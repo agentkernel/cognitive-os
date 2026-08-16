@@ -233,3 +233,32 @@
 - Outcome: authored. Final `commit_transition` is now
   `Ok(self.engine().commit_transition(&cmd)?)` matching `start_loop`.
   Journey semantics unchanged.
+
+### D02-LINUX-02 — kernel-server tests at `0fce61df` (superseded)
+
+- Instrument: `cargo test -p kernel-server --test p2_t16_registered_check --locked`
+  then `cargo test -p kernel-server --bin kernel-server --locked`
+- Environment: `DEV-LINUX-NATIVE-01` at exact `0fce61df`
+- Outcome: `fail` — `p2_t16_registered_check` 3/3; kernel-server bin 293/295.
+  `production_typescript_repair_journey_completes_after_registered_check` and
+  the Rust twin stayed `ACTIVE`. Tick log:
+  `candidate admission authorization already exists` then
+  `no further governed repair candidate remains`. Root cause: WIA table is
+  `UNIQUE (loop_object_id, iteration)`; the second admission reused iteration 1
+  because no progress fact was recorded after the intermediate Write.
+  Assertions were not weakened.
+
+### D02-CI-02 — Ubuntu required CI at `0fce61df` (superseded)
+
+- Instrument: GitHub Actions run
+  [31917808207](https://github.com/agentkernel/cognitive-os/actions/runs/31917808207)
+- Environment: `ubuntu-latest` supporting CI
+- Outcome: `fail` — workspace tests hit the same two journey failures.
+  Clippy did not run.
+
+### D02-IMPL-03 — record Advanced progress after intermediate mutation
+
+- Instrument: `apps/kernel-server/src/personal/scheduler_authority/dispatch.rs`
+- Outcome: authored. After returning the Loop to `DECIDE`, the daemon records
+  a monotonic `advanced` progress fact bound to the closed Effect so the next
+  candidate WIA receives `iteration = last + 1`.

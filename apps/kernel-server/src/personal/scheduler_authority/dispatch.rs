@@ -31,7 +31,7 @@ use cognitive_kernel::context::{
 };
 use cognitive_kernel::effects::{WriterLease, admit_operation};
 use cognitive_kernel::engine::CommittedTransition;
-use cognitive_kernel::harness::LoopDriver;
+use cognitive_kernel::harness::{LoopDriver, ProgressStatus};
 use cognitive_kernel::intent_chain::{
     GovernanceSeed, compose_governed_header, seal_governed_object_content_digest,
     strong_reference_to,
@@ -592,6 +592,32 @@ where
                 current_loop.version,
                 &dispatch.task_ref,
                 &resolved.authorization.effect_object_id,
+                &writer_lease,
+            )
+            .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;
+        let last_progress_iteration = authority_store
+            .list_progress_facts(&resolved.authorization.loop_object_id)
+            .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+            .last()
+            .map(|fact| fact.iteration);
+        let next_progress_iteration = match last_progress_iteration {
+            Some(last_iteration) => last_iteration.checked_add(1).ok_or_else(|| {
+                SchedulerAuthorityError::NativeExecution(
+                    "intermediate progress iteration overflow".to_owned(),
+                )
+            })?,
+            None => 1,
+        };
+        driver
+            .record_progress(
+                &resolved.authorization.loop_object_id,
+                next_progress_iteration,
+                ProgressStatus::Advanced,
+                &resolved.authorization.action_fingerprint,
+                &[format!(
+                    "effect://{}",
+                    resolved.authorization.effect_object_id
+                )],
                 &writer_lease,
             )
             .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?;

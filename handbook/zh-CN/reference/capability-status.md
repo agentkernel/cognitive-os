@@ -13,7 +13,7 @@ sources:
   - path: crates/cognitive-secret/src/backend_select.rs
   - path: apps/kernel-server/src/personal/tool_executor/mod.rs
   - path: crates/cognitive-management/src/task_application.rs
-fingerprint: "sha256:0b5440f8ce2243145e7ad43e89861bc0ac84c5f1a32084b755f3993c7e159b4b"
+fingerprint: "sha256:8b0bfd6d9c56216e0b9cdc9e9f6fbed31d69e72a81ffbac82f359cb5f2121a7e"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---

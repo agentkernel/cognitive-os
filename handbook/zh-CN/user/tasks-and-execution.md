@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:8ee9f6aca66b572dcdfd31b21329a846e4b628d5859cb6e7d730f68c043017b9"
+fingerprint: "sha256:217173ba8b051a70f176689d46daf4412e6f7b996c5984bd5d44643436f1ce64"
 non_claims:
   - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
 ---
