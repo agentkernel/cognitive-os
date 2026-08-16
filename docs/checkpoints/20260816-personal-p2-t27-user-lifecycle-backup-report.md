@@ -125,6 +125,14 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   pass**, `cargo clippy -p admin-cli --all-targets --locked -- -D warnings`
   **pass**.
 
+### D02-LINUX-02 — exact-revision `p2_t27_pi_lifecycle` (`cf7dd501`)
+
+- Instrument: `DEV-LINUX-NATIVE-01` `cargo test -p admin-cli --test p2_t27_pi_lifecycle --locked`.
+- Outcome: **pass** (1/1). Install → activate-root v1 → register → activate →
+  process-bound upgrade/rollback negatives → pause/resume/stop → stale recover
+  fail → recover (new session) → stop → upgrade v2 → monotonic rollback v3 →
+  uninstall.
+
 ### D02-LOCAL-01 — Windows GNU Rust tests
 
 - Instrument: local `cargo test` on `DEV-WIN-GNU-01`.
