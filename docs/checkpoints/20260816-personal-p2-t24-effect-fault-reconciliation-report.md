@@ -64,6 +64,16 @@
 - Disposition: use the imported types in `project_effect_history_entry`.
   Compile-fix commit `eaab6e3ec7a8587a5ea20f08e13f25be23172e09`.
 
+### D01-CI-02 — Ubuntu supporting CI at `eaab6e3e` (superseded)
+
+- Instrument: GitHub Actions run
+  [31924662017](https://github.com/agentkernel/cognitive-os/actions/runs/31924662017)
+- Outcome: `fail` — Clippy `-D warnings` on `AuthorizedFaultPoint` sharing the
+  `Before` postfix (`clippy::enum_variant_names`). Same allow already used on
+  `CampaignFaultPoint`.
+- Disposition: `#[allow(clippy::enum_variant_names)]` on the D01 enum, included
+  in the D02 head.
+
 ## D02 — original-key reconcile under persisted profiles
 
 ### D02-TEST-01 — persisted profile original-key restart, mutation count 1

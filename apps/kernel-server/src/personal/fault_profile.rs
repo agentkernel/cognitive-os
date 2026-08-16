@@ -20,6 +20,8 @@ const MAX_PROFILES: usize = 32;
 const MAX_CAMPAIGN_ID_CHARS: usize = 32;
 const MAX_CASE_REF_CHARS: usize = 64;
 
+/// Variant names keep the plan's before-stage suffix, matching P2-T17.
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(crate) enum AuthorizedFaultPoint {
