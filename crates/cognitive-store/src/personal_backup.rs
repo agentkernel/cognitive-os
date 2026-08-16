@@ -711,9 +711,8 @@ pub fn restore_personal_backup_archive_with_options(
     if staging.exists() {
         fs::remove_dir_all(&staging).map_err(archive_io)?;
     }
-    copy_verified_archive(archive_path, &staging, &manifest).map_err(|error| {
+    copy_verified_archive(archive_path, &staging, &manifest).inspect_err(|_| {
         let _ = fs::remove_dir_all(&staging);
-        error
     })?;
 
     let snapshot = layout
@@ -723,10 +722,9 @@ pub fn restore_personal_backup_archive_with_options(
         if snapshot.exists() {
             fs::remove_dir_all(&snapshot).map_err(archive_io)?;
         }
-        snapshot_live_trees(layout, &snapshot).map_err(|error| {
+        snapshot_live_trees(layout, &snapshot).inspect_err(|_| {
             let _ = fs::remove_dir_all(&staging);
             let _ = fs::remove_dir_all(&snapshot);
-            error
         })?;
         if options.inject_fault_before_apply {
             let _ = fs::remove_dir_all(&staging);

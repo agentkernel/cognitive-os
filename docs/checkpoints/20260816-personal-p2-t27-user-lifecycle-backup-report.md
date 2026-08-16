@@ -63,3 +63,17 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   **2/2 pass**. `cargo test -p kernel-server --test p2_t27_backup_restore --locked`
   **fail** — same `E0433`/`E0618` compile errors as D01-CI-01. fmt/Clippy
   `not-run` at this revision.
+
+### D01-CI-02 — Ubuntu supporting CI after compile fix
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` on `7d80b7a5` (run
+  [31937711577](https://github.com/agentkernel/cognitive-os/actions/runs/31937711577)).
+- Outcome: in progress at this cell. Rust workspace **build** passed; workspace
+  tests were running. Clippy is still required.
+
+### D01-LINUX-02 — exact-revision revalidation after compile fix (`7d80b7a5`)
+
+- Instrument: `DEV-LINUX-NATIVE-01` at `7d80b7a5`.
+- Outcome: **partial**. HTTP `p2_t27_backup_restore` **1/1 pass**. Clippy
+  `-D warnings` **fail** on `clippy::manual_inspect` (`map_err` used only to
+  clean staging on error). Fix follows (`inspect_err`).
