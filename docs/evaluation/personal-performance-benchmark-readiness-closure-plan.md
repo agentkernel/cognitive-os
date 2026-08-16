@@ -110,8 +110,8 @@ informative work-package ID：
 
 | Work package | Formal task | Initial status |
 |---|---|---|
-| BR-01 | P2-T21 | in-progress |
-| BR-02 | P2-T22 | not-started |
+| BR-01 | P2-T21 | done |
+| BR-02 | P2-T22 | done |
 | BR-03 | P2-T23 | not-started |
 | BR-04 | P2-T24 | not-started |
 | BR-05 | P2-T25 | not-started |
@@ -151,6 +151,11 @@ digest mismatch/family mismatch/stale epoch/preimage drift/cross-task/wrong-chan
 missing CAS 全部 fail closed；Task 仅在 current verification + acceptance 后完成。
 
 ### BR-02 — C2a 完整软件修复 journey
+
+**Status (2026-08-16):** D01–D03 complete at `4a803070` / Draft PR #221.
+Ubuntu required CI run `31919267639` green; exact-revision `DEV-LINUX-NATIVE-01`
+workspace tests 0-failed, Clippy `-D warnings`, fmt. Ready/merge remains.
+No EVAL/Gate/release/Profile claim.
 
 **实施：**
 

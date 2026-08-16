@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:d820abb70555928a29c67500f37cfc1fe26e14415ca6f2514e9006ad2c3cb1b2"
+fingerprint: "sha256:217173ba8b051a70f176689d46daf4412e6f7b996c5984bd5d44643436f1ce64"
 non_claims:
   - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
 ---
@@ -65,8 +65,9 @@ production dispatches parameter-free WorkspaceRead, independently verifies its
 fixed reconciled Effect, then derives candidate and final acceptance only from
 current CAS-backed authority facts. Exact native `22c3f502` reached `COMPLETED`.
 Open-Effect, superseded-report and missing-CAS negatives are written; a stale
-fixed post-state negative is still open. Other Tool request carriers remain
-unwired.
+fixed post-state negative is still open. A RegisteredCheck-terminated software-repair
+Task can continue from a closed WorkspaceWrite back to Loop `DECIDE` and complete
+only after RegisteredCheckRun plus independent verification.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).

@@ -493,6 +493,123 @@ where
         Ok(self.engine().commit_prepared_transition(&prepared)?)
     }
 
+    /// After a closed intermediate Effect on a RegisteredCheck-terminated
+    /// Task, walk the registered edges
+    /// `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` so a later scheduler
+    /// tick can admit the next candidate. This is not Task acceptance.
+    /// WorkspaceRead with the fixed-Effect verifier keeps `ACT -> VERIFY`.
+    pub fn return_to_decide_after_closed_effect(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        effect_object_id: &ObjectId,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError> {
+        self.verify_lease(lease)?;
+        let effect = self
+            .store
+            .load_object(LifecycleDomain::Effect, effect_object_id)
+            .map_err(store_rejection)?
+            .ok_or_else(|| {
+                denial(
+                    STATE_CONFLICT,
+                    format!("closed Effect {effect_object_id} is missing"),
+                )
+            })?;
+        if !matches!(effect.state.as_str(), "RECONCILED" | "VERIFIED") {
+            return Err(denial(
+                STATE_CONFLICT,
+                format!(
+                    "Effect {} is {} and cannot return the Loop to DECIDE",
+                    effect_object_id, effect.state
+                ),
+            )
+            .into());
+        }
+        let facts = self.contract_facts(task_ref)?;
+        let contract_row = self
+            .store
+            .load_task_contract(task_ref, facts.contract_epoch)
+            .map_err(store_rejection)?
+            .ok_or_else(|| denial(STATE_CONFLICT, "contract row vanished".to_owned()))?;
+        let effect_content = serde_json::to_string(&effect.body).map_err(|error| {
+            denial(
+                STATE_CONFLICT,
+                format!("Effect body is not serializable: {error}"),
+            )
+        })?;
+        let effect_ref = strong_ref(effect_object_id, effect.version.get(), &effect_content)
+            .map_err(EffectError::Denied)?;
+        let contract_ref = strong_ref(&contract_row.contract_id, 1, &contract_row.canonical_json)
+            .map_err(EffectError::Denied)?;
+
+        let mut observe_guards = BTreeSet::new();
+        observe_guards.insert("effect_state_recorded".to_owned());
+        let mut observe_evidence = BTreeMap::new();
+        observe_evidence.insert("effect_or_event_refs".to_owned(), effect_ref.clone());
+        let observed = self.engine().commit_transition(&self.command(
+            loop_id,
+            "ACT",
+            "OBSERVE",
+            "NEW_EVIDENCE_AVAILABLE",
+            observe_guards,
+            observe_evidence,
+            expected_version,
+            None,
+            lease,
+        )?)?;
+
+        let mut resolve_guards = BTreeSet::new();
+        resolve_guards.insert("observation_recorded".to_owned());
+        let mut resolve_evidence = BTreeMap::new();
+        resolve_evidence.insert("observation_refs".to_owned(), effect_ref.clone());
+        let resolved = self.engine().commit_transition(&self.command(
+            loop_id,
+            "OBSERVE",
+            "RESOLVE",
+            "EVIDENCE_OBSERVED",
+            resolve_guards,
+            resolve_evidence,
+            observed.after_version,
+            None,
+            lease,
+        )?)?;
+
+        let mut orient_guards = BTreeSet::new();
+        orient_guards.insert("required_context_closed".to_owned());
+        orient_guards.insert("context_authorized".to_owned());
+        let mut orient_evidence = BTreeMap::new();
+        orient_evidence.insert("context_view".to_owned(), contract_ref.clone());
+        let oriented = self.engine().commit_transition(&self.command(
+            loop_id,
+            "RESOLVE",
+            "ORIENT",
+            "CONTEXT_COMPLETE",
+            orient_guards,
+            orient_evidence,
+            resolved.after_version,
+            None,
+            lease,
+        )?)?;
+
+        let mut decide_guards = BTreeSet::new();
+        decide_guards.insert("decision_inputs_fixed".to_owned());
+        let mut decide_evidence = BTreeMap::new();
+        decide_evidence.insert("orientation_record".to_owned(), effect_ref);
+        Ok(self.engine().commit_transition(&self.command(
+            loop_id,
+            "ORIENT",
+            "DECIDE",
+            "ORIENTATION_COMPLETE",
+            decide_guards,
+            decide_evidence,
+            oriented.after_version,
+            None,
+            lease,
+        )?)?)
+    }
+
     /// Atomically pin one closed Effect post-state, persist its verification
     /// request, and enter Loop `ACT -> VERIFY`.
     ///

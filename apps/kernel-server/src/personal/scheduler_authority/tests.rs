@@ -87,6 +87,11 @@ use std::sync::{
 };
 use std::time::{SystemTime, UNIX_EPOCH};
 
+use crate::personal::registered_check::{
+    C2A_CHECK_ID, C2A_RUST_CHECK_ID, CHECK_EVIDENCE_SCHEMA, CHECK_TARGET_PREFIX,
+    REGISTERED_CHECK_VERIFIER_REF, RepairCorpusFamily, broken_source_bytes, repaired_source_bytes,
+    reset_broken_repair_corpus,
+};
 use crate::personal::tool_executor::{
     ASSEMBLED_EXECUTOR_FAMILIES, NativeToolExecutionError, ProductionNativeToolExecutorRouter,
     workspace_image_digest,
@@ -257,6 +262,8 @@ struct ContextFixtureExecutionOptions {
     max_iterations: Option<i64>,
     /// Optional override for `TaskContract.max_retries`; defaults to 0.
     max_retries: Option<i64>,
+    /// Optional override for `TaskContract.budget.tool_calls`; defaults to 1.
+    tool_calls: Option<i64>,
 }
 
 fn append_context_fixture(
@@ -470,7 +477,7 @@ fn append_context_fixture(
             money_microunits: None,
             output_tokens: None,
             semantic_calls: execution_options.semantic_calls,
-            tool_calls: Some(1),
+            tool_calls: Some(execution_options.tool_calls.unwrap_or(1)),
             wall_time_ms: None,
         },
         budget_id: Some(
@@ -3297,6 +3304,27 @@ impl super::PrivatePiCandidateProposer for DeterministicProductionChainProposer 
     }
 }
 
+struct SequentialProductionChainProposer {
+    candidates: Vec<UntrustedPiCandidate>,
+    calls: Cell<usize>,
+}
+
+impl super::PrivatePiCandidateProposer for SequentialProductionChainProposer {
+    fn propose_candidate(
+        &self,
+        _resolved_context: &super::ResolvedContextView,
+        _task_ref: &str,
+        _contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String> {
+        let index = self.calls.get();
+        self.calls.set(index + 1);
+        self.candidates
+            .get(index)
+            .cloned()
+            .ok_or_else(|| "no further governed repair candidate remains".to_owned())
+    }
+}
+
 fn production_chain_candidate(
     family: NativeOperationFamily,
     target: &str,
@@ -3318,6 +3346,25 @@ fn production_chain_candidate(
             "cognitiveos.personal.candidate-parameters/0.1",
         )
         .unwrap(),
+        expected_state_version: Version::INITIAL.get(),
+        operation_descriptor_id: crate::personal::tool_executor::builtin_native_descriptor_id(
+            &descriptor.operation_id,
+        )
+        .unwrap(),
+    }
+}
+
+fn production_registered_check_candidate(check_id: &str) -> UntrustedPiCandidate {
+    let descriptor = BUILTIN_TOOL_CATALOG
+        .iter()
+        .find(|descriptor| descriptor.family == NativeOperationFamily::RegisteredCheckRun)
+        .unwrap();
+    UntrustedPiCandidate {
+        tool_ref: descriptor.operation_id.clone(),
+        action: descriptor.action.clone(),
+        target: format!("{CHECK_TARGET_PREFIX}{check_id}"),
+        parameters: None,
+        parameters_digest: format!("sha256:{}", "0".repeat(64)),
         expected_state_version: Version::INITIAL.get(),
         operation_descriptor_id: crate::personal::tool_executor::builtin_native_descriptor_id(
             &descriptor.operation_id,
@@ -3352,6 +3399,7 @@ fn prepare_public_admission_equivalent_production_chain(
         // are raised above the single production attempt.
         max_iterations: Some(4),
         max_retries: Some(4),
+        tool_calls: None,
     };
     let (context_command, _) =
         append_context_fixture(&store, &task_ref, None, json!({}), &execution_options);
@@ -3448,11 +3496,128 @@ fn prepare_public_admission_equivalent_production_chain(
     (store, repository)
 }
 
+fn prepare_governed_repair_journey_chain(
+    layout: &PersonalDataLayout,
+    write_candidate: &UntrustedPiCandidate,
+    check_candidate: &UntrustedPiCandidate,
+) -> (SqliteAuthorityStore, SchedulerRepository, String) {
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(layout).unwrap();
+    let database_path = layout.authority_database_path();
+    let store = SqliteAuthorityStore::open(&database_path).unwrap();
+    let task_ref = "task://tenant-a/p2-t22-repair".to_owned();
+    let execution_options = ContextFixtureExecutionOptions {
+        allowed_tools: vec![
+            write_candidate.tool_ref.clone(),
+            check_candidate.tool_ref.clone(),
+        ],
+        candidate_actions: vec![
+            write_candidate.action.clone(),
+            check_candidate.action.clone(),
+        ],
+        semantic_calls: Some(4),
+        verifier_ref: Some(REGISTERED_CHECK_VERIFIER_REF.to_owned()),
+        system_clock_lease: true,
+        max_iterations: Some(8),
+        max_retries: Some(4),
+        tool_calls: Some(4),
+    };
+    let (context_command, _) =
+        append_context_fixture(&store, &task_ref, None, json!({}), &execution_options);
+    let contract = store.load_task_contract(&task_ref, 1).unwrap().unwrap();
+    let admitted_at = WallTimestamp::parse("2026-08-07T00:00:00Z").unwrap();
+    store
+        .materialize_draft_task_projection(&contract, &admitted_at)
+        .unwrap();
+    store
+        .admit_object(&ObjectAdmission {
+            object: StoredObject {
+                object_id: object_id(929),
+                domain: LifecycleDomain::Loop,
+                state: state("DECIDE"),
+                version: Version::INITIAL,
+                body: json!({
+                    "task_ref": task_ref,
+                    "contract_epoch": 1,
+                    "fixture": "governed-repair-journey"
+                }),
+            },
+            admitted_at: admitted_at.clone(),
+            event: EventDraft {
+                event_id: EventId::parse("00000000-0000-7000-a000-000000000929").unwrap(),
+                object_id: object_id(929),
+                domain: LifecycleDomain::Loop,
+                object_version: Version::INITIAL,
+                event_type: "loop.fixture-decide".to_owned(),
+                canonical_json: "{\"event\":\"loop.fixture-decide\"}".to_owned(),
+            },
+            outbox: Vec::new(),
+            fencing_epoch: Some(1),
+        })
+        .unwrap();
+    let initial_budget = BudgetState::new(BTreeMap::from([
+        ("semantic_calls".to_owned(), 4),
+        ("tool_calls".to_owned(), 4),
+    ]))
+    .unwrap();
+    store
+        .create_budget(
+            &BudgetId::parse("00000000-0000-7000-b000-000000000926").unwrap(),
+            &serde_json::to_string(&initial_budget).unwrap(),
+            &admitted_at,
+        )
+        .unwrap();
+    store
+        .append_scheduler_execution_policy(&SchedulerExecutionPolicyRow {
+            task_ref: task_ref.clone(),
+            contract_epoch: 1,
+            context_request_id: context_command.request_id.clone(),
+            canonical_json: json!({
+                "schema_version": 1,
+                "task_ref": task_ref,
+                "contract_epoch": 1,
+                "context": {
+                    "request_id": context_command.request_id.as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "tenant_id": "tenant-a",
+                    "resource_scope_prefix": "workspace://tenant-a/project",
+                    "conversation_ref": "conversation://tenant-a/one",
+                    "source_limit": 1,
+                },
+                "admission": {
+                    "candidate_id": object_id(940).as_str(),
+                    "authorization_subject_ref": "principal://tenant-a/daemon",
+                    "authorization_purpose": "task_execution",
+                    "budget_charge": {"semantic_calls": 1},
+                    "governance": {
+                        "owner": context_governance().owner,
+                        "authority": context_governance().authority,
+                        "resource_scope": context_governance().resource_scope,
+                        "tenant_id": "tenant-a",
+                        "created_by": "principal://tenant-a/daemon",
+                        "sensitivity": "internal",
+                        "purpose_constraints": ["task_execution"],
+                        "retention_policy": "standard",
+                    },
+                    "actor_ref": "principal://personal/daemon",
+                    "authority_ref": "authority://personal/daemon",
+                    "correlation_id": "correlation://personal/p2-t22-repair",
+                },
+            })
+            .to_string(),
+        })
+        .unwrap();
+    crate::personal::tool_executor::ensure_builtin_native_descriptors(&store).unwrap();
+    let mut repository = SchedulerRepository::open(&database_path).unwrap();
+    repository.upsert(&scheduler_row(&task_ref)).unwrap();
+    (store, repository, task_ref)
+}
+
 fn run_production_chain_tick(
     layout: &PersonalDataLayout,
     store: &SqliteAuthorityStore,
     repository: &mut SchedulerRepository,
-    proposer: &DeterministicProductionChainProposer,
+    proposer: &dyn super::PrivatePiCandidateProposer,
 ) {
     let artifact_store =
         cognitive_store::ArtifactStore::open(layout.data_dir().join("artifacts"), 1024 * 1024)
@@ -3706,6 +3871,322 @@ fn patch_preimage_drift_fails_closed_before_workspace_publication() {
             .as_str(),
         "COMPLETED"
     );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+fn artifact_dir_contains_schema(root: &std::path::Path, schema: &str) -> bool {
+    fn walk(dir: &std::path::Path, schema: &str) -> bool {
+        let Ok(entries) = std::fs::read_dir(dir) else {
+            return false;
+        };
+        for entry in entries.flatten() {
+            let path = entry.path();
+            if path.is_dir() && walk(&path, schema) {
+                return true;
+            }
+            if std::fs::read(&path).ok().is_some_and(|bytes| {
+                bytes
+                    .windows(schema.len())
+                    .any(|window| window == schema.as_bytes())
+            }) {
+                return true;
+            }
+        }
+        false
+    }
+    walk(root, schema)
+}
+
+#[test]
+fn production_write_of_repaired_typescript_does_not_complete_repair_journey() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::TypeScript;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspaceWrite,
+        "workspace://src/repair.ts",
+        CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+            family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+            input_b64: STANDARD.encode(repaired_source_bytes(family)),
+            preimage: format!(
+                "digest:{}",
+                workspace_image_digest(broken_source_bytes(family)).unwrap()
+            ),
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(
+        std::fs::read(workspace_root.join(family.source_path())).unwrap(),
+        repaired_source_bytes(family),
+        "production WorkspaceWrite must publish the repaired TypeScript source"
+    );
+    assert_ne!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "COMPLETED",
+        "write-alone must not complete the governed repair journey"
+    );
+    assert!(
+        !artifact_dir_contains_schema(&layout.data_dir().join("artifacts"), CHECK_EVIDENCE_SCHEMA),
+        "write-alone must not publish registered-check evidence"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+fn repair_write_candidate(family: RepairCorpusFamily) -> UntrustedPiCandidate {
+    production_chain_candidate(
+        NativeOperationFamily::WorkspaceWrite,
+        &format!("workspace://{}", family.source_path()),
+        CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+            family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+            input_b64: STANDARD.encode(repaired_source_bytes(family)),
+            preimage: format!(
+                "digest:{}",
+                workspace_image_digest(broken_source_bytes(family)).unwrap()
+            ),
+        }),
+    )
+}
+
+fn load_task_state(store: &SqliteAuthorityStore, task_ref: &str) -> String {
+    let contract = store.load_task_contract(task_ref, 1).unwrap().unwrap();
+    store
+        .load_object(LifecycleDomain::Task, &contract.contract_id)
+        .unwrap()
+        .unwrap()
+        .state
+        .as_str()
+        .to_owned()
+}
+
+fn load_loop_state(store: &SqliteAuthorityStore, task_ref: &str) -> String {
+    let contract_row = store.load_task_contract(task_ref, 1).unwrap().unwrap();
+    let contract = parse_execution_bound_contract(&contract_row.canonical_json).unwrap();
+    let loop_id = ObjectId::parse(&contract.loop_object_id.unwrap().0).unwrap();
+    store
+        .load_object(LifecycleDomain::Loop, &loop_id)
+        .unwrap()
+        .unwrap()
+        .state
+        .as_str()
+        .to_owned()
+}
+
+fn run_four_repair_journey_ticks(
+    layout: &PersonalDataLayout,
+    store: &SqliteAuthorityStore,
+    repository: &mut SchedulerRepository,
+    proposer: &SequentialProductionChainProposer,
+) {
+    for _ in 0..4 {
+        run_production_chain_tick(layout, store, repository, proposer);
+    }
+}
+
+#[test]
+fn production_typescript_repair_journey_completes_after_registered_check() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::TypeScript;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let write_candidate = repair_write_candidate(family);
+    let check_candidate = production_registered_check_candidate(C2A_CHECK_ID);
+    let proposer = SequentialProductionChainProposer {
+        candidates: vec![write_candidate.clone(), check_candidate.clone()],
+        calls: Cell::new(0),
+    };
+    let (store, mut repository, task_ref) =
+        prepare_governed_repair_journey_chain(&layout, &write_candidate, &check_candidate);
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(
+        std::fs::read(workspace_root.join(family.source_path())).unwrap(),
+        repaired_source_bytes(family)
+    );
+    assert_ne!(
+        load_task_state(&store, &task_ref),
+        "COMPLETED",
+        "write-alone must not complete a RegisteredCheck-terminated Task"
+    );
+    assert_eq!(
+        load_loop_state(&store, &task_ref),
+        "DECIDE",
+        "a closed intermediate mutation must return the Loop to DECIDE"
+    );
+    assert!(
+        !artifact_dir_contains_schema(&layout.data_dir().join("artifacts"), CHECK_EVIDENCE_SCHEMA),
+        "write-alone must not publish registered-check evidence"
+    );
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(load_task_state(&store, &task_ref), "COMPLETED");
+    assert!(
+        artifact_dir_contains_schema(&layout.data_dir().join("artifacts"), CHECK_EVIDENCE_SCHEMA),
+        "the governed journey must publish registered-check evidence"
+    );
+    assert_eq!(proposer.calls.get(), 2);
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_rust_repair_journey_completes_after_registered_check() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::Rust;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let write_candidate = repair_write_candidate(family);
+    let check_candidate = production_registered_check_candidate(C2A_RUST_CHECK_ID);
+    let proposer = SequentialProductionChainProposer {
+        candidates: vec![write_candidate.clone(), check_candidate.clone()],
+        calls: Cell::new(0),
+    };
+    let (store, mut repository, task_ref) =
+        prepare_governed_repair_journey_chain(&layout, &write_candidate, &check_candidate);
+
+    run_four_repair_journey_ticks(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(
+        std::fs::read(workspace_root.join(family.source_path())).unwrap(),
+        repaired_source_bytes(family)
+    );
+    assert_eq!(load_task_state(&store, &task_ref), "COMPLETED");
+    assert!(artifact_dir_contains_schema(
+        &layout.data_dir().join("artifacts"),
+        CHECK_EVIDENCE_SCHEMA
+    ));
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_repair_journey_fails_when_hidden_test_is_gutted() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::TypeScript;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let write_candidate = repair_write_candidate(family);
+    let check_candidate = production_registered_check_candidate(C2A_CHECK_ID);
+    let proposer = SequentialProductionChainProposer {
+        candidates: vec![write_candidate.clone(), check_candidate.clone()],
+        calls: Cell::new(0),
+    };
+    let (store, mut repository, task_ref) =
+        prepare_governed_repair_journey_chain(&layout, &write_candidate, &check_candidate);
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    std::fs::write(
+        workspace_root.join(family.hidden_test_path()),
+        b"export {}\n",
+    )
+    .unwrap();
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(
+        std::fs::read(workspace_root.join(family.source_path())).unwrap(),
+        repaired_source_bytes(family)
+    );
+    assert_ne!(load_task_state(&store, &task_ref), "COMPLETED");
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_repair_journey_fails_when_public_test_is_weakened() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::TypeScript;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let write_candidate = repair_write_candidate(family);
+    let check_candidate = production_registered_check_candidate(C2A_CHECK_ID);
+    let proposer = SequentialProductionChainProposer {
+        candidates: vec![write_candidate.clone(), check_candidate.clone()],
+        calls: Cell::new(0),
+    };
+    let (store, mut repository, task_ref) =
+        prepare_governed_repair_journey_chain(&layout, &write_candidate, &check_candidate);
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    std::fs::write(
+        workspace_root.join(family.public_test_path()),
+        b"export {}\n",
+    )
+    .unwrap();
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_ne!(load_task_state(&store, &task_ref), "COMPLETED");
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn production_repair_journey_refuses_out_of_scope_write() {
+    let layout = temporary_personal_layout();
+    let family = RepairCorpusFamily::TypeScript;
+    let workspace_root = layout.data_dir().join("workspace");
+    reset_broken_repair_corpus(family, &workspace_root).unwrap();
+    let mut write_candidate = repair_write_candidate(family);
+    write_candidate.target = "workspace://../escape.txt".to_owned();
+    let check_candidate = production_registered_check_candidate(C2A_CHECK_ID);
+    let proposer = SequentialProductionChainProposer {
+        candidates: vec![write_candidate.clone(), check_candidate.clone()],
+        calls: Cell::new(0),
+    };
+    let (store, mut repository, task_ref) =
+        prepare_governed_repair_journey_chain(&layout, &write_candidate, &check_candidate);
+
+    run_four_repair_journey_ticks(&layout, &store, &mut repository, &proposer);
+
+    assert!(!layout.data_dir().join("escape.txt").exists());
+    assert_ne!(
+        std::fs::read(workspace_root.join(family.source_path())).unwrap(),
+        repaired_source_bytes(family)
+    );
+    assert_ne!(load_task_state(&store, &task_ref), "COMPLETED");
+    assert!(!artifact_dir_contains_schema(
+        &layout.data_dir().join("artifacts"),
+        CHECK_EVIDENCE_SCHEMA
+    ));
 
     drop(repository);
     drop(store);

@@ -18,6 +18,8 @@ sources:
     symbols: ["check_and_debit"]
   - path: crates/cognitive-kernel/src/recovery.rs
     symbols: ["RECOVERY_ORDER", "run_recovery"]
+  - path: crates/cognitive-kernel/src/harness.rs
+    symbols: ["return_to_decide_after_closed_effect"]
 contracts:
   - specs/transitions/effect.transitions.json
   - specs/transitions/task.transitions.json
@@ -27,7 +29,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:aad3d4ce637b7acdf656e0fe83dd4674925b6b38dc58dcef92be54c6c5b8413b"
+fingerprint: "sha256:dca3ca4f431eb2ddf41af597e89cae99dd25106fdacd571968e58f0e765e3bba"
 non_claims:
   - Kernel correctness evidence is focused-test evidence; it is not a Gate, release, or Profile result.
 ---
@@ -95,6 +97,10 @@ commit sinks (executor, authority commit, admission+outbox, checkpoint) re-check
 the writer fencing epoch inside the store transaction. Verification entry is
 also one compound authority commit: a current closed Effect pin, its request,
 and Loop `ACT -> VERIFY` either all persist or all roll back.
+A closed intermediate Effect that is not RegisteredCheckRun on a
+RegisteredCheck-terminated Task instead walks
+`ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` from durable Effect and
+contract facts so the next candidate can be admitted without completing the Task.
 Task acceptance remains a separate authority: candidate and final acceptance
 transitions are prepared by the same deterministic engine, then SQLite
 transactionally rechecks current contract epoch, the complete closed Effect set,

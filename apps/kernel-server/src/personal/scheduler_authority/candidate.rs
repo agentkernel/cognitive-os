@@ -264,13 +264,18 @@ where
     execution_context_command.decided_at = proposed_at.clone();
     let authorization_snapshot =
         load_current_context_authorization_snapshot(store, &execution_context_command)?;
+    let authorization_resource = if proposed_candidate.tool_ref == "native.registered-check.run" {
+        execution_context_command.resource_scope_prefix.clone()
+    } else {
+        proposed_candidate.target.clone()
+    };
     let authorization_grant = authorize(
         &authorization_snapshot,
         &ObjectGovernance {
             object_ref: proposed_candidate.target.clone(),
             tenant_id: Some(execution_context_command.tenant_id.clone()),
             owner_ref: admission_command.authorization_subject_ref.clone(),
-            resource_scope: proposed_candidate.target.clone(),
+            resource_scope: authorization_resource,
             conversation_ref: execution_context_command.conversation_ref.clone(),
         },
         &AccessRequest {
