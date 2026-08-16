@@ -151,7 +151,17 @@
   (compile failed first). Windows `not-run by owner-directed Linux-only route`.
   `B01-Desktop-Linux-002` untouched.
 
-### D02-CI-02 — Ubuntu supporting CI after E0716/E0061 fixes
+### D02-CI-02 — Ubuntu supporting CI at `6ae64b50` (superseded)
 
-- Instrument: pending after the compile-fix head is pushed.
+- Instrument: GitHub Actions run
+  [31930441274](https://github.com/agentkernel/cognitive-os/actions/runs/31930441274)
+- Outcome: `fail` — workspace tests compiled and ran; Clippy `-D warnings`
+  rejected `clippy::expect_used` on `pinned_https` test `layout()` (`expect("clock")`
+  and `expect("temp layout")`).
+- Disposition: allow `expect_used`/`unwrap_used`/`panic` on the test module,
+  matching `tool_lifecycle` tests.
+
+### D02-CI-03 — Ubuntu supporting CI after Clippy test-module allow
+
+- Instrument: pending after the Clippy-allow head is pushed.
 - Initial status: `not-run`.

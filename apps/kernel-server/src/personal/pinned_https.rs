@@ -484,6 +484,7 @@ fn error(status: u16, code: &str, message: &str) -> PinnedHttpsResponse {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
 mod tests {
     use super::*;
     use cognitive_store::PersonalDataLayout;
