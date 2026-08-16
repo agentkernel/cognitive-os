@@ -195,6 +195,15 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
   [`31939577639`](https://github.com/agentkernel/cognitive-os/actions/runs/31939577639)
   also **pass**. Implementation evidence remains `5a561fbf`.
 
+### D03-CI-02 — Ubuntu supporting CI after acceptance mapping
+
+- Instrument: GitHub Actions `verify (ubuntu-latest)` run
+  [`31939988369`](https://github.com/agentkernel/cognitive-os/actions/runs/31939988369)
+  at `b296cf71`.
+- Outcome: **fail**. `CURRENT_SNAPSHOT_LEASE_MISMATCH`: Layer 2 marked
+  `P2-T27/D03` `done` while the active lease still named D03. Slice status
+  stays `in-progress` until ready/merge. Fix follows on the same branch.
+
 ### D03-ACCEPT-01 — formal acceptance mapping
 
 | Acceptance | Evidence |
