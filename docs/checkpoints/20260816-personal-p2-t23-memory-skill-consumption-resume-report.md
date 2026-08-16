@@ -96,6 +96,17 @@
 - Disposition: repair the sealed retention timestamp to an I-JSON-safe far-future
   value in the same change set as D02. Do not weaken assertions.
 
+### D01-CI-02 — Ubuntu supporting CI at `beb4afb3`
+
+- Instrument: GitHub Actions run `31922114988`
+- Outcome: `fail`. `295 passed; 4 failed`. Public remember returned
+  `RESOURCE_MEMORY_CONFLICT` because the helper set `target_scope` to the Task
+  ref (policy requires same-scope as `governance_scope`) and retention
+  `4_102_444_800` exceeded the 1-year admission ceiling.
+- Disposition: public remember now uses workspace `target_scope` and
+  `now + 3600` retention, matching `p4_t05_resource_api`. Skill bind remains
+  task-targeted.
+
 ## D02 — persist bounded consumption and resume session 2 from durable state
 
 ### D02-TEST-01 — public session-2 GET after restart, zero restatement

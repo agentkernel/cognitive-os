@@ -1502,6 +1502,10 @@ fn public_remember_and_bind(
     governance_scope: &str,
 ) -> (String, String, String) {
     let issued_at = WallTimestamp::parse("2026-08-16T00:00:00Z").unwrap();
+    let observed_at = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap_or_default()
+        .as_secs() as i64;
     let source_header = compose_governed_header(
         &source_id,
         "WorkspaceContextSource",
@@ -1545,10 +1549,10 @@ fn public_remember_and_bind(
         "source_digest": source_digest,
         "source_provenance_ref": format!("file://workspace/facts/{}.txt", source_id),
         "governance_scope": governance_scope,
-        "target_scope": target_task,
+        "target_scope": governance_scope,
         "purpose": "task_execution",
-        "retention_expires_at_unix_seconds": 4_102_444_800i64,
-        "observed_at_unix_seconds": 1,
+        "retention_expires_at_unix_seconds": observed_at + 3_600,
+        "observed_at_unix_seconds": observed_at,
     }))
     .unwrap();
     let remember = api.handle_authority_or_mutation(
