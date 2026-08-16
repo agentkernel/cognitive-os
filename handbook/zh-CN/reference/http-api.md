@@ -12,7 +12,7 @@ sources:
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:94fd259adb972d0019527b0c8d2e4cc7f994234160fd8948f9a34971942c590e"
+fingerprint: "sha256:91e7ecb159a19d89517b0c2d906bb4aa79019fba4f5fcfb7e68d736e34ef2006"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -51,5 +51,6 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/watch` | task | 快照优先的有界 Task watch，支持可选 resume_from。 |
 | `GET` | `/task/resource/v1/projection` | task | Task 绑定的 Memory/Skill 资源投影（需要 task_ref）；经 `/task/resource/` 前缀重写复用共享 resource 处理器。 |
 | `GET` | `/task/resource/v1/watch` | task | Task 绑定的资源 watch，经同一前缀重写提供。 |
+| `GET` | `/task/resource/v1/consumption` | task | 返回一个 task_ref 上最新的 daemon 写入脱敏 Memory/Skill 消费钉；query_text 与 skill_binding_id 视为重述并拒绝。 |
 | `POST` | `/task/resource/v1/consumption` | task | 记录绑定当前权威事实的 Task trace Memory/Skill 消费。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

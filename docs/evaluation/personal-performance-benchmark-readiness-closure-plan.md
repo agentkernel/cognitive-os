@@ -112,7 +112,7 @@ informative work-package ID：
 |---|---|---|
 | BR-01 | P2-T21 | done |
 | BR-02 | P2-T22 | done |
-| BR-03 | P2-T23 | not-started |
+| BR-03 | P2-T23 | in-progress |
 | BR-04 | P2-T24 | not-started |
 | BR-05 | P2-T25 | not-started |
 | BR-06 | P2-T26 | not-started |

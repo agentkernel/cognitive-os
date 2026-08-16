@@ -667,6 +667,16 @@ fn dispatch_http_route(
             "management",
         );
     }
+    if method_path.starts_with("GET /task/resource/v1/consumption") {
+        return handle_task_consumption_query_route(
+            stream,
+            &method_path,
+            headers,
+            authority,
+            authority_store,
+            resource_api,
+        );
+    }
     if method_path.starts_with("POST /task/resource/v1/consumption") {
         return handle_task_consumption_route(
             stream,
@@ -983,6 +993,46 @@ fn handle_task_resource_route(
         .lock()
         .map_err(|_| "resource projection lock poisoned".to_owned())?
         .handle_task(&method_path.replacen("/task/resource/", "/resource/", 1));
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_task_consumption_query_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+    resource_api: &Arc<Mutex<ResourceApi>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    let response = resource_api
+        .lock()
+        .map_err(|_| "resource projection lock poisoned".to_owned())?
+        .handle_task_consumption_query(method_path, authority_store.as_ref());
     write_response(
         stream,
         response.status,

@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:99648a9b7c58df9ecbdfa4ade291739da4362d513ab583e39736454e9de6dcbc"
+fingerprint: "sha256:3d8e78c2d0a1aeb0ec5881c93eb1268a3e99b335dd2f5077a6d3a661a0b57dad"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -65,6 +65,10 @@ management Resource 表面提供只读生命周期前置条件、封存 Context 
 Memory remember/review/forget，以及 Skill import/inspect/bind/supersede/revoke。
 变更必须持有 management bearer；task bearer 在进入 handler 前失败。创建成功使用
 HTTP 状态 `201`，持久行在重启后仍可检查。
+task 通道通过 `GET /task/resource/v1/consumption?task_ref=…` 读取 daemon 写入的
+最新 Memory/Skill 消费记录：只返回精确钉、session 关联和 `reuse_of`。
+`query_text` 与 `skill_binding_id` 视为用户重述并被拒绝。遗忘、撤销或 digest
+漂移的钉在响应前失败闭合，且绝不返回 Memory/Skill 正文。
 
 ## 投影
 

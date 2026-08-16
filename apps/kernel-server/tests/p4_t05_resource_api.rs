@@ -328,6 +328,34 @@ fn task_projection_requires_task_reference_and_management_cannot_cross_task_boun
     );
     assert!(unknown_task_consumption.contains("RESOURCE_TASK_NOT_FOUND"));
 
+    let missing_get = get(port, "/task/resource/v1/consumption", &task_token);
+    assert!(missing_get.contains("400 Bad Request"), "{missing_get}");
+    assert!(missing_get.contains("RESOURCE_TASK_REFERENCE_REQUIRED"));
+
+    let restated_get = get(
+        port,
+        "/task/resource/v1/consumption?task_ref=task://local/missing&query_text=restated",
+        &task_token,
+    );
+    assert!(restated_get.contains("400 Bad Request"), "{restated_get}");
+    assert!(restated_get.contains("RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN"));
+
+    let management_get = get(
+        port,
+        "/task/resource/v1/consumption?task_ref=task://local/missing",
+        &management_token,
+    );
+    assert!(management_get.contains("403 Forbidden"), "{management_get}");
+    assert!(management_get.contains("SHELL_CHANNEL_BINDING_MISMATCH"));
+
+    let unknown_get = get(
+        port,
+        "/task/resource/v1/consumption?task_ref=task://local/missing",
+        &task_token,
+    );
+    assert!(unknown_get.contains("404 Not Found"), "{unknown_get}");
+    assert!(unknown_get.contains("RESOURCE_TASK_NOT_FOUND"));
+
     daemon.kill().unwrap();
     daemon.wait().unwrap();
     let _ = std::fs::remove_dir_all(runtime_root);

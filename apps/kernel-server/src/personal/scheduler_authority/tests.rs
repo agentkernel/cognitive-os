@@ -92,6 +92,7 @@ use crate::personal::registered_check::{
     REGISTERED_CHECK_VERIFIER_REF, RepairCorpusFamily, broken_source_bytes, repaired_source_bytes,
     reset_broken_repair_corpus,
 };
+use crate::personal::resource_api::ResourceApi;
 use crate::personal::tool_executor::{
     ASSEMBLED_EXECUTOR_FAMILIES, NativeToolExecutionError, ProductionNativeToolExecutorRouter,
     workspace_image_digest,
@@ -973,6 +974,357 @@ fn session_two_reuses_durable_pins_without_restating_memory_or_skill() {
 
     drop(store);
     std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn public_memory_skill_lifecycle_then_task_consumption_does_not_require_query_restatement() {
+    use cognitive_kernel::memory_skill_consumption::MemorySkillConsumptionStore;
+
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+    let task_ref = "task://tenant-a/p2-t23-public-consumption";
+    let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+    let api = ResourceApi::new();
+    let remembered_body = "owner remembered procedure for session two";
+    let (memory_id, binding_id, source_id) = public_remember_and_bind(
+        &api,
+        &store,
+        &context_command,
+        task_ref,
+        object_id(1500),
+        object_id(1501),
+        object_id(1503),
+        object_id(1504),
+        object_id(1505),
+        remembered_body,
+        "workspace://tenant-a/project/alpha",
+    );
+
+    let review = api.handle_authority(
+        &format!("GET /management/resource/v1/memory/object?id={memory_id}"),
+        &store,
+    );
+    assert_eq!(review.status, 200, "{}", review.body);
+    assert!(
+        review.body.contains(remembered_body),
+        "review is the management inspect of the admitted object, got {}",
+        review.body
+    );
+
+    let inspect = api.handle_authority(
+        &format!("GET /management/resource/v1/skill/binding/explain?id={binding_id}"),
+        &store,
+    );
+    assert_eq!(inspect.status, 200, "{}", inspect.body);
+
+    let before = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(before.status, 404, "{}", before.body);
+    assert!(
+        before.body.contains("RESOURCE_CONSUMPTION_NOT_FOUND"),
+        "{}",
+        before.body
+    );
+
+    let restated = api.handle_task_consumption_query(
+        &format!(
+            "GET /task/resource/v1/consumption?task_ref={task_ref}&query_text=owner+remembered+procedure"
+        ),
+        &store,
+    );
+    assert_eq!(restated.status, 400, "{}", restated.body);
+    assert!(
+        restated
+            .body
+            .contains("RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN"),
+        "{}",
+        restated.body
+    );
+
+    let resolved = super::resolve_authorized_task_context(&store, &context_command).unwrap();
+    assert!(
+        resolved
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == memory_id),
+        "public remember must reach the governed Context path"
+    );
+    assert!(
+        resolved
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == binding_id),
+        "public bind must reach the governed Context path"
+    );
+
+    let consumption = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(consumption.status, 200, "{}", consumption.body);
+    let document: serde_json::Value = serde_json::from_str(&consumption.body).unwrap();
+    assert_eq!(document["decision_class"], "authorized_exact_pin");
+    assert_eq!(document["memory"][0]["memory_id"], memory_id);
+    assert_eq!(document["memory"][0]["source_id"], source_id);
+    assert_eq!(document["skill"][0]["binding_id"], binding_id);
+    assert!(
+        document.get("canonical_json").is_none(),
+        "redacted consumption must not return the durable canonical payload"
+    );
+    assert!(
+        !consumption.body.contains(remembered_body),
+        "redacted consumption must not return Memory body: {}",
+        consumption.body
+    );
+    assert!(
+        !consumption.body.contains("只能使用守护进程批准的技能内容")
+            && !consumption
+                .body
+                .contains("use only the reviewed public skill"),
+        "redacted consumption must not return Skill instructions: {}",
+        consumption.body
+    );
+
+    let latest = store
+        .load_latest_memory_skill_consumption(task_ref, 1, &context_command.request_id)
+        .unwrap()
+        .unwrap();
+    assert!(latest.reuse_of.is_none());
+    assert_eq!(latest.session_ref, "conversation://tenant-a/one");
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn public_consumption_rejects_cross_scope_forgotten_and_revoked_before_rank() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+    let task_ref = "task://tenant-a/p2-t23-pre-rank-negatives";
+    let (context_command, _) = append_context_race_fixture(&store, task_ref, None);
+    let api = ResourceApi::new();
+    let (memory_id, binding_id, _) = public_remember_and_bind(
+        &api,
+        &store,
+        &context_command,
+        task_ref,
+        object_id(1600),
+        object_id(1601),
+        object_id(1603),
+        object_id(1604),
+        object_id(1605),
+        "authorized procedure text",
+        "workspace://tenant-a/project/alpha",
+    );
+    let foreign_scope = "workspace://tenant-b/other";
+    let _ = public_remember_and_bind(
+        &api,
+        &store,
+        &context_command,
+        "task://tenant-b/foreign",
+        object_id(1610),
+        object_id(1611),
+        object_id(1613),
+        object_id(1614),
+        object_id(1615),
+        "cross-scope secret procedure",
+        foreign_scope,
+    );
+
+    let resolved = super::resolve_authorized_task_context(&store, &context_command).unwrap();
+    assert!(
+        resolved
+            .loaded
+            .iter()
+            .any(|item| item.object_ref == memory_id)
+    );
+    assert!(
+        !resolved.loaded.iter().any(|item| item
+            .body
+            .to_string()
+            .contains("cross-scope secret procedure")),
+        "cross-scope Memory must not reach ranking or body load"
+    );
+
+    let first = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(first.status, 200, "{}", first.body);
+    assert!(
+        !first.body.contains("cross-scope secret procedure"),
+        "{}",
+        first.body
+    );
+
+    let forget = api.handle_authority_or_mutation(
+        "POST /management/resource/v1/memory/forget",
+        json!({"memory_id": memory_id, "reason": "owner forgot the public fact"})
+            .to_string()
+            .as_bytes(),
+        &store,
+    );
+    assert_eq!(forget.status, 201, "{}", forget.body);
+    let forgotten_resolve = super::resolve_authorized_task_context(&store, &context_command).err();
+    assert!(
+        matches!(
+            forgotten_resolve,
+            Some(SchedulerAuthorityError::ContextAuthorizationUnavailable(ref detail))
+                if detail.contains("forgotten")
+        ),
+        "forgotten public Memory must fail before reuse, got {forgotten_resolve:?}"
+    );
+    let forgotten_get = api.handle_task_consumption_query(
+        &format!("GET /task/resource/v1/consumption?task_ref={task_ref}"),
+        &store,
+    );
+    assert_eq!(forgotten_get.status, 409, "{}", forgotten_get.body);
+    assert!(
+        forgotten_get
+            .body
+            .contains("RESOURCE_CONSUMPTION_NOT_ELIGIBLE"),
+        "{}",
+        forgotten_get.body
+    );
+    assert!(
+        !forgotten_get.body.contains(&memory_id),
+        "forgotten exposure must not return Memory pins: {}",
+        forgotten_get.body
+    );
+
+    let revoke = api.handle_authority_or_mutation(
+        "POST /management/resource/v1/skill/binding/revoke",
+        json!({
+            "revocation_id": object_id(1606).to_string(),
+            "binding_id": binding_id,
+            "reason": "owner revoked the public binding"
+        })
+        .to_string()
+        .as_bytes(),
+        &store,
+    );
+    assert_eq!(revoke.status, 201, "{}", revoke.body);
+
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[allow(clippy::too_many_arguments)]
+fn public_remember_and_bind(
+    api: &ResourceApi,
+    store: &SqliteAuthorityStore,
+    context_command: &ContextResolutionCommand,
+    target_task: &str,
+    source_id: ObjectId,
+    candidate_id: ObjectId,
+    package_id: ObjectId,
+    revision_id: ObjectId,
+    binding_id: ObjectId,
+    body_text: &str,
+    governance_scope: &str,
+) -> (String, String, String) {
+    let issued_at = WallTimestamp::parse("2026-08-16T00:00:00Z").unwrap();
+    let source_header = compose_governed_header(
+        &source_id,
+        "WorkspaceContextSource",
+        "cognitiveos.workspace-context-source/0.1",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t23-public-memory",
+        &issued_at,
+    )
+    .unwrap();
+    let (source, source_digest) = seal_governed_object_content_digest(json!({
+        "header": source_header,
+        "tenant_id": "tenant-a",
+        "owner_ref": "principal://tenant-a/daemon",
+        "resource_scope": governance_scope,
+        "conversation_ref": null,
+        "role": "working",
+        "trust_level": "verified",
+        "representation": "text",
+        "provenance_ref": format!("file://workspace/facts/{}.txt", source_id),
+        "content_bytes": body_text.len() as i64,
+        "content_tokens": 4,
+        "body": {"text": body_text},
+    }))
+    .unwrap();
+    let candidate_header = compose_governed_header(
+        &candidate_id,
+        "MemoryCandidate",
+        "cognitiveos.memory/0.1",
+        &context_governance(),
+        Vec::new(),
+        Vec::new(),
+        "p2-t23-public-candidate",
+        &issued_at,
+    )
+    .unwrap();
+    let (candidate, _) = seal_governed_object_content_digest(json!({
+        "header": candidate_header,
+        "source_id": source_id.to_string(),
+        "source_digest": source_digest,
+        "source_provenance_ref": format!("file://workspace/facts/{}.txt", source_id),
+        "governance_scope": governance_scope,
+        "target_scope": target_task,
+        "purpose": "task_execution",
+        "retention_expires_at_unix_seconds": i64::MAX,
+        "observed_at_unix_seconds": 1,
+    }))
+    .unwrap();
+    let remember = api.handle_authority_or_mutation(
+        "POST /management/resource/v1/memory/remember",
+        json!({"source": source, "candidate": candidate})
+            .to_string()
+            .as_bytes(),
+        store,
+    );
+    assert_eq!(remember.status, 201, "{}", remember.body);
+    let memory_id = serde_json::from_str::<serde_json::Value>(&remember.body).unwrap()["memory_id"]
+        .as_str()
+        .unwrap()
+        .to_owned();
+
+    let import = api.handle_authority_or_mutation(
+        "POST /management/resource/v1/skill/import",
+        json!({
+            "package_id": package_id.to_string(),
+            "revision_id": revision_id.to_string(),
+            "workspace_scope": context_command.resource_scope_prefix,
+            "local_source_path": "skills/p2-t23/SKILL.md",
+            "provenance_ref": "file://workspace/skills/p2-t23/SKILL.md",
+            "manifest_digest": format!("sha256:{}", "a".repeat(64)),
+            "content_digest": format!("sha256:{}", "b".repeat(64)),
+            "compatibility": "compatible",
+            "instructions": "use only the reviewed public skill",
+        })
+        .to_string()
+        .as_bytes(),
+        store,
+    );
+    assert_eq!(import.status, 201, "{}", import.body);
+    let bind = api.handle_authority_or_mutation(
+        "POST /management/resource/v1/skill/bind",
+        json!({
+            "binding_id": binding_id.to_string(),
+            "revision_id": revision_id.to_string(),
+            "workspace_scope": context_command.resource_scope_prefix,
+            "target_kind": "task",
+            "target_ref": target_task,
+        })
+        .to_string()
+        .as_bytes(),
+        store,
+    );
+    assert_eq!(bind.status, 201, "{}", bind.body);
+    (memory_id, binding_id.to_string(), source_id.to_string())
 }
 
 fn admit_memory_and_bind_skill(

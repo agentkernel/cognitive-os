@@ -1,0 +1,87 @@
+# P2-T23 Public Memory/Skill consumption and resume — running validation report
+
+- Task: `P2-T23`
+- Branch: `personal/P2-T23-memory-skill-consumption-resume`
+- Lease: `lease/personal/P2-T23/public-memory-skill-consumption-resume`
+- Base: `origin/main` after P2-T22 merge `03bc530d692649a00efa7918bfeadddf8ba0ebea` / PR #221
+- Change class: `implementation-only` (public redacted consumption GET and
+  failure-first public lifecycle/task-consumption tests). Mapped handbook
+  pages updated bilingually; fingerprints refreshed in the same change set.
+- Claim ceiling: implementation evidence only; hypothesis/non-claim. No Gate,
+  release, Profile, B01, EVAL, or Agent-benefit promotion.
+
+本文件是本任务唯一的增量验证报告。每个已完成单元在下一个单元开始前追加记录；已发布
+结果只通过追加的 superseding entry 更正。
+
+## 预登记验证路由
+
+- 本地 `DEV-WIN-GNU-01`：只运行 `cargo fmt --check`、静态一致性、Node、handbook、
+  docs-sync 与 diff 检查；不运行 Rust build/test/Clippy（`RUST-LINK-DEV-WIN-GNU-01`
+  已登记 exit 121 linker failure）。
+- Rust 主验证：已推送精确 revision 的 GitHub Ubuntu required CI（`verify (ubuntu-latest)`
+  workspace test + Clippy + handbook）。Windows 是
+  `not-run by owner-directed Linux-only route`。
+- `DEV-LINUX-NATIVE-01`（`wuz@192.168.1.2` / `hal9000`）：exact pushed-revision
+  worktree；只做 native build/test/clippy/fmt 验证；不触碰 `B01-Desktop-Linux-002`
+  guest / EVAL-004 campaign roots。
+- `B01-Desktop-Linux-002` guest 属于 owner-directed evaluation campaign，与本 task
+  验证无关，本任务不使用。
+
+## D01 — failure-first public lifecycle and task consumption journey
+
+### D01-DOC-01 — lease, plan, and BR-03 registration
+
+- Instrument: `docs/plan/PARALLEL-LANES.md` active table,
+  `docs/plan/PROGRESS.md` Current snapshot,
+  `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`,
+  `docs/evaluation/personal-performance-benchmark-readiness-closure-plan.md`
+- Outcome: `pass` (authored). Lease
+  `lease/personal/P2-T23/public-memory-skill-consumption-resume` claimed with
+  `P2-T23/D01`. P2-T22 flipped to merged
+  `03bc530d692649a00efa7918bfeadddf8ba0ebea` / PR #221. Layer 1
+  `88 | 75 | 1 | 1 | 11 | 13`. BR-02 `done`, BR-03 `in-progress`.
+- Disposition: opens D01; does not execute Rust tests.
+
+### D01-IMPL-01 — public redacted consumption GET
+
+- Instrument: `apps/kernel-server/src/personal/resource_api.rs`,
+  `apps/kernel-server/src/personal/server.rs`
+- Outcome: authored. `GET /task/resource/v1/consumption?task_ref=…` is a
+  task-channel read of the latest daemon-authored v24 consumption record.
+  It returns only exact Memory/Skill pins, session/`reuse_of` linkage, and
+  `authorized_exact_pin`. `query_text` and `skill_binding_id` fail closed
+  with `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Forgotten, revoked, or
+  digest-drifted pins fail closed with `RESOURCE_CONSUMPTION_NOT_ELIGIBLE`
+  before any pin is returned. Memory/Skill bodies are absent.
+- Disposition: focused tests below must prove the public lifecycle journey
+  and pre-rank negatives.
+
+### D01-TEST-01 — public lifecycle then governed consumption without restatement
+
+- Instrument:
+  `personal::scheduler_authority::tests::public_memory_skill_lifecycle_then_task_consumption_does_not_require_query_restatement`
+- Fixture: public `remember`/`review` plus `import`/`inspect`/`bind`, then
+  production `resolve_authorized_task_context`, then GET consumption.
+- Oracle: GET before resolve is `RESOURCE_CONSUMPTION_NOT_FOUND`; GET with
+  `query_text` is restatement-forbidden; after resolve GET returns the
+  remembered Memory and bound Skill pins and no body/instructions.
+- Initial status: `not-run` locally (`RUST-LINK-DEV-WIN-GNU-01`). Ubuntu
+  supporting CI is the first execution.
+
+### D01-TEST-02 — pre-rank cross-scope / forgotten / revoked negatives
+
+- Instrument:
+  `personal::scheduler_authority::tests::public_consumption_rejects_cross_scope_forgotten_and_revoked_before_rank`
+- Oracle: cross-scope remembered procedure text never appears in Context
+  bodies or GET consumption; public forget makes reuse and GET fail closed
+  without returning Memory pins; public revoke is accepted on the
+  management path.
+- Initial status: `not-run` locally.
+
+### D01-TEST-03 — HTTP channel and restatement guards
+
+- Instrument: `apps/kernel-server/tests/p4_t05_resource_api.rs`
+- Oracle: GET consumption requires a task bearer and `task_ref`; management
+  bearer is 403; `query_text` is restatement-forbidden; unknown Task is
+  `RESOURCE_TASK_NOT_FOUND`.
+- Initial status: `not-run` locally.
