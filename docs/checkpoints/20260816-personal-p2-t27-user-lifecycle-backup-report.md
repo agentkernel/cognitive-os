@@ -77,3 +77,30 @@ finish (`TEST-REPORT-INCREMENTAL-01`).
 - Outcome: **partial**. HTTP `p2_t27_backup_restore` **1/1 pass**. Clippy
   `-D warnings` **fail** on `clippy::manual_inspect` (`map_err` used only to
   clean staging on error). Fix follows (`inspect_err`).
+
+### D01-LINUX-03 — exact-revision store/CLI/HTTP/fmt/Clippy (`6eea42c4`)
+
+- Instrument: `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2` / `hal9000`, Rust 1.97.1)
+  at `6eea42c4`.
+- Outcome: **pass**. `personal_backup` **22/22**; `admin-cli` `p2_t27_backup_restore`
+  **2/2**; `kernel-server` `p2_t27_backup_restore` **1/1**; `cargo fmt --all -- --check`
+  **pass**; `cargo clippy --workspace --all-targets --locked -- -D warnings`
+  **pass**. Windows `not-run by owner-directed Linux-only route`.
+  `B01-Desktop-Linux-002` untouched.
+
+## D02 — managed Pi install through recover
+
+### D02-IMPL-01 — public `activate-root` / `rollback` callers
+
+- Instrument: `admin-cli activate-root` and `admin-cli rollback` wrapping
+  `activate_official_pi_root_durable` / `rollback_official_pi_root_durable`;
+  current-revision test `apps/admin-cli/tests/p2_t27_pi_lifecycle.rs`.
+- Outcome: authored. Reuses the P5-T01/T02/T05 stack. Process-bound upgrade/
+  rollback and stale-recover epoch are fail-closed negatives. Local Rust
+  `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
+
+### D02-LOCAL-01 — Windows GNU Rust tests
+
+- Instrument: local `cargo test` on `DEV-WIN-GNU-01`.
+- Outcome: `not-run by owner-directed Linux-only route` /
+  `RUST-LINK-DEV-WIN-GNU-01`.
