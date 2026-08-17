@@ -583,12 +583,32 @@ ceiling, not a remaining-cell mutex). No product code was added.
 | B5 24 h | **conditional; default `not-run`** | Only if 8 h has an unresolved slope **and** owner budget |
 | B6 optimization replay | **`not-run`** | Not this campaign |
 
+## B5 8 h soak (2026-08-17) — pass
+
+Instrument `b5_8h.py`
+`sha256:f51eee640f426c7d200b1565786dd46817485c95d83956520b0cad5a60d248af`.
+480 one-minute blocks, each 20 health + six resource projections + one
+bounded watch: **12 960 started, 12 960 retained, 0 non-OK**. Elapsed
+28 740.1 s. **7/7 hourly restarts** at minutes 60,120,180,240,300,360,420
+(instrument has no restart at minute 0 or 480); **0 lock residue**, all
+seven `health_after=200`. Restart pids 244104, 246156, 248280, 250249,
+252676, 254823, **256919**. RSS 10 280 kB → 10 260 kB (**−20 kB / 8 h**). No
+unresolved leak slope. Paired 10-minute soak blocks **`not-run`** (B1/B2
+already consumed the confirmatory Provider denominator). Evidence jsonl
+`sha256:5329cd28e6aa6ecd1545fa5ae09d74c2f17dd1bd096ece5a9efb975642db707e`;
+summary
+`sha256:c9192e1601950b219ea68c67a0cd2a99dc7d5a54715a80c46affe8203c15b076`.
+Redactor after cell: `evidence/` 29 files `key_shaped_hits=0`; `runtime/` 8
+files `key_shaped_hits=0`. Listeners `48181`/`48284`/`48383` and broker
+`48386` pid 201300 untouched. Soak pid 241537 exited after `CELL_DONE b5-8h`.
+
+`B5` 24 h is **`not-run`**: the 8 h slope is resolved (RSS declined) and
+there is no owner budget instruction to extend.
+
 ## Unique next action
 
-Do **not** stop B5 8 h pid **241537**, campaign daemon `127.0.0.1:48286`, or
-broker `127.0.0.1:48386`. Wait for `CELL_DONE b5-8h` in `evidence/b5-8h.log`
-(480 minutes, hourly restart at minutes 60,120,…,420). Then, without
-touching `48181`/`48284`/`48383` or SecretStore `/12` until cleanup: UJ4
-(30 admissions) + UJ3 task-watch 20, T2 lifecycle smoke, UJ2 cold stratum
-with `--bind 127.0.0.1:48286`, UJ6 register, cleanup + secret scan, final
-assessment. Claim ceiling `hypothesis`.
+Execute UJ4 (30 frozen read-only admissions) and the missing UJ3 task-bound
+watches (N=20), then T2 lifecycle smoke, then UJ2 cold stratum with
+`--bind 127.0.0.1:48286`. Do not bind or stop `48181`/`48284`/`48383`. Do
+not clear SecretStore `/12` until final cleanup. Claim ceiling `hypothesis`.
+
