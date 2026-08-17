@@ -287,14 +287,16 @@ impl PrivatePiCandidateProcess {
             .map_err(|_| "private Pi adapter stdout could not be read".to_owned())?;
         let stderr_output = stderr_reader.join().unwrap_or_else(|_| Vec::new());
         if let Some(error) = termination_error {
-            let _ = socket.finish();
+            drop(socket);
             return Err(error);
         }
         let exit_status = exit_status.ok_or_else(|| {
             "private Pi candidate adapter exited without a final status".to_owned()
         })?;
         if !exit_status.success() {
-            let _ = socket.finish();
+            // The adapter never connected; do not wait out the completion
+            // listener deadline before the skip class becomes a public fact.
+            drop(socket);
             return Err(adapter_rejection_message(&stderr_output));
         }
         if output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT
