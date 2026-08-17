@@ -52,7 +52,13 @@ tests hid this by injecting facts and leaving Loop at `DECIDE`.
 - Ubuntu supporting CI run `32019929603` `verify (ubuntu-latest)`: **fail** —
   Clippy `-D warnings` `too_many_arguments` on
   `LoopDriver::advance_start_to_decide_after_context_view` (8/7). Fix: same
-  `#[allow(clippy::too_many_arguments)]` used by sibling LoopDriver methods.
+  `#[allow(clippy::too_many_arguments)]` used by sibling LoopDriver methods
+  at `85d6a2bb89136c6907f3c260740af9032ddc88b7`.
+- Ubuntu supporting CI run `32020479890` at `85d6a2bb`: `verify (ubuntu-latest)`
+  **pass**; `verify (windows-latest)` **pass**; `required-ci` **pass**. Windows
+  GitHub MSVC is the workflow job; extra native GNU remains `not-run by
+  owner-directed Linux-only route`.
+
 
 
 
@@ -63,5 +69,23 @@ tests hid this by injecting facts and leaving Loop at `DECIDE`.
 - Expected: tick 1 spawns Pi (`calls >= 1`), Task stays `DRAFT`, `lease_owner`
   None, `attempt_count` 0; tick 2 acquires a lease, Task leaves `DRAFT`, Effect
   `RECONCILED`.
-- Outcome: **not-run** (`RUST-LINK-DEV-WIN-GNU-01`); routed to Ubuntu supporting
-  CI and exact-revision `DEV-LINUX-NATIVE-01`.
+- Outcome: **pass** on exact `85d6a2bb89136c6907f3c260740af9032ddc88b7`
+  `DEV-LINUX-NATIVE-01`:
+  `personal::scheduler_authority::tests::public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`
+  **ok** (1 passed / 336 filtered on the focused filter; full kernel-server bin
+  337/337). Tick 1 spawns Pi and leaves DRAFT; tick 2 acquires the lease.
+
+## D03 — exact-revision `DEV-LINUX-NATIVE-01` (`85d6a2bb`)
+
+- Host: `wuz@192.168.1.2` (`hal9000`), rustc 1.97.1.
+- Worktree: `/home/wuz/agent-kernel-worktrees/p2-t30-590e41bb` at exact
+  `85d6a2bb89136c6907f3c260740af9032ddc88b7`.
+- Focused `public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`:
+  **pass**.
+- `cargo test --locked -p kernel-server --bins`: **pass** 337/337.
+- `cargo test --workspace --locked`: **pass**, 0 failed.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings`: **pass**.
+- `cargo fmt --all -- --check`: **pass**.
+- Ubuntu/Windows/`required-ci` run `32020479890`: **pass**.
+- `B01-Desktop-Linux-002` untouched.
+
