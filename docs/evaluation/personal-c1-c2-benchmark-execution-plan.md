@@ -1,7 +1,7 @@
 # CognitiveOS Personal C1/C2 governed-task benchmark addendum
 
 - Campaign: `PERSONAL-PERF-EVAL-004`
-- Status: **preregistered; 2026-08-16 re-freeze at `main@1e71344a`; B0 not started on the new freeze**
+- Status: **closed 2026-08-17** after remaining required cells. B0/B1/B2 C0 pass; C1/C2 workspace bytes frozen, paired adapter `not-run` after public-path re-check; UJ2 cold 10/10 retained; MS-AUTH Skill 10/10, Memory sealed-header `not-run`; B3 executable faults 10/10, stale `not-run`. Reviewer `not_reviewed`. Final: [personal-performance-assessment-20260817-full-os-only.md](personal-performance-assessment-20260817-full-os-only.md)
 - Full OS-only scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](personal-performance-benchmark-full-os-only-addendum.md)
 - Parent execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Scope: this document defines C1/C2 execution. The owner-authorized full
