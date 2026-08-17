@@ -5,7 +5,13 @@
 //! `DeterministicProductionChainProposer` fixture. This test drives the public
 //! HTTP path against a spawned Personal daemon, installs a Unix stub private-
 //! candidate adapter (not bash/edit/write), and retains scheduler stderr.
-#![allow(dead_code, clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![allow(
+    dead_code,
+    unused_imports,
+    clippy::unwrap_used,
+    clippy::expect_used,
+    clippy::panic
+)]
 
 mod common;
 

@@ -5,7 +5,7 @@
 - Lease: `lease/personal/P2-T31/live-daemon-scheduler-lease`
 - Change class: `implementation-only`
 - Claim ceiling: `hypothesis` / non-claim
-- Document status: D01 pass (failure-first); D02 pass on linux-002 at `5d073398`; D03 in progress
+- Document status: D03 in progress; Windows unused-import fix pending CI
 
 Owner 2026-08-17 after `PERSONAL-PERF-EVAL-006` close. EVAL-006 B0 on
 `main@103fe776` admitted `task://local/eval006-b0-C1-search-b0-0-071b35428873`
@@ -29,10 +29,13 @@ selected-model); the focused test installs a stub adapter (not bash/edit/write).
 |---|---|---|
 | D01 live-daemon HTTP admit skip | **pass** (failure-first) | linux-002 at `ee353679`: Task stayed DRAFT, `lease_acquired` 0, empty skip lines — first tick blocked ~65 s on unused Provider completion socket |
 | D02 shared store + stdout stub + first-dispatch retry | **pass** | linux-002 at `5d073398`: focused `p2_t31_live_daemon_scheduler` 1/1 in 3.20s — left DRAFT, `lease_acquired` ≥ 1 |
-| D03 `cargo fmt --all -- --check` | **pass** | linux-002 at `5d073398` |
-| Ubuntu supporting CI | `not-run` | after `5d073398` push |
+| D03 `cargo fmt --all -- --check` | **pass** | linux-002 at `63ab512a` (also `5d073398`) |
 | D03 workspace tests | **pass** | linux-002 at `5d073398`: 0 failed |
-| D03 Clippy `-D warnings` | **fail** | `clippy::collapsible_if` in `pi_runtime.rs` stdout-stub parse; fix in next commit |
+| D03 Clippy `-D warnings` | **pass** | linux-002 at `63ab512a` |
+| D03 kernel-server `--bins` | **pass** | linux-002 at `63ab512a`: 337/337 |
+| D03 focused live HTTP | **pass** | linux-002 at `63ab512a`: 1/1 in 3.20s |
+| Ubuntu CI | **pass** | run `32037708477` verify ubuntu-latest at `63ab512a` |
+| Windows MSVC CI | **fail** | unused imports in the `cfg(not(unix))` placeholder test; fix this commit |
 | Windows GNU cargo | `not-run` | `RUST-LINK-DEV-WIN-GNU-01`; live test `cfg(unix)`; extra native GNU not-run by Linux-only route |
 
 No Gate, release, Profile, B01, EVAL, or Agent-benefit claim.
