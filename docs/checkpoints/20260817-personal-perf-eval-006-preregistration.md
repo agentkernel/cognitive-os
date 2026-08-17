@@ -53,9 +53,9 @@ incident) if that item is still in use.
 | New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/15` (not `/12`/`/13`/`/14`). D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup`. See § SecretStore import |
 | Local Pi `0.81.1` pin | **pass** | guest-local npm pack+install under the new root; `--extension` absolute path only. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true`. See § Pi pin |
 | Exact-source `pi-agent-adapter` | **pass** | same extracted `103fe776` archive; host release build copied to guest. See § Adapter freeze |
-| C1/C2 paired B0 | `not-run` | freeze complete; next cell |
-| C1/C2 paired B1/B2 | `not-run` | after B0 |
-| Cleanup / campaign close | `not-run` | stop 48290/48390; clear the new SecretStore item without search/lookup; leave 48181/48284/48383 and EVAL-004/005 roots untouched |
+| C1/C2 paired B0 | **partial** | one O-arm C1-search sample retained; skip class `scheduler_row_skip_before_lease`; P-arm not started. See running report |
+| C1/C2 paired B1/B2 | `not-run` | B0 path/fairness incomplete |
+| Cleanup / campaign close | **pass** | daemon 48290 already stopped; broker 48390 absent; SecretStore `/15` cleared without search/lookup; leave 48181/48284/48383 and EVAL-004/005 roots untouched |
 
 ## Source archive (2026-08-17)
 
@@ -191,10 +191,13 @@ only — no conversation, Task, Tool, Effect, or sample until B0.
 
 ## Unique next action
 
-Run C1/C2 paired **B0** against this freeze (`retry=0`). Do not patch
-product code. Do not reuse EVAL-004/005 roots/ports or SecretStore
-`/12`/`/13`/`/14`. Never `secret-tool search`/`lookup`. Rotate the
-Provider key exposed earlier by EVAL-004 `secret-tool search`.
+**Campaign closed 2026-08-17** after owner-authorized measurement closure.
+Retain the started C1-search sample. Do not reopen B1/B2 on this freeze.
+Do not reuse EVAL-004, EVAL-005, or EVAL-006 roots/ports or SecretStore
+`/12`/`/13`/`/14`/`/15`. Never `secret-tool search`/`lookup`. Evaluation
+routing is OFF. The live-daemon scheduler skip is a product mutex for a
+new formal P2 task after this close (do not collide with P2-T29/T30).
+Rotate the Provider key exposed earlier by EVAL-004 `secret-tool search`.
 
 ## Non-claims
 
