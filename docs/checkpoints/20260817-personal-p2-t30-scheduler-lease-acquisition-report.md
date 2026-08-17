@@ -89,3 +89,23 @@ tests hid this by injecting facts and leaving Loop at `DECIDE`.
 - Ubuntu/Windows/`required-ci` run `32020479890`: **pass**.
 - `B01-Desktop-Linux-002` untouched.
 
+## Closure
+
+- Merged PR [#233](https://github.com/agentkernel/cognitive-os/pull/233) at
+  `main@b13655b9091174d6fbfb774159e68b43ea60b0cc`.
+- Lease `lease/personal/P2-T30/scheduler-lease-acquisition` closed 2026-08-17.
+- Claim ceiling remains hypothesis/non-claim. No Gate, release, Profile, B01,
+  EVAL, or Agent-benefit promotion.
+
+## Acceptance map (product task; not EVAL)
+
+| Acceptance | Evidence |
+|---|---|
+| Public admit persists owner-local Context authorization and tenant `personal` revocation | `persist_owner_local_context_authorization`; 409 on conflicting scope |
+| First tick walks Loop START→DECIDE then private-candidate Pi; Task stays DRAFT | linux-002 focused test tick 1: `calls >= 1`, `lease_owner` None, state DRAFT |
+| Later tick acquires a scheduler lease and leaves DRAFT | linux-002 focused test tick 2: `attempt_count >= 1`, Task not DRAFT, Effect RECONCILED |
+| Ubuntu supporting CI + exact-revision linux-002 | CI `32020479890` pass; linux-002 bin 337/337, workspace 0-failed, Clippy, fmt |
+| Windows | `not-run by owner-directed Linux-only route` for extra native GNU; GitHub `windows-latest` is the workflow job |
+| No Gate/release/Profile/B01/EVAL/Agent-benefit promotion | claim ceiling hypothesis/non-claim |
+
+
