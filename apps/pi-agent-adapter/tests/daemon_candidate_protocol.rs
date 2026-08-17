@@ -98,10 +98,7 @@ fn daemon_candidate_response_rejects_non_positive_state_version() {
 fn daemon_candidate_response_rejects_non_sha256_parameters_digest() {
     let response = String::from_utf8(valid_response_json())
         .expect("response is UTF-8")
-        .replace(
-            &format!("sha256:{}", "a".repeat(64)),
-            "sha256:parameters",
-        );
+        .replace(&format!("sha256:{}", "a".repeat(64)), "sha256:parameters");
 
     let error = parse_daemon_candidate_response(response.as_bytes()).expect_err("reject digest");
 

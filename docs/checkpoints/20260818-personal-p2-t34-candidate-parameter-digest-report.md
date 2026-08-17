@@ -16,7 +16,7 @@ that freeze.
 | Unit | Status | Note |
 |---|---|---|
 | EVAL-010 remains closed | **pass** | do not reuse `48298` / `/19` / `perfeval010-20260818` runtime |
-| Adapter JSON-fallback digest tests | `not-run` | linux-002 `cargo test -p pi-agent-adapter` |
+| Adapter JSON-fallback digest tests | **pass** | linux-002 at `936333ab`: `cargo test -p pi-agent-adapter --locked` including `rejects_non_sha256` and `recomputes_digest`; Clippy `-p pi-agent-adapter --all-targets -D warnings` **pass**. fmt fix follows |
 | Ubuntu required CI | `not-run` | after push |
 | Windows required CI | `not-run by owner-directed Linux-only route` | merge-only |
 

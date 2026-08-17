@@ -132,7 +132,7 @@ synchronization is now an enforced pre-commit/pre-push/pre-merge obligation.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
-| `P2-T34/D01` | `in-progress` | adapter JSON-fallback digest tests written; linux-002 `not-run` | exact-revision `cargo test -p pi-agent-adapter` on linux-002 |
+| `P2-T34/D01` | `in-progress` | linux-002 at `936333ab`: adapter tests pass (new digest negatives); Clippy `-D warnings`. fmt rustfmt one-liner pending | commit fmt; then D02 |
 | `P2-T34/D02` | `ready` | JSON-fallback with valid parameters overwrites a garbage digest | after D01 linux-002 pass |
 | `P2-T34/D03` | `ready` | linux-002 matrix + Ubuntu CI + handbook sync | after D02 |
 | `P2-T33/D01` | `done` | linux-002 at `289eebad`: focused `p2_t33` 2/2, socket-bind + redact + role/content + tools-strip units, Clippy `-D warnings` for kernel-server/adapter/admin-cli, fmt. Ubuntu `32063236152` `verify (ubuntu-latest)` **pass**. | consumed by D02 |
