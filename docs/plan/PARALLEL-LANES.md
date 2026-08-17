@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/EVAL-005/c1-c2-paired-freeze` | `PERSONAL-PERF-EVAL-005` C1/C2 paired freeze after P2-T29; no formal task/slice | Lane-DOC (measurement-only) | `evaluation/EVAL-005-freeze` | `docs/evaluation/`; `docs/checkpoints/20260817-personal-perf-eval-005-preregistration.md`; `docs/plan/PROGRESS.md` | cursor-grok-4.6 / 2026-08-17 owner C1/C2 freeze | 2026-08-17 / 2026-08-17 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
