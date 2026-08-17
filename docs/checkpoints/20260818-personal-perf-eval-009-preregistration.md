@@ -11,7 +11,8 @@
   `hal9000`) ProxyJump `hal9001@192.168.123.160`
 - Claim ceiling: `hypothesis` / non-claim
 - Independent reviewer: `not_reviewed`
-- Product code changes: none permitted (measurement-only)
+- Product code changes: none permitted on this freeze (measurement-only).
+  Owner later authorized product work in a separate task after close.
 
 This is a **new freeze**. It does not reopen EVAL-008 / EVAL-007 / PR #238 /
 PR #239. It does not reuse EVAL-004/005/006/007/008 campaign roots, loopback
@@ -59,26 +60,24 @@ campaign binaries may resolve only glibc/`libgcc`/`libm`.
 |---|---|---|
 | EVAL-008 remains closed | **pass** | do not reopen; do not reuse `/17` / `48294` / `perfeval008-20260818` runtime |
 | Evaluation lease claimed | **pass** | this document + Current snapshot row `PERSONAL-PERF-EVAL-009` **active** |
-| Product source pin | pending | `fb85cfff25d8dd9fc5e3a8743ab9fdb3b3586630` |
-| Source archive + SHA-256 | pending | reuse EVAL-008 archive digest `202384ee…` after re-hash; 0 `.git/` members |
-| New campaign root/port | pending | `/home/hal9001/e009` mode `0700`; daemon `127.0.0.1:48296` |
-| Exact-source daemon/CLI binaries | pending | same SHA-256 as EVAL-008 freeze; `ldd` glibc/`libgcc`/`libm` only |
-| Campaign daemon on `48296` | pending | public `cognitive daemon start`; `log_path` mode `0600` |
-| New SecretStore entry | pending | stdin import; D-Bus `SearchItems` paths only |
-| Local Pi `0.81.1` pin | pending | `--extension` absolute; doctor ready is **not** C1/C2 |
-| Exact-source `pi-agent-adapter` | pending | real adapter, not the P2-T32 stub |
-| `cognitive doctor` | pending | readiness only |
-| C1/C2 paired B0 | pending | C1 WorkspaceSearch O-arm first |
-| C1/C2 paired B1/B2 | pending | only after B0 path/fairness |
-| Cleanup / campaign close | pending | stop `48296`; clear this campaign SecretStore item; leave `48181`/`48284`/`48383` and EVAL-004/005/006/007/008 roots |
+| Product source pin | **pass** | `fb85cfff25d8dd9fc5e3a8743ab9fdb3b3586630` |
+| Source archive + SHA-256 | **pass** | EVAL-008 archive reused after SHA-256 match; binaries equal EVAL-008; 0 `.git/` members |
+| New campaign root/port | **pass** | `/home/hal9001/e009` mode `0700`; daemon `127.0.0.1:48296` pid 283539 |
+| Exact-source daemon/CLI binaries | **pass** | SHA-256 equal EVAL-008 (`kernel-server` `e603edab…`, `cognitive` `6917dca3…`, adapter `816856b4…`) |
+| Campaign daemon on `48296` | **pass** | public `cognitive daemon start`; `log_path` mode `0600` |
+| New SecretStore entry | **pass** | stdin import into `/org/freedesktop/secrets/collection/login/18`; D-Bus `SearchItems` paths only |
+| Local Pi `0.81.1` pin | **pass** | `--extension` absolute; doctor ready is **not** C1/C2 |
+| Exact-source `pi-agent-adapter` | **pass** | real adapter, not the P2-T32 stub |
+| `cognitive doctor` | **pass** | readiness only; not a C1/C2 Task |
+| C1/C2 paired B0 | **partial** | C1 WorkspaceSearch O-arm retained; skip `private_pi_candidate_adapter_rejected_the_request`; remaining families `not-run` |
+| C1/C2 paired B1/B2 | `not-run` | B0 path/fairness incomplete |
+| Cleanup / campaign close | **pass** | stop `48296`; clear `/18`; leave `48181`/`48284`/`48383` and EVAL-004/005/006/007/008 roots |
 
 ## Unique next action
 
-Freeze this short-root pin, then B0 C1 WorkspaceSearch O-arm. If the Task
-leaves `DRAFT` with `lease_acquired` ≥ 1, continue remaining C1/C2 families
-then P-arm. If the same skip class returns, retain the sample and do not
-open Provider spend. Never `secret-tool search`/`lookup`. Do not patch
-product code in this campaign.
+None for this campaign — closed 2026-08-18. Do not reopen. Do not reuse
+`e009` / `48296` / `/18`. Product follow-up is a separate owner-directed
+task after this close; this freeze must not be patched.
 
 ## Non-claims
 
