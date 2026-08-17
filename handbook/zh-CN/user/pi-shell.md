@@ -11,6 +11,7 @@ sources:
   - path: packages/pi-cognitiveos/src/daemon-provider.ts
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: packages/pi-cognitiveos/src/tool-policy.ts
+  - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/admin-cli/src/personal_cli/pi.rs
 tests:
   - packages/pi-cognitiveos/src/extension.test.ts
@@ -19,7 +20,8 @@ tests:
   - packages/pi-cognitiveos/src/safety.test.ts
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:2265d105416fb0fd987071a03bd04074bdda22072d892315bae21af296d2fe20"
+  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:623805d73debc335711ce49761f66d37ddcd0e66c8de2da1f57171ce3f8fe652"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -87,5 +89,9 @@ CognitiveOS state/runtime/config 目录内的路径一律拒绝。阶段计时�
 在 shell 之外，daemon 还把 Pi 作为受治理 agent 管理（获取、注册、sidecar 会话），并
 能启动一个高度受限的 Pi 子进程经一次性私有 socket 产出 **candidate**——该路径禁用工
 具、skill、会话与除钉住 candidate 扩展外的一切扩展。测试 stub 可在 stdout 发出同一未
-信任 candidate 而不使用 Provider completion socket。见
+信任 candidate 而不使用 Provider completion socket。completion socket 本身绑在短主机
+路径下（`$XDG_RUNTIME_DIR/cognitiveos/pc-<pid>-<seq>.sock`，其次进程临时目录，再次
+`/tmp/cognitiveos`），因此很长的 `--runtime-root` 也不会超过 Linux `UNIX_PATH_MAX`；
+Pi 的 `--work-dir`/`--config-dir` 仍可落在 runtime root 下。适配器或 Pi 拒绝时，
+stderr 会以脱敏形式出现在 `daemon.log`。见
 [Agent 与 Pi 生命周期](../developer/agent-and-pi-lifecycle.md)。

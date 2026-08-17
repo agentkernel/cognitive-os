@@ -70,6 +70,9 @@ P2-T28 D03 精确 revision 的 `DEV-LINUX-NATIVE-01` 聚合运行命名 UJ oracl
 P2-T30 公开 admit 调度 lease 覆盖是 kernel-server 聚焦测试
 `public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`
 （仅 Linux/CI；Windows GNU `not-run`）。
+P2-T33 私有 candidate 主机路径覆盖是
+`apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs` 以及
+`provider_proxy` 的私有 candidate 单元测试（仅 Linux/CI；Windows GNU `not-run`）。
 
 ## CI 在每个 PR 上强制什么
 

@@ -44,6 +44,8 @@ use serde_json::Value;
 use super::provider_proxy::{ProviderProxyService, RustlsProviderTransport};
 
 #[cfg(unix)]
+use std::os::unix::ffi::OsStrExt;
+#[cfg(unix)]
 use std::os::unix::fs::PermissionsExt;
 #[cfg(unix)]
 use std::os::unix::net::{UnixListener, UnixStream};
@@ -79,6 +81,11 @@ const PRIVATE_COMPLETION_TIMEOUT: Duration = Duration::from_secs(65);
 const PRIVATE_ADAPTER_TIMEOUT: Duration = Duration::from_secs(70);
 #[cfg(unix)]
 static PRIVATE_SOCKET_SEQUENCE: AtomicU64 = AtomicU64::new(0);
+/// Linux `sockaddr_un.sun_path` length, including the terminating NUL.
+#[cfg(unix)]
+const UNIX_SOCKET_PATH_MAX: usize = 108;
+#[cfg(unix)]
+const ADAPTER_DIAGNOSTIC_LIMIT: usize = 360;
 
 /// Non-secret Personal Pi configuration.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -200,7 +207,7 @@ impl PrivatePiCandidateProcess {
             .ok_or_else(|| "private Pi candidate extension path is not valid UTF-8".to_owned())?;
         let mut command = Command::new(adapter_path);
         command.env_clear();
-        for key in PROBE_ENVIRONMENT_ALLOWLIST {
+        for key in CANDIDATE_ENVIRONMENT_ALLOWLIST {
             if let Some(value) = std::env::var_os(key) {
                 command.env(key, value);
             }
@@ -220,7 +227,7 @@ impl PrivatePiCandidateProcess {
             .env("COGNITIVEOS_PRIVATE_COMPLETION_SOCKET", socket_path)
             .stdin(Stdio::piped())
             .stdout(Stdio::piped())
-            .stderr(Stdio::null())
+            .stderr(Stdio::piped())
             .spawn()
             .map_err(|_| "private Pi candidate adapter invocation failed".to_owned())?;
         child
@@ -235,11 +242,22 @@ impl PrivatePiCandidateProcess {
             .take()
             .ok_or_else(|| "private Pi adapter stdout was not captured".to_owned())?
             .take((PRIVATE_PI_CANDIDATE_FRAME_LIMIT + 1) as u64);
+        let stderr = child
+            .stderr
+            .take()
+            .ok_or_else(|| "private Pi adapter stderr was not captured".to_owned())?
+            .take((ADAPTER_DIAGNOSTIC_LIMIT as u64) + 1);
         let stdout_reader = thread::spawn(move || {
             let mut output = Vec::new();
             let mut stdout = stdout;
             stdout.read_to_end(&mut output).map_err(|_| ())?;
             Ok::<_, ()>(output)
+        });
+        let stderr_reader = thread::spawn(move || {
+            let mut output = Vec::new();
+            let mut stderr = stderr;
+            let _ = stderr.read_to_end(&mut output);
+            output
         });
         // The adapter owns a shorter Pi deadline, while this outer deadline
         // ensures a broken adapter cannot strand the scheduler indefinitely.
@@ -267,6 +285,7 @@ impl PrivatePiCandidateProcess {
             .join()
             .map_err(|_| "private Pi adapter stdout reader panicked".to_owned())?
             .map_err(|_| "private Pi adapter stdout could not be read".to_owned())?;
+        let stderr_output = stderr_reader.join().unwrap_or_else(|_| Vec::new());
         if let Some(error) = termination_error {
             let _ = socket.finish();
             return Err(error);
@@ -276,7 +295,7 @@ impl PrivatePiCandidateProcess {
         })?;
         if !exit_status.success() {
             let _ = socket.finish();
-            return Err("private Pi candidate adapter rejected the request".to_owned());
+            return Err(adapter_rejection_message(&stderr_output));
         }
         if output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT
             && let Ok(parsed) = serde_json::from_slice::<PrivatePiCandidateResponse>(&output)
@@ -306,23 +325,37 @@ struct PrivateCompletionSocket {
 #[cfg(unix)]
 impl PrivateCompletionSocket {
     fn create(config_dir: &Path) -> Result<Self, String> {
+        Self::create_with_socket_parent(config_dir, &private_completion_socket_parent())
+    }
+
+    fn create_with_socket_parent(config_dir: &Path, socket_parent: &Path) -> Result<Self, String> {
         let socket_directory = config_dir.join("private-completions");
         fs::create_dir_all(&socket_directory)
             .map_err(|_| "private completion socket directory is unavailable".to_owned())?;
         fs::set_permissions(&socket_directory, fs::Permissions::from_mode(0o700)).map_err(
             |_| "private completion socket directory permissions are unavailable".to_owned(),
         )?;
-        let runtime_directory = socket_directory.join(format!(
-            "candidate-{}-{}",
-            std::process::id(),
-            PRIVATE_SOCKET_SEQUENCE.fetch_add(1, Ordering::Relaxed)
-        ));
+        let sequence = PRIVATE_SOCKET_SEQUENCE.fetch_add(1, Ordering::Relaxed);
+        let runtime_directory =
+            socket_directory.join(format!("candidate-{}-{sequence}", std::process::id(),));
         fs::create_dir(&runtime_directory)
             .map_err(|_| "private completion runtime directory could not be created".to_owned())?;
         fs::set_permissions(&runtime_directory, fs::Permissions::from_mode(0o700)).map_err(
             |_| "private completion runtime directory permissions are unavailable".to_owned(),
         )?;
-        let socket_path = runtime_directory.join("completion.sock");
+        if socket_parent == Path::new("/") || socket_parent == Path::new("/tmp") {
+            return Err("private completion socket directory is unavailable".to_owned());
+        }
+        fs::create_dir_all(socket_parent)
+            .map_err(|_| "private completion socket directory is unavailable".to_owned())?;
+        fs::set_permissions(socket_parent, fs::Permissions::from_mode(0o700)).map_err(|_| {
+            "private completion socket directory permissions are unavailable".to_owned()
+        })?;
+        let socket_path = socket_parent.join(format!("pc-{}-{sequence}.sock", std::process::id()));
+        if !unix_socket_path_fits(&socket_path) {
+            return Err("private completion socket path exceeds host limit".to_owned());
+        }
+        let _ = fs::remove_file(&socket_path);
         let listener = UnixListener::bind(&socket_path)
             .map_err(|_| "private completion socket could not be created".to_owned())?;
         fs::set_permissions(&socket_path, fs::Permissions::from_mode(0o600))
@@ -791,6 +824,118 @@ pub const PROBE_ENVIRONMENT_ALLOWLIST: [&str; 8] = [
     "WINDIR",
 ];
 
+/// Environment forwarded to the private-candidate adapter (and then to Pi).
+///
+/// This stays an allowlist: Provider keys, D-Bus, and bootstrap material are
+/// never copied. Linux entries exist so Node/Pi can locate `node`, UTF-8
+/// locale data, and TLS trust after `env_clear()`.
+#[cfg(unix)]
+const CANDIDATE_ENVIRONMENT_ALLOWLIST: [&str; 17] = [
+    "ComSpec",
+    "PATH",
+    "PATHEXT",
+    "SystemRoot",
+    "TEMP",
+    "TMP",
+    "USERPROFILE",
+    "WINDIR",
+    "HOME",
+    "USER",
+    "LOGNAME",
+    "LANG",
+    "LC_ALL",
+    "LC_CTYPE",
+    "XDG_RUNTIME_DIR",
+    "SSL_CERT_FILE",
+    "SSL_CERT_DIR",
+];
+
+#[cfg(unix)]
+fn unix_socket_path_fits(path: &Path) -> bool {
+    path.as_os_str().as_bytes().len() + 1 <= UNIX_SOCKET_PATH_MAX
+}
+
+#[cfg(unix)]
+fn private_completion_socket_parent() -> PathBuf {
+    let mut candidates = Vec::new();
+    if let Some(runtime_dir) = std::env::var_os("XDG_RUNTIME_DIR") {
+        if !runtime_dir.is_empty() {
+            candidates.push(PathBuf::from(runtime_dir));
+        }
+    }
+    candidates.push(std::env::temp_dir());
+    candidates.push(PathBuf::from("/tmp"));
+    for candidate in candidates {
+        let parent = candidate.join("cognitiveos");
+        let probe = parent.join("pc-xxxxxxxxxx-xxxxxxxxxx.sock");
+        if unix_socket_path_fits(&probe) {
+            return parent;
+        }
+    }
+    PathBuf::from("/tmp/cognitiveos")
+}
+
+#[cfg(unix)]
+fn adapter_rejection_message(stderr: &[u8]) -> String {
+    let diagnostic = redact_adapter_diagnostic(stderr);
+    if diagnostic.is_empty() {
+        "private Pi candidate adapter rejected the request".to_owned()
+    } else {
+        format!("private Pi candidate adapter rejected the request ({diagnostic})")
+    }
+}
+
+#[cfg(unix)]
+fn redact_adapter_diagnostic(raw: &[u8]) -> String {
+    let collapsed = String::from_utf8_lossy(raw)
+        .split_whitespace()
+        .take(48)
+        .collect::<Vec<_>>()
+        .join(" ");
+    let truncated: String = collapsed.chars().take(ADAPTER_DIAGNOSTIC_LIMIT).collect();
+    redact_secret_shaped_spans(&truncated)
+}
+
+fn redact_secret_shaped_spans(text: &str) -> String {
+    let mut output = String::new();
+    let mut rest = text;
+    while !rest.is_empty() {
+        let sk_at = rest.find("sk-");
+        let api_at = rest
+            .find("api_key=")
+            .into_iter()
+            .chain(rest.find("API_KEY="))
+            .chain(rest.find("token="))
+            .chain(rest.find("TOKEN="))
+            .min();
+        let next = match (sk_at, api_at) {
+            (Some(sk), Some(api)) if sk <= api => ("sk-[REDACTED]", sk, 3),
+            (Some(sk), None) => ("sk-[REDACTED]", sk, 3),
+            (None, Some(api)) => (
+                "[REDACTED]",
+                api,
+                rest[api..].find('=').map_or(0, |i| i + 1),
+            ),
+            (Some(_), Some(api)) => (
+                "[REDACTED]",
+                api,
+                rest[api..].find('=').map_or(0, |i| i + 1),
+            ),
+            (None, None) => {
+                output.push_str(rest);
+                break;
+            }
+        };
+        let (replacement, at, skip) = next;
+        output.push_str(&rest[..at]);
+        output.push_str(replacement);
+        rest = &rest[at + skip..];
+        rest = rest
+            .trim_start_matches(|ch: char| ch.is_ascii_alphanumeric() || ch == '_' || ch == '-');
+    }
+    output
+}
+
 /// Build the probe child's environment from a parent environment map.
 #[cfg(test)]
 fn probe_child_environment(parent: &BTreeMap<String, String>) -> BTreeMap<String, String> {
@@ -958,6 +1103,64 @@ mod tests {
         assert!(UnixStream::connect(&socket_path).is_err());
 
         fs::remove_dir_all(&temporary_directory).expect("remove temporary config directory");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn private_completion_socket_binds_under_host_path_limit_when_config_dir_is_long() {
+        let nested = "a".repeat(80);
+        let temporary_directory = std::env::temp_dir().join(format!(
+            "cognitiveos-p2t33-long-{}-{nested}",
+            std::process::id()
+        ));
+        fs::create_dir_all(&temporary_directory).expect("create long config directory");
+        let old_nested = temporary_directory
+            .join("private-completions")
+            .join(format!("candidate-{}-0", std::process::id()))
+            .join("completion.sock");
+        assert!(
+            old_nested.as_os_str().as_bytes().len() + 1 > UNIX_SOCKET_PATH_MAX,
+            "fixture must exceed the host Unix socket path limit"
+        );
+        let socket_parent =
+            std::env::temp_dir().join(format!("cognitiveos-p2t33-sock-{}", std::process::id()));
+        let _ = fs::remove_dir_all(&socket_parent);
+        let socket = PrivateCompletionSocket::create_with_socket_parent(
+            &temporary_directory,
+            &socket_parent,
+        )
+        .expect("long config_dir must still bind a short completion socket");
+        assert!(
+            unix_socket_path_fits(socket.path()),
+            "bound path must fit sockaddr_un: {}",
+            socket.path().display()
+        );
+        assert!(socket.path().starts_with(&socket_parent));
+        drop(socket);
+        let _ = fs::remove_dir_all(&temporary_directory);
+        let _ = fs::remove_dir_all(&socket_parent);
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn adapter_rejection_diagnostic_is_redacted_and_bounded() {
+        let diagnostic = redact_adapter_diagnostic(
+            b"daemon candidate Pi exited unsuccessfully: sk-abcdefghijklmnopqrstuvwxyz0123456789 leftover",
+        );
+        assert!(
+            diagnostic.contains("daemon candidate Pi exited unsuccessfully"),
+            "{diagnostic}"
+        );
+        assert!(diagnostic.contains("sk-[REDACTED]"), "{diagnostic}");
+        assert!(
+            !diagnostic.contains("sk-abcdefghijklmnopqrstuvwxyz0123456789"),
+            "{diagnostic}"
+        );
+        assert_eq!(
+            adapter_rejection_message(b""),
+            "private Pi candidate adapter rejected the request"
+        );
+        assert!(adapter_rejection_message(b"needle-class").contains("needle-class"));
     }
 
     #[test]

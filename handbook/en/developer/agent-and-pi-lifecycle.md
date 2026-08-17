@@ -14,6 +14,8 @@ sources:
     symbols: ["admit_pi_launch"]
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: apps/pi-agent-adapter/src/lib.rs
+  - path: apps/pi-agent-adapter/src/main.rs
+  - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
   - path: crates/cognitive-runtime/src/non_pi_agent.rs
@@ -27,7 +29,8 @@ tests:
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:dedfe44799e541e0f41bcc15f198f7e5cc5117a8bc6ba2d0a602cbfd84289ce5"
+  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:7cd4db2b29d92c50b619e64914305d1f4a1a6e7cd1e9f1dd19b52a05589c4b95"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -82,7 +85,16 @@ WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
 P2-T21 candidate path. The daemon treats the output as a candidate for
 admission — nothing more. A test stub adapter may emit that untrusted candidate
 on stdout without connecting to the Provider completion socket; the daemon still
-validates descriptor, digest, and authorization.
+validates descriptor, digest, and authorization. The completion socket is bound
+under `$XDG_RUNTIME_DIR/cognitiveos/` (then the process temp directory, then
+`/tmp/cognitiveos`) so the path fits Linux `UNIX_PATH_MAX`; this is independent
+of daemon layout fail-closed behaviour when `XDG_RUNTIME_DIR` is absent. Linux
+candidate spawn forwards a host allowlist (`HOME`, locale, `XDG_RUNTIME_DIR`,
+TLS trust files) after `env_clear()` and never copies `DBUS_SESSION_BUS_ADDRESS`
+or Provider keys. Adapter/Pi stderr is retained on `daemon.log` after
+`sk-` / `api_key=` / `token=` redaction. The private-candidate Provider proxy
+strips `tools`/`tool_choice` before forward, accepts one text choice that may
+include `role=assistant`, and refuses `tool_calls`.
 
 ## Beyond Pi
 

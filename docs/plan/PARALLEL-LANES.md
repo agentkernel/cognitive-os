@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T33/private-candidate-host-path` | P2-T33/D01 private-candidate host path and public adapter diagnosis | Lane-RUN | `personal/P2-T33-private-candidate-host-path` | `apps/kernel-server/src/personal/pi_runtime.rs`; `apps/kernel-server/src/personal/provider_proxy.rs`; `apps/pi-agent-adapter/src/main.rs`; `apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs`; `handbook/en/user/pi-shell.md`; `handbook/zh-CN/user/pi-shell.md`; `handbook/en/developer/agent-and-pi-lifecycle.md`; `handbook/zh-CN/developer/agent-and-pi-lifecycle.md`; `handbook/en/developer/daemon-and-http.md`; `handbook/zh-CN/developer/daemon-and-http.md`; `handbook/en/user/operations-and-recovery.md`; `handbook/zh-CN/user/operations-and-recovery.md`; `handbook/en/user/provider-and-secrets.md`; `handbook/zh-CN/user/provider-and-secrets.md`; `handbook/en/ai/validation-commands.md`; `handbook/zh-CN/ai/validation-commands.md`; `handbook/en/reference/http-api.md`; `handbook/zh-CN/reference/http-api.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/plan/personal-trace.yaml`; `docs/checkpoints/20260818-personal-p2-t33-private-candidate-host-path-report.md` | cursor-session / P2-T33 | 2026-08-18 / 2026-08-18 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

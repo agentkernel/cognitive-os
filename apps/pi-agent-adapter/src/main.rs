@@ -156,12 +156,18 @@ fn daemon_candidate(flags: &ParsedFlags) -> Result<Value, String> {
     let _ = close_stdin_sender.send(());
     let _ = stdin_holder.join();
     let stdout = join_child_stream(stdout_reader, "stdout")?;
-    let _stderr = join_child_stream(stderr_reader, "stderr")?;
+    let stderr = join_child_stream(stderr_reader, "stderr")?;
     if stdout.len() > DAEMON_CANDIDATE_FRAME_LIMIT {
         return Err("daemon candidate Pi stdout exceeds transport limit".to_owned());
     }
     if !exit_status.success() {
-        return Err("daemon candidate Pi exited unsuccessfully".to_owned());
+        let diagnostic = redact_child_diagnostic(&stderr);
+        if diagnostic.is_empty() {
+            return Err("daemon candidate Pi exited unsuccessfully".to_owned());
+        }
+        return Err(format!(
+            "daemon candidate Pi exited unsuccessfully: {diagnostic}"
+        ));
     }
     let response = extract_daemon_candidate_response_from_pi_events(
         std::str::from_utf8(&stdout)
@@ -417,6 +423,15 @@ fn candidate_only_command(program: &str) -> Command {
         "TMP",
         "USERPROFILE",
         "WINDIR",
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "LANG",
+        "LC_ALL",
+        "LC_CTYPE",
+        "XDG_RUNTIME_DIR",
+        "SSL_CERT_FILE",
+        "SSL_CERT_DIR",
     ] {
         if let Some(value) = env::var_os(key) {
             command.env(key, value);
@@ -429,6 +444,17 @@ fn candidate_only_command(program: &str) -> Command {
         command.env("COGNITIVEOS_PRIVATE_COMPLETION_SOCKET", socket_path);
     }
     command
+}
+
+fn redact_child_diagnostic(raw: &[u8]) -> String {
+    String::from_utf8_lossy(raw)
+        .split_whitespace()
+        .take(40)
+        .collect::<Vec<_>>()
+        .join(" ")
+        .chars()
+        .take(360)
+        .collect()
 }
 
 #[cfg(test)]

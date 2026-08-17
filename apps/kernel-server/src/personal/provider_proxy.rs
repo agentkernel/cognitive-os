@@ -114,9 +114,10 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         &self,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
-        let requested_model = validate_chat_request(request_body)?;
+        let sanitized_body = sanitize_private_candidate_request(request_body)?;
+        let requested_model = validate_chat_request(&sanitized_body)?;
         let timed_response =
-            self.forward_selected_chat_completion(requested_model, request_body)?;
+            self.forward_selected_chat_completion(requested_model, &sanitized_body)?;
         validate_private_candidate_response(&timed_response.response)?;
         Ok(timed_response.response)
     }
@@ -180,6 +181,19 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
 }
 
 #[cfg(unix)]
+fn sanitize_private_candidate_request(request_body: &[u8]) -> Result<Vec<u8>, ProviderProxyError> {
+    let mut request_json: serde_json::Value =
+        serde_json::from_slice(request_body).map_err(|_| ProviderProxyError::InvalidRequest)?;
+    if let Some(object) = request_json.as_object_mut() {
+        object.remove("tools");
+        object.remove("tool_choice");
+        object.remove("functions");
+        object.remove("function_call");
+    }
+    serde_json::to_vec(&request_json).map_err(|_| ProviderProxyError::InvalidRequest)
+}
+
+#[cfg(unix)]
 fn validate_private_candidate_response(
     response: &ProviderHttpResponse,
 ) -> Result<(), ProviderProxyError> {
@@ -194,23 +208,38 @@ fn validate_private_candidate_response(
     else {
         return Err(ProviderProxyError::UpstreamRequestFailed);
     };
-    let Some(choice) = choices.first() else {
+    if choices.len() != 1 {
+        return Err(ProviderProxyError::UpstreamRequestFailed);
+    }
+    let Some(message) = choices[0]
+        .get("message")
+        .and_then(serde_json::Value::as_object)
+    else {
         return Err(ProviderProxyError::UpstreamRequestFailed);
     };
-    if choices.len() != 1
-        || choice
-            .get("message")
-            .and_then(serde_json::Value::as_object)
-            .is_none_or(|message| {
-                message.len() != 1
-                    || !message
-                        .get("content")
-                        .is_some_and(serde_json::Value::is_string)
-            })
-    {
+    if !private_candidate_message_is_text_only(message) {
         return Err(ProviderProxyError::UpstreamRequestFailed);
     }
     Ok(())
+}
+
+#[cfg(unix)]
+fn private_candidate_message_is_text_only(
+    message: &serde_json::Map<String, serde_json::Value>,
+) -> bool {
+    if !message
+        .get("content")
+        .is_some_and(serde_json::Value::is_string)
+    {
+        return false;
+    }
+    if message.contains_key("tool_calls") || message.contains_key("function_call") {
+        return false;
+    }
+    match message.get("role") {
+        None => true,
+        Some(role) => role.as_str() == Some("assistant"),
+    }
 }
 
 fn validate_chat_request(request_body: &[u8]) -> Result<String, ProviderProxyError> {
@@ -262,9 +291,9 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    #[cfg(unix)]
-    use super::validate_private_candidate_response;
     use super::{ProviderProxyError, ProviderProxyService, validate_chat_request};
+    #[cfg(unix)]
+    use super::{sanitize_private_candidate_request, validate_private_candidate_response};
     use cognitive_secret::{
         EphemeralSecretStore, ProviderConfigRepository, ProviderHttpRequest, ProviderHttpResponse,
         ProviderKeyService, ProviderTransport, ProviderTransportError, SecretMaterial,
@@ -331,6 +360,13 @@ mod tests {
         };
         assert_eq!(validate_private_candidate_response(&valid_response), Ok(()));
 
+        let role_response = ProviderHttpResponse {
+            status: 200,
+            body: br#"{"choices":[{"index":0,"message":{"role":"assistant","content":"candidate"},"finish_reason":"stop"}]}"#
+                .to_vec(),
+        };
+        assert_eq!(validate_private_candidate_response(&role_response), Ok(()));
+
         let tool_response = ProviderHttpResponse {
             status: 200,
             body: br#"{"choices":[{"message":{"content":"candidate","tool_calls":[]}}]}"#.to_vec(),
@@ -349,6 +385,24 @@ mod tests {
             validate_private_candidate_response(&multiple_choice_response),
             Err(ProviderProxyError::UpstreamRequestFailed)
         );
+    }
+
+    #[test]
+    #[cfg(unix)]
+    fn private_candidate_request_strips_tool_surfaces_before_forwarding() {
+        let sanitized = sanitize_private_candidate_request(
+            br#"{"model":"test-model","stream":false,"messages":[],"tools":[{"type":"function"}],"tool_choice":"auto"}"#,
+        )
+        .expect("request with tools must still parse");
+        let parsed: serde_json::Value =
+            serde_json::from_slice(&sanitized).expect("sanitized request is JSON");
+        let object = parsed.as_object().expect("sanitized request is an object");
+        assert_eq!(
+            object.get("model").and_then(serde_json::Value::as_str),
+            Some("test-model")
+        );
+        assert!(!object.contains_key("tools"));
+        assert!(!object.contains_key("tool_choice"));
     }
 
     #[test]

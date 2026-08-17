@@ -11,6 +11,7 @@ sources:
   - path: packages/pi-cognitiveos/src/daemon-provider.ts
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: packages/pi-cognitiveos/src/tool-policy.ts
+  - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/admin-cli/src/personal_cli/pi.rs
 tests:
   - packages/pi-cognitiveos/src/extension.test.ts
@@ -19,7 +20,8 @@ tests:
   - packages/pi-cognitiveos/src/safety.test.ts
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:2265d105416fb0fd987071a03bd04074bdda22072d892315bae21af296d2fe20"
+  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:623805d73debc335711ce49761f66d37ddcd0e66c8de2da1f57171ce3f8fe652"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -103,5 +105,10 @@ registration, sidecar sessions) and can launch a locked-down Pi child process to
 produce **candidates** over a private one-shot socket — that path disables tools,
 skills, sessions, and extensions except the pinned candidate extension. A test
 stub may emit the same untrusted candidate on stdout without using the Provider
-completion socket. See
+completion socket. The completion socket itself is bound under a short host
+path (`$XDG_RUNTIME_DIR/cognitiveos/pc-<pid>-<seq>.sock`, then the process
+temp directory, then `/tmp/cognitiveos`) so a long `--runtime-root` cannot
+exceed Linux `UNIX_PATH_MAX`; Pi `--work-dir`/`--config-dir` may still live
+under the runtime root. Adapter and Pi stderr is a redacted `daemon.log` fact
+when the adapter rejects. See
 [Agent and Pi lifecycle](../developer/agent-and-pi-lifecycle.md).

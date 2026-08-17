@@ -54,6 +54,8 @@ non_claims:
 - 服务日志：`journalctl --user -u cognitiveos-personal.service`。CLI
   `cognitive daemon start` 还会把 kernel-server 的 stdout/stderr 追加到
   `state/cognitiveos/daemon.log`（权限 `0600`）；调度 skip 行不是公开 HTTP 事实。
+  私有 candidate 适配器拒绝时，脱敏诊断（去掉 `sk-` / `api_key=` / `token=` 片段）
+  会保留在该日志中。
 
 ## 停止、重启、过期状态 —— `implemented`
 
