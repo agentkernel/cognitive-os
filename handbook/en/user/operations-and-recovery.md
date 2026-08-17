@@ -106,7 +106,9 @@ a pin the allowlist stays empty and the request fails closed.
 
 A successful Task admission is also crash-atomic inside the authority database:
 the contract, `DRAFT` governed Task, `START` Loop, hard Budget, and runnable
-scheduler row appear together. A failure before commit leaves none of those
+scheduler row appear together. Daemon-owned Context authorization facts and the
+tenant `personal` revocation epoch are persisted immediately before that CAS as
+idempotent owner-local policy, not a client capability channel. A failure before commit leaves none of those
 admission members, while a crash after the success response reopens the complete
 publication. Startup can repair a missing legacy Task projection without
 resetting any existing lifecycle state.

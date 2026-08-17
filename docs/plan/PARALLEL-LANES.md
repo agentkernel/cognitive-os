@@ -85,8 +85,9 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P2-T30/scheduler-lease-acquisition` | P2-T30/D03 public-admit scheduler lease acquisition | Lane-RUN | `personal/P2-T30-scheduler-lease-acquisition` | `apps/kernel-server/src/personal/task_api.rs`; `apps/kernel-server/src/personal/scheduler_authority/candidate.rs`; `apps/kernel-server/src/personal/scheduler_authority/tests.rs`; `crates/cognitive-kernel/src/harness.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/personal-trace.yaml`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260817-personal-p2-t30-scheduler-lease-acquisition-report.md`; `handbook/en/developer/execution-chain-status.md`; `handbook/zh-CN/developer/execution-chain-status.md`; `handbook/en/developer/task-pipeline.md`; `handbook/zh-CN/developer/task-pipeline.md`; `handbook/en/developer/daemon-and-http.md`; `handbook/zh-CN/developer/daemon-and-http.md`; `handbook/en/developer/authority-kernel.md`; `handbook/zh-CN/developer/authority-kernel.md`; `handbook/en/developer/context-and-artifact.md`; `handbook/zh-CN/developer/context-and-artifact.md`; `handbook/en/reference/capability-status.md`; `handbook/zh-CN/reference/capability-status.md`; `handbook/en/reference/http-api.md`; `handbook/zh-CN/reference/http-api.md`; `handbook/en/reference/state-transitions.md`; `handbook/zh-CN/reference/state-transitions.md`; `handbook/en/user/operations-and-recovery.md`; `handbook/zh-CN/user/operations-and-recovery.md`; `handbook/en/ai/validation-commands.md`; `handbook/zh-CN/ai/validation-commands.md`; `handbook/en/user/tasks-and-execution.md`; `handbook/zh-CN/user/tasks-and-execution.md` | cursor-grok-4.6 / P2-T30 | 2026-08-17 / 2026-08-17 | active |
 
-No active lease. Closed historical leases are archived in
+Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
 writable ownership. Only the active table above grants write access.
 

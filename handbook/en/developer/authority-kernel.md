@@ -19,7 +19,7 @@ sources:
   - path: crates/cognitive-kernel/src/recovery.rs
     symbols: ["RECOVERY_ORDER", "run_recovery"]
   - path: crates/cognitive-kernel/src/harness.rs
-    symbols: ["return_to_decide_after_closed_effect"]
+    symbols: ["return_to_decide_after_closed_effect", "advance_start_to_decide_after_context_view"]
 contracts:
   - specs/transitions/effect.transitions.json
   - specs/transitions/task.transitions.json
@@ -29,7 +29,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:dca3ca4f431eb2ddf41af597e89cae99dd25106fdacd571968e58f0e765e3bba"
+fingerprint: "sha256:530000ebd734a26292cfa479c1a10ee2aaaff0a651e433336ac8103d26dc5047"
 non_claims:
   - Kernel correctness evidence is focused-test evidence; it is not a Gate, release, or Profile result.
 ---
@@ -103,6 +103,10 @@ A closed intermediate Effect that is not RegisteredCheckRun on a
 RegisteredCheck-terminated Task instead walks
 `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` from durable Effect and
 contract facts so the next candidate can be admitted without completing the Task.
+Public-admit Tasks start Loop at `START`; after a sealed ContextView exists,
+`LoopDriver::advance_start_to_decide_after_context_view` walks
+`START -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` before Pi. That walk is not
+Task acceptance.
 Task acceptance remains a separate authority: candidate and final acceptance
 transitions are prepared by the same deterministic engine, then SQLite
 transactionally rechecks current contract epoch, the complete closed Effect set,

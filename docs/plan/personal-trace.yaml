@@ -88,7 +88,7 @@ personal_requirements:
     statement: The Personal daemon is the sole authority writer.
     direct_registry_requirements: [REQ-AUTH-001, REQ-STATE-001, REQ-STATE-003, REQ-EVT-001]
     product_only_aspects: [daemon-process-identity, single-writer-deployment-topology]
-    tasks: [P1-T04, P2-T01, P2-T02, P2-T03, P2-T08]
+    tasks: [P1-T04, P2-T01, P2-T02, P2-T03, P2-T08, P2-T30]
     gates: [G2, B02, B05]
     evidence_status: not-run
 
@@ -113,7 +113,7 @@ personal_requirements:
     classification: direct
     statement: Every Task has scope, criteria, budgets, and retry or iteration bounds.
     direct_registry_requirements: [REQ-RUN-003, REQ-RUN-004, REQ-RUN-005, REQ-RUN-008, REQ-RES-001]
-    tasks: [P2-T01, P2-T03, P2-T04, P2-T07, P2-T08]
+    tasks: [P2-T01, P2-T03, P2-T04, P2-T07, P2-T08, P2-T30]
     gates: [G2, B04, B07]
     evidence_status: not-run
 
@@ -145,7 +145,7 @@ personal_requirements:
     classification: direct
     statement: Context is minimally sufficient, authorized before ranking, and loss is explicit.
     direct_registry_requirements: [REQ-CTX-002, REQ-CTX-003, REQ-CTX-004, REQ-CTX-005, REQ-CTX-006, REQ-CTX-007]
-    tasks: [P2-T23, P2-T26, P3-T01, P3-T02, P3-T03, P3-T04, P3-T05, P3-T06]
+    tasks: [P2-T23, P2-T26, P2-T30, P3-T01, P3-T02, P3-T03, P3-T04, P3-T05, P3-T06]
     gates: [G3, B03, B06, B07]
     evidence_status: not-run
 

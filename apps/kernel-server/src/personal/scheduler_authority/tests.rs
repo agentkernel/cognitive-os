@@ -58,13 +58,13 @@ use cognitive_kernel::intent_chain::{
 use cognitive_kernel::ports::{
     AuthorityStore, BudgetCas, CandidateAdmissionCommit, ContextAuthorizationFactStore,
     ContextAuthorizationFactsRow, ContextRequestRow, ContextRevocationFactRow, ContextStore,
-    ContinuationAuthorityStore, DaemonOperationDescriptorRow, EventDraft, IntentChainStore,
-    IntentRow, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow, MemoryStore,
-    MemoryTombstoneRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow, ProgressFactRow,
-    ProtocolStore, RecordDraft, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    SchedulerLeaseBinding, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
-    SkillRevisionRow, SkillStore, StoredObject, TaskBinding, TaskContractRow,
-    TaskExecutionBootstrap, TransitionCommit, WorkerAuthorizationStore,
+    ContinuationAuthorityStore, DaemonOperationDescriptorRow, EventDraft, IdGenerator,
+    IntentChainStore, IntentRow, MemoryAdmissionDecisionRow, MemoryCandidateRow, MemoryObjectRow,
+    MemoryStore, MemoryTombstoneRow, ObjectAdmission, ObjectCas, OperationCandidateProposalRow,
+    ProgressFactRow, ProtocolStore, RecordDraft, SchedulerExecutionPolicyRow,
+    SchedulerExecutionPolicyStore, SchedulerLeaseBinding, SkillBindingRevocationRow,
+    SkillBindingRow, SkillPackageRow, SkillRevisionRow, SkillStore, StoredObject, TaskBinding,
+    TaskContractRow, TaskExecutionBootstrap, TransitionCommit, WorkerAuthorizationStore,
     WorkerIterationAuthorizationRow, WorkspaceContextSourceRow,
 };
 use cognitive_kernel::tool_registry::{BUILTIN_TOOL_CATALOG, NativeOperationFamily};
@@ -94,6 +94,7 @@ use crate::personal::registered_check::{
     reset_broken_repair_corpus,
 };
 use crate::personal::resource_api::ResourceApi;
+use crate::personal::task_api::TaskApi;
 use crate::personal::tool_executor::{
     ASSEMBLED_EXECUTOR_FAMILIES, NativeToolExecutionError, ProductionNativeToolExecutorRouter,
     workspace_image_digest,
@@ -4304,6 +4305,246 @@ fn assert_pi_admission_does_not_complete_task(
         "bounded Pi output and candidate admission cannot complete the Task"
     );
     authorization
+}
+
+fn public_task_json(response: &crate::personal::task_api::TaskApiResponse) -> serde_json::Value {
+    assert_eq!(
+        response.status, 200,
+        "public Task API failed: {}",
+        response.body
+    );
+    serde_json::from_str(&response.body).unwrap()
+}
+
+fn public_workspace_search_draft(loop_object_id: &str, budget_id: &str) -> serde_json::Value {
+    json!({
+        "allowed_state_domains": ["task", "effect"],
+        "allowed_tools": ["native.workspace.search"],
+        "budget": {"semantic_calls": 4, "tool_calls": 4},
+        "budget_id": budget_id,
+        "conditions": [{
+            "description": "independent fixed-effect verification",
+            "id": "acceptance",
+            "kind": "acceptance",
+            "verifier_ref": "verifier://personal/fixed-effect"
+        }],
+        "deadline": "2027-12-31T00:00:00Z",
+        "loop_object_id": loop_object_id,
+        "max_iterations": 4,
+        "max_retries": 4,
+        "objective": "search the workspace for needle",
+        "scope": {
+            "in_scope": ["workspace search"],
+            "out_of_scope": ["bash", "edit", "write"]
+        },
+        "task_ref": "task://personal/p2-t30-scheduler-lease"
+    })
+}
+
+/// EVAL-005 skip class `scheduler_row_skip_before_lease`: public admit left
+/// Tasks in DRAFT, `lease_acquired` 0/0, and never spawned Pi because Context
+/// authorization facts and Loop DECIDE were missing. This is the public-path
+/// regression, not the fixture-injected production-chain equivalent.
+#[test]
+fn public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease() {
+    let layout = temporary_personal_layout();
+    layout.ensure_directories().unwrap();
+    prepare_personal_databases(&layout).unwrap();
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("search.txt"), b"contains needle\n").unwrap();
+
+    let principal = "principal://local/owner";
+    let mut api = TaskApi::new(layout.clone());
+    let recorded = public_task_json(
+        &api.handle(
+            "POST /task/intent.record HTTP/1.1",
+            serde_json::to_vec(&json!({
+                "conversation_or_scope_ref": "conversation://personal/p2-t30",
+                "raw_expression": "search the workspace for needle",
+                "schema_version": "cognitiveos.task-intent-record-request/0.1"
+            }))
+            .unwrap()
+            .as_slice(),
+            principal,
+        ),
+    );
+    let user_intent_record_id = recorded["user_intent_record_id"].as_str().unwrap();
+    let interpreted = public_task_json(
+        &api.handle(
+            "POST /task/intent.interpret HTTP/1.1",
+            serde_json::to_vec(&json!({
+                "schema_version": "cognitiveos.task-intent-interpret-request/0.1",
+                "user_intent_record_id": user_intent_record_id,
+                "candidate": {
+                    "objectives": ["search the workspace for needle"],
+                    "constraints": [],
+                    "forbidden": [],
+                    "assumptions": [],
+                    "ambiguities": [],
+                    "information_gaps": []
+                }
+            }))
+            .unwrap()
+            .as_slice(),
+            principal,
+        ),
+    );
+    assert_eq!(interpreted["status"], "candidate");
+    let loop_object_id = UuidV7Generator.next_uuid_v7().unwrap();
+    let budget_id = UuidV7Generator.next_uuid_v7().unwrap();
+    let draft = public_workspace_search_draft(&loop_object_id, &budget_id);
+    let previewed = public_task_json(
+        &api.handle(
+            "POST /task/preview HTTP/1.1",
+            serde_json::to_vec(&json!({
+                "schema_version": "cognitiveos.task-preview-request/0.1",
+                "task_contract_draft": draft
+            }))
+            .unwrap()
+            .as_slice(),
+            principal,
+        ),
+    );
+    let admitted = public_task_json(
+        &api.handle(
+            "POST /task/admit HTTP/1.1",
+            serde_json::to_vec(&json!({
+                "schema_version": "cognitiveos.task-admit-request/0.1",
+                "expected_current_epoch": 0,
+                "preview_digest": previewed["preview_digest"],
+                "task_contract_draft": draft,
+                "acceptance": {
+                    "accepted_by": principal,
+                    "accepted_digest": interpreted["interpretation_digest"],
+                    "interpretation_id": interpreted["interpretation_id"]
+                }
+            }))
+            .unwrap()
+            .as_slice(),
+            principal,
+        ),
+    );
+    let task_ref = admitted["task_ref"].as_str().unwrap();
+    assert_eq!(task_ref, "task://personal/p2-t30-scheduler-lease");
+
+    let store = SqliteAuthorityStore::open(&layout.authority_database_path()).unwrap();
+    crate::personal::tool_executor::ensure_builtin_native_descriptors(&store).unwrap();
+    let contract = store.load_task_contract(task_ref, 1).unwrap().unwrap();
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Task, &contract.contract_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "DRAFT",
+        "public admit must leave the Task DRAFT until worker activation"
+    );
+    let mut repository = SchedulerRepository::open(&layout.authority_database_path()).unwrap();
+    let before_tick = repository
+        .load(&SchedulerWorkKey {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        })
+        .unwrap()
+        .unwrap();
+    assert_eq!(before_tick.state, SchedulerState::Runnable.as_str());
+    assert_eq!(before_tick.lease_owner, None);
+    assert_eq!(before_tick.attempt_count, 0);
+
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspaceSearch,
+        "workspace://",
+        CandidateParameters::WorkspaceSearchParameters(WorkspaceSearchParameters {
+            family: WorkspaceSearchParametersFamily::WorkspaceSearch,
+            query: "needle".to_owned(),
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    assert!(
+        proposer.calls.get() >= 1,
+        "public-admit C1 search must spawn the private-candidate Pi on the first tick"
+    );
+    let authorization = store
+        .load_unconsumed_worker_iteration_authorization_for_task_binding(task_ref, 1)
+        .unwrap()
+        .unwrap();
+    assert_eq!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "DRAFT",
+        "Pi admission must not complete or activate the Task"
+    );
+    let after_pi = repository
+        .load(&SchedulerWorkKey {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        })
+        .unwrap()
+        .unwrap();
+    assert_eq!(after_pi.lease_owner, None);
+    assert_eq!(
+        after_pi.attempt_count, 0,
+        "the Pi proposal pass must not acquire a scheduler lease"
+    );
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    assert_eq!(
+        proposer.calls.get(),
+        1,
+        "later ticks must consume durable WIA"
+    );
+    let after_lease = repository
+        .load(&SchedulerWorkKey {
+            task_ref: task_ref.to_owned(),
+            contract_epoch: 1,
+        })
+        .unwrap()
+        .unwrap();
+    assert!(
+        after_lease.attempt_count >= 1,
+        "the second tick must acquire a scheduler lease; got attempt_count {}",
+        after_lease.attempt_count
+    );
+    let task_state = store
+        .load_object(LifecycleDomain::Task, &contract.contract_id)
+        .unwrap()
+        .unwrap()
+        .state
+        .as_str()
+        .to_owned();
+    assert_ne!(
+        task_state, "DRAFT",
+        "leased native dispatch must activate the public-admit Task"
+    );
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert!(
+        std::fs::read_dir(layout.data_dir().join("artifacts"))
+            .unwrap()
+            .next()
+            .is_some(),
+        "the production search sink must persist its governed output"
+    );
 }
 
 #[test]

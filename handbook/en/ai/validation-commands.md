@@ -69,6 +69,9 @@ P2-T28 D02 public-caller smoke is `apps/kernel-server/tests/p2_t28_end_to_end_jo
 P2-T28 D03 exact-revision `DEV-LINUX-NATIVE-01` aggregate runs the named UJ
 oracles plus `cargo test -p kernel-server --bins`, `cargo test --workspace`,
 `cargo fmt --all -- --check`, and `cargo clippy --workspace --all-targets -- -D warnings`.
+P2-T30 public-admit scheduler lease coverage is the kernel-server focused test
+`public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`
+(Linux/CI only; Windows GNU `not-run`).
 
 ## What CI enforces on every PR
 

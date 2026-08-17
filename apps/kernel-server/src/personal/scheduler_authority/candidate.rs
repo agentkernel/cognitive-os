@@ -78,6 +78,87 @@ use crate::personal::pi_runtime::{
 
 use super::*;
 
+/// Public Task admission leaves Loop at `START`. Candidate admission requires
+/// `DECIDE`. Walk the registered first-iteration edges from the sealed
+/// ContextView before Pi is invoked. Fixture tests that already start at
+/// `DECIDE` are a no-op.
+fn advance_admitted_loop_to_decide_before_pi<S, C, G>(
+    store: &S,
+    clock: &C,
+    identifiers: &G,
+    task_contract: &TaskContract,
+    view_row: &ContextViewRow,
+) -> Result<(), SchedulerAuthorityError>
+where
+    S: AuthorityStore + HarnessStore + IntentChainStore + ProtocolStore,
+    C: Clock,
+    G: IdGenerator,
+{
+    let loop_object_id = ObjectId::parse(
+        &task_contract
+            .loop_object_id
+            .as_ref()
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MalformedContract("contract has no loop".to_owned())
+            })?
+            .0,
+    )
+    .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let budget_id = BudgetId::parse(
+        &task_contract
+            .budget_id
+            .as_ref()
+            .ok_or_else(|| {
+                SchedulerAuthorityError::MalformedContract("contract has no budget".to_owned())
+            })?
+            .0,
+    )
+    .map_err(|error| SchedulerAuthorityError::MalformedContract(error.to_string()))?;
+    let loop_object = store
+        .load_object(LifecycleDomain::Loop, &loop_object_id)
+        .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?
+        .ok_or_else(|| SchedulerAuthorityError::LoopUnavailable(loop_object_id.to_string()))?;
+    match loop_object.state.as_str() {
+        "DECIDE" => Ok(()),
+        "START" => {
+            let fencing_epoch = store
+                .current_fencing_epoch()
+                .map_err(|error| SchedulerAuthorityError::Store(error.to_string()))?;
+            let driver = LoopDriver::new(
+                store,
+                clock,
+                identifiers,
+                UriRef::parse("principal://personal/daemon").map_err(|error| {
+                    SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+                })?,
+                UriRef::parse("authority://personal/loop").map_err(|error| {
+                    SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+                })?,
+                UriRef::parse("correlation://personal/private-scheduler-tick").map_err(
+                    |error| {
+                        SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string())
+                    },
+                )?,
+            );
+            driver.advance_start_to_decide_after_context_view(
+                &loop_object_id,
+                loop_object.version,
+                &task_contract.task_ref,
+                &budget_id,
+                &view_row.view_id,
+                &view_row.canonical_json,
+                &WriterLease {
+                    epoch: fencing_epoch,
+                },
+            )?;
+            Ok(())
+        }
+        other => Err(SchedulerAuthorityError::LoopUnavailable(format!(
+            "{loop_object_id} is {other}"
+        ))),
+    }
+}
+
 /// Resolve Context, obtain exactly one untrusted Pi candidate, then have the
 /// daemon seal, persist, and atomically admit it. Pi-provided fields never
 /// become governed references, header facts, authority, or lifecycle state.
@@ -182,7 +263,7 @@ where
                 context_command.request_id.to_string(),
             )
         })?;
-    persist_resolved_context_view(
+    let view_row = persist_resolved_context_view(
         store,
         clock,
         identifiers,
@@ -210,6 +291,13 @@ where
             "current TaskContract ContextRequest binding changed before Pi proposal".to_owned(),
         ));
     }
+    advance_admitted_loop_to_decide_before_pi(
+        store,
+        clock,
+        identifiers,
+        &task_contract,
+        &view_row,
+    )?;
 
     let proposed_candidate = proposer
         .propose_candidate(

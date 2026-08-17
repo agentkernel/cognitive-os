@@ -7,7 +7,7 @@
 //! resumable deltas, and a resume point outside the bounded replay window
 //! fails explicitly rather than silently losing observations.
 
-use std::collections::VecDeque;
+use std::collections::{BTreeMap, VecDeque};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -36,7 +36,9 @@ use cognitive_contracts::generated::task_preview_request::{
 use cognitive_contracts::generated::task_preview_result::{
     TaskPreviewResult, TaskPreviewResultSchemaVersion,
 };
+use cognitive_domain::capability::{CapabilityConstraints, LeaseWindow};
 use cognitive_domain::{BudgetId, LifecycleDomain, ObjectId, UriRef, WallTimestamp};
+use cognitive_kernel::authz::{ActorChainFacts, MembershipFacts, PrincipalFacts};
 use cognitive_kernel::effects::WriterLease;
 use cognitive_kernel::intent_chain::{
     AcceptanceCommand, AmbiguityFact, ConditionSpec, GovernanceSeed, InterpretationCandidate,
@@ -44,7 +46,8 @@ use cognitive_kernel::intent_chain::{
     seal_governed_object_content_digest, strong_reference_to,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, ContextRequestRow, ContextStore, ContinuationAuthorityStore, IntentChainStore,
+    AuthorityStore, ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRequestRow,
+    ContextRevocationFactRow, ContextStore, ContinuationAuthorityStore, IntentChainStore,
     IntentRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
     StoredObject, TaskBinding,
 };
@@ -513,6 +516,11 @@ impl TaskApi {
         ) {
             return response;
         }
+        if let Err(response) =
+            persist_owner_local_context_authorization(service.store(), principal, &governance)
+        {
+            return response;
+        }
         match service.admit(
             &lease,
             &request.preview_digest.0,
@@ -809,6 +817,251 @@ fn persist_scheduler_execution_policy(
                 "daemon could not persist scheduler execution policy",
             )
         })
+}
+
+/// Persist the owner-local Context authorization facts and initial revocation
+/// epoch that public Task admission previously omitted. Without these rows the
+/// first scheduler tick skips before Pi (`ContextAuthorizationUnavailable`) and
+/// never acquires a lease. Values are daemon policy for tenant `personal`, not
+/// a client-supplied capability channel.
+fn persist_owner_local_context_authorization(
+    store: &SqliteAuthorityStore,
+    principal: &str,
+    governance: &GovernanceSeed,
+) -> Result<(), TaskApiResponse> {
+    const TENANT_ID: &str = "personal";
+    const RESOURCE_SCOPE: &str = "workspace:";
+    const PURPOSE: &str = "task_execution";
+
+    if let Some(existing) = store
+        .load_latest_context_authorization_facts(principal, TENANT_ID)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_AUTHORIZATION_UNAVAILABLE",
+                "daemon could not reload Context authorization facts",
+            )
+        })?
+    {
+        let covers_workspace = existing.capability_links.iter().any(|capability| {
+            capability.resource == RESOURCE_SCOPE
+                && capability.purpose == PURPOSE
+                && capability.actions.contains("read_body")
+        });
+        if existing.subject_ref != principal || !covers_workspace {
+            return Err(error(
+                409,
+                "TASK_CONTEXT_AUTHORIZATION_BINDING_CONFLICT",
+                "Context authorization facts already bind a different owner-local scope",
+            ));
+        }
+    } else {
+        let issued_at = cognitive_kernel::ports::Clock::now(&SystemClock).map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_AUTHORIZATION_CLOCK_UNAVAILABLE",
+                "daemon could not timestamp Context authorization facts",
+            )
+        })?;
+        let principal_ref = uri(principal)?;
+        let principal_facts = PrincipalFacts {
+            principal_ref: principal_ref.clone(),
+            authenticated: true,
+            active: true,
+            tenant_id: Some(TENANT_ID.to_owned()),
+        };
+        let mut hasher = Sha256::new();
+        hasher.update(principal.as_bytes());
+        let actor_chain = ActorChainFacts {
+            chain_digest: format!("sha256:{:x}", hasher.finalize()),
+            resolved: true,
+        };
+        let membership = Some(MembershipFacts {
+            valid: true,
+            roles: ["owner".to_owned()].into(),
+        });
+        let capability = CapabilityConstraints {
+            subject: principal.to_owned(),
+            audience: "daemon://personal/context".to_owned(),
+            resource: RESOURCE_SCOPE.to_owned(),
+            purpose: PURPOSE.to_owned(),
+            actions: [
+                "read_body".to_owned(),
+                "read".to_owned(),
+                "search".to_owned(),
+                "write".to_owned(),
+                "patch".to_owned(),
+            ]
+            .into_iter()
+            .collect(),
+            parameter_bounds: BTreeMap::new(),
+            lease: LeaseWindow {
+                not_before: WallTimestamp::parse("2026-01-01T00:00:00Z").map_err(|_| {
+                    error(
+                        503,
+                        "TASK_CONTEXT_AUTHORIZATION_LEASE_REJECTED",
+                        "daemon could not compose the owner-local capability lease",
+                    )
+                })?,
+                expires: WallTimestamp::parse("2027-12-31T00:00:00Z").map_err(|_| {
+                    error(
+                        503,
+                        "TASK_CONTEXT_AUTHORIZATION_LEASE_REJECTED",
+                        "daemon could not compose the owner-local capability lease",
+                    )
+                })?,
+            },
+            depth_remaining: 1,
+            issued_epoch: 1,
+        };
+        let facts_id = new_object_id()?;
+        let facts_header = compose_governed_header(
+            &facts_id,
+            "ContextAuthorizationFacts",
+            "cognitiveos.context-authorization-facts/0.1",
+            governance,
+            Vec::new(),
+            Vec::new(),
+            "daemon-task-admission-context-authorization",
+            &issued_at,
+        )
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_AUTHORIZATION_HEADER_REJECTED",
+                "daemon could not compose Context authorization facts",
+            )
+        })?;
+        let facts_payload = json!({
+            "header": facts_header,
+            "fact_set_id": facts_id,
+            "subject_ref": principal,
+            "tenant_id": TENANT_ID,
+            "principal": principal_facts,
+            "actor_chain": actor_chain,
+            "membership": membership,
+            "capability_links": [&capability],
+            "explicit_denies": [],
+            "capability_set_version": 1,
+            "issued_revocation_epoch": 1,
+        });
+        let (sealed_facts, _) =
+            seal_governed_object_content_digest(facts_payload).map_err(|_| {
+                error(
+                    503,
+                    "TASK_CONTEXT_AUTHORIZATION_SEALING_FAILED",
+                    "daemon could not seal Context authorization facts",
+                )
+            })?;
+        let facts_json = serde_json::to_string(&sealed_facts).map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_AUTHORIZATION_SERIALIZATION_FAILED",
+                "daemon could not serialize Context authorization facts",
+            )
+        })?;
+        store
+            .append_context_authorization_facts(&ContextAuthorizationFactsRow {
+                fact_set_id: facts_id,
+                subject_ref: principal.to_owned(),
+                tenant_id: TENANT_ID.to_owned(),
+                principal: principal_facts,
+                actor_chain,
+                membership,
+                capability_links: vec![capability],
+                explicit_denies: Vec::new(),
+                capability_set_version: 1,
+                issued_revocation_epoch: 1,
+                canonical_json: facts_json,
+            })
+            .map_err(|_| {
+                error(
+                    503,
+                    "TASK_CONTEXT_AUTHORIZATION_PERSISTENCE_FAILED",
+                    "daemon could not persist Context authorization facts",
+                )
+            })?;
+    }
+
+    if store
+        .load_current_context_revocation_epoch(TENANT_ID)
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_REVOCATION_UNAVAILABLE",
+                "daemon could not reload the Context revocation epoch",
+            )
+        })?
+        .is_some()
+    {
+        return Ok(());
+    }
+
+    let issued_at = cognitive_kernel::ports::Clock::now(&SystemClock).map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_REVOCATION_CLOCK_UNAVAILABLE",
+            "daemon could not timestamp the Context revocation epoch",
+        )
+    })?;
+    let revocation_id = new_object_id()?;
+    let revocation_header = compose_governed_header(
+        &revocation_id,
+        "ContextRevocationFact",
+        "cognitiveos.context-revocation-fact/0.1",
+        governance,
+        Vec::new(),
+        Vec::new(),
+        "daemon-task-admission-context-revocation",
+        &issued_at,
+    )
+    .map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_REVOCATION_HEADER_REJECTED",
+            "daemon could not compose the Context revocation fact",
+        )
+    })?;
+    let revocation_payload = json!({
+        "header": revocation_header,
+        "revocation_fact_id": revocation_id,
+        "tenant_id": TENANT_ID,
+        "revocation_epoch": 1,
+        "revoked_subject_ref": null,
+        "revoked_capability_ref": null,
+    });
+    let (sealed_revocation, _) =
+        seal_governed_object_content_digest(revocation_payload).map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_REVOCATION_SEALING_FAILED",
+                "daemon could not seal the Context revocation fact",
+            )
+        })?;
+    let revocation_json = serde_json::to_string(&sealed_revocation).map_err(|_| {
+        error(
+            503,
+            "TASK_CONTEXT_REVOCATION_SERIALIZATION_FAILED",
+            "daemon could not serialize the Context revocation fact",
+        )
+    })?;
+    store
+        .append_context_revocation_fact(&ContextRevocationFactRow {
+            revocation_fact_id: revocation_id,
+            tenant_id: TENANT_ID.to_owned(),
+            revocation_epoch: 1,
+            revoked_subject_ref: None,
+            revoked_capability_ref: None,
+            canonical_json: revocation_json,
+        })
+        .map_err(|_| {
+            error(
+                503,
+                "TASK_CONTEXT_REVOCATION_PERSISTENCE_FAILED",
+                "daemon could not persist the Context revocation epoch",
+            )
+        })?;
+    Ok(())
 }
 
 /// Recover the immutable ContextRequest selected by a previously persisted

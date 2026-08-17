@@ -19,7 +19,7 @@ sources:
   - path: crates/cognitive-kernel/src/recovery.rs
     symbols: ["RECOVERY_ORDER", "run_recovery"]
   - path: crates/cognitive-kernel/src/harness.rs
-    symbols: ["return_to_decide_after_closed_effect"]
+    symbols: ["return_to_decide_after_closed_effect", "advance_start_to_decide_after_context_view"]
 contracts:
   - specs/transitions/effect.transitions.json
   - specs/transitions/task.transitions.json
@@ -29,7 +29,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:dca3ca4f431eb2ddf41af597e89cae99dd25106fdacd571968e58f0e765e3bba"
+fingerprint: "sha256:530000ebd734a26292cfa479c1a10ee2aaaff0a651e433336ac8103d26dc5047"
 non_claims:
   - 内核正确性证据是聚焦测试证据，不构成 Gate、release 或 Profile 结论。
 ---
@@ -87,7 +87,9 @@ PROPOSED→AUTHORIZED→EXECUTING→…→COMMITTED，守卫只从持久重载�
 pin、其 verification request 与 Loop `ACT -> VERIFY` 要么一起持久化，要么一起回滚。
 非 RegisteredCheckRun 的中间闭合 Effect 在 RegisteredCheck 收口的 Task 上则从持久
 Effect/合同事实走 `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE`，以便准入下一
-candidate 而不完成 Task。
+candidate 而不完成 Task。公开 admit 的 Task 把 Loop 留在 `START`；封存 ContextView
+存在后，`LoopDriver::advance_start_to_decide_after_context_view` 在 Pi 之前走
+`START -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE`。该行走不是 Task 验收。
 Task 验收属于独立权威：candidate 与最终 acceptance transition 都先经同一 deterministic
 engine 准备，再由 SQLite 在事务内重查当前合同 epoch、完整闭合 Effect 集合、fixed
 post-state、最新 passed report 与 fencing；最终 principal 是 daemon-private acceptance
