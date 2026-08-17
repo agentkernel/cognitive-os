@@ -11,6 +11,7 @@ use std::collections::{BTreeMap, VecDeque};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
+use std::sync::Arc;
 
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
@@ -175,14 +176,31 @@ pub(crate) struct TaskApiResponse {
 /// reloaded for mutations; this only provides connection delivery semantics.
 pub(crate) struct TaskApi {
     layout: PersonalDataLayout,
+    shared_store: Option<Arc<SqliteAuthorityStore>>,
     next_watch_sequence: u64,
     watch_events: VecDeque<(u64, Value)>,
 }
 
 impl TaskApi {
+    #[allow(dead_code)] // in-process tests construct TaskApi without a daemon handle
     pub(crate) fn new(layout: PersonalDataLayout) -> Self {
         Self {
             layout,
+            shared_store: None,
+            next_watch_sequence: 1,
+            watch_events: VecDeque::new(),
+        }
+    }
+
+    /// Bind the daemon-owned single-writer handle so HTTP admit and the
+    /// periodic scheduler tick share one WAL connection.
+    pub(crate) fn with_shared_store(
+        layout: PersonalDataLayout,
+        store: Arc<SqliteAuthorityStore>,
+    ) -> Self {
+        Self {
+            layout,
+            shared_store: Some(store),
             next_watch_sequence: 1,
             watch_events: VecDeque::new(),
         }
@@ -601,15 +619,9 @@ impl TaskApi {
             }
             Err(response) => return response,
         };
-        let store = match SqliteAuthorityStore::open(&self.layout.authority_database_path()) {
+        let store = match self.authority_store() {
             Ok(store) => store,
-            Err(_) => {
-                return error(
-                    503,
-                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
-                    "durable authority store is unavailable",
-                );
-            }
+            Err(response) => return response,
         };
         match reconstruct_terminal_task_evidence(&store, &self.layout, &task_ref) {
             Ok(Some(evidence)) => ok(evidence),
@@ -643,15 +655,9 @@ impl TaskApi {
             }
             Err(response) => return response,
         };
-        let store = match SqliteAuthorityStore::open(&self.layout.authority_database_path()) {
+        let store = match self.authority_store() {
             Ok(store) => store,
-            Err(_) => {
-                return error(
-                    503,
-                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
-                    "durable authority store is unavailable",
-                );
-            }
+            Err(response) => return response,
         };
         match reconstruct_bounded_effect_history(&store, &task_ref) {
             Ok(Some(history)) => ok(history),
@@ -664,21 +670,27 @@ impl TaskApi {
         }
     }
 
+    fn authority_store(&self) -> Result<SqliteAuthorityStore, TaskApiResponse> {
+        if let Some(shared) = &self.shared_store {
+            return Ok(shared.as_ref().clone());
+        }
+        SqliteAuthorityStore::open(&self.layout.authority_database_path()).map_err(|_| {
+            error(
+                503,
+                "TASK_AUTHORITY_STORE_UNAVAILABLE",
+                "durable authority store is unavailable",
+            )
+        })
+    }
+
     fn service(
         &self,
     ) -> Result<
         KernelTaskApplicationService<SqliteAuthorityStore, SystemClock, UuidV7Generator>,
         TaskApiResponse,
     > {
-        SqliteAuthorityStore::open(&self.layout.authority_database_path())
+        self.authority_store()
             .map(|store| KernelTaskApplicationService::new(store, SystemClock, UuidV7Generator))
-            .map_err(|_| {
-                error(
-                    503,
-                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
-                    "durable authority store is unavailable",
-                )
-            })
     }
 
     fn publish(&mut self, kind: &str, body: Value) {

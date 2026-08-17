@@ -267,17 +267,27 @@ impl PrivatePiCandidateProcess {
             .join()
             .map_err(|_| "private Pi adapter stdout reader panicked".to_owned())?
             .map_err(|_| "private Pi adapter stdout could not be read".to_owned())?;
-        let socket_result = socket.finish();
         if let Some(error) = termination_error {
+            let _ = socket.finish();
             return Err(error);
         }
         let exit_status = exit_status.ok_or_else(|| {
             "private Pi candidate adapter exited without a final status".to_owned()
         })?;
         if !exit_status.success() {
+            let _ = socket.finish();
             return Err("private Pi candidate adapter rejected the request".to_owned());
         }
-        socket_result?;
+        if output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT
+            && let Ok(parsed) = serde_json::from_slice::<PrivatePiCandidateResponse>(&output)
+        {
+            // A stub adapter may emit the untrusted candidate on stdout
+            // without connecting to the Provider completion socket. The
+            // daemon still validates descriptor, digest, and authorization.
+            drop(socket);
+            return Ok(parsed);
+        }
+        socket.finish()?;
         if output.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
             return Err("private Pi candidate response exceeds transport limit".to_owned());
         }

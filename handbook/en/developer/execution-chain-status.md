@@ -38,9 +38,10 @@ tests:
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:8a4751932409b802252fa87973fa223e6107990df5db14ae56193cda4f9deb89"
+fingerprint: "sha256:54b51b50882145ecf2d5696505409d860ff06723823b54fff733678b99e4013c"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -94,7 +95,12 @@ durable WIA under a lease and activates the Task. Row-local failures are isolate
 not abort later rows in the bounded pass. The daemon now starts one
 non-reentrant, cancellable periodic worker only after bind and endpoint
 publication; pass-level failures are retried and cannot prevent listening.
-The remaining gaps are:
+Live HTTP `TaskApi` clones the daemon-owned `SqliteAuthorityStore` handle so that
+tick sees the Context facts admit persisted; opening a second writer per request
+is the EVAL-006 skip. A contract `max_retries` of 0 still allows the first
+scheduler dispatch: retry count 0 is not a reached ceiling, so the later WIA
+tick can acquire a lease instead of calling `stop_for_ceiling` with no
+checkpoint. The remaining gaps are:
 
 1. **Executor wiring is complete across all seven registered families**: the six
    original families (P2-T10) plus RegisteredCheckRun (P2-T16) all have a

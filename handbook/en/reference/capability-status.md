@@ -15,7 +15,7 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
   - path: apps/kernel-server/src/personal/capability_truth.rs
     symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
-fingerprint: "sha256:6869d43a588485059082db34b389187d05f3824ed906003f9a7cbf3961852c53"
+fingerprint: "sha256:26c74a9db231226d69e114b8c4888691c4d44fda9f3954894cdfb0bfdf25862c"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---

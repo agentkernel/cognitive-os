@@ -274,7 +274,10 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     );
     let _lock = lock;
     let authority = Arc::new(Mutex::new(authority));
-    let task_api = Arc::new(Mutex::new(TaskApi::new(config.layout.clone())));
+    let task_api = Arc::new(Mutex::new(TaskApi::with_shared_store(
+        config.layout.clone(),
+        Arc::clone(&authority_store),
+    )));
     crate::personal::observation::bind_observation_store(config.layout.data_dir().to_path_buf());
     let resource_api = Arc::new(Mutex::new(ResourceApi::with_governance_data_dir(Some(
         config.layout.data_dir().to_path_buf(),
@@ -510,10 +513,8 @@ fn handle_connection_with_task_api(
 }
 
 /// Single-connection test helper. Production keeps one shared TaskApi for
-/// process-lifetime watch continuity; pre-existing front-door tests do not
-/// exercise that state and use an isolated instance. The authority store is
-/// opened once by the fixture (mirroring the daemon-owned handle) so limit
-/// checks are not delayed by per-connection SQLite open.
+/// process-lifetime watch continuity and binds the daemon-owned authority
+/// store so HTTP admit and the scheduler tick share one writer.
 #[cfg(test)]
 fn handle_connection(
     stream: TcpStream,
@@ -524,7 +525,10 @@ fn handle_connection(
     active_connections: &Arc<AtomicUsize>,
     in_flight: &Arc<AtomicUsize>,
 ) {
-    let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
+    let task_api = Arc::new(Mutex::new(TaskApi::with_shared_store(
+        layout.clone(),
+        Arc::clone(authority_store),
+    )));
     let resource_api = Arc::new(Mutex::new(ResourceApi::with_governance_data_dir(Some(
         layout.data_dir().to_path_buf(),
     ))));

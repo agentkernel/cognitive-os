@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:a8d9975ca40bbc06887300162bc04ede6b654564d5267d5a9877de5b2c414706"
+fingerprint: "sha256:2f8fb39363f7575850f9509565e65f573acf8ae616286ff371a48da1c7f34425"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -30,7 +30,9 @@ non_claims:
 # Store and migrations
 
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
-Two databases under XDG state: **authority** (migrations v1–v24) and
+`SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
+Personal daemon can hand the same writer to HTTP Task admission and the periodic
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v24) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
