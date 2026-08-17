@@ -51,7 +51,10 @@ Rotate the previously leaked Provider key if that item is still in use.
 | New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/14` (not `/12`/`/13`). Owner file `~/下载/deepseek.txt` used by shape only; key travelled `sed -n '8p'` → pipe → `--api-key-file -`. D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup`. See § SecretStore import |
 | Local Pi `0.81.1` pin | **pass** | guest-local npm pack+install under the new root; `--extension` absolute path only. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true`. See § Pi pin |
 | Exact-source `pi-agent-adapter` | **pass** | same extracted `b16d2955` archive; host `CARGO_NET_OFFLINE=true cargo build --release --locked -p pi-agent-adapter` 1 m 10 s. See § Adapter freeze |
-| C1/C2 paired B0 | **partial** | two O-arm C1-search samples started and retained; both still `DRAFT`; P-arm not started. See § B0 C1-search |
+| C1/C2 paired B0 | **partial** | two O-arm C1-search samples retained; skip class `scheduler_row_skip_before_lease`; P-arm not started. See § Private-candidate skip |
+| C1/C2 paired B1/B2 | **not-run** | B0 never left `DRAFT`; no Provider spend |
+| T8 / B3 stale | **not-run** | no public invocation / no mutation path |
+| MS-AUTH Memory positives | **pass** | 10/10 unsealed lifecycle + caller-header 400. See running report |
 
 ## Non-claims
 
@@ -256,11 +259,22 @@ started. Paired B1/B2 must not begin while B0 path/fairness is incomplete.
 
 This is not a performance result and creates no Agent-benefit claim.
 
+## Private-candidate skip (2026-08-17)
+
+Campaign-only observation. Skip class **`scheduler_row_skip_before_lease`**.
+Public status/doctor remain ready (`first_conversation_ready: true`); that
+is not C1/C2. Both retained Tasks stay `DRAFT` with empty Intent/Effect.
+O4: `runnable_count` 32/32, `lease_acquired` 0/0. Campaign kernel-server
+pid 267060 stderr is `/dev/null`, so the per-row skip string is not a
+public fact. Adapter/`pi.json`/selected-model files exist; this is not a
+missing-asset `not_available`. Remaining paired C1/C2, T8, and B3 stale
+are `not-run`. MS-AUTH Memory positives **pass** (10/10). See the running
+report.
+
 ## Unique next action
 
-Keep the two started C1-search samples retained. Next: obtain the
-private-candidate skip cause from campaign-only observation (do not patch
-product). If Pi still never spawns, disposition remaining C1/C2 paired
-cells `not-run` and continue applicable MS-AUTH Memory / T8 / B3-stale
-only where a real public path exists. Do not reuse EVAL-004 roots/ports or
-SecretStore `/12`/`/13`. Never `secret-tool search`/`lookup`.
+Keep the two started C1-search samples retained. Campaign stays **active**
+until the owner closes it. Do not open B1/B2 Provider spend. Do not claim
+`P*-T*` or patch product. Cleanup (daemon/broker/SecretStore `/14`) waits
+for owner close. Do not reuse EVAL-004 roots/ports or SecretStore
+`/12`/`/13`. Never `secret-tool search`/`lookup`.
