@@ -51,7 +51,8 @@ daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shel
 - `project_trust` 恒拒绝。Pi 原生 bash/write/edit（及其他内置工具）仍被拒绝。扩展
   对外广告 daemon 治理的 WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
   `execute` 不触碰文件系统；daemon 把这些参数作为 candidate 走 Intent/Effect。
-  Pi 原生文件系统工具不是 C1/C2 测量臂。
+  模型给出的纯 JSON candidate 不被信任为 digest：若带 `parameters`，适配器会重算
+  `parameters_digest`。Pi 原生文件系统工具不是 C1/C2 测量臂。
 - Pi 内尚无资源浏览、任务提交或 watch UI：这些客户端方法存在于
   `PersonalDaemonClient` 与 CLI（`cognitive resource|task`），但未接入 shell UX。
 - 模型参数由 daemon 的 selected model 固定。只有 Provider 返回完整且内部一致的计数

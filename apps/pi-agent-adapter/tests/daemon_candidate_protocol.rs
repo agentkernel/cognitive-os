@@ -22,7 +22,7 @@ fn valid_response_json() -> Vec<u8> {
         action: "observe".to_owned(),
         target: "workspace://personal/example".to_owned(),
         parameters: None,
-        parameters_digest: "sha256:parameters".to_owned(),
+        parameters_digest: format!("sha256:{}", "a".repeat(64)),
         expected_state_version: 1,
         operation_descriptor_id: "0190f5c0-0000-7000-8000-000000000001".to_owned(),
     })
@@ -92,6 +92,45 @@ fn daemon_candidate_response_rejects_non_positive_state_version() {
         error,
         "daemon candidate response expected_state_version is invalid"
     );
+}
+
+#[test]
+fn daemon_candidate_response_rejects_non_sha256_parameters_digest() {
+    let response = String::from_utf8(valid_response_json())
+        .expect("response is UTF-8")
+        .replace(
+            &format!("sha256:{}", "a".repeat(64)),
+            "sha256:parameters",
+        );
+
+    let error = parse_daemon_candidate_response(response.as_bytes()).expect_err("reject digest");
+
+    assert_eq!(
+        error,
+        "daemon candidate response parameters_digest is invalid"
+    );
+}
+
+#[test]
+fn daemon_candidate_response_recomputes_digest_from_workspace_search_parameters() {
+    let supplied = serde_json::json!({
+        "tool_ref": "native.workspace.search",
+        "action": "search",
+        "target": "workspace://",
+        "parameters": {"family": "WorkspaceSearch", "query": "needle"},
+        "parameters_digest": "sha256:parameters",
+        "expected_state_version": 1,
+        "operation_descriptor_id": "00000000-0000-7000-8000-000000002002",
+    });
+    let bytes = serde_json::to_vec(&supplied).expect("serialize candidate");
+
+    let response = parse_daemon_candidate_response(&bytes).expect("recompute digest");
+
+    assert_eq!(
+        response.parameters_digest,
+        "sha256:fa38ed3a81b5d77594862fe780acd8c0382b96171f007eb7a07916f7beba4fd5"
+    );
+    assert_eq!(response.tool_ref, "native.workspace.search");
 }
 
 fn finalized_pi_event(candidate_response: &str) -> String {

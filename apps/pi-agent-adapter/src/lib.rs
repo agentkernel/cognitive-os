@@ -75,20 +75,35 @@ pub fn parse_daemon_candidate_response(frame: &[u8]) -> Result<DaemonCandidateRe
     if frame.len() > DAEMON_CANDIDATE_FRAME_LIMIT {
         return Err("daemon candidate response exceeds transport limit".to_owned());
     }
-    let response: DaemonCandidateResponse = serde_json::from_slice(frame)
+    let mut response: DaemonCandidateResponse = serde_json::from_slice(frame)
         .map_err(|error| format!("daemon candidate response is invalid: {error}"))?;
     if response.tool_ref.trim().is_empty()
         || response.action.trim().is_empty()
         || response.target.trim().is_empty()
-        || response.parameters_digest.trim().is_empty()
         || response.operation_descriptor_id.trim().is_empty()
+        || (response.parameters.is_none() && response.parameters_digest.trim().is_empty())
     {
         return Err("daemon candidate response contains an empty field".to_owned());
     }
     if response.expected_state_version < 1 {
         return Err("daemon candidate response expected_state_version is invalid".to_owned());
     }
+    if let Some(parameters) = &response.parameters {
+        response.parameters_digest = digest_candidate_parameters(parameters)?;
+    } else if !is_sha256_digest(&response.parameters_digest) {
+        return Err("daemon candidate response parameters_digest is invalid".to_owned());
+    }
     Ok(response)
+}
+
+fn is_sha256_digest(value: &str) -> bool {
+    let Some(hexadecimal) = value.strip_prefix("sha256:") else {
+        return false;
+    };
+    hexadecimal.len() == 64
+        && hexadecimal
+            .bytes()
+            .all(|byte| byte.is_ascii_digit() || matches!(byte, b'a'..=b'f'))
 }
 
 /// Extract one strict candidate response from Pi's documented JSON print-mode
