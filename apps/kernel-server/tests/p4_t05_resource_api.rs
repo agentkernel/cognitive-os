@@ -745,3 +745,82 @@ fn management_skill_lifecycle_imports_inspects_supersedes_and_revokes() {
     restarted.wait().unwrap();
     let _ = std::fs::remove_dir_all(runtime_root);
 }
+
+#[test]
+fn public_remember_accepts_unsealed_payload_and_daemon_composes_headers() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p2t29-unsealed-remember-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret(&runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let remember = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/memory/remember",
+        &management_token,
+        &json!({
+            "text": "owner remembered fact",
+            "governance_scope": "workspace://personal/project/unsealed",
+            "target_scope": "workspace://personal/project/unsealed",
+            "purpose": "task_execution",
+            "retention_expires_at_unix_seconds": now + 3_600,
+        }),
+    );
+    assert!(remember.contains("HTTP/1.1 201 "), "{remember}");
+    let body = response_json(&remember);
+    assert_eq!(body["status"], "remembered");
+    assert!(body["memory_id"].as_str().is_some());
+
+    daemon.kill().unwrap();
+    daemon.wait().unwrap();
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
+
+#[test]
+fn public_remember_rejects_caller_minted_header_on_unsealed_payload() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p2t29-unsealed-header-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret(&runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
+    let rejected = send_json(
+        port,
+        "POST",
+        "/management/resource/v1/memory/remember",
+        &management_token,
+        &json!({
+            "text": "forged header must not admit",
+            "governance_scope": "workspace://personal/project/forged",
+            "purpose": "task_execution",
+            "retention_expires_at_unix_seconds": now + 3_600,
+            "header": {"id": "00000000-0000-7000-9000-000000000099"},
+        }),
+    );
+    assert!(rejected.contains("400"), "{rejected}");
+    assert!(
+        rejected.contains("RESOURCE_MEMORY_PAYLOAD_INVALID"),
+        "{rejected}"
+    );
+
+    daemon.kill().unwrap();
+    daemon.wait().unwrap();
+    let _ = std::fs::remove_dir_all(runtime_root);
+}

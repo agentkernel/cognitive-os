@@ -74,7 +74,8 @@ Tool overlay 与钉住 HTTPS origin 文件位于 Personal data 目录
 （Memory FTS 索引）可从权威行重建；被遗忘的 Memory 绝不会因索引重建而复活。权威库
 迁移现含 v24 只追加 Memory/Skill 消费记录；后续会话可复用精确钉，但遗忘、撤销或
 digest 漂移或竞争记录会失败闭合，而不是让已遗忘事实复活。management Memory/Skill
-生命周期行与 Skill revision 谱系在 daemon 重启后仍可检查。
+生命周期行与 Skill revision 谱系在 daemon 重启后仍可检查。公开 Memory remember 可发送
+未封存的 owner 字段；daemon 用持久治理根组合封存 header。
 
 ## 崩溃与未知结果恢复 —— 引擎层 `implemented`
 

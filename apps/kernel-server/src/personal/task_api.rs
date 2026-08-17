@@ -10,6 +10,7 @@
 use std::collections::VecDeque;
 use std::fs::{self, OpenOptions};
 use std::io::Write;
+use std::path::Path;
 
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
@@ -687,31 +688,11 @@ impl TaskApi {
     /// and validate it for every subsequent mutation. The root is not a
     /// request DTO and is never populated from client-provided object facts.
     fn governance(&self, principal: &str) -> Result<GovernanceSeed, TaskApiResponse> {
-        let root_path = self.layout.data_dir().join(GOVERNANCE_ROOT_FILE_NAME);
-        let root = if root_path.exists() {
-            load_governance_root(&root_path)?
-        } else {
-            let root = bootstrap_governance_root(principal)?;
-            persist_governance_root(&root_path, &root)?;
-            root
-        };
-        if root.principal != principal || !governance_root_is_canonical(&root) {
-            return Err(error(
-                403,
-                "TASK_GOVERNANCE_ROOT_INVALID",
-                "persisted governance root is missing, corrupt, ambiguous, or principal-mismatched",
-            ));
-        }
-        Ok(GovernanceSeed {
-            owner: root.owner,
-            authority: root.authority,
-            resource_scope: root.resource_scope,
-            tenant_id: None,
-            created_by: principal.to_owned(),
-            sensitivity: GovernedObjectHeaderSensitivity::Internal,
-            purpose_constraints: vec!["task_execution".to_owned()],
-            retention_policy: "standard".to_owned(),
-        })
+        personal_governance_seed(
+            self.layout.data_dir(),
+            principal,
+            vec!["task_execution".to_owned()],
+        )
     }
 }
 
@@ -1636,6 +1617,41 @@ fn contract_from_draft(
         context_request_ref: None,
         governance,
         correlation_id: correlation(principal)?,
+    })
+}
+
+/// Load or bootstrap the daemon-owned local governance root and return a
+/// [`GovernanceSeed`] for the authenticated principal. Callers must not mint
+/// sealed headers from client-supplied facts.
+pub(crate) fn personal_governance_seed(
+    data_dir: &Path,
+    principal: &str,
+    purpose_constraints: Vec<String>,
+) -> Result<GovernanceSeed, TaskApiResponse> {
+    let root_path = data_dir.join(GOVERNANCE_ROOT_FILE_NAME);
+    let root = if root_path.exists() {
+        load_governance_root(&root_path)?
+    } else {
+        let root = bootstrap_governance_root(principal)?;
+        persist_governance_root(&root_path, &root)?;
+        root
+    };
+    if root.principal != principal || !governance_root_is_canonical(&root) {
+        return Err(error(
+            403,
+            "TASK_GOVERNANCE_ROOT_INVALID",
+            "persisted governance root is missing, corrupt, ambiguous, or principal-mismatched",
+        ));
+    }
+    Ok(GovernanceSeed {
+        owner: root.owner,
+        authority: root.authority,
+        resource_scope: root.resource_scope,
+        tenant_id: None,
+        created_by: principal.to_owned(),
+        sensitivity: GovernedObjectHeaderSensitivity::Internal,
+        purpose_constraints,
+        retention_policy: "standard".to_owned(),
     })
 }
 

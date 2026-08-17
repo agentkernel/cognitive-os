@@ -9,10 +9,10 @@
  * live in `./pin.js` and are drift-checked against the Rust
  * `PiCompatibilityPin` by `pin.test.ts`.
  *
- * Only the five surfaces the CognitiveOS Extension actually uses are declared:
- * `on("project_trust")`, `on("tool_call")`, `on("session_start")` and
- * `registerCommand`, plus `setModel` for the daemon-selected model. If Pi
- * changes any of these shapes, the compatibility pin
+ * Only the surfaces the CognitiveOS Extension actually uses are declared:
+ * `on("project_trust")`, `on("tool_call")`, `on("session_start")`,
+ * `registerCommand`, `registerTool`, plus `setModel` for the daemon-selected
+ * model. If Pi changes any of these shapes, the compatibility pin
  * must be re-reviewed before the version is moved — a wider mirror would only
  * create a second, unverified source of truth for Pi's API.
  */
@@ -37,6 +37,31 @@ export interface ToolCallBlock {
 }
 
 export type ToolCallDecision = ToolCallBlock | undefined;
+
+/**
+ * Bounded tool result. The Extension returns text only; it never attaches
+ * images, files, or authority-shaped details.
+ */
+export interface AgentToolResult {
+  readonly content: readonly { readonly type: "text"; readonly text: string }[];
+}
+
+/**
+ * Subset of Pi's `registerTool` record used to advertise daemon-governed
+ * Workspace* operations. `parameters` is a JSON Schema object (not TypeBox)
+ * so this package does not take a new runtime dependency on Pi internals.
+ */
+export interface ExtensionToolDefinition {
+  readonly name: string;
+  readonly label: string;
+  readonly description: string;
+  readonly parameters: Readonly<Record<string, unknown>>;
+  execute(
+    toolCallId: string,
+    params: Readonly<Record<string, unknown>>,
+    signal?: AbortSignal,
+  ): Promise<AgentToolResult>;
+}
 
 /** Presentation-only surface Pi hands to hooks and command handlers. */
 export interface ExtensionUi {
@@ -170,6 +195,7 @@ export interface ExtensionAPI {
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,
   ): void;
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
+  registerTool(tool: ExtensionToolDefinition): void;
   registerProvider(providerName: string, config: ProviderConfig): void;
   setModel(model: PiModel): Promise<boolean>;
 }

@@ -97,7 +97,7 @@ personal_requirements:
     statement: Pi may host the Agent Shell, but that client role is distinct from managed Pi package, installation, instance, execution, process, conversation, and Task identities; neither role is authority.
     direct_registry_requirements: [REQ-AGENT-ADAPTER-001, REQ-AGENT-COMPLETE-001, REQ-AGENT-SHELL-001, REQ-STATE-004, REQ-AKP-RES-001]
     product_only_aspects: [Pi-product-integration]
-    tasks: [P0-T06, P1-T07, P2-T02, P2-T08, P5-T01, P5-T02, P5-T05]
+    tasks: [P0-T06, P1-T07, P2-T02, P2-T08, P2-T29, P5-T01, P5-T02, P5-T05]
     gates: [G2, B02, B05, B09, GMVP-LINUX]
     evidence_status: not-run
 
@@ -153,7 +153,7 @@ personal_requirements:
     classification: direct
     statement: Memory has provenance, scope, freshness, and forgetting.
     direct_registry_requirements: [REQ-MEM-OBJECT-001, REQ-MEM-ADMIT-001, REQ-MEM-ADMIT-002, REQ-MEM-PROMOTE-001, REQ-MEM-DELETE-001, REQ-MEM-MUTATE-001]
-    tasks: [P2-T23, P4-T01, P4-T02, P4-T03, P4-T05, P4-T06]
+    tasks: [P2-T23, P2-T29, P4-T01, P4-T02, P4-T03, P4-T05, P4-T06]
     gates: [G4, B08]
     evidence_status: not-run
 

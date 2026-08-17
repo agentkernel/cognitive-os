@@ -8,9 +8,10 @@
  *   - `project_trust` is always denied. Pi's own trust prompt would grant Pi
  *     ambient project permission; in governed mode CognitiveOS is the only thing
  *     that authorizes anything.
- *   - every `tool_call` is refused (see `tool-policy.ts`). Governed tool
- *     execution belongs to the daemon's Tool Registry and process supervisor
- *     (P2-T05/P2-T06), not to Pi.
+ *   - Pi-native `tool_call`s are refused (see `tool-policy.ts`), including
+ *     bash/edit/write. The Extension advertises daemon-governed
+ *     WorkspaceSearch/Write/Patch whose `execute` is I/O-free; the daemon
+ *     admits those arguments as candidates on the Intent/Effect path.
  *   - `session_start` reads the daemon's readiness projection and shows it. When
  *     the daemon cannot be read, the session says so loudly and never implies
  *     readiness.
@@ -37,6 +38,7 @@ import {
   statusLineFromProjection,
 } from "./status.js";
 import { decideToolCall } from "./tool-policy.js";
+import { daemonGovernedWorkspaceTools } from "./workspace-tools.js";
 
 /** Deny project trust unconditionally; governed mode authorizes nothing via Pi. */
 export const PROJECT_TRUST_DECISION = { trusted: "no" } as const;
@@ -92,6 +94,10 @@ export async function registerCognitiveOsExtension(
     throw new Error("the daemon provider registered no selectable model");
   }
   pi.registerProvider(daemonSelectedModel.provider, daemonProvider);
+
+  for (const tool of daemonGovernedWorkspaceTools()) {
+    pi.registerTool(tool);
+  }
 }
 
 export default registerCognitiveOsExtension;

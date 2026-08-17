@@ -46,11 +46,17 @@ test("unknown tools are blocked too: a non-authority client authorizes nothing",
   }
 });
 
-test("the read-only allowlist is empty, so no tool call is ever permitted", () => {
+test("the read-only allowlist is empty, so no Pi-native tool call is ever permitted", () => {
   assert.deepEqual([...READ_ONLY_TOOL_ALLOWLIST], []);
   const sampled = ["bash", "edit", "write", "read", "ls", "todo", "mcp__anything"];
   for (const toolName of sampled) {
     assert.notEqual(decideToolCall({ toolName }), undefined);
+  }
+});
+
+test("daemon-governed WorkspaceSearch/Write/Patch are allowed so Extension execute can run", () => {
+  for (const toolName of ["WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
+    assert.equal(decideToolCall({ toolName }), undefined, `${toolName} must not be blocked`);
   }
 });
 

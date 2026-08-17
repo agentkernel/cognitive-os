@@ -25,7 +25,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
-fingerprint: "sha256:4bd869c421b83273906dacdd582bbe5d72470992fef35994a78f2021e31ccd5a"
+fingerprint: "sha256:dedfe44799e541e0f41bcc15f198f7e5cc5117a8bc6ba2d0a602cbfd84289ce5"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -72,10 +72,13 @@ accepted from a runner-built object.
 ## Candidate production role
 
 `pi-agent-adapter` (pinned adapter, `daemon-candidate` capability only) runs the
-locked-down Pi child: tools/skills/sessions/extension discovery disabled, env
-allowlist, one-shot private socketpair with byte caps and deadlines, structured
-`AdapterOutcome` (never authority state). The daemon treats its output as a
-candidate for admission — nothing more.
+locked-down Pi child: built-in filesystem/shell tools, skills, sessions and
+extension discovery disabled (`--no-builtin-tools`), env allowlist, one-shot
+private socketpair with byte caps and deadlines, structured `AdapterOutcome`
+(never authority state). The CognitiveOS Extension advertises daemon-governed
+WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
+P2-T21 candidate path. The daemon treats the output as a candidate for
+admission — nothing more.
 
 ## Beyond Pi
 

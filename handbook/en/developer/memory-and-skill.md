@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:f65b201b987d97a6d1763b4a14908abbf48e44bb8b2f5d1e912aec8dab8cd69a"
+fingerprint: "sha256:acf10523f716442607064d28e1a329986b1edebf2a6e83927ebf627c790074f5"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -61,11 +61,14 @@ bindings keep their exact pins — they never drift to a successor.
 
 ## HTTP reach
 
-The management channel publishes lifecycle preconditions, admits a sealed
-`WorkspaceContextSource`, and completes Memory remember/review/forget plus
-Skill import/revision-inspect/bind/supersede/revoke without direct SQLite
-access. Memory admission accepts a sealed `MemoryCandidate`; the daemon derives
-the decision and Memory identities. `skill/binding/revoke` is matched before
+The management channel publishes lifecycle preconditions, admits Memory
+remember/review/forget plus Skill import/revision-inspect/bind/supersede/revoke
+without direct SQLite access. Public remember accepts unsealed owner fields
+(`text`, scope, purpose, retention); the daemon loads the persisted
+`GovernanceSeed` and composes sealed headers. A sealed `WorkspaceContextSource`
+plus `MemoryCandidate` envelope remains valid for callers that already have
+one. Campaign or test code must not mint sealed headers on the public positive
+path. `skill/binding/revoke` is matched before
 `skill/bind`, since the shorter route is a prefix of the longer one and would
 otherwise handle every revoke. All mutation rows and revision lineage remain
 available after daemon restart. A policy-rejected Memory candidate may retry

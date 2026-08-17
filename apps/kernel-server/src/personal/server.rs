@@ -276,7 +276,9 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     let authority = Arc::new(Mutex::new(authority));
     let task_api = Arc::new(Mutex::new(TaskApi::new(config.layout.clone())));
     crate::personal::observation::bind_observation_store(config.layout.data_dir().to_path_buf());
-    let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
+    let resource_api = Arc::new(Mutex::new(ResourceApi::with_governance_data_dir(Some(
+        config.layout.data_dir().to_path_buf(),
+    ))));
     let active_connections = Arc::new(AtomicUsize::new(0));
     let in_flight = Arc::new(AtomicUsize::new(0));
     let shutting_down = Arc::new(AtomicBool::new(false));
@@ -523,7 +525,9 @@ fn handle_connection(
     in_flight: &Arc<AtomicUsize>,
 ) {
     let task_api = Arc::new(Mutex::new(TaskApi::new(layout.clone())));
-    let resource_api = Arc::new(Mutex::new(ResourceApi::new()));
+    let resource_api = Arc::new(Mutex::new(ResourceApi::with_governance_data_dir(Some(
+        layout.data_dir().to_path_buf(),
+    ))));
     handle_connection_with_task_api(
         stream,
         bounds,

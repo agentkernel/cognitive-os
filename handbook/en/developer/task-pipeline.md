@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:5254989333b2124c5a17ecb044ab2f8565f35b7315854dc59fbdf27225926923"
+fingerprint: "sha256:9d84a7fd3ff8db40b84bd4a6d13fda9c2dcc5c4842197582d31ab4b98028e8a5"
 non_claims:
   - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
 ---
