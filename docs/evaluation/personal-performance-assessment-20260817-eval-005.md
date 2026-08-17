@@ -1,10 +1,12 @@
-# PERSONAL-PERF-EVAL-005 assessment (running)
+# PERSONAL-PERF-EVAL-005 assessment (closed)
 
 - Campaign: `PERSONAL-PERF-EVAL-005`
 - Frozen source: `main@b16d2955` (P2-T29 closed)
-- Lease: `lease/personal/EVAL-005/c1-c2-paired-freeze`
+- Lease: `lease/personal/EVAL-005/c1-c2-paired-freeze` (closed 2026-08-17)
 - Claim ceiling: `hypothesis` / non-claim
 - Reviewer: `not_reviewed`
+- Document status: owner 2026-08-17 authorized measurement closure so product
+  work can start. Campaign **closed 2026-08-17**. Evaluation routing OFF.
 
 This is the campaign's single running report. Append each finished cell before
 starting the next (`TEST-REPORT-INCREMENTAL-01`).
@@ -25,6 +27,7 @@ starting the next (`TEST-REPORT-INCREMENTAL-01`).
 | B3 stale | **not-run** | no mutation path |
 | MS-AUTH Memory positives | **pass** | 10/10 unsealed remember→review→forget→second-forget 409; caller-header 400 |
 | B4 mixed / B5 paired soak | **not-run** | no paired C1/C2 path |
+| Cleanup | **pass** | daemon `48288` already stopped; broker `48388` absent; SecretStore `/14` absent; 48181/48284/48383 and EVAL-004 roots untouched; redactor 22/0 |
 
 No Gate, release, Profile, B01, or Agent-benefit claim.
 
@@ -146,3 +149,36 @@ match. `secret-tool search`/`lookup` were not used.
 
 Claim ceiling `hypothesis`. No Gate, release, Profile, B01, or Agent-benefit
 claim.
+
+## Cleanup (2026-08-17) — pass
+
+Owner 2026-08-17 authorized campaign close (measurement closure only; no
+product patch in this campaign). Guest route unchanged:
+`wuz@192.168.1.2` ProxyJump `hal9001@192.168.123.160`.
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48288` pid 267060 | already absent; product `cognitive daemon stop` reported `already_stopped`; lock absent; listener absent |
+| campaign broker `127.0.0.1:48388` | never started; listener absent |
+| listeners `48181` / `48284` / `48383` | untouched (`cos-current` / EVAL-004 residue / EVAL-002 broker) |
+| EVAL-004 roots `perfeval004` / `perfeval004-20260816` | untouched |
+| SecretStore item `/14` | unlocked `login` collection `item_count 0`; direct path `/login/14` absent; `secret-tool clear` on the product attribute triple (`application=cognitiveos-personal`, `provider=deepseek`, `purpose=provider-api-key`); D-Bus `SearchItems` and collection `Items` paths only; never `secret-tool search`/`lookup` |
+| redactor `evidence/` | 4 files, `key_shaped_hits=0` |
+| redactor `runtime/` | 18 files, `key_shaped_hits=0` |
+| campaign root | retained `0700` at `/home/hal9001/perfeval005-20260817` (evidence only) |
+
+**Campaign closed.** C1/C2 paired remains `partial`/`not-run` on skip class
+`scheduler_row_skip_before_lease` (Tasks stayed `DRAFT`; `lease_acquired`
+0/0; no Intent/Effect; no Pi child). That skip is a product mutex for a
+new formal task after this close. Claim ceiling `hypothesis`, verifier
+`not_reviewed`. No Gate, release, Profile, B01, or Agent-benefit
+promotion.
+
+The EVAL-004 `secret-tool search` leak is unchanged: the owner must rotate
+the Provider key. This session did not print secret material.
+
+## Non-claims
+
+No Gate, release, Profile, B01, B01-W, or Agent-benefit promotion. No
+optimization success. Owner 2026-08-17 authorized backlog continuation
+after this close; evaluation routing is OFF.

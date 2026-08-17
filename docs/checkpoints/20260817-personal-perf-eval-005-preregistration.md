@@ -1,7 +1,7 @@
 # PERSONAL-PERF-EVAL-005 freeze preregistration
 
 - Campaign: `PERSONAL-PERF-EVAL-005`
-- Lease: `lease/personal/EVAL-005/c1-c2-paired-freeze`
+- Lease: `lease/personal/EVAL-005/c1-c2-paired-freeze` (closed 2026-08-17)
 - Date: 2026-08-17
 - Frozen product source: `origin/main@b16d29556eb4113ead3661f186e615c3183962a9`
   (merge of P2-T29 closure PR #231). Product enablement merged as PR #230 at
@@ -10,7 +10,8 @@
   `hal9000`) ProxyJump `hal9001@192.168.123.160`
 - Claim ceiling: `hypothesis` / non-claim
 - Independent reviewer: `not_reviewed`
-- Product code changes: none permitted (measurement-only)
+- Product code changes: none permitted (measurement-only). Campaign closed
+  2026-08-17 after owner-authorized measurement closure.
 
 This is a **new freeze**. It does not reuse EVAL-004 campaign root
 `/home/hal9001/perfeval004` or `/home/hal9001/perfeval004-20260816`, loopback
@@ -55,6 +56,7 @@ Rotate the previously leaked Provider key if that item is still in use.
 | C1/C2 paired B1/B2 | **not-run** | B0 never left `DRAFT`; no Provider spend |
 | T8 / B3 stale | **not-run** | no public invocation / no mutation path |
 | MS-AUTH Memory positives | **pass** | 10/10 unsealed lifecycle + caller-header 400. See running report |
+| Cleanup / campaign close | **pass** | Owner 2026-08-17 authorized close. Daemon `48288` already stopped; broker `48388` absent; SecretStore `/14` absent on unlocked login collection; `secret-tool clear` on the product triple; D-Bus paths only; never search/lookup; 48181/48284/48383 and EVAL-004 roots untouched; redactor 22 files 0 key-shaped hits |
 
 ## Non-claims
 
@@ -273,8 +275,10 @@ report.
 
 ## Unique next action
 
-Keep the two started C1-search samples retained. Campaign stays **active**
-until the owner closes it. Do not open B1/B2 Provider spend. Do not claim
-`P*-T*` or patch product. Cleanup (daemon/broker/SecretStore `/14`) waits
-for owner close. Do not reuse EVAL-004 roots/ports or SecretStore
-`/12`/`/13`. Never `secret-tool search`/`lookup`.
+**Campaign closed 2026-08-17** after owner-authorized measurement closure.
+Retain the two started C1-search samples. Do not reopen B1/B2 on this
+freeze. Do not reuse EVAL-004 or EVAL-005 roots/ports or SecretStore
+`/12`/`/13`/`/14`. Never `secret-tool search`/`lookup`. Evaluation routing
+is OFF. The scheduler skip is a product mutex for a new formal P2 task
+after this close (do not collide with P2-T29). Rotate the Provider key
+exposed earlier by EVAL-004 `secret-tool search`.
