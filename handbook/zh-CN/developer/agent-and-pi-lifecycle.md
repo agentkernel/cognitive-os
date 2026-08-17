@@ -25,6 +25,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
 fingerprint: "sha256:dedfe44799e541e0f41bcc15f198f7e5cc5117a8bc6ba2d0a602cbfd84289ce5"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
@@ -71,7 +72,8 @@ shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign obs
 单、带字节上限与截止的一次性私有 socketpair、结构化 `AdapterOutcome`（绝非权威状
 态）。CognitiveOS 扩展对外广告 daemon 治理的 WorkspaceSearch/Write/Patch；适配器把
 一次此类工具调用映射到 P2-T21 candidate 路径。daemon 把其输出当作待准入
-candidate——仅此而已。
+candidate——仅此而已。测试用 stub 适配器可以在 stdout 发出该未信任 candidate，而不连接
+Provider completion socket；daemon 仍校验 descriptor、digest 与授权。
 
 ## Pi 之外
 

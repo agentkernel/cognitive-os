@@ -27,8 +27,8 @@ selected-model); the focused test installs a stub adapter (not bash/edit/write).
 
 | Unit | Status | Note |
 |---|---|---|
-| D01 live-daemon HTTP admit skip | authored | `p2_t31_live_daemon_scheduler.rs`; expected fail on unfixed HEAD; Unix stub + shared-store is D02 |
-| D02 shared store + stub transport | authored | `TaskApi::with_shared_store`; `SqliteAuthorityStore` clones share one mutex; pending Ubuntu/linux-002 |
+| D01 live-daemon HTTP admit skip | **pass** (failure-first) | linux-002 at `ee353679`: Task stayed DRAFT, `lease_acquired` 0, empty skip lines — first tick blocked ~65 s on unused Provider completion socket |
+| D02 shared store + stdout stub candidate | authored | `TaskApi::with_shared_store`; stdout-valid adapter candidate does not wait on the completion socket; pending re-run |
 | Ubuntu supporting CI | `not-run` | after push |
 | `DEV-LINUX-NATIVE-01` | `not-run` | after D02 push |
 | Windows GNU cargo | `not-run` | `RUST-LINK-DEV-WIN-GNU-01`; live test `cfg(unix)`; extra native GNU not-run by Linux-only route |

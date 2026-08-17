@@ -17,6 +17,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
 fingerprint: "sha256:2265d105416fb0fd987071a03bd04074bdda22072d892315bae21af296d2fe20"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
@@ -99,5 +100,7 @@ Gate, release or Profile claim.
 Separately from the shell, the daemon manages Pi as a governed agent (acquisition,
 registration, sidecar sessions) and can launch a locked-down Pi child process to
 produce **candidates** over a private one-shot socket — that path disables tools,
-skills, sessions, and extensions except the pinned candidate extension. See
+skills, sessions, and extensions except the pinned candidate extension. A test
+stub may emit the same untrusted candidate on stdout without using the Provider
+completion socket. See
 [Agent and Pi lifecycle](../developer/agent-and-pi-lifecycle.md).

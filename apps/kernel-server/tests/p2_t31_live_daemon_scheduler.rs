@@ -291,6 +291,13 @@ fn live_http_admit_c1_search_leaves_draft_until_scheduler_acquires_lease() {
         &task_token,
     ));
     let skip_lines = redact_scheduler_stderr(&stderr.lock().unwrap());
+    let stderr_head = stderr
+        .lock()
+        .unwrap()
+        .lines()
+        .take(6)
+        .collect::<Vec<_>>()
+        .join("\n");
     let _ = daemon.kill();
     let _ = daemon.wait();
     let _ = std::fs::remove_dir_all(&root);
@@ -303,11 +310,11 @@ fn live_http_admit_c1_search_leaves_draft_until_scheduler_acquires_lease() {
         .unwrap_or(0);
     assert_ne!(
         state, "DRAFT",
-        "EVAL-006 skip: live HTTP admit stayed DRAFT; lease_acquired={lease_acquired}; scheduler stderr:\n{skip_lines}"
+        "EVAL-006 skip: live HTTP admit stayed DRAFT; lease_acquired={lease_acquired}; scheduler stderr:\n{skip_lines}\nstderr head:\n{stderr_head}"
     );
     assert!(
         lease_acquired >= 1,
-        "live daemon must acquire a scheduler lease; lease_acquired={lease_acquired}; scheduler stderr:\n{skip_lines}"
+        "live daemon must acquire a scheduler lease; lease_acquired={lease_acquired}; scheduler stderr:\n{skip_lines}\nstderr head:\n{stderr_head}"
     );
 }
 

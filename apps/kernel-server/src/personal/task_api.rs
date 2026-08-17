@@ -182,6 +182,7 @@ pub(crate) struct TaskApi {
 }
 
 impl TaskApi {
+    #[allow(dead_code)] // in-process tests construct TaskApi without a daemon handle
     pub(crate) fn new(layout: PersonalDataLayout) -> Self {
         Self {
             layout,

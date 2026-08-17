@@ -17,6 +17,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
 fingerprint: "sha256:2265d105416fb0fd987071a03bd04074bdda22072d892315bae21af296d2fe20"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
@@ -84,5 +85,6 @@ CognitiveOS state/runtime/config 目录内的路径一律拒绝。阶段计时�
 
 在 shell 之外，daemon 还把 Pi 作为受治理 agent 管理（获取、注册、sidecar 会话），并
 能启动一个高度受限的 Pi 子进程经一次性私有 socket 产出 **candidate**——该路径禁用工
-具、skill、会话与除钉住 candidate 扩展外的一切扩展。见
+具、skill、会话与除钉住 candidate 扩展外的一切扩展。测试 stub 可在 stdout 发出同一未
+信任 candidate 而不使用 Provider completion socket。见
 [Agent 与 Pi 生命周期](../developer/agent-and-pi-lifecycle.md)。
