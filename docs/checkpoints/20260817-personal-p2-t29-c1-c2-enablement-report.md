@@ -84,9 +84,18 @@
   **336/336**.
 - `cargo fmt --all -- --check`: **pass**.
 - Ubuntu supporting CI run `31999496789` `verify (ubuntu-latest)`: **pass**
-  (workspace test, Clippy `-D warnings`, handbook). windows-latest pending at
-  the time this unit was recorded.
+  (workspace test, Clippy `-D warnings`, handbook).
+- Dual-platform CI run `32000735588` at docs-head `dbbd176f`: Ubuntu **pass**,
+  windows-latest **pass**, `required-ci` **pass**.
 - `B01-Desktop-Linux-002` untouched.
+
+## Closure
+
+- Merged PR [#230](https://github.com/agentkernel/cognitive-os/pull/230) at
+  `main@98cb23d1dc548929e727259fa4d3109cfe38f5ee`.
+- Lease `lease/personal/P2-T29/c1-c2-enablement` closed 2026-08-17.
+- Claim ceiling remains hypothesis/non-claim. No Gate, release, Profile, B01,
+  EVAL, or Agent-benefit promotion.
 
 ## Acceptance map (product task; not EVAL)
 
