@@ -65,4 +65,36 @@
 - Ubuntu supporting CI run `31998669185`: **fail** — `RUSTFLAGS=-D warnings` dead_code on
   `ResourceApi::new` (production callers now use `with_governance_data_dir`;
   `new` remains test-only). Same fail on windows-latest and linux-002 compile.
-- Fix: `#[cfg(test)]` on `ResourceApi::new`. Re-push and re-run the matrix.
+- Fix: `#[cfg(test)]` on `ResourceApi::new` at `a317d8171cacba4bbf69270e62aa7e720747c8ee`.
+
+## D03 — exact-revision `DEV-LINUX-NATIVE-01` (`a317d817`)
+
+- Host: `wuz@192.168.1.2` (`hal9000`), rustc 1.97.1.
+- Worktree: `/home/wuz/agent-kernel-worktrees/p2-t29-df39b49c` at exact
+  `a317d8171cacba4bbf69270e62aa7e720747c8ee` (bundle fetch after GitHub HTTP/2
+  fetch failed on the host).
+- `cargo test --locked -p kernel-server --test p4_t05_resource_api`: **pass**
+  7/7, including `public_remember_accepts_unsealed_payload_and_daemon_composes_headers`
+  and `public_remember_rejects_caller_minted_header_on_unsealed_payload`.
+- `cargo test --locked -p pi-agent-adapter --test daemon_candidate_protocol`:
+  **pass** 14/14, including one WorkspaceSearch extraction, bash still rejected,
+  mixed tool+JSON rejected, and two Workspace* calls rejected.
+- `cargo clippy --workspace --all-targets --locked -- -D warnings`: **pass**.
+- `cargo test --workspace --locked`: **pass**, 0 failed. `kernel-server` bin
+  **336/336**.
+- `cargo fmt --all -- --check`: **pass**.
+- Ubuntu supporting CI run `31999496789` `verify (ubuntu-latest)`: **pass**
+  (workspace test, Clippy `-D warnings`, handbook). windows-latest pending at
+  the time this unit was recorded.
+- `B01-Desktop-Linux-002` untouched.
+
+## Acceptance map (product task; not EVAL)
+
+| Acceptance | Evidence |
+|---|---|
+| Extension advertises WorkspaceSearch/Write/Patch; allowlist empty; bash/edit/write blocked | Local Node 92/92; `workspace-tools.ts` execute I/O-free |
+| Adapter `--no-builtin-tools`; one Workspace* maps to P2-T21 candidate shape | linux-002 `daemon_candidate_protocol` 14/14; `PiLaunchPolicy::deepseek_candidate` still `--no-tools` |
+| Unsealed public remember; daemon-composed GovernanceSeed headers; caller header 400; sealed path unchanged | linux-002 `p4_t05_resource_api` 7/7 |
+| Ubuntu supporting CI + exact-revision linux-002 | Ubuntu `31999496789` pass; linux-002 matrix above |
+| Windows | `not-run by owner-directed Linux-only route` for extra native GNU; GitHub `windows-latest` is the workflow dual-platform job |
+| No Gate/release/Profile/B01/EVAL/Agent-benefit promotion | claim ceiling hypothesis/non-claim |
