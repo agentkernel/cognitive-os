@@ -37,7 +37,7 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:36547468623e9067ea9826b08c4a76b508d1fc7c05853f4dbaa57a5434c4617e"
+fingerprint: "sha256:591d5ac152cc044743591261673519799d27fc94b9762ba4d32640c38e76c663"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -54,7 +54,9 @@ native Tool descriptor/router composition sharing that CAS → bootstrap secret 
 TCP bind → atomic `daemon-endpoint.json` publication → one periodic scheduler
 worker → thread-per-connection serving. No scheduler pass runs before the listener and
 endpoint exist, so a Task admitted by this process can be observed by a later
-pass. The worker owns the scheduler connection, runs serial fixed-delay 250 ms
+pass. Public `POST /task/admit` persists owner-local Context authorization for
+tenant `personal` so that later pass can resolve Context instead of skipping
+before Pi. The worker owns the scheduler connection, runs serial fixed-delay 250 ms
 passes behind a non-reentrant gate, logs and retries pass-level failures, and is
 explicitly cancelled, unparked, and joined on orderly exit. Row-local failures
 remain isolated inside each pass. There is still no HTTP shutdown route (see

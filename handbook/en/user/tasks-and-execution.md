@@ -17,9 +17,9 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:8fa02ef518a8ead8b8c3bb91fbbb3625fa9e7ca006ec49361a2fb9587c67a54d"
+fingerprint: "sha256:bb450bc5fb2e7c79c3b313ff1b599b3c6164bc317c9c9a6596ab50ce21a502d9"
 non_claims:
-  - No claim that admitted Tasks execute autonomously today; the execution pipeline's component evidence lives in focused tests, not an end-to-end product path.
+  - Admission still does not consume the worker authorization or acquire a scheduler lease on the same pass; a later tick does. No Gate, release, Profile, or EVAL promotion.
 ---
 
 # Tasks and execution
@@ -38,7 +38,8 @@ durable paper trail:
    (objectives, scope, budgets, deadline, allowed tools, acceptance conditions).
 4. **Admit** — you accept exactly that digest; under one fenced epoch-CAS
    transaction the daemon mints the TaskContract and publishes its named
-   `START` Loop, hard Budget, and current-epoch runnable scheduler row. Changing
+   `START` Loop, hard Budget, and current-epoch runnable scheduler row, plus
+   owner-local Context authorization for tenant `personal`. Changing
    your mind later supersedes to a new epoch and fences everything bound to the
    old one.
 
@@ -57,11 +58,11 @@ daemon admits it as Intent + Effect + a one-time Worker Iteration Authorization 
 governed tool execution (persist-before-dispatch) → independent verification →
 loop continuation or STOP.
 
-Today admission durably enqueues its complete scheduler bootstrap, and each later
-stage exists with focused tests (lease CAS and fencing, sealed ContextViews,
-candidate admission bundles, six assembled Tool executors with unknown-outcome
-reconciliation, an independent verifier seam). Zero-Intent work now reaches
-candidate admission and leaves its new worker authorization for a later pass.
+Today admission durably enqueues its complete scheduler bootstrap, including
+owner-local Context authorization so the first later pass can resolve Context.
+Zero-Intent work now reaches candidate admission after walking Loop
+`START -> DECIDE`, and leaves its new worker authorization for a later pass
+that acquires the scheduler lease.
 One non-reentrant periodic worker starts after the daemon is listening, so later
 passes can observe Tasks admitted by the running process; pass errors do not
 stop the listener, and orderly shutdown cancels and joins the worker.

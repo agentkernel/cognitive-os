@@ -17,9 +17,9 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:8fa02ef518a8ead8b8c3bb91fbbb3625fa9e7ca006ec49361a2fb9587c67a54d"
+fingerprint: "sha256:bb450bc5fb2e7c79c3b313ff1b599b3c6164bc317c9c9a6596ab50ce21a502d9"
 non_claims:
-  - 不声明已接纳的 Task 今天能自主执行；执行流水线的组件证据存在于聚焦测试中，而非端到端产品路径。
+  - 准入同一趟仍不消费 worker 授权、也不获取调度 lease；那是后续 tick 的事。不作 Gate、release、Profile 或 EVAL 升格。
 ---
 
 # Task 与执行
@@ -35,7 +35,7 @@ Task 不是"agent 说它做了什么"，而是带持久证据链的受治理对�
    截止、允许工具、验收条件）。
 4. **Admit** —— 你接受的正是那个 digest；daemon 在一个 fenced epoch-CAS 事务内铸
    造 TaskContract，并发布其命名的 `START` Loop、硬 Budget 与当前 epoch 的 runnable
-   调度行。之后改主意会 supersede 到新 epoch，并 fence 一切绑定旧 epoch 的事物。
+   调度行，以及租户 `personal` 的 owner-local Context 授权。之后改主意会 supersede 到新 epoch，并 fence 一切绑定旧 epoch 的事物。
 
 该准入流水线为 `implemented`，也是默认路径上唯一的人工确认点。`GET /task/watch`
 提供有界、快照先行的事件流。已认证的 task 调用方还可以读取有界 O2/O3/O4/O5/O13 观测
@@ -49,10 +49,9 @@ O13 审计回放在过期游标或 digest 断裂时失败闭合。
 Intent + Effect + 一次性 Worker Iteration Authorization → 受治理工具执行
 （persist-before-dispatch）→ 独立验证 → 循环继续或 STOP。
 
-今天准入会持久入列完整的调度引导，后续每个环节也存在且有聚焦测试（lease CAS 与
-fencing、封存 ContextView、candidate 准入捆绑、带未知结果对账的六族已装配 Tool 执行
-器、独立 verifier 接缝）。零 Intent 工作现在可到 candidate 准入，并把新 worker 授权
-留给后续 pass。唯一非重入周期 worker 会在 daemon 开始监听后启动，因此后续 pass 可看
+今天准入会持久入列完整的调度引导，包括 owner-local Context 授权，使后续第一趟 pass
+能解析 Context。零 Intent 工作现在会在把 Loop 从 `START` 走到 `DECIDE` 后到达
+candidate 准入，并把新 worker 授权留给后续获取调度 lease 的 pass。唯一非重入周期 worker 会在 daemon 开始监听后启动，因此后续 pass 可看
 到本进程接纳的 Task；pass 错误不终止监听，顺序退出会取消并 join worker。**daemon
 的公共 C1 completion 实现已 native 证明**：生产会派发无参数 WorkspaceRead、
 独立验证其固定的已对账 Effect，再只从当前 CAS-backed authority facts 推导 candidate

@@ -7,7 +7,7 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/task_api.rs
-    symbols: ["TaskApi"]
+    symbols: ["TaskApi", "persist_owner_local_context_authorization"]
   - path: crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService", "contract_preview_digest"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
@@ -21,9 +21,9 @@ tests:
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:9d84a7fd3ff8db40b84bd4a6d13fda9c2dcc5c4842197582d31ab4b98028e8a5"
+fingerprint: "sha256:b5e69e050b595fb2eda4652efa1e88d76b3f424dbbf4d5f034db30ac1a4a677d"
 non_claims:
-  - Admission does not start autonomous execution; that gap is documented in execution-chain-status.
+  - Admission still does not consume a worker iteration authorization or acquire a scheduler lease; a later tick does.
 ---
 
 # Task pipeline
@@ -36,7 +36,7 @@ chain → SQLite, with generated request/result DTOs at the wire.
 | `propose` | `POST /task/intent.record` | `record_user_intent` — raw text fixed durably first |
 | `clarify` | `POST /task/intent.interpret` | `record_interpretation_candidate` — status derived, never chosen |
 | `preview` | `POST /task/preview` | local canonical digest over the typed draft (`cognitiveos.personal.task-contract-preview` domain); persists nothing |
-| `admit` | `POST /task/admit` | recompute preview digest (`PreviewDigestMismatch` on drift) → `admit_interpretation` → one fenced contract-epoch-CAS transaction for TaskContract + `START` Loop + hard Budget + runnable scheduler row |
+| `admit` | `POST /task/admit` | recompute preview digest (`PreviewDigestMismatch` on drift) → persist daemon-owned owner-local Context authorization facts and the tenant `personal` revocation epoch → `admit_interpretation` → one fenced contract-epoch-CAS transaction for TaskContract + `START` Loop + hard Budget + runnable scheduler row |
 | evidence | `GET /task/evidence?task_ref=...` | reconstruct a bounded redacted lifecycle, Effect reconciliation class, current verification/Artifact availability, acceptance transition, and durable event cursor from SQLite authority plus Artifact CAS |
 | effects | `GET /task/effects?task_ref=...` | reconstruct bounded Effect history (opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent, report refs) without receipts or raw parameters |
 | observation | `GET /task/observation?family=o2\|o3\|o4\|o5\|o13&task_ref=...` | bounded O2/O3/O4/O5/O13 read plane; empty collectors return `observed_zero` plus a named negative control; O5 reuses redacted Effect history; O13 is durable audit cursor/replay; no body/capability leakage |
@@ -52,8 +52,11 @@ and ceilings, and its own ID becomes the WIA namespace root.
 
 The admission publication is all-or-nothing in the authority SQLite file. A
 late Loop/Budget/scheduler conflict rolls back the contract and event; a crash
-after a successful response reopens every member. It does not create the
-candidate Intent/Effect or run a Tool—the periodic worker path remains separate.
+after a successful response reopens every member. Owner-local Context
+authorization facts are daemon policy for tenant `personal`, not a client
+capability channel; the first scheduler tick walks Loop `START -> DECIDE` from
+the sealed ContextView before Pi. It does not create the candidate Intent/Effect
+or run a Tool—the periodic worker path remains separate.
 At daemon startup, the current immutable contract can reconstruct the same
 bootstrap and idempotently restore only a missing Loop, Budget, or scheduler
 row; existing authority is never reset.

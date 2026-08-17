@@ -52,7 +52,9 @@ content digests; a view's strong `request_ref` is checked against the persisted
 request digest (not caller input). Workspace sources carry role/trust CHECK
 constraints; discovery is metadata-first with separate body loads;
 authorization/revocation fact sets reconstruct `AuthzSnapshot`s at the **current**
-revocation epoch. On the real scheduler path the daemon reloads
+revocation epoch. Public `POST /task/admit` persists those owner-local facts and
+the tenant `personal` epoch as daemon policy so the scheduler does not skip
+before Pi. On the real scheduler path the daemon reloads
 authorization/revocation immediately before every body load and seals the view
 before any Pi transport. Eligible Memory/Skill fragments are loaded only after
 exact scope/pin/digest checks and current forget/revoke revalidation; the

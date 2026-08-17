@@ -84,9 +84,13 @@ verification → verified continuation or ceiling STOP.
 The former bootstrap gap is closed in the admission path without adding a
 parallel scheduler: successful `TaskApplicationService::admit` atomically
 publishes the contract-named Loop and Budget beside the runnable scheduler row.
-A zero-Intent row now enters the pre-admission candidate branch instead of
-raising `MissingEffectBinding`; that pass returns after issuing the WIA, so it
-cannot consume its own worker authority. Row-local failures are isolated and do
+Public `POST /task/admit` also persists daemon-owned Context authorization facts
+and the tenant `personal` revocation epoch. A zero-Intent row now enters the
+pre-admission candidate branch instead of raising `MissingEffectBinding`; that
+first tick walks Loop `START -> DECIDE` from the sealed ContextView, admits one
+private Pi candidate, and returns after issuing the WIA, so it cannot consume
+its own worker authority or acquire a scheduler lease. A later tick reloads the
+durable WIA under a lease and activates the Task. Row-local failures are isolated and do
 not abort later rows in the bounded pass. The daemon now starts one
 non-reentrant, cancellable periodic worker only after bind and endpoint
 publication; pass-level failures are retried and cannot prevent listening.

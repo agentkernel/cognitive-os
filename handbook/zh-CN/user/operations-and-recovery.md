@@ -88,7 +88,9 @@ orphan staging。生产 HTTP fetch staging 还会咨询评测授权的钉住 ori
 钉时白名单保持为空，请求失败闭合。
 
 成功的 Task 准入在权威库内同样具备崩溃原子性：合同、`DRAFT` governed Task、
-`START` Loop、硬 Budget 与 runnable 调度行一起出现。提交前失败不会留下这些准入成员；
+`START` Loop、硬 Budget 与 runnable 调度行一起出现。daemon 自有的 Context 授权事实与
+租户 `personal` 撤销 epoch 在该 CAS 之前作为幂等 owner-local 策略持久化，不是调用方
+能力通道。提交前失败不会留下这些准入成员；
 成功响应后崩溃重开会看到完整发布。启动可修复缺失的旧 Task 投影，且不会重置任何既有
 生命周期状态。
 

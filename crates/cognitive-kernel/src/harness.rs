@@ -9,7 +9,9 @@
 //! and durable-fact-derived:
 //!
 //! - loop boundary transitions with sanctioned guard derivations
-//!   ([`LoopDriver::start_loop`], [`LoopDriver::begin_iteration`],
+//!   ([`LoopDriver::start_loop`],
+//!   [`LoopDriver::advance_start_to_decide_after_context_view`],
+//!   [`LoopDriver::begin_iteration`],
 //!   [`LoopDriver::end_iteration_from_persisted_report`]): contract pinning, hard budget
 //!   admission + same-transaction debit, checkpoint-bound continuation;
 //! - typed progress facts ([`LoopDriver::record_progress`]): progress is
@@ -378,6 +380,74 @@ where
             lease,
         )?;
         Ok(self.engine().commit_transition(&cmd)?)
+    }
+
+    /// Walk `START -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE` after a sealed
+    /// ContextView exists. Public Task admission leaves Loop at `START`;
+    /// candidate admission requires `DECIDE`. This is not Task acceptance and
+    /// does not invoke Pi.
+    pub fn advance_start_to_decide_after_context_view(
+        &self,
+        loop_id: &ObjectId,
+        expected_version: Version,
+        task_ref: &str,
+        budget_id: &BudgetId,
+        context_view_id: &ObjectId,
+        context_view_canonical_json: &str,
+        lease: &WriterLease,
+    ) -> Result<CommittedTransition, EffectError> {
+        let observed = self.start_loop(loop_id, expected_version, task_ref, budget_id, lease)?;
+        let view_ref = strong_ref(context_view_id, 1, context_view_canonical_json)
+            .map_err(EffectError::Denied)?;
+
+        let mut resolve_guards = BTreeSet::new();
+        resolve_guards.insert("observation_recorded".to_owned());
+        let mut resolve_evidence = BTreeMap::new();
+        resolve_evidence.insert("observation_refs".to_owned(), view_ref.clone());
+        let resolved = self.engine().commit_transition(&self.command(
+            loop_id,
+            "OBSERVE",
+            "RESOLVE",
+            "EVIDENCE_OBSERVED",
+            resolve_guards,
+            resolve_evidence,
+            observed.after_version,
+            None,
+            lease,
+        )?)?;
+
+        let mut orient_guards = BTreeSet::new();
+        orient_guards.insert("required_context_closed".to_owned());
+        orient_guards.insert("context_authorized".to_owned());
+        let mut orient_evidence = BTreeMap::new();
+        orient_evidence.insert("context_view".to_owned(), view_ref.clone());
+        let oriented = self.engine().commit_transition(&self.command(
+            loop_id,
+            "RESOLVE",
+            "ORIENT",
+            "CONTEXT_COMPLETE",
+            orient_guards,
+            orient_evidence,
+            resolved.after_version,
+            None,
+            lease,
+        )?)?;
+
+        let mut decide_guards = BTreeSet::new();
+        decide_guards.insert("decision_inputs_fixed".to_owned());
+        let mut decide_evidence = BTreeMap::new();
+        decide_evidence.insert("orientation_record".to_owned(), view_ref);
+        Ok(self.engine().commit_transition(&self.command(
+            loop_id,
+            "ORIENT",
+            "DECIDE",
+            "ORIENTATION_COMPLETE",
+            decide_guards,
+            decide_evidence,
+            oriented.after_version,
+            None,
+            lease,
+        )?)?)
     }
 
     /// CONTINUE -> OBSERVE (`NEXT_ITERATION`): the deterministic iteration

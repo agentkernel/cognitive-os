@@ -82,8 +82,11 @@ non_claims:
 
 原先的引导缺口已在准入路径闭合，且未新增平行调度器：成功的
 `TaskApplicationService::admit` 会把合同命名的 Loop、Budget 与 runnable 调度行原子发
-布。零 Intent 行现在进入 pre-admission candidate 分支，而非抛出
-`MissingEffectBinding`；该趟签发 WIA 后立即返回，不能消费自己刚产生的 worker 权威。
+布。公开 `POST /task/admit` 还会持久化 daemon 自有的 Context 授权事实与租户
+`personal` 撤销 epoch。零 Intent 行现在进入 pre-admission candidate 分支，而非抛出
+`MissingEffectBinding`；该首个 tick 用封存 ContextView 把 Loop 从 `START` 走到
+`DECIDE`，准入一条私有 Pi candidate，签发 WIA 后立即返回，不能消费自己刚产生的
+worker 权威，也不获取调度 lease。后续 tick 在 lease 下重载持久 WIA 并激活 Task。
 逐行失败彼此隔离，不会中止有界 pass 中的后续行。daemon 现在只在绑定并发布 endpoint
 后启动唯一、非重入且可取消的周期 worker；pass 级失败会重试，不能阻止监听。剩余缺口
 为：

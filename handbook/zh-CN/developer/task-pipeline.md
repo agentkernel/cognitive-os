@@ -7,7 +7,7 @@ status: implemented
 generated: false
 sources:
   - path: apps/kernel-server/src/personal/task_api.rs
-    symbols: ["TaskApi"]
+    symbols: ["TaskApi", "persist_owner_local_context_authorization"]
   - path: crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService", "contract_preview_digest"]
   - path: crates/cognitive-kernel/src/intent_chain.rs
@@ -21,9 +21,9 @@ tests:
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:9d84a7fd3ff8db40b84bd4a6d13fda9c2dcc5c4842197582d31ab4b98028e8a5"
+fingerprint: "sha256:b5e69e050b595fb2eda4652efa1e88d76b3f424dbbf4d5f034db30ac1a4a677d"
 non_claims:
-  - 准入不会启动自主执行；该缺口记录于执行链状态页。
+  - 准入仍不消费 worker iteration authorization，也不获取调度 lease；那是后续 tick 的事。
 ---
 
 # Task 流水线
@@ -36,7 +36,7 @@ chain → SQLite，线上使用生成的 request/result DTO。
 | `propose` | `POST /task/intent.record` | `record_user_intent` —— 原文先持久固定 |
 | `clarify` | `POST /task/intent.interpret` | `record_interpretation_candidate` —— 状态推导，绝不挑选 |
 | `preview` | `POST /task/preview` | 对类型化草稿做本地 canonical digest（域 `cognitiveos.personal.task-contract-preview`）；不持久化 |
-| `admit` | `POST /task/admit` | 重算 preview digest（漂移 → `PreviewDigestMismatch`）→ `admit_interpretation` → 一个 fenced 合同 epoch-CAS 事务发布 TaskContract + `START` Loop + 硬 Budget + runnable 调度行 |
+| `admit` | `POST /task/admit` | 重算 preview digest（漂移 → `PreviewDigestMismatch`）→ 持久化 daemon 自有的 owner-local Context 授权事实与租户 `personal` 撤销 epoch → `admit_interpretation` → 一个 fenced 合同 epoch-CAS 事务发布 TaskContract + `START` Loop + 硬 Budget + runnable 调度行 |
 | evidence | `GET /task/evidence?task_ref=...` | 从 SQLite authority 与 Artifact CAS 重建有界脱敏的生命周期、Effect 对账类别、current verification/Artifact 可用性、acceptance transition 与持久事件游标 |
 | effects | `GET /task/effects?task_ref=...` | 重建有界 Effect 历史（不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省、report refs），不含 receipt 或原始参数 |
 | observation | `GET /task/observation?family=o2\|o3\|o4\|o5\|o13&task_ref=...` | 有界 O2/O3/O4/O5/O13 只读平面；空 collector 返回 `observed_zero` 与具名 negative control；O5 复用脱敏 Effect 历史；O13 是持久审计游标回放；不泄漏 body/capability |
@@ -50,7 +50,9 @@ chain → SQLite，线上使用生成的 request/result DTO。
 工具、截止与上限，其自身 ID 成为 WIA 命名空间根。
 
 准入发布在 authority SQLite 文件内全有或全无。靠后的 Loop/Budget/调度冲突会回滚合同
-与事件；成功响应后崩溃重开会看到全部成员。它不创建 candidate Intent/Effect，也不运行
+与事件；成功响应后崩溃重开会看到全部成员。Owner-local Context 授权事实是租户
+`personal` 的 daemon 策略，不是调用方能力通道；首个调度 tick 在 Pi 之前用封存
+ContextView 把 Loop 从 `START` 走到 `DECIDE`。它不创建 candidate Intent/Effect，也不运行
 Tool——周期 worker 路径仍是独立接线。
 daemon 启动时可从当前不可变合同重构同一引导，并幂等恢复所缺 Loop、Budget 或调度行；
 既有权威绝不重置。
