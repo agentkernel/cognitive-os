@@ -15,13 +15,20 @@ starting the next (`TEST-REPORT-INCREMENTAL-01`).
 
 | Cell | Status | Note |
 |---|---|---|
-| Freeze (archive/binaries/root/port) | `not-run` | planned guest `/home/hal9001/perfeval006-20260817`; daemon `127.0.0.1:48290` |
-| SecretStore import | `not-run` | new item via stdin; D-Bus paths only; never search/lookup |
-| Pi 0.81.1 pin | `not-run` | `--extension` absolute |
-| Exact-source `pi-agent-adapter` | `not-run` | same `103fe776` archive |
-| B0 C1/C2 paired | `not-run` | after freeze |
+| Freeze (archive/binaries/root/port) | **pass** | guest `/home/hal9001/perfeval006-20260817`; daemon `127.0.0.1:48290` pid 273829; archive `sha256:d322be1555…`; kernel-server `sha256:47513386ae…` |
+| SecretStore import | **pass** | new item `/15` via stdin; D-Bus `SearchItems` paths only; never search/lookup |
+| Pi 0.81.1 pin | **pass** | `--extension` absolute; doctor package/pinned/observed `0.81.1`; `first_conversation_ready: true` |
+| Exact-source `pi-agent-adapter` | **pass** | same `103fe776` archive; `sha256:816856b496…`; `o-arm-candidate.mjs` `sha256:29870821…` |
+| B0 C1/C2 paired | `not-run` | freeze complete; next cell |
 | B1 C1/C2 paired | `not-run` | after B0 |
 | B2 C1/C2 paired | `not-run` | after B1 |
 | Cleanup | `not-run` | do not touch 48181/48284/48383 or EVAL-004/005 roots |
 
-No Gate, release, Profile, B01, or Agent-benefit claim.
+## Freeze (2026-08-17) — pass
+
+Exact source `main@103fe776`. Guest root mode `0700`. Listeners `48181` /
+`48284` / `48383` untouched. SecretStore item `/15` is new (not `/12` /
+`/13` / `/14`). Public doctor: all required components `ready`, Pi
+`0.81.1`, `first_conversation_ready: true`. That is conversation
+readiness, not a C1/C2 Task. Claim ceiling `hypothesis`. No Gate, release,
+Profile, B01, or Agent-benefit claim.
