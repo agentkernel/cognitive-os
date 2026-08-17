@@ -1,21 +1,20 @@
-# PERSONAL-PERF-EVAL-007 assessment (running)
+# PERSONAL-PERF-EVAL-007 assessment (final)
 
 - Campaign: `PERSONAL-PERF-EVAL-007`
 - Frozen source target: `main@2a8d4d2f` (P2-T31 closed)
-- Lease: `lease/personal/EVAL-007/c1-c2-paired-freeze`
+- Lease: `lease/personal/EVAL-007/c1-c2-paired-freeze` (closed 2026-08-17)
 - Claim ceiling: `hypothesis` / non-claim
 - Reviewer: `not_reviewed`
-- Document status: freeze **pass**; C1/C2 B0 in progress
+- Document status: campaign **closed**. Measurement-only. Evaluation routing OFF.
 
 This is the campaign's single running report. Append each finished cell before
-starting the next (`TEST-REPORT-INCREMENTAL-01`). Measurement-only: no product
-code, contract, negative, test, or handbook source change.
+starting the next (`TEST-REPORT-INCREMENTAL-01`).
 
 Owner 2026-08-17 authorized C1/C2 re-measure after P2-T31. EVAL-006 B0 on
 `main@103fe776` skipped with `scheduler_row_skip_before_lease` on the live
-daemon. P2-T31 made live HTTP admit share the daemon store, accept a
-stdout-valid stub candidate without waiting on the unused Provider socket,
-and treat the first dispatch as not a retry.
+daemon. P2-T31's focused test spawned `kernel-server --personal` with piped
+stderr and passed. This campaign measured the public `cognitive daemon start`
+launcher.
 
 ## Cells
 
@@ -25,10 +24,10 @@ and treat the first dispatch as not a retry.
 | SecretStore import | **pass** | new item `/16` via stdin; D-Bus `SearchItems` paths only; never search/lookup |
 | Pi 0.81.1 pin | **pass** | `--extension` absolute; doctor package/pinned/observed `0.81.1`; `first_conversation_ready: true` |
 | Exact-source `pi-agent-adapter` | **pass** | same `2a8d4d2f` archive; `sha256:816856b496…`; `o-arm-candidate.mjs` `sha256:29870821…` |
-| B0 C1/C2 paired | `not-run` | freeze pass recorded; cell starting next |
-| B1 C1/C2 paired | `not-run` | after B0 |
-| B2 C1/C2 paired | `not-run` | after B0 |
-| Cleanup | `not-run` | stop 48292/48392; clear `/16`; leave 48181/48284/48383 and EVAL-004/005/006 roots |
+| B0 C1/C2 paired | **partial** | one retained O-arm C1-search Task; public lifecycle `DRAFT`; `lease_acquired` 0; no Pi child; P-arm not-run |
+| B1 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
+| B2 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
+| Cleanup | **pass** | daemon 48292 stopped; broker 48392 absent; SecretStore `/16` cleared; 48181/48284/48383 and EVAL-004/005/006 roots untouched; redactor 18/0 |
 
 ## Freeze (2026-08-17) — pass
 
@@ -54,8 +53,99 @@ Profile, B01, or Agent-benefit claim.
 Host `ldd` on `kernel-server` resolves only glibc/`libgcc`/`libm`. Windows
 GNU Rust build remains `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
 
+## B0 C1-search O-arm (2026-08-17) — partial; retained
+
+One O-arm C1-search qualification Task was started with `retry=0` against
+the public Task admit surface on the public `cognitive daemon start`
+launcher. It is retained. It did not leave `DRAFT`. No Intent, Effect,
+verification, or acceptance row exists. WorkspaceRead is still not
+advertised; this cell used WorkspaceSearch only.
+
+| Seed | Task ref | Admit | Probe | Lifecycle |
+|---|---|---|---|---|
+| `b0-0` | `task://local/eval007-b0-C1-search-b0-0-d37aaefff202` | 200 (record 14 ms, interpret 5 ms, preview 1 ms, admit 29 ms) | wall 179206 ms; `acceptance_ref` absent | `DRAFT`; minted `2026-08-17T15:11:37.942Z` |
+
+Guest evidence file:
+`/home/hal9001/perfeval007-20260817/evidence/b0-oarm-C1-search-b0-0.json`
+`sha256:77ed3b392ab40398420285ea8756283a1497a9279eaf244f3c85bd42f1dee2fe`.
+Instrument `eval007-b0-c1-search.py`
+`sha256:f3338064e716822a5cdee19f7f75c75138af4b2f36bde0593e00c96c672e4709`.
+Public `cognitive task evidence`: `lifecycle.current_state=DRAFT`;
+`intent_refs` / `effect_refs` empty; `latest_verification` /
+`latest_acceptance` null. Bounded O4: `runnable_count` 32,
+`lease_acquired` 0 (observed_zero true). O5 named zero. No
+`pi-agent-adapter` or `pi-coding-agent` child. Campaign kernel-server pid
+277358. Listeners `48181` / `48284` / `48383` untouched. P-arm / broker
+`48392` not started.
+
+Claim ceiling `hypothesis`. No Gate, release, Profile, B01, or Agent-benefit
+claim.
+
+## Private-candidate skip (2026-08-17) — public facts match EVAL-006
+
+Campaign-only observation. No product change. Public `cognitive status` /
+`doctor` were ready (`first_conversation_ready: true`) before B0; that is
+not C1/C2. The admitted Task stayed `DRAFT` for the full 180 s probe.
+O4 `lease_acquired` 0. No Pi child. Freeze assets required for a spawn
+were present (`pi.json` candidate paths, adapter binary, selected model).
+This is therefore **not** a missing-freeze-asset `not_available`.
+
+P2-T31's focused test spawns `kernel-server --personal` and pipes stderr.
+This cell used public `cognitive daemon start --bind 127.0.0.1:48292`,
+which sends stderr to `/dev/null`, so the exact per-row skip string is
+**not a public fact**. Public symptoms are unchanged from EVAL-006:
+`DRAFT`, `lease_acquired` 0, no Intent/Effect, no Pi child.
+
+This is not a real public C1/C2 caller. Remaining paired B0 classes,
+B1/B2, and P-arm stay `not-run`. Do not open Provider spend on a path
+that never leaves `DRAFT`. The skip is a product mutex for a new formal
+task after this close (do not collide with P2-T29/T30/T31): exercise the
+**public `cognitive daemon start`** path, not only a test-spawned
+`kernel-server --personal`.
+
+## C1/C2 paired remainder (2026-08-17) — `not-run`
+
+| Cell | Disposition | Cause |
+|---|---|---|
+| B0 remaining C1/C2 classes | `not-run` | same public skip; one C1-search O-arm sample was started and is retained |
+| B1 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
+| B2 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
+| P-arm / broker `48392` | `not-run` | equivalent Pi adapter not started; fairness not measurable |
+| O5/O6 as C1/C2 dependents | `not-run` | no Intent/Effect |
+| T4–T5/T8/T9 | `not-run` | T8 is invocation-time descriptor drift; no public dispatch |
+| B3 stale Task/epoch | `not-run` | no mutation path |
+
+## Cleanup (2026-08-17) — pass
+
+Owner 2026-08-17 authorized measurement close after B0 path/fairness failed
+on the public daemon launcher. Guest route unchanged:
+`wuz@192.168.1.2` ProxyJump `hal9001@192.168.123.160`.
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48292` pid 277358 | product `cognitive daemon stop` `action=stopped`; lock absent; listener absent |
+| campaign broker `127.0.0.1:48392` | never started; listener absent |
+| listeners `48181` / `48284` / `48383` | untouched (`cos-current` / EVAL-004 residue / EVAL-002 broker) |
+| EVAL-004/005/006 roots | untouched |
+| SecretStore item `/16` | `secret-tool clear` on the product attribute triple (`application=cognitiveos-personal`, `provider=deepseek`, `purpose=provider-api-key`); post-clear D-Bus `SearchItems` unlocked/locked 0; `login` collection `Items` 0; never `secret-tool search`/`lookup` |
+| redactor `evidence/` | 3 files, `key_shaped_hits=0` |
+| redactor `runtime/` | 15 files, `key_shaped_hits=0` |
+| campaign root | retained `0700` at `/home/hal9001/perfeval007-20260817` (evidence only) |
+
+**Campaign closed.** C1/C2 paired remains `partial`/`not-run` on the public
+`cognitive daemon start` path (Task stayed `DRAFT`; `lease_acquired` 0;
+no Intent/Effect; no Pi child). That skip is a product mutex for a new
+formal task after this close. Claim ceiling `hypothesis`, verifier
+`not_reviewed`. No Gate, release, Profile, B01, or Agent-benefit
+promotion.
+
+The EVAL-004 `secret-tool search` leak is unchanged: the owner must rotate
+the Provider key. This session did not print secret material.
+
 ## Non-claims
 
-Hypothesis only. No Gate, release, Profile, B01, or Agent-benefit promotion.
+No Gate, release, Profile, B01, B01-W, or Agent-benefit promotion. No
+optimization success. Owner 2026-08-17 authorized backlog continuation
+after this close; evaluation routing is OFF.
 **Rotate the Provider key** leaked by the earlier EVAL-004 `secret-tool search`
 incident. Do not print it. Never `secret-tool search`/`lookup`.

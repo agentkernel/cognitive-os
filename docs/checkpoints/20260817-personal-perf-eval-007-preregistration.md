@@ -52,15 +52,20 @@ incident) if that item is still in use.
 | New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/16` (not `/12`/`/13`/`/14`/`/15`). D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
 | Local Pi `0.81.1` pin | **pass** | guest-local npm install of tarball SHA-256 `420113c0282160e6181656fd16cf18742f76bf9040ee3dfb9cb67e3e6ad5641c` under the new root; `--extension` absolute. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true` |
 | Exact-source `pi-agent-adapter` | **pass** | same extracted `2a8d4d2f` archive; host release build copied to guest. `o-arm-candidate.mjs` SHA-256 `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
-| C1/C2 paired B0 | `not-run` | freeze pass recorded; cell starting next |
-| C1/C2 paired B1/B2 | `not-run` | after B0 path/fairness |
-| Cleanup / campaign close | `not-run` | stop 48292/48392; clear new SecretStore item without search/lookup; leave 48181/48284/48383 and EVAL-004/005/006 roots untouched |
+| C1/C2 paired B0 | **partial** | one O-arm C1-search sample retained; public lifecycle `DRAFT`; `lease_acquired` 0; no Pi child; P-arm not started. See running report |
+| C1/C2 paired B1/B2 | `not-run` | B0 path/fairness incomplete |
+| Cleanup / campaign close | **pass** | daemon 48292 stopped; broker 48392 absent; SecretStore `/16` cleared without search/lookup; leave 48181/48284/48383 and EVAL-004/005/006 roots untouched; redactor evidence 3/0 runtime 15/0 |
 
 ## Unique next action
 
-Run B0 C1-search O-arm against live daemon `127.0.0.1:48292` (instrument
-`eval007-b0-c1-search.py`, started 2026-08-17). Append the cell to the
-running assessment before B1/B2. Measurement-only.
+**Campaign closed 2026-08-17** after B0 path/fairness failed on the public
+`cognitive daemon start` launcher. Retain the started C1-search sample.
+Do not reopen B1/B2 on this freeze. Do not reuse EVAL-004, EVAL-005,
+EVAL-006, or EVAL-007 roots/ports or SecretStore `/12`/`/13`/`/14`/`/15`/`/16`.
+Never `secret-tool search`/`lookup`. Evaluation routing is OFF. The public
+daemon-launcher skip is a product mutex for a new formal P2 task after this
+close (do not collide with P2-T29/T30/T31). Rotate the Provider key exposed
+earlier by EVAL-004 `secret-tool search`.
 
 ## Non-claims
 
