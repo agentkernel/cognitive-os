@@ -65,26 +65,26 @@ on campaign binaries may resolve only glibc/`libgcc`/`libm`.
 | P2-T32 lease closed (task not done) | **pass** | Lease archived; task `in-progress` pending Windows required-ci merge of PR #239. Stub pass ≠ C1/C2 |
 | Evaluation lease claimed | **pass** | this document + Current snapshot row `PERSONAL-PERF-EVAL-008` **active** |
 | Product source pin | **pass** | `fb85cfff25d8dd9fc5e3a8743ab9fdb3b3586630` |
-| Source archive + SHA-256 | `not-run` | `git archive --format=tar --prefix=cognitiveos-personal-fb85cfff/` of exact `fb85cfff`; record bytes/entries; 0 `.git/` members; `scp` not SSH-pipe |
-| New campaign root/port | `not-run` | `/home/hal9001/perfeval008-20260818` mode `0700`; daemon `127.0.0.1:48294`. Listeners `48181`/`48284`/`48383` untouched |
-| Exact-source daemon/CLI binaries | `not-run` | `DEV-LINUX-NATIVE-01` `CARGO_NET_OFFLINE=true cargo build --release --locked -p kernel-server -p admin-cli -p pi-agent-adapter`; record each SHA-256 |
-| Campaign daemon on `48294` | `not-run` | public `cognitive daemon start --runtime-root <root>/runtime --bind 127.0.0.1:48294 --kernel-server <root>/kernel-server`; start JSON must include `log_path` → `state/cognitiveos/daemon.log` mode `0600` |
-| New SecretStore entry | `not-run` | product stdin import into **new** item (expected `/17`). D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
-| Local Pi `0.81.1` pin | `not-run` | guest-local install under the new root; `--extension` absolute path only |
-| Exact-source `pi-agent-adapter` | `not-run` | same extracted `fb85cfff` archive; real adapter + operator `pi.json` / `selected-model.json` (not test stub) |
-| `cognitive doctor` | `not-run` | may record `first_conversation_ready`; **not** a C1/C2 pass |
+| Source archive + SHA-256 | **pass** | `git archive --format=tar --prefix=cognitiveos-personal-fb85cfff/` of exact `fb85cfff`; 14,653,440 bytes; 1538 entries; 0 `.git/` members; SHA-256 `202384ee0b125c6600764042ddc7a2142bb1502da21be642b8c328440325ced3`. Copied with `scp` |
+| New campaign root/port | **pass** | `/home/hal9001/perfeval008-20260818` mode `0700`; daemon `127.0.0.1:48294` pid 281083. Listeners `48181`/`48284`/`48383` untouched |
+| Exact-source daemon/CLI binaries | **pass** | `DEV-LINUX-NATIVE-01` `CARGO_NET_OFFLINE=true cargo build --release --locked` in 1m 36s; Rust 1.97.1. `kernel-server` SHA-256 `e603edab9a594e41177f89ac105b2755bff34cdb980c30faece03de87610ec55`; `cognitive` `6917dca3a0f294c34d1f177dd5ebd3e1a36fff1c71de7661094049b30741a65f`; `pi-agent-adapter` `816856b49674d06f025f535fe2bf5219dd9744ab899250a489538ea687aa3167`. `ldd` glibc/`libgcc`/`libm` only |
+| Campaign daemon on `48294` | **pass** | public `cognitive daemon start --bind 127.0.0.1:48294`; pid `281083`; start JSON `log_path` `…/runtime/state/cognitiveos/daemon.log` mode `0600` |
+| New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/17`. D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
+| Local Pi `0.81.1` pin | **pass** | guest-local npm install of tarball SHA-256 `420113c0282160e6181656fd16cf18742f76bf9040ee3dfb9cb67e3e6ad5641c`; `--extension` absolute. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true` (not C1/C2) |
+| Exact-source `pi-agent-adapter` | **pass** | same extracted `fb85cfff` archive; `o-arm-candidate.mjs` SHA-256 `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
+| `cognitive doctor` | **pass** (readiness only) | all required components `ready`; **not** a C1/C2 pass |
 | C1/C2 paired B0 | `not-run` | start with C1 WorkspaceSearch O-arm; retain every started sample; Provider `retry=0` |
 | C1/C2 paired B1/B2 | `not-run` | only if B0 path/fairness complete |
 | Cleanup / campaign close | `not-run` | stop `48294`; clear this campaign SecretStore item; leave `48181`/`48284`/`48383` and EVAL-004/005/006/007 roots |
 
 ## Unique next action
 
-Complete the freeze checklist on `B01-Desktop-Linux-002`, then run B0 C1
-WorkspaceSearch O-arm. C1/C2 pass requires: admit 200, lifecycle ≠
-`DRAFT`, O4 `lease_acquired` ≥ 1, whether a Pi/adapter child appears, and
-whether Intent/Effect exist. Doctor readiness is not that bar. If the
-sample stays `DRAFT` with `lease_acquired` 0: retain it, record
-`partial`, do not open Provider spend, read skip class from `daemon.log`.
+Run B0 C1 WorkspaceSearch O-arm (new root/port/task_ref; WorkspaceSearch
+only). C1/C2 pass requires: admit 200, lifecycle ≠ `DRAFT`, O4
+`lease_acquired` ≥ 1, whether a Pi/adapter child appears, and whether
+Intent/Effect exist. Doctor readiness is not that bar. If the sample stays
+`DRAFT` with `lease_acquired` 0: retain it, record `partial`, do not open
+Provider spend, read skip class from `daemon.log`.
 
 ## Non-claims
 
