@@ -52,6 +52,7 @@ pub(crate) struct ResourceApi {
 }
 
 impl ResourceApi {
+    #[cfg(test)]
     pub(crate) fn new() -> Self {
         Self::with_governance_data_dir(None)
     }

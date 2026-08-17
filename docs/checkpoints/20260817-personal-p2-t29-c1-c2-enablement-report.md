@@ -57,3 +57,12 @@
   repaired to `2026-08-17 / 2026-08-17`.
 - Rust `p4_t05_resource_api` unsealed/caller-header tests: **not-run**
   (`RUST-LINK-DEV-WIN-GNU-01`); same Linux/CI route as D01.
+
+## Checkpoint
+
+- HEAD: `df39b49cbb59960b0b73a26c45008e8a7186dfab`
+- Draft PR: https://github.com/agentkernel/cognitive-os/pull/230
+- Ubuntu supporting CI run `31998669185`: **fail** — `RUSTFLAGS=-D warnings` dead_code on
+  `ResourceApi::new` (production callers now use `with_governance_data_dir`;
+  `new` remains test-only). Same fail on windows-latest and linux-002 compile.
+- Fix: `#[cfg(test)]` on `ResourceApi::new`. Re-push and re-run the matrix.
