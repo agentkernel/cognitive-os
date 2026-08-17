@@ -13,8 +13,9 @@ sources:
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:926a94ec492b5631a1876f37e14d6bd49d6ed698d13e2d431dd4dcd9f1abc2c1"
+fingerprint: "sha256:dac1a24dc3bf5c47c1a7873c14f8e3afde58898dffe74f0eb9382d675935cc77"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -31,7 +32,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive init` | prepare XDG layout + databases (with backups), store the Provider key into the Secret Service, probe the Provider, persist `provider.json` and `selected-model.json` |
 | `cognitive status` | authenticated component projection (system, database, secret, provider, daemon, pi) |
 | `cognitive doctor` | the same projection plus redacted diagnostic sections |
-| `cognitive daemon start` | spawn `kernel-server --personal` bound to `127.0.0.1:48181` (override with `--bind`, `--kernel-server`, or `COGNITIVE_KERNEL_SERVER`) |
+| `cognitive daemon start` | spawn `kernel-server --personal` bound to `127.0.0.1:48181` (override with `--bind`, `--kernel-server`, or `COGNITIVE_KERNEL_SERVER`); append stdout/stderr to `state/cognitiveos/daemon.log` (mode `0600`) |
 | `cognitive daemon status` | report daemon lock/endpoint liveness |
 | `cognitive daemon stop` | signal the recorded PID; remove lock/endpoint only after confirmed exit |
 | `cognitive pi configure` | write non-secret `pi.json` (absolute executable + extension paths) |

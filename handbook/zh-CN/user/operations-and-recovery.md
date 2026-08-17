@@ -29,8 +29,9 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:2d8aee05329f7ebe5244f997dd7edf2980b60ede1859534ef701ba0a2485ea9c"
+fingerprint: "sha256:f1de465d3decd85110d3636d3861f0864f93b980d1f7b4bf604bcad12d9d2582"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -50,7 +51,9 @@ non_claims:
   小节（当前为静态 `not_run`/`not_configured` 报告——更多是脱敏校验器而非实时探针）。
 - `GET /personal/health`（免认证）仅是存活探测——安装器与服务控制器使用它；不要把
   readiness 读进去。
-- 服务日志：`journalctl --user -u cognitiveos-personal.service`。
+- 服务日志：`journalctl --user -u cognitiveos-personal.service`。CLI
+  `cognitive daemon start` 还会把 kernel-server 的 stdout/stderr 追加到
+  `state/cognitiveos/daemon.log`（权限 `0600`）；调度 skip 行不是公开 HTTP 事实。
 
 ## 停止、重启、过期状态 —— `implemented`
 

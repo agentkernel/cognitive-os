@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ab4380fb9ef873715a6b3e0d8388d82c54f20367f6d7e047cdc686af962b8ec8"
+fingerprint: "sha256:f341f6574a12611ab20d64cb3a98517426a43e0ceb018de13ddb171bdf744758"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -50,6 +50,7 @@ Hard rules:
   - Pi configuration writes only non-secret executable and Extension paths
   - Pi launch requires daemon-owned ready state and passes only --extension
   - never advances Task/Effect/Verification authority state
+  - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
   - --allow-ephemeral-secret-backend is for hermetic tests only
 

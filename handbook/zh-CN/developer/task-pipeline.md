@@ -22,6 +22,7 @@ tests:
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
 fingerprint: "sha256:46a8c8944033b536dc39b4d03db095f7304f3267d919fdbd0f09e57c528c1395"
 non_claims:
   - 准入仍不消费 worker iteration authorization，也不获取调度 lease；那是后续 tick 的事。

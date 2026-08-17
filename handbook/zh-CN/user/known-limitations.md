@@ -12,7 +12,8 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:05bf440caeb0e8a869868e80acf2b53b6e08d0421f4634f53dae4800cccdc1cc"
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+fingerprint: "sha256:d593709bbd7726e963c511d01bf0f6b7abf0e8d5a84d2cc55e1319c1b72f81ae"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -43,6 +44,10 @@ non_claims:
   `admin-cli install --mode official` 的 usage 漏写必需的 `--package-id`。
 - 单独运行 `kernel-server --personal` 默认临时端口（`127.0.0.1:0`）；canonical 的
   `48181` 来自 `cognitive daemon start`。
+- `cognitive doctor` 的 `first_conversation_ready` 是对话壳就绪，不是 C1/C2 Task
+  生命周期；已准入 Task 在调度器拿到 lease 之前可以停在 `DRAFT`。CLI
+  `cognitive daemon start` 把 kernel-server stdio 留在 `state/cognitiveos/daemon.log`，
+  不再丢到 `/dev/null`。
 - Provider key 过期时 readiness 仍可能显示 `ready`（无实时探测）。
 - `state/backups/` 下的迁移备份只增不清。
 - 迁移中崩溃可能留下过期 `migration.lock`，需人工移除。

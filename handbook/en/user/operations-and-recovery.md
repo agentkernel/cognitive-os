@@ -29,8 +29,9 @@ tests:
   - apps/kernel-server/tests/p1_t05_personal_readiness.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:2d8aee05329f7ebe5244f997dd7edf2980b60ede1859534ef701ba0a2485ea9c"
+fingerprint: "sha256:f1de465d3decd85110d3636d3861f0864f93b980d1f7b4bf604bcad12d9d2582"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -54,7 +55,10 @@ non_claims:
   `not_run`/`not_configured` reports — redaction validators more than live probes).
 - `GET /personal/health` (no auth) is liveness only — the installer and service
   controller use it; don't read readiness into it.
-- Service logs: `journalctl --user -u cognitiveos-personal.service`.
+- Service logs: `journalctl --user -u cognitiveos-personal.service`. CLI
+  `cognitive daemon start` also appends kernel-server stdout/stderr to
+  `state/cognitiveos/daemon.log` (mode `0600`); scheduler skip lines are not a
+  public HTTP fact.
 
 ## Stop, restart, stale state — `implemented`
 

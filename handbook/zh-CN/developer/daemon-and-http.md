@@ -38,6 +38,7 @@ tests:
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
 fingerprint: "sha256:7d256de5efac751ab012125fb24712798f4b050f3789bcc034e04e72d6653414"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
@@ -60,6 +61,8 @@ worker → 每连接一线程服务。监听器与 endpoint 出现前不执行�
 tick 能看到 admit 刚写入的事实。该 worker 独占调度连接，在非重入门后按固定延迟 250 ms 串行运行；pass
 级错误只记录并重试，逐行错误仍在单趟内隔离。顺序退出时会显式取消、唤醒并 join
 worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain-status.md)）。
+`cognitive daemon start` 把该进程的 stdout/stderr 追加到 `state/cognitiveos/daemon.log`
+（权限 `0600`）；systemd `Type=simple` 仍走 journal。
 
 ## 认证
 

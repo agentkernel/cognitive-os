@@ -38,6 +38,7 @@ tests:
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
 fingerprint: "sha256:7d256de5efac751ab012125fb24712798f4b050f3789bcc034e04e72d6653414"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
@@ -63,7 +64,9 @@ periodic tick observes the facts admit just wrote. The worker owns the scheduler
 passes behind a non-reentrant gate, logs and retries pass-level failures, and is
 explicitly cancelled, unparked, and joined on orderly exit. Row-local failures
 remain isolated inside each pass. There is still no HTTP shutdown route (see
-[execution-chain status](./execution-chain-status.md)).
+[execution-chain status](./execution-chain-status.md)). `cognitive daemon start`
+appends this process's stdout/stderr to `state/cognitiveos/daemon.log` (mode
+`0600`); systemd `Type=simple` still uses the journal.
 
 ## Authentication
 
