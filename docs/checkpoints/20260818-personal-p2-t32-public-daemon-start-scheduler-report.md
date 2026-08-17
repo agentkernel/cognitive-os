@@ -6,8 +6,10 @@
 - Change class: `implementation-only`
 - Claim ceiling: `hypothesis` / non-claim
 - Document status: D01 test authored; D02 launcher wiring landed; D03 handbook
-  in the same change set. Ubuntu CI / linux-002 focused `p2_t32_*` is the unique
-  next action. Do not merge as C1/C2 proof. Do not freeze or run EVAL-008 here.
+  in the same change set. Draft PR [#239](https://github.com/agentkernel/cognitive-os/pull/239)
+  at `b1f1d12ea8d02cfbf792be3c49575abeb8e72ff4`. Ubuntu CI / linux-002 focused
+  `p2_t32_*` is the unique next action. Do not merge as C1/C2 proof. Do not freeze
+  or run EVAL-008 here.
 
 Owner 2026-08-18 after `PERSONAL-PERF-EVAL-007` close. EVAL-007 public
 `cognitive daemon start --bind 127.0.0.1:48292` admitted over HTTP (200) and the
@@ -40,7 +42,7 @@ still diverges.
 | Local `check:handbook` / `generate-handbook --check` | **pass** | 54 docs × 2 locales; 18 generated pages byte-identical |
 | Local `docs-sync-gate --staged` | **pass** | `cli-product` mapped; no `DOCS_IMPACT_NONE` |
 | Local `git diff --check` | **pass** | this window |
-| Ubuntu required CI | `not-run` | after push |
+| Ubuntu required CI | `not-run` | after push of `b1f1d12e`; Draft PR [#239](https://github.com/agentkernel/cognitive-os/pull/239) |
 | linux-002 focused `p2_t32_*` | `not-run` | next window; exact pushed revision |
 
 No Gate, release, Profile, B01, EVAL, or Agent-benefit claim.
