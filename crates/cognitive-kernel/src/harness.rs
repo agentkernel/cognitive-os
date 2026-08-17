@@ -386,6 +386,7 @@ where
     /// ContextView exists. Public Task admission leaves Loop at `START`;
     /// candidate admission requires `DECIDE`. This is not Task acceptance and
     /// does not invoke Pi.
+    #[allow(clippy::too_many_arguments)]
     pub fn advance_start_to_decide_after_context_view(
         &self,
         loop_id: &ObjectId,

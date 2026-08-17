@@ -29,7 +29,7 @@ tests:
   - crates/cognitive-kernel/tests/governance_gate.rs
   - crates/cognitive-store/tests/m4_effects.rs
   - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:250dff539a72f06829c1e1f5b90b62eb592eebbe4814281c4a056fb64aa56368"
+fingerprint: "sha256:530000ebd734a26292cfa479c1a10ee2aaaff0a651e433336ac8103d26dc5047"
 non_claims:
   - Kernel correctness evidence is focused-test evidence; it is not a Gate, release, or Profile result.
 ---

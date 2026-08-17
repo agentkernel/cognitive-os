@@ -49,9 +49,11 @@ tests hid this by injecting facts and leaving Loop at `DECIDE`.
 - `pnpm run check:consistency`: **pass**.
 - `node tools/src/docs-sync-gate.mjs --staged`: **pass** (daemon-http,
   scheduler-execution, kernel-authority mappings; no `DOCS_IMPACT_NONE`).
-- Rust `public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`:
-  **not-run** (`RUST-LINK-DEV-WIN-GNU-01`); routed to Ubuntu supporting CI and
-  exact-revision `DEV-LINUX-NATIVE-01`.
+- Ubuntu supporting CI run `32019929603` `verify (ubuntu-latest)`: **fail** —
+  Clippy `-D warnings` `too_many_arguments` on
+  `LoopDriver::advance_start_to_decide_after_context_view` (8/7). Fix: same
+  `#[allow(clippy::too_many_arguments)]` used by sibling LoopDriver methods.
+
 
 
 ### D01-VAL-02 — failure-first public-admit test
