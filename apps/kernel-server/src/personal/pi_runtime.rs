@@ -278,14 +278,14 @@ impl PrivatePiCandidateProcess {
             let _ = socket.finish();
             return Err("private Pi candidate adapter rejected the request".to_owned());
         }
-        if output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
-            if let Ok(parsed) = serde_json::from_slice::<PrivatePiCandidateResponse>(&output) {
-                // A stub adapter may emit the untrusted candidate on stdout
-                // without connecting to the Provider completion socket. The
-                // daemon still validates descriptor, digest, and authorization.
-                drop(socket);
-                return Ok(parsed);
-            }
+        if output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT
+            && let Ok(parsed) = serde_json::from_slice::<PrivatePiCandidateResponse>(&output)
+        {
+            // A stub adapter may emit the untrusted candidate on stdout
+            // without connecting to the Provider completion socket. The
+            // daemon still validates descriptor, digest, and authorization.
+            drop(socket);
+            return Ok(parsed);
         }
         socket.finish()?;
         if output.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
