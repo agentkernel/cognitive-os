@@ -605,10 +605,55 @@ files `key_shaped_hits=0`. Listeners `48181`/`48284`/`48383` and broker
 `B5` 24 h is **`not-run`**: the 8 h slope is resolved (RSS declined) and
 there is no owner budget instruction to extend.
 
+## UJ4 / O1 Task admission (2026-08-17) — pass
+
+Frozen `p9-t04-l4-t1-scenario-runner.mjs`
+`sha256:8fe3f3c936f1e30b2c72202749c51ef312e4bdc887174a73890b16ad8c9246f3`
+against `127.0.0.1:48286` at source
+`1e71344a7b2c4a443fd0581e7fd33f21e970efbd`. **30/30 started, 30/30
+retained, 30/30 admitted**, terminal error `null` × 30, executed
+mutations 0, independent acceptance 0, verified completions claimed
+**0**. Admission total 81.657 ms p50 (MAD 9.888, 54.391–148.213). Stage
+p50: session mint 4.163 ms, `intent.record` 18.160 ms, interpret
+18.337 ms, preview 9.302 ms, admit 31.651 ms. Evidence
+`sha256:24f5ada61f8859a959e29dec05115dd63a7fdfa4f07674eb338e6600ffcb1fed`.
+Admission is not completion (plan §11 item 8). Hypothesis only.
+
+## UJ3 task-channel resource watch (2026-08-17) — partial
+
+Instrument `uj3_task_watch.py`
+`sha256:57e539e2dcb1e94b4f2d7300475d6217b7cf2956172c70585987c10c6ac6b17b`.
+Plan §5.3 N=20 same-process Task watch. **20/20 started and retained**,
+all HTTP **403** (0.922 ms p50) on task-channel
+`GET /resource/v1/watch?family=task&version=1`. This is fail-closed
+channel isolation, not watch delivery. Management-channel family=task
+watch remains the UJ3 10/10 HTTP 200 already recorded. Evidence
+`sha256:27800b9ba0f0587140ae479869240228a70000b9bb1b8cce21e042ed025b6537`.
+
+## T2 Tool lifecycle (2026-08-17) — pass
+
+Instrument `t2_lifecycle.py`
+`sha256:d654a9ca572aaf23e494daf3a48878f4543e56745f236ea5fa0dfc1f802aede7`.
+**65/65 started and retained, 0 non-OK** on public P2-T25 routes for
+`native.http.fetch` (never revoked). Unknown id 10/10 HTTP 404
+`RESOURCE_TOOL_UNKNOWN`; task-channel disable 10/10 HTTP 403
+`RESOURCE_TOOL_LIFECYCLE_CHANNEL_FORBIDDEN`; unauthenticated disable
+HTTP 401 `LOCAL_SESSION_UNAUTHORIZED`; disable→catalog→enable→catalog
+10/10 HTTP 200; quarantine 200 then enable-from-quarantine 409
+`RESOURCE_TOOL_QUARANTINED` (product); restore disable+enable 200.
+p50 0.955 ms. Tool left enabled. Evidence
+`sha256:2faf4ff1c502715adad0a2d65afdb5516410488b0229cb717fddcb840e8465b3`.
+No live ecosystem claim. EVAL-002's lifecycle fall-through is historical
+at this revision.
+
+Redactor `evidence/` after UJ4/T2: 34 files, `key_shaped_hits=0`.
+
 ## Unique next action
 
-Execute UJ4 (30 frozen read-only admissions) and the missing UJ3 task-bound
-watches (N=20), then T2 lifecycle smoke, then UJ2 cold stratum with
-`--bind 127.0.0.1:48286`. Do not bind or stop `48181`/`48284`/`48383`. Do
-not clear SecretStore `/12` until final cleanup. Claim ceiling `hypothesis`.
+Execute UJ2 cold stratum (10 A4 confirmatory seeds, `retry=0`) with
+public `cognitive daemon start --bind 127.0.0.1:48286` before each O
+arm. Daemon-warm/Pi-cold remains the B1/B2 result; Pi-warm is
+`not_available`. Then UJ6 register, cleanup + secret scan, final
+assessment. Do not touch `48181`/`48284`/`48383`. Do not clear
+SecretStore `/12` until cleanup. Claim ceiling `hypothesis`.
 
