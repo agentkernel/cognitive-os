@@ -2,7 +2,8 @@
 
 - Task: `P2-T32`
 - Branch: `personal/P2-T32-public-daemon-start-scheduler`
-- Lease: `lease/personal/P2-T32/public-daemon-start-scheduler`
+- Lease: `lease/personal/P2-T32/public-daemon-start-scheduler` (**closed**
+  2026-08-18 so EVAL-008 can own `PROGRESS.md`; task is not `done`)
 - Change class: `implementation-only`
 - Claim ceiling: `hypothesis` / non-claim
 - Document status: D01/D02 landed. Ubuntu `verify` **pass** at `fb85cfff`
@@ -10,8 +11,8 @@
   in 3.33s plus `daemon_log` unit tests 2/2. Windows `verify` **fail** on
   unrelated flake `server_startup_recovers_closed_effect_before_publishing_endpoint`
   (330 pass / 1 fail); not the public-launcher test. Draft PR [#239](https://github.com/agentkernel/cognitive-os/pull/239).
-  Unique next for merge: Windows required-ci green. C1/C2 真机 is a new EVAL-008
-  freeze, not this task merge. Stub-adapter pass ≠ real `pi-agent-adapter`.
+  Unique next for merge: Windows required-ci green. C1/C2 真机 is EVAL-008,
+  not this task merge. Stub-adapter pass ≠ real `pi-agent-adapter`.
 
 Owner 2026-08-18 after `PERSONAL-PERF-EVAL-007` close. EVAL-007 public
 `cognitive daemon start --bind 127.0.0.1:48292` admitted over HTTP (200) and the
