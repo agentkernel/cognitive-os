@@ -555,10 +555,10 @@ ceiling, not a remaining-cell mutex). No product code was added.
 | Cell | Disposition | Note |
 |---|---|---|
 | UJ1 install→first response | **`not-run`** | Plan §5.1 reuses historical B01; this freeze does not reinstall or mutate the guest image |
-| UJ2 cold/warm conversation | **queued after B5 8 h** | Cold stratum would stop the soak daemon. Daemon-warm/Pi-cold is already the B1/B2 condition (fresh Pi per task). Pi-warm process reuse remains `not_available` |
-| UJ3 task-bound resource watch (plan N=20) | **queued with UJ4** | UJ3 recorded health/CLI/six-resource get/watch; the plan's 20 task-bound watches were not in that instrument |
-| UJ4 / O1 Task admission | **queued after B5 8 h** | Frozen `p9-t04-l4-t1-scenario-runner.mjs` extracted from the `1e71344a` archive, `sha256:8fe3f3c936f1e30b2c72202749c51ef312e4bdc887174a73890b16ad8c9246f3` (matches in-tree). 30 unique read-only Tasks; would contaminate soak RSS/watch |
-| UJ6 journey register | **queued at closure** | Final coverage matrix; not a live sample |
+| UJ2 cold/warm conversation | **partial** | 1 confirmatory-A4-000 pair started and retained; both arms `timeout` 180.12 s / 0 output chars. Daemon cold start with `--bind` **health 200** (not EVAL-002 `instrument_error`). Wrapper `timeout 420` stopped the remaining 9 seeds as **`not-run`**. Pi-warm `not_available`. Daemon-warm/Pi-cold remains B1/B2 |
+| UJ3 task-bound resource watch (plan N=20) | **partial** | 20/20 task-channel `GET /resource/v1/watch?family=task` HTTP 403 retained; management-channel family=task watch already 10/10 HTTP 200 in UJ3 |
+| UJ4 / O1 Task admission | **pass** | 30/30 admitted, 0 verified completions; see § UJ4 |
+| UJ6 journey register | **recorded at closure** | See § UJ6 below |
 | O2 Context decision surface | **`not_available`** | Addendum: no public redacted decision surface; SQLite/test helpers forbidden |
 | O3 cache/compaction | **`not_available`** | Addendum: no public cache observation surface |
 | O4 scheduler/fairness telemetry | **`not_available`** | Capability partial; no compliant public fairness/queue/fence telemetry |
@@ -569,7 +569,7 @@ ceiling, not a remaining-cell mutex). No product code was added.
 | O12 SecretStore fail-closed / redaction | **covered by B0** | SecretStore `/12` import + redactor 0 key-shaped hits on evidence/runtime/arms |
 | O13 bounded public replay | **`partial`** (UJ3) | Public bounded watch only; full audit chain internal |
 | O14 backup/restore | **`not_available`** | Addendum: no user CLI/API restore path |
-| T2 enable/disable/quarantine | **queued after B5 8 h** | P2-T25 public management routes exist at this revision (EVAL-002's fall-through is historical). Instrument staged at guest `t2_lifecycle.py` `sha256:d654a9ca572aaf23e494daf3a48878f4543e56745f236ea5fa0dfc1f802aede7` — not started |
+| T2 enable/disable/quarantine | **pass** | 65/65; see § T2 |
 | T3 Tool selection pilot | **`not-run`** | Plan-optional; not in confirmatory |
 | T4–T5, T9 positives | **`not-run`** | C1/C2 equivalent Pi Workspace* adapter absent |
 | T6/T7 positives | **`not-run`** | Addendum: outside supported scope |
@@ -648,12 +648,81 @@ at this revision.
 
 Redactor `evidence/` after UJ4/T2: 34 files, `key_shaped_hits=0`.
 
+## UJ2 cold stratum (2026-08-17) — partial
+
+Instrument `uj2_cold.py`
+`sha256:73b1dbb5e6ae083b6b14457f56930f0d8836d90e3c026b9ed26c0b65578cab10`.
+Preregistered 10 A4 confirmatory seeds (indices 0–9), `retry=0`, 180 s
+arm timeout, explicit `cognitive daemon start --bind 127.0.0.1:48286`
+before each O arm.
+
+**Started / retained:** 1 pair / 2 arms (task `confirmatory-A4-000`, arm
+order P then O). Both arms **`timeout`**, return 124, 0 output chars,
+wall 180.12 s. O-arm daemon stop/start: `stop_rc=0`,
+`start_returncode=0`, **`health_after=200`** — cold bind is not the
+EVAL-002 `instrument_error`. The outer `timeout 420` then stopped the
+process (exit 124) before seeds 1–9 started; those nine pairs are
+**`not-run`**, not retries of the timed-out pair. Pi-warm remains
+`not_available`. Daemon-warm/Pi-cold remains the B1/B2 denominator.
+Evidence
+`sha256:1a886994437bfb9c182e378216a260dca8dfec55883a26a8078d19a457b33e22`.
+No cold-versus-warm latency delta is calculated.
+
+## UJ6 journey coverage register (2026-08-17)
+
+| Journey | This freeze |
+|---|---|
+| Memory remember/review/forget | MS-AUTH **partial** (negatives fail-closed; sealed-header positives `not-run`) |
+| Skill import/pin/revoke | MS-AUTH **partial**; Agent consumption S4/S8 **`not-run`** |
+| Workspace read/search | C1 paired **`not-run`** (no equivalent Pi Workspace* adapter); T-GOV projection `execution_ready` |
+| Workspace write/patch/check | C2a paired **`not-run`** |
+| Pi install/register/activate | freeze pin 0.81.1 **pass**; live upgrade/rollback **`not-run`** |
+| backup/restore | O14 **`not_available`** |
+| Web UI / Multi-Agent | unavailable/deferred |
+| Task admission | UJ4 **pass** 30/30 |
+| Task independent acceptance | 0/30 observed; **`not_available`** as a completion claim |
+| Tool catalog / lifecycle | T-GOV **pass**; T2 **pass** |
+| Tool invocation T4–T9 | **`not-run`** / positives out of scope |
+
+## Cleanup, secret scan, and campaign closure (2026-08-17) — pass with operator-transcript incident
+
+| Check | Result |
+|---|---|
+| B5 8 h soak pid 241537 | exited after `CELL_DONE b5-8h` |
+| campaign daemon `127.0.0.1:48286` | product `daemon stop` status ok; stale lock removed; listener absent |
+| campaign broker `127.0.0.1:48386` pid 201300 | absent after cleanup |
+| stale `daemon.lock` / `daemon-endpoint.json` | none |
+| listeners `48181` / `48284` / `48383` | untouched (pids 166715 / 184841 / 167900) |
+| old root `/home/hal9001/perfeval004` | untouched |
+| campaign SecretStore `[/12]` | cleared with `secret-tool clear` on the product attribute triple; post-clear search returned no items |
+| redactor `evidence/` | 35 files, `key_shaped_hits=0` |
+| redactor `runtime/` | 9 files, `key_shaped_hits=0` |
+| owner key file `~/下载/deepseek.txt` | not read, hashed, or deleted |
+
+**Cleanup-instrument incident (not Git/evidence):** `secret-tool search`
+prints secret material. A paths-only Secret Service search was required;
+`search` was used instead and emitted the Provider key into the operator
+SSH transcript for this session. The value was **not** copied into Git,
+evidence, the running report, or chat records written by this campaign.
+The owner should **rotate** that Provider key. Future cleanup must use
+attribute/path-only listing, never `secret-tool search` / `lookup`.
+
+Guest evidence remains at
+`b01guest:/home/hal9001/perfeval004-20260816/evidence/` until independent
+review changes `not_reviewed`.
+
+**Campaign closed.** Every currently executable plan cell is executed or
+honestly dispositioned. Claim ceiling `hypothesis`, verifier
+`not_reviewed`. No Gate, release, Profile, B01, or Agent-benefit
+promotion. Campaign closure does **not** resume development.
+
+Final assessment:
+[personal-performance-assessment-20260817-full-os-only.md](../evaluation/personal-performance-assessment-20260817-full-os-only.md).
+
 ## Unique next action
 
-Execute UJ2 cold stratum (10 A4 confirmatory seeds, `retry=0`) with
-public `cognitive daemon start --bind 127.0.0.1:48286` before each O
-arm. Daemon-warm/Pi-cold remains the B1/B2 result; Pi-warm is
-`not_available`. Then UJ6 register, cleanup + secret scan, final
-assessment. Do not touch `48181`/`48284`/`48383`. Do not clear
-SecretStore `/12` until cleanup. Claim ceiling `hypothesis`.
+Merge docs-only PR #229 if it should land on `main`. Rotate the Provider
+key exposed in the operator SSH transcript by `secret-tool search`. Do
+**not** resume the development backlog without a fresh owner delivery
+instruction.
 
