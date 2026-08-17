@@ -54,22 +54,22 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | EVAL-009 remains closed | **pass** | do not reopen; do not reuse `/18` / `48296` / `e009` runtime |
 | Evaluation lease claimed | **pass** | this document + Current snapshot row `PERSONAL-PERF-EVAL-010` **active** |
 | Product source pin | **pass** | `289eebade1432fdf224cfe16661fdc102874e416` |
-| Source archive + SHA-256 | `not-run` | after this claim is pushed |
-| New campaign root/port | `not-run` | `/home/hal9001/perfeval010-20260818` / daemon `48298` |
-| Exact-source daemon/CLI binaries | `not-run` | pin `289eebad`; real `pi-agent-adapter` |
-| Campaign daemon on `48298` | `not-run` | public `cognitive daemon start` |
-| New SecretStore entry | `not-run` | stdin import; D-Bus `SearchItems` paths only |
-| Local Pi `0.81.1` pin | `not-run` | `--extension` absolute |
+| Source archive + SHA-256 | **pass** | `git archive --format=tar --prefix=cognitiveos-personal-289eebad/` of exact `289eebad`; 14,735,360 bytes; 1544 entries; 0 `.git/` members; SHA-256 `ccf7e6a1ecba22a55e3a5fe50831f6a182bed3a21b84192d22c5ac7efaac769f`. Copied with `scp` |
+| New campaign root/port | **pass** | `/home/hal9001/perfeval010-20260818` mode `0700`; daemon `127.0.0.1:48298` pid 287493. Listeners `48181`/`48284`/`48383` untouched |
+| Exact-source daemon/CLI binaries | **pass** | `DEV-LINUX-NATIVE-01` `CARGO_NET_OFFLINE=true` dedicated `CARGO_TARGET_DIR` `cargo build --release --locked` in 1m 37s; Rust 1.97.1. `kernel-server` SHA-256 `a60e1166fa81e09b2b6b2e95892e9daccfc28fd98806f874e01d34502aedf1c5`; `cognitive` `6917dca3a0f294c34d1f177dd5ebd3e1a36fff1c71de7661094049b30741a65f`; `pi-agent-adapter` `70ba7f05d3b743737334186c4b8b3155047cfa5856c4b0e28c45924866095cdb`. `ldd` glibc/`libgcc`/`libm` only |
+| Campaign daemon on `48298` | **pass** | public `cognitive daemon start --bind 127.0.0.1:48298`; pid `287493`; start JSON `log_path` `…/runtime/state/cognitiveos/daemon.log` mode `0600` |
+| New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/19`. D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
+| Local Pi `0.81.1` pin | **pass** | `--extension` absolute; doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true` (not C1/C2) |
+| Exact-source `pi-agent-adapter` | **pass** | real adapter, not the P2-T33 stub; SHA-256 `70ba7f05d3b743737334186c4b8b3155047cfa5856c4b0e28c45924866095cdb`; `o-arm-candidate.mjs` `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
+| `cognitive doctor` | **pass** (readiness only) | all required components `ready`; **not** a C1/C2 pass |
 | C1/C2 paired B0 | `not-run` | WorkspaceSearch O-arm first; C1 stays search-only |
 | C1/C2 paired B1/B2 | `not-run` | after B0 path/fairness |
 | Cleanup / campaign close | `not-run` | stop `48298`; clear `/19`; leave `48181`/`48284`/`48383` and prior EVAL roots |
 
 ## Unique next action
 
-Push this claim. Freeze exact `289eebad` binaries onto
-`/home/hal9001/perfeval010-20260818` with daemon `127.0.0.1:48298`, import a
-new SecretStore item without search/lookup, then run B0 C1 WorkspaceSearch
-O-arm with the real adapter.
+Run B0 C1 WorkspaceSearch O-arm (`retry=0`, retain the started sample) against
+the public Task admit surface on `127.0.0.1:48298` with the real adapter.
 
 Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
 or Agent-benefit promotion.
