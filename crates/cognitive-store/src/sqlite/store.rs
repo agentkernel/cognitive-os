@@ -46,12 +46,16 @@ use rusqlite::{Connection, OpenFlags, OptionalExtension, Transaction, Transactio
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::path::Path;
-use std::sync::{Mutex, MutexGuard};
+use std::sync::{Arc, Mutex, MutexGuard};
 
 use super::*;
 
+/// Authority SQLite adapter. Clones share one WAL connection mutex so the
+/// Personal daemon can hand the same writer to HTTP Task admission and the
+/// periodic scheduler tick.
+#[derive(Clone)]
 pub struct SqliteAuthorityStore {
-    pub(crate) conn: Mutex<Connection>,
+    pub(crate) conn: Arc<Mutex<Connection>>,
 }
 
 impl SqliteAuthorityStore {
@@ -93,7 +97,7 @@ impl SqliteAuthorityStore {
         conn.execute_batch(&schema)
             .map_err(unavailable("install schema"))?;
         Ok(Self {
-            conn: Mutex::new(conn),
+            conn: Arc::new(Mutex::new(conn)),
         })
     }
 
@@ -109,7 +113,7 @@ impl SqliteAuthorityStore {
         conn.execute_batch("PRAGMA query_only=ON; PRAGMA busy_timeout=5000;")
             .map_err(unavailable("set read-only pragmas"))?;
         Ok(Self {
-            conn: Mutex::new(conn),
+            conn: Arc::new(Mutex::new(conn)),
         })
     }
 

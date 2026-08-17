@@ -37,7 +37,8 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:591d5ac152cc044743591261673519799d27fc94b9762ba4d32640c38e76c663"
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+fingerprint: "sha256:a2df471c90fdf004be2066cb48b13f6db845792088c00100ffbe5f4804eef65e"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -54,7 +55,9 @@ descriptor/router → bootstrap
 secret 加载/创建 → TCP 绑定 → 原子发布 `daemon-endpoint.json` → 启动唯一周期调度
 worker → 每连接一线程服务。监听器与 endpoint 出现前不执行调度 pass，因此本进程随后接纳的 Task 可被后
 续 pass 观察。公开 `POST /task/admit` 会为租户 `personal` 持久化 owner-local Context
-授权，使后续 pass 能解析 Context 而不是在 Pi 之前跳过。该 worker 独占调度连接，在非重入门后按固定延迟 250 ms 串行运行；pass
+授权，使后续 pass 能解析 Context 而不是在 Pi 之前跳过。HTTP `TaskApi` 克隆同一
+`SqliteAuthorityStore` 句柄（共享连接互斥），而不是每次请求再开一个 writer，因此周期
+tick 能看到 admit 刚写入的事实。该 worker 独占调度连接，在非重入门后按固定延迟 250 ms 串行运行；pass
 级错误只记录并重试，逐行错误仍在单趟内隔离。顺序退出时会显式取消、唤醒并 join
 worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain-status.md)）。
 

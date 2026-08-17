@@ -37,7 +37,8 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:591d5ac152cc044743591261673519799d27fc94b9762ba4d32640c38e76c663"
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+fingerprint: "sha256:a2df471c90fdf004be2066cb48b13f6db845792088c00100ffbe5f4804eef65e"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -56,7 +57,9 @@ worker → thread-per-connection serving. No scheduler pass runs before the list
 endpoint exist, so a Task admitted by this process can be observed by a later
 pass. Public `POST /task/admit` persists owner-local Context authorization for
 tenant `personal` so that later pass can resolve Context instead of skipping
-before Pi. The worker owns the scheduler connection, runs serial fixed-delay 250 ms
+before Pi. HTTP `TaskApi` clones that same `SqliteAuthorityStore` handle (shared
+connection mutex) rather than opening a second writer per request, so the
+periodic tick observes the facts admit just wrote. The worker owns the scheduler connection, runs serial fixed-delay 250 ms
 passes behind a non-reentrant gate, logs and retries pass-level failures, and is
 explicitly cancelled, unparked, and joined on orderly exit. Row-local failures
 remain isolated inside each pass. There is still no HTTP shutdown route (see

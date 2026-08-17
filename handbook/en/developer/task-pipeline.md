@@ -21,7 +21,8 @@ tests:
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:b5e69e050b595fb2eda4652efa1e88d76b3f424dbbf4d5f034db30ac1a4a677d"
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+fingerprint: "sha256:ed32076c8ddf757f515f8cd3a2e02536650f8bd9a73ddc1c9be9dfb2b26ba5fd"
 non_claims:
   - Admission still does not consume a worker iteration authorization or acquire a scheduler lease; a later tick does.
 ---
@@ -55,8 +56,11 @@ late Loop/Budget/scheduler conflict rolls back the contract and event; a crash
 after a successful response reopens every member. Owner-local Context
 authorization facts are daemon policy for tenant `personal`, not a client
 capability channel; the first scheduler tick walks Loop `START -> DECIDE` from
-the sealed ContextView before Pi. It does not create the candidate Intent/Effect
-or run a Tool—the periodic worker path remains separate.
+the sealed ContextView before Pi. On the live daemon the HTTP adapter clones the
+process-owned authority-store handle so that tick observes those facts; an
+in-process `TaskApi::handle` fixture that opens a second connection is not this
+path. It does not create the candidate Intent/Effect or run a Tool—the periodic
+worker path remains separate.
 At daemon startup, the current immutable contract can reconstruct the same
 bootstrap and idempotently restore only a missing Loop, Budget, or scheduler
 row; existing authority is never reset.

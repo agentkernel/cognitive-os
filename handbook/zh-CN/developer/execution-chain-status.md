@@ -38,9 +38,10 @@ tests:
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:8a4751932409b802252fa87973fa223e6107990df5db14ae56193cda4f9deb89"
+fingerprint: "sha256:8eb26c07dea5cca295116620ab765ab82a45adc956672c28bf7872d657b87247"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -88,7 +89,9 @@ non_claims:
 `DECIDE`，准入一条私有 Pi candidate，签发 WIA 后立即返回，不能消费自己刚产生的
 worker 权威，也不获取调度 lease。后续 tick 在 lease 下重载持久 WIA 并激活 Task。
 逐行失败彼此隔离，不会中止有界 pass 中的后续行。daemon 现在只在绑定并发布 endpoint
-后启动唯一、非重入且可取消的周期 worker；pass 级失败会重试，不能阻止监听。剩余缺口
+后启动唯一、非重入且可取消的周期 worker；pass 级失败会重试，不能阻止监听。live HTTP
+`TaskApi` 克隆 daemon 持有的 `SqliteAuthorityStore` 句柄，使 tick 能看到 admit 持久化的
+Context 事实；每次请求另开 writer 即 EVAL-006 skip。剩余缺口
 为：
 
 1. **执行器接线已完成，覆盖全部七个已登记族**：P2-T10 的原六族加 P2-T16 的

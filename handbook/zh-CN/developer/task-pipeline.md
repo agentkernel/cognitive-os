@@ -21,7 +21,8 @@ tests:
   - apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - apps/kernel-server/tests/p2_t24_effect_fault.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
-fingerprint: "sha256:b5e69e050b595fb2eda4652efa1e88d76b3f424dbbf4d5f034db30ac1a4a677d"
+  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+fingerprint: "sha256:ed32076c8ddf757f515f8cd3a2e02536650f8bd9a73ddc1c9be9dfb2b26ba5fd"
 non_claims:
   - 准入仍不消费 worker iteration authorization，也不获取调度 lease；那是后续 tick 的事。
 ---
@@ -52,7 +53,9 @@ chain → SQLite，线上使用生成的 request/result DTO。
 准入发布在 authority SQLite 文件内全有或全无。靠后的 Loop/Budget/调度冲突会回滚合同
 与事件；成功响应后崩溃重开会看到全部成员。Owner-local Context 授权事实是租户
 `personal` 的 daemon 策略，不是调用方能力通道；首个调度 tick 在 Pi 之前用封存
-ContextView 把 Loop 从 `START` 走到 `DECIDE`。它不创建 candidate Intent/Effect，也不运行
+ContextView 把 Loop 从 `START` 走到 `DECIDE`。live daemon 上 HTTP 适配器克隆进程持有的
+authority-store 句柄，使该 tick 能看到这些事实；另开连接的 in-process
+`TaskApi::handle` fixture 不是这条路径。它不创建 candidate Intent/Effect，也不运行
 Tool——周期 worker 路径仍是独立接线。
 daemon 启动时可从当前不可变合同重构同一引导，并幂等恢复所缺 Loop、Budget 或调度行；
 既有权威绝不重置。

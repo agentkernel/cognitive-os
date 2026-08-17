@@ -22,14 +22,16 @@ tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:a8d9975ca40bbc06887300162bc04ede6b654564d5267d5a9877de5b2c414706"
+fingerprint: "sha256:2f8fb39363f7575850f9509565e65f573acf8ae616286ff371a48da1c7f34425"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
 
 # 存储与迁移
 
-`cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。XDG state 下两个数
+`cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
+可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
+准入与周期调度 tick。XDG state 下两个数
 据库：**authority**（迁移 v1–v24）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
