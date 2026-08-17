@@ -45,16 +45,22 @@ incident) if that item is still in use.
 | P2-T31 merged and lease closed | **pass** | PR #236 product; PR #237 closure at `main@2a8d4d2f` |
 | Evaluation lease claimed | **pass** | this document + Current snapshot row |
 | Product source pin | **pass** | `2a8d4d2f9944417c8081edede2f1fd04caa5379d` |
-| Source archive + SHA-256 | `not-run` | `git archive` of exact `2a8d4d2f` on `DEV-LINUX-NATIVE-01`; scp to guest (do not SSH-pipe) |
-| New campaign root/port | `not-run` | `/home/hal9001/perfeval007-20260817` mode `0700`; daemon `127.0.0.1:48292`. Leave `48181`/`48284`/`48383` untouched |
-| Exact-source daemon/CLI binaries | `not-run` | `DEV-LINUX-NATIVE-01` `cargo build --release --locked -p kernel-server -p admin-cli -p pi-agent-adapter` from extracted archive |
-| Campaign daemon on `48292` | `not-run` | public `cognitive daemon start --bind 127.0.0.1:48292` |
-| New SecretStore entry | `not-run` | product stdin import; D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
-| Local Pi `0.81.1` pin | `not-run` | guest-local npm pack+install under the new root; `--extension` absolute path only |
-| Exact-source `pi-agent-adapter` | `not-run` | same extracted `2a8d4d2f` archive |
-| C1/C2 paired B0 | `not-run` | after freeze pass |
+| Source archive + SHA-256 | **pass** | `git archive --format=tar --prefix=cognitiveos-personal-2a8d4d2f/` of exact `2a8d4d2f`; 14,622,720 bytes; 1536 entries; 0 `.git/` members; SHA-256 `ca2a95b09a78062cc55112211dac2d5de192aa3e353dafbbdd0572bcb4e1efed`. Copied with `scp` (not SSH-pipe) |
+| New campaign root/port | **pass** | `/home/hal9001/perfeval007-20260817` mode `0700`; daemon `127.0.0.1:48292` pid 277358. Listeners `48181`/`48284`/`48383` untouched |
+| Exact-source daemon/CLI binaries | **pass** | `DEV-LINUX-NATIVE-01` `CARGO_NET_OFFLINE=true cargo build --release --locked -p kernel-server -p admin-cli -p pi-agent-adapter` from extracted archive; Rust 1.97.1. `kernel-server` SHA-256 `e603edab9a594e41177f89ac105b2755bff34cdb980c30faece03de87610ec55`; `cognitive` `0c443a5c56c55efdd92927d973d4acf9f00ad8d0007f51eca7fc2386baa713f2`; `pi-agent-adapter` `816856b49674d06f025f535fe2bf5219dd9744ab899250a489538ea687aa3167` |
+| Campaign daemon on `48292` | **pass** | public `cognitive daemon start --bind 127.0.0.1:48292`; pid `277358`; lock `…/runtime/cognitiveos/daemon.lock` |
+| New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/16` (not `/12`/`/13`/`/14`/`/15`). D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
+| Local Pi `0.81.1` pin | **pass** | guest-local npm install of tarball SHA-256 `420113c0282160e6181656fd16cf18742f76bf9040ee3dfb9cb67e3e6ad5641c` under the new root; `--extension` absolute. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true` |
+| Exact-source `pi-agent-adapter` | **pass** | same extracted `2a8d4d2f` archive; host release build copied to guest. `o-arm-candidate.mjs` SHA-256 `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
+| C1/C2 paired B0 | `not-run` | freeze pass recorded; cell starting next |
 | C1/C2 paired B1/B2 | `not-run` | after B0 path/fairness |
 | Cleanup / campaign close | `not-run` | stop 48292/48392; clear new SecretStore item without search/lookup; leave 48181/48284/48383 and EVAL-004/005/006 roots untouched |
+
+## Unique next action
+
+Run B0 C1-search O-arm against live daemon `127.0.0.1:48292` (instrument
+`eval007-b0-c1-search.py`, started 2026-08-17). Append the cell to the
+running assessment before B1/B2. Measurement-only.
 
 ## Non-claims
 
