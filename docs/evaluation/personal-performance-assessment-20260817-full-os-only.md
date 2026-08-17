@@ -12,7 +12,7 @@
 - Claim level: **`hypothesis` / non-claim**
 - Independent verifier: **`not_reviewed`**
 - Agent benefit claimed: **no**
-- Document status: final campaign report; campaign **closed 2026-08-17**
+- Document status: remaining required cells recorded 2026-08-17; campaign **closed 2026-08-17** after owner 「继续完成」
 
 This report does **not** establish a Gate, release, Profile, B01, or
 Agent-benefit outcome. `PERSONAL-PERF-EVAL-002` remains closed and is not
@@ -28,11 +28,12 @@ McNemar p = 0.2379). Median paired wall **+1695.6 ms** (CI [1595.7, 1833.4],
 **+43.9 %**). B1 pilot (90 pairs) was the same direction for wall
 (+1790 ms, +43.9 %) with completion +3.3 pp and a CI that includes zero.
 
-**C1/C2 governed workspace arms remain unpaired.** Workspace fixture bytes
-were digest-pinned under the guest `fixtures/c1-c2/` tree. The CognitiveOS
-Extension still does not advertise equivalent Workspace* tools to Pi, so
-the paired adapter stayed `not-run` rather than substituting a second
-authority writer.
+**C1/C2 governed workspace arms remain unpaired** after a 2026-08-17
+public-path re-check. P2-T21..P2-T28 provide the production daemon
+Workspace* path (T-GOV 7/7 `execution_ready`). The frozen Extension still
+has `READ_ONLY_TOOL_ALLOWLIST = []` and does not advertise Workspace* tools
+to Pi. Paired C1/C2 stayed `not-run` rather than substituting a second
+authority writer. Measurement-only; no mid-campaign product task.
 
 **Local OS surfaces are fast; CLI status is not.** UJ3: in-daemon health
 0.45 ms p50 (200/200); six-resource GET 0.29–0.41 ms; CLI `status`/`doctor`
@@ -48,11 +49,13 @@ acceptances, 0 verified completions claimed, 0 mutations.
 enable / quarantine / channel isolation / unknown-id behave as registered
 codes. EVAL-002's enable/disable fall-through is historical after P2-T25.
 
-**UJ2 cold bind works; the started cold pair timed out on both arms.** The
-O-arm daemon started with `--bind 127.0.0.1:48286` and reached health 200.
-Both P and O then hit the 180 s runner timeout with 0 output chars on
-`confirmatory-A4-000`. Remaining 9 UJ2 seeds were `not-run` after the 420 s
-wrapper. No cold/warm latency comparison is made.
+**UJ2 cold bind works.** The started pair `confirmatory-A4-000` remains a
+retained 180 s timeout on both arms (0 output chars). Remaining seeds 1–9
+were completed with `--bind`: **9/9 pairs** both arms `completed` and
+oracle True; O-arm cold start health 200 × 9. Descriptive paired wall on
+those 9 completed pairs: median **+2270.9 ms** (927–3111). No
+cold-versus-warm comparison is made. Combined UJ2 cold denominator:
+**10/10 pairs started and retained**.
 
 ## 2. Cell register
 
@@ -61,20 +64,20 @@ wrapper. No cold/warm latency comparison is made.
 | B0 C0 qualification | pass | 9/9 (+ 3 discarded warmups) |
 | B1 C0 pilot | pass (hypothesis) | 90 pairs / 180 runs |
 | B2 C0 confirmatory | pass (hypothesis) | 270 pairs / 540 runs |
-| C1/C2 paired B0/B1/B2 | `not-run` | equivalent Pi adapter absent |
+| C1/C2 paired B0/B1/B2 | `not-run` | equivalent Pi adapter absent after public-path re-check |
 | UJ1 | `not-run` | no guest reinstall |
-| UJ2 cold | **partial** | 1/10 pairs started; 2/2 arms timeout; 9 `not-run` |
+| UJ2 cold | **pass** (hypothesis; 1 retained timeout pair) | 10/10 pairs; seed 0 timeout both arms; seeds 1–9 complete/oracle True |
 | UJ2 Pi-warm | `not_available` | no process reuse |
 | UJ3 daily ops | pass | health 200; CLI 100/50/50; 300 GET; 60 watch |
-| UJ3 task-channel watch | **partial** | 20/20 HTTP 403 |
+| UJ3 task-channel watch | **partial** | 20/20 HTTP 403 (expected channel isolation, not a defect) |
 | UJ4 / O1 admission | pass | 30/30 admitted; 0 completions |
 | UJ6 | register only | table in the running record |
 | T-GOV projection | pass | 7/7 `execution_ready` |
 | T2 lifecycle | pass | 65/65 |
 | T3; T4–T9 invoke; T10 live | `not-run` | optional or missing public dispatch / ecosystem |
-| MS-AUTH | **partial** | 6/6 negatives; sealed-header positives `not-run` |
+| MS-AUTH | **partial** | 6/6 negatives; Skill lifecycle 10/10; Memory sealed-header positives `not-run` |
 | S4/S8 | `not-run` | no paired governed consumer |
-| B3 faults | **partial** | mismatch 10/10; restart 10/10; Pi-kill 10/10; deadline/broker/upstream/stale `not-run` |
+| B3 faults | **partial** | mismatch/restart/Pi-kill 10/10; deadline/broker/upstream-timeout/oversize 10/10; stale `not-run` |
 | B4 local | pass | 932/932; mixed Agent `not-run` |
 | B5 1 h | pass | 1620/1620 |
 | B5 8 h | pass | 12960/12960; 7/7 restarts |
@@ -84,14 +87,15 @@ wrapper. No cold/warm latency comparison is made.
 | O5/O6 | `not-run` | C1/C2 adapter absent |
 | O10–O13 | covered by B3/UJ3/B0 | no extra denominator |
 | B6 | `not-run` | not this campaign |
-| Cleanup | pass, with operator-transcript incident | SecretStore `/12` cleared; 48181/48284/48383 untouched |
+| Cleanup | pass | 2026-08-17 remaining-cells cleanup: daemon/broker stopped; SecretStore `/13` cleared (no search/lookup); 48181/48284/48383 untouched; redactor 0 hits |
 
 ## 3. Capability truth (not a slow-path claim)
 
 Reachable on the public campaign daemon at this freeze: C0 Provider proxy,
 management health/status/doctor, six-resource projection/watch,
-Task admission, Tool catalog and lifecycle mutation, fail-closed
-Memory/Skill negatives, local concurrency and soak.
+Task admission, Tool catalog and lifecycle mutation, Skill
+import/inspect/bind/supersede/revoke, fail-closed Memory/Skill negatives,
+local concurrency and soak.
 
 Not paired / not claimed as OS Agent benefit: C1/C2 workspace tools,
 governed Skill consumption, verified Task completion, backup/restore,
@@ -101,13 +105,15 @@ fairness telemetry, cache observation, live MCP.
 
 1. Nested per-request Pi/Extension timing to locate the ~1.7 s C0 overhead
    (still unattributed beyond “not daemon local residual / not broker”).
-2. Equivalent Pi Workspace* adapter, or an honest product gap, before any
-   C1/C2 paired cell.
-3. Sealed-header composer so MS-AUTH positives can run without inventing
-   a second writer.
-4. Do not use `secret-tool search` in cleanup; it prints secret material.
-   Rotate the Provider key that appeared in this session's operator SSH
-   transcript.
+2. Equivalent Pi Workspace* adapter (product: Extension advertise daemon
+   Workspace* tools) before any C1/C2 paired cell. That is a product mutex,
+   not a measurement gap that this campaign may implement.
+3. Sealed-header composer from daemon-owned `GovernanceSeed` so MS-AUTH
+   Memory positives can run without fabricating governance.
+4. Do not use `secret-tool search` or `lookup` in cleanup; they print secret
+   material. Rotate the Provider key that appeared in the earlier operator
+   SSH transcript. The 2026-08-17 remaining-cells session used stdin import
+   and `secret-tool clear` plus D-Bus attribute listing only.
 5. Independent review before any claim promotion.
 
 ## 5. Non-claims

@@ -1,8 +1,8 @@
 # PERSONAL-PERF-EVAL-004 re-freeze preregistration
 
 - Campaign: `PERSONAL-PERF-EVAL-004`
-- Lease: `lease/personal/EVAL-20260816/full-os-only-refreeze`
-- Date: 2026-08-16
+- Lease: `lease/personal/EVAL-20260817/remaining-required-cells` (2026-08-16 re-freeze lease closed; this remaining-cells lease is measurement-only)
+- Date: 2026-08-16; remaining required cells resumed 2026-08-17
 - Frozen product source: `origin/main@1e71344a7b2c4a443fd0581e7fd33f21e970efbd`
   (merge of P2-T28 / PR #227; BR-01..BR-08 are on `main`)
 - Campaign registration: PR #228 merged at
@@ -721,8 +721,113 @@ Final assessment:
 
 ## Unique next action
 
-Merge docs-only PR #229 if it should land on `main`. Rotate the Provider
-key exposed in the operator SSH transcript by `secret-tool search`. Do
-**not** resume the development backlog without a fresh owner delivery
-instruction.
+Owner 「继续完成」 remaining required cells under
+`lease/personal/EVAL-20260817/remaining-required-cells`. Do not redo passed
+C0/UJ3-daily/UJ4/T-GOV/T2/B4-local/B5-1h-8h. Rotate the Provider key exposed
+by `secret-tool search`. Never `secret-tool search`/`lookup`.
+
+## Remaining required cells (2026-08-17) — in progress
+
+Owner instruction 2026-08-17 re-opened measurement-only EVAL-004 after the
+2026-08-17 closure. Frozen product remains `origin/main@1e71344a`. Campaign
+root `/home/hal9001/perfeval004-20260816`. Listeners `48181`/`48284`/`48383`
+untouched. SecretStore `/12` was not reused; new item
+`/org/freedesktop/secrets/collection/login/13` (label
+`cognitiveos-personal-provider-api-key`, attributes only; value never read
+with `lookup`/`search`). Product stdin import `secret_material_written=true`,
+`secret_ref_redacted=true`. Campaign daemon restarted on `127.0.0.1:48286`
+pid 262109; public status overall `ready`, `first_conversation_ready: true`.
+Broker key load uses stdin (`pure-pi-broker-stdin.py`
+`sha256:e128abeaf08191c08273d05bb5a475af68d3eb440d4434ec7b7744a294572a55`);
+no `secret-tool lookup`.
+
+### C1/C2 paired public-path re-check (2026-08-17) — `not-run`
+
+P2-T21..P2-T28 on `main@1e71344a` provide the production daemon path
+(T-GOV 7/7 `execution_ready`; governed Search/Write/Patch carriers). The
+frozen CognitiveOS Extension on the guest still has
+`READ_ONLY_TOOL_ALLOWLIST = []` and default-denies every Pi `tool_call`.
+It does not advertise WorkspaceRead/Search/Write/Patch to Pi. A campaign
+Pi-native `bash`/`edit`/`write` adapter would break equivalent-tool
+fairness; reimplementing the candidate protocol as a campaign instrument
+would be a second authority writer. C1/C2 addendum §1 therefore keeps
+paired C1/C2 **`not-run`**. Measurement-only: no product task in this
+lease. O5/O6 remain **`not-run`** without that adapter.
+
+### MS-AUTH remaining positives (2026-08-17) — partial (Skill pass; Memory sealed-header `not-run`)
+
+Instrument `msauth_skill.py`
+`sha256:12aa3ac7e56d0f02c7532e9f028e3f749e4670cafa4c4ac298f3df71bd4fb656`.
+Public Skill import does not require a sealed header. First 10 rounds
+retained: round 0 **pass** (import 201 → inspect 200 → bind 201 →
+supersede 201 → revoke 201 → revoked-reuse 409 `RESOURCE_SKILL_CONFLICT`);
+rounds 1–9 import 409 on a reused content digest (instrument error,
+retained). Unique-digest continuation 9/9 **pass** the same lifecycle
+(revoked-reuse 409). Combined unique successful Skill lifecycles **10/10**.
+Memory remember 10/10 HTTP 400 unsealed payloads; sealed-header composer
+remains **`not-run`** (public remember requires daemon-owned
+`GovernanceSeed`; campaign must not fabricate one). Evidence
+`msauth-remaining-summary.json` / `msauth-unique-summary.json`.
+
+### B3 remaining faults (2026-08-17) — executed except stale
+
+Instrument `b3_remaining.py`
+`sha256:7cf387b61b1af8bea34dc17eb3e0457f54d1622044f40e21b64a5407357b580c`.
+N=10 confirmatory-A4 P-arm seeds, `retry=0`, started=retained.
+
+| Sub-cell | Started | Retained | Result |
+|---|---:|---:|---|
+| client deadline (5 s) | 10 | 10 | **10/10 timeout**, 5026.7 ms p50 (5018.5–5034.7) |
+| broker unavailable | 10 | 10 | broker health 0; **10/10 timeout**, 8030.7 ms p50 (8025.0–8032.2) |
+| Provider upstream timeout (broker `FAULT_MODE=timeout` sleep 12 s, no upstream) | 10 | 10 | **10/10 timeout**, 8030.9 ms p50 |
+| response-size bound (broker `FAULT_MODE=oversize`, no upstream) | 10 | 10 | **10/10 timeout**, 8031.8 ms p50 |
+| stale Task/epoch / `OUTCOME_UNKNOWN` | 0 | 0 | **`not-run`** — C1/C2 paired adapter absent |
+
+Mismatch / restart / Pi-kill remain the 2026-08-16 10/10 records.
+
+### UJ3 task-channel watch — keep partial (expected isolation)
+
+20/20 HTTP 403 on task-channel `GET /resource/v1/watch?family=task` is
+fail-closed channel isolation (`SHELL_CHANNEL_BINDING_MISMATCH` class),
+not a missing watch. Management-channel family=task watch already 10/10
+HTTP 200 in UJ3 daily. Not a product defect for this campaign; no product
+task.
+
+### UJ2 cold resume (2026-08-17) — 9 remaining seeds executed; 10/10 retained
+
+Instrument `uj2_cold_resume.py`
+`sha256:60c52ee2e9bdccfa27081993d96ab98cdf3295beb271b1924e7afe3a6f3fa5e6`.
+Seeds 1–9 of confirmatory-A4; append-only; started seed 0 timeout pair
+retained. `retry=0`, 180 s arm timeout, `--bind 127.0.0.1:48286` before
+each O arm. Elapsed 100.6 s.
+
+**9/9 pairs** both arms `completed`, oracle True, O-arm
+`health_after=200`, `start_returncode=0`. Evidence
+`sha256:5446885512d5b5df8c853059e5eff7d599f7db44c17dcb865e9d3eb3db638431`.
+Descriptive paired wall on the 9 completed pairs only: median **+2270.9 ms**
+(927.2–3111.5). Combined with the retained seed-0 timeout: **10/10 pairs
+started and retained**. No cold-versus-warm delta is claimed.
+
+### Remaining-cells cleanup (2026-08-17) — pass (no secret-tool search/lookup)
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48286` | product `daemon stop` status ok; stale lock removed; listener absent |
+| campaign stdin-broker `127.0.0.1:48386` | absent after `pkill` of `pure-pi-broker-stdin.py` only |
+| listeners `48181` / `48284` / `48383` | untouched |
+| old root `/home/hal9001/perfeval004` | untouched |
+| SecretStore item `/13` | `secret-tool clear` on the product attribute triple; post-clear D-Bus `SearchItems` **item_count 0** (attributes/paths only; no `lookup`/`search`) |
+| redactor `evidence/` | 52 files, `key_shaped_hits=0` |
+| redactor `runtime/` | 9 files, `key_shaped_hits=0` |
+
+**Campaign closed** after remaining required cells were executed or
+honestly dispositioned. Claim ceiling `hypothesis`, verifier
+`not_reviewed`. No Gate, release, Profile, B01, or Agent-benefit
+promotion. Campaign closure does **not** resume development.
+
+## Unique next action
+
+Merge docs-only PR #229 onto `main` if required checks are green. Rotate
+the Provider key exposed earlier by `secret-tool search`. Do **not**
+resume the development backlog without a fresh owner delivery instruction.
 
