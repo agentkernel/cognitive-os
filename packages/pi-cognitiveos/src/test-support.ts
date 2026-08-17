@@ -17,6 +17,7 @@ import type {
   ExtensionAPI,
   ExtensionCommandSpec,
   ExtensionContext,
+  ExtensionToolDefinition,
   ExtensionUi,
   PiModel,
   ProviderConfig,
@@ -77,6 +78,7 @@ export class FakePi implements ExtensionAPI {
   readonly ui = new FakeUi();
   readonly context: ExtensionContext = { ui: this.ui };
   readonly commands = new Map<string, ExtensionCommandSpec>();
+  readonly tools: ExtensionToolDefinition[] = [];
   readonly providers: Array<{ readonly providerName: string; readonly config: ProviderConfig }> = [];
   readonly selectedModels: PiModel[] = [];
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
@@ -112,6 +114,10 @@ export class FakePi implements ExtensionAPI {
 
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void {
     this.commands.set(commandName, spec);
+  }
+
+  registerTool(tool: ExtensionToolDefinition): void {
+    this.tools.push(tool);
   }
 
   registerProvider(providerName: string, config: ProviderConfig): void {

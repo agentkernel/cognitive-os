@@ -1,10 +1,11 @@
 //! Candidate-only boundary for invoking an external Pi process.
 //!
 //! Pi is an external coding-agent process. This policy deliberately does not
-//! turn its output into authority, an Effect, or a completed Task. In
-//! particular it disables Pi tools, project-local extensions, skills, context
-//! files and session persistence. That reduction is useful for supervised
-//! model evaluation, but is not an OS sandbox and must not be called C0/C1.
+//! turn its output into authority, an Effect, or a completed Task. The
+//! daemon-candidate path disables Pi built-in filesystem/shell tools and keeps
+//! only the CognitiveOS Extension's daemon-governed Workspace* tools. That
+//! reduction is useful for supervised model evaluation, but is not an OS
+//! sandbox and must not be called C0/C1.
 
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -91,16 +92,18 @@ pub fn parse_daemon_candidate_response(frame: &[u8]) -> Result<DaemonCandidateRe
 }
 
 /// Extract one strict candidate response from Pi's documented JSON print-mode
-/// event stream. Pi may emit lifecycle and streaming events, but only one
-/// finalized assistant `message_end` payload is eligible to carry the opaque
-/// candidate JSON. Any tool event, non-text block, duplicate final message, or
-/// surrounding prose fails closed.
+/// event stream. Pi may emit lifecycle and streaming events. Eligible carriers
+/// are either one finalized assistant `message_end` JSON payload or exactly one
+/// daemon-governed WorkspaceSearch/Write/Patch `tool_execution_start`. Bash,
+/// edit, write, and any other tool fail closed. Mixed JSON-plus-Workspace* or
+/// two Workspace* calls fail closed.
 pub fn extract_daemon_candidate_response_from_pi_events(
     event_stream: &str,
 ) -> Result<DaemonCandidateResponse, String> {
     let events = parse_rpc_jsonl_records(event_stream)
         .map_err(|error| format!("Pi candidate event stream is invalid: {error}"))?;
     let mut candidate_payload: Option<String> = None;
+    let mut workspace_candidate: Option<DaemonCandidateResponse> = None;
 
     for event in events {
         let event_type = event.get("type").and_then(Value::as_str);
@@ -108,6 +111,25 @@ pub fn extract_daemon_candidate_response_from_pi_events(
             event_type,
             Some("tool_execution_start" | "tool_execution_update" | "tool_execution_end")
         ) {
+            let tool_name = event.get("toolName").and_then(Value::as_str).unwrap_or("");
+            if matches!(
+                event_type,
+                Some("tool_execution_update" | "tool_execution_end")
+            ) && is_daemon_governed_workspace_tool(tool_name)
+            {
+                continue;
+            }
+            if event_type == Some("tool_execution_start")
+                && is_daemon_governed_workspace_tool(tool_name)
+            {
+                if workspace_candidate.is_some() {
+                    return Err(
+                        "Pi candidate event stream has multiple Workspace* tool calls".to_owned(),
+                    );
+                }
+                workspace_candidate = Some(workspace_tool_event_to_candidate(&event)?);
+                continue;
+            }
             return Err("Pi candidate event stream attempted a tool operation".to_owned());
         }
         if event_type != Some("message_end") {
@@ -138,10 +160,113 @@ pub fn extract_daemon_candidate_response_from_pi_events(
         }
     }
 
-    let payload = candidate_payload
-        .ok_or_else(|| "Pi candidate event stream has no final assistant response".to_owned())?;
-    parse_daemon_candidate_response(payload.as_bytes())
-        .map_err(|error| format!("Pi candidate final response is invalid: {error}"))
+    match (workspace_candidate, candidate_payload) {
+        (Some(_), Some(_)) => Err(
+            "Pi candidate event stream mixed a Workspace* tool call with a JSON candidate"
+                .to_owned(),
+        ),
+        (Some(candidate), None) => Ok(candidate),
+        (None, Some(payload)) => parse_daemon_candidate_response(payload.as_bytes())
+            .map_err(|error| format!("Pi candidate final response is invalid: {error}")),
+        (None, None) => Err("Pi candidate event stream has no final assistant response".to_owned()),
+    }
+}
+
+fn is_daemon_governed_workspace_tool(tool_name: &str) -> bool {
+    matches!(
+        tool_name.trim().to_ascii_lowercase().as_str(),
+        "workspacesearch" | "workspacewrite" | "workspacepatch"
+    )
+}
+
+fn workspace_tool_event_to_candidate(event: &Value) -> Result<DaemonCandidateResponse, String> {
+    let tool_name = event
+        .get("toolName")
+        .and_then(Value::as_str)
+        .ok_or_else(|| "Workspace* tool event is missing toolName".to_owned())?;
+    let args = event
+        .get("args")
+        .and_then(Value::as_object)
+        .ok_or_else(|| "Workspace* tool event is missing args".to_owned())?;
+    let target = args
+        .get("target")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| "Workspace* tool event is missing target".to_owned())?
+        .to_owned();
+    let (tool_ref, action, operation_descriptor_id, parameters) =
+        match tool_name.trim().to_ascii_lowercase().as_str() {
+            "workspacesearch" => {
+                let query = args
+                    .get("query")
+                    .and_then(Value::as_str)
+                    .filter(|value| !value.is_empty())
+                    .ok_or_else(|| "WorkspaceSearch tool event is missing query".to_owned())?;
+                (
+                    "native.workspace.search",
+                    "search",
+                    "00000000-0000-7000-8000-000000002002",
+                    serde_json::json!({"family":"WorkspaceSearch","query": query}),
+                )
+            }
+            "workspacewrite" => mutation_parameters(args, "WorkspaceWrite")?,
+            "workspacepatch" => mutation_parameters(args, "WorkspacePatch")?,
+            _ => {
+                return Err("Workspace* tool event named an unknown family".to_owned());
+            }
+        };
+    let parameters_digest = digest_candidate_parameters(&parameters)?;
+    Ok(DaemonCandidateResponse {
+        tool_ref: tool_ref.to_owned(),
+        action: action.to_owned(),
+        target,
+        parameters: Some(parameters),
+        parameters_digest,
+        expected_state_version: 1,
+        operation_descriptor_id: operation_descriptor_id.to_owned(),
+    })
+}
+
+fn mutation_parameters(
+    args: &serde_json::Map<String, Value>,
+    family: &str,
+) -> Result<(&'static str, &'static str, &'static str, Value), String> {
+    let input_b64 = args
+        .get("input_b64")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| format!("{family} tool event is missing input_b64"))?;
+    let preimage = args
+        .get("preimage")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty())
+        .ok_or_else(|| format!("{family} tool event is missing preimage"))?;
+    let (tool_ref, action, descriptor) = if family == "WorkspaceWrite" {
+        (
+            "native.workspace.write",
+            "write",
+            "00000000-0000-7000-8000-000000002003",
+        )
+    } else {
+        (
+            "native.workspace.patch",
+            "patch",
+            "00000000-0000-7000-8000-000000002004",
+        )
+    };
+    Ok((
+        tool_ref,
+        action,
+        descriptor,
+        serde_json::json!({"family": family, "input_b64": input_b64, "preimage": preimage}),
+    ))
+}
+
+fn digest_candidate_parameters(parameters: &Value) -> Result<String, String> {
+    let bytes = cognitive_contracts::canonical::canonical_bytes_of_value(parameters)
+        .map_err(|error| format!("Workspace* parameters are not canonicalizable: {error}"))?;
+    cognitive_contracts::canonical::digest(&bytes, "cognitiveos.personal.candidate-parameters/0.1")
+        .map_err(|error| format!("Workspace* parameters digest failed: {error}"))
 }
 
 /// Immutable metadata for the Pi release reviewed by P0-T06.

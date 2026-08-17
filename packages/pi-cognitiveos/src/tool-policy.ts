@@ -15,11 +15,14 @@
  * (P2-T05/P2-T06) and runs in the daemon, never in Pi.
  *
  * `READ_ONLY_TOOL_ALLOWLIST` is deliberately empty. It is the single, explicit
- * place where a future batch may admit a tool, and it exists so that admitting
- * one is a reviewed edit rather than an accidental gap.
+ * place where a future batch may admit a *Pi-native* tool to run ungoverned,
+ * and it exists so that admitting one is a reviewed edit rather than an
+ * accidental gap. Daemon-governed WorkspaceSearch/Write/Patch are advertised
+ * separately via `registerTool`; they are not entries on this allowlist.
  */
 
 import type { ToolCallDecision, ToolCallEvent } from "./pi-api.js";
+import { isDaemonGovernedWorkspaceTool } from "./workspace-tools.js";
 
 /** Pi built-ins that mutate the workspace or execute commands. */
 export const BLOCKED_MUTATING_TOOLS: readonly string[] = ["bash", "edit", "write"];
@@ -43,11 +46,15 @@ export function isBlockedMutatingTool(toolName: string): boolean {
 }
 
 /**
- * Decide one `tool_call`. Never returns `undefined` while the allowlist is
- * empty, so no Pi tool executes ungoverned.
+ * Decide one `tool_call`. Daemon-governed Workspace* tools return `undefined`
+ * so Pi runs the Extension's I/O-free `execute`. Every other tool is refused
+ * while the Pi-native allowlist stays empty.
  */
 export function decideToolCall(event: ToolCallEvent): ToolCallDecision {
   const toolName = normalizeToolName(event.toolName);
+  if (isDaemonGovernedWorkspaceTool(toolName)) {
+    return undefined;
+  }
   if (READ_ONLY_TOOL_ALLOWLIST.includes(toolName)) {
     return undefined;
   }

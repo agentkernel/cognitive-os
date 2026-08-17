@@ -136,6 +136,76 @@ fn pi_print_events_reject_tool_execution_before_candidate_extraction() {
 }
 
 #[test]
+fn pi_print_events_accept_one_daemon_governed_workspace_search() {
+    let events = concat!(
+        r#"{"type":"tool_execution_start","toolCallId":"1","toolName":"WorkspaceSearch","args":{"query":"TODO","target":"workspace://personal/example"}}"#,
+        "\n",
+        r#"{"type":"tool_execution_end","toolCallId":"1","toolName":"WorkspaceSearch","isError":false,"result":{"content":[{"type":"text","text":"queued"}]}}"#,
+        "\n"
+    );
+
+    let candidate =
+        extract_daemon_candidate_response_from_pi_events(events).expect("workspace search");
+
+    assert_eq!(candidate.tool_ref, "native.workspace.search");
+    assert_eq!(candidate.action, "search");
+    assert_eq!(candidate.target, "workspace://personal/example");
+    assert_eq!(
+        candidate.operation_descriptor_id,
+        "00000000-0000-7000-8000-000000002002"
+    );
+    assert_eq!(candidate.expected_state_version, 1);
+    let parameters = candidate.parameters.expect("search parameters");
+    assert_eq!(parameters["family"], "WorkspaceSearch");
+    assert_eq!(parameters["query"], "TODO");
+    assert!(
+        candidate.parameters_digest.starts_with("sha256:"),
+        "{}",
+        candidate.parameters_digest
+    );
+}
+
+#[test]
+fn pi_print_events_reject_bash_even_when_a_workspace_tool_is_present() {
+    let events = concat!(
+        r#"{"type":"tool_execution_start","toolName":"bash","args":{"command":"ls"}}"#,
+        "\n",
+        r#"{"type":"tool_execution_start","toolName":"WorkspaceSearch","args":{"query":"TODO","target":"workspace://personal/example"}}"#,
+        "\n"
+    );
+
+    let error = extract_daemon_candidate_response_from_pi_events(events).expect_err("reject bash");
+    assert_eq!(
+        error,
+        "Pi candidate event stream attempted a tool operation"
+    );
+}
+
+#[test]
+fn pi_print_events_reject_mixed_workspace_tool_and_json_candidate() {
+    let response = String::from_utf8(valid_response_json()).expect("response is UTF-8");
+    let events = format!(
+        "{}\n{}\n",
+        r#"{"type":"tool_execution_start","toolName":"WorkspaceSearch","args":{"query":"TODO","target":"workspace://personal/example"}}"#,
+        finalized_pi_event(&response)
+    );
+
+    let error =
+        extract_daemon_candidate_response_from_pi_events(&events).expect_err("reject mixed");
+    assert!(error.contains("mixed"), "{error}");
+}
+
+#[test]
+fn pi_print_events_reject_two_workspace_tool_calls() {
+    let event = r#"{"type":"tool_execution_start","toolName":"WorkspaceSearch","args":{"query":"TODO","target":"workspace://personal/example"}}"#;
+    let events = format!("{event}\n{event}\n");
+
+    let error =
+        extract_daemon_candidate_response_from_pi_events(&events).expect_err("reject duplicate");
+    assert!(error.contains("multiple Workspace*"), "{error}");
+}
+
+#[test]
 fn pi_print_events_reject_multiple_finalized_candidates() {
     let response = String::from_utf8(valid_response_json()).expect("response is UTF-8");
     let event = finalized_pi_event(&response);

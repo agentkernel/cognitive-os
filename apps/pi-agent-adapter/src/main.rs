@@ -101,7 +101,7 @@ fn daemon_candidate(flags: &ParsedFlags) -> Result<Value, String> {
         // discovery remains disabled separately by `--no-extensions`.
         .arg("-e")
         .arg(extension)
-        .arg("--no-tools")
+        .arg("--no-builtin-tools")
         .arg("--no-extensions")
         .arg("--no-skills")
         .arg("--no-context-files")
@@ -182,7 +182,7 @@ fn read_daemon_candidate_request() -> Result<DaemonCandidateRequest, String> {
 
 fn candidate_prompt(request: &DaemonCandidateRequest) -> String {
     format!(
-        "Return exactly one JSON object and no Markdown or prose. Its only fields must be tool_ref (string), action (string), target (string), parameters (object when required, otherwise omit), parameters_digest (sha256 digest of the canonical parameters object), expected_state_version (integer >= 1), and operation_descriptor_id (string). The only parameter objects are {{\"family\":\"WorkspaceSearch\",\"query\":string}}, {{\"family\":\"WorkspaceWrite\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}, and {{\"family\":\"WorkspacePatch\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}. Do not invoke tools. Context follows:\n{}",
+        "Call exactly one of the CognitiveOS WorkspaceSearch, WorkspaceWrite, or WorkspacePatch tools. WorkspaceSearch arguments are query (string) and target (string). WorkspaceWrite and WorkspacePatch arguments are input_b64 (canonical base64), preimage (\"absent\" or digest:sha256:<64 lowercase hex>), and target (string). Do not call bash, edit, write, read, or any other Pi built-in. A JSON object with only tool_ref, action, target, parameters, parameters_digest, expected_state_version, and operation_descriptor_id remains an accepted fallback; the only parameter objects are {{\"family\":\"WorkspaceSearch\",\"query\":string}}, {{\"family\":\"WorkspaceWrite\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}, and {{\"family\":\"WorkspacePatch\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}. Context follows:\n{}",
         request.rendered_context
     )
 }

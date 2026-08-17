@@ -22,7 +22,7 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:f65b201b987d97a6d1763b4a14908abbf48e44bb8b2f5d1e912aec8dab8cd69a"
+fingerprint: "sha256:82958cf8b301b5911a4e18d9421d4efe214d2d2badf7c2f61754997d12eeeab3"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -55,10 +55,12 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 
 ## HTTP 可及面
 
-management 通道发布生命周期前置条件，准入封存的 `WorkspaceContextSource`，并在不
-直连 SQLite 的情况下完成 Memory remember/review/forget 与 Skill
-import/revision-inspect/bind/supersede/revoke。Memory 准入只接受封存
-`MemoryCandidate`，decision 与 Memory 身份由 daemon 推导。
+management 通道发布生命周期前置条件，并在不直连 SQLite 的情况下完成 Memory
+remember/review/forget 与 Skill import/revision-inspect/bind/supersede/revoke。
+公开 remember 接受未封存的 owner 字段（`text`、scope、purpose、retention）；daemon
+加载持久 `GovernanceSeed` 并组合封存 header。已持有封存
+`WorkspaceContextSource` + `MemoryCandidate` 信封的调用方仍可走原路径。评测或测试
+代码不得在公开正例路径上自行铸造封存 header。
 `skill/binding/revoke` 必须先于 `skill/bind` 匹配：后者是前者的前缀，否则每次撤销都
 会落到 bind handler。所有变更行与 revision 谱系在 daemon 重启后仍可读取。被策略
 拒绝的 Memory candidate 可直接重试字段完全相同的封存 source，无需原始清理；相同 id

@@ -4,8 +4,8 @@
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
 > **状态：active（P0-T01..T07、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；Profile / Windows B01-W 未声明）**
-> **最后更新：2026-08-16**
-> **计划追踪 ID：** `P0-T01` 至 `P9-T07`（含后续登记的 `P2-T09..P2-T28`）是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **最后更新：2026-08-17**
+> **计划追踪 ID：** `P0-T01` 至 `P9-T07`（含后续登记的 `P2-T09..P2-T29`）是本计划的管理 ID，不是 `specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** 仓库根目录 `plan.md`；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
@@ -151,7 +151,7 @@
 |---|---:|---:|---:|---:|---:|---|
 | Phase 0 - 基线与决策 | 7 | 7 | 0 | 0 | 0 | G0 |
 | Phase 1 - 安装到首次对话 | 9 | 9 | 0 | 0 | 0 | G1 / B01 `pass` |
-| Phase 2 - 单 Agent 任务闭环 | 28 | 28 | 0 | 0 | 0 | G2 / B02、B04、B05、B12 |
+| Phase 2 - 单 Agent 任务闭环 | 29 | 28 | 1 | 0 | 0 | G2 / B02、B04、B05、B12 |
 | Phase 3 - Context Resource Value | 6 | 6 | 0 | 0 | 0 | G3 / B03 `pass`、B06、B07 |
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
@@ -159,7 +159,7 @@
 | Phase 7 - 产品化与发布 | 8 | 5 | 0 | 1 | 2 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 8 | 8 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 7 | 7 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **88** | **81** | **0** | **1** | **6** | — |
+| **合计** | **89** | **81** | **1** | **1** | **6** | — |
 
 ## 2. 产品边界与不变量
 
@@ -254,6 +254,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P2-T26 | P2-T23、P2-T24、P2-T25、P7-T04、P9-T06 | O2/O3/O4/O5/O13 authenticated bounded collectors、active negative controls、durable audit replay/gap detection 与 concurrency/restart negatives；exact-revision `linux-002` | 无 |
 | P2-T27 | P7-T02、P5-T01、P5-T02、P5-T05、P2-T23 | public backup/restore、transactional migration/tamper/secret-exclusion/RTO/RPO evidence，以及 managed Pi full lifecycle/recovery；exact-revision `linux-002` | 无 |
 | P2-T28 | P2-T21、P2-T22..P2-T27 | UJ1..UJ6 required rows each have public caller、mechanical oracle、cleanup 和 bounded evidence；Web UI/Multi-Agent 明确 scope-excluded；exact-revision `linux-002` | EVAL-004 重新冻结与 B0/B1 仍为独立 campaign，不能由 task completion 推导 |
+| P2-T29 | P2-T21、P2-T23 | Pi Extension advertises daemon-governed WorkspaceSearch/Write/Patch without opening bash/edit/write; public Memory remember accepts unsealed owner fields and daemon-composes sealed headers from the persisted GovernanceSeed; exact-revision `linux-002` | 无；task `done` 不推进 EVAL、Gate、release 或 Profile |
 | P3-T01 | P2-T01/P2-T02 稳定 application contracts；**不要求 P2-T08 Gate** | real Context workspace/task/evidence source、scope-before-ranking、owner-local management-session MVP authorization | B03 |
 | P3-T02 | P3-T01 stable Context source port | minimum Context Builder、required fail-closed、显式 loss 与预算 | B03 |
 | P3-T06 | P3-T05 | MVP B03 fixed 33-test Context correctness matrix、native Linux/Clippy、required Ubuntu/Windows CI、redacted cleanup and owner review; B06/B07 only collect repeatable raw metrics | GMVP-LINUX Gate composition requires B03; B06/B07 do not block |
@@ -588,6 +589,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P2-T26 | Bounded OS observation plane | P2-T23, P2-T24, P2-T25, P7-T04, P9-T06 | O2/O3/O4/O5/O13 authenticated bounded read plane：authorization、cache/compaction、queue/fairness/fence、Effect、audit chain/replay；每个 zero 有 denominator 与 active negative control | done | BR-06；merged PR [#225](https://github.com/agentkernel/cognitive-os/pull/225) at `main@9e1404a1`. Ubuntu `31934786837`; linux-002 observation 27/27, bins 329/329；无 EVAL/Gate/release/Profile claim |
 | P2-T27 | User lifecycle and backup/restore | P7-T02, P5-T01, P5-T02, P5-T05, P2-T23 | 真实 CLI/API backup/restore，排除 secret/bearer/raw Provider/Pi/authority DB copy；preflight + transactional restore；managed Pi install 到 recover 全生命周期 | done | BR-07；merged PR [#226](https://github.com/agentkernel/cognitive-os/pull/226) at `main@70980131`. Ubuntu `31940138451`; linux-002 focused matrix at `5a561fbf`. Windows `not-run by owner-directed Linux-only route`；无 EVAL/Gate/release/Profile claim |
 | P2-T28 | End-to-end journey and capability truth | P2-T21, P2-T22..P2-T27 | UJ1..UJ6 required rows逐项具备 public caller、mechanical oracle、cleanup、bounded evidence；覆盖 cold/warm、nested timing、Task terminal query、fault/restart、Memory/Skill、Tool、Pi lifecycle、backup/restore | done | BR-08；merged PR [#227](https://github.com/agentkernel/cognitive-os/pull/227) at `main@1e71344a`. Web UI/Multi-Agent 明确 scope-excluded；完成不等于 EVAL-004 B0/B1 或任何 Gate/claim |
+| P2-T29 | C1/C2 enablement: daemon Workspace* advertisement and Memory sealed-header composer | P2-T21, P2-T23 | (1) Pi Extension registers daemon-governed WorkspaceSearch/WorkspaceWrite/WorkspacePatch tools; `READ_ONLY_TOOL_ALLOWLIST` stays empty; bash/edit/write and other Pi natives remain blocked; adapter `--no-builtin-tools` plus event extraction maps exactly one Workspace* call onto the P2-T21 candidate/Intent/Effect path; Pi native filesystem tools must not become the C1/C2 arm. (2) Public `POST /management/resource/v1/memory/remember` accepts unsealed owner fields and daemon-composes GovernanceSeed sealed headers; campaign/test code must not mint sealed headers on the public positive path; existing sealed envelopes remain valid. Ubuntu supporting CI + exact-revision `DEV-LINUX-NATIVE-01`; Windows `not-run by owner-directed Linux-only route` | in-progress | Owner 2026-08-17 delivery after EVAL-004 closure. EVAL-004 remaining C1/C2 paired and MS-AUTH Memory positives were `not-run` on product mutexes, not measurement gaps. Task completion is not EVAL/Gate/release/Profile promotion. |
 | P2-T08 | Runtime Spine E2E Gate | P2-T07 | 真实 projection→scheduler→Context→sidecar→Tool/process→checkpoint/recovery/verifier；B02/B04/B05/B12 与 false-completion negative；ADR-0018 到期核查；Tier-2 负例（ADR-0026） | done | 2026-08-11；ADR-0046 MVP: D01–D04 closed. Fixed matrix + non-claim report at `be7febb`; CI `31407542786`; owner `affirm all` → B02/B04/B05/B12 MVP `pass`. Closure: `docs/checkpoints/20260811-personal-p2-t08-runtime-spine-closure.md`; Draft PR #182. No GMVP-LINUX/B08/B09/release/Profile claim. |
 
 ### Phase 3 - Context Resource Value（Context、Token 与 Loop 效率）
@@ -786,6 +788,9 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P2-T28/D01` | P2-T28 | freeze UJ1..UJ6 capability-truth matrix and failure-first missing-caller/oracle checks | P2-T22..P2-T27 | scope-excluded Web UI/Multi-Agent remain explicit; Ubuntu supporting CI |
 | `P2-T28/D02` | P2-T28 | run all required public journeys including cold/warm, faults, resources and terminal evidence | `P2-T28/D01` | every row has caller, mechanical oracle, cleanup and bounded evidence |
 | `P2-T28/D03` | P2-T28 | execute exact-revision aggregate `linux-002` matrix and deterministic product-train closure | `P2-T28/D02` | Windows not-run by route; no EVAL/Gate/release/Profile promotion |
+| `P2-T29/D01` | P2-T29 | advertise daemon-governed WorkspaceSearch/Write/Patch through the Pi Extension and adapter without opening bash/edit/write | P2-T21 | allowlist stays empty; native filesystem tools remain blocked; Ubuntu supporting CI |
+| `P2-T29/D02` | P2-T29 | daemon-owned GovernanceSeed composer so public Memory remember succeeds without caller-minted sealed headers | P2-T23, `P2-T29/D01` | sealed envelopes still work; mixed/caller-header unsealed payloads fail closed |
+| `P2-T29/D03` | P2-T29 | execute exact-revision `linux-002` matrix and deterministic product-train closure | `P2-T29/D02` | Windows not-run by route; no EVAL/Gate/release/Profile promotion |
 | `P2-T20/D05` | P2-T20 | complete the task acceptance assessment, merge the Draft PR, close the lease, and reconcile branch/main | `P2-T20/D01-D04` | final acceptance mapping, required Ubuntu/Windows CI green, then ready/merge/lease/branch/main reconciliation; no Gate/release/Profile claim |
 | `P2-T11/D01` | P2-T11 | make the `provider` readiness component reflect whether the configured `secret_ref` actually resolves, and stop `POST /management/resource/v1/skill/binding/revoke` being shadowed by the `skill/bind` prefix match | completed P2-T09 readiness-separation pattern; `PERSONAL-PERF-EVAL-002` evidence | failure-first negatives proving a dangling ref never reads ready, an unreachable backend blocks rather than assumes, and a discriminating revoke-route probe that only the revoke handler can satisfy; exact-revision Linux focused tests, Clippy, and required CI; readiness must emit no secret material and no Gate/release/Profile claim is created |
 | `P9-T07/D01` | P9-T07 | a failure-first proof plus the Pi-side nested observation core: an opaque correlation id, a monotonic sequential stage recorder that cannot emit overlapping Pi-domain stages, a strict observation validator, an authorization resolver that is denied by default, and a bounded content-free sink a campaign runner can read | completed `P9-T04/D01` measurement envelope and the existing `packages/pi-cognitiveos` daemon client | failure-first negatives for malformed/duplicate correlation id, missing/overlapping stages, zero or negative duration, inconsistent usage counters, secret-shaped observation, raw body/header capture, unauthorized instrumentation, and authority-shaped sink target; Node package tests and `check:consistency`; the core alone performs no daemon request |

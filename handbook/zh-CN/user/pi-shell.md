@@ -17,15 +17,16 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:f90e20bd87ff8cbe19ab80ed90a9bbc6932ee4fdf54c205e7e58d811c982d2c6"
+fingerprint: "sha256:2265d105416fb0fd987071a03bd04074bdda22072d892315bae21af296d2fe20"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
 
 # Pi 对话壳
 
-`partial`：经 daemon 代理的对话、readiness 展示与状态命令已实现；agent 工具使用与资
-源/任务浏览面有意尚未在 shell 中开放。
+`partial`：经 daemon 代理的对话、readiness 展示、状态命令，以及对外广告的
+daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shell 工具仍被拒
+绝。资源/任务浏览面有意尚未在 shell 中开放。
 
 ## 今天能用什么
 
@@ -43,8 +44,10 @@ non_claims:
 
 ## 有意锁死的部分
 
-- `project_trust` 恒拒绝，且工具策略拒绝**所有** Pi 内置工具（含只读工具）——shell
-  无法触碰你的文件或执行命令。
+- `project_trust` 恒拒绝。Pi 原生 bash/write/edit（及其他内置工具）仍被拒绝。扩展
+  对外广告 daemon 治理的 WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
+  `execute` 不触碰文件系统；daemon 把这些参数作为 candidate 走 Intent/Effect。
+  Pi 原生文件系统工具不是 C1/C2 测量臂。
 - Pi 内尚无资源浏览、任务提交或 watch UI：这些客户端方法存在于
   `PersonalDaemonClient` 与 CLI（`cognitive resource|task`），但未接入 shell UX。
 - 模型参数由 daemon 的 selected model 固定。只有 Provider 返回完整且内部一致的计数

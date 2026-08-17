@@ -37,7 +37,7 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:764950e7fa55cae554b0ca34e631272f5a05344dd59654073373f2603d5f064d"
+fingerprint: "sha256:36547468623e9067ea9826b08c4a76b508d1fc7c05853f4dbaa57a5434c4617e"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -77,8 +77,10 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain
 串的手写前缀匹配，分布在 `server.rs`、`task_api.rs`、`resource_api.rs`（生成的
 [HTTP 参考](../reference/http-api.md)枚举完整表与通道）。
 
-management Resource 表面提供只读生命周期前置条件、封存 Context source 准入、
-Memory remember/review/forget，以及 Skill import/inspect/bind/supersede/revoke。
+management Resource 表面提供只读生命周期前置条件、Memory remember/review/forget，
+以及 Skill import/inspect/bind/supersede/revoke。公开 remember 接受未封存的 owner
+字段，由 daemon 用持久 `GovernanceSeed` 组合封存 header；带封存
+source+candidate 的信封仍然有效。未封存路径上调用方不得自行铸造 header。
 变更必须持有 management bearer；task bearer 在进入 handler 前失败。创建成功使用
 HTTP 状态 `201`，持久行在重启后仍可检查。
 task 通道通过 `GET /task/resource/v1/consumption?task_ref=…` 读取 daemon 写入的

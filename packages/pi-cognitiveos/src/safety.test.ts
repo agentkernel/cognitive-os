@@ -70,6 +70,7 @@ test("the runtime sources are exactly the modules under guard", () => {
       "pin.ts",
       "status.ts",
       "tool-policy.ts",
+      "workspace-tools.ts",
     ],
   );
 });

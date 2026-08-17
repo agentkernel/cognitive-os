@@ -37,7 +37,7 @@ tests:
   - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:764950e7fa55cae554b0ca34e631272f5a05344dd59654073373f2603d5f064d"
+fingerprint: "sha256:36547468623e9067ea9826b08c4a76b508d1fc7c05853f4dbaa57a5434c4617e"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -86,8 +86,11 @@ matching on `METHOD /path` strings across `server.rs`, `task_api.rs`, and
 enumerates the full table and channels).
 
 The management Resource surface exposes a read-only lifecycle-preconditions
-document, sealed Context-source admission, Memory remember/review/forget, and
-Skill import/inspect/bind/supersede/revoke. Mutations require a management
+document, Memory remember/review/forget, and Skill import/inspect/bind/
+supersede/revoke. Public remember accepts unsealed owner fields and the daemon
+composes sealed headers from its persisted `GovernanceSeed`; a sealed
+source+candidate envelope remains valid. Callers must not mint sealed headers
+on the unsealed path. Mutations require a management
 bearer; task bearers fail before handlers run. Successful creation responses
 use HTTP status `201`, and durable rows remain inspectable after restart.
 The task channel reads the latest daemon-authored Memory/Skill consumption

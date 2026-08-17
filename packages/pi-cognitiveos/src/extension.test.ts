@@ -16,6 +16,7 @@ import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
 import { registerCognitiveOsExtension } from "./extension.js";
 import { COGNITIVEOS_STATUS_COMMAND_NAME, COGNITIVEOS_STATUS_KEY } from "./pin.js";
+import { DAEMON_WORKSPACE_QUEUED_RESULT } from "./workspace-tools.js";
 import { FakePi, readinessProjectionBody, startFakeDaemon } from "./test-support.js";
 
 const BOOTSTRAP_SECRET = "boot-0123456789abcdef-fedcba9876543210";
@@ -72,6 +73,10 @@ test("registration queues the daemon provider and activates its model at session
     assert.ok(pi.commands.has(COGNITIVEOS_STATUS_COMMAND_NAME));
     assert.match(pi.commands.get(COGNITIVEOS_STATUS_COMMAND_NAME)?.description ?? "", /read-only/);
     assert.equal(pi.providers.length, 1);
+    assert.deepEqual(
+      pi.tools.map((tool) => tool.name).sort(),
+      ["WorkspacePatch", "WorkspaceSearch", "WorkspaceWrite"],
+    );
     assert.equal(pi.selectedModels.length, 0);
 
     await pi.driveSessionStart();
@@ -92,7 +97,7 @@ test("project trust is always denied", async () => {
   await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
 });
 
-test("bash, write and edit are blocked, and so is every other tool", async () => {
+test("bash, write and edit are blocked, and so is every other Pi-native tool", async () => {
   const pi = new FakePi();
   await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));
 
@@ -105,6 +110,32 @@ test("bash, write and edit are blocked, and so is every other tool", async () =>
   const unknown = await pi.driveToolCall("some_other_tool");
   assert.ok(unknown);
   assert.equal(unknown.block, true);
+});
+
+test("daemon Workspace* tools are registered and their execute path is I/O-free", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: readinessProjectionBody(),
+  });
+  try {
+    const pi = new FakePi();
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+
+    for (const toolName of ["WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
+      const decision = await pi.driveToolCall(toolName);
+      assert.equal(decision, undefined, `${toolName} must be allowed for Extension execute`);
+    }
+    const bash = await pi.driveToolCall("bash");
+    assert.ok(bash);
+    assert.equal(bash.block, true);
+
+    const search = pi.tools.find((tool) => tool.name === "WorkspaceSearch");
+    assert.ok(search);
+    const result = await search.execute("call-1", { query: "TODO", target: "workspace://personal/example" });
+    assert.equal(result.content[0]?.text, DAEMON_WORKSPACE_QUEUED_RESULT);
+  } finally {
+    await daemon.close();
+  }
 });
 
 test("session start shows real daemon facts and warns when the first conversation is blocked", async () => {

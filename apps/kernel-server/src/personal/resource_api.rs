@@ -5,32 +5,37 @@
 //! and makes missing authority backends explicit rather than fabricating rows.
 
 use std::collections::VecDeque;
+use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use cognitive_contracts::generated::context_view::{
     LoadedContextItemRepresentation, LoadedContextItemRole, LoadedContextItemTrustLevel,
 };
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeader;
-use cognitive_domain::ObjectId;
+use cognitive_domain::{ObjectId, WallTimestamp};
 use cognitive_kernel::BUILTIN_TOOL_CATALOG;
 use cognitive_kernel::authz::ObjectGovernance;
+use cognitive_kernel::intent_chain::{
+    compose_governed_header, seal_governed_object_content_digest,
+};
 use cognitive_kernel::memory_admission::MemoryAdmissionPolicy;
 use cognitive_kernel::memory_skill_consumption::{
     MemoryConsumptionPin, MemorySkillConsumptionStore, SkillConsumptionPin,
 };
 use cognitive_kernel::ports::{
-    ContextStore, IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow,
+    Clock, ContextStore, IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow,
     MemoryObjectRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
     SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
     SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
     WorkspaceContextSourceRow,
 };
-use cognitive_store::{SqliteAuthorityStore, UuidV7Generator, admit_memory_candidate};
+use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator, admit_memory_candidate};
 use serde_json::{Value, json};
 
 const PROJECTION_VERSION: &str = "personal-resource-projection/1";
 const MAX_WATCH_EVENTS: usize = 128;
 const RESOURCE_FAMILIES: [&str; 6] = ["memory", "skill", "tool", "context", "task", "runtime"];
+const LOCAL_OWNER_PRINCIPAL: &str = "principal://local/owner";
 
 /// A response ready for the loopback HTTP transport.
 pub(crate) struct ResourceApiResponse {
@@ -43,13 +48,20 @@ pub(crate) struct ResourceApiResponse {
 pub(crate) struct ResourceApi {
     next_watch_sequence: u64,
     watch_events: VecDeque<(u64, String, Value)>,
+    governance_data_dir: Option<PathBuf>,
 }
 
 impl ResourceApi {
+    #[cfg(test)]
     pub(crate) fn new() -> Self {
+        Self::with_governance_data_dir(None)
+    }
+
+    pub(crate) fn with_governance_data_dir(governance_data_dir: Option<PathBuf>) -> Self {
         let mut api = Self {
             next_watch_sequence: 1,
             watch_events: VecDeque::new(),
+            governance_data_dir,
         };
         for family in RESOURCE_FAMILIES {
             api.publish(family, "projection.initialized", family_projection(family));
@@ -729,6 +741,165 @@ impl ResourceApi {
                 "Memory remember payload is invalid",
             );
         };
+        let has_source = envelope.get("source").is_some();
+        let has_candidate = envelope.get("candidate").is_some();
+        let has_unsealed_text = public_remember_text(&envelope).is_some();
+        if (has_source || has_candidate) && has_unsealed_text {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory remember cannot mix a sealed envelope with unsealed public fields",
+            );
+        }
+        if has_source && has_candidate {
+            return self.remember_sealed_envelope(&envelope, store);
+        }
+        if has_source || has_candidate {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory remember requires sealed source and candidate members",
+            );
+        }
+        self.remember_unsealed_public(&envelope, store)
+    }
+
+    fn remember_unsealed_public(
+        &self,
+        document: &Value,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        if document.get("header").is_some() {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "unsealed Memory remember must not include a caller-minted header",
+            );
+        }
+        let Some(text) = public_remember_text(document) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "unsealed Memory remember requires text",
+            );
+        };
+        let Some(governance_scope) = string_field(document, "governance_scope") else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "unsealed Memory remember requires governance_scope",
+            );
+        };
+        let target_scope =
+            string_field(document, "target_scope").unwrap_or_else(|| governance_scope.clone());
+        let purpose =
+            string_field(document, "purpose").unwrap_or_else(|| "task_execution".to_owned());
+        let Some(retention_expires_at_unix_seconds) =
+            integer_field(document, "retention_expires_at_unix_seconds")
+        else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "unsealed Memory remember requires retention_expires_at_unix_seconds",
+            );
+        };
+        let provenance_ref = string_field(document, "provenance_ref")
+            .unwrap_or_else(|| "management://personal/memory/remember".to_owned());
+        let Some(data_dir) = self.governance_data_dir.as_ref() else {
+            return error(
+                503,
+                "RESOURCE_MEMORY_GOVERNANCE_UNAVAILABLE",
+                "daemon-owned governance root is unavailable",
+            );
+        };
+        let seed = match super::task_api::personal_governance_seed(
+            data_dir,
+            LOCAL_OWNER_PRINCIPAL,
+            vec!["memory_admission".to_owned()],
+        ) {
+            Ok(seed) => seed,
+            Err(response) => {
+                return error(
+                    if response.status == 403 { 403 } else { 503 },
+                    "RESOURCE_MEMORY_GOVERNANCE_UNAVAILABLE",
+                    "daemon-owned governance root is unavailable",
+                );
+            }
+        };
+        let created_at = match SystemClock.now() {
+            Ok(timestamp) => timestamp,
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_MEMORY_UNAVAILABLE",
+                    "daemon could not read the wall clock",
+                );
+            }
+        };
+        let source_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let candidate_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let content_bytes = i64::try_from(text.len()).unwrap_or(i64::MAX);
+        let content_tokens = i64::try_from(text.split_whitespace().count()).unwrap_or(i64::MAX);
+        let source_payload = json!({
+            "tenant_id": "personal",
+            "owner_ref": LOCAL_OWNER_PRINCIPAL,
+            "resource_scope": governance_scope,
+            "conversation_ref": null,
+            "role": "working",
+            "trust_level": "verified",
+            "representation": "text",
+            "provenance_ref": provenance_ref,
+            "content_bytes": content_bytes,
+            "content_tokens": content_tokens,
+            "body": { "text": text },
+        });
+        let (source, source_digest) = match seal_public_governed_object(
+            &source_id,
+            "WorkspaceContextSource",
+            "cognitiveos.workspace-context-source/0.1",
+            source_payload,
+            &seed,
+            &created_at,
+        ) {
+            Ok(sealed) => sealed,
+            Err(response) => return response,
+        };
+        let observed_at_unix_seconds = now_unix_seconds();
+        let candidate_payload = json!({
+            "source_id": source_id.to_string(),
+            "source_digest": source_digest,
+            "source_provenance_ref": provenance_ref,
+            "governance_scope": governance_scope,
+            "target_scope": target_scope,
+            "purpose": purpose,
+            "retention_expires_at_unix_seconds": retention_expires_at_unix_seconds,
+            "observed_at_unix_seconds": observed_at_unix_seconds,
+        });
+        let (candidate, _) = match seal_public_governed_object(
+            &candidate_id,
+            "MemoryCandidate",
+            "cognitiveos.memory/0.1",
+            candidate_payload,
+            &seed,
+            &created_at,
+        ) {
+            Ok(sealed) => sealed,
+            Err(response) => return response,
+        };
+        self.remember_sealed_envelope(&json!({"source": source, "candidate": candidate}), store)
+    }
+
+    fn remember_sealed_envelope(
+        &self,
+        envelope: &Value,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
         let (Some(source_document), Some(document)) =
             (envelope.get("source"), envelope.get("candidate").cloned())
         else {
@@ -1281,6 +1452,57 @@ fn snapshot(family: &str, latest_sequence: u64, task_reference: Option<&str>) ->
     })
 }
 
+fn public_remember_text(document: &Value) -> Option<String> {
+    if let Some(text) = string_field(document, "text") {
+        return Some(text);
+    }
+    if let Some(text) = string_value_at(document, &["body", "text"]) {
+        return Some(text.to_owned());
+    }
+    string_field(document, "body")
+}
+
+fn seal_public_governed_object(
+    identifier: &ObjectId,
+    object_type: &str,
+    schema_version: &str,
+    mut payload: Value,
+    seed: &cognitive_kernel::intent_chain::GovernanceSeed,
+    created_at: &WallTimestamp,
+) -> Result<(Value, String), ResourceApiResponse> {
+    let header = compose_governed_header(
+        identifier,
+        object_type,
+        schema_version,
+        seed,
+        Vec::new(),
+        Vec::new(),
+        "personal-public-memory-remember",
+        created_at,
+    )
+    .map_err(|_| {
+        error(
+            503,
+            "RESOURCE_MEMORY_GOVERNANCE_UNAVAILABLE",
+            "daemon could not compose a governed header",
+        )
+    })?;
+    payload["header"] = serde_json::to_value(header).map_err(|_| {
+        error(
+            503,
+            "RESOURCE_MEMORY_UNAVAILABLE",
+            "daemon could not serialize a governed header",
+        )
+    })?;
+    seal_governed_object_content_digest(payload).map_err(|_| {
+        error(
+            503,
+            "RESOURCE_MEMORY_UNAVAILABLE",
+            "daemon could not seal Memory content digest",
+        )
+    })
+}
+
 fn governed_header(document: &Value) -> Option<GovernedObjectHeader> {
     document
         .get("header")
@@ -1346,7 +1568,7 @@ fn family_projection(family: &str) -> Value {
             "authority_source": "authority-service-not-yet-implemented",
             "lifecycle": {
                 "remember": "/management/resource/v1/memory/remember",
-                "remember_input": "sealed source + sealed candidate envelope",
+                "remember_input": "unsealed public fields (daemon-composed sealed headers) or sealed source + sealed candidate envelope",
                 "review": "/management/resource/v1/memory/object?id={memory_id}",
                 "forget": "/management/resource/v1/memory/forget",
             },

@@ -46,7 +46,7 @@ export function statusDetailFromProjection(projection: ReadinessProjection): str
   lines.push(
     `claims: profile=${projection.profileClaim}, gate=${projection.gateClaim}`,
     "this is a static readiness projection, not a Gate, Profile or release claim",
-    "Pi runs as a non-authority client: direct bash/write/edit are disabled",
+    "Pi runs as a non-authority client: direct bash/write/edit are disabled; daemon WorkspaceSearch/Write/Patch are advertised",
   );
   return lines.join("\n");
 }

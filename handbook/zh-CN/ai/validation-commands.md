@@ -44,7 +44,8 @@ git diff --check
 cargo build --workspace --locked
 cargo test --workspace --locked -- --test-threads=1
 cargo test -p kernel-server tool_executor --locked -- --test-threads=1
-cargo test -p kernel-server readiness --locked -- --test-threads=1
+cargo test -p kernel-server p4_t05_resource_api --locked -- --test-threads=1
+cargo test -p pi-agent-adapter --locked -- --test-threads=1
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo run -p cognitive-conformance --bin conformance-runner
 cargo run -p cognitive-contracts --bin contracts-codegen   # 之后 diff 生成目录

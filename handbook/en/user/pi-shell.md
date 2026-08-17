@@ -17,16 +17,17 @@ tests:
   - packages/pi-cognitiveos/src/daemon-provider.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - packages/pi-cognitiveos/src/safety.test.ts
-fingerprint: "sha256:f90e20bd87ff8cbe19ab80ed90a9bbc6932ee4fdf54c205e7e58d811c982d2c6"
+fingerprint: "sha256:2265d105416fb0fd987071a03bd04074bdda22072d892315bae21af296d2fe20"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
 
 # The Pi shell
 
-`partial`: daemon-proxied conversation, readiness display, and a status command are
-implemented; agent tool use and the resource/task browsing surfaces are deliberately
-not available in the shell yet.
+`partial`: daemon-proxied conversation, readiness display, a status command, and
+advertised daemon-governed WorkspaceSearch/Write/Patch are implemented; Pi
+native filesystem/shell tools stay refused. Resource/task browsing surfaces are
+deliberately not available in the shell yet.
 
 ## What works today
 
@@ -45,9 +46,11 @@ extension emits it as a single block (text only; images/tool-calls are rejected)
 
 ## What is deliberately locked
 
-- `project_trust` is always denied and **every** Pi built-in tool (including
-  read-only ones) is refused by the tool policy — the shell cannot touch your files
-  or run commands.
+- `project_trust` is always denied. Pi's native bash/write/edit (and other
+  built-ins) stay refused. The Extension advertises daemon-governed
+  WorkspaceSearch/WorkspaceWrite/WorkspacePatch whose execute path does not
+  touch the filesystem; the daemon admits those arguments as candidates on the
+  Intent/Effect path. Pi native filesystem tools are not the C1/C2 arm.
 - No resource browsing, task submission, or watch UI inside Pi yet: those client
   methods exist in `PersonalDaemonClient` and the CLI (`cognitive resource|task`),
   but are not wired into shell UX.

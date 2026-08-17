@@ -86,7 +86,9 @@ index rebuild. Authority migrations now include v24 append-only Memory/Skill
 consumption records; a later session may reuse exact pins, but forget, revoke,
 digest drift, or a competing record fail closed instead of resurrecting
 forgotten facts. Management Memory/Skill lifecycle rows and Skill revision
-lineage remain inspectable after daemon restart.
+lineage remain inspectable after daemon restart. Public Memory remember may send
+unsealed owner fields; the daemon composes sealed headers from its persisted
+governance root.
 
 ## Crash and unknown-outcome recovery — `implemented` at the engine level
 

@@ -9,6 +9,7 @@ license.workspace = true
 
 [dependencies]
 cognitive-runtime = { workspace = true }
+cognitive-contracts = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 
