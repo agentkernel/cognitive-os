@@ -73,18 +73,16 @@ on campaign binaries may resolve only glibc/`libgcc`/`libm`.
 | Local Pi `0.81.1` pin | **pass** | guest-local npm install of tarball SHA-256 `420113c0282160e6181656fd16cf18742f76bf9040ee3dfb9cb67e3e6ad5641c`; `--extension` absolute. Doctor: package/pinned/observed `0.81.1`, `first_conversation_ready: true` (not C1/C2) |
 | Exact-source `pi-agent-adapter` | **pass** | same extracted `fb85cfff` archive; `o-arm-candidate.mjs` SHA-256 `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
 | `cognitive doctor` | **pass** (readiness only) | all required components `ready`; **not** a C1/C2 pass |
-| C1/C2 paired B0 | `not-run` | start with C1 WorkspaceSearch O-arm; retain every started sample; Provider `retry=0` |
-| C1/C2 paired B1/B2 | `not-run` | only if B0 path/fairness complete |
+| C1/C2 paired B0 | **partial** | one O-arm C1-search sample retained; skip class `private_completion_socket_could_not_be_created`; Task `DRAFT`; `lease_acquired` 0; no Pi child; P-arm not started |
+| C1/C2 paired B1/B2 | `not-run` | B0 path/fairness incomplete |
 | Cleanup / campaign close | `not-run` | stop `48294`; clear this campaign SecretStore item; leave `48181`/`48284`/`48383` and EVAL-004/005/006/007 roots |
 
 ## Unique next action
 
-Run B0 C1 WorkspaceSearch O-arm (new root/port/task_ref; WorkspaceSearch
-only). C1/C2 pass requires: admit 200, lifecycle ≠ `DRAFT`, O4
-`lease_acquired` ≥ 1, whether a Pi/adapter child appears, and whether
-Intent/Effect exist. Doctor readiness is not that bar. If the sample stays
-`DRAFT` with `lease_acquired` 0: retain it, record `partial`, do not open
-Provider spend, read skip class from `daemon.log`.
+Cleanup this freeze: `cognitive daemon stop` on `48294`; clear SecretStore
+`/17` without search/lookup; redactor 0 key-shaped hits; leave
+`48181`/`48284`/`48383` and EVAL-004/005/006/007 roots. Then publish the
+final assessment. Do not patch product code in this campaign.
 
 ## Non-claims
 

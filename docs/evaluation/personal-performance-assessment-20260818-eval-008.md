@@ -27,15 +27,15 @@ no Pi child) because public `cognitive daemon start` sent stderr to
 | SecretStore import | **pass** | new item `/org/freedesktop/secrets/collection/login/17` via stdin; D-Bus `SearchItems` paths only; never search/lookup |
 | Pi 0.81.1 pin | **pass** | `--extension` absolute; package/pinned/observed `0.81.1`; doctor `first_conversation_ready: true` is **not** C1/C2 |
 | Exact-source `pi-agent-adapter` | **pass** | same `fb85cfff` archive; SHA-256 `816856b49674d06f025f535fe2bf5219dd9744ab899250a489538ea687aa3167`; `o-arm-candidate.mjs` `29870821…` |
-| B0 C1 WorkspaceSearch O-arm | `not-run` | first qualification sample; WorkspaceSearch only |
-| B0 remaining C1/C2 families | `not-run` | C2a/C2b/C2c/C2d only if O-arm leaves `DRAFT` and `lease_acquired` ≥ 1 |
-| B0 P-arm / broker `48394` | `not-run` | only after O-arm path is fairly measurable |
+| B0 C1 WorkspaceSearch O-arm | **partial** | one retained sample; admit 200; lifecycle `DRAFT`; `lease_acquired` 0; no Pi child; skip class `private_completion_socket_could_not_be_created` |
+| B0 remaining C1/C2 families | `not-run` | same public skip; do not open Provider spend |
+| B0 P-arm / broker `48394` | `not-run` | O-arm path not fairly measurable |
 | B1 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
 | B2 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
-| B3 faults | `not-run` | after B2 |
-| B4 concurrency | `not-run` | after B3 |
-| B5 soak | `not-run` | 1 h first; 8 h only if 1 h has no leak; 24 h default deferred |
-| C0 paired (G1/G2/G3/G4/G6/G9, A1/A4/A5) | `not-run` | if broker/runner still unqualified, keep `not-run` |
+| B3 faults | `not-run` | no frozen fault runner on this freeze; C1/C2 path incomplete; do not cobble |
+| B4 concurrency | `not-run` | B0 path/fairness incomplete |
+| B5 soak | `not-run` | no frozen soak runner; 1 h trigger not met |
+| C0 paired (G1/G2/G3/G4/G6/G9, A1/A4/A5) | `not-run` | broker `48394` never started; do not cobble a paired shell |
 | Cleanup | `not-run` | stop `48294`; clear campaign SecretStore; leave prior roots/ports |
 
 ## Freeze (2026-08-18) — pass
@@ -91,6 +91,77 @@ provider `secret_ref_resolves=true`, `secret_material_exposed=false`, Pi
 digest differs, as expected for P2-T32 launcher/log/`process_group`
 changes. Adapter and Extension dist match EVAL-007 because those trees
 are unchanged at `fb85cfff`.
+
+## B0 C1-search O-arm (2026-08-18) — partial; retained
+
+One O-arm C1-search qualification Task was started with `retry=0` against
+the public Task admit surface on the public `cognitive daemon start`
+launcher. It is retained. It did not leave `DRAFT`. No Intent, Effect,
+verification, or acceptance row exists. WorkspaceRead is still not
+advertised; this cell used WorkspaceSearch only. No Provider spend: the
+scheduler never spawned Pi.
+
+| Seed | Task ref | Admit | Probe | Lifecycle |
+|---|---|---|---|---|
+| `b0-0` | `task://local/eval008-b0-C1-search-b0-0-5390a313b553` | 200 (record 13 ms, interpret 6 ms, preview 1 ms, admit 30 ms) | wall 179178 ms; `acceptance_ref` absent | `DRAFT`; minted `2026-08-17T17:52:02.893Z` |
+
+Guest evidence file:
+`/home/hal9001/perfeval008-20260818/evidence/b0-oarm-C1-search-b0-0.json`
+SHA-256 `8ab7f84120a211058c487654ae2d55ab0d99a973b65f3975c77c40d365b72626`.
+Instrument `eval008-b0-c1-search.py`
+SHA-256 `c79475819d1f00c0fcbf635b0f1768bdaf03eacb9aaf9e1cf80c849bcbd89ff5`.
+Public `cognitive task evidence`: `lifecycle.current_state=DRAFT`;
+`intent_refs` / `effect_refs` empty; `latest_verification` /
+`latest_acceptance` null. Bounded O4: `runnable_count` 32,
+`lease_acquired` 0 (`observed_zero` true). O5 named zero. No
+`pi-agent-adapter` or `pi-coding-agent` child. Campaign kernel-server pid
+281083. Listeners `48181` / `48284` / `48383` untouched. P-arm / broker
+`48394` not started.
+
+Claim ceiling `hypothesis`. No Gate, release, Profile, B01, or Agent-benefit
+claim.
+
+## Private-candidate skip (2026-08-18) — public `daemon.log` fact
+
+Campaign-only observation. No product change. Public `cognitive status` /
+`doctor` were ready (`first_conversation_ready: true`) before B0; that is
+not C1/C2. The admitted Task stayed `DRAFT` for the full 180 s probe.
+O4 `lease_acquired` 0. No Pi child. Freeze assets required for a spawn
+were present (`pi.json` candidate paths, adapter binary, selected model).
+This is therefore **not** a missing-freeze-asset `not_available`.
+
+P2-T32's focused test uses a stub Workspace* adapter and proved the public
+launcher can leave `DRAFT` with `lease_acquired` ≥ 1. This cell used the
+real `pi-agent-adapter` plus operator `pi.json`. Skip rows are now a
+public fact on `runtime/state/cognitiveos/daemon.log` (mode `0600`):
+
+`kernel-server personal scheduler tick: skip row
+task://local/eval008-b0-C1-search-b0-0-5390a313b553 at epoch 1: scheduler
+private Pi candidate proposal failed: private completion socket could
+not be created`
+
+Skip class: `private_completion_socket_could_not_be_created`. This is not
+EVAL-007's non-public stderr `/dev/null` skip, and it is not a claim that
+P2-T32 "fixed" C1/C2.
+
+This is not a real public C1/C2 caller. Remaining paired B0 classes,
+B1/B2, and P-arm stay `not-run`. Do not open Provider spend on a path
+that never leaves `DRAFT`. Do not patch product code in this campaign.
+
+## C1/C2 paired remainder and later batches (2026-08-18) — `not-run`
+
+| Cell | Disposition | Cause |
+|---|---|---|
+| B0 remaining C1/C2 classes (C2a/C2b/C2c/C2d) | `not-run` | same public skip; one C1-search O-arm sample was started and is retained |
+| B1 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
+| B2 C1/C2 paired | `not-run` | B0 path/fairness incomplete |
+| P-arm / broker `48394` | `not-run` | equivalent Pi adapter not started; fairness not measurable |
+| O5/O6 as C1/C2 dependents | `not-run` | no Intent/Effect |
+| T4–T5/T8/T9 | `not-run` | no public dispatch |
+| B3 faults | `not-run` | no frozen fault runner on this freeze; do not cobble |
+| B4 concurrency | `not-run` | B0 path/fairness incomplete |
+| B5 1 h / 8 h / 24 h | `not-run` | no frozen soak runner; 1 h trigger not met; 24 h default deferred |
+| C0 paired (G1/G2/G3/G4/G6/G9, A1/A4/A5) | `not-run` | broker/runner not qualified on this freeze; do not cobble a paired shell |
 
 ## Non-claims
 
