@@ -1,15 +1,16 @@
-# PERSONAL-PERF-EVAL-008 assessment (running)
+# PERSONAL-PERF-EVAL-008 assessment (final)
 
 - Campaign: `PERSONAL-PERF-EVAL-008`
 - Frozen source target: `fb85cfff25d8dd9fc5e3a8743ab9fdb3b3586630` (P2-T32
   public launcher; unmerged freeze)
-- Lease: `lease/personal/EVAL-008/c1-c2-paired-freeze`
+- Lease: `lease/personal/EVAL-008/c1-c2-paired-freeze` (closed 2026-08-18)
 - Claim ceiling: `hypothesis` / non-claim
 - Reviewer: `not_reviewed`
-- Document status: campaign **active**. Measurement-only. Evaluation routing ON.
+- Document status: campaign **closed**. Measurement-only. Evaluation routing OFF.
 
-This is the campaign's single running report. Append each finished cell before
-starting the next (`TEST-REPORT-INCREMENTAL-01`).
+This is the campaign's single report (`TEST-REPORT-INCREMENTAL-01`). Cells
+were appended as they finished. The campaign is closed; do not append more
+cells on this freeze.
 
 Owner 2026-08-18 authorized C1/C2 真机 re-measure after P2-T32 public-launcher
 stub proof. EVAL-007 B0 on `main@2a8d4d2f` stayed `DRAFT` (`lease_acquired` 0,
@@ -36,7 +37,7 @@ no Pi child) because public `cognitive daemon start` sent stderr to
 | B4 concurrency | `not-run` | B0 path/fairness incomplete |
 | B5 soak | `not-run` | no frozen soak runner; 1 h trigger not met |
 | C0 paired (G1/G2/G3/G4/G6/G9, A1/A4/A5) | `not-run` | broker `48394` never started; do not cobble a paired shell |
-| Cleanup | `not-run` | stop `48294`; clear campaign SecretStore; leave prior roots/ports |
+| Cleanup | **pass** | daemon 48294 stopped; broker 48394 absent; SecretStore `/17` cleared; 48181/48284/48383 and EVAL-004/005/006/007 roots untouched; redactor evidence 1/0 runtime 16/0 |
 
 ## Freeze (2026-08-18) — pass
 
@@ -163,9 +164,50 @@ that never leaves `DRAFT`. Do not patch product code in this campaign.
 | B5 1 h / 8 h / 24 h | `not-run` | no frozen soak runner; 1 h trigger not met; 24 h default deferred |
 | C0 paired (G1/G2/G3/G4/G6/G9, A1/A4/A5) | `not-run` | broker/runner not qualified on this freeze; do not cobble a paired shell |
 
+## Cleanup (2026-08-18) — pass
+
+Guest route unchanged: `wuz@192.168.1.2` ProxyJump
+`hal9001@192.168.123.160`. `B01-Desktop-Linux-002` snapshot was not
+reverted. `B01-Clean-Linux-001` was not contacted.
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48294` pid 281083 | product `cognitive daemon stop` `action=stopped` (`stale_lock_removed=true`); lock absent; listener absent |
+| campaign broker `127.0.0.1:48394` | never started; listener absent |
+| listeners `48181` / `48284` / `48383` | untouched (`cos-current` / EVAL-004 residue / EVAL-002 broker) |
+| EVAL-004/005/006/007 roots | untouched |
+| SecretStore item `/17` | `secret-tool clear` on the product attribute triple (`application=cognitiveos-personal`, `provider=deepseek`, `purpose=provider-api-key`); post-clear D-Bus `SearchItems` unlocked/locked 0; `login` collection `Items` 0; never `secret-tool search`/`lookup` |
+| redactor `evidence/` | 1 file, `key_shaped_hits=0` |
+| redactor `runtime/` | 16 files, `key_shaped_hits=0` |
+| campaign root | retained `0700` at `/home/hal9001/perfeval008-20260818` (evidence only) |
+
+## Capability matrix (hypothesis / non-claim)
+
+| Class | This freeze | Note |
+|---|---|---|
+| Public doctor / first conversation | ready | not a C1/C2 Task |
+| C1 WorkspaceSearch O-arm | **partial** | admit 200; stayed `DRAFT`; `lease_acquired` 0; no Pi/Intent/Effect |
+| C2a mutation / C2b Memory-Skill / C2c Effect recovery / C2d verified completion | `not-run` | same skip; no Provider spend |
+| C1/C2 P-arm | `not-run` | broker `48394` never started |
+| C0 paired G/A families | `not-run` | paired runner/broker not qualified |
+| B3 / B4 / B5 | `not-run` | no frozen runners; 1 h trigger not met |
+
+## Evidence-ranked optimization priorities (hypothesis only)
+
+1. **Public `cognitive daemon start` + real `pi-agent-adapter`:** scheduler skip class `private_completion_socket_could_not_be_created` is now a public `daemon.log` fact. P2-T32 stub Workspace* tests are a different composition and are not this cell.
+2. Keep scheduler skip rows on the public `log_path` (mode `0600`). Do not send kernel-server stderr to `/dev/null` again.
+3. WorkspaceRead is still not advertised as a Pi tool; C1 remains WorkspaceSearch-only until a later freeze says otherwise.
+
+This campaign does not register a `P*-T*` task. Closure does not resume
+development.
+
 ## Non-claims
 
 No Gate, release, Profile, B01, B01-W, or Agent-benefit promotion. No
 optimization success. Never `secret-tool search`/`lookup`. Do not print
 Provider keys. Do not treat P2-T32 stub pass as EVAL-007 repaired or as
 C1/C2 Agent benefit.
+
+**Campaign closed.** Evaluation routing is OFF. Development is not resumed.
+**Rotate the Provider key** leaked by the earlier EVAL-004 `secret-tool search`
+incident if that material is still in use.

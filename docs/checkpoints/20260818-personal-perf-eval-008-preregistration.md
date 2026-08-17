@@ -1,7 +1,7 @@
 # PERSONAL-PERF-EVAL-008 freeze preregistration
 
 - Campaign: `PERSONAL-PERF-EVAL-008`
-- Lease: `lease/personal/EVAL-008/c1-c2-paired-freeze`
+- Lease: `lease/personal/EVAL-008/c1-c2-paired-freeze` (closed 2026-08-18)
 - Date: 2026-08-18
 - Frozen product source: `fb85cfff25d8dd9fc5e3a8743ab9fdb3b3586630`
   (P2-T32 public `cognitive daemon start` on Draft PR #239; Ubuntu verify
@@ -63,7 +63,7 @@ on campaign binaries may resolve only glibc/`libgcc`/`libm`.
 | Step | Status | Note |
 |---|---|---|
 | P2-T32 lease closed (task not done) | **pass** | Lease archived; task `in-progress` pending Windows required-ci merge of PR #239. Stub pass ≠ C1/C2 |
-| Evaluation lease claimed | **pass** | this document + Current snapshot row `PERSONAL-PERF-EVAL-008` **active** |
+| Evaluation lease claimed | **pass** (closed) | claimed then closed 2026-08-18; Current snapshot row `PERSONAL-PERF-EVAL-008` **closed**; routing OFF |
 | Product source pin | **pass** | `fb85cfff25d8dd9fc5e3a8743ab9fdb3b3586630` |
 | Source archive + SHA-256 | **pass** | `git archive --format=tar --prefix=cognitiveos-personal-fb85cfff/` of exact `fb85cfff`; 14,653,440 bytes; 1538 entries; 0 `.git/` members; SHA-256 `202384ee0b125c6600764042ddc7a2142bb1502da21be642b8c328440325ced3`. Copied with `scp` |
 | New campaign root/port | **pass** | `/home/hal9001/perfeval008-20260818` mode `0700`; daemon `127.0.0.1:48294` pid 281083. Listeners `48181`/`48284`/`48383` untouched |
@@ -75,14 +75,17 @@ on campaign binaries may resolve only glibc/`libgcc`/`libm`.
 | `cognitive doctor` | **pass** (readiness only) | all required components `ready`; **not** a C1/C2 pass |
 | C1/C2 paired B0 | **partial** | one O-arm C1-search sample retained; skip class `private_completion_socket_could_not_be_created`; Task `DRAFT`; `lease_acquired` 0; no Pi child; P-arm not started |
 | C1/C2 paired B1/B2 | `not-run` | B0 path/fairness incomplete |
-| Cleanup / campaign close | `not-run` | stop `48294`; clear this campaign SecretStore item; leave `48181`/`48284`/`48383` and EVAL-004/005/006/007 roots |
+| Cleanup / campaign close | **pass** | daemon 48294 stopped; broker 48394 absent; SecretStore `/17` cleared without search/lookup; leave 48181/48284/48383 and EVAL-004/005/006/007 roots untouched; redactor evidence 1/0 runtime 16/0 |
 
 ## Unique next action
 
-Cleanup this freeze: `cognitive daemon stop` on `48294`; clear SecretStore
-`/17` without search/lookup; redactor 0 key-shaped hits; leave
-`48181`/`48284`/`48383` and EVAL-004/005/006/007 roots. Then publish the
-final assessment. Do not patch product code in this campaign.
+**Campaign closed 2026-08-18** after B0 path/fairness failed on the public
+`cognitive daemon start` + real `pi-agent-adapter` path. Retain the started
+C1-search sample. Do not reopen B1/B2 on this freeze. Do not reuse
+EVAL-004/005/006/007/008 roots/ports or SecretStore `/12`–`/17`. Never
+`secret-tool search`/`lookup`. Evaluation routing is OFF. Campaign closure
+does not resume development. P2-T32 remains in-progress pending Windows
+required-ci merge and is not this campaign.
 
 ## Non-claims
 
