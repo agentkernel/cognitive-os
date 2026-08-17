@@ -68,7 +68,8 @@ When that admitted Task later resolves Context, the daemon loads currently
 eligible Memory objects and exact Skill pins into the sealed view and writes an
 append-only consumption record; a later session reuses those pins without
 chat restatement, and forget/revoke/digest drift fail closed. This does not
-complete the Task.
+complete the Task. A later lease tick treats retry count 0 as not yet at the
+retry ceiling, even when the contract `max_retries` is 0.
 
 When a scheduler pass first observes that row with zero Intents, it selects the
 pre-admission candidate path rather than treating the absent Effect binding as

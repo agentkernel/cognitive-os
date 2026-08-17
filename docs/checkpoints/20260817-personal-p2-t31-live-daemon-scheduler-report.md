@@ -28,7 +28,7 @@ selected-model); the focused test installs a stub adapter (not bash/edit/write).
 | Unit | Status | Note |
 |---|---|---|
 | D01 live-daemon HTTP admit skip | **pass** (failure-first) | linux-002 at `ee353679`: Task stayed DRAFT, `lease_acquired` 0, empty skip lines — first tick blocked ~65 s on unused Provider completion socket |
-| D02 shared store + stdout stub candidate | authored | `TaskApi::with_shared_store`; stdout-valid adapter candidate does not wait on the completion socket; pending re-run |
+| D02 shared store + stdout stub candidate | **partial** | linux-002 at `74e02c6f`: Pi path ran; skip became `ceiling STOP requires a durable loop checkpoint` with `max_retries: 0` (`0 >= 0`). First dispatch is not a retry. |
 | Ubuntu supporting CI | `not-run` | after push |
 | `DEV-LINUX-NATIVE-01` | `not-run` | after D02 push |
 | Windows GNU cargo | `not-run` | `RUST-LINK-DEV-WIN-GNU-01`; live test `cfg(unix)`; extra native GNU not-run by Linux-only route |

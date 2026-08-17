@@ -242,6 +242,7 @@ fn live_http_admit_c1_search_leaves_draft_until_scheduler_acquires_lease() {
         "deadline": "2027-12-31T00:00:00Z",
         "loop_object_id": loop_object_id,
         "max_iterations": 4,
+        // EVAL-like: first dispatch is not a retry even when max_retries is 0.
         "max_retries": 0,
         "objective": "search the workspace for needle",
         "scope": {

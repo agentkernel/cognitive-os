@@ -200,7 +200,15 @@ where
         ceiling_facts: SchedulerCeilingFacts {
             deadline: Some(deadline),
             retry_count,
-            retry_ceiling: contract.max_retries,
+            // Inclusive `retry_count >= retry_ceiling` would treat a fresh
+            // Task with `max_retries: 0` as already exhausted (0 >= 0) and
+            // call stop_for_ceiling before any lease. The first dispatch is
+            // not a retry; later ticks still use the contract ceiling.
+            retry_ceiling: if retry_count == 0 {
+                contract.max_retries.max(1)
+            } else {
+                contract.max_retries
+            },
             completed_steps,
             step_ceiling: contract.max_iterations,
             spent_cost_microunits,

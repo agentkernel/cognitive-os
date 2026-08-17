@@ -41,7 +41,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:8eb26c07dea5cca295116620ab765ab82a45adc956672c28bf7872d657b87247"
+fingerprint: "sha256:54b51b50882145ecf2d5696505409d860ff06723823b54fff733678b99e4013c"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.
@@ -97,7 +97,10 @@ non-reentrant, cancellable periodic worker only after bind and endpoint
 publication; pass-level failures are retried and cannot prevent listening.
 Live HTTP `TaskApi` clones the daemon-owned `SqliteAuthorityStore` handle so that
 tick sees the Context facts admit persisted; opening a second writer per request
-is the EVAL-006 skip. The remaining gaps are:
+is the EVAL-006 skip. A contract `max_retries` of 0 still allows the first
+scheduler dispatch: retry count 0 is not a reached ceiling, so the later WIA
+tick can acquire a lease instead of calling `stop_for_ceiling` with no
+checkpoint. The remaining gaps are:
 
 1. **Executor wiring is complete across all seven registered families**: the six
    original families (P2-T10) plus RegisteredCheckRun (P2-T16) all have a
