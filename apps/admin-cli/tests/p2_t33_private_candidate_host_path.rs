@@ -340,7 +340,7 @@ fn rejecting_adapter_stderr_is_a_public_daemon_log_fact_on_a_long_runtime_root()
         .join("candidate-999999-0")
         .join("completion.sock");
     assert!(
-        old_nested.to_str().map(str::len).unwrap_or(0) + 1 > 108,
+        old_nested.to_str().map(str::len).unwrap_or(0) >= 108,
         "fixture must exceed UNIX_PATH_MAX: {}",
         old_nested.display()
     );

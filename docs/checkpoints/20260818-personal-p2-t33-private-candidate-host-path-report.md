@@ -5,7 +5,7 @@
 - Lease: `lease/personal/P2-T33/private-candidate-host-path`
 - Change class: `implementation-only`
 - Claim ceiling: `hypothesis` / non-claim
-- Document status: D01 implemented locally; Linux/CI validation pending
+- Document status: D01/D02 focused linux-002 **pass** at `3e103bfc`; Clippy/Windows dead-code patch in flight
 
 Owner 2026-08-18 after `PERSONAL-PERF-EVAL-009` close authorized product
 changes. EVAL-008 nested `completion.sock` under a long `--runtime-root` and
@@ -42,14 +42,14 @@ release, Profile, B01, or Agent-benefit.
 | D01 `adapter_rejection_diagnostic_is_redacted_and_bounded` | implemented; `not-run` locally | same |
 | D01 `private_candidate_provider_response_requires_one_text_choice` (role+content Ok) | implemented; `not-run` locally | same |
 | D01 `private_candidate_request_strips_tool_surfaces_before_forwarding` | implemented; `not-run` locally | same |
-| D01 `rejecting_adapter_stderr_is_a_public_daemon_log_fact_on_a_long_runtime_root` | implemented; `not-run` locally | admin-cli focused; Unix only |
-| D02 `public_launcher_on_a_long_runtime_root_still_acquires_a_stub_lease` | implemented; `not-run` locally | stub ≠ real adapter |
+| D01 `rejecting_adapter_stderr_is_a_public_daemon_log_fact_on_a_long_runtime_root` | **pass** | linux-002 at `3e103bfc` after rebuilding `kernel-server`: 2/2 in 6.60s. First `fff18df6` attempt waited on unused `finish()` (65 s); follow-up drop-on-reject is required. |
+| D02 `public_launcher_on_a_long_runtime_root_still_acquires_a_stub_lease` | **pass** | same linux-002 run: long `--runtime-root` stub leaves DRAFT with `lease_acquired` ≥ 1. Stub ≠ real adapter. |
 | Local `cargo fmt --all -- --check` | **pass** | this window, Windows GNU eligible |
 | Local `pnpm run check:consistency` | **pass** | 275 requirements / leases verified |
 | Local `check:handbook` / `generate-handbook --check` | **pass** | 54 docs × 2 locales; 18 generated pages byte-identical |
 | Local `git diff --check` | **pass** | this window |
-| Ubuntu required CI | `not-run` | after push |
-| linux-002 focused `p2_t33` | `not-run` | exact pushed revision |
+| Ubuntu `verify` | **fail** then patch | run `32062608736` at `3e103bfc`: Clippy `-D warnings` `int_plus_one` + `collapsible_if`. Windows MSVC: `redact_secret_shaped_spans` dead-code. This follow-up is the patch. |
+| linux-002 focused `p2_t33` | **pass** | archive SHA-256 `e18ab476e308aacd48ff2d276bddb2bb4560442e99fe170a29a56ba37c18cccc` of `3e103bfc`; Rust 1.97.1 |
 | Windows GNU cargo | `not-run` | `RUST-LINK-DEV-WIN-GNU-01` |
 
 No Gate, release, Profile, B01, EVAL, or Agent-benefit claim.

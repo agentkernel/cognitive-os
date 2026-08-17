@@ -854,16 +854,16 @@ const CANDIDATE_ENVIRONMENT_ALLOWLIST: [&str; 17] = [
 
 #[cfg(unix)]
 fn unix_socket_path_fits(path: &Path) -> bool {
-    path.as_os_str().as_bytes().len() + 1 <= UNIX_SOCKET_PATH_MAX
+    path.as_os_str().as_bytes().len() < UNIX_SOCKET_PATH_MAX
 }
 
 #[cfg(unix)]
 fn private_completion_socket_parent() -> PathBuf {
     let mut candidates = Vec::new();
-    if let Some(runtime_dir) = std::env::var_os("XDG_RUNTIME_DIR") {
-        if !runtime_dir.is_empty() {
-            candidates.push(PathBuf::from(runtime_dir));
-        }
+    if let Some(runtime_dir) = std::env::var_os("XDG_RUNTIME_DIR")
+        && !runtime_dir.is_empty()
+    {
+        candidates.push(PathBuf::from(runtime_dir));
     }
     candidates.push(std::env::temp_dir());
     candidates.push(PathBuf::from("/tmp"));
@@ -898,6 +898,7 @@ fn redact_adapter_diagnostic(raw: &[u8]) -> String {
     redact_secret_shaped_spans(&truncated)
 }
 
+#[cfg(unix)]
 fn redact_secret_shaped_spans(text: &str) -> String {
     let mut output = String::new();
     let mut rest = text;
@@ -1121,7 +1122,7 @@ mod tests {
             .join(format!("candidate-{}-0", std::process::id()))
             .join("completion.sock");
         assert!(
-            old_nested.as_os_str().as_bytes().len() + 1 > UNIX_SOCKET_PATH_MAX,
+            old_nested.as_os_str().as_bytes().len() >= UNIX_SOCKET_PATH_MAX,
             "fixture must exceed the host Unix socket path limit"
         );
         let socket_parent =

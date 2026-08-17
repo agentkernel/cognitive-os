@@ -131,7 +131,7 @@ synchronization is now an enforced pre-commit/pre-push/pre-merge obligation.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
-| `P2-T33/D01` | `in-progress` | Failure-first socket bind under host path limit, public adapter stderr on `daemon.log`, and private-candidate `role`+`content` proxy. Local fmt/handbook/consistency **pass**. Local Rust `not-run` (`RUST-LINK-DEV-WIN-GNU-01`). | push then exact-revision linux-002 |
+| `P2-T33/D01` | `in-progress` | Failure-first socket bind under host path limit, public adapter stderr on `daemon.log`, and private-candidate `role`+`content` proxy. linux-002 focused `p2_t33` **2/2 pass** at `3e103bfc`. Local fmt/handbook/consistency **pass**. Ubuntu `32062608736` Clippy fail (patch in flight). | push Clippy patch; re-run Ubuntu + linux-002 at the new SHA |
 | `P2-T33/D02` | `ready` | public launcher on a long root acquires a stub lease | after D01 |
 | `P2-T33/D03` | `ready` | exact-revision linux-002 matrix | after D02 |
 | `P2-T32/D01` | `done` | Ubuntu + linux-002: public `cognitive daemon start` + stub Workspace* + HTTP admit leaves `DRAFT` with `lease_acquired` ≥ 1. | consumed by D02 |
