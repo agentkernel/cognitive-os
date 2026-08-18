@@ -80,6 +80,36 @@ the B0 qualification disposition. On any stop, append the result immediately,
 clean campaign-owned runtime state, reconcile the active campaign row and EVAL
 lease, and do not resume P2-T36 without a fresh owner delivery instruction.
 
+## 5. Amendment 1 -- B0 instrument disposition and closure
+
+The owner approved this amendment on 2026-08-18 after the campaign's only
+candidate-root instrument was statically inspected. The amendment does not
+authorize a replacement runner, a retry, a new sample, P-arm activity, B1/B2,
+or any product change.
+
+The frozen candidate script digest is
+`4cffeba1445b750f790fd9be805da41426ca337e8cf4187926cab9eae173adb9`.
+It cannot serve as a B0 instrument because it has no side-effect-free help
+mode, addresses the wrong runtime root, mints its own local session through a
+custom HTTP caller, creates its own workspace fixture, and has no separately
+frozen manifest, oracle, output schema, lifecycle observation contract, or
+cleanup procedure. Its earlier `--help` invocation is retained as one started
+redacted Provider-side failure with `retry=0`, but is not a B0 sample.
+
+Accordingly, `B0 C1 WorkspaceRead O-arm` and `B0 C1 WorkspaceSearch O-arm`
+are both final `not-run` outcomes for this campaign. No valid sample denominator
+exists; the campaign makes no C1/C2, performance, Gate, release, Profile, B01,
+or Agent-benefit claim.
+
+Closure is authorized only for EVAL-011-owned resources: public daemon stop,
+one exact non-secret SecretStore cleanup command using the fixed attribute
+triple `application=cognitiveos-personal`, `provider=deepseek`, and
+`purpose=provider-api-key`, and recursive deletion of the campaign root
+`/home/hal9001/perfeval011-20260818`. The cleanup command must not search or
+look up SecretStore items and must not print a value. Do not contact
+`B01-Clean-Linux-001` or any closed-EVAL root, port, evidence, runner, or
+SecretStore item.
+
 # PERSONAL-PERF-EVAL-011 running report
 
 - Campaign: `PERSONAL-PERF-EVAL-011`
@@ -108,4 +138,3 @@ Results are appended immediately after every completed campaign unit.
 
 Record the read-only B01 guest baseline and snapshot list through the registered
 host route before creating any EVAL-011 guest resource.
-
