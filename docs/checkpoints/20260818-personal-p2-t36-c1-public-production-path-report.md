@@ -20,10 +20,12 @@ Results are appended immediately after each completed validation unit.
 | D01 staged documentation gate | `DEV-WIN-GNU-01` static/documentation allowlist | pass | `node tools/src/docs-sync-gate.mjs --staged` passed. The mapped `pi-shell` pages and fingerprints are synchronized; this gate does not execute the C1 runtime path. |
 | D01 exact-revision push | local Git transport | partial | Checkpoint `6e7e4197` committed, but `git push -u origin HEAD` could not connect to GitHub through the configured loopback proxy. No supported Linux runtime validation has started because it must consume a pushed exact revision. Retry the normal push path before invoking `DEV-LINUX-NATIVE-01`; no force push or alternate source copy is permitted. |
 | D01 transport recovery retry | local Git transport | partial | A second normal `git push -u origin HEAD` and a one-command no-config-override retry (`git -c http.proxy= -c https.proxy= push -u origin HEAD`) both failed with the same connection refusal via `127.0.0.1:443`. The current session has no `*PROXY` environment variables and no repository-level `http.proxy`/`https.proxy` setting. The fault remains external to task-owned code. |
+| D01 exact-revision delivery recovery | GitHub HTTPS | pass | The normal `git push -u origin HEAD` succeeded after connectivity was restored. `origin/personal/P2-T36-c1-public-production-path` now contains product checkpoint `ae6fd828`; the next supported validation must check out that exact product commit from Git rather than copy local files. |
 
 ## Remaining
 
-WorkspaceRead extension registration and adapter extraction are implemented.
-Retry the normal exact-revision push for `6e7e4197`, then run the public
-production-path validation on `DEV-LINUX-NATIVE-01`. No B01 guest, Provider
-sample, paired runner, or evaluation campaign is used by this task.
+WorkspaceRead extension registration and adapter extraction are implemented,
+and product checkpoint `ae6fd828` is pushed. Create or update the task Draft
+PR, then run the public production-path validation on an exact Git worktree at
+`DEV-LINUX-NATIVE-01`. No B01 guest, Provider sample, paired runner, or
+evaluation campaign is used by this task.
