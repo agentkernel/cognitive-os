@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P2-T34/candidate-parameter-digest` | P2-T34/D03 private-candidate parameters digest canonicalization | Lane-RUN | `personal/P2-T34-candidate-parameter-digest` | `apps/pi-agent-adapter/src/lib.rs`; `apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/personal-trace.yaml`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260818-personal-p2-t34-candidate-parameter-digest-report.md`; `handbook/en/user/pi-shell.md`; `handbook/zh-CN/user/pi-shell.md`; `handbook/en/developer/agent-and-pi-lifecycle.md`; `handbook/zh-CN/developer/agent-and-pi-lifecycle.md`; `handbook/_meta/fingerprints.json` | cursor-session / P2-T34 | 2026-08-18 / 2026-08-18 | active |
+| `lease/personal/P2-T35/candidate-digest-default` | P2-T35/D01 private-candidate JSON-fallback digest default and adapter diagnostic separation | Lane-RUN | `personal/P2-T35-candidate-digest-default` | `apps/pi-agent-adapter/`; `apps/kernel-server/src/personal/pi_runtime.rs`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260818-personal-p2-t35-candidate-digest-default-report.md`; `handbook/en/developer/agent-and-pi-lifecycle.md`; `handbook/zh-CN/developer/agent-and-pi-lifecycle.md`; `handbook/en/user/pi-shell.md`; `handbook/zh-CN/user/pi-shell.md`; `handbook/_meta/fingerprints.json` | cursor-session / P2-T35 | 2026-08-18 / 2026-08-18 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

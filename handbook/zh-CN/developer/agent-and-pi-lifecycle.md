@@ -30,7 +30,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:578047dcecc993b855320bd7e7e57f3ac7d70c131fe9431b228567c5dd5bc1f7"
+fingerprint: "sha256:b76197ba7d9faeb4493a3632c0086e87549c82edb81810896a4fa7e1e1ea648f"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -76,7 +76,7 @@ shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign obs
 单、带字节上限与截止的一次性私有 socketpair、结构化 `AdapterOutcome`（绝非权威状
 态）。CognitiveOS 扩展对外广告 daemon 治理的 WorkspaceSearch/Write/Patch；适配器把
 一次此类工具调用映射到 P2-T21 candidate 路径。JSON 回退 candidate 若带
-`parameters`，适配器会从参数重算 `parameters_digest`（含空 digest 或非法 digest）；否则 digest 必须是
+`parameters`，适配器会从参数重算 `parameters_digest`（含省略、空值或非法 digest）；否则 digest 必须是
 `sha256:` 加 64 位小写十六进制。daemon 把其输出当作待准入
 candidate——仅此而已。测试用 stub 适配器可以在 stdout 发出该未信任 candidate，而不连接
 Provider completion socket；daemon 仍校验 descriptor、digest 与授权。completion
@@ -85,7 +85,7 @@ socket 绑在 `$XDG_RUNTIME_DIR/cognitiveos/`（其次进程临时目录，再�
 `XDG_RUNTIME_DIR` 缺失时 fail-closed 的行为相互独立。Linux candidate 在
 `env_clear()` 之后只转发主机白名单（`HOME`、locale、`XDG_RUNTIME_DIR`、TLS
 信任文件），绝不复制 `DBUS_SESSION_BUS_ADDRESS` 或 Provider key。适配器/Pi 的
-stderr 经 `sk-` / `api_key=` / `token=` 脱敏后保留在 `daemon.log`。私有
+stderr 经 `sk-` / `api_key=` / `token=` 脱敏后保留尾部真实错误在 `daemon.log`；退出码 2 表示 usage 错误、3 表示运行时失败，令公开 skip 可归因。私有
 candidate 的 Provider 代理在转发前剥离 `tools`/`tool_choice`，接受可含
 `role=assistant` 的单条文本 choice，并拒绝 `tool_calls`。
 
