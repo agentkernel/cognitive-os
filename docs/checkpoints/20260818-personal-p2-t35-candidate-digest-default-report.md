@@ -19,6 +19,7 @@ Results are appended immediately after each completed validation unit.
 | D02 kernel-server focused unit tests | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo test -p kernel-server --bin kernel-server --locked`: **341/341**. Tail-preserving redaction, `sk-` masking, and adapter exit-class separation all pass in the kernel-server unit suite. |
 | D02 Clippy | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo clippy -p pi-agent-adapter -p kernel-server --all-targets --locked -- -D warnings` completed without warnings. |
 | D03 formatting | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo fmt --all -- --check` passed. |
+| Required CI `32106757917` | Ubuntu + Windows | `fail` | Both platforms reached TypeScript tools tests, where `check-consistency` found the initial P2-T35 registration's mismatched task counts and missing D01-D03 Current snapshot statuses. No Rust test failure occurred; this report and plan/snapshot are being corrected before rerunning CI. |
 
 ## Remaining
 

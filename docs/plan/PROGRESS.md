@@ -119,7 +119,7 @@ supported scope.
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 94 | 86 | 1 | 1 | 6 | 8 |
+| 95 | 87 | 1 | 1 | 6 | 8 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
@@ -135,7 +135,10 @@ synchronization is now an enforced pre-commit/pre-push/pre-merge obligation.
 |---|---|---|---|
 | `P2-T34/D01` | `done` | linux-002 at `936333ab`: adapter tests pass (`rejects_non_sha256`, `recomputes_digest`); Clippy `-D warnings`. fmt at `a7c7c2a5`. PR [#241](https://github.com/agentkernel/cognitive-os/pull/241) CI `32067650868` Ubuntu+Windows SUCCESS | consumed by D02 |
 | `P2-T34/D02` | `done` | linux-002 zip of `a60ceed5`: `--test daemon_candidate_protocol` **17/17** including empty-digest recompute; full `-p pi-agent-adapter` pass; Clippy `-D warnings`; fmt | consumed by D03 |
-| `P2-T34/D03` | `in-progress` | T32/T33 merged to `main`; T34 branch merged `origin/main` at `310949e0`. Ubuntu `32087503082` SUCCESS at `a60ceed5` | retarget PR #241 to `main`; merge after required CI; stub ≠ C1/C2 |
+| `P2-T34/D03` | `done` | Merged PR [#241](https://github.com/agentkernel/cognitive-os/pull/241) at `main@106cfcc0`; required Ubuntu/Windows CI passed. Stub ≠ C1/C2. | retain closure |
+| `P2-T35/D01` | `in-progress` | exact `a9555325` linux-002: adapter protocol 20/20 and kernel-server 341/341; Clippy and fmt pass. Required CI `32106757917` fails before Rust checks on a plan/snapshot consistency mismatch introduced by this task's registration. | reconcile formal plan and Current snapshot counts/slice statuses, then rerun required CI |
+| `P2-T35/D02` | `ready` | implementation is present but D01 required CI must pass before the next slice is closed | consume D01's green CI and complete adapter/diagnostic acceptance mapping |
+| `P2-T35/D03` | `ready` | no EVAL-012 campaign has been preregistered; EVAL-011 remains closed | finish task validation and closure; a future evaluation needs a separate preregistration |
 | `P2-T33/D01` | `done` | linux-002 at `289eebad`: focused `p2_t33` 2/2, socket-bind + redact + role/content + tools-strip units, Clippy `-D warnings` for kernel-server/adapter/admin-cli, fmt. Ubuntu `32063236152` `verify (ubuntu-latest)` **pass**. | consumed by D02 |
 | `P2-T33/D02` | `done` | public launcher on a long root acquires a stub lease (same 2/2). Stub ≠ real adapter. | consumed by D03 |
 | `P2-T33/D03` | `done` | Merged PR [#240](https://github.com/agentkernel/cognitive-os/pull/240) at `main@09a44455`. CI `32064313430` Ubuntu+Windows SUCCESS. Stub ≠ C1/C2. | retain closure; EVAL-010 remains closed |
