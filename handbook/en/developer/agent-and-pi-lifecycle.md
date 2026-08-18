@@ -30,7 +30,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:f47831d7dd710d10a8e9ae5f8d2dcb27ce42bfcca24879e289e4bd8e4f08273c"
+fingerprint: "sha256:578047dcecc993b855320bd7e7e57f3ac7d70c131fe9431b228567c5dd5bc1f7"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -82,7 +82,10 @@ extension discovery disabled (`--no-builtin-tools`), env allowlist, one-shot
 private socketpair with byte caps and deadlines, structured `AdapterOutcome`
 (never authority state). The CognitiveOS Extension advertises daemon-governed
 WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
-P2-T21 candidate path. The daemon treats the output as a candidate for
+P2-T21 candidate path. A JSON-fallback candidate still has its
+`parameters_digest` recomputed from `parameters` when present, including an
+empty or otherwise invalid model-supplied digest; otherwise the
+digest must be `sha256:` plus 64 lowercase hex. The daemon treats the output as a candidate for
 admission — nothing more. A test stub adapter may emit that untrusted candidate
 on stdout without connecting to the Provider completion socket; the daemon still
 validates descriptor, digest, and authorization. The completion socket is bound

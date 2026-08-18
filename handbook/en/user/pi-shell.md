@@ -54,7 +54,9 @@ extension emits it as a single block (text only; images/tool-calls are rejected)
   built-ins) stay refused. The Extension advertises daemon-governed
   WorkspaceSearch/WorkspaceWrite/WorkspacePatch whose execute path does not
   touch the filesystem; the daemon admits those arguments as candidates on the
-  Intent/Effect path. Pi native filesystem tools are not the C1/C2 arm.
+  Intent/Effect path. A JSON-only candidate from the model is not trusted as a
+  digest: the adapter recomputes `parameters_digest` from `parameters` when
+  present, including an empty or otherwise invalid model-supplied digest. Pi native filesystem tools are not the C1/C2 arm.
 - No resource browsing, task submission, or watch UI inside Pi yet: those client
   methods exist in `PersonalDaemonClient` and the CLI (`cognitive resource|task`),
   but are not wired into shell UX.
