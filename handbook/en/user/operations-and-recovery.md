@@ -58,7 +58,8 @@ non_claims:
 - Service logs: `journalctl --user -u cognitiveos-personal.service`. CLI
   `cognitive daemon start` also appends kernel-server stdout/stderr to
   `state/cognitiveos/daemon.log` (mode `0600`); scheduler skip lines are not a
-  public HTTP fact.
+  public HTTP fact. A private-candidate adapter rejection is retained there as a
+  redacted diagnostic (`sk-` / `api_key=` / `token=` spans stripped).
 
 ## Stop, restart, stale state — `implemented`
 

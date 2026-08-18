@@ -14,6 +14,8 @@ sources:
     symbols: ["admit_pi_launch"]
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
   - path: apps/pi-agent-adapter/src/lib.rs
+  - path: apps/pi-agent-adapter/src/main.rs
+  - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
   - path: crates/cognitive-runtime/src/non_pi_agent.rs
@@ -27,7 +29,8 @@ tests:
   - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:dedfe44799e541e0f41bcc15f198f7e5cc5117a8bc6ba2d0a602cbfd84289ce5"
+  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:f47831d7dd710d10a8e9ae5f8d2dcb27ce42bfcca24879e289e4bd8e4f08273c"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -74,7 +77,15 @@ shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign obs
 态）。CognitiveOS 扩展对外广告 daemon 治理的 WorkspaceSearch/Write/Patch；适配器把
 一次此类工具调用映射到 P2-T21 candidate 路径。daemon 把其输出当作待准入
 candidate——仅此而已。测试用 stub 适配器可以在 stdout 发出该未信任 candidate，而不连接
-Provider completion socket；daemon 仍校验 descriptor、digest 与授权。
+Provider completion socket；daemon 仍校验 descriptor、digest 与授权。completion
+socket 绑在 `$XDG_RUNTIME_DIR/cognitiveos/`（其次进程临时目录，再次
+`/tmp/cognitiveos`）下，以符合 Linux `UNIX_PATH_MAX`；这与 daemon 布局在
+`XDG_RUNTIME_DIR` 缺失时 fail-closed 的行为相互独立。Linux candidate 在
+`env_clear()` 之后只转发主机白名单（`HOME`、locale、`XDG_RUNTIME_DIR`、TLS
+信任文件），绝不复制 `DBUS_SESSION_BUS_ADDRESS` 或 Provider key。适配器/Pi 的
+stderr 经 `sk-` / `api_key=` / `token=` 脱敏后保留在 `daemon.log`。私有
+candidate 的 Provider 代理在转发前剥离 `tools`/`tool_choice`，接受可含
+`role=assistant` 的单条文本 choice，并拒绝 `tool_calls`。
 
 ## Pi 之外
 

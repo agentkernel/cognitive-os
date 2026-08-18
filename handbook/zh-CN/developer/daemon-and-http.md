@@ -39,7 +39,8 @@ tests:
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:7d256de5efac751ab012125fb24712798f4b050f3789bcc034e04e72d6653414"
+  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:6d1e98d620a101104efc59ccaaf19a57f0f0b8c9777e78e502c7e409c8df9b94"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -150,7 +151,9 @@ Rustls 传输转发。成功的代理响应始终携带 `X-CognitiveOS-Provider-
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明
 correlation id 时才发出；畸形或重复的 id 被忽略，产品 body 不变，观测器不写任何
 东西。一次性私有 Unix socket（`POST /chat/completions`）只服务 daemon 启
-动的 Pi candidate 进程且禁止 Authorization 头。
+动的 Pi candidate 进程且禁止 Authorization 头。该私有 candidate 路径在转发前剥离
+`tools`/`tool_choice`，接受可含 `role=assistant` 以及 `finish_reason` 等额外
+choice 字段的单条文本 choice，并拒绝 `tool_calls` / `function_call`。
 
 ## 非 Personal 骨架
 

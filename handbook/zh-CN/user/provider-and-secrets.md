@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:4371cbe35b337d6264a555197980f0fd32899337905db48f75e3655844ffe583"
+fingerprint: "sha256:765f8bdaf7e39fa3a453cc7e096a1313b886a3b170edacf4671c407a35f2e52e"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---
@@ -56,6 +56,9 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
    该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/
    SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略，产品 body
    不变。
+5. 私有 Pi candidate completion 走同一 daemon 代理：转发前剥离 `tools`/`tool_choice`，
+   接受可含 `role=assistant` 的单条文本 choice，并拒绝 `tool_calls`。适配器 stderr
+   出现在 `daemon.log` 前会脱敏（`sk-` / `api_key=` / `token=`）。
 
 发现流程（`cognitive init`）探测 `GET /models` 及 chat/stream/tool/cancel 战役，持久
 化带身份 digest 的非 secret 能力快照；selected model 必须匹配该快照。

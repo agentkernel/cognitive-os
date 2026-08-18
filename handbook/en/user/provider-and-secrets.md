@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:4371cbe35b337d6264a555197980f0fd32899337905db48f75e3655844ffe583"
+fingerprint: "sha256:765f8bdaf7e39fa3a453cc7e096a1313b886a3b170edacf4671c407a35f2e52e"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -62,6 +62,10 @@ Clients never talk to the Provider. The daemon owns egress:
    `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore,
    disjoint from the network exchange). Malformed or duplicate correlation
    headers are ignored and the product body is unchanged.
+5. The private Pi candidate completion uses the same daemon-owned proxy: it
+   strips `tools`/`tool_choice` before forward, accepts one text choice that may
+   include `role=assistant`, and refuses `tool_calls`. Adapter stderr on
+   `daemon.log` is redacted (`sk-` / `api_key=` / `token=`).
 
 Discovery (`cognitive init`) probes `GET /models` plus a chat/stream/tool/cancel
 campaign and persists a non-secret capability snapshot with an identity digest; the

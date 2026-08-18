@@ -39,7 +39,8 @@ tests:
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:7d256de5efac751ab012125fb24712798f4b050f3789bcc034e04e72d6653414"
+  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:6d1e98d620a101104efc59ccaaf19a57f0f0b8c9777e78e502c7e409c8df9b94"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -180,7 +181,10 @@ and the request carries one well-formed opaque correlation id; malformed or
 duplicate ids are ignored, the product body is unchanged, and the observer
 writes nothing. The private one-shot Unix socket
 (`POST /chat/completions`) serves only the daemon-launched Pi candidate process
-and forbids Authorization headers.
+and forbids Authorization headers. That private-candidate path strips
+`tools`/`tool_choice` before forward, accepts one text choice that may include
+`role=assistant` plus extra choice fields such as `finish_reason`, and refuses
+`tool_calls` / `function_call`.
 
 ## Non-Personal skeleton
 

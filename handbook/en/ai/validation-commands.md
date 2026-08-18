@@ -72,6 +72,10 @@ oracles plus `cargo test -p kernel-server --bins`, `cargo test --workspace`,
 P2-T30 public-admit scheduler lease coverage is the kernel-server focused test
 `public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`
 (Linux/CI only; Windows GNU `not-run`).
+P2-T33 private-candidate host-path coverage is
+`apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs` plus the
+`provider_proxy` private-candidate unit tests (Linux/CI only; Windows GNU
+`not-run`).
 
 ## What CI enforces on every PR
 
