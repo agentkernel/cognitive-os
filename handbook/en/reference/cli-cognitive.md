@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:c3c701d48fefda507cae90b4c307627460048afa6ef3fdc4470debf3a43d791f"
+fingerprint: "sha256:74b74f4bcc601b05341421da561efadbcc70124f768ef8d98172b8e3d4c0b10d"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -35,7 +35,7 @@ USAGE:
   cognitive daemon stop   [--runtime-root <dir>]
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
-  cognitive pi launch [--runtime-root <dir>]
+  cognitive pi launch [--runtime-root <dir>] [--print]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -48,7 +48,8 @@ Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
   - backup/restore never copy secret, bearer, provider-config, or authority SQLite
   - Pi configuration writes only non-secret executable and Extension paths
-  - Pi launch requires daemon-owned ready state and passes only --extension
+  - Pi launch requires daemon-owned ready state, loads only its configured Extension,
+    and disables Pi-native tools that bypass daemon authority
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path

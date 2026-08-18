@@ -74,9 +74,9 @@ cognitive pi configure --executable <pi 绝对路径> --extension-entry <dist/in
 cognitive pi launch
 ```
 
-launch 是 fail-closed 的：要求 doctor 全组件 ready 与精确钉住的 Pi 版本，只传
-`--extension`，绝不把 Provider key 交给 Pi。你的第一条消息经 Pi → daemon Provider
-代理 → Provider；见 [Pi 对话壳](./pi-shell.md)。
+launch 是 fail-closed 的：要求 doctor 全组件 ready 与精确钉住的 Pi 版本，只加载已配置
+的 Extension，禁用绕过 daemon authority 的 Pi 原生工具，绝不把 Provider key 交给 Pi。你
+的第一条消息经 Pi → daemon Provider 代理 → Provider；见 [Pi 对话壳](./pi-shell.md)。
 若要进行有界的非交互对话，使用 `cognitive pi launch --print`，并通过 stdin 提供
 prompt。CLI 会保持连接直到钉住的 Pi 进程退出；prompt 不是 Provider 凭据，Provider key
 不会进入命令行或环境。

@@ -172,6 +172,8 @@ fn prepare_launch_with_doctor_document(
             let mut arguments = vec![
                 "--extension".to_owned(),
                 path_to_argument(&extension_entry_path)?,
+                // Pi-native filesystem/process tools bypass daemon authority.
+                "--no-builtin-tools".to_owned(),
             ];
             if options.print_mode {
                 arguments.push("--print".to_owned());
@@ -637,6 +639,39 @@ mod tests {
         .expect_err("selected-model, Provider, or SecretStore failure must block launch");
 
         assert!(error.contains("not ready"), "{error}");
+    }
+
+    #[test]
+    fn launch_preparation_disables_pi_native_tools_and_preserves_print_mode() {
+        let temporary_root = tempfile::tempdir().expect("temporary root");
+        let executable_path = temporary_root.path().join("pi");
+        let extension_entry_path = temporary_root.path().join("extension.js");
+        fs::write(&executable_path, "pinned Pi placeholder").expect("Pi executable fixture");
+        fs::write(&extension_entry_path, "extension placeholder").expect("extension entry fixture");
+        write_launch_configuration(&temporary_root, &executable_path, &extension_entry_path);
+        let options = PiLaunchOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            print_mode: true,
+        };
+
+        let launch_plan = prepare_launch_with_doctor_document(
+            &options,
+            LOOPBACK_ENDPOINT_DOCUMENT,
+            &ready_doctor_document(),
+        )
+        .expect("ready daemon and Pi configuration produce a launch plan");
+
+        assert_eq!(
+            launch_plan.arguments,
+            vec![
+                "--extension".to_owned(),
+                extension_entry_path.display().to_string(),
+                "--no-builtin-tools".to_owned(),
+                "--print".to_owned(),
+            ]
+        );
     }
 
     #[test]

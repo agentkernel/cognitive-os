@@ -62,8 +62,9 @@ non_claims:
   redacted diagnostic (`sk-` / `api_key=` / `token=` spans stripped).
 - `cognitive pi launch --print` is the bounded non-interactive Pi path: it keeps
   the public CLI attached while Pi reads its prompt from stdin and exits. It still
-  requires the daemon's full ready projection, passes no Provider credential to
-  Pi, and must not be substituted with direct daemon/private-candidate calls.
+  requires the daemon's full ready projection, disables Pi-native tools, passes no
+  Provider credential to Pi, and must not be substituted with direct
+  daemon/private-candidate calls.
 
 ## Stop, restart, stale state — `implemented`
 

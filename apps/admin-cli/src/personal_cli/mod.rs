@@ -672,7 +672,7 @@ USAGE:
   cognitive daemon stop   [--runtime-root <dir>]
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
-  cognitive pi launch [--runtime-root <dir>]
+  cognitive pi launch [--runtime-root <dir>] [--print]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -685,7 +685,8 @@ Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
   - backup/restore never copy secret, bearer, provider-config, or authority SQLite
   - Pi configuration writes only non-secret executable and Extension paths
-  - Pi launch requires daemon-owned ready state and passes only --extension
+  - Pi launch requires daemon-owned ready state, loads only its configured Extension,
+    and disables Pi-native tools that bypass daemon authority
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
