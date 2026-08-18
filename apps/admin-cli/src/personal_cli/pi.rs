@@ -180,7 +180,7 @@ fn prepare_launch_with_doctor_document(
             }
             arguments
         },
-        environment: minimal_execution_environment(),
+        environment: execution_environment_for_layout_roots(&options.layout_roots)?,
     })
 }
 
@@ -346,6 +346,39 @@ fn path_to_argument(path: &Path) -> Result<String, String> {
     path.to_str()
         .map(str::to_owned)
         .ok_or_else(|| "Pi path is not valid Unicode".to_owned())
+}
+
+fn execution_environment_for_layout_roots(
+    layout_roots: &LayoutRoots,
+) -> Result<BTreeMap<String, String>, String> {
+    let mut environment = minimal_execution_environment();
+    let Some(runtime_root) = &layout_roots.runtime_root else {
+        return Ok(environment);
+    };
+
+    // The Node extension resolves the daemon through XDG paths. Keep it aligned
+    // with the CLI's hermetic runtime root rather than inheriting host paths.
+    environment.insert(
+        "XDG_CONFIG_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("config"))?,
+    );
+    environment.insert(
+        "XDG_DATA_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("data"))?,
+    );
+    environment.insert(
+        "XDG_STATE_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("state"))?,
+    );
+    environment.insert(
+        "XDG_CACHE_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("cache"))?,
+    );
+    environment.insert(
+        "XDG_RUNTIME_DIR".to_owned(),
+        path_to_argument(runtime_root)?,
+    );
+    Ok(environment)
 }
 
 fn minimal_execution_environment() -> BTreeMap<String, String> {
@@ -671,6 +704,18 @@ mod tests {
                 "--no-builtin-tools".to_owned(),
                 "--print".to_owned(),
             ]
+        );
+        assert_eq!(
+            launch_plan.environment.get("XDG_CONFIG_HOME"),
+            Some(&temporary_root.path().join("config").display().to_string())
+        );
+        assert_eq!(
+            launch_plan.environment.get("XDG_STATE_HOME"),
+            Some(&temporary_root.path().join("state").display().to_string())
+        );
+        assert_eq!(
+            launch_plan.environment.get("XDG_RUNTIME_DIR"),
+            Some(&temporary_root.path().display().to_string())
         );
     }
 
