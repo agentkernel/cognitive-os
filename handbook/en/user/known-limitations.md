@@ -13,7 +13,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:d593709bbd7726e963c511d01bf0f6b7abf0e8d5a84d2cc55e1319c1b72f81ae"
+fingerprint: "sha256:b9ac6ef81930afeb0cf41d1cd626883d1afd8c699eec88c698844539a61266a0"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---

@@ -29,6 +29,9 @@ const REQUIRED_READINESS_COMPONENTS: [&str; 6] =
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PiLaunchOptions {
     pub layout_roots: LayoutRoots,
+    /// Run Pi in its supported non-interactive mode and keep the CLI attached
+    /// until Pi has consumed stdin and completed the conversation.
+    pub print_mode: bool,
 }
 
 /// Inputs accepted by `cognitive pi configure`.
@@ -115,12 +118,23 @@ pub fn launch(options: &PiLaunchOptions) -> Result<Value, String> {
         prepare_launch_with_doctor_document(options, &endpoint_document, &doctor_document)?;
 
     verify_pinned_pi_version(&launch_plan)?;
-    let child_process = spawn_pi_client(&launch_plan)?;
+    let mut child_process = spawn_pi_client(&launch_plan)?;
+    let action = if options.print_mode {
+        let exit_status = child_process
+            .wait()
+            .map_err(|_| "Pi non-interactive conversation could not be joined".to_owned())?;
+        if !exit_status.success() {
+            return Err("Pi non-interactive conversation exited unsuccessfully".to_owned());
+        }
+        "completed"
+    } else {
+        "spawned"
+    };
 
     Ok(json!({
         "status": "ok",
         "surface": "cognitive-pi-launch",
-        "action": "spawned",
+        "action": action,
         "process_id": child_process.id(),
         "profile_claim": "not-claimed",
         "gate_claim": "not-claimed",
@@ -154,10 +168,16 @@ fn prepare_launch_with_doctor_document(
 
     Ok(PiLaunchPlan {
         executable_path,
-        arguments: vec![
-            "--extension".to_owned(),
-            path_to_argument(&extension_entry_path)?,
-        ],
+        arguments: {
+            let mut arguments = vec![
+                "--extension".to_owned(),
+                path_to_argument(&extension_entry_path)?,
+            ];
+            if options.print_mode {
+                arguments.push("--print".to_owned());
+            }
+            arguments
+        },
         environment: minimal_execution_environment(),
     })
 }
@@ -459,6 +479,7 @@ mod tests {
             layout_roots: LayoutRoots {
                 runtime_root: Some(temporary_root.path().to_path_buf()),
             },
+            print_mode: false,
         }
     }
 

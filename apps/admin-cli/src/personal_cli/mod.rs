@@ -610,6 +610,15 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
             }
             continue;
         }
+        if flag == "--print" {
+            if flags
+                .insert("print".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --print given twice".to_owned());
+            }
+            continue;
+        }
         let Some(name) = flag.strip_prefix("--") else {
             return Err(format!("unexpected argument `{flag}`"));
         };
@@ -769,6 +778,7 @@ mod tests {
                 layout_roots: LayoutRoots {
                     runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
                 },
+                print_mode: false,
             }))
         );
 
@@ -781,6 +791,28 @@ mod tests {
         .expect_err("Pi launch must reject Provider secret flags");
 
         assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn pi_launch_accepts_noninteractive_print_mode_without_secret_flags() {
+        let command = parse_cognitive_args(&[
+            "pi".to_owned(),
+            "launch".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--print".to_owned(),
+        ])
+        .expect("parse noninteractive Pi launch command");
+
+        assert_eq!(
+            command,
+            CognitiveCommand::Pi(PiCommand::Launch(PiLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                print_mode: true,
+            }))
+        );
     }
 
     #[test]
