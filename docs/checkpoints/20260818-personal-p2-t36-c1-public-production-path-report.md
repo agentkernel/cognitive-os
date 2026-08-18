@@ -19,6 +19,7 @@ Results are appended immediately after each completed validation unit.
 | D01 plan and handbook checks | `DEV-WIN-GNU-01` static/documentation allowlist | pass | After registering P2-T36/D01-D03 and synchronizing both handbook locales, `pnpm run check:consistency`, `node tools/src/check-handbook.mjs`, and `node tools/src/generate-handbook.mjs --check` passed. These checks do not execute the C1 runtime path. |
 | D01 staged documentation gate | `DEV-WIN-GNU-01` static/documentation allowlist | pass | `node tools/src/docs-sync-gate.mjs --staged` passed. The mapped `pi-shell` pages and fingerprints are synchronized; this gate does not execute the C1 runtime path. |
 | D01 exact-revision push | local Git transport | partial | Checkpoint `6e7e4197` committed, but `git push -u origin HEAD` could not connect to GitHub through the configured loopback proxy. No supported Linux runtime validation has started because it must consume a pushed exact revision. Retry the normal push path before invoking `DEV-LINUX-NATIVE-01`; no force push or alternate source copy is permitted. |
+| D01 transport recovery retry | local Git transport | partial | A second normal `git push -u origin HEAD` and a one-command no-config-override retry (`git -c http.proxy= -c https.proxy= push -u origin HEAD`) both failed with the same connection refusal via `127.0.0.1:443`. The current session has no `*PROXY` environment variables and no repository-level `http.proxy`/`https.proxy` setting. The fault remains external to task-owned code. |
 
 ## Remaining
 
