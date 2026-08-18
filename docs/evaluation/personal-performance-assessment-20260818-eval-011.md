@@ -25,7 +25,7 @@ C1/C2 Agent-benefit.
 | SecretStore import | **pass** | new item `/org/freedesktop/secrets/collection/login/20` via stdin; `busctl --user tree` paths only; never search/lookup |
 | Pi 0.81.1 pin | **pass** | `--extension` absolute; doctor ready is **not** C1/C2 |
 | Exact-source `pi-agent-adapter` | **pass** | real adapter; SHA-256 `3e7924deeeca901e21cc4203960125938ab76688e89a52f4abe600ea0fbfd6cd` |
-| B0 C1 WorkspaceSearch O-arm | `not-run` | after freeze pass |
+| B0 C1 WorkspaceSearch O-arm | **partial** (sample `b0-0` retained) | admit 200; lifecycle `DRAFT`; `lease_acquired` 0; skip class `private_pi_candidate_adapter_rejected_the_request`; cause: freeze copy missed `private_candidate_provider.mjs`; short sockets `pc-291495-*.sock`; real adapter spawned |
 | B0 remaining C1/C2 families | `not-run` | after C1-search leaves `DRAFT` with `lease_acquired` ≥ 1 |
 | B0 P-arm / broker `48400` | `not-run` | after O-arm is fairly measurable |
 | B1/B2 C1/C2 paired | `not-run` | after B0 path/fairness |
@@ -72,3 +72,68 @@ search`/`lookup`. Doctor after configure: provider
 `127.0.0.1:48300`.
 
 No Gate, release, Profile, B01, or Agent-benefit claim.
+
+## B0 C1-search O-arm sample `b0-0` (2026-08-18) — partial; retained
+
+One O-arm C1-search qualification Task was started with `retry=0` against
+the public Task admit surface on the public `cognitive daemon start`
+launcher. It is retained. It did not leave `DRAFT`. No Intent, Effect,
+verification, or acceptance row exists. WorkspaceRead is still not
+advertised; this cell used WorkspaceSearch only.
+
+P2-T33 UNIX_PATH_MAX product fix: **confirmed on this long root.** During
+the probe, `$XDG_RUNTIME_DIR/cognitiveos/pc-291495-*.sock` existed (48
+names `pc-291495-0.sock` … `pc-291495-47.sock`). Nested `completion.sock`
+under `/home/hal9001/perfeval011-20260818` was not required. This is
+therefore **not** EVAL-008's `private_completion_socket_could_not_be_created`.
+
+P2-T34 digest skip: **not this sample's skip.** The real adapter spawned
+and Pi exited while loading the campaign O-arm extension, before a
+structurally parsed candidate reached `validate_untrusted_pi_candidate`.
+
+| Seed | Task ref | Admit | Probe | Lifecycle |
+|---|---|---|---|---|
+| `b0-0` | `task://local/eval011-b0-C1-search-b0-0-42371727ec06` | 200 (record 14 ms, interpret 6 ms, preview 1 ms, admit 30 ms) | wall 180002 ms; 88 probes; `acceptance_ref` absent | `DRAFT`; `contract_epoch` 1 |
+
+Guest evidence file:
+`/home/hal9001/perfeval011-20260818/evidence/b0-oarm-C1-search-b0-0.json`
+SHA-256 `591aeb947f18aa849057f647bc09ccef3d2a50b938225d69792889366bec8ce8`.
+Instrument `eval011-b0-c1-search.py`
+SHA-256 `b609be34a80c6c5c8c68132d53417f6e84f11e18efaf9e7a0b34fbe155d7c5d4`.
+Public `cognitive`/`GET /task/evidence`: `lifecycle.current_state=DRAFT`;
+`intent_refs` / `effect_refs` empty; `latest_verification` /
+`latest_acceptance` null. Bounded O4 last probe: `runnable_count` 32,
+`lease_acquired` 0 (`observed_zero` true). O5 named zero.
+
+Public skip rows on `daemon.log` (mode `0600`):
+
+`kernel-server personal scheduler tick: skip row
+task://local/eval011-b0-C1-search-b0-0-42371727ec06 at epoch 1: scheduler
+private Pi candidate proposal failed: private Pi candidate adapter
+rejected the request (daemon candidate Pi exited unsuccessfully: Error:
+Failed to load extension
+"/home/hal9001/perfeval011-20260818/o-arm-candidate.mjs": Failed to load
+extension: Cannot find module './private_candidate_provider.mjs' … Error:
+Unknown provider "cognitiveos-private-candidate". Use --list-models )`
+
+Skip class: `private_pi_candidate_adapter_rejected_the_request`.
+`o-arm-candidate.mjs` (SHA-256 `29870821…`, same bytes as EVAL-010)
+`import`s `./private_candidate_provider.mjs`. That companion file was
+present on the closed EVAL-010 root (`SHA-256
+2b7e52a6afe205e5997c58fe59b096fc7666dfd8733e196777e915d3a0bc245b`) and
+**absent** from `/home/hal9001/perfeval011-20260818` at sample start.
+This is a freeze-copy gap, not a product digest failure and not a
+product-code change.
+
+Last probe `kernel_children` listed pid 294170 `pi-agent-adapte` (ppid
+291495) and pid 294181 `node` (ppid 294170, cmdline matched
+`pi-coding-agent`). Real `pi-agent-adapter` **did** spawn.
+`adapter_or_pi_seen` true (`/proc` `Name` truncation accounted for).
+
+Claim ceiling `hypothesis`. No Gate, release, Profile, B01, or
+Agent-benefit claim. Scheduler ticks after the retained sample may have
+reached the Provider proxy; this campaign does not claim zero Provider
+spend. Sample `b0-0` is not retried (`retry=0`). Unique next: copy the
+missing campaign companion module onto this root (same EVAL-010 digest)
+and start a **new** C1-search sample `b0-1`. That is freeze-asset
+completion, not a product edit and not a retry of `b0-0`.

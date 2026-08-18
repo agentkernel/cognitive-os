@@ -59,14 +59,17 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | Local Pi `0.81.1` pin | **pass** | `--extension` absolute; package/pinned/observed `0.81.1` |
 | Exact-source `pi-agent-adapter` | **pass** | real adapter, not a stub; SHA-256 `3e7924deeeca901e21cc4203960125938ab76688e89a52f4abe600ea0fbfd6cd`; `o-arm-candidate.mjs` `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
 | `cognitive doctor` | **pass** (readiness only) | all required components `ready`; Pi `0.81.1`; `first_conversation_ready: true`; **not** a C1/C2 pass |
-| C1/C2 paired B0 | `not-run` | after freeze pass |
+| C1/C2 paired B0 | **partial** | sample `b0-0` retained; skip class `private_pi_candidate_adapter_rejected_the_request` (`Cannot find module './private_candidate_provider.mjs'`); Task `DRAFT`; `lease_acquired` 0; short sockets created; real adapter spawned; P-arm not started |
 | C1/C2 paired B1/B2 | `not-run` | after B0 path/fairness |
 | Cleanup / campaign close | `not-run` | stop `48300`; clear SecretStore item; leave `48181`/`48284`/`48383` and prior EVAL roots |
 
 ## Unique next action
 
-Run B0 C1 WorkspaceSearch O-arm against daemon `48300`. Do not reopen
-EVAL-010. Doctor ready ≠ C1/C2.
+Copy closed EVAL-010 companion `private_candidate_provider.mjs` (SHA-256
+`2b7e52a6afe205e5997c58fe59b096fc7666dfd8733e196777e915d3a0bc245b`) onto
+this campaign root, then run B0 C1 WorkspaceSearch O-arm sample `b0-1`.
+Do not retry `b0-0`. Do not reopen EVAL-010. Do not modify product code.
+Doctor ready ≠ C1/C2.
 
 Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
 or Agent-benefit promotion.
