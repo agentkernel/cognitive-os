@@ -21,10 +21,12 @@ Results are appended immediately after each completed validation unit.
 | D03 formatting | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo fmt --all -- --check` passed. |
 | Required CI `32106757917` | Ubuntu + Windows | `fail` | Both platforms reached TypeScript tools tests, where `check-consistency` found the initial P2-T35 registration's mismatched task counts and missing D01-D03 Current snapshot statuses. No Rust test failure occurred; this report and plan/snapshot are being corrected before rerunning CI. |
 | Required CI `32107175113` | Ubuntu + Windows | `pass` | Corrected exact branch head `ecc89fd1`: Ubuntu verify **pass** (3m24s), Windows verify **pass** (11m1s), and `required-ci` **pass**. |
+| Required CI `32108875933` | Ubuntu + Windows | `pass` | Exact branch head `aa51b49de60cac3704b05ed38cfd22e4824eebe6`: Ubuntu verify **pass** (3m25s), Windows verify **pass** (21m48s), `resolve validation route` **pass**, and `required-ci` **pass**. |
 
 ## Remaining
 
-Confirm the required Ubuntu CI result for the pushed branch head. Windows Rust
-validation remains `not-run by owner-directed Linux-only route`. A new live Pi
-evaluation requires a separately preregistered EVAL-012 campaign and must not
-reuse EVAL-011 runtime state.
+All required CI checks passed for the recorded branch head. Windows local Rust
+validation remains `not-run by owner-directed Linux-only route`; the Windows
+CI result above is independent supported validation. A new live Pi evaluation
+requires a separately preregistered EVAL-012 campaign and must not reuse
+EVAL-011 runtime state.
