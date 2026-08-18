@@ -6,7 +6,7 @@
 - Target: `B01-Desktop-Linux-002`
 - Claim ceiling: `hypothesis` / non-claim
 - Reviewer: `not_reviewed`
-- Status: paused for B0 procedure amendment; measurement-only
+- Status: closed; B0 qualification final; measurement-only
 
 Results are appended immediately after every completed campaign unit.
 
@@ -27,14 +27,15 @@ Results are appended immediately after every completed campaign unit.
 | Selected Flash model refresh | pass | Public non-PTY `cognitive init` reused the existing opaque SecretRef without secret input (`secret_material_written: false`) and selected `deepseek-v4-flash`; provider configuration is present with a redacted reference and snapshot digest `fnv1a64:c58ce6f2f7521544`. This is credential/readiness preparation only, not a Provider, C1/C2, B0, Gate, release, Profile, B01, or Agent-benefit result. |
 | Public daemon readiness after credential recovery | pass | Public daemon started at EVAL-011 endpoint `127.0.0.1:48300`; status reports a live lock/process. Redacted doctor reports system/database/secret/provider/daemon/Pi ready, `secret_ref_resolves: true`, selected model digest match, Pi `0.81.1`, and `first_conversation_ready: true`. This is readiness only; it does not execute a Pi candidate, scheduler lease, Tool executor, verifier, acceptance, B0, Gate, release, Profile, B01, or Agent-benefit result. |
 | Unfrozen B0 instrument interface check | fail / procedure deviation | SHA-256 `4cffeba1445b750f790fd9be805da41426ca337e8cf4187926cab9eae173adb9` was recorded for the campaign-root `eval011-b0-c1-search.py`; however, invoking its `--help` interface unexpectedly attempted a session mint and returned redacted `401` (`session mint failed`). This is retained as a started Provider-side failure with `retry=0`, but it is **not** a valid WorkspaceRead or WorkspaceSearch qualification sample: its complete manifest, bounded input, oracle, output schema, lifecycle observation, and cleanup procedure were not frozen before invocation. No C1/C2, scheduler-lease, Tool executor, verifier, acceptance, B0, Gate, release, Profile, B01, or Agent-benefit conclusion follows. Stop campaign-owned daemon and do not run another instrument without an owner-approved preregistration amendment. |
-| B0 C1 WorkspaceRead O-arm | not-run | `retry=0`; at most one bounded sample after readiness. Record candidate validation, lease, dispatch, verification, and acceptance separately. |
-| B0 C1 WorkspaceSearch O-arm | not-run | Starts only if WorkspaceRead reaches a fair scheduler-lease observation. |
+| B0 C1 WorkspaceRead O-arm | final not-run | Amendment 1 freezes the only candidate-root instrument as unusable before a valid sample because it has no side-effect-free interface, wrong runtime root, custom bootstrap/session caller, self-created fixture, and no frozen manifest/oracle/output/cleanup contract. No valid WorkspaceRead sample started. |
+| B0 C1 WorkspaceSearch O-arm | final not-run | Amendment 1 records no fair WorkspaceRead scheduler-lease observation and authorizes no replacement/retry. No valid WorkspaceSearch sample started. |
 | B0 P-arm / paired B1/B2 / C2a-C2d | not-run | Not authorized until B0 O-arm is complete, fair, and a future approved amendment freezes the missing assets. |
-| Campaign pause cleanup | pass | Public campaign-owned daemon stop returned `stopped` for PID `305658`, with confirmed stale-lock removal. The associated `kill` observed the PID already absent; no retry or further process action occurred. Campaign root, runtime, frozen artifacts, and opaque SecretStore item are retained only for the paused amendment decision; no cleanup/discovery of SecretStore state was performed. |
+| Campaign pause cleanup | pass | Public campaign-owned daemon stop returned `stopped` for PID `305658`, with confirmed stale-lock removal. The associated `kill` observed the PID already absent; no retry or further process action occurred. Campaign root, runtime, frozen artifacts, and opaque SecretStore item were retained only for the paused amendment decision. |
+| Campaign closure cleanup | partial | Amendment 1's exact non-secret `secret-tool clear` attribute-triple command was invoked with all output discarded; the remote command's shell returned zero, but PowerShell-to-SSH formatting made the individual subcommand status labels ambiguous. It was not retried. The campaign root deletion was independently confirmed: `eval011_root=absent`. No SecretStore search/lookup, value print, closed-EVAL access, or B01-Clean-Linux-001 access occurred. Treat SecretStore cleanup verification as unavailable rather than infer an item state. |
 
 ## Unique next action
 
-EVAL-011 daemon is stopped. Await an owner-approved amendment that freezes a B0
-runner, manifest, input, oracle, output schema, lifecycle observation, and
-cleanup procedure; do not retry the started failed instrument or run any B0
-sample before that amendment.
+EVAL-011 is closed. B0 has no valid sample denominator: WorkspaceRead and
+WorkspaceSearch are final `not-run`; the retained session-mint `401` remains an
+invalid procedure-deviation event, not a qualification result. No C1/C2,
+performance, Gate, release, Profile, B01, or Agent-benefit claim is made.
