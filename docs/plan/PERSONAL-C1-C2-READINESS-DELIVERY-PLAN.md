@@ -5,7 +5,7 @@
   activated, C1/C2 paired benchmark readiness assessment
 - Current product task: `P2-T36` on
   `personal/P2-T36-c1-public-production-path`
-- Current exact pushed revision: `ae6fd82852c21d3bbddd1c024f738c1d21686e3e`
+- Current C1 implementation checkpoint: `ae6fd82852c21d3bbddd1c024f738c1d21686e3e`
 - Last reconciled: 2026-08-18
 
 ## 1. Authority and use
@@ -29,7 +29,28 @@ then use this document to select the next dependency-safe readiness item. If a
 canonical source conflicts with this document, update this document in the
 active task delivery and follow the canonical source.
 
-## 2. Fixed boundaries
+## 2. Continuation progress board
+
+This is a compact recovery board, not a second source of task or campaign
+truth. Update it together with the P2-T36 running report after each completed
+validation unit. On recovery, use the `Next recovery action` column only after
+reconciling the authoritative sources in section 1.
+
+| Package | Status | Completed, supported facts | Open boundary | Next recovery action |
+|---|---|---|---|---|
+| Plan persistence | complete | This navigation document is registered in the active P2-T36 lease and linked from `PROGRESS.md`. | Keep revision and row status current during the task. | Read this board after `PROGRESS.md`, lease, and branch reconciliation. |
+| P2-T36/D01: Pi candidate surface | complete | WorkspaceRead is I/O-free and daemon-governed; native Pi filesystem/shell tools remain denied. Exact Linux adapter protocol test passed **21/21**. | Unit protocol evidence is not a public C1 route. | Preserve existing negatives while testing the real public route. |
+| P2-T36/D01: exact source and base tools | complete | A cleanable, non-B01 native Linux Git worktree was shallow-cloned from the pushed branch. Rust adapter/admin CLI, Extension, and pinned Pi `0.81.1` build/version checks passed. | Native worktree must be refreshed to the exact current pushed head before final D02/D03 validation. | Read the branch head from `PROGRESS.md`, fetch/check it out from Git, and record exact equality before each final validation unit. |
+| P2-T36/D02: disposable Pi configuration | complete | Public `cognitive pi configure` created a cleanable non-B01 runtime configuration referencing the pinned Pi, built Extension, and candidate adapter. No Provider material was configured or inspected. | Configuring Pi neither starts the daemon nor proves readiness or candidate execution. | Start the public daemon in that disposable runtime and capture only redacted status/doctor facts. |
+| P2-T36/D02: public C1 WorkspaceRead/Search | in progress | The required candidate surface and supporting adapter protocol exist. Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) is open. | No real public daemon-start path has yet recorded both WorkspaceRead and WorkspaceSearch through candidate validation, scheduler lease, dispatch, verification, and acceptance. | Use the exact native Git worktree to run one bounded, cleanable public C1 route; append each outcome immediately to the running report. |
+| P2-T36/D02: provider/readiness boundary | not started | No secret was read, printed, searched, logged, or placed in command arguments. | Pi launch is permitted only after daemon-owned readiness admits it; missing approved SecretStore readiness is a truthful `not-run`, not a workaround target. | Query public redacted readiness only after daemon start; use an approved SecretStore path only if the task route requires it. |
+| P2-T36/D03: supported validation and CI | in progress | Initial Ubuntu verification passed. A previous Windows job failed on an unrelated existing reconciliation test and was retried. | Latest CI for the current pushed head is pending; no CI result may be inferred. | Observe the current CI revision; repair only task-owned failures and record unrelated failures precisely. |
+| P2-T36/D03: task closure | not started | Draft PR and incremental report exist. | Full acceptance mapping, required validation, ready/merge, lease closure, branch cleanup, and `main` reconciliation remain. | Begin closure only after the public C1 route and required validation pass on the same pushed task head. |
+| C2a-C2d public O-arm | blocked by P2-T36 dependency | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | After P2-T36 closes, run the first supported public path and register the smallest uncovered product gap. |
+| Pure-Pi P arm and frozen paired assets | not started | No new runner, corpus, broker, oracle, or campaign asset is in use. | Product O-arm readiness is a prerequisite; new EVAL activation remains owner-only. | Do not begin until the formal preparation boundary permits it. |
+| New C1/C2 campaign | not started / inactive | EVAL-004 through EVAL-010 remain closed and isolated. | No new EVAL ID, preregistration, root, port, SecretStore item, denominator, or sample is authorized by this plan. | Only a future owner activation may request a new preregistration and B0. |
+
+## 3. Fixed boundaries
 
 1. The daemon remains the only authority writer; Pi, runners, fixture adapters,
    brokers, CLI, and test code produce observations or candidates only.
@@ -53,7 +74,7 @@ active task delivery and follow the canonical source.
    or Agent-benefit claim. A readiness assessment may conclude only that a
    newly preregistered B0 is eligible to be requested.
 
-## 3. Readiness definition and dependency order
+## 4. Readiness definition and dependency order
 
 The programme is complete only when every row below has supported evidence and
 no unexplained `partial`, `not-run`, product gap, asset gap, broker gap, or
@@ -71,7 +92,7 @@ public-observation gap remains.
 | 8 | B0 fairness readiness | A fresh B0 can prove P/O equality of tool set, input bytes, workspace, oracle, Provider/model, timeout, retry=0, environment, and cleanup. | Requires packages 1-7. A new EVAL ID is still not authorized by this plan. |
 | 9 | New campaign readiness assessment | A non-claim assessment references all supported evidence, allocation strategy for a new root/port/SecretStore item, Provider budget, B1-B5 freezes, and cleanup. | Must state only that a new B0 may be requested; it cannot activate or execute a campaign. |
 
-## 4. Current task route: P2-T36
+## 5. Current task route: P2-T36
 
 ### Objective
 
@@ -108,7 +129,7 @@ executor, verifier, and acceptance chain.
    formal acceptance; otherwise register the smallest next formal task before
    editing unrelated paths.
 
-## 5. Environment configuration checklist
+## 6. Environment configuration checklist
 
 This checklist configures supported development evidence, not B01 or a
 benchmark campaign:
@@ -127,7 +148,7 @@ benchmark campaign:
 - [ ] Cleanup removes task-created runtime/process state and records only
   redacted facts.
 
-## 6. Future task-selection rules
+## 7. Future task-selection rules
 
 After P2-T36 closes, select the first unresolved package in section 3 that has
 all `implementation_requires` satisfied. First run an existing supported
@@ -138,7 +159,7 @@ Do not create implementation tasks for a campaign-only runner, broker, corpus,
 or report until product paths are supported and the formal preparation boundary
 permits it. Do not start Provider benchmark samples during any product task.
 
-## 7. Completion gate
+## 8. Completion gate
 
 Before reporting readiness, perform one evidence-indexed assessment against
 the final checklist in the owner instruction: new-EVAL isolation strategy;
