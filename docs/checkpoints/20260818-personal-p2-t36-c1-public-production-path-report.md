@@ -18,11 +18,11 @@ Results are appended immediately after each completed validation unit.
 | D01 Rust formatting | `DEV-WIN-GNU-01` Rust formatting allowlist | pass | `cargo fmt --all` completed after the adapter protocol update. Rust compilation and tests remain routed to exact pushed `DEV-LINUX-NATIVE-01`. |
 | D01 plan and handbook checks | `DEV-WIN-GNU-01` static/documentation allowlist | pass | After registering P2-T36/D01-D03 and synchronizing both handbook locales, `pnpm run check:consistency`, `node tools/src/check-handbook.mjs`, and `node tools/src/generate-handbook.mjs --check` passed. These checks do not execute the C1 runtime path. |
 | D01 staged documentation gate | `DEV-WIN-GNU-01` static/documentation allowlist | pass | `node tools/src/docs-sync-gate.mjs --staged` passed. The mapped `pi-shell` pages and fingerprints are synchronized; this gate does not execute the C1 runtime path. |
+| D01 exact-revision push | local Git transport | partial | Checkpoint `6e7e4197` committed, but `git push -u origin HEAD` could not connect to GitHub through the configured loopback proxy. No supported Linux runtime validation has started because it must consume a pushed exact revision. Retry the normal push path before invoking `DEV-LINUX-NATIVE-01`; no force push or alternate source copy is permitted. |
 
 ## Remaining
 
-Implement the daemon-governed, I/O-free `WorkspaceRead` extension surface and
-candidate extraction without adding any Pi-native filesystem or shell tool.
-Then add adapter protocol coverage and route the public production-path
-validation to an exact pushed `DEV-LINUX-NATIVE-01` revision. No B01 guest,
-Provider sample, paired runner, or evaluation campaign is used by this task.
+WorkspaceRead extension registration and adapter extraction are implemented.
+Retry the normal exact-revision push for `6e7e4197`, then run the public
+production-path validation on `DEV-LINUX-NATIVE-01`. No B01 guest, Provider
+sample, paired runner, or evaluation campaign is used by this task.
