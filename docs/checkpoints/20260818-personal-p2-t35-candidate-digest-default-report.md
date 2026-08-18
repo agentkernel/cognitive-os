@@ -15,9 +15,14 @@ Results are appended immediately after each completed validation unit.
 | Unit | Environment | Result | Evidence |
 |---|---|---|---|
 | D01 failure-first source assessment | `DEV-WIN-GNU-01` | `not-run` | Rust test execution is prohibited on the registered Windows GNU linker host. Before the default is applied, serde rejects an omitted `parameters_digest` with the EVAL-011-class `missing field parameters_digest` diagnostic; exact-revision Linux is required for executable proof. |
+| D01 adapter protocol focused tests | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo test -p pi-agent-adapter --test daemon_candidate_protocol --locked`: **20/20**. The omitted digest recomputes from WorkspaceSearch parameters; missing both remains rejected; unknown fields remain rejected. |
+| D02 kernel-server focused unit tests | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo test -p kernel-server --bin kernel-server --locked`: **341/341**. Tail-preserving redaction, `sk-` masking, and adapter exit-class separation all pass in the kernel-server unit suite. |
+| D02 Clippy | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo clippy -p pi-agent-adapter -p kernel-server --all-targets --locked -- -D warnings` completed without warnings. |
+| D03 formatting | exact `a9555325` on `DEV-LINUX-NATIVE-01` | `pass` | `cargo fmt --all -- --check` passed. |
 
 ## Remaining
 
-Run the focused D01/D02 Rust tests, Clippy, and fmt on an exact pushed revision
-in `DEV-LINUX-NATIVE-01`, then confirm the required Ubuntu CI result. Windows
-Rust validation remains `not-run by owner-directed Linux-only route`.
+Confirm the required Ubuntu CI result for the pushed branch head. Windows Rust
+validation remains `not-run by owner-directed Linux-only route`. A new live Pi
+evaluation requires a separately preregistered EVAL-012 campaign and must not
+reuse EVAL-011 runtime state.
