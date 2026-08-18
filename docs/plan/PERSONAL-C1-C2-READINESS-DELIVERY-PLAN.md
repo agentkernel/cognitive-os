@@ -5,7 +5,7 @@
   activated, C1/C2 paired benchmark readiness assessment
 - Current product task: `P2-T36` on
   `personal/P2-T36-c1-public-production-path`
-- Current C1 implementation checkpoint: `ae6fd82852c21d3bbddd1c024f738c1d21686e3e`
+- Current C1 implementation checkpoint: `6dd704f5ee9dcfce59519b2f3922cc4e568e00ab`
 - Last reconciled: 2026-08-18
 
 ## 1. Authority and use
@@ -49,6 +49,41 @@ reconciling the authoritative sources in section 1.
 | C2a-C2d public O-arm | blocked by P2-T36 dependency | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | After P2-T36 closes, run the first supported public path and register the smallest uncovered product gap. |
 | Pure-Pi P arm and frozen paired assets | not started | No new runner, corpus, broker, oracle, or campaign asset is in use. | Product O-arm readiness is a prerequisite; new EVAL activation remains owner-only. | Do not begin until the formal preparation boundary permits it. |
 | New C1/C2 campaign | not started / inactive | EVAL-004 through EVAL-010 remain closed and isolated. | No new EVAL ID, preregistration, root, port, SecretStore item, denominator, or sample is authorized by this plan. | Only a future owner activation may request a new preregistration and B0. |
+
+### 2.1 Delivery-stage progress table
+
+Use this table as the compact checkpoint ledger for a resumed session. A row is
+`complete` only when its stated evidence exists on the recorded exact revision;
+`in progress` means that a single next action is already identified; and
+`blocked` means the blocker and recovery route must be recorded in the running
+report before selecting unrelated work. `Not started` is not a failure.
+
+| Stage | Status | Exact evidence or durable fact | Exit criterion | Single next action |
+|---|---|---|---|---|
+| 0. Navigation and ownership | complete | This plan is linked from `PROGRESS.md` and is an exact active-lease path. | Current task, lease, revision, report, and next action reconcile. | Reconcile canonical sources before changing the table. |
+| 1. P2-T36 failure-first surface proof | complete | The missing `WorkspaceRead` Extension registration was observed as the expected failure before implementation. | A focused regression proves the new surface and native Pi deny policy. | Preserve the focused negative while changing D02. |
+| 2. WorkspaceRead candidate implementation | complete | Pi Extension registration, adapter event extraction, and protocol negatives are implemented; exact native adapter protocol test is **21/21 pass**. | WorkspaceRead and WorkspaceSearch can each produce one untrusted, schema-bound candidate while built-ins fail closed. | Exercise this implementation only through the real public composition. |
+| 3. Exact native source and toolchain | complete | Cleanable non-B01 Git worktree at `15557d18`; Rust 1.97.1, Node 22.19.0, and Pi 0.81.1 were verified for the initial D02 environment. | Before final evidence, checkout an exact pushed revision and record equality. | Refresh the cleanable worktree to the current pushed head before final validation. |
+| 4. Public Pi configuration | complete | `cognitive pi configure` created a non-secret, cleanable non-B01 `pi.json` using the pinned Pi, Extension, and adapter. | Daemon-owned readiness can inspect the configuration without direct Provider or secret handling by Pi. | Start the public daemon in the disposable runtime. |
+| 5. Daemon-owned readiness | in progress | No Provider or secret material has been accessed. | Public daemon start succeeds and public redacted doctor/status shows whether Pi launch is admitted. | Start `cognitive daemon start`; record only redacted status/doctor facts. |
+| 6. C1 WorkspaceRead public route | not started | Candidate and configuration prerequisites are present. | Public admit -> Context -> real Pi candidate -> lease -> executor -> verifier -> acceptance is separately observable. | Run one bounded WorkspaceRead route after readiness permits it. |
+| 7. C1 WorkspaceSearch public route | not started | Search candidate path existed before P2-T36 and remains covered by adapter negatives. | Same public lifecycle completes without borrowing WorkspaceRead evidence. | Run one bounded WorkspaceSearch route after the Read route is recorded. |
+| 8. Required CI and supported regressions | in progress | Initial Ubuntu verification passed; Windows retry is pending for the current branch. | Required CI is green on the final task head, or an independently reproducible task-owned defect is repaired. | Monitor the current PR checks and classify any failure precisely. |
+| 9. P2-T36 closure | not started | Draft PR and running report exist. | Acceptance mapping, report, handbook/docs sync, ready/merge, lease close, branch cleanup, and main reconciliation all complete. | Begin only after stages 5-8 pass on the same final pushed head. |
+| 10. C2 and paired-benchmark readiness | not started | C2a-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Select the first dependency-ready package only after P2-T36 closure. |
+
+### 2.2 Resume checklist
+
+Before executing the `Single next action` above, record the following facts in
+the running report if they changed since the prior session:
+
+- task branch, local `HEAD`, upstream `HEAD`, Draft PR URL/status, and current
+  CI run;
+- active lease and its exact writable paths;
+- remote host, disposable runtime root, and exact Git worktree revision;
+- completed/remaining validation units as `pass`, `fail`, `partial`, or
+  `not-run`; and
+- the one next action, including any concrete blocker recovery route.
 
 ## 3. Fixed boundaries
 
