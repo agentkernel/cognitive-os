@@ -75,7 +75,7 @@ test("registration queues the daemon provider and activates its model at session
     assert.equal(pi.providers.length, 1);
     assert.deepEqual(
       pi.tools.map((tool) => tool.name).sort(),
-      ["WorkspacePatch", "WorkspaceSearch", "WorkspaceWrite"],
+      ["WorkspacePatch", "WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite"],
     );
     assert.equal(pi.selectedModels.length, 0);
 
@@ -121,7 +121,7 @@ test("daemon Workspace* tools are registered and their execute path is I/O-free"
     const pi = new FakePi();
     await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
 
-    for (const toolName of ["WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
+    for (const toolName of ["WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
       const decision = await pi.driveToolCall(toolName);
       assert.equal(decision, undefined, `${toolName} must be allowed for Extension execute`);
     }
@@ -129,9 +129,9 @@ test("daemon Workspace* tools are registered and their execute path is I/O-free"
     assert.ok(bash);
     assert.equal(bash.block, true);
 
-    const search = pi.tools.find((tool) => tool.name === "WorkspaceSearch");
-    assert.ok(search);
-    const result = await search.execute("call-1", { query: "TODO", target: "workspace://personal/example" });
+    const read = pi.tools.find((tool) => tool.name === "WorkspaceRead");
+    assert.ok(read);
+    const result = await read.execute("call-1", { target: "workspace://personal/example" });
     assert.equal(result.content[0]?.text, DAEMON_WORKSPACE_QUEUED_RESULT);
   } finally {
     await daemon.close();

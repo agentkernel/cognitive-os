@@ -12,10 +12,12 @@
 import type { AgentToolResult, ExtensionToolDefinition } from "./pi-api.js";
 
 export const DAEMON_WORKSPACE_SEARCH = "WorkspaceSearch";
+export const DAEMON_WORKSPACE_READ = "WorkspaceRead";
 export const DAEMON_WORKSPACE_WRITE = "WorkspaceWrite";
 export const DAEMON_WORKSPACE_PATCH = "WorkspacePatch";
 
 export const DAEMON_GOVERNED_WORKSPACE_TOOL_NAMES: readonly string[] = [
+  DAEMON_WORKSPACE_READ,
   DAEMON_WORKSPACE_SEARCH,
   DAEMON_WORKSPACE_WRITE,
   DAEMON_WORKSPACE_PATCH,
@@ -54,6 +56,21 @@ export function isDaemonGovernedWorkspaceTool(toolName: string): boolean {
  */
 export function daemonGovernedWorkspaceTools(): readonly ExtensionToolDefinition[] {
   return [
+    {
+      name: DAEMON_WORKSPACE_READ,
+      label: "Workspace read (daemon-governed)",
+      description:
+        "Propose a bounded workspace read. CognitiveOS admits this as an untrusted candidate and executes it only through a daemon Intent/Effect. This tool does not read files.",
+      parameters: objectSchema(
+        {
+          target: { type: "string", description: "Workspace URI target" },
+        },
+        ["target"],
+      ),
+      async execute(): Promise<AgentToolResult> {
+        return queuedResult();
+      },
+    },
     {
       name: DAEMON_WORKSPACE_SEARCH,
       label: "Workspace search (daemon-governed)",

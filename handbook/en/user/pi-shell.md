@@ -29,7 +29,7 @@ non_claims:
 # The Pi shell
 
 `partial`: daemon-proxied conversation, readiness display, a status command, and
-advertised daemon-governed WorkspaceSearch/Write/Patch are implemented; Pi
+advertised daemon-governed WorkspaceRead/Search/Write/Patch are implemented; Pi
 native filesystem/shell tools stay refused. Resource/task browsing surfaces are
 deliberately not available in the shell yet.
 
@@ -52,7 +52,7 @@ extension emits it as a single block (text only; images/tool-calls are rejected)
 
 - `project_trust` is always denied. Pi's native bash/write/edit (and other
   built-ins) stay refused. The Extension advertises daemon-governed
-  WorkspaceSearch/WorkspaceWrite/WorkspacePatch whose execute path does not
+  WorkspaceRead/WorkspaceSearch/WorkspaceWrite/WorkspacePatch whose execute path does not
   touch the filesystem; the daemon admits those arguments as candidates on the
   Intent/Effect path. A JSON-only candidate from the model is not trusted as a
   digest: the adapter recomputes `parameters_digest` from `parameters` when

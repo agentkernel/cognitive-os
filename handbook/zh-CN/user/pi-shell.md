@@ -29,7 +29,7 @@ non_claims:
 # Pi 对话壳
 
 `partial`：经 daemon 代理的对话、readiness 展示、状态命令，以及对外广告的
-daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shell 工具仍被拒
+daemon 治理 WorkspaceRead/Search/Write/Patch 已实现；Pi 原生文件系统/shell 工具仍被拒
 绝。资源/任务浏览面有意尚未在 shell 中开放。
 
 ## 今天能用什么
@@ -49,7 +49,7 @@ daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shel
 ## 有意锁死的部分
 
 - `project_trust` 恒拒绝。Pi 原生 bash/write/edit（及其他内置工具）仍被拒绝。扩展
-  对外广告 daemon 治理的 WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
+  对外广告 daemon 治理的 WorkspaceRead/WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
   `execute` 不触碰文件系统；daemon 把这些参数作为 candidate 走 Intent/Effect。
   模型给出的纯 JSON candidate 不被信任为 digest：若带 `parameters`，适配器会重算
   `parameters_digest`（含模型省略、给出的空值或非法 digest）。adapter 诊断保留脱敏后的尾部真实错误，并以退出码区分 usage 失败（2）和运行时失败（3）。Pi 原生文件系统工具不是 C1/C2 测量臂。

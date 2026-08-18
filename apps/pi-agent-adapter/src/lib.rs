@@ -110,7 +110,7 @@ fn is_sha256_digest(value: &str) -> bool {
 /// Extract one strict candidate response from Pi's documented JSON print-mode
 /// event stream. Pi may emit lifecycle and streaming events. Eligible carriers
 /// are either one finalized assistant `message_end` JSON payload or exactly one
-/// daemon-governed WorkspaceSearch/Write/Patch `tool_execution_start`. Bash,
+/// daemon-governed WorkspaceRead/Search/Write/Patch `tool_execution_start`. Bash,
 /// edit, write, and any other tool fail closed. Mixed JSON-plus-Workspace* or
 /// two Workspace* calls fail closed.
 pub fn extract_daemon_candidate_response_from_pi_events(
@@ -191,7 +191,7 @@ pub fn extract_daemon_candidate_response_from_pi_events(
 fn is_daemon_governed_workspace_tool(tool_name: &str) -> bool {
     matches!(
         tool_name.trim().to_ascii_lowercase().as_str(),
-        "workspacesearch" | "workspacewrite" | "workspacepatch"
+        "workspaceread" | "workspacesearch" | "workspacewrite" | "workspacepatch"
     )
 }
 
@@ -210,8 +210,15 @@ fn workspace_tool_event_to_candidate(event: &Value) -> Result<DaemonCandidateRes
         .filter(|value| !value.is_empty())
         .ok_or_else(|| "Workspace* tool event is missing target".to_owned())?
         .to_owned();
-    let (tool_ref, action, operation_descriptor_id, parameters) =
+    let (tool_ref, action, operation_descriptor_id, parameters, parameters_digest) =
         match tool_name.trim().to_ascii_lowercase().as_str() {
+            "workspaceread" => (
+                "native.workspace.read",
+                "read",
+                "00000000-0000-7000-8000-000000002001",
+                None,
+                digest_candidate_parameters(&serde_json::json!({"family":"WorkspaceRead"}))?,
+            ),
             "workspacesearch" => {
                 let query = args
                     .get("query")
@@ -222,21 +229,45 @@ fn workspace_tool_event_to_candidate(event: &Value) -> Result<DaemonCandidateRes
                     "native.workspace.search",
                     "search",
                     "00000000-0000-7000-8000-000000002002",
-                    serde_json::json!({"family":"WorkspaceSearch","query": query}),
+                    Some(serde_json::json!({"family":"WorkspaceSearch","query": query})),
+                    digest_candidate_parameters(
+                        &serde_json::json!({"family":"WorkspaceSearch","query": query}),
+                    )?,
                 )
             }
-            "workspacewrite" => mutation_parameters(args, "WorkspaceWrite")?,
-            "workspacepatch" => mutation_parameters(args, "WorkspacePatch")?,
+            "workspacewrite" => {
+                let (tool_ref, action, descriptor, parameters) =
+                    mutation_parameters(args, "WorkspaceWrite")?;
+                let parameters_digest = digest_candidate_parameters(&parameters)?;
+                (
+                    tool_ref,
+                    action,
+                    descriptor,
+                    Some(parameters),
+                    parameters_digest,
+                )
+            }
+            "workspacepatch" => {
+                let (tool_ref, action, descriptor, parameters) =
+                    mutation_parameters(args, "WorkspacePatch")?;
+                let parameters_digest = digest_candidate_parameters(&parameters)?;
+                (
+                    tool_ref,
+                    action,
+                    descriptor,
+                    Some(parameters),
+                    parameters_digest,
+                )
+            }
             _ => {
                 return Err("Workspace* tool event named an unknown family".to_owned());
             }
         };
-    let parameters_digest = digest_candidate_parameters(&parameters)?;
     Ok(DaemonCandidateResponse {
         tool_ref: tool_ref.to_owned(),
         action: action.to_owned(),
         target,
-        parameters: Some(parameters),
+        parameters,
         parameters_digest,
         expected_state_version: 1,
         operation_descriptor_id: operation_descriptor_id.to_owned(),

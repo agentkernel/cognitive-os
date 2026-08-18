@@ -253,6 +253,30 @@ fn pi_print_events_reject_tool_execution_before_candidate_extraction() {
 }
 
 #[test]
+fn pi_print_events_accept_one_daemon_governed_workspace_read() {
+    let events = concat!(
+        r#"{"type":"tool_execution_start","toolCallId":"1","toolName":"WorkspaceRead","args":{"target":"workspace://personal/example"}}"#,
+        "\n",
+        r#"{"type":"tool_execution_end","toolCallId":"1","toolName":"WorkspaceRead","isError":false,"result":{"content":[{"type":"text","text":"queued"}]}}"#,
+        "\n"
+    );
+
+    let candidate =
+        extract_daemon_candidate_response_from_pi_events(events).expect("workspace read");
+
+    assert_eq!(candidate.tool_ref, "native.workspace.read");
+    assert_eq!(candidate.action, "read");
+    assert_eq!(candidate.target, "workspace://personal/example");
+    assert_eq!(
+        candidate.operation_descriptor_id,
+        "00000000-0000-7000-8000-000000002001"
+    );
+    assert_eq!(candidate.expected_state_version, 1);
+    assert_eq!(candidate.parameters, None);
+    assert!(candidate.parameters_digest.starts_with("sha256:"));
+}
+
+#[test]
 fn pi_print_events_accept_one_daemon_governed_workspace_search() {
     let events = concat!(
         r#"{"type":"tool_execution_start","toolCallId":"1","toolName":"WorkspaceSearch","args":{"query":"TODO","target":"workspace://personal/example"}}"#,

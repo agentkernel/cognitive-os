@@ -30,7 +30,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:b76197ba7d9faeb4493a3632c0086e87549c82edb81810896a4fa7e1e1ea648f"
+fingerprint: "sha256:fbbd8a96a9f27ab052faa6a821c46c5c2c805529cfe5295b4dc67178d1c8ef2f"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -81,8 +81,11 @@ locked-down Pi child: built-in filesystem/shell tools, skills, sessions and
 extension discovery disabled (`--no-builtin-tools`), env allowlist, one-shot
 private socketpair with byte caps and deadlines, structured `AdapterOutcome`
 (never authority state). The CognitiveOS Extension advertises daemon-governed
-WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
-P2-T21 candidate path. A JSON-fallback candidate still has its
+WorkspaceRead/Search/Write/Patch; their I/O-free Extension handlers emit only
+an untrusted candidate, and the adapter maps exactly one such tool call onto
+the daemon candidate path. WorkspaceRead carries only its workspace target;
+the parameterized families retain their bounded parameter handling. A
+JSON-fallback candidate still has its
 `parameters_digest` recomputed from `parameters` when present, including an
 omitted, empty, or otherwise invalid model-supplied digest; otherwise the
 digest must be `sha256:` plus 64 lowercase hex. The daemon treats the output as a candidate for
