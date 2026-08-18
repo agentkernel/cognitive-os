@@ -76,7 +76,7 @@ shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign obs
 单、带字节上限与截止的一次性私有 socketpair、结构化 `AdapterOutcome`（绝非权威状
 态）。CognitiveOS 扩展对外广告 daemon 治理的 WorkspaceSearch/Write/Patch；适配器把
 一次此类工具调用映射到 P2-T21 candidate 路径。JSON 回退 candidate 若带
-`parameters`，适配器会从参数重算 `parameters_digest`；否则 digest 必须是
+`parameters`，适配器会从参数重算 `parameters_digest`（含空 digest 或非法 digest）；否则 digest 必须是
 `sha256:` 加 64 位小写十六进制。daemon 把其输出当作待准入
 candidate——仅此而已。测试用 stub 适配器可以在 stdout 发出该未信任 candidate，而不连接
 Provider completion socket；daemon 仍校验 descriptor、digest 与授权。completion

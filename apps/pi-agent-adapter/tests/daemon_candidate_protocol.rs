@@ -130,6 +130,27 @@ fn daemon_candidate_response_recomputes_digest_from_workspace_search_parameters(
     assert_eq!(response.tool_ref, "native.workspace.search");
 }
 
+#[test]
+fn daemon_candidate_response_recomputes_digest_when_parameters_digest_is_empty() {
+    let supplied = serde_json::json!({
+        "tool_ref": "native.workspace.search",
+        "action": "search",
+        "target": "workspace://",
+        "parameters": {"family": "WorkspaceSearch", "query": "needle"},
+        "parameters_digest": "",
+        "expected_state_version": 1,
+        "operation_descriptor_id": "00000000-0000-7000-8000-000000002002",
+    });
+    let bytes = serde_json::to_vec(&supplied).expect("serialize candidate");
+
+    let response = parse_daemon_candidate_response(&bytes).expect("recompute empty digest");
+
+    assert_eq!(
+        response.parameters_digest,
+        "sha256:fa38ed3a81b5d77594862fe780acd8c0382b96171f007eb7a07916f7beba4fd5"
+    );
+}
+
 fn finalized_pi_event(candidate_response: &str) -> String {
     serde_json::json!({
         "type": "message_end",

@@ -83,7 +83,8 @@ private socketpair with byte caps and deadlines, structured `AdapterOutcome`
 (never authority state). The CognitiveOS Extension advertises daemon-governed
 WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
 P2-T21 candidate path. A JSON-fallback candidate still has its
-`parameters_digest` recomputed from `parameters` when present; otherwise the
+`parameters_digest` recomputed from `parameters` when present, including an
+empty or otherwise invalid model-supplied digest; otherwise the
 digest must be `sha256:` plus 64 lowercase hex. The daemon treats the output as a candidate for
 admission — nothing more. A test stub adapter may emit that untrusted candidate
 on stdout without connecting to the Provider completion socket; the daemon still
