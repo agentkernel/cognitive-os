@@ -55,10 +55,27 @@ fn main() {
             }
         },
         Err(error) => {
-            eprintln!("{error}\n{USAGE}");
-            std::process::exit(2);
+            if is_usage_error(&args) {
+                eprintln!("{error}\n{USAGE}");
+                std::process::exit(2);
+            }
+            eprintln!("{error}");
+            std::process::exit(3);
         }
     }
+}
+
+fn is_usage_error(args: &[String]) -> bool {
+    let Some((verb, rest)) = args.split_first() else {
+        return true;
+    };
+    if parse_flags(rest).is_err() {
+        return true;
+    }
+    !matches!(
+        verb.as_str(),
+        "run" | "evaluate" | "extension-load" | "daemon-candidate"
+    )
 }
 
 fn run(args: &[String]) -> Result<Value, String> {
@@ -188,7 +205,7 @@ fn read_daemon_candidate_request() -> Result<DaemonCandidateRequest, String> {
 
 fn candidate_prompt(request: &DaemonCandidateRequest) -> String {
     format!(
-        "Call exactly one of the CognitiveOS WorkspaceSearch, WorkspaceWrite, or WorkspacePatch tools. WorkspaceSearch arguments are query (string) and target (string). WorkspaceWrite and WorkspacePatch arguments are input_b64 (canonical base64), preimage (\"absent\" or digest:sha256:<64 lowercase hex>), and target (string). Do not call bash, edit, write, read, or any other Pi built-in. A JSON object with only tool_ref, action, target, parameters, parameters_digest, expected_state_version, and operation_descriptor_id remains an accepted fallback; the only parameter objects are {{\"family\":\"WorkspaceSearch\",\"query\":string}}, {{\"family\":\"WorkspaceWrite\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}, and {{\"family\":\"WorkspacePatch\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}. Context follows:\n{}",
+        "Call exactly one of the CognitiveOS WorkspaceSearch, WorkspaceWrite, or WorkspacePatch tools. WorkspaceSearch arguments are query (string) and target (string). WorkspaceWrite and WorkspacePatch arguments are input_b64 (canonical base64), preimage (\"absent\" or digest:sha256:<64 lowercase hex>), and target (string). Do not call bash, edit, write, read, or any other Pi built-in. A JSON object with only tool_ref, action, target, parameters, parameters_digest, expected_state_version, and operation_descriptor_id remains an accepted fallback; parameters_digest may be omitted because the adapter recomputes it from parameters. The only parameter objects are {{\"family\":\"WorkspaceSearch\",\"query\":string}}, {{\"family\":\"WorkspaceWrite\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}, and {{\"family\":\"WorkspacePatch\",\"input_b64\":canonical_base64,\"preimage\":\"absent\" or \"digest:sha256:<64 lowercase hex>\"}}. Context follows:\n{}",
         request.rendered_context
     )
 }
@@ -475,6 +492,17 @@ mod tests {
     }
 
     #[test]
+    fn usage_errors_include_usage_but_runtime_errors_do_not() {
+        assert!(is_usage_error(&[]));
+        assert!(is_usage_error(&["unknown".to_owned()]));
+        assert!(is_usage_error(&[
+            "daemon-candidate".to_owned(),
+            "--pi".to_owned(),
+        ]));
+        assert!(!is_usage_error(&["daemon-candidate".to_owned()]));
+    }
+
+    #[test]
     fn expired_local_native_provider_exception_is_rejected() {
         let error = parse_flags(&[format!("--{EXPIRED_LOCAL_NATIVE_PROVIDER_SECRET_FLAG}")])
             .expect_err("expired exception flag must fail closed");
@@ -569,6 +597,7 @@ mod tests {
             );
         }
         assert!(prompt.contains("digest:sha256:<64 lowercase hex>"));
+        assert!(prompt.contains("parameters_digest may be omitted"));
         assert!(prompt.contains("\"absent\""));
         assert!(prompt.contains("untrusted Context text"));
         assert!(!prompt.contains("wia"));

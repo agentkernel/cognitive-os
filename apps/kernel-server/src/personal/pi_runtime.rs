@@ -297,7 +297,10 @@ impl PrivatePiCandidateProcess {
             // The adapter never connected; do not wait out the completion
             // listener deadline before the skip class becomes a public fact.
             drop(socket);
-            return Err(adapter_rejection_message(&stderr_output));
+            return Err(adapter_rejection_message(
+                exit_status.code(),
+                &stderr_output,
+            ));
         }
         if output.len() <= PRIVATE_PI_CANDIDATE_FRAME_LIMIT
             && let Ok(parsed) = serde_json::from_slice::<PrivatePiCandidateResponse>(&output)
@@ -878,23 +881,37 @@ fn private_completion_socket_parent() -> PathBuf {
 }
 
 #[cfg(unix)]
-fn adapter_rejection_message(stderr: &[u8]) -> String {
+fn adapter_rejection_message(exit_code: Option<i32>, stderr: &[u8]) -> String {
     let diagnostic = redact_adapter_diagnostic(stderr);
+    let exit_class =
+        exit_code.map_or_else(|| "signal".to_owned(), |code| format!("exit code {code}"));
     if diagnostic.is_empty() {
-        "private Pi candidate adapter rejected the request".to_owned()
+        format!("private Pi candidate adapter rejected the request ({exit_class})")
     } else {
-        format!("private Pi candidate adapter rejected the request ({diagnostic})")
+        format!("private Pi candidate adapter rejected the request ({exit_class}; {diagnostic})")
     }
 }
 
 #[cfg(unix)]
 fn redact_adapter_diagnostic(raw: &[u8]) -> String {
-    let collapsed = String::from_utf8_lossy(raw)
-        .split_whitespace()
-        .take(48)
+    let decoded = String::from_utf8_lossy(raw);
+    let lines: Vec<&str> = decoded.lines().collect();
+    let diagnostic = lines
+        .iter()
+        .rev()
+        .take(4)
+        .rev()
+        .copied()
         .collect::<Vec<_>>()
         .join(" ");
-    let truncated: String = collapsed.chars().take(ADAPTER_DIAGNOSTIC_LIMIT).collect();
+    let truncated: String = diagnostic
+        .chars()
+        .rev()
+        .take(ADAPTER_DIAGNOSTIC_LIMIT)
+        .collect::<String>()
+        .chars()
+        .rev()
+        .collect();
     redact_secret_shaped_spans(&truncated)
 }
 
@@ -1159,11 +1176,29 @@ mod tests {
             !diagnostic.contains("sk-abcdefghijklmnopqrstuvwxyz0123456789"),
             "{diagnostic}"
         );
-        assert_eq!(
-            adapter_rejection_message(b""),
-            "private Pi candidate adapter rejected the request"
+        assert!(adapter_rejection_message(Some(2), b"").contains("exit code 2"));
+        assert!(adapter_rejection_message(Some(3), b"needle-class").contains("needle-class"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn adapter_rejection_diagnostic_preserves_tail_error_and_separates_exit_classes() {
+        let diagnostic = redact_adapter_diagnostic(
+            b"adapter usage preamble\nhelp text\nmissing field parameters_digest at line 1 column 118\n",
         );
-        assert!(adapter_rejection_message(b"needle-class").contains("needle-class"));
+        assert!(
+            diagnostic.contains("missing field parameters_digest at line 1 column 118"),
+            "{diagnostic}"
+        );
+        assert_eq!(
+            adapter_rejection_message(Some(2), b"usage\nmissing required flag"),
+            "private Pi candidate adapter rejected the request (exit code 2; usage missing required flag)"
+        );
+        assert!(
+            adapter_rejection_message(Some(3), b"daemon candidate Pi exited unsuccessfully")
+                .contains("exit code 3"),
+            "runtime adapter failures need a distinct skip subclass"
+        );
     }
 
     #[test]

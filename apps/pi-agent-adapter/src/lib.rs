@@ -37,6 +37,7 @@ pub struct DaemonCandidateResponse {
     pub target: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub parameters: Option<Value>,
+    #[serde(default)]
     pub parameters_digest: String,
     pub expected_state_version: i64,
     pub operation_descriptor_id: String,

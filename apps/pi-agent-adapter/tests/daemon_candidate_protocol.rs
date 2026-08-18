@@ -151,6 +151,66 @@ fn daemon_candidate_response_recomputes_digest_when_parameters_digest_is_empty()
     );
 }
 
+#[test]
+fn json_fallback_without_parameters_digest_key_is_recomputed_from_parameters() {
+    let supplied = serde_json::json!({
+        "tool_ref": "native.workspace.search",
+        "action": "search",
+        "target": "workspace://",
+        "parameters": {"family": "WorkspaceSearch", "query": "needle"},
+        "expected_state_version": 1,
+        "operation_descriptor_id": "00000000-0000-0000-0000-000000000001",
+    });
+
+    let response = parse_daemon_candidate_response(
+        &serde_json::to_vec(&supplied).expect("serialize candidate without digest"),
+    )
+    .expect("parameters must supply the canonical digest");
+
+    assert_eq!(
+        response.parameters_digest,
+        "sha256:fa38ed3a81b5d77594862fe780acd8c0382b96171f007eb7a07916f7beba4fd5"
+    );
+}
+
+#[test]
+fn json_fallback_without_digest_and_without_parameters_still_fails_closed() {
+    let supplied = serde_json::json!({
+        "tool_ref": "native.workspace.search",
+        "action": "search",
+        "target": "workspace://",
+        "expected_state_version": 1,
+        "operation_descriptor_id": "00000000-0000-0000-0000-000000000001",
+    });
+
+    let error = parse_daemon_candidate_response(
+        &serde_json::to_vec(&supplied).expect("serialize incomplete candidate"),
+    )
+    .expect_err("missing parameters and digest must be rejected");
+
+    assert_eq!(error, "daemon candidate response contains an empty field");
+}
+
+#[test]
+fn json_fallback_with_unknown_extra_field_still_fails_closed() {
+    let supplied = serde_json::json!({
+        "tool_ref": "native.workspace.search",
+        "action": "search",
+        "target": "workspace://",
+        "parameters": {"family": "WorkspaceSearch", "query": "needle"},
+        "expected_state_version": 1,
+        "operation_descriptor_id": "00000000-0000-0000-0000-000000000001",
+        "unexpected": true,
+    });
+
+    let error = parse_daemon_candidate_response(
+        &serde_json::to_vec(&supplied).expect("serialize candidate with extra field"),
+    )
+    .expect_err("unknown candidate fields must be rejected");
+
+    assert!(error.contains("invalid"), "{error}");
+}
+
 fn finalized_pi_event(candidate_response: &str) -> String {
     serde_json::json!({
         "type": "message_end",

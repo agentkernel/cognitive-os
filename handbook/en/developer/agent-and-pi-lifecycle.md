@@ -30,7 +30,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:578047dcecc993b855320bd7e7e57f3ac7d70c131fe9431b228567c5dd5bc1f7"
+fingerprint: "sha256:b76197ba7d9faeb4493a3632c0086e87549c82edb81810896a4fa7e1e1ea648f"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -84,7 +84,7 @@ private socketpair with byte caps and deadlines, structured `AdapterOutcome`
 WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
 P2-T21 candidate path. A JSON-fallback candidate still has its
 `parameters_digest` recomputed from `parameters` when present, including an
-empty or otherwise invalid model-supplied digest; otherwise the
+omitted, empty, or otherwise invalid model-supplied digest; otherwise the
 digest must be `sha256:` plus 64 lowercase hex. The daemon treats the output as a candidate for
 admission — nothing more. A test stub adapter may emit that untrusted candidate
 on stdout without connecting to the Provider completion socket; the daemon still
@@ -94,8 +94,9 @@ under `$XDG_RUNTIME_DIR/cognitiveos/` (then the process temp directory, then
 of daemon layout fail-closed behaviour when `XDG_RUNTIME_DIR` is absent. Linux
 candidate spawn forwards a host allowlist (`HOME`, locale, `XDG_RUNTIME_DIR`,
 TLS trust files) after `env_clear()` and never copies `DBUS_SESSION_BUS_ADDRESS`
-or Provider keys. Adapter/Pi stderr is retained on `daemon.log` after
-`sk-` / `api_key=` / `token=` redaction. The private-candidate Provider proxy
+or Provider keys. Adapter/Pi stderr retains its redacted tail error on
+`daemon.log`; exit code 2 denotes usage errors and exit code 3 denotes runtime
+failures, so a public skip stays attributable. The private-candidate Provider proxy
 strips `tools`/`tool_choice` before forward, accepts one text choice that may
 include `role=assistant`, and refuses `tool_calls`.
 

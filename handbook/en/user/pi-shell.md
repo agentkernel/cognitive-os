@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:00705b89b61084a807f063557efd304961dd7513a47ae8542f4feed9943b9055"
+fingerprint: "sha256:eadc35339fb4bd280836f598f2668c802c7cde2db1cfae26dd86937f4fceda87"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -56,7 +56,7 @@ extension emits it as a single block (text only; images/tool-calls are rejected)
   touch the filesystem; the daemon admits those arguments as candidates on the
   Intent/Effect path. A JSON-only candidate from the model is not trusted as a
   digest: the adapter recomputes `parameters_digest` from `parameters` when
-  present, including an empty or otherwise invalid model-supplied digest. Pi native filesystem tools are not the C1/C2 arm.
+  present, including an omitted, empty, or otherwise invalid model-supplied digest. Adapter diagnostics preserve a redacted tail error and distinguish usage failures (exit 2) from runtime failures (exit 3). Pi native filesystem tools are not the C1/C2 arm.
 - No resource browsing, task submission, or watch UI inside Pi yet: those client
   methods exist in `PersonalDaemonClient` and the CLI (`cognitive resource|task`),
   but are not wired into shell UX.

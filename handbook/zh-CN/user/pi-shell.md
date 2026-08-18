@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:00705b89b61084a807f063557efd304961dd7513a47ae8542f4feed9943b9055"
+fingerprint: "sha256:eadc35339fb4bd280836f598f2668c802c7cde2db1cfae26dd86937f4fceda87"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -52,7 +52,7 @@ daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shel
   对外广告 daemon 治理的 WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
   `execute` 不触碰文件系统；daemon 把这些参数作为 candidate 走 Intent/Effect。
   模型给出的纯 JSON candidate 不被信任为 digest：若带 `parameters`，适配器会重算
-  `parameters_digest`（含模型给出的空 digest 或非法 digest）。Pi 原生文件系统工具不是 C1/C2 测量臂。
+  `parameters_digest`（含模型省略、给出的空值或非法 digest）。adapter 诊断保留脱敏后的尾部真实错误，并以退出码区分 usage 失败（2）和运行时失败（3）。Pi 原生文件系统工具不是 C1/C2 测量臂。
 - Pi 内尚无资源浏览、任务提交或 watch UI：这些客户端方法存在于
   `PersonalDaemonClient` 与 CLI（`cognitive resource|task`），但未接入 shell UX。
 - 模型参数由 daemon 的 selected model 固定。只有 Provider 返回完整且内部一致的计数
