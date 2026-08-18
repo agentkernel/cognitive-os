@@ -60,6 +60,10 @@ non_claims:
   `state/cognitiveos/daemon.log` (mode `0600`); scheduler skip lines are not a
   public HTTP fact. A private-candidate adapter rejection is retained there as a
   redacted diagnostic (`sk-` / `api_key=` / `token=` spans stripped).
+- `cognitive pi launch --print` is the bounded non-interactive Pi path: it keeps
+  the public CLI attached while Pi reads its prompt from stdin and exits. It still
+  requires the daemon's full ready projection, passes no Provider credential to
+  Pi, and must not be substituted with direct daemon/private-candidate calls.
 
 ## Stop, restart, stale state — `implemented`
 

@@ -85,6 +85,10 @@ cognitive pi launch
 Launch is fail-closed: it requires all doctor components ready and the exact pinned
 Pi version, passes only `--extension`, and never hands Pi a Provider key. Your first
 message flows Pi → daemon Provider proxy → Provider; see [The Pi shell](./pi-shell.md).
+For a bounded non-interactive conversation, use `cognitive pi launch --print` and
+provide the prompt on stdin. The CLI remains attached until the pinned Pi process
+exits; the prompt is not a Provider credential and no Provider key is placed in
+the command line or environment.
 
 ## Failure exits worth knowing
 
