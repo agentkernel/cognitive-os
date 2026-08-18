@@ -49,25 +49,24 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | Step | Status | Note |
 |---|---|---|
 | EVAL-010 remains closed | **pass** | do not reopen; do not reuse `/19` / `48298` / `perfeval010-20260818` runtime |
-| Evaluation lease claimed | `in-progress` | claimed 2026-08-18; Current snapshot row `PERSONAL-PERF-EVAL-011` **active** |
-| Product source pin | **pass** (declared) | `106cfcc06255fe562d455b9a5c1f0862e9994b5a` |
-| Source archive + SHA-256 | `not-run` | `git archive` of exact `106cfcc0`; `scp` copy; 0 `.git/` members |
-| New campaign root/port | `not-run` | `/home/hal9001/perfeval011-20260818` mode `0700`; daemon `127.0.0.1:48300` |
-| Exact-source daemon/CLI binaries | `not-run` | `DEV-LINUX-NATIVE-01` `CARGO_NET_OFFLINE=true` dedicated `CARGO_TARGET_DIR` `cargo build --release --locked` |
-| Campaign daemon on `48300` | `not-run` | public `cognitive daemon start --bind 127.0.0.1:48300` |
-| New SecretStore entry | `not-run` | product stdin import; D-Bus `SearchItems` paths only; never `secret-tool search`/`lookup` |
-| Local Pi `0.81.1` pin | `not-run` | `--extension` absolute; doctor ready ≠ C1/C2 |
-| Exact-source `pi-agent-adapter` | `not-run` | real adapter, not a stub |
-| `cognitive doctor` | `not-run` | readiness only; **not** a C1/C2 pass |
+| Evaluation lease claimed | **pass** | claimed 2026-08-18; Current snapshot row `PERSONAL-PERF-EVAL-011` **active** |
+| Product source pin | **pass** | `106cfcc06255fe562d455b9a5c1f0862e9994b5a` |
+| Source archive + SHA-256 | **pass** | `git archive --format=zip` of exact `106cfcc0`; 4,589,620 bytes; SHA-256 `47ba70be6b82fe210a51c5cde4e3d0335b2270723797a38db3d6448eaee28f8d`. Copied with `scp` (PowerShell pipes corrupt tar) |
+| New campaign root/port | **pass** | `/home/hal9001/perfeval011-20260818` mode `0700`; daemon `127.0.0.1:48300` pid 291495. Listeners `48181`/`48284`/`48383` untouched |
+| Exact-source daemon/CLI binaries | **pass** | `DEV-LINUX-NATIVE-01` `CARGO_NET_OFFLINE=true` dedicated `CARGO_TARGET_DIR` `cargo build --release --locked` in 1m 44s; Rust 1.97.1. `kernel-server` SHA-256 `24b78883500e4c75cddb59c98e89c457f9f9da63e3302fec34862382e4887330`; `cognitive` `04ba65b1ffcd4a50cfcff4b6d3e857b7e6f9c4694f428a78df32d81e4f77a0e7`; `pi-agent-adapter` `3e7924deeeca901e21cc4203960125938ab76688e89a52f4abe600ea0fbfd6cd`. `ldd` glibc/`libgcc`/`libm` only |
+| Campaign daemon on `48300` | **pass** | public `cognitive daemon start --bind 127.0.0.1:48300`; pid `291495`; start JSON `log_path` `…/runtime/state/cognitiveos/daemon.log` mode `0600` |
+| New SecretStore entry | **pass** | product stdin import into **new** item `/org/freedesktop/secrets/collection/login/20`. `busctl --user tree` paths only; never `secret-tool search`/`lookup` |
+| Local Pi `0.81.1` pin | **pass** | `--extension` absolute; package/pinned/observed `0.81.1` |
+| Exact-source `pi-agent-adapter` | **pass** | real adapter, not a stub; SHA-256 `3e7924deeeca901e21cc4203960125938ab76688e89a52f4abe600ea0fbfd6cd`; `o-arm-candidate.mjs` `29870821488451b5728f88c4612e1616fd65681adaf23011dd898d459428e573` |
+| `cognitive doctor` | **pass** (readiness only) | all required components `ready`; Pi `0.81.1`; `first_conversation_ready: true`; **not** a C1/C2 pass |
 | C1/C2 paired B0 | `not-run` | after freeze pass |
 | C1/C2 paired B1/B2 | `not-run` | after B0 path/fairness |
 | Cleanup / campaign close | `not-run` | stop `48300`; clear SecretStore item; leave `48181`/`48284`/`48383` and prior EVAL roots |
 
 ## Unique next action
 
-Freeze exact `106cfcc0` binaries onto the long guest root and import a new
-SecretStore item via stdin. Then run B0 C1 WorkspaceSearch O-arm. Do not
-reopen EVAL-010.
+Run B0 C1 WorkspaceSearch O-arm against daemon `48300`. Do not reopen
+EVAL-010. Doctor ready ≠ C1/C2.
 
 Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
 or Agent-benefit promotion.
