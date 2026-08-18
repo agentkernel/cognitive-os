@@ -21,11 +21,15 @@ Results are appended immediately after each completed validation unit.
 | D01 exact-revision push | local Git transport | partial | Checkpoint `6e7e4197` committed, but `git push -u origin HEAD` could not connect to GitHub through the configured loopback proxy. No supported Linux runtime validation has started because it must consume a pushed exact revision. Retry the normal push path before invoking `DEV-LINUX-NATIVE-01`; no force push or alternate source copy is permitted. |
 | D01 transport recovery retry | local Git transport | partial | A second normal `git push -u origin HEAD` and a one-command no-config-override retry (`git -c http.proxy= -c https.proxy= push -u origin HEAD`) both failed with the same connection refusal via `127.0.0.1:443`. The current session has no `*PROXY` environment variables and no repository-level `http.proxy`/`https.proxy` setting. The fault remains external to task-owned code. |
 | D01 exact-revision delivery recovery | GitHub HTTPS | pass | The normal `git push -u origin HEAD` succeeded after connectivity was restored. `origin/personal/P2-T36-c1-public-production-path` now contains product checkpoint `ae6fd828`; the next supported validation must check out that exact product commit from Git rather than copy local files. |
+| D01 exact-worktree provisioning | `DEV-LINUX-NATIVE-01` | pass | Direct full and HTTP/1.1 clone attempts were transiently unavailable or below Git's transfer floor. A clean shallow Git clone of the pushed branch then completed at `/home/wuz/p2-t36-c1`; `git rev-parse HEAD` was `15557d18d5efa5a38e5c2948545742e07d53db81`, matching the pushed task head. The pre-existing `/home/wuz/agent-kernel` source directory has no `.git` metadata and was not used. |
+| D01 adapter WorkspaceRead protocol | `DEV-LINUX-NATIVE-01` exact `15557d18` | pass | `cargo test -p pi-agent-adapter --test daemon_candidate_protocol --locked` completed **21/21**. This includes `pi_print_events_accept_one_daemon_governed_workspace_read` and the existing duplicate/mixed candidate, Pi-built-in, unknown digest, missing digest, authority-field, and oversized-context negatives. It proves adapter protocol parsing only, not public daemon admission, scheduler lease, dispatch, verification, acceptance, real Provider/Pi execution, C1, B01, or a paired benchmark. |
+| D01 supporting CI | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` exact `15557d18` | partial | Ubuntu verification passed. Windows failed only in existing unrelated `personal::p2_t17_a7_failure_first::post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance` (`Indeterminate` observed where `ReconciledExecuted` was asserted); required-ci therefore failed. The failed job was rerun before any task-owned code change. This is not evidence for the pending real Pi public path. |
 
 ## Remaining
 
 WorkspaceRead extension registration and adapter extraction are implemented,
-and product checkpoint `ae6fd828` is pushed. Create or update the task Draft
-PR, then run the public production-path validation on an exact Git worktree at
-`DEV-LINUX-NATIVE-01`. No B01 guest, Provider sample, paired runner, or
-evaluation campaign is used by this task.
+the exact Git worktree is prepared, and Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244)
+exists. Continue D02 by exercising the real Pi/public `cognitive daemon start`
+path on that worktree, recording candidate validation, scheduler lease,
+dispatch, verification, and acceptance separately. No B01 guest, Provider
+sample, paired runner, or evaluation campaign is used by this task.
