@@ -14,6 +14,7 @@ use super::StatusOptions;
 use super::layout::build_layout;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
+const DAEMON_LOG_FILE_NAME: &str = "daemon.log";
 
 /// Start `kernel-server --personal` under the resolved layout.
 pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
@@ -21,6 +22,8 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
     layout
         .ensure_directories()
         .map_err(|error| format!("unable to create runtime directories: {error}"))?;
+
+    let log_path = daemon_log_path(&layout);
 
     if layout.daemon_lock_path().exists() {
         if process_from_lock_alive(&layout)? {
@@ -30,7 +33,8 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
                 "surface": "cognitive-daemon",
                 "action": "already_running",
                 "endpoint": endpoint,
-                "lock_path": layout.daemon_lock_path().display().to_string()
+                "lock_path": layout.daemon_lock_path().display().to_string(),
+                "log_path": log_path.display().to_string()
             }));
         }
         return Err(format!(
@@ -42,11 +46,14 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
 
     ensure_loopback_bind(&options.bind_address)?;
     let kernel_server = resolve_kernel_server_path(options.kernel_server_path.as_deref())?;
+    let log_file = open_daemon_log(&layout)?;
     let mut child = spawn_detached_kernel_server(
         &kernel_server,
         &options.bind_address,
         options.layout_roots.runtime_root.as_deref(),
+        &log_file,
     )?;
+    drop(log_file);
 
     // Windows MSVC debug and cold disks can take longer than a tight local loop.
     for _ in 0..250 {
@@ -66,24 +73,26 @@ pub fn start(options: &DaemonStartOptions) -> Result<Value, String> {
                 "pid": daemon_pid,
                 "kernel_server": kernel_server.display().to_string(),
                 "lock_path": layout.daemon_lock_path().display().to_string(),
+                "log_path": log_path.display().to_string(),
                 "profile_claim": "not-claimed",
                 "gate_claim": "not-claimed"
             }));
         }
         if let Ok(Some(status)) = child.try_wait() {
             return Err(format!(
-                "kernel-server exited before becoming ready (status {status:?})"
+                "kernel-server exited before becoming ready (status {status:?}); inspect {}",
+                log_path.display()
             ));
         }
         thread::sleep(Duration::from_millis(20));
     }
 
     let _ = child.kill();
-    Err(
-        "Personal daemon did not publish lock/bootstrap within timeout; check bind address \
-         and runtime permissions"
-            .to_owned(),
-    )
+    Err(format!(
+        "Personal daemon did not publish lock/bootstrap within timeout; inspect {} \
+         and check bind address and runtime permissions",
+        log_path.display()
+    ))
 }
 
 /// Report whether the daemon lock and endpoint look live.
@@ -183,6 +192,60 @@ fn endpoint_path(layout: &PersonalDataLayout) -> PathBuf {
     layout.state_dir().join(ENDPOINT_FILE_NAME)
 }
 
+fn daemon_log_path(layout: &PersonalDataLayout) -> PathBuf {
+    layout.state_dir().join(DAEMON_LOG_FILE_NAME)
+}
+
+fn open_daemon_log(layout: &PersonalDataLayout) -> Result<fs::File, String> {
+    let path = daemon_log_path(layout);
+    if let Some(parent) = path.parent() {
+        fs::create_dir_all(parent).map_err(|error| {
+            format!(
+                "unable to create daemon.log directory {}: {error}",
+                parent.display()
+            )
+        })?;
+    }
+    let mut options = fs::OpenOptions::new();
+    options.create(true).append(true);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::OpenOptionsExt;
+        options.mode(0o600);
+    }
+    let file = options.open(&path).map_err(|error| {
+        format!(
+            "unable to open daemon.log at {} for append: {error}",
+            path.display()
+        )
+    })?;
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::PermissionsExt;
+        fs::set_permissions(&path, fs::Permissions::from_mode(0o600)).map_err(|error| {
+            format!(
+                "unable to set daemon.log mode 0600 at {}: {error}",
+                path.display()
+            )
+        })?;
+    }
+    Ok(file)
+}
+
+fn redirect_kernel_server_stdio(command: &mut Command, log_file: &fs::File) -> Result<(), String> {
+    let stdout = log_file
+        .try_clone()
+        .map_err(|error| format!("unable to clone daemon.log for stdout: {error}"))?;
+    let stderr = log_file
+        .try_clone()
+        .map_err(|error| format!("unable to clone daemon.log for stderr: {error}"))?;
+    command
+        .stdin(Stdio::null())
+        .stdout(Stdio::from(stdout))
+        .stderr(Stdio::from(stderr));
+    Ok(())
+}
+
 fn ensure_loopback_bind(bind_address: &str) -> Result<(), String> {
     let allowed = bind_address.starts_with("127.")
         || bind_address.starts_with("[::1]")
@@ -199,14 +262,21 @@ fn spawn_detached_kernel_server(
     kernel_server: &Path,
     bind_address: &str,
     runtime_root: Option<&Path>,
+    log_file: &fs::File,
 ) -> Result<std::process::Child, String> {
     let arguments = kernel_server_arguments(bind_address, runtime_root)?;
     let mut command = Command::new(kernel_server);
-    command
-        .args(&arguments)
-        .stdin(Stdio::null())
-        .stdout(Stdio::null())
-        .stderr(Stdio::null());
+    command.args(&arguments);
+    redirect_kernel_server_stdio(&mut command, log_file)?;
+
+    #[cfg(unix)]
+    {
+        use std::os::unix::process::CommandExt;
+        // New process group on the CLI spawn path so the daemon outlives the
+        // short-lived `cognitive` process. systemd Type=simple starts
+        // kernel-server directly and is not this path.
+        command.process_group(0);
+    }
 
     // Detach so the daemon outlives the short-lived `cognitive daemon start`
     // process under shells and CI job objects (Windows).
@@ -231,12 +301,9 @@ fn spawn_detached_kernel_server(
                 const CREATE_NEW_PROCESS_GROUP: u32 = 0x0000_0200;
                 const DETACHED_PROCESS: u32 = 0x0000_0008;
                 let mut fallback = Command::new(kernel_server);
-                fallback
-                    .args(&arguments)
-                    .stdin(Stdio::null())
-                    .stdout(Stdio::null())
-                    .stderr(Stdio::null())
-                    .creation_flags(CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
+                fallback.args(&arguments);
+                redirect_kernel_server_stdio(&mut fallback, log_file)?;
+                fallback.creation_flags(CREATE_NEW_PROCESS_GROUP | DETACHED_PROCESS);
                 if let Ok(child) = fallback.spawn() {
                     return Ok(child);
                 }
@@ -421,5 +488,50 @@ mod tests {
                 "/tmp/cognitiveos-hermetic-root".to_owned(),
             ]
         );
+    }
+
+    #[test]
+    fn daemon_log_lives_under_layout_state_dir() {
+        let layout = PersonalDataLayout::from_xdg_roots(
+            "/tmp/cfg",
+            "/tmp/data",
+            "/tmp/state",
+            "/tmp/cache",
+            "/tmp/run",
+        );
+
+        assert_eq!(
+            daemon_log_path(&layout),
+            layout.state_dir().join("daemon.log")
+        );
+    }
+
+    #[test]
+    fn open_daemon_log_creates_an_append_file_under_state_dir() {
+        let root = tempfile::tempdir().expect("tempdir");
+        let layout = PersonalDataLayout::from_xdg_roots(
+            root.path().join("config"),
+            root.path().join("data"),
+            root.path().join("state"),
+            root.path().join("cache"),
+            root.path().join("run"),
+        );
+        layout.ensure_directories().expect("layout directories");
+
+        let file = open_daemon_log(&layout).expect("open daemon.log");
+        drop(file);
+
+        let path = daemon_log_path(&layout);
+        assert!(path.is_file(), "missing {}", path.display());
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::PermissionsExt;
+            let mode = std::fs::metadata(&path)
+                .expect("metadata")
+                .permissions()
+                .mode()
+                & 0o777;
+            assert_eq!(mode, 0o600, "daemon.log must be mode 0600");
+        }
     }
 }

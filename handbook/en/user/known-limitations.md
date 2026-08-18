@@ -12,7 +12,8 @@ sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-fingerprint: "sha256:05bf440caeb0e8a869868e80acf2b53b6e08d0421f4634f53dae4800cccdc1cc"
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+fingerprint: "sha256:d593709bbd7726e963c511d01bf0f6b7abf0e8d5a84d2cc55e1319c1b72f81ae"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -51,6 +52,10 @@ current fact of the code.
   `admin-cli install --mode official` usage omits the required `--package-id`.
 - `kernel-server --personal` alone defaults to an ephemeral port (`127.0.0.1:0`);
   the canonical `48181` comes from `cognitive daemon start`.
+- `cognitive doctor` `first_conversation_ready` is conversation-shell readiness,
+  not C1/C2 Task lifecycle; an admitted Task can stay `DRAFT` until the scheduler
+  acquires a lease. CLI `cognitive daemon start` retains kernel-server stdio in
+  `state/cognitiveos/daemon.log` rather than `/dev/null`.
 - Readiness can say `ready` while your Provider key is stale (no live probe).
 - Migration-backup files under `state/backups/` accumulate without pruning.
 - A crashed migration can leave a stale `migration.lock` requiring manual removal.

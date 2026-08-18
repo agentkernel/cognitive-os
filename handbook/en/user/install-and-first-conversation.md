@@ -16,6 +16,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
 fingerprint: "sha256:f543ba606e59b310562b3f241c4b8b140dfb8ff82d9da65d257964ec6da8f5fe"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
@@ -68,7 +69,11 @@ cognitive doctor                # redacted diagnostics
 ```
 
 `first_conversation_ready` in the status output additionally requires Pi
-configuration; overall readiness does not.
+configuration; overall readiness does not. That flag is conversation-shell
+readiness, not C1/C2 Task progress: an admitted Task can stay `DRAFT` until the
+scheduler acquires a lease. CLI `cognitive daemon start` appends kernel-server
+stdout/stderr to `state/cognitiveos/daemon.log` (mode `0600` under the Personal
+state directory). systemd `Type=simple` still uses the journal.
 
 ## 4. Configure and launch Pi
 

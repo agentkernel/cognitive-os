@@ -16,6 +16,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
 fingerprint: "sha256:f543ba606e59b310562b3f241c4b8b140dfb8ff82d9da65d257964ec6da8f5fe"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
@@ -61,6 +62,10 @@ cognitive doctor                # 脱敏诊断
 ```
 
 status 输出中的 `first_conversation_ready` 额外要求 Pi 已配置；整体 readiness 不要求。
+该标志是对话壳就绪，不是 C1/C2 Task 进度：已准入 Task 在调度器拿到 lease 之前可以一直
+停在 `DRAFT`。CLI `cognitive daemon start` 把 kernel-server 的 stdout/stderr 追加到
+`state/cognitiveos/daemon.log`（Personal state 目录下权限 `0600`）。systemd
+`Type=simple` 仍走 journal。
 
 ## 4. 配置并启动 Pi
 

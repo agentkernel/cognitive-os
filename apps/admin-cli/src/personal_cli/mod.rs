@@ -677,6 +677,7 @@ Hard rules:
   - Pi configuration writes only non-secret executable and Extension paths
   - Pi launch requires daemon-owned ready state and passes only --extension
   - never advances Task/Effect/Verification authority state
+  - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
   - --allow-ephemeral-secret-backend is for hermetic tests only
 

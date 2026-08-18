@@ -13,8 +13,9 @@ sources:
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:926a94ec492b5631a1876f37e14d6bd49d6ed698d13e2d431dd4dcd9f1abc2c1"
+fingerprint: "sha256:dac1a24dc3bf5c47c1a7873c14f8e3afde58898dffe74f0eb9382d675935cc77"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -30,7 +31,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive init` | 准备 XDG 布局与数据库（带备份），把 Provider key 存入 Secret Service，探测 Provider，持久化 `provider.json` 与 `selected-model.json` |
 | `cognitive status` | 已认证的组件投影（system、database、secret、provider、daemon、pi） |
 | `cognitive doctor` | 同一投影外加脱敏诊断小节 |
-| `cognitive daemon start` | 启动绑定 `127.0.0.1:48181` 的 `kernel-server --personal`（可用 `--bind`、`--kernel-server` 或 `COGNITIVE_KERNEL_SERVER` 覆盖） |
+| `cognitive daemon start` | 启动绑定 `127.0.0.1:48181` 的 `kernel-server --personal`（可用 `--bind`、`--kernel-server` 或 `COGNITIVE_KERNEL_SERVER` 覆盖）；stdout/stderr 追加到 `state/cognitiveos/daemon.log`（权限 `0600`） |
 | `cognitive daemon status` | 报告 daemon 锁/endpoint 存活状态 |
 | `cognitive daemon stop` | 向记录的 PID 发信号；确认退出后才移除锁与 endpoint |
 | `cognitive pi configure` | 写非 secret 的 `pi.json`（可执行文件与扩展入口的绝对路径） |
