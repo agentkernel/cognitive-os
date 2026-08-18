@@ -119,7 +119,7 @@ supported scope.
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 95 | 87 | 1 | 1 | 6 | 8 |
+| 95 | 88 | 0 | 1 | 6 | 7 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
