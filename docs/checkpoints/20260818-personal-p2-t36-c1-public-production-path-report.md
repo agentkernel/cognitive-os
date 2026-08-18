@@ -26,14 +26,15 @@ Results are appended immediately after each completed validation unit.
 | D01 supporting CI | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` exact `15557d18` | partial | Ubuntu verification passed. Windows failed only in existing unrelated `personal::p2_t17_a7_failure_first::post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance` (`Indeterminate` observed where `ReconciledExecuted` was asserted); required-ci therefore failed. The failed job was rerun before any task-owned code change. This is not evidence for the pending real Pi public path. |
 | D02 real-adapter prerequisites | `DEV-LINUX-NATIVE-01` exact `15557d18` | partial | `pnpm install --frozen-lockfile`, `pnpm --filter @cognitiveos/pi-cognitiveos build`, and `cargo build -p pi-agent-adapter --locked` passed in the exact Git worktree. The final non-secret `command -v pi` probe found no Pi executable on the host PATH, so no `cognitive pi configure`, daemon start, Provider readiness, or real Pi candidate attempt began. Locate or install only the pinned Pi `0.81.1` through an approved non-secret package path before configuring the disposable product runtime. |
 | D02 pinned Pi environment recovery | `DEV-LINUX-NATIVE-01` | partial | `pnpm setup` registered the user-level PNPM home in `/home/wuz/.bashrc`; no repository file or secret path changed. The first global install was rejected because that bin directory was absent from the noninteractive PATH. A corrected `PNPM_HOME`/PATH install of `@earendil-works/pi-coding-agent@0.81.1` downloaded its pinned dependency graph but made no progress after link completion for more than 60 seconds, so the stalled SSH command was stopped. No Pi executable/version confirmation, `pi configure`, daemon, Provider, or candidate execution occurred. Retry from the installed package state with a bounded noninteractive verification before any public product attempt. |
+| D02 Pi runtime configuration | `DEV-LINUX-NATIVE-01` exact `15557d18` | pass | A bounded retry confirmed `/home/wuz/.local/share/pnpm/bin/pi` reports pinned version `0.81.1`. On the same exact Git worktree, `cargo build -p admin-cli --locked` passed and public `cognitive pi configure` created a cleanable non-B01 runtime's non-secret `pi.json`, referencing the pinned Pi binary, built Extension, and built candidate adapter. This configures no Provider material and does not launch Pi or the daemon. |
 
 ## Remaining
 
 WorkspaceRead extension registration and adapter extraction are implemented,
-the exact Git worktree is prepared, and Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244)
-exists. The non-secret build prerequisites pass, but the pinned Pi executable
-is not currently on the native host PATH. Recover that approved runtime path,
-then exercise the real Pi/public `cognitive daemon start` path on the exact
-worktree, recording candidate validation, scheduler lease, dispatch,
-verification, and acceptance separately. No B01 guest, Provider sample,
-paired runner, or evaluation campaign is used by this task.
+the exact Git worktree and cleanable non-B01 Pi configuration are prepared, and
+Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) exists.
+Continue D02 by starting the public daemon and using the configured real Pi
+path only after daemon-owned readiness admits it. Record candidate validation,
+scheduler lease, dispatch, verification, and acceptance separately. No B01
+guest, Provider sample, paired runner, or evaluation campaign is used by this
+task.
