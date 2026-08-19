@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:35cf1b05710c30a03eacca1b5e85ea325c89cb283e2706a5138503c830e54ac3"
+fingerprint: "sha256:22c4eba394fd5586855d0bf8fdb789480038552bcfc823e227ba903ae3f6bce8"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -37,8 +37,9 @@ deliberately not available in the shell yet.
 
 Launch Pi through `cognitive pi launch`. It loads only the configured Extension,
 uses Pi's explicit tool allowlist to exclude Pi-native tools, and leaves only daemon-governed Workspace tools available
-to the conversation. Its fixed Pi allowlist contains only `WorkspaceRead` and
-`WorkspaceSearch`; it never activates Pi's native file or shell tools. With
+to the conversation. Its fixed Pi allowlist contains only `WorkspaceRead`,
+`WorkspaceSearch`, `WorkspaceWrite`, and `WorkspacePatch`; it never activates
+Pi's native file or shell tools. With
 `--runtime-root`, the CLI maps its hermetic layout roots into Pi's XDG environment
 so the Extension resolves that runtime's endpoint and local bootstrap secret. The
 CognitiveOS extension uses Pi's required runtime tool schemas before it exposes

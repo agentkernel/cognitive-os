@@ -39,8 +39,10 @@ import {
 } from "./status.js";
 import { decideToolCall } from "./tool-policy.js";
 import {
+  DAEMON_WORKSPACE_PATCH,
   DAEMON_WORKSPACE_READ,
   DAEMON_WORKSPACE_SEARCH,
+  DAEMON_WORKSPACE_WRITE,
   daemonGovernedWorkspaceTools,
   type PublicCandidateSubmitter,
 } from "./workspace-tools.js";
@@ -48,6 +50,8 @@ import {
 const PUBLIC_DAEMON_GOVERNED_TOOL_NAMES = [
   DAEMON_WORKSPACE_READ,
   DAEMON_WORKSPACE_SEARCH,
+  DAEMON_WORKSPACE_WRITE,
+  DAEMON_WORKSPACE_PATCH,
 ] as const;
 
 /** Deny project trust unconditionally; governed mode authorizes nothing via Pi. */
@@ -77,7 +81,7 @@ export async function registerCognitiveOsExtension(
   const taskRef = options.taskRef ?? client.readPublicTaskRef();
   const candidateSubmitter = taskRef === undefined
     ? undefined
-    : publicCandidateSubmitter(client, taskRef);
+    : createPublicCandidateSubmitter(client, taskRef);
   pi.on("before_agent_start", async () => {
     activateDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
   });
@@ -127,7 +131,7 @@ function registerDaemonGovernedWorkspaceTools(
   }
 }
 
-function publicCandidateSubmitter(
+export function createPublicCandidateSubmitter(
   client: PersonalDaemonClient,
   taskRef: string,
 ): PublicCandidateSubmitter {
@@ -139,23 +143,68 @@ function publicCandidateSubmitter(
       }
       const query = parameters["query"];
       const isSearch = toolName === DAEMON_WORKSPACE_SEARCH;
+      const isWrite = toolName === DAEMON_WORKSPACE_WRITE;
+      const isPatch = toolName === DAEMON_WORKSPACE_PATCH;
+      if (!isSearch && !isWrite && !isPatch && toolName !== DAEMON_WORKSPACE_READ) {
+        throw new Error("daemon Workspace candidate tool is unsupported");
+      }
       if (isSearch && (typeof query !== "string" || query.length === 0)) {
         throw new Error("daemon WorkspaceSearch candidate query is invalid");
       }
+      const input = parameters["input_b64"];
+      const preimage = parameters["preimage"];
+      if ((isWrite || isPatch) &&
+        (typeof input !== "string" || input.length === 0 ||
+          typeof preimage !== "string" || preimage.length === 0 ||
+          !isCanonicalBase64(input) || !isExpectedPreimage(preimage))) {
+        throw new Error("daemon Workspace mutation candidate parameters are invalid");
+      }
+      const candidateParameters = isSearch
+        ? { family: "WorkspaceSearch", query }
+        : isWrite
+          ? { family: "WorkspaceWrite", input_b64: input, preimage }
+          : isPatch
+            ? { family: "WorkspacePatch", input_b64: input, preimage }
+            : undefined;
       await client.submitPublicCandidate({
         taskRef,
-        toolRef: isSearch ? "native.workspace.search" : "native.workspace.read",
-        action: isSearch ? "search" : "read",
+        toolRef: isSearch
+          ? "native.workspace.search"
+          : isWrite
+            ? "native.workspace.write"
+            : isPatch
+              ? "native.workspace.patch"
+              : "native.workspace.read",
+        action: isSearch ? "search" : isWrite ? "write" : isPatch ? "patch" : "read",
         target,
-        ...(isSearch ? { parameters: { family: "WorkspaceSearch", query } } : {}),
+        ...(candidateParameters === undefined ? {} : { parameters: candidateParameters }),
         parametersDigest: "sha256:" + "0".repeat(64),
         expectedStateVersion: 1,
         operationDescriptorId: isSearch
           ? "00000000-0000-7000-8000-000000002002"
-          : "00000000-0000-7000-8000-000000002001",
+          : isWrite
+            ? "00000000-0000-7000-8000-000000002003"
+            : isPatch
+              ? "00000000-0000-7000-8000-000000002004"
+              : "00000000-0000-7000-8000-000000002001",
       });
     },
   };
+}
+
+function isCanonicalBase64(value: string): boolean {
+  if (value.length === 0 || value.length % 4 !== 0 || !/^[A-Za-z0-9+/]*={0,2}$/.test(value)) {
+    return false;
+  }
+  try {
+    return globalThis.btoa(globalThis.atob(value)) === value;
+  } catch {
+    return false;
+  }
+}
+
+function isExpectedPreimage(value: string): boolean {
+  return value === "absent" || /^digest:sha256:[0-9a-f]{64}$/.test(value);
 }
 
 function activateDaemonGovernedWorkspaceTools(
@@ -166,7 +215,7 @@ function activateDaemonGovernedWorkspaceTools(
   // bound. Re-registering same-name tools at the pre-agent hook refreshes the
   // registry without expanding the Extension surface.
   registerDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
-  // This explicit allowlist keeps all native and mutating tools inactive.
+  // This explicit allowlist keeps Pi-native filesystem and shell tools inactive.
   pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
   assertDaemonGovernedToolsAreActive(pi);
 }

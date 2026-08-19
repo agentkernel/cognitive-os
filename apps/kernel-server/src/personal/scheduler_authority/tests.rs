@@ -3305,6 +3305,60 @@ fn candidate_mutation_rejects_router_incompatible_raw_digest_preimage() {
 }
 
 #[test]
+fn candidate_mutation_rejects_malformed_or_non_canonical_base64() {
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(995),
+        descriptor: BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|candidate| candidate.operation_id == "native.workspace.write")
+            .map(|candidate| OperationDescriptor {
+                operation_id: candidate.operation_id.clone(),
+                action: candidate.action.clone(),
+                effect_class: EffectClass::Pure,
+                executor: candidate.executor.clone(),
+                capabilities: ExecutorCapabilities {
+                    queryable: true,
+                    idempotent: true,
+                },
+                descriptor_version: candidate.descriptor_version,
+            })
+            .unwrap(),
+        canonical_json: "{}".to_owned(),
+    };
+    for input_b64 in ["not-base64", "Y2JhCg", ""] {
+        let parameters = CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+            family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+            input_b64: input_b64.to_owned(),
+            preimage: "absent".to_owned(),
+        });
+        let canonical_value = serde_json::to_value(&parameters).unwrap();
+        let canonical_bytes = canonical::canonical_bytes_of_value(&canonical_value).unwrap();
+        let candidate = UntrustedPiCandidate {
+            tool_ref: descriptor.descriptor.operation_id.clone(),
+            action: descriptor.descriptor.action.clone(),
+            target: "workspace://tenant-a/project/output.txt".to_owned(),
+            parameters: Some(canonical_value),
+            parameters_digest: canonical::digest(
+                &canonical_bytes,
+                "cognitiveos.personal.candidate-parameters/0.1",
+            )
+            .unwrap(),
+            expected_state_version: 1,
+            operation_descriptor_id: descriptor.descriptor_id.clone(),
+        };
+
+        assert!(
+            matches!(
+                super::canonicalize_candidate_parameters(&candidate, &descriptor),
+                Err(SchedulerAuthorityError::PrivatePiProposal(detail))
+                    if detail.contains("base64") || detail.contains("non-canonical")
+            ),
+            "payload {input_b64:?} must fail closed before daemon admission"
+        );
+    }
+}
+
+#[test]
 fn candidate_parameter_digest_mismatch_denies_before_candidate_persistence() {
     let descriptor = DaemonOperationDescriptorRow {
         descriptor_id: object_id(992),
@@ -4649,6 +4703,60 @@ fn admitted_search_write_and_patch_reach_production_sinks_on_later_ticks() {
         drop(store);
         std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
     }
+}
+
+#[test]
+fn c2a_public_patch_fixture_reaches_production_sink() {
+    let patch_preimage = b"c2a-patch-v1\n";
+    let expected_preimage =
+        "digest:sha256:575ba0739b778cf7f38f3bb74a32d1727dec211c5bcab00850966e267c2a4857";
+    let computed_preimage = format!("digest:{}", workspace_image_digest(patch_preimage).unwrap());
+    assert_eq!(computed_preimage, expected_preimage);
+    let patch_payload = STANDARD
+        .decode("QEAgLTEgKzEgQEAKLWMyYS1wYXRjaC12MQorYzJhLXBhdGNoLXYyCg==")
+        .unwrap();
+    let layout = temporary_personal_layout();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspacePatch,
+        "workspace://c2a-patch.txt",
+        CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+            family: WorkspacePatchParametersFamily::WorkspacePatch,
+            input_b64: STANDARD.encode(&patch_payload),
+            preimage: computed_preimage,
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("c2a-patch.txt"), patch_preimage).unwrap();
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(proposer.calls.get(), 1);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        std::fs::read(workspace_root.join("c2a-patch.txt")).unwrap(),
+        b"c2a-patch-v2\n"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
 }
 
 #[test]

@@ -50,6 +50,9 @@ pub struct InitOptions {
     pub allow_ephemeral_secret_backend: bool,
     /// When true, rotate an already-configured provider key.
     pub rotate_key: bool,
+    /// Bind `provider.json` to the existing production SecretStore item for
+    /// `--provider` without reading or writing key material.
+    pub reuse_existing_secret_binding: bool,
 }
 
 /// Options for `cognitive status` / `cognitive doctor`.
@@ -500,6 +503,7 @@ fn parse_init_options(flags: &BTreeMap<String, String>) -> Result<InitOptions, S
         api_key_file: flags.get("api-key-file").map(PathBuf::from),
         allow_ephemeral_secret_backend: flag_bool(flags, "allow-ephemeral-secret-backend")?,
         rotate_key: flag_bool(flags, "rotate-key")?,
+        reuse_existing_secret_binding: flag_bool(flags, "reuse-existing-secret-binding")?,
     })
 }
 
@@ -603,6 +607,18 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
             }
             continue;
         }
+        if flag == "--reuse-existing-secret-binding" {
+            if flags
+                .insert(
+                    "reuse-existing-secret-binding".to_owned(),
+                    "true".to_owned(),
+                )
+                .is_some()
+            {
+                return Err("flag --reuse-existing-secret-binding given twice".to_owned());
+            }
+            continue;
+        }
         if flag == "--preflight" {
             if flags
                 .insert("preflight".to_owned(), "true".to_owned())
@@ -664,6 +680,7 @@ pub const COGNITIVE_USAGE: &str = "cognitive — CognitiveOS Personal product CL
 USAGE:
   cognitive init   [--runtime-root <dir>] [--provider <id>] [--base-url <https-url>]
                    [--model-id <id>] [--api-key-file <path|->] [--rotate-key]
+                   [--reuse-existing-secret-binding]
                    [--allow-ephemeral-secret-backend]
   cognitive status [--runtime-root <dir>] [--endpoint <host:port>]
   cognitive doctor [--runtime-root <dir>] [--endpoint <host:port>]
@@ -699,6 +716,36 @@ Exit codes: 0 success, 1 operational error, 2 usage error.";
 #[allow(clippy::expect_used)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn init_parses_reuse_existing_secret_binding_without_key_file() {
+        let command = parse_cognitive_args(&[
+            "init".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--provider".to_owned(),
+            "deepseek".to_owned(),
+            "--base-url".to_owned(),
+            "https://api.deepseek.com/v1".to_owned(),
+            "--reuse-existing-secret-binding".to_owned(),
+        ])
+        .expect("parse reuse-existing-secret-binding");
+        assert_eq!(
+            command,
+            CognitiveCommand::Init(InitOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                provider_id: Some("deepseek".to_owned()),
+                base_url: Some("https://api.deepseek.com/v1".to_owned()),
+                model_id: None,
+                api_key_file: None,
+                allow_ephemeral_secret_backend: false,
+                rotate_key: false,
+                reuse_existing_secret_binding: true,
+            })
+        );
+    }
 
     #[test]
     fn daemon_start_defaults_to_the_canonical_personal_loopback_port() {

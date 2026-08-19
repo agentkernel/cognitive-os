@@ -24,7 +24,8 @@ const PINNED_PI_VERSION: &str = "0.81.1";
 const PI_VERSION_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 const REQUIRED_READINESS_COMPONENTS: [&str; 6] =
     ["system", "database", "secret", "provider", "daemon", "pi"];
-const PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST: &str = "WorkspaceRead,WorkspaceSearch";
+const PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST: &str =
+    "WorkspaceRead,WorkspaceSearch,WorkspaceWrite,WorkspacePatch";
 
 /// Inputs accepted by `cognitive pi launch`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -719,7 +720,7 @@ mod tests {
                 "--extension".to_owned(),
                 extension_entry_path.display().to_string(),
                 "--tools".to_owned(),
-                "WorkspaceRead,WorkspaceSearch".to_owned(),
+                PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST.to_owned(),
                 "--print".to_owned(),
             ]
         );
