@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:566276d52d74ee23d0022f4119f06be987413bef54409611721f4eaea03b5640"
+fingerprint: "sha256:94850f34a43daab8355314d2b974cfb03f8044992715f29100d8958b5e8eb06e"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -46,8 +46,10 @@ hermetic layout roots 映射到 Pi 的 XDG 环境，使 Extension 能解析该 r
 - 会话开始时展示 daemon readiness，首次对话被阻塞时给出警告；
 - `/cognitive-status` 命令只回答 daemon 事实。
 
-响应为单发：daemon 请求非流式补全，扩展将其作为单块输出（仅文本；图像/工具调用被拒
-绝）。
+响应为单发：daemon 请求非流式补全。扩展可输出受限文本或一个结构化的 daemon 治理
+Workspace 工具调用；图像和不受支持的工具调用形状会被拒绝。Pi 提供相应工具结果后，
+下一次 daemon 请求会使用 Provider 的标准工具续接消息角色保留该受限 assistant 工具调用
+与结果。
 
 ## 有意锁死的部分
 

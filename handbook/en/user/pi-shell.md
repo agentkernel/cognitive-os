@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:566276d52d74ee23d0022f4119f06be987413bef54409611721f4eaea03b5640"
+fingerprint: "sha256:94850f34a43daab8355314d2b974cfb03f8044992715f29100d8958b5e8eb06e"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -52,8 +52,11 @@ those tools, then:
   blocked;
 - answers `/cognitive-status` with daemon facts only.
 
-Responses are one-shot: the daemon requests a non-streaming completion and the
-extension emits it as a single block (text only; images/tool-calls are rejected).
+Responses are one-shot: the daemon requests a non-streaming completion. It emits
+bounded text or one structured daemon-governed Workspace tool call; images and
+unsupported tool-call shapes are rejected. When Pi supplies the corresponding
+tool result, the next daemon request preserves the bounded assistant tool call
+and result using the Provider's standard tool-continuation message roles.
 
 ## What is deliberately locked
 

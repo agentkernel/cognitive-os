@@ -135,6 +135,41 @@ test("structured daemon tool calls become pinned Pi tool-call events", async () 
   }
 });
 
+test("Pi tool-result continuations preserve the prior structured call", async () => {
+  const daemon = await startFakeDaemon({ bootstrapSecret: BOOTSTRAP_SECRET, statusBody: "{}" });
+  try {
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint));
+    const stream = provider.streamSimple(provider.models[0]!, {
+      messages: [
+        {
+          role: "assistant",
+          content: [{
+            type: "toolCall",
+            id: "call-workspace-read",
+            name: "WorkspaceRead",
+            arguments: { target: "README.md" },
+          }],
+        },
+        {
+          role: "toolResult",
+          toolCallId: "call-workspace-read",
+          content: [{ type: "text", text: "candidate queued" }],
+        },
+      ],
+    });
+    for await (const _event of stream) {
+      // Consume the bounded completion so the fake daemon records the request.
+    }
+
+    const completionRequest = daemon.requests.at(-1);
+    assert.match(completionRequest?.body ?? "", /"role":"assistant","content":null,"tool_calls"/);
+    assert.match(completionRequest?.body ?? "", /"tool_call_id":"call-workspace-read"/);
+    assert.match(completionRequest?.body ?? "", /"role":"tool"/);
+  } finally {
+    await daemon.close();
+  }
+});
+
 test("unsupported tool output produces one terminal error without tool events", async () => {
   const daemon = await startFakeDaemon({
     bootstrapSecret: BOOTSTRAP_SECRET,

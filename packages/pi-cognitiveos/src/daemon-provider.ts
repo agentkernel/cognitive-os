@@ -1,7 +1,12 @@
 /** Complete pinned-Pi provider whose only model transport is the local daemon. */
 
 import { PersonalDaemonClient } from "./daemon-client.js";
-import type { BoundedCompletion, DaemonToolDefinition, ProviderUsage } from "./daemon-client.js";
+import type {
+  BoundedCompletion,
+  DaemonChatMessage,
+  DaemonToolDefinition,
+  ProviderUsage,
+} from "./daemon-client.js";
 import { DaemonClientError } from "./errors.js";
 import {
   assemblePiRouteObservation,
@@ -98,7 +103,7 @@ async function dispatchCompletion(
   stream.push({ type: "start", partial });
   try {
     recorder?.begin("pi_request_preparation");
-    let daemonMessages: readonly { role: "system" | "user" | "assistant"; content: string }[];
+    let daemonMessages: readonly DaemonChatMessage[];
     try {
       daemonMessages = toDaemonMessages(context);
     } finally {
@@ -238,18 +243,68 @@ function classifyObservationFailure(
   return "protocol_error";
 }
 
-function toDaemonMessages(context: PiCompletionContext): readonly { role: "system" | "user" | "assistant"; content: string }[] {
-  const messages: { role: "system" | "user" | "assistant"; content: string }[] = [];
+function toDaemonMessages(context: PiCompletionContext): readonly DaemonChatMessage[] {
+  const messages: DaemonChatMessage[] = [];
   if (context.systemPrompt !== undefined && context.systemPrompt.length > 0) messages.push({ role: "system", content: context.systemPrompt });
   for (const rawMessage of context.messages) {
     if (typeof rawMessage !== "object" || rawMessage === null) throw new Error("unsupported Pi message");
     const message = rawMessage as Record<string, unknown>;
     const role = message["role"];
-    const content = extractText(message["content"]);
-    if ((role !== "user" && role !== "assistant") || content === undefined) throw new Error("unsupported Pi message");
-    messages.push({ role, content });
+    if (role === "user") {
+      const content = extractText(message["content"]);
+      if (content === undefined) throw new Error("unsupported Pi user message");
+      messages.push({ role, content });
+      continue;
+    }
+    if (role === "assistant") {
+      const toolCalls = extractToolCalls(message["content"]);
+      if (toolCalls.length > 0) {
+        messages.push({ role, content: null, tool_calls: toolCalls });
+        continue;
+      }
+      const content = extractText(message["content"]);
+      if (content === undefined) throw new Error("unsupported Pi assistant message");
+      messages.push({ role, content });
+      continue;
+    }
+    if (role === "toolResult") {
+      const toolCallId = message["toolCallId"];
+      const content = extractText(message["content"]);
+      if (typeof toolCallId !== "string" || toolCallId.length === 0 || content === undefined) {
+        throw new Error("unsupported Pi tool result");
+      }
+      messages.push({ role: "tool", tool_call_id: toolCallId, content });
+      continue;
+    }
+    throw new Error("unsupported Pi message role");
   }
   return messages;
+}
+
+function extractToolCalls(content: unknown): readonly Record<string, unknown>[] {
+  if (!Array.isArray(content)) return [];
+  const toolCalls: Record<string, unknown>[] = [];
+  for (const block of content) {
+    if (typeof block !== "object" || block === null) return [];
+    const record = block as Record<string, unknown>;
+    if (record["type"] !== "toolCall") continue;
+    const identifier = record["id"];
+    const name = record["name"];
+    const argumentsValue = record["arguments"];
+    if (
+      typeof identifier !== "string" || identifier.length === 0 ||
+      typeof name !== "string" || name.length === 0 ||
+      typeof argumentsValue !== "object" || argumentsValue === null || Array.isArray(argumentsValue)
+    ) {
+      throw new Error("unsupported Pi tool call");
+    }
+    toolCalls.push({
+      id: identifier,
+      type: "function",
+      function: { name, arguments: JSON.stringify(argumentsValue) },
+    });
+  }
+  return toolCalls;
 }
 
 function extractText(content: unknown): string | undefined {
