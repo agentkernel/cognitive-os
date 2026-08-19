@@ -68,6 +68,10 @@ evaluation, or Agent-benefit claim.
     false`. Same-host reuse of the existing opaque SecretRef document from the
     Write runtime was not executed in this window. Patch admit/launch remains
     `not-run`.
+11. **Required CI `32282577281` on `e53f72ad` — pass.** Ubuntu verify, Windows
+    verify, `resolve validation route`, and `required-ci` all completed
+    successfully. This is supporting CI for the current documentation head; it
+    does not close D02 while public WorkspacePatch remains `not-run`.
 
 ## Implemented boundary
 
