@@ -804,7 +804,6 @@ mod tests {
             vec![
                 "--extension",
                 extension_entry_path.to_str().expect("UTF-8 path"),
-                "--no-builtin-tools",
                 "--tools",
                 PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST,
             ]
