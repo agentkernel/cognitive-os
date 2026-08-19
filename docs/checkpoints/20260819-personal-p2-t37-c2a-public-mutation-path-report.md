@@ -3,7 +3,8 @@
 Task: `P2-T37`
 Branch: `personal/P2-T37-c2a-public-mutation-path`
 Lease: `lease/personal/P2-T37/c2a-public-mutation-path`
-Scope: `P2-T37/D01` and the beginning of `P2-T37/D02` only
+Scope: `P2-T37/D01` complete; `P2-T37/D02` public WorkspaceWrite complete,
+WorkspacePatch outstanding
 
 This is an implementation report, not a C2, Gate, release, Profile, B01,
 evaluation, or Agent-benefit claim.
@@ -36,6 +37,24 @@ evaluation, or Agent-benefit claim.
    failed. No product assertion other than that stale expectation failed. The
    follow-up repair updates that assertion to the four-tool allowlist and adds a
    daemon canonicalize negative for malformed/non-canonical mutation base64.
+7. **Linux focused Rust at `b043d430` — pass.** Exact `DEV-LINUX-NATIVE-01`
+   (`wuz@192.168.1.2`) ran `cargo fmt --all -- --check`,
+   `cargo test -p admin-cli --lib personal_cli::pi` **9/9** including the
+   repaired four-tool print-mode allowlist, and
+   `cargo test -p kernel-server --bin kernel-server candidate_mutation` **3/3**.
+   Local Windows GNU Rust remains `not-run` per `RUST-LINK-DEV-WIN-GNU-01`.
+8. **D02 public WorkspaceWrite lifecycle — pass.** Fresh non-B01 runtime
+   `/home/wuz/p2-t37-c2a-write-20260820` on loopback `127.0.0.1:48445` used the
+   rebuilt `b043d430` daemon/CLI/adapter binaries and the public stdin-fed
+   `cognitive pi launch --print --task-ref task://personal/p2-t37-public-write`
+   caller. Authenticated admit, real Pi `WorkspaceWrite` candidate submission,
+   scheduler `lease_acquired: 1`, durable Intent/Effect, passed current
+   independent verification, and daemon `ACCEPTANCE_GRANTED` closed the Task at
+   `COMPLETED` with `reconcile_class: closed`. The workspace file
+   `c2a-write.txt` is 10 bytes with SHA-256
+   `1f4f0de2f82b076bf2833308146c57e4b8a517731499c800ef1546027088a3f4`. No Pi-native
+   filesystem or shell tool was used. This does not prove WorkspacePatch, C2,
+   Gate, release, Profile, B01, or Agent-benefit.
 
 ## Implemented boundary
 
@@ -52,8 +71,8 @@ evaluation, or Agent-benefit claim.
 
 ## Remaining
 
-- Complete D02 with exact pushed native-Linux public WorkspaceWrite and
-  WorkspacePatch lifecycle validation as separate fresh Tasks.
+- Complete D02 with a separate exact pushed native-Linux public WorkspacePatch
+  lifecycle Task. WorkspaceWrite is complete.
 - Run the daemon/API mutation negatives for malformed base64, preimage,
   descriptor/digest/epoch drift, duplicate or mixed candidates, preimage
   mismatch, and no mutation before daemon admission.
