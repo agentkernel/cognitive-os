@@ -55,6 +55,19 @@ evaluation, or Agent-benefit claim.
    `1f4f0de2f82b076bf2833308146c57e4b8a517731499c800ef1546027088a3f4`. No Pi-native
    filesystem or shell tool was used. This does not prove WorkspacePatch, C2,
    Gate, release, Profile, B01, or Agent-benefit.
+9. **Linux Clippy `-D warnings` — pass.** Exact `DEV-LINUX-NATIVE-01` at
+   `a5da7329` passed `cargo clippy -p kernel-server --all-targets --locked -- -D warnings`
+   and `cargo clippy -p admin-cli --all-targets --locked -- -D warnings`.
+10. **D02 public WorkspacePatch runtime — partial / not-run.** A separate
+    non-B01 root `/home/wuz/p2-t37-c2a-patch-20260820` on loopback
+    `127.0.0.1:48446` was initialized, public Pi configured, and
+    `c2a-patch.txt` seeded (13 bytes, SHA-256
+    `7c3a0a01304ba98bbe58fe47fbc45565b4477d046335828375216c739e4bdffa`). Public
+    doctor reports system/database/secret/daemon/Pi ready and Provider
+    `provider_config_missing` / overall `blocked` / `first_conversation_ready:
+    false`. Same-host reuse of the existing opaque SecretRef document from the
+    Write runtime was not executed in this window. Patch admit/launch remains
+    `not-run`.
 
 ## Implemented boundary
 
@@ -72,7 +85,10 @@ evaluation, or Agent-benefit claim.
 ## Remaining
 
 - Complete D02 with a separate exact pushed native-Linux public WorkspacePatch
-  lifecycle Task. WorkspaceWrite is complete.
+  lifecycle Task. WorkspaceWrite is complete. The Patch runtime is started;
+  Provider SecretRef document still needs to be written through the public
+  `cognitive init` opaque-ref path or an equivalent same-host SecretRef reuse
+  without printing material.
 - Run the daemon/API mutation negatives for malformed base64, preimage,
   descriptor/digest/epoch drift, duplicate or mixed candidates, preimage
   mismatch, and no mutation before daemon admission.
