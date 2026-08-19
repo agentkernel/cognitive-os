@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:d8ee828095aed72d226c148294948607e6b64441839873d1e64c45656a714a95"
+fingerprint: "sha256:55111abecd7e21311e35ff342a526eac4941b1307210355d8bf533a7e13a5bfe"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -26,6 +26,7 @@ cognitive — CognitiveOS Personal product CLI (P1-T06)
 USAGE:
   cognitive init   [--runtime-root <dir>] [--provider <id>] [--base-url <https-url>]
                    [--model-id <id>] [--api-key-file <path|->] [--rotate-key]
+                   [--reuse-existing-secret-binding]
                    [--allow-ephemeral-secret-backend]
   cognitive status [--runtime-root <dir>] [--endpoint <host:port>]
   cognitive doctor [--runtime-root <dir>] [--endpoint <host:port>]

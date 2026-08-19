@@ -15,7 +15,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:47a7f8aaea8e0b90ab0655e0c2ff55902a006ba30b7fde572daefe2a37c4998e"
+fingerprint: "sha256:e1d7c616abd8ee04bade7f6f4ce8cce89fdbf7d259d663eca4af960c36d15894"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -29,7 +29,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 
 | Verb | What it actually does |
 |---|---|
-| `cognitive init` | prepare XDG layout + databases (with backups), store the Provider key into the Secret Service, probe the Provider, persist `provider.json` and `selected-model.json` |
+| `cognitive init` | prepare XDG layout + databases (with backups), store the Provider key into the Secret Service or bind an already-stored item with `--reuse-existing-secret-binding`, probe the Provider, persist `provider.json` and `selected-model.json` |
 | `cognitive status` | authenticated component projection (system, database, secret, provider, daemon, pi) |
 | `cognitive doctor` | the same projection plus redacted diagnostic sections |
 | `cognitive daemon start` | spawn `kernel-server --personal` bound to `127.0.0.1:48181` (override with `--bind`, `--kernel-server`, or `COGNITIVE_KERNEL_SERVER`); append stdout/stderr to `state/cognitiveos/daemon.log` (mode `0600`) |

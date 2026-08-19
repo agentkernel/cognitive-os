@@ -15,7 +15,7 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
   - path: apps/kernel-server/src/personal/capability_truth.rs
     symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
-fingerprint: "sha256:32a94b6304112ca45fbcbb86db6716eb1084123e29025f28c81751e409e918b8"
+fingerprint: "sha256:5882a73412fb28720ebfe3c52a06f406ac2fd53025791915e968301a51588727"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---

@@ -4,7 +4,8 @@ use cognitive_provider_transport::RustlsProviderTransport;
 use cognitive_secret::{
     EphemeralSecretStore, ModelSelection, ProviderConfig, ProviderConfigRepository,
     ProviderDiscoveryService, ProviderKeyService, ProviderProbeOptions, ProviderTransport,
-    SecretMaterial, SecretStore, select_production_secret_store,
+    SecretMaterial, SecretRef, SecretStore, provider_secret_attributes,
+    select_production_secret_store,
 };
 use cognitive_store::prepare_personal_databases;
 use serde_json::{Value, json};
@@ -92,7 +93,23 @@ fn configure_provider_if_requested(
         || options.base_url.is_some()
         || options.api_key_file.is_some()
         || options.model_id.is_some()
-        || options.rotate_key;
+        || options.rotate_key
+        || options.reuse_existing_secret_binding;
+
+    if options.reuse_existing_secret_binding
+        && (options.api_key_file.is_some() || options.rotate_key)
+    {
+        return Err(
+            "--reuse-existing-secret-binding cannot be combined with --api-key-file or --rotate-key"
+                .to_owned(),
+        );
+    }
+    if options.reuse_existing_secret_binding && options.allow_ephemeral_secret_backend {
+        return Err(
+            "--reuse-existing-secret-binding requires the production Linux Secret Service backend"
+                .to_owned(),
+        );
+    }
 
     if !wants_provider {
         return Ok(json!({
@@ -143,6 +160,12 @@ fn configure_provider_if_requested(
             )
         }
         cognitive_secret::ProductionSecretBackend::WindowsCredentialManager(store) => {
+            if options.reuse_existing_secret_binding {
+                return Err(
+                    "--reuse-existing-secret-binding currently supports only Linux Secret Service"
+                        .to_owned(),
+                );
+            }
             configure_and_discover_with_store(
                 &store,
                 &RustlsProviderTransport::default(),
@@ -176,9 +199,22 @@ fn configure_and_discover_with_store<S: SecretStore, T: ProviderTransport>(
     backend_class: &str,
 ) -> Result<Value, String> {
     let provider_key_service = ProviderKeyService::new(secret_store, config_repository.clone());
-    let secret_material_written =
-        !already_configured || options.rotate_key || options.api_key_file.is_some();
-    let action = if secret_material_written {
+    let secret_material_written = !options.reuse_existing_secret_binding
+        && (!already_configured || options.rotate_key || options.api_key_file.is_some());
+    let action = if options.reuse_existing_secret_binding && !already_configured {
+        let secret_ref = existing_linux_provider_secret_ref(provider_id)?;
+        let bound = ProviderConfig::new(
+            provider_id.to_owned(),
+            base_url.to_owned(),
+            secret_ref,
+            None,
+        )
+        .map_err(|error| format!("invalid reused provider config: {error}"))?;
+        config_repository
+            .store(&bound)
+            .map_err(|error| format!("unable to store reused provider config: {error}"))?;
+        "bound_existing_secret_ref"
+    } else if secret_material_written {
         let material = read_api_key_material(options.api_key_file.as_deref())?;
         let request = PutProviderKeyRequest {
             config_repository,
@@ -294,6 +330,18 @@ fn put_with_store<S: SecretStore>(
     })
 }
 
+fn existing_linux_provider_secret_ref(provider_id: &str) -> Result<SecretRef, String> {
+    let attributes = provider_secret_attributes(provider_id)
+        .map_err(|error| format!("unable to build provider secret attributes: {error}"))?;
+    let mut segments = vec!["ssv1:fdss".to_owned()];
+    for (key, value) in attributes.pairs() {
+        segments.push(key.clone());
+        segments.push(value.clone());
+    }
+    SecretRef::from_opaque(segments.join("/"))
+        .map_err(|error| format!("unable to encode existing provider SecretRef: {error}"))
+}
+
 fn run_self_check(
     layout: &cognitive_store::PersonalDataLayout,
     config_repository: &ProviderConfigRepository,
@@ -394,7 +442,39 @@ mod tests {
             api_key_file,
             allow_ephemeral_secret_backend: true,
             rotate_key: false,
+            reuse_existing_secret_binding: false,
         }
+    }
+
+    #[test]
+    fn existing_linux_provider_secret_ref_matches_documented_fdss_encoding() {
+        let encoded = super::existing_linux_provider_secret_ref("deepseek").expect("ref");
+        assert_eq!(
+            encoded.as_str(),
+            "ssv1:fdss/application/cognitiveos-personal/provider/deepseek/purpose/provider-api-key"
+        );
+    }
+
+    #[test]
+    fn reuse_existing_binding_rejects_key_file_and_ephemeral() {
+        let temporary_directory = tempfile::tempdir().expect("temporary directory");
+        let config_repository = ProviderConfigRepository::from_file_path(
+            temporary_directory.path().join("provider.json"),
+        );
+        let mut with_key = init_options(
+            Some(temporary_directory.path().join("provider-key.txt")),
+            "catalog-model",
+        );
+        with_key.reuse_existing_secret_binding = true;
+        let combined = super::configure_provider_if_requested(&with_key, &config_repository, false)
+            .expect_err("reuse cannot combine with a key file");
+        assert!(combined.contains("cannot be combined"), "{combined}");
+
+        let mut ephemeral = init_options(None, "catalog-model");
+        ephemeral.reuse_existing_secret_binding = true;
+        let backend = super::configure_provider_if_requested(&ephemeral, &config_repository, false)
+            .expect_err("reuse cannot use the ephemeral backend");
+        assert!(backend.contains("Linux Secret Service"), "{backend}");
     }
 
     #[test]

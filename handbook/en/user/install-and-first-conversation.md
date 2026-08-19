@@ -17,7 +17,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:f543ba606e59b310562b3f241c4b8b140dfb8ff82d9da65d257964ec6da8f5fe"
+fingerprint: "sha256:b05f40812fbcb268eefb36f151b497e07ebcf6910d72c8f93a8cfcfefeb7750c"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---
@@ -57,8 +57,10 @@ Provider key into the OS secret store (Linux Secret Service here; on Windows
 hosts the same command selects the Credential Manager backend) via stdin/hidden
 input — never argv or files — probes the Provider, and persists two non-secret
 files: `provider.json` (with an opaque `SecretRef`) and `selected-model.json`. If
-no production secret backend is usable the command fails closed — there is no
-plaintext fallback.
+a later disposable runtime needs the same already-stored item, pass
+`--reuse-existing-secret-binding` with `--provider` and `--base-url` instead of
+another key capture. If no production secret backend is usable the command fails
+closed — there is no plaintext fallback.
 
 ## 3. Start and check the daemon
 

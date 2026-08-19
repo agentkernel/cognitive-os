@@ -15,7 +15,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:47a7f8aaea8e0b90ab0655e0c2ff55902a006ba30b7fde572daefe2a37c4998e"
+fingerprint: "sha256:e1d7c616abd8ee04bade7f6f4ce8cce89fdbf7d259d663eca4af960c36d15894"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -28,7 +28,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 
 | 动词 | 实际行为 |
 |---|---|
-| `cognitive init` | 准备 XDG 布局与数据库（带备份），把 Provider key 存入 Secret Service，探测 Provider，持久化 `provider.json` 与 `selected-model.json` |
+| `cognitive init` | 准备 XDG 布局与数据库（带备份），把 Provider key 存入 Secret Service，或用 `--reuse-existing-secret-binding` 绑定已有条目，探测 Provider，持久化 `provider.json` 与 `selected-model.json` |
 | `cognitive status` | 已认证的组件投影（system、database、secret、provider、daemon、pi） |
 | `cognitive doctor` | 同一投影外加脱敏诊断小节 |
 | `cognitive daemon start` | 启动绑定 `127.0.0.1:48181` 的 `kernel-server --personal`（可用 `--bind`、`--kernel-server` 或 `COGNITIVE_KERNEL_SERVER` 覆盖）；stdout/stderr 追加到 `state/cognitiveos/daemon.log`（权限 `0600`） |

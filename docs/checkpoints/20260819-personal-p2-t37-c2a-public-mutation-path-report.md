@@ -65,13 +65,20 @@ evaluation, or Agent-benefit claim.
     `7c3a0a01304ba98bbe58fe47fbc45565b4477d046335828375216c739e4bdffa`). Public
     doctor reports system/database/secret/daemon/Pi ready and Provider
     `provider_config_missing` / overall `blocked` / `first_conversation_ready:
-    false`. Same-host reuse of the existing opaque SecretRef document from the
-    Write runtime was not executed in this window. Patch admit/launch remains
-    `not-run`.
+    false`. File-copy/link of `provider.json` is refused. The product recovery
+    is `cognitive init --reuse-existing-secret-binding` (opaque SecretRef only;
+    no key recapture). Patch admit/launch remains `not-run`.
 11. **Required CI `32282577281` on `e53f72ad` — pass.** Ubuntu verify, Windows
     verify, `resolve validation route`, and `required-ci` all completed
     successfully. This is supporting CI for the current documentation head; it
     does not close D02 while public WorkspacePatch remains `not-run`.
+12. **Public `cognitive init --reuse-existing-secret-binding` — implemented,
+    Linux live bind not-run.** The CLI now binds `provider.json` to the existing
+    Linux Secret Service item for `--provider` without reading key material.
+    Focused negatives reject combining the flag with `--api-key-file` or the
+    ephemeral backend. Local fmt, handbook, generator `--check`, and
+    `check:consistency` passed. Live Patch bind remains `not-run` until this
+    revision is rebuilt on `DEV-LINUX-NATIVE-01`.
 
 ## Implemented boundary
 
@@ -90,9 +97,8 @@ evaluation, or Agent-benefit claim.
 
 - Complete D02 with a separate exact pushed native-Linux public WorkspacePatch
   lifecycle Task. WorkspaceWrite is complete. The Patch runtime is started;
-  Provider SecretRef document still needs to be written through the public
-  `cognitive init` opaque-ref path or an equivalent same-host SecretRef reuse
-  without printing material.
+  bind Provider with public `cognitive init --reuse-existing-secret-binding`
+  after rebuilding the updated CLI, then admit and launch.
 - Run the daemon/API mutation negatives for malformed base64, preimage,
   descriptor/digest/epoch drift, duplicate or mixed candidates, preimage
   mismatch, and no mutation before daemon admission.
