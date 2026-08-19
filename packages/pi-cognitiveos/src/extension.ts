@@ -74,10 +74,8 @@ export async function registerCognitiveOsExtension(
   let daemonSelectedModel: PiModel | undefined;
 
   pi.on("session_start", async (_event, context) => {
-    // Pi 0.81.1 builds its first registry before Extension hooks are bound.
-    // Refreshing here makes the already-registered Extension tools visible,
-    // then this explicit allowlist keeps all native/mutating tools inactive.
-    pi.refreshTools();
+    // Pi exposes setActiveTools after it binds the Extension runtime. This
+    // explicit allowlist keeps all native and mutating tools inactive.
     pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
     if (daemonSelectedModel === undefined) {
       await showStatus(client, context, "session_start");

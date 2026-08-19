@@ -82,7 +82,6 @@ test("registration queues the daemon provider and activates its model at session
     await pi.driveSessionStart();
     assert.equal(pi.selectedModels.length, 1);
     assert.equal(pi.selectedModels[0]?.provider, "cognitiveos");
-    assert.equal(pi.refreshToolCalls, 1);
     assert.deepEqual(pi.activeToolSelections, [["WorkspaceRead", "WorkspaceSearch"]]);
     assert.equal(
       pi.selectedModels[0]?.baseUrl,
