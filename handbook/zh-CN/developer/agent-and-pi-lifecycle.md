@@ -65,7 +65,8 @@ Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径
 Pi 原生工具，并只显式允许 `WorkspaceRead` 与 `WorkspaceSearch`。这些 Extension 工具使用
 钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。Pi 绑定
 session 后，Extension 重新登记同名 daemon 治理定义以刷新 Pi runtime registry，然后只
-激活这两个名称；未知名称会被忽略。该 post-bind 步骤不能激活 Pi 原生文件系统、shell 或
+激活这两个名称。每次 agent turn 前，它会在 runtime registry 可用后重复该激活；未知名称
+会被忽略。CLI 显式的 `--tools` 列表是完整 Pi registry allowlist，因此不能激活 Pi 原生文件系统、shell 或
 mutating tools。
 
 shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi

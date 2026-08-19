@@ -70,8 +70,10 @@ tools, and explicitly permits only `WorkspaceRead` and `WorkspaceSearch`.
 Those Extension tools use the pinned Pi runtime's TypeBox schemas; JSON-shaped
 lookalikes are rejected during live registration. Once Pi binds its session,
 the Extension re-registers the same daemon-governed definitions to refresh
-Pi's runtime registry, then activates only those two names; unknown names are
-ignored. This post-bind step cannot activate Pi-native filesystem, shell, or
+Pi's runtime registry, then activates only those two names. Before each agent
+turn, it repeats that activation after the runtime registry is available;
+unknown names are ignored. The CLI's explicit `--tools` list is the full Pi
+registry allowlist, so this cannot activate Pi-native filesystem, shell, or
 mutating tools.
 
 The shell-host Provider route has an opt-in, non-authority campaign observer.

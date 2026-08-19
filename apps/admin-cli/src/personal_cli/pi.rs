@@ -173,10 +173,9 @@ fn prepare_launch_with_doctor_document(
             let mut arguments = vec![
                 "--extension".to_owned(),
                 path_to_argument(&extension_entry_path)?,
-                // Pi-native filesystem/process tools bypass daemon authority.
-                "--no-builtin-tools".to_owned(),
-                // Pi treats --no-builtin-tools as an empty initial active-tool
-                // set, so explicitly activate only the C1 daemon-governed tools.
+                // Pi's explicit --tools list is a full registry allowlist. It
+                // excludes Pi-native filesystem/process tools while retaining
+                // only the daemon-governed Extension names.
                 "--tools".to_owned(),
                 PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST.to_owned(),
             ];
@@ -706,7 +705,6 @@ mod tests {
             vec![
                 "--extension".to_owned(),
                 extension_entry_path.display().to_string(),
-                "--no-builtin-tools".to_owned(),
                 "--tools".to_owned(),
                 "WorkspaceRead,WorkspaceSearch".to_owned(),
                 "--print".to_owned(),
