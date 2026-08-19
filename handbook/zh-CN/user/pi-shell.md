@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:135eff962b56c5ec56a52268877c3bd20b78c9aa810e9803c531f30ebf4f48c2"
+fingerprint: "sha256:965d56647875e7c341a9f4416de97cae748a5c913e9eb4d9f6893ab52ba9da25"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---

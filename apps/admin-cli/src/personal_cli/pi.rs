@@ -773,7 +773,7 @@ mod tests {
     }
 
     #[test]
-    fn launch_plan_passes_only_extension_and_an_allowlisted_environment() {
+    fn launch_plan_activates_only_daemon_governed_tools_and_an_allowlisted_environment() {
         let temporary_root = tempfile::tempdir().expect("temporary root");
         let executable_path = temporary_root.path().join("pi");
         let extension_entry_path = temporary_root.path().join("index.js");
@@ -792,7 +792,10 @@ mod tests {
             launch_plan.arguments,
             vec![
                 "--extension",
-                extension_entry_path.to_str().expect("UTF-8 path")
+                extension_entry_path.to_str().expect("UTF-8 path"),
+                "--no-builtin-tools",
+                "--tools",
+                PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST,
             ]
         );
         assert!(!launch_plan.environment.contains_key("DEEPSEEK_API_KEY"));
