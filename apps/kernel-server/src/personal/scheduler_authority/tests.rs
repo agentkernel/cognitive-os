@@ -4706,6 +4706,63 @@ fn admitted_search_write_and_patch_reach_production_sinks_on_later_ticks() {
 }
 
 #[test]
+fn c2a_public_patch_fixture_reaches_production_sink() {
+    let patch_preimage = b"c2a-patch-v1\n";
+    let expected_preimage =
+        "digest:sha256:575ba0739b778cf7f38f3bb74a32d1727dec211c5bcab00850966e267c2a4857";
+    let computed_preimage = format!(
+        "digest:{}",
+        workspace_image_digest(patch_preimage).expect("C2a public Patch preimage")
+    );
+    assert_eq!(computed_preimage, expected_preimage);
+    let patch_payload = STANDARD
+        .decode("QEAgLTEgKzEgQEAKLWMyYS1wYXRjaC12MQorYzJhLXBhdGNoLXYyCg==")
+        .expect("C2a public Patch fixture payload");
+    let layout = temporary_personal_layout();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspacePatch,
+        "workspace://c2a-patch.txt",
+        CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+            family: WorkspacePatchParametersFamily::WorkspacePatch,
+            input_b64: STANDARD.encode(&patch_payload),
+            preimage: computed_preimage,
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("c2a-patch.txt"), patch_preimage).unwrap();
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(proposer.calls.get(), 1);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        std::fs::read(workspace_root.join("c2a-patch.txt")).unwrap(),
+        b"c2a-patch-v2\n"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
 fn candidate_digest_mismatch_fails_before_effect_or_workspace_io() {
     let layout = temporary_personal_layout();
     let mut candidate = production_chain_candidate(
