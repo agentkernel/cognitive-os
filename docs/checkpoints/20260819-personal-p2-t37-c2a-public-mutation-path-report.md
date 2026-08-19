@@ -72,13 +72,24 @@ evaluation, or Agent-benefit claim.
     verify, `resolve validation route`, and `required-ci` all completed
     successfully. This is supporting CI for the current documentation head; it
     does not close D02 while public WorkspacePatch remains `not-run`.
-12. **Public `cognitive init --reuse-existing-secret-binding` — implemented,
-    Linux live bind not-run.** The CLI now binds `provider.json` to the existing
-    Linux Secret Service item for `--provider` without reading key material.
-    Focused negatives reject combining the flag with `--api-key-file` or the
-    ephemeral backend. Local fmt, handbook, generator `--check`, and
-    `check:consistency` passed. Live Patch bind remains `not-run` until this
-    revision is rebuilt on `DEV-LINUX-NATIVE-01`.
+12. **Public `cognitive init --reuse-existing-secret-binding` — pass.** Exact
+    `1f257b1b` CLI on `DEV-LINUX-NATIVE-01` bound Patch root
+    `/home/wuz/p2-t37-c2a-patch-20260820` with `action:
+    bound_existing_secret_ref`, `secret_material_written: false`, and
+    `secret_ref_redacted: true`. Doctor then reported Provider ready,
+    `secret_ref_resolves: true`, `selected_model_digest_matches: true`, overall
+    `ready`, and `first_conversation_ready: true`. No key material was
+    recaptured, copied, printed, or placed on argv.
+13. **D02 public WorkspacePatch lifecycle — fail / not closed.** Two independent
+    public Tasks (`task://personal/p2-t37-public-patch` and
+    `task://personal/p2-t37-public-patch-retry`) each acquired
+    `lease_acquired: 1` after `cognitive pi launch --print --task-ref ...` with
+    the repo Patch fixture, then persisted Effect `NOT_EXECUTED` /
+    `reconcile_class: must_reconcile`. The workspace file remained 13 bytes,
+    SHA-256 `7c3a0a01304ba98bbe58fe47fbc45565b4477d046335828375216c739e4bdffa`.
+    Verification and acceptance stayed absent; lifecycle stayed `ACTIVE`. This
+    does not prove WorkspacePatch, C2, Gate, release, Profile, B01, or
+    Agent-benefit.
 
 ## Implemented boundary
 
@@ -95,10 +106,11 @@ evaluation, or Agent-benefit claim.
 
 ## Remaining
 
-- Complete D02 with a separate exact pushed native-Linux public WorkspacePatch
-  lifecycle Task. WorkspaceWrite is complete. The Patch runtime is started;
-  bind Provider with public `cognitive init --reuse-existing-secret-binding`
-  after rebuilding the updated CLI, then admit and launch.
+- Complete D02 with a public WorkspacePatch Task that reaches `COMPLETED`,
+  `lease_acquired >= 1`, current passed verification, and `ACCEPTANCE_GRANTED`.
+  Provider bind is done. Two live Patch Tasks refused at Effect `NOT_EXECUTED`.
+  Strengthen the public Patch fixture so Pi copies the governed parameters
+  exactly, then admit a fresh Task.
 - Run the daemon/API mutation negatives for malformed base64, preimage,
   descriptor/digest/epoch drift, duplicate or mixed candidates, preimage
   mismatch, and no mutation before daemon admission.
