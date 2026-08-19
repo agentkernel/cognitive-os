@@ -121,6 +121,25 @@ test("before-agent activation fails closed when Pi leaves the allowlist empty", 
   }
 });
 
+test("before-agent activation fails closed when Pi omits daemon tools from its registry", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: readinessProjectionBody(),
+  });
+  try {
+    const pi = new FakePi();
+    pi.suppressToolRegistration = true;
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+
+    await assert.rejects(
+      pi.driveBeforeAgentStart(),
+      /daemon-governed tools are absent from Pi's registry: WorkspaceRead, WorkspaceSearch/,
+    );
+  } finally {
+    await daemon.close();
+  }
+});
+
 test("project trust is always denied", async () => {
   const pi = new FakePi();
   await assert.rejects(registerCognitiveOsExtension(pi, { client: clientFor(undefined) }));

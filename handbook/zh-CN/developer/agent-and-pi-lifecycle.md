@@ -31,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:a4d8cff16b198c0c58953525077e53573b36fdb9b0769fe9a5ec6c2c0e1da636"
+fingerprint: "sha256:25f3b790e9cc5535f75be783ef085f80ab90b710662c352ad20cefaf192df8dd"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -66,7 +66,7 @@ Pi 原生工具，并只显式允许 `WorkspaceRead` 与 `WorkspaceSearch`。这
 钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。Pi 绑定
 session 后，Extension 重新登记同名 daemon 治理定义以刷新 Pi runtime registry，然后只
 激活这两个名称。每次 agent turn 前，它会在 runtime registry 可用后重复该激活；未知名称
-会被忽略。CLI 显式的 `--tools` 列表是完整 Pi registry allowlist，因此不能激活 Pi 原生文件系统、shell 或
+会被忽略，因此任一名称不在 Pi 实际 registry 时 CognitiveOS 会 fail-close。CLI 显式的 `--tools` 列表是完整 Pi registry allowlist，因此不能激活 Pi 原生文件系统、shell 或
 mutating tools。
 
 shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi

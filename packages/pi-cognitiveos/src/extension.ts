@@ -129,6 +129,16 @@ function activateDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
 }
 
 function assertDaemonGovernedToolsAreActive(pi: ExtensionAPI): void {
+  const registeredToolNames = new Set(pi.getAllTools().map((tool) => tool.name));
+  const missingRegisteredToolNames = PUBLIC_DAEMON_GOVERNED_TOOL_NAMES.filter(
+    (toolName) => !registeredToolNames.has(toolName),
+  );
+  if (missingRegisteredToolNames.length > 0) {
+    throw new Error(
+      `CognitiveOS daemon-governed tools are absent from Pi's registry: ${missingRegisteredToolNames.join(", ")}`,
+    );
+  }
+
   const activeToolNames = new Set(pi.getActiveTools());
   const missingToolNames = PUBLIC_DAEMON_GOVERNED_TOOL_NAMES.filter(
     (toolName) => !activeToolNames.has(toolName),

@@ -84,6 +84,7 @@ export class FakePi implements ExtensionAPI {
   readonly activeToolSelections: string[][] = [];
   toolRegistrationCount = 0;
   suppressActiveToolActivation = false;
+  suppressToolRegistration = false;
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
   private toolCallHandler: ((event: ToolCallEvent) => Promise<ToolCallDecision>) | undefined;
   private beforeAgentStartHandler:
@@ -135,6 +136,9 @@ export class FakePi implements ExtensionAPI {
 
   registerTool(tool: ExtensionToolDefinition): void {
     this.toolRegistrationCount += 1;
+    if (this.suppressToolRegistration) {
+      return;
+    }
     const existingToolIndex = this.tools.findIndex(
       (registeredTool) => registeredTool.name === tool.name,
     );
@@ -151,6 +155,10 @@ export class FakePi implements ExtensionAPI {
 
   getActiveTools(): readonly string[] {
     return this.activeToolSelections.at(-1) ?? [];
+  }
+
+  getAllTools(): readonly ExtensionToolDefinition[] {
+    return this.tools;
   }
 
   setActiveTools(toolNames: readonly string[]): void {

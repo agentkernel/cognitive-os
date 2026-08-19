@@ -31,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:a4d8cff16b198c0c58953525077e53573b36fdb9b0769fe9a5ec6c2c0e1da636"
+fingerprint: "sha256:25f3b790e9cc5535f75be783ef085f80ab90b710662c352ad20cefaf192df8dd"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -72,7 +72,8 @@ lookalikes are rejected during live registration. Once Pi binds its session,
 the Extension re-registers the same daemon-governed definitions to refresh
 Pi's runtime registry, then activates only those two names. Before each agent
 turn, it repeats that activation after the runtime registry is available;
-unknown names are ignored. The CLI's explicit `--tools` list is the full Pi
+unknown names are ignored, so CognitiveOS fails closed if either name is absent
+from Pi's actual registry. The CLI's explicit `--tools` list is the full Pi
 registry allowlist, so this cannot activate Pi-native filesystem, shell, or
 mutating tools.
 

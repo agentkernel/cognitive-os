@@ -64,6 +64,11 @@ export interface ExtensionToolDefinition {
   ): Promise<AgentToolResult>;
 }
 
+/** Runtime registry projection returned by Pi's public `getAllTools()` API. */
+export interface RegisteredToolDefinition {
+  readonly name: string;
+}
+
 /** Presentation-only surface Pi hands to hooks and command handlers. */
 export interface ExtensionUi {
   setStatus(statusKey: string, statusText: string): void;
@@ -201,6 +206,8 @@ export interface ExtensionAPI {
   registerProvider(providerName: string, config: ProviderConfig): void;
   /** Return the active Pi tool names after session binding. */
   getActiveTools(): readonly string[];
+  /** Return the actual Pi registry after extension and allowlist filtering. */
+  getAllTools(): readonly RegisteredToolDefinition[];
   /** Activate only registered tools; Pi ignores unknown names. */
   setActiveTools(toolNames: readonly string[]): void;
   setModel(model: PiModel): Promise<boolean>;
