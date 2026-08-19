@@ -304,6 +304,14 @@ fn observe_public_c2a_task_redacted_counters() {
         ),
         &task_token,
     ));
+    let effects = response_json(&get(
+        port,
+        &format!(
+            "/task/observation?family=o5&task_ref={}",
+            encode_task_ref(&task_ref)
+        ),
+        &task_token,
+    ));
     let lifecycle = evidence["lifecycle"]["current_state"]
         .as_str()
         .unwrap_or("absent");
@@ -320,6 +328,32 @@ fn observe_public_c2a_task_redacted_counters() {
     let lease_acquired = observation["counters"]["lease_acquired"]["count"]
         .as_u64()
         .unwrap_or(0);
+    let effect_stages: Vec<String> = effects
+        .get("effects")
+        .and_then(Value::as_array)
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| {
+                    row.get("stage")
+                        .and_then(Value::as_str)
+                        .map(ToOwned::to_owned)
+                })
+                .collect()
+        })
+        .unwrap_or_default();
+    let effect_outcome_classes: Vec<String> = effects
+        .get("effects")
+        .and_then(Value::as_array)
+        .map(|rows| {
+            rows.iter()
+                .filter_map(|row| {
+                    row.get("outcome_class")
+                        .and_then(Value::as_str)
+                        .map(ToOwned::to_owned)
+                })
+                .collect()
+        })
+        .unwrap_or_default();
     println!(
         "{}",
         json!({
@@ -329,7 +363,9 @@ fn observe_public_c2a_task_redacted_counters() {
             "verification_status": verification_status,
             "verification_current": verification_current,
             "acceptance_current": acceptance_current,
-            "lease_acquired": lease_acquired
+            "lease_acquired": lease_acquired,
+            "effect_stages": effect_stages,
+            "effect_outcome_classes": effect_outcome_classes
         })
     );
 }
