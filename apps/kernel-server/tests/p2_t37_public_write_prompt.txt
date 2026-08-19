@@ -1,0 +1,1 @@
+Call exactly one daemon-governed tool: WorkspaceWrite. Do not use bash, edit, write, read, or any Pi-native filesystem or shell tool. Use these exact parameters: target=workspace://c2a-write.txt input_b64=YzJhLXdyaXRlCg== preimage=absent. After that tool returns, stop.
