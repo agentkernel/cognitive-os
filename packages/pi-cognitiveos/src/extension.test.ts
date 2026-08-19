@@ -14,7 +14,10 @@ import { test } from "node:test";
 import { PersonalDaemonClient } from "./daemon-client.js";
 import type { EnvironmentSlice, FileReader } from "./daemon-discovery.js";
 import { resolvePersonalDaemonPaths } from "./daemon-discovery.js";
-import { registerCognitiveOsExtension } from "./extension.js";
+import {
+  createPublicCandidateSubmitter,
+  registerCognitiveOsExtension,
+} from "./extension.js";
 import { COGNITIVEOS_STATUS_COMMAND_NAME, COGNITIVEOS_STATUS_KEY } from "./pin.js";
 import { DAEMON_WORKSPACE_QUEUED_RESULT } from "./workspace-tools.js";
 import { FakePi, readinessProjectionBody, startFakeDaemon } from "./test-support.js";
@@ -85,12 +88,17 @@ test("registration queues the daemon provider and activates its model at session
     assert.equal(pi.selectedModels[0]?.provider, "cognitiveos");
     assert.equal(pi.toolRegistrationCount, 8, "session binding must refresh same-name tools");
     assert.equal(pi.tools.length, 4, "post-bind refresh must not widen the tool surface");
-    assert.deepEqual(pi.activeToolSelections, [["WorkspaceRead", "WorkspaceSearch"]]);
+    assert.deepEqual(pi.activeToolSelections, [[
+      "WorkspaceRead",
+      "WorkspaceSearch",
+      "WorkspaceWrite",
+      "WorkspacePatch",
+    ]]);
 
     await pi.driveBeforeAgentStart();
     assert.deepEqual(pi.activeToolSelections, [
-      ["WorkspaceRead", "WorkspaceSearch"],
-      ["WorkspaceRead", "WorkspaceSearch"],
+      ["WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"],
+      ["WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"],
     ]);
     assert.equal(
       pi.selectedModels[0]?.baseUrl,
@@ -114,7 +122,7 @@ test("before-agent activation fails closed when Pi leaves the allowlist empty", 
 
     await assert.rejects(
       pi.driveBeforeAgentStart(),
-      /daemon-governed tools were not activated: WorkspaceRead, WorkspaceSearch/,
+      /daemon-governed tools were not activated: WorkspaceRead, WorkspaceSearch, WorkspaceWrite, WorkspacePatch/,
     );
   } finally {
     await daemon.close();
@@ -133,7 +141,7 @@ test("before-agent activation fails closed when Pi omits daemon tools from its r
 
     await assert.rejects(
       pi.driveBeforeAgentStart(),
-      /daemon-governed tools are absent from Pi's registry: WorkspaceRead, WorkspaceSearch/,
+      /daemon-governed tools are absent from Pi's registry: WorkspaceRead, WorkspaceSearch, WorkspaceWrite, WorkspacePatch/,
     );
   } finally {
     await daemon.close();
@@ -184,6 +192,104 @@ test("daemon Workspace* tools are registered and their execute path is I/O-free"
   } finally {
     await daemon.close();
   }
+});
+
+test("task-bound public mutation candidates carry only bounded daemon-governed fields", async () => {
+  const candidates: unknown[] = [];
+  const client = {
+    async submitPublicCandidate(candidate: unknown): Promise<void> {
+      candidates.push(candidate);
+    },
+  } as unknown as PersonalDaemonClient;
+  const submitter = createPublicCandidateSubmitter(client, "task://personal/c2a-write");
+
+  await submitter.submit("WorkspaceWrite", {
+    target: "workspace://personal/c2a.txt",
+    input_b64: "YzJhCg==",
+    preimage: "absent",
+  });
+  await submitter.submit("WorkspacePatch", {
+    target: "workspace://personal/c2a.txt",
+    input_b64: "LS0tIGEvdGVzdAo=",
+    preimage: "digest:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  });
+
+  assert.deepEqual(candidates, [
+    {
+      taskRef: "task://personal/c2a-write",
+      toolRef: "native.workspace.write",
+      action: "write",
+      target: "workspace://personal/c2a.txt",
+      parameters: { family: "WorkspaceWrite", input_b64: "YzJhCg==", preimage: "absent" },
+      parametersDigest: "sha256:" + "0".repeat(64),
+      expectedStateVersion: 1,
+      operationDescriptorId: "00000000-0000-7000-8000-000000002003",
+    },
+    {
+      taskRef: "task://personal/c2a-write",
+      toolRef: "native.workspace.patch",
+      action: "patch",
+      target: "workspace://personal/c2a.txt",
+      parameters: {
+        family: "WorkspacePatch",
+        input_b64: "LS0tIGEvdGVzdAo=",
+        preimage: "digest:sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      },
+      parametersDigest: "sha256:" + "0".repeat(64),
+      expectedStateVersion: 1,
+      operationDescriptorId: "00000000-0000-7000-8000-000000002004",
+    },
+  ]);
+});
+
+test("task-bound public mutation candidates reject absent schema-bound fields", async () => {
+  const client = {
+    async submitPublicCandidate(): Promise<void> {
+      throw new Error("invalid candidates must not reach the daemon client");
+    },
+  } as unknown as PersonalDaemonClient;
+  const submitter = createPublicCandidateSubmitter(client, "task://personal/c2a-write");
+
+  await assert.rejects(
+    submitter.submit("WorkspaceWrite", {
+      target: "workspace://personal/c2a.txt",
+      preimage: "absent",
+    }),
+    /mutation candidate parameters are invalid/,
+  );
+  await assert.rejects(
+    submitter.submit("WorkspacePatch", {
+      target: "workspace://personal/c2a.txt",
+      input_b64: "LS0tIGEvdGVzdAo=",
+    }),
+    /mutation candidate parameters are invalid/,
+  );
+});
+
+test("task-bound public mutation candidates reject malformed base64 and preimages", async () => {
+  const client = {
+    async submitPublicCandidate(): Promise<void> {
+      throw new Error("invalid candidates must not reach the daemon client");
+    },
+  } as unknown as PersonalDaemonClient;
+  const submitter = createPublicCandidateSubmitter(client, "task://personal/c2a-write");
+
+  await assert.rejects(
+    submitter.submit("WorkspaceWrite", {
+      target: "workspace://personal/c2a.txt",
+      input_b64: "not-base64",
+      preimage: "absent",
+    }),
+    /mutation candidate parameters are invalid/,
+  );
+  await assert.rejects(
+    submitter.submit("WorkspacePatch", {
+      target: "workspace://personal/c2a.txt",
+      input_b64: "YzJhCg==",
+      preimage: "digest:sha256:BAD",
+    }),
+    /mutation candidate parameters are invalid/,
+  );
 });
 
 test("session start shows real daemon facts and warns when the first conversation is blocked", async () => {

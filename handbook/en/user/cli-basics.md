@@ -36,7 +36,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive daemon status` | report daemon lock/endpoint liveness |
 | `cognitive daemon stop` | signal the recorded PID; remove lock/endpoint only after confirmed exit |
 | `cognitive pi configure` | write non-secret `pi.json` (absolute executable + extension paths) |
-| `cognitive pi launch` | fail-closed Pi launch after full doctor readiness and exact version check |
+| `cognitive pi launch [--task-ref <task://URI>]` | fail-closed Pi launch after full doctor readiness and exact version check; task-bound launches expose only daemon-governed WorkspaceRead/Search/Write/Patch and submit untrusted candidates to the task channel |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |

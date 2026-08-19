@@ -11,7 +11,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
   - path: docs/product/personal/linux-1.0-scope.md
-fingerprint: "sha256:098d99caa342dd0eee92e77d5f28f7facb91725d499d2c09cf3f51c47270a7dc"
+fingerprint: "sha256:a4b75d2895097bc50a0974edd51dafff5f3547b144ba170c022d6747f91cc427"
 non_claims:
   - Compilation on a platform is not product support; only the listed product target carries installation and service paths.
 ---

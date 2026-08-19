@@ -3,8 +3,9 @@
 - Status: active navigation document; no evaluation campaign is active
 - Purpose: preserve the dependency-ordered delivery route to a **new**, not yet
   activated, C1/C2 paired benchmark readiness assessment
-- Current product route: C2a public WorkspaceWrite/Patch reconfirmation on
-  `main@3efd7011b605a32ac0c9ec114321831995f32d90`
+- Current product task: `P2-T37` public WorkspaceWrite/Patch path on
+  `personal/P2-T37-c2a-public-mutation-path`, based on
+  `main@08819a82688c78f56af3cbe8b202b787986feefb`
 - Current C1 implementation checkpoint: P2-T36 closed at
   `main@3efd7011b605a32ac0c9ec114321831995f32d90`
 - Last reconciled: 2026-08-19
@@ -47,7 +48,7 @@ reconciling the authoritative sources in section 1.
 | P2-T36/D02: provider/readiness boundary | complete | No secret was read, printed, searched, logged, or placed in command arguments. The updated owner-designated file was streamed only through non-PTY public CLI stdin; redacted doctor reports Provider SecretRef resolution, selected-model digest match, and `first_conversation_ready: true`. The independent P2 runtime did not reuse EVAL-011 state. | Pi launch is permitted only after daemon-owned readiness admits it. | Repair the public Pi conversation caller/runtime integration; do not inspect material or reuse any closed-EVAL item. |
 | P2-T36/D03: supported validation and CI | complete | Final documentation-head workflow `32245868452` passed Ubuntu, Windows, and required-ci. | C1-supported validation remains scoped to the merged product revision. | Preserve the report as C1 evidence only. |
 | P2-T36/D03: task closure | complete | PR #244 merged at `3efd7011`; the lease is archived; local/remote task branches are deleted; local `main` equals `origin/main`. | No P2-T36 closure work remains. | Select C2a per section 7. |
-| C2a-C2d public O-arm | C2a reconfirmation next | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations; P2-T36 is closed. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | Run the first supported C2a public WorkspaceWrite/Patch path and register the smallest uncovered product gap. |
+| C2a-C2d public O-arm | P2-T37/D01 in progress | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations; P2-T36 is closed. Public source inspection proves the C2a mutation path is omitted from the public Pi allowlist. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | Add P2-T37 failure-first public allowlist and candidate-mapper coverage, then validate separately bound mutation Tasks. |
 | Pure-Pi P arm and frozen paired assets | not started | No new runner, corpus, broker, oracle, or campaign asset is in use. | Product O-arm readiness is a prerequisite; new EVAL activation remains owner-only. | Do not begin until the formal preparation boundary permits it. |
 | New C1/C2 campaign | not started / inactive | EVAL-004 through EVAL-010 remain closed and isolated. | No new EVAL ID, preregistration, root, port, SecretStore item, denominator, or sample is authorized by this plan. | Only a future owner activation may request a new preregistration and B0. |
 
@@ -71,7 +72,7 @@ report before selecting unrelated work. `Not started` is not a failure.
 | 7. C1 WorkspaceSearch public route | complete | A separate fresh non-B01 Linux Task independently completed public Pi WorkspaceSearch through the same authority chain. | The evidence is retained in the P2-T36 report. | Reconfirm C2a without borrowing C1 evidence. |
 | 8. Required CI and supported regressions | complete | Final documentation-head required CI `32245868452` passed Ubuntu, Windows, and required-ci. | C1 CI is complete at the merged revision. | Use exact merged `main` for C2a reconfirmation. |
 | 9. P2-T36 closure | complete | PR #244 merged at `3efd7011`; lease/branch/main reconciliation is complete. | No P2-T36 work remains. | Select C2a under a new narrow lease only if the real public route exposes a gap. |
-| 10. C2 and paired-benchmark readiness | in progress | C1 is complete; C2a-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Reconfirm the C2a public WorkspaceWrite/Patch path on exact merged `main`. |
+| 10. C2 and paired-benchmark readiness | in progress | C1 is complete. P2-T37 is the active C2a public WorkspaceWrite/Patch product task; C2b-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Complete P2-T37/D01 before exposing the C2a mutation tools through the public composition. |
 
 ### 2.2 Resume checklist
 

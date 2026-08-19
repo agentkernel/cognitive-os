@@ -35,7 +35,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive daemon status` | 报告 daemon 锁/endpoint 存活状态 |
 | `cognitive daemon stop` | 向记录的 PID 发信号；确认退出后才移除锁与 endpoint |
 | `cognitive pi configure` | 写非 secret 的 `pi.json`（可执行文件与扩展入口的绝对路径） |
-| `cognitive pi launch` | doctor 全就绪且版本精确匹配后 fail-closed 启动 Pi |
+| `cognitive pi launch [--task-ref <task://URI>]` | doctor 全就绪且版本精确匹配后 fail-closed 启动 Pi；任务绑定启动仅暴露 daemon 治理的 WorkspaceRead/Search/Write/Patch，并向 task 通道提交不可信 candidate |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
 | `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
