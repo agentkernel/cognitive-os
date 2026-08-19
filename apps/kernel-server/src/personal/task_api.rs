@@ -14,9 +14,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 use crate::personal::scheduler_authority::{
-    ContextResolutionCommand, PrivatePiCandidateProposer, UntrustedPiCandidate,
-    candidate_admission_command_from_policy, context_resolution_command_from_policy,
-    propose_persist_and_admit_candidate,
+    PrivatePiCandidateProposer, UntrustedPiCandidate, candidate_admission_command_from_policy,
+    context_resolution_command_from_policy, propose_persist_and_admit_candidate,
 };
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
@@ -649,7 +648,7 @@ impl TaskApi {
         }
     }
 
-    fn candidate(&mut self, body: &[u8], principal: &str) -> TaskApiResponse {
+    fn candidate(&mut self, body: &[u8], _principal: &str) -> TaskApiResponse {
         let request: PublicPiCandidateRequest = match decode(body) {
             Ok(request) => request,
             Err(response) => return response,
