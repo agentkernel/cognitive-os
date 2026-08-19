@@ -33,6 +33,8 @@ pub struct PiLaunchOptions {
     /// Run Pi in its supported non-interactive mode and keep the CLI attached
     /// until Pi has consumed stdin and completed the conversation.
     pub print_mode: bool,
+    /// Bind public Workspace candidates to an already admitted Task.
+    pub task_ref: Option<String>,
 }
 
 /// Inputs accepted by `cognitive pi configure`.
@@ -184,7 +186,16 @@ fn prepare_launch_with_doctor_document(
             }
             arguments
         },
-        environment: execution_environment_for_layout_roots(&options.layout_roots)?,
+        environment: {
+            let mut environment = execution_environment_for_layout_roots(&options.layout_roots)?;
+            if let Some(task_ref) = &options.task_ref {
+                if !task_ref.starts_with("task://") {
+                    return Err("Pi task ref must be a canonical task:// URI".to_owned());
+                }
+                environment.insert("COGNITIVEOS_PI_TASK_REF".to_owned(), task_ref.clone());
+            }
+            environment
+        },
     })
 }
 
@@ -519,6 +530,7 @@ mod tests {
                 runtime_root: Some(temporary_root.path().to_path_buf()),
             },
             print_mode: false,
+            task_ref: None,
         }
     }
 

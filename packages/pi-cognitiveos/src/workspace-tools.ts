@@ -2,15 +2,19 @@
  * Daemon-governed Workspace* tools advertised to Pi (P2-T29).
  *
  * These tools exist so the Agent can name Search/Write/Patch without using Pi's
- * native filesystem tools. `execute` must not touch the filesystem, spawn a
- * process, or HTTP the daemon: the private candidate path holds the authority
- * store while `propose()` waits, and a nested remember/search call would
- * deadlock. The adapter extracts arguments from Pi's event stream and maps
- * them onto the existing P2-T21 candidate/Intent/Effect path.
+ * native filesystem tools. `execute` never touches the filesystem or spawns a
+ * process. In task-bound public mode it submits only untrusted operation fields
+ * to the daemon Task channel; the daemon remains the sole authority writer.
+ * Without a task binding, the handler retains the observation-only behavior
+ * used by ordinary Pi sessions and protocol tests.
  */
 
 import type { AgentToolResult, ExtensionToolDefinition } from "./pi-api.js";
 import { Type } from "typebox";
+
+export interface PublicCandidateSubmitter {
+  submit(toolName: string, parameters: Readonly<Record<string, unknown>>): Promise<void>;
+}
 
 export const DAEMON_WORKSPACE_SEARCH = "WorkspaceSearch";
 export const DAEMON_WORKSPACE_READ = "WorkspaceRead";
@@ -25,13 +29,13 @@ export const DAEMON_GOVERNED_WORKSPACE_TOOL_NAMES: readonly string[] = [
 ];
 
 export const DAEMON_WORKSPACE_QUEUED_RESULT =
-  "queued for daemon-governed Intent/Effect; this Extension does not mutate the workspace or contact the daemon during private candidate generation";
+  "queued for daemon-governed Intent/Effect; this Extension does not mutate the workspace";
 
 function queuedResult(): AgentToolResult {
   return { content: [{ type: "text", text: DAEMON_WORKSPACE_QUEUED_RESULT }] };
 }
 
-/** True when the name is one of the three daemon-governed Workspace* tools. */
+/** True when the name is one of the daemon-governed Workspace* tools. */
 export function isDaemonGovernedWorkspaceTool(toolName: string): boolean {
   const normalized = toolName.trim().toLowerCase();
   return DAEMON_GOVERNED_WORKSPACE_TOOL_NAMES.some(
@@ -40,10 +44,21 @@ export function isDaemonGovernedWorkspaceTool(toolName: string): boolean {
 }
 
 /**
- * Registerable tool records. `execute` is a no-op observation: it returns a
- * bounded queued text and never performs I/O.
+ * Registerable tool records. Public task-bound execution submits a candidate
+ * through the daemon and returns only a bounded queued result.
  */
-export function daemonGovernedWorkspaceTools(): readonly ExtensionToolDefinition[] {
+export function daemonGovernedWorkspaceTools(
+  candidateSubmitter?: PublicCandidateSubmitter,
+): readonly ExtensionToolDefinition[] {
+  const executeCandidate = async (
+    toolName: string,
+    parameters: Readonly<Record<string, unknown>>,
+  ): Promise<AgentToolResult> => {
+    if (candidateSubmitter !== undefined) {
+      await candidateSubmitter.submit(toolName, parameters);
+    }
+    return queuedResult();
+  };
   return [
     {
       name: DAEMON_WORKSPACE_READ,
@@ -54,8 +69,8 @@ export function daemonGovernedWorkspaceTools(): readonly ExtensionToolDefinition
         { target: Type.String({ description: "Workspace URI target" }) },
         { additionalProperties: false },
       ),
-      async execute(): Promise<AgentToolResult> {
-        return queuedResult();
+      async execute(_toolCallId, params): Promise<AgentToolResult> {
+        return executeCandidate(DAEMON_WORKSPACE_READ, params);
       },
     },
     {
@@ -70,8 +85,8 @@ export function daemonGovernedWorkspaceTools(): readonly ExtensionToolDefinition
         },
         { additionalProperties: false },
       ),
-      async execute(): Promise<AgentToolResult> {
-        return queuedResult();
+      async execute(_toolCallId, params): Promise<AgentToolResult> {
+        return executeCandidate(DAEMON_WORKSPACE_SEARCH, params);
       },
     },
     {
@@ -89,8 +104,8 @@ export function daemonGovernedWorkspaceTools(): readonly ExtensionToolDefinition
         },
         { additionalProperties: false },
       ),
-      async execute(): Promise<AgentToolResult> {
-        return queuedResult();
+      async execute(_toolCallId, params): Promise<AgentToolResult> {
+        return executeCandidate(DAEMON_WORKSPACE_WRITE, params);
       },
     },
     {
@@ -108,8 +123,8 @@ export function daemonGovernedWorkspaceTools(): readonly ExtensionToolDefinition
         },
         { additionalProperties: false },
       ),
-      async execute(): Promise<AgentToolResult> {
-        return queuedResult();
+      async execute(_toolCallId, params): Promise<AgentToolResult> {
+        return executeCandidate(DAEMON_WORKSPACE_PATCH, params);
       },
     },
   ];

@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: handbook/_meta/annotations/env-vars.json
-fingerprint: "sha256:429c2171cd68347d852d06027abdecc5d20b08f6652ced7138a1b07bd17b4734"
+fingerprint: "sha256:4b6cade9a033f81ad1e23650add217bf288a337081dbd9e79b65edf17071271e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -25,6 +25,7 @@ non_claims:
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos, kernel-server | 设为 enabled 才请求 Pi 侧 route stage 测量以及 daemon 侧 nested preflight/correlation 回显；其他值（含缺省）两侧均不启用插桩。 |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN` | pi-cognitiveos | 该测量会话被授权的 campaign 标识；必须与启用变量同时提供，凭据形状的值一律拒绝。 |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` | pi-cognitiveos | 可选的绝对 .ndjson 路径，供嵌入的 campaign harness 写入；Extension 自身绝不打开它，且位于 Personal state/runtime/config 根内的路径一律拒绝。 |
+| `COGNITIVEOS_PI_TASK_REF` | cognitive pi launch, pi-cognitiveos | public Pi 任务绑定启动上下文。Extension 仅将不可信 Workspace candidate 字段提交到已认证 daemon Task 通道，由 daemon 校验并接纳。 |
 | `COGNITIVEOS_PRIVATE_COMPLETION_SOCKET` | pi-agent-adapter | daemon 创建并交给 Pi candidate 进程的一次性私有 completion socket 路径。 |
 | `DBUS_SESSION_BUS_ADDRESS` | SecretStore backend selection | 为 Linux Secret Service 后端探测提供会话总线信号。 |
 | `HOME` | daemon, CLI, Pi extension | XDG 变量缺失时的回退基目录。 |

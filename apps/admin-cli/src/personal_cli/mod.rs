@@ -548,10 +548,11 @@ fn parse_pi_configure_options(
 }
 
 fn parse_pi_launch_options(flags: &BTreeMap<String, String>) -> Result<PiLaunchOptions, String> {
-    reject_unexpected_flags(flags, &["runtime-root", "print"])?;
+    reject_unexpected_flags(flags, &["runtime-root", "print", "task-ref"])?;
     Ok(PiLaunchOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
         print_mode: flag_bool(flags, "print")?,
+        task_ref: flags.get("task-ref").cloned(),
     })
 }
 

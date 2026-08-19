@@ -33,6 +33,12 @@
       "description_zh": "可选的绝对 .ndjson 路径，供嵌入的 campaign harness 写入；Extension 自身绝不打开它，且位于 Personal state/runtime/config 根内的路径一律拒绝。"
     },
     {
+      "name": "COGNITIVEOS_PI_TASK_REF",
+      "consumer": "cognitive pi launch, pi-cognitiveos",
+      "description_en": "Task-bound public Pi launch context. The Extension submits only untrusted Workspace candidate fields to the authenticated daemon Task channel for validation and admission.",
+      "description_zh": "public Pi 任务绑定启动上下文。Extension 仅将不可信 Workspace candidate 字段提交到已认证 daemon Task 通道，由 daemon 校验并接纳。"
+    },
+    {
       "name": "COGNITIVEOS_PRIVATE_COMPLETION_SOCKET",
       "consumer": "pi-agent-adapter",
       "description_en": "Path of the daemon-created one-shot private completion socket handed to the Pi candidate process.",

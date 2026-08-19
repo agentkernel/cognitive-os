@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:5ae215b62f28cd120acc3b6a2e5f70b847f9c65350b30302d01aa67ccafab21e"
+fingerprint: "sha256:c2ef64d1d97190bdad1a2c0bf63b0d52ef1616ef6cfea6e0bddd856a06828b35"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -50,6 +50,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/intent.interpret` | task | Persist a probabilistic interpretation candidate; material ambiguity forces clarification_required. |
 | `POST` | `/task/preview` | task | Server-issued digest-bound contract preview; persists nothing. |
 | `POST` | `/task/admit` | task | Admit the exact preview digest and mint the TaskContract under epoch CAS. |
+| `POST` | `/task/candidate` | task | Submit bounded public-Pi operation fields; the daemon recomputes parameter digests and performs candidate admission from the immutable Task policy. |
 | `GET` | `/task/evidence` | task | Reconstruct bounded redacted lifecycle, Effect reconciliation, verification, acceptance, and durable cursor evidence for one task_ref from authority and Artifact CAS. |
 | `GET` | `/task/effects` | task | Return bounded Effect history for one task_ref: opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and report refs. Receipts, raw parameters, and extra query fields are refused. |
 | `GET` | `/task/observation` | task | Return bounded O2/O3/O4/O5/O13 observation for one task_ref. Empty collectors return observed_zero with a named negative control; prompt/body/receipt/capability query keys fail closed. O5 reuses redacted Effect history; O13 is durable audit cursor/replay with stale-cursor, digest-break, and gap negatives. Not a second authority API. |

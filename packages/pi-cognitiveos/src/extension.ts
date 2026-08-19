@@ -42,6 +42,7 @@ import {
   DAEMON_WORKSPACE_READ,
   DAEMON_WORKSPACE_SEARCH,
   daemonGovernedWorkspaceTools,
+  type PublicCandidateSubmitter,
 } from "./workspace-tools.js";
 
 const PUBLIC_DAEMON_GOVERNED_TOOL_NAMES = [
@@ -55,6 +56,8 @@ export const PROJECT_TRUST_DECISION = { trusted: "no" } as const;
 export interface CognitiveOsExtensionOptions {
   /** Injected in tests; production constructs a default client. */
   readonly client?: PersonalDaemonClient;
+  /** Public Task binding supplied only by the task-bound launch surface. */
+  readonly taskRef?: string;
 }
 
 /**
@@ -70,15 +73,18 @@ export async function registerCognitiveOsExtension(
 
   pi.on("tool_call", async (event) => decideToolCall(event));
 
-  pi.on("before_agent_start", async () => {
-    activateDaemonGovernedWorkspaceTools(pi);
-  });
-
   const client = options.client ?? new PersonalDaemonClient();
+  const taskRef = options.taskRef ?? client.readPublicTaskRef();
+  const candidateSubmitter = taskRef === undefined
+    ? undefined
+    : publicCandidateSubmitter(client, taskRef);
+  pi.on("before_agent_start", async () => {
+    activateDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
+  });
   let daemonSelectedModel: PiModel | undefined;
 
   pi.on("session_start", async (_event, context) => {
-    activateDaemonGovernedWorkspaceTools(pi);
+    activateDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
     if (daemonSelectedModel === undefined) {
       await showStatus(client, context, "session_start");
       return;
@@ -109,20 +115,57 @@ export async function registerCognitiveOsExtension(
   }
   pi.registerProvider(daemonSelectedModel.provider, daemonProvider);
 
-  registerDaemonGovernedWorkspaceTools(pi);
+  registerDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
 }
 
-function registerDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
-  for (const tool of daemonGovernedWorkspaceTools()) {
+function registerDaemonGovernedWorkspaceTools(
+  pi: ExtensionAPI,
+  candidateSubmitter?: PublicCandidateSubmitter,
+): void {
+  for (const tool of daemonGovernedWorkspaceTools(candidateSubmitter)) {
     pi.registerTool(tool);
   }
 }
 
-function activateDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
+function publicCandidateSubmitter(
+  client: PersonalDaemonClient,
+  taskRef: string,
+): PublicCandidateSubmitter {
+  return {
+    async submit(toolName, parameters) {
+      const target = parameters["target"];
+      if (typeof target !== "string" || target.length === 0) {
+        throw new Error("daemon Workspace candidate target is invalid");
+      }
+      const query = parameters["query"];
+      const isSearch = toolName === DAEMON_WORKSPACE_SEARCH;
+      if (isSearch && (typeof query !== "string" || query.length === 0)) {
+        throw new Error("daemon WorkspaceSearch candidate query is invalid");
+      }
+      await client.submitPublicCandidate({
+        taskRef,
+        toolRef: isSearch ? "native.workspace.search" : "native.workspace.read",
+        action: isSearch ? "search" : "read",
+        target,
+        ...(isSearch ? { parameters: { family: "WorkspaceSearch", query } } : {}),
+        parametersDigest: "sha256:" + "0".repeat(64),
+        expectedStateVersion: 1,
+        operationDescriptorId: isSearch
+          ? "00000000-0000-7000-8000-000000002002"
+          : "00000000-0000-7000-8000-000000002001",
+      });
+    },
+  };
+}
+
+function activateDaemonGovernedWorkspaceTools(
+  pi: ExtensionAPI,
+  candidateSubmitter?: PublicCandidateSubmitter,
+): void {
   // Pi's initial extension load records tools before its runtime registry is
   // bound. Re-registering same-name tools at the pre-agent hook refreshes the
   // registry without expanding the Extension surface.
-  registerDaemonGovernedWorkspaceTools(pi);
+  registerDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
   // This explicit allowlist keeps all native and mutating tools inactive.
   pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
   assertDaemonGovernedToolsAreActive(pi);

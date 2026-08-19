@@ -13,6 +13,11 @@ use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
 
+use crate::personal::scheduler_authority::{
+    ContextResolutionCommand, PrivatePiCandidateProposer, UntrustedPiCandidate,
+    candidate_admission_command_from_policy, context_resolution_command_from_policy,
+    propose_persist_and_admit_candidate,
+};
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
 use cognitive_contracts::generated::object_reference::{
@@ -47,10 +52,10 @@ use cognitive_kernel::intent_chain::{
     seal_governed_object_content_digest, strong_reference_to,
 };
 use cognitive_kernel::ports::{
-    AuthorityStore, ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRequestRow,
-    ContextRevocationFactRow, ContextStore, ContinuationAuthorityStore, IntentChainStore,
-    IntentRow, ProtocolStore, SchedulerExecutionPolicyRow, SchedulerExecutionPolicyStore,
-    StoredObject, TaskBinding,
+    AuthorityStore, Clock, ContextAuthorizationFactStore, ContextAuthorizationFactsRow,
+    ContextRequestRow, ContextRevocationFactRow, ContextStore, ContinuationAuthorityStore,
+    IntentChainStore, IntentRow, ProtocolStore, SchedulerExecutionPolicyRow,
+    SchedulerExecutionPolicyStore, StoredObject, TaskBinding,
 };
 use cognitive_management::{KernelTaskApplicationService, TaskApplicationService};
 use cognitive_store::{
@@ -164,6 +169,79 @@ struct PersistedGovernanceRoot {
     resource_scope: StrongReference,
 }
 
+/// Public Pi candidate input. The authenticated daemon task channel supplies
+/// all governance and identity fields; Pi contributes only bounded operation
+/// data and the descriptor reference it claims to have selected.
+#[derive(Debug, Deserialize)]
+#[serde(deny_unknown_fields)]
+struct PublicPiCandidateRequest {
+    schema_version: String,
+    task_ref: String,
+    tool_ref: String,
+    action: String,
+    target: String,
+    #[serde(default)]
+    parameters: Option<Value>,
+    parameters_digest: String,
+    expected_state_version: i64,
+    operation_descriptor_id: String,
+}
+
+impl PublicPiCandidateRequest {
+    fn into_untrusted_candidate(self) -> Result<UntrustedPiCandidate, String> {
+        if self.schema_version != "cognitiveos.task-candidate-request/0.1" {
+            return Err("candidate schema version is unsupported".to_owned());
+        }
+        if self.tool_ref.trim().is_empty()
+            || self.action.trim().is_empty()
+            || self.target.trim().is_empty()
+            || self.parameters_digest.trim().is_empty()
+            || self.expected_state_version < 1
+        {
+            return Err("candidate contains an empty or invalid field".to_owned());
+        }
+        let operation_descriptor_id = ObjectId::parse(&self.operation_descriptor_id)
+            .map_err(|_| "candidate operation descriptor is malformed".to_owned())?;
+        let parameters_digest = match &self.parameters {
+            Some(parameters) => {
+                let canonical_bytes =
+                    cognitive_contracts::canonical::canonical_bytes_of_value(parameters)
+                        .map_err(|_| "candidate parameters are not canonicalizable".to_owned())?;
+                cognitive_contracts::canonical::digest(
+                    &canonical_bytes,
+                    "cognitiveos.personal.candidate-parameters/0.1",
+                )
+                .map_err(|_| "candidate parameters digest could not be computed".to_owned())?
+            }
+            None => self.parameters_digest,
+        };
+        Ok(UntrustedPiCandidate {
+            tool_ref: self.tool_ref,
+            action: self.action,
+            target: self.target,
+            parameters: self.parameters,
+            parameters_digest,
+            expected_state_version: self.expected_state_version,
+            operation_descriptor_id,
+        })
+    }
+}
+
+struct PublicPiCandidateProposer {
+    candidate: UntrustedPiCandidate,
+}
+
+impl PrivatePiCandidateProposer for PublicPiCandidateProposer {
+    fn propose_candidate(
+        &self,
+        _resolved_context: &cognitive_kernel::context::ResolvedContextView,
+        _task_ref: &str,
+        _contract_epoch: i64,
+    ) -> Result<UntrustedPiCandidate, String> {
+        Ok(self.candidate.clone())
+    }
+}
+
 /// A response ready for the loopback HTTP transport.
 #[derive(Debug)]
 pub(crate) struct TaskApiResponse {
@@ -224,6 +302,9 @@ impl TaskApi {
             }
             "POST" if method_path.starts_with("POST /task/admit ") => {
                 self.admit(body, authenticated_principal)
+            }
+            "POST" if method_path.starts_with("POST /task/candidate ") => {
+                self.candidate(body, authenticated_principal)
             }
             "GET"
                 if method_path.starts_with("GET /task/evidence?")
@@ -564,6 +645,116 @@ impl TaskApi {
                 409,
                 "TASK_ADMISSION_REJECTED",
                 "preview digest, acceptance, or epoch CAS was rejected",
+            ),
+        }
+    }
+
+    fn candidate(&mut self, body: &[u8], principal: &str) -> TaskApiResponse {
+        let request: PublicPiCandidateRequest = match decode(body) {
+            Ok(request) => request,
+            Err(response) => return response,
+        };
+        if request.task_ref.trim().is_empty() || UriRef::parse(&request.task_ref).is_err() {
+            return error(
+                400,
+                "TASK_CANDIDATE_INVALID_TASK_REF",
+                "task_ref must be a canonical URI",
+            );
+        }
+        let store = match self.authority_store() {
+            Ok(store) => store,
+            Err(response) => return response,
+        };
+        let contract_epoch = match store.current_contract_epoch(&request.task_ref) {
+            Ok(epoch) if epoch > 0 => epoch,
+            Ok(_) => {
+                return error(
+                    404,
+                    "TASK_CANDIDATE_TASK_NOT_FOUND",
+                    "no admitted TaskContract exists for task_ref",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
+                    "durable authority store is unavailable",
+                );
+            }
+        };
+        let policy = match store.load_scheduler_execution_policy(&request.task_ref, contract_epoch)
+        {
+            Ok(Some(policy)) => policy,
+            Ok(None) => {
+                return error(
+                    409,
+                    "TASK_CANDIDATE_POLICY_UNAVAILABLE",
+                    "task has no daemon scheduler policy",
+                );
+            }
+            Err(_) => {
+                return error(
+                    503,
+                    "TASK_AUTHORITY_STORE_UNAVAILABLE",
+                    "durable authority store is unavailable",
+                );
+            }
+        };
+        let now = match SystemClock.now() {
+            Ok(value) => value,
+            Err(_) => {
+                return error(
+                    503,
+                    "TASK_CANDIDATE_CLOCK_UNAVAILABLE",
+                    "daemon clock is unavailable",
+                );
+            }
+        };
+        let context_command = match context_resolution_command_from_policy(&policy, now) {
+            Ok(command) => command,
+            Err(_) => {
+                return error(
+                    409,
+                    "TASK_CANDIDATE_POLICY_INVALID",
+                    "daemon scheduler policy is invalid",
+                );
+            }
+        };
+        let admission_command = match candidate_admission_command_from_policy(&policy) {
+            Ok(command) => command,
+            Err(_) => {
+                return error(
+                    409,
+                    "TASK_CANDIDATE_POLICY_INVALID",
+                    "daemon scheduler policy is invalid",
+                );
+            }
+        };
+        let task_ref = request.task_ref.clone();
+        let candidate = match request.into_untrusted_candidate() {
+            Ok(candidate) => candidate,
+            Err(message) => return error(400, "TASK_CANDIDATE_INVALID", &message),
+        };
+        let proposer = PublicPiCandidateProposer { candidate };
+        match propose_persist_and_admit_candidate(
+            &store,
+            &SystemClock,
+            &UuidV7Generator,
+            &context_command,
+            &proposer,
+            &admission_command,
+        ) {
+            Ok(receipt) => ok(json!({
+                "schema_version": "cognitiveos.task-candidate-result/0.1",
+                "task_ref": task_ref,
+                "authorization_id": receipt.authorization_id.to_string(),
+                "admitted": true,
+                "authority_side_effects": true
+            })),
+            Err(_) => error(
+                409,
+                "TASK_CANDIDATE_ADMISSION_REJECTED",
+                "daemon rejected the candidate",
             ),
         }
     }

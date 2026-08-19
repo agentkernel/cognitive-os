@@ -127,6 +127,18 @@ export interface BoundedToolCall {
   readonly arguments: Readonly<Record<string, unknown>>;
 }
 
+/** Untrusted operation fields submitted to daemon candidate admission. */
+export interface PublicPiCandidate {
+  readonly taskRef: string;
+  readonly toolRef: string;
+  readonly action: string;
+  readonly target: string;
+  readonly parameters?: Readonly<Record<string, unknown>>;
+  readonly parametersDigest: string;
+  readonly expectedStateVersion: number;
+  readonly operationDescriptorId: string;
+}
+
 /** Bounded OpenAI-compatible definition forwarded from Pi's active tool set. */
 export interface DaemonToolDefinition {
   readonly type: "function";
@@ -186,6 +198,11 @@ export class PersonalDaemonClient {
   /** Read the daemon's validated loopback endpoint for Pi's in-memory model metadata. */
   readLoopbackEndpoint(): string {
     return readDaemonEndpoint(resolvePersonalDaemonPaths(this.environment), this.files);
+  }
+
+  /** Read the optional task binding injected by the public launcher. */
+  readPublicTaskRef(): string | undefined {
+    return this.environment["COGNITIVEOS_PI_TASK_REF"];
   }
 
   /**
@@ -391,6 +408,37 @@ export class PersonalDaemonClient {
     return bodyText;
   }
 
+  /** Submit one untrusted public-Pi candidate to daemon-owned admission. */
+  async submitPublicCandidate(candidate: PublicPiCandidate): Promise<void> {
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    let token = this.taskSessionToken ?? (await this.issueSession(endpoint, paths, TASK_CHANNEL));
+    let response = await this.submitCandidate(endpoint, token, candidate);
+    if (response.status === 401) {
+      this.taskSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, TASK_CHANNEL);
+      response = await this.submitCandidate(endpoint, token, candidate);
+    }
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      this.taskSessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "POST /task/candidate");
+    }
+    this.taskSessionToken = token;
+    const parsedBody: unknown = JSON.parse(bodyText);
+    if (
+      typeof parsedBody !== "object" ||
+      parsedBody === null ||
+      (parsedBody as Record<string, unknown>)["admitted"] !== true
+    ) {
+      throw new DaemonClientError(
+        "PI_EXTENSION_DAEMON_PROTOCOL_ERROR",
+        "daemon candidate response did not confirm admission",
+        { httpStatus: response.status },
+      );
+    }
+  }
+
   /** Drop the cached bearer, e.g. after the operator restarts the daemon. */
   forgetSession(): void {
     this.managementSessionToken = undefined;
@@ -493,6 +541,31 @@ export class PersonalDaemonClient {
     return this.send(endpoint, `/task/watch${watchCursorQuery(resumeFrom, true)}`, {
       method: "GET",
       headers: { authorization: `Bearer ${token}` },
+    });
+  }
+
+  private async submitCandidate(
+    endpoint: string,
+    token: string,
+    candidate: PublicPiCandidate,
+  ): Promise<Response> {
+    return this.send(endpoint, "/task/candidate", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        schema_version: "cognitiveos.task-candidate-request/0.1",
+        task_ref: candidate.taskRef,
+        tool_ref: candidate.toolRef,
+        action: candidate.action,
+        target: candidate.target,
+        ...(candidate.parameters === undefined ? {} : { parameters: candidate.parameters }),
+        parameters_digest: candidate.parametersDigest,
+        expected_state_version: candidate.expectedStateVersion,
+        operation_descriptor_id: candidate.operationDescriptorId,
+      }),
     });
   }
 
