@@ -718,7 +718,9 @@ test("an unauthorized Pi run measures nothing and behaves exactly as before", as
     const events: string[] = [];
     for await (const event of stream) events.push(event.type);
     assert.deepEqual(events, ["start", "text_start", "text_delta", "text_end", "done"]);
-    assert.equal((await stream.result()).content[0]?.text, "daemon text");
+    const resultContent = (await stream.result()).content[0];
+    assert.ok(resultContent !== undefined && resultContent.type === "text");
+    assert.equal(resultContent.text, "daemon text");
     assert.deepEqual(
       daemon.requests.map((request) => `${request.method} ${request.url}`),
       [

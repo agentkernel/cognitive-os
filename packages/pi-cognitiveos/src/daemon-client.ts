@@ -90,8 +90,9 @@ export interface SelectedModelProjection {
 
 /** The only completion result accepted by the one-shot bridge. */
 export interface BoundedCompletion {
-  readonly content: string;
-  readonly finishReason: "stop";
+  readonly content: string | undefined;
+  readonly toolCalls: readonly BoundedToolCall[];
+  readonly finishReason: "stop" | "tool_calls";
   /** Opaque campaign metadata, never a bearer or user/provider payload. */
   readonly correlationId: string;
   /**
@@ -117,6 +118,23 @@ export interface BoundedCompletion {
    * telemetry, not a fallback token estimate.
    */
   readonly providerUsage: ProviderUsage;
+}
+
+/** One OpenAI-compatible tool call accepted from the daemon Provider route. */
+export interface BoundedToolCall {
+  readonly id: string;
+  readonly name: string;
+  readonly arguments: Readonly<Record<string, unknown>>;
+}
+
+/** Bounded OpenAI-compatible definition forwarded from Pi's active tool set. */
+export interface DaemonToolDefinition {
+  readonly type: "function";
+  readonly function: {
+    readonly name: string;
+    readonly description: string;
+    readonly parameters: unknown;
+  };
 }
 
 export type ProviderUsage =
@@ -238,6 +256,7 @@ export class PersonalDaemonClient {
     messages: readonly { readonly role: "system" | "user" | "assistant"; readonly content: string }[],
     signal?: AbortSignal,
     recorder?: PiRouteStageRecorder,
+    tools: readonly DaemonToolDefinition[] = [],
   ): Promise<BoundedCompletion> {
     if (signal?.aborted) throw abortedRequestError();
     const correlationId = recorder?.readCorrelationId() ?? createPiRouteCorrelationId();
@@ -261,7 +280,12 @@ export class PersonalDaemonClient {
           "content-type": "application/json",
           "x-cognitiveos-correlation-id": correlationId,
         },
-        body: JSON.stringify({ model, messages, stream: false }),
+        body: JSON.stringify({
+          model,
+          messages,
+          stream: false,
+          ...(tools.length === 0 ? {} : { tools, tool_choice: "auto" }),
+        }),
         ...(signal === undefined ? {} : { signal }),
       };
     } finally {
@@ -559,19 +583,42 @@ export function parseBoundedCompletion(
   const message = choiceRecord["message"];
   if (typeof message !== "object" || message === null) throw completionProtocolError();
   const messageRecord = message as Record<string, unknown>;
-  if (typeof messageRecord["content"] !== "string" || "tool_calls" in messageRecord || "function_call" in messageRecord) {
-    throw completionProtocolError();
-  }
-  if (choiceRecord["finish_reason"] !== "stop") throw completionProtocolError();
+  const toolCalls = parseBoundedToolCalls(messageRecord["tool_calls"]);
+  const content = messageRecord["content"];
+  if (toolCalls.length === 0 && typeof content !== "string") throw completionProtocolError();
+  if (toolCalls.length > 0 && content !== null && content !== undefined && typeof content !== "string") throw completionProtocolError();
+  const finishReason = choiceRecord["finish_reason"];
+  if ((toolCalls.length === 0 && finishReason !== "stop") || (toolCalls.length > 0 && finishReason !== "tool_calls" && finishReason !== "stop")) throw completionProtocolError();
   return {
-    content: messageRecord["content"],
-    finishReason: "stop",
+    content: typeof content === "string" ? content : undefined,
+    toolCalls,
+    finishReason: toolCalls.length > 0 ? "tool_calls" : "stop",
     correlationId,
     loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
     providerNetworkElapsedNanos: daemonReported.providerNetworkElapsedNanos,
     daemonReported,
     providerUsage: providerUsageFromDaemonResponse(record["usage"], correlationId),
   };
+}
+
+function parseBoundedToolCalls(value: unknown): readonly BoundedToolCall[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length !== 1) throw completionProtocolError();
+  const toolCall = value[0];
+  if (typeof toolCall !== "object" || toolCall === null) throw completionProtocolError();
+  const record = toolCall as Record<string, unknown>;
+  const functionRecord = record["function"];
+  if (
+    record["type"] !== "function" ||
+    typeof record["id"] !== "string" || record["id"].length === 0 ||
+    typeof functionRecord !== "object" || functionRecord === null
+  ) throw completionProtocolError();
+  const functionValue = functionRecord as Record<string, unknown>;
+  if (typeof functionValue["name"] !== "string" || functionValue["name"].length === 0 || typeof functionValue["arguments"] !== "string") throw completionProtocolError();
+  let argumentsValue: unknown;
+  try { argumentsValue = JSON.parse(functionValue["arguments"]); } catch { throw completionProtocolError(); }
+  if (typeof argumentsValue !== "object" || argumentsValue === null || Array.isArray(argumentsValue)) throw completionProtocolError();
+  return [{ id: record["id"], name: functionValue["name"], arguments: argumentsValue as Record<string, unknown> }];
 }
 
 /** What an unauthorized, unreachable or older daemon reports: nothing. */

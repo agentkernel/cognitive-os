@@ -115,6 +115,14 @@ export interface PiModel {
 export interface PiCompletionContext {
   readonly systemPrompt?: string;
   readonly messages: readonly unknown[];
+  readonly tools?: readonly PiToolDefinition[];
+}
+
+/** One active Pi tool definition forwarded to an OpenAI-compatible Provider. */
+export interface PiToolDefinition {
+  readonly name: string;
+  readonly description: string;
+  readonly parameters: unknown;
 }
 
 /** The only Pi stream option honored by the daemon bridge is cancellation. */
@@ -133,7 +141,7 @@ export interface PiProviderAuth {
 
 export interface PiAssistantMessage {
   readonly role: "assistant";
-  readonly content: readonly PiTextContent[];
+  readonly content: readonly PiAssistantContent[];
   readonly api: string;
   readonly provider: string;
   readonly model: string;
@@ -163,11 +171,24 @@ export interface PiTextContent {
   readonly text: string;
 }
 
+export type PiAssistantContent = PiTextContent | PiToolCallContent;
+
+/** A structured tool call emitted by the pinned Pi Provider event protocol. */
+export interface PiToolCallContent {
+  readonly type: "toolCall";
+  readonly id: string;
+  readonly name: string;
+  readonly arguments: Readonly<Record<string, unknown>>;
+}
+
 export type PiAssistantMessageEvent =
   | { readonly type: "start"; readonly partial: PiAssistantMessage }
   | { readonly type: "text_start"; readonly contentIndex: number; readonly partial: PiTextContent }
   | { readonly type: "text_delta"; readonly contentIndex: number; readonly delta: string }
   | { readonly type: "text_end"; readonly contentIndex: number; readonly content: PiTextContent }
+  | { readonly type: "toolcall_start"; readonly contentIndex: number; readonly partial: PiAssistantMessage }
+  | { readonly type: "toolcall_delta"; readonly contentIndex: number; readonly delta: string }
+  | { readonly type: "toolcall_end"; readonly contentIndex: number; readonly toolCall: PiToolCallContent; readonly partial: PiAssistantMessage }
   | { readonly type: "done"; readonly message: PiAssistantMessage }
   | { readonly type: "error"; readonly error: PiAssistantMessage };
 

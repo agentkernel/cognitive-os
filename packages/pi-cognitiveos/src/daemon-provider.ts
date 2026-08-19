@@ -1,7 +1,7 @@
 /** Complete pinned-Pi provider whose only model transport is the local daemon. */
 
 import { PersonalDaemonClient } from "./daemon-client.js";
-import type { BoundedCompletion, ProviderUsage } from "./daemon-client.js";
+import type { BoundedCompletion, DaemonToolDefinition, ProviderUsage } from "./daemon-client.js";
 import { DaemonClientError } from "./errors.js";
 import {
   assemblePiRouteObservation,
@@ -19,6 +19,7 @@ import type {
   PiModel,
   PiStreamOptions,
   PiTextContent,
+  PiToolCallContent,
   ProviderConfig,
 } from "./pi-api.js";
 
@@ -103,7 +104,13 @@ async function dispatchCompletion(
     } finally {
       recorder?.complete("pi_request_preparation");
     }
-    completion = await client.completeChat(model.id, daemonMessages, signal, recorder);
+    completion = await client.completeChat(
+      model.id,
+      daemonMessages,
+      signal,
+      recorder,
+      toDaemonTools(context),
+    );
     if (signal?.aborted) {
       endFailure(stream, model, timestamp, "aborted", "completion cancelled while waiting");
       publishObservation(session, recorder, "cancelled", completion);
@@ -111,11 +118,7 @@ async function dispatchCompletion(
     }
     recorder?.begin("pi_event_delivery");
     try {
-      const content: PiTextContent = { type: "text", text: completion.content };
-      stream.push({ type: "text_start", contentIndex: 0, partial: content });
-      stream.push({ type: "text_delta", contentIndex: 0, delta: content.text });
-      stream.push({ type: "text_end", contentIndex: 0, content });
-      const message = assistantMessage(model, [content], "stop", timestamp, completion.providerUsage);
+      const message = deliverCompletion(stream, model, timestamp, completion);
       stream.push({ type: "done", message });
       stream.end(message);
     } finally {
@@ -127,6 +130,46 @@ async function dispatchCompletion(
     endFailure(stream, model, timestamp, signal?.aborted ? "aborted" : "error", safeErrorMessage(error));
     publishObservation(session, recorder, outcome, completion, error);
   }
+}
+
+function deliverCompletion(
+  stream: LocalAssistantMessageEventStream,
+  model: PiModel,
+  timestamp: number,
+  completion: BoundedCompletion,
+): PiAssistantMessage {
+  if (completion.toolCalls.length === 0) {
+    const content: PiTextContent = { type: "text", text: completion.content ?? "" };
+    stream.push({ type: "text_start", contentIndex: 0, partial: content });
+    stream.push({ type: "text_delta", contentIndex: 0, delta: content.text });
+    stream.push({ type: "text_end", contentIndex: 0, content });
+    return assistantMessage(model, [content], "stop", timestamp, completion.providerUsage);
+  }
+
+  const toolCall = completion.toolCalls[0]!;
+  const partial = assistantMessage(model, [], "stop", timestamp, completion.providerUsage);
+  const content: PiToolCallContent = {
+    type: "toolCall",
+    id: toolCall.id,
+    name: toolCall.name,
+    arguments: toolCall.arguments,
+  };
+  stream.push({ type: "toolcall_start", contentIndex: 0, partial });
+  stream.push({ type: "toolcall_delta", contentIndex: 0, delta: JSON.stringify(toolCall.arguments) });
+  stream.push({ type: "toolcall_end", contentIndex: 0, toolCall: content, partial });
+  return assistantMessage(model, [content], "stop", timestamp, completion.providerUsage);
+}
+
+function toDaemonTools(context: PiCompletionContext): readonly DaemonToolDefinition[] {
+  const tools = context.tools ?? [];
+  return tools.map((tool) => ({
+    type: "function",
+    function: {
+      name: tool.name,
+      description: tool.description,
+      parameters: tool.parameters,
+    },
+  }));
 }
 
 /**
@@ -230,7 +273,7 @@ function endFailure(stream: LocalAssistantMessageEventStream, model: PiModel, ti
 
 function assistantMessage(
   model: PiModel,
-  content: readonly PiTextContent[],
+  content: PiAssistantMessage["content"],
   stopReason: PiAssistantMessage["stopReason"],
   timestamp: number,
   providerUsage: ProviderUsage,
