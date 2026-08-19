@@ -4,11 +4,11 @@
 - Purpose: preserve the dependency-ordered delivery route to a **new**, not yet
   activated, C1/C2 paired benchmark readiness assessment
 - Current product task: `P2-T37` public WorkspaceWrite/Patch path on
-  `personal/P2-T37-c2a-public-mutation-path`, based on
+  `personal/P2-T37-c2a-public-mutation-path` / Draft PR [#246](https://github.com/agentkernel/cognitive-os/pull/246), based on
   `main@08819a82688c78f56af3cbe8b202b787986feefb`
 - Current C1 implementation checkpoint: P2-T36 closed at
   `main@3efd7011b605a32ac0c9ec114321831995f32d90`
-- Last reconciled: 2026-08-19
+- Last reconciled: 2026-08-20
 
 ## 1. Authority and use
 
@@ -48,7 +48,7 @@ reconciling the authoritative sources in section 1.
 | P2-T36/D02: provider/readiness boundary | complete | No secret was read, printed, searched, logged, or placed in command arguments. The updated owner-designated file was streamed only through non-PTY public CLI stdin; redacted doctor reports Provider SecretRef resolution, selected-model digest match, and `first_conversation_ready: true`. The independent P2 runtime did not reuse EVAL-011 state. | Pi launch is permitted only after daemon-owned readiness admits it. | Repair the public Pi conversation caller/runtime integration; do not inspect material or reuse any closed-EVAL item. |
 | P2-T36/D03: supported validation and CI | complete | Final documentation-head workflow `32245868452` passed Ubuntu, Windows, and required-ci. | C1-supported validation remains scoped to the merged product revision. | Preserve the report as C1 evidence only. |
 | P2-T36/D03: task closure | complete | PR #244 merged at `3efd7011`; the lease is archived; local/remote task branches are deleted; local `main` equals `origin/main`. | No P2-T36 closure work remains. | Select C2a per section 7. |
-| C2a-C2d public O-arm | P2-T37/D01 in progress | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations; P2-T36 is closed. Public source inspection proves the C2a mutation path is omitted from the public Pi allowlist. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | Add P2-T37 failure-first public allowlist and candidate-mapper coverage, then validate separately bound mutation Tasks. |
+| C2a-C2d public O-arm | P2-T37/D02 in progress | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations; P2-T36 is closed. Public launcher and Extension now expose daemon-governed WorkspaceWrite/Patch beside C1 tools. Draft PR [#246](https://github.com/agentkernel/cognitive-os/pull/246) is open. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | Repair the stale launcher-allowlist CI assertion, then validate separately bound public WorkspaceWrite and WorkspacePatch Tasks. |
 | Pure-Pi P arm and frozen paired assets | not started | No new runner, corpus, broker, oracle, or campaign asset is in use. | Product O-arm readiness is a prerequisite; new EVAL activation remains owner-only. | Do not begin until the formal preparation boundary permits it. |
 | New C1/C2 campaign | not started / inactive | EVAL-004 through EVAL-010 remain closed and isolated. | No new EVAL ID, preregistration, root, port, SecretStore item, denominator, or sample is authorized by this plan. | Only a future owner activation may request a new preregistration and B0. |
 
@@ -62,7 +62,7 @@ report before selecting unrelated work. `Not started` is not a failure.
 
 | Stage | Status | Exact evidence or durable fact | Exit criterion | Single next action |
 |---|---|---|---|---|
-| 0. Navigation and ownership | complete | P2-T36 is closed and archived; no active task lease exists. | Current revision, closed lease, report, and next action reconcile. | Reconcile canonical sources before claiming a C2a task. |
+| 0. Navigation and ownership | complete | P2-T37 is leased on `personal/P2-T37-c2a-public-mutation-path` / Draft PR [#246](https://github.com/agentkernel/cognitive-os/pull/246). | Current revision, active lease, report, and next action reconcile. | Continue D02 public mutation Tasks after the launcher-allowlist CI repair. |
 | 1. P2-T36 failure-first surface proof | complete | The missing `WorkspaceRead` Extension registration was observed as the expected failure before implementation. | A focused regression proves the new surface and native Pi deny policy. | Preserve the focused negative while changing D02. |
 | 2. WorkspaceRead candidate implementation | complete | Pi Extension registration, adapter event extraction, and protocol negatives are implemented; exact native adapter protocol test is **21/21 pass**. | WorkspaceRead and WorkspaceSearch can each produce one untrusted, schema-bound candidate while built-ins fail closed. | Exercise this implementation only through the real public composition. |
 | 3. Exact native source and toolchain | complete | Cleanable non-B01 Git worktree refreshed directly from GitHub and detached at `33a95017a4fd300a622c0d3a79485f4dda1f09a5`; its status is clean. Rust 1.97.1, Node 22.19.0, and Pi 0.81.1 were verified. Exact-revision daemon/admin/adapter binaries were rebuilt and the non-secret Pi configuration was refreshed. | Public readiness is observed from the rebuilt exact revision. | Continue with the public candidate-to-authority bridge gap. |
@@ -72,7 +72,7 @@ report before selecting unrelated work. `Not started` is not a failure.
 | 7. C1 WorkspaceSearch public route | complete | A separate fresh non-B01 Linux Task independently completed public Pi WorkspaceSearch through the same authority chain. | The evidence is retained in the P2-T36 report. | Reconfirm C2a without borrowing C1 evidence. |
 | 8. Required CI and supported regressions | complete | Final documentation-head required CI `32245868452` passed Ubuntu, Windows, and required-ci. | C1 CI is complete at the merged revision. | Use exact merged `main` for C2a reconfirmation. |
 | 9. P2-T36 closure | complete | PR #244 merged at `3efd7011`; lease/branch/main reconciliation is complete. | No P2-T36 work remains. | Select C2a under a new narrow lease only if the real public route exposes a gap. |
-| 10. C2 and paired-benchmark readiness | in progress | C1 is complete. P2-T37 is the active C2a public WorkspaceWrite/Patch product task; C2b-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Complete P2-T37/D01 before exposing the C2a mutation tools through the public composition. |
+| 10. C2 and paired-benchmark readiness | in progress | C1 is complete. P2-T37/D02 is the active C2a public WorkspaceWrite/Patch product slice; C2b-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Complete P2-T37/D02 separate public mutation Tasks on exact native Linux. |
 
 ### 2.2 Resume checklist
 
@@ -120,7 +120,7 @@ public-observation gap remains.
 | Order | Readiness package | Required outcome before advancing | Current navigation state |
 |---:|---|---|---|
 | 1 | C1 public O-arm | WorkspaceRead and WorkspaceSearch each traverse public admit -> Context -> real Pi candidate -> scheduler lease -> daemon Tool executor -> independent verifier -> daemon acceptance. | **Complete:** P2-T36 merged as PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) at `main@3efd7011`; independent fresh non-B01 Linux WorkspaceRead and WorkspaceSearch Tasks completed the full public chain. Final required CI `32245868452` passed Ubuntu, Windows, and required-ci. |
-| 2 | C2a mutation O-arm | WorkspaceWrite/Patch carry schema-bound input and expected preimage through public authority; Intent/Effect, original-key reconcile, independent verification, and acceptance close the Task. | Reconfirm existing P2-T21/P2-T22 path with a real Pi/public caller; register a narrowly scoped product task only for an uncovered gap. |
+| 2 | C2a mutation O-arm | WorkspaceWrite/Patch carry schema-bound input and expected preimage through public authority; Intent/Effect, original-key reconcile, independent verification, and acceptance close the Task. | P2-T37/D02 in progress: public allowlist and mapper expose Write/Patch; exact public mutation Tasks remain outstanding. |
 | 3 | C2b governed session-2 | A real user path proves daemon-authorized Memory/Skill consumption and resume without forged governance state or private helper use. | Reconfirm P2-T23 public consumption path with a real caller; register only an uncovered product gap. |
 | 4 | C2c recovery | Controlled fixture crash/OUTCOME_UNKNOWN cases query by original key, reconcile, independently verify, and then accept or honestly remain unresolved. | Reconfirm P2-T24 plus production public caller; register only an uncovered product gap. |
 | 5 | C2d public closure | Public observations distinguish admission, receipt, Effect closure, verification, and daemon acceptance, and demonstrate that acceptance closes the Task. | Reconfirm P2-T14/P2-T21 terminal evidence through each C1/C2 route; register only an uncovered observation/product gap. |

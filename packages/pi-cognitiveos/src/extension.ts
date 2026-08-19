@@ -215,7 +215,7 @@ function activateDaemonGovernedWorkspaceTools(
   // bound. Re-registering same-name tools at the pre-agent hook refreshes the
   // registry without expanding the Extension surface.
   registerDaemonGovernedWorkspaceTools(pi, candidateSubmitter);
-  // This explicit allowlist keeps all native and mutating tools inactive.
+  // This explicit allowlist keeps Pi-native filesystem and shell tools inactive.
   pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
   assertDaemonGovernedToolsAreActive(pi);
 }

@@ -3305,6 +3305,60 @@ fn candidate_mutation_rejects_router_incompatible_raw_digest_preimage() {
 }
 
 #[test]
+fn candidate_mutation_rejects_malformed_or_non_canonical_base64() {
+    let descriptor = DaemonOperationDescriptorRow {
+        descriptor_id: object_id(995),
+        descriptor: BUILTIN_TOOL_CATALOG
+            .iter()
+            .find(|candidate| candidate.operation_id == "native.workspace.write")
+            .map(|candidate| OperationDescriptor {
+                operation_id: candidate.operation_id.clone(),
+                action: candidate.action.clone(),
+                effect_class: EffectClass::Pure,
+                executor: candidate.executor.clone(),
+                capabilities: ExecutorCapabilities {
+                    queryable: true,
+                    idempotent: true,
+                },
+                descriptor_version: candidate.descriptor_version,
+            })
+            .unwrap(),
+        canonical_json: "{}".to_owned(),
+    };
+    for input_b64 in ["not-base64", "Y2JhCg", ""] {
+        let parameters = CandidateParameters::WorkspaceWriteParameters(WorkspaceWriteParameters {
+            family: WorkspaceWriteParametersFamily::WorkspaceWrite,
+            input_b64: input_b64.to_owned(),
+            preimage: "absent".to_owned(),
+        });
+        let canonical_value = serde_json::to_value(&parameters).unwrap();
+        let canonical_bytes = canonical::canonical_bytes_of_value(&canonical_value).unwrap();
+        let candidate = UntrustedPiCandidate {
+            tool_ref: descriptor.descriptor.operation_id.clone(),
+            action: descriptor.descriptor.action.clone(),
+            target: "workspace://tenant-a/project/output.txt".to_owned(),
+            parameters: Some(canonical_value),
+            parameters_digest: canonical::digest(
+                &canonical_bytes,
+                "cognitiveos.personal.candidate-parameters/0.1",
+            )
+            .unwrap(),
+            expected_state_version: 1,
+            operation_descriptor_id: descriptor.descriptor_id.clone(),
+        };
+
+        assert!(
+            matches!(
+                super::canonicalize_candidate_parameters(&candidate, &descriptor),
+                Err(SchedulerAuthorityError::PrivatePiProposal(detail))
+                    if detail.contains("base64") || detail.contains("non-canonical")
+            ),
+            "payload {input_b64:?} must fail closed before daemon admission"
+        );
+    }
+}
+
+#[test]
 fn candidate_parameter_digest_mismatch_denies_before_candidate_persistence() {
     let descriptor = DaemonOperationDescriptorRow {
         descriptor_id: object_id(992),

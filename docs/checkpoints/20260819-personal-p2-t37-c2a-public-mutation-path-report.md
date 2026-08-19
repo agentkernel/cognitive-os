@@ -28,6 +28,14 @@ evaluation, or Agent-benefit claim.
    personal_cli::pi` reached the Windows GNU linker and failed with the known
    `x86_64-w64-mingw32-gcc` exit 121 limitation. No product assertion failed;
    Rust execution remains routed to supported Linux/CI validation.
+6. **Required CI `32272661185` — fail (stale allowlist assertion).** Ubuntu and
+   Windows `verify` both failed only in
+   `launch_preparation_disables_pi_native_tools_and_preserves_print_mode`, which
+   still expected `--tools WorkspaceRead,WorkspaceSearch` after the public
+   launcher correctly exposed Write/Patch. `required-ci` failed because verify
+   failed. No product assertion other than that stale expectation failed. The
+   follow-up repair updates that assertion to the four-tool allowlist and adds a
+   daemon canonicalize negative for malformed/non-canonical mutation base64.
 
 ## Implemented boundary
 

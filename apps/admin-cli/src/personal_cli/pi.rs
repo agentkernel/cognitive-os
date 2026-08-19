@@ -720,7 +720,7 @@ mod tests {
                 "--extension".to_owned(),
                 extension_entry_path.display().to_string(),
                 "--tools".to_owned(),
-                "WorkspaceRead,WorkspaceSearch".to_owned(),
+                PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST.to_owned(),
                 "--print".to_owned(),
             ]
         );
