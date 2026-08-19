@@ -191,6 +191,7 @@ export interface ProviderConfig {
 export interface ExtensionAPI {
   on(event: "project_trust", handler: () => Promise<ProjectTrustDecision>): void;
   on(event: "tool_call", handler: (event: ToolCallEvent) => Promise<ToolCallDecision>): void;
+  on(event: "before_agent_start", handler: (event: unknown, context: ExtensionContext) => Promise<void>): void;
   on(
     event: "session_start",
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,

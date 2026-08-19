@@ -70,17 +70,15 @@ export async function registerCognitiveOsExtension(
 
   pi.on("tool_call", async (event) => decideToolCall(event));
 
+  pi.on("before_agent_start", async () => {
+    activateDaemonGovernedWorkspaceTools(pi);
+  });
+
   const client = options.client ?? new PersonalDaemonClient();
   let daemonSelectedModel: PiModel | undefined;
 
   pi.on("session_start", async (_event, context) => {
-    // Pi's initial extension load records tools before its runtime registry is
-    // bound. Re-registering same-name tools post-bind refreshes that registry
-    // without expanding the Extension surface.
-    registerDaemonGovernedWorkspaceTools(pi);
-    // This explicit allowlist keeps all native and mutating tools inactive.
-    pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
-    assertDaemonGovernedToolsAreActive(pi);
+    activateDaemonGovernedWorkspaceTools(pi);
     if (daemonSelectedModel === undefined) {
       await showStatus(client, context, "session_start");
       return;
@@ -118,6 +116,16 @@ function registerDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
   for (const tool of daemonGovernedWorkspaceTools()) {
     pi.registerTool(tool);
   }
+}
+
+function activateDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
+  // Pi's initial extension load records tools before its runtime registry is
+  // bound. Re-registering same-name tools at the pre-agent hook refreshes the
+  // registry without expanding the Extension surface.
+  registerDaemonGovernedWorkspaceTools(pi);
+  // This explicit allowlist keeps all native and mutating tools inactive.
+  pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
+  assertDaemonGovernedToolsAreActive(pi);
 }
 
 function assertDaemonGovernedToolsAreActive(pi: ExtensionAPI): void {
