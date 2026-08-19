@@ -31,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:8b39a1d20951bf5cc61e31c8f67909b1f959ef521c31afc999e39088998b9d01"
+fingerprint: "sha256:c2bd7577c1da6bd71a0c97945f2fc2d0229579598392fef6f35ac7fd98730257"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -64,8 +64,9 @@ Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径
 精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。它加载已配置 Extension、禁用
 Pi 原生工具，并只显式允许 `WorkspaceRead` 与 `WorkspaceSearch`。这些 Extension 工具使用
 钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。Pi 绑定
-session 后，Extension 只激活这两个已经注册的 daemon 治理名称；未知名称会被忽略。
-该 post-bind 步骤不能激活 Pi 原生文件系统、shell 或 mutating tools。
+session 后，Extension 重新登记同名 daemon 治理定义以刷新 Pi runtime registry，然后只
+激活这两个名称；未知名称会被忽略。该 post-bind 步骤不能激活 Pi 原生文件系统、shell 或
+mutating tools。
 
 shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi
 请求用独立不透明 id 与 daemon 测得的两个阶段关联；Node 与 Rust 单调时长始终属于分离

@@ -82,6 +82,8 @@ test("registration queues the daemon provider and activates its model at session
     await pi.driveSessionStart();
     assert.equal(pi.selectedModels.length, 1);
     assert.equal(pi.selectedModels[0]?.provider, "cognitiveos");
+    assert.equal(pi.toolRegistrationCount, 8, "session binding must refresh same-name tools");
+    assert.equal(pi.tools.length, 4, "post-bind refresh must not widen the tool surface");
     assert.deepEqual(pi.activeToolSelections, [["WorkspaceRead", "WorkspaceSearch"]]);
     assert.equal(
       pi.selectedModels[0]?.baseUrl,

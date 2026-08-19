@@ -74,8 +74,11 @@ export async function registerCognitiveOsExtension(
   let daemonSelectedModel: PiModel | undefined;
 
   pi.on("session_start", async (_event, context) => {
-    // Pi exposes setActiveTools after it binds the Extension runtime. This
-    // explicit allowlist keeps all native and mutating tools inactive.
+    // Pi's initial extension load records tools before its runtime registry is
+    // bound. Re-registering same-name tools post-bind refreshes that registry
+    // without expanding the Extension surface.
+    registerDaemonGovernedWorkspaceTools(pi);
+    // This explicit allowlist keeps all native and mutating tools inactive.
     pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
     if (daemonSelectedModel === undefined) {
       await showStatus(client, context, "session_start");
@@ -107,6 +110,10 @@ export async function registerCognitiveOsExtension(
   }
   pi.registerProvider(daemonSelectedModel.provider, daemonProvider);
 
+  registerDaemonGovernedWorkspaceTools(pi);
+}
+
+function registerDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
   for (const tool of daemonGovernedWorkspaceTools()) {
     pi.registerTool(tool);
   }

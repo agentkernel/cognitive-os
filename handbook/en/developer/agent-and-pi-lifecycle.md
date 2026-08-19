@@ -31,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:8b39a1d20951bf5cc61e31c8f67909b1f959ef521c31afc999e39088998b9d01"
+fingerprint: "sha256:c2bd7577c1da6bd71a0c97945f2fc2d0229579598392fef6f35ac7fd98730257"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -69,9 +69,10 @@ HTTPS proxy endpoint. It passes the configured Extension, disables Pi-native
 tools, and explicitly permits only `WorkspaceRead` and `WorkspaceSearch`.
 Those Extension tools use the pinned Pi runtime's TypeBox schemas; JSON-shaped
 lookalikes are rejected during live registration. Once Pi binds its session,
-the Extension activates only those two registered daemon-governed names;
-unknown names are ignored. This post-bind step cannot activate Pi-native
-filesystem, shell, or mutating tools.
+the Extension re-registers the same daemon-governed definitions to refresh
+Pi's runtime registry, then activates only those two names; unknown names are
+ignored. This post-bind step cannot activate Pi-native filesystem, shell, or
+mutating tools.
 
 The shell-host Provider route has an opt-in, non-authority campaign observer.
 One opaque id correlates each concurrent Pi request with two daemon-measured
