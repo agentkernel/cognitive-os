@@ -83,7 +83,7 @@ validation unit.
 | 3. C2b governed session-2 | historical product | **done** (reconfirmed) | P2-T23 PR [#222](https://github.com/agentkernel/cognitive-os/pull/222) at `main@795bfac8`. Public Memory/Skill consumption and session-2 resume. | P-arm cannot use daemon Memory/Skill. | Remaining work is package 6/7/10 fairness classification, not a new P2 product task. |
 | 4. C2c recovery | historical product | **done** (reconfirmed) | P2-T24 PR [#223](https://github.com/agentkernel/cognitive-os/pull/223) at `main@2b803e0f`. Original-key restart reconcile. | Campaign fault profile is measurement-only. | Remaining work is freeze + B0, not a new P2 product task. |
 | 5. C2d public closure | historical product | **done** (reconfirmed) | P2-T14 acceptance authority; P2-T21 `GET /task/evidence`. C1/C2a public O4/O5 observed terminal facts. | Pure-Pi completion is not OS Task completion. | Remaining work is package 6/7 oracles, not a new P2 product task. |
-| 6. Pure-Pi P arm | readiness delivery | **not started** | None in this programme. Closed-EVAL brokers are not reusable. | No live P-arm cell. | P9-T08/D02: deliver broker + equivalent fixture adapter. |
+| 6. Pure-Pi P arm | readiness delivery | **in progress (D02)** | Local Node 8/8: loopback broker + equivalent Workspace* fixture adapter. | Linux Secret Service `get` and live Pi remain. | Continue D02 on `DEV-LINUX-NATIVE-01`. |
 | 7. Frozen paired assets | readiness delivery | **not started** | No C1/C2 runner, corpus, oracle, redactor, seeds, or digest ledger. | Must freeze before any sample. | P9-T08/D03 after package 6. |
 | 8. B0 fairness contract | readiness delivery | **not started** | P/O equality is `not-run`. Product O-arm does not substitute. | Observable checks must exist before B0. | P9-T08/D03 encodes and proves the checker on non-B01. |
 | 9. B01 guest readiness | readiness delivery | **not started** | Route is known (`wuz@192.168.1.2` → ProxyJump `hal9001@192.168.123.160`). Isolation IDs are reserved below, not bound. | No guest mutation until EVAL activation. | P9-T08/D04 writes the checkable procedure. |
@@ -146,7 +146,7 @@ follows.
 | 3 | C2b governed session-2 | historical | A real user path proves daemon-authorized Memory/Skill consumption and resume without forged governance state. | **Complete (reconfirmed):** P2-T23 / PR #222. No new product gap. |
 | 4 | C2c recovery | historical | Controlled fixture crash/`OUTCOME_UNKNOWN` cases query by original key, reconcile, independently verify, and then accept or honestly remain unresolved. | **Complete (reconfirmed):** P2-T24 / PR #223. No new product gap. |
 | 5 | C2d public closure | historical | Public observations distinguish admission, receipt, Effect closure, verification, and daemon acceptance. | **Complete (reconfirmed):** P2-T14 + P2-T21 + C1/C2a public O4/O5. No new product gap. |
-| 6 | Pure-Pi P arm | readiness | Same-fixture adapter works without daemon, Extension, Task, Context, Memory, Skill, retry, cache, or verifier; credential route is approved and secret-safe; equivalent public observation exists for C1/C2 tasks. | **Remaining — P9-T08/D02.** No product P2 gap identified on current `main`. If D02 proves the O-arm Workspace* schemas cannot be cloned without daemon authority, fail closed and register a new P2 task; never daemon-proxy as pure Pi. |
+| 6 | Pure-Pi P arm | readiness | Same-fixture adapter works without daemon, Extension, Task, Context, Memory, Skill, retry, cache, or verifier; credential route is approved and secret-safe; equivalent public observation exists for C1/C2 tasks. | **In progress — P9-T08/D02.** Local Node 8/8 pass. Linux SecretStore `get` remaining. No product P2 gap identified. If D02 proves the O-arm Workspace* schemas cannot be cloned without daemon authority, fail closed and register a new P2 task; never daemon-proxy as pure Pi. |
 | 7 | Frozen paired assets | readiness | Runner, fixture corpus, oracle, redactor, analysis, reset, cleanup, command manifests, seeds, `retry=0`, timeout, arm order, and all digests are frozen **before any sample**. | **Remaining — P9-T08/D03.** |
 | 8 | B0 fairness readiness | readiness | The execution-plan §2.3 equality checks (tool set, input bytes, workspace, oracle, Provider/model, timeout, retry=0, environment, cleanup) are encoded and a non-B01 run proves the runner can observe pass/fail. Product O-arm does not substitute. | **Remaining — P9-T08/D03.** Full B0 on B01 is package 15. |
 | 9 | B01 guest readiness | readiness | Checkable procedure for `B01-Desktop-Linux-002` only: new EVAL ID, new root, new ports, new SecretStore, snapshot/baseline rules, standing-authorization limits. No guest mutation in this package. | **Remaining — P9-T08/D04.** |
@@ -449,10 +449,10 @@ Owner confirmation is required to:
 
 1. Close P9-T08/D01: this amended programme, formal-task registration, lease,
    Current snapshot, and amendment checkpoint are durable on the task branch.
-2. **Execute package 6 immediately** (`P9-T08/D02`): deliver the secret-safe
-   pure-Pi broker and equivalent Workspace* fixture adapter on
-   `DEV-LINUX-NATIVE-01`. Do not open EVAL-012. Do not start B01 samples. Do
-   not resume unrelated `P*-T*` backlog.
+2. **Execute package 6 (`P9-T08/D02`).** Local Node focused tests 8/8 are
+   recorded. Remaining: Linux Secret Service `get` into the broker on
+   `DEV-LINUX-NATIVE-01` without argv/env/log material. Do not open EVAL-012.
+   Do not start B01 samples. Do not resume unrelated `P*-T*` backlog.
 
 ## 13. Completion gate
 

@@ -23,6 +23,20 @@ before starting the next.
 4. **Isolation reserved, not activated — pass.** `PERSONAL-PERF-EVAL-012` is
    named only as a reserved future EVAL ID. The Owner-directed campaign row
    does not activate it.
+5. **D01 durable — pass.** Commit `6ceb8d29` pushed; Draft PR
+   [#247](https://github.com/agentkernel/cognitive-os/pull/247).
 
-Next unit: D02 package 6 (P-arm broker + equivalent Workspace* fixture
-adapter) on `DEV-LINUX-NATIVE-01`.
+## D02 P-arm instruments
+
+6. **Failure-first P-arm broker and fixture adapter — pass (local Node).**
+   `node --test tools/test/c1_c2_paired_p_arm.test.mjs` **8/8 pass**. Broker
+   refuses non-loopback binds and secret-shaped argv/env, binds only a
+   non-secret placeholder token, and exposes no Context/Memory/Task/retry/
+   verify surface. Fixture adapter schemas match O-arm Workspace* names and
+   parameter keys; C1 read/search and C2a write/patch run inside a temp
+   fixture root; path escape and preimage mismatch fail closed.
+7. **Linux Secret Service get and live Pi — not-run.** Remaining D02 work on
+   `DEV-LINUX-NATIVE-01`. No B01 sample.
+
+Next unit: Linux Secret Service `get` into the broker without argv/env/log
+material, still on a non-B01 host.
