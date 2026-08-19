@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:5f3b2f1dda773bb00cbf93845fb0bfdac61cfcc6970980a68b628c7f87605883"
+fingerprint: "sha256:d8ee828095aed72d226c148294948607e6b64441839873d1e64c45656a714a95"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

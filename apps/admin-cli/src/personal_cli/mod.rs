@@ -782,6 +782,7 @@ mod tests {
                     runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
                 },
                 print_mode: false,
+                task_ref: None,
             }))
         );
 
@@ -814,6 +815,7 @@ mod tests {
                     runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
                 },
                 print_mode: true,
+                task_ref: None,
             }))
         );
     }
