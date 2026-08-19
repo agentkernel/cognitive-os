@@ -3,8 +3,8 @@
 Task: `P2-T37`
 Branch: `personal/P2-T37-c2a-public-mutation-path`
 Lease: `lease/personal/P2-T37/c2a-public-mutation-path`
-Scope: `P2-T37/D01` complete; `P2-T37/D02` public WorkspaceWrite and
-WorkspacePatch complete; `P2-T37/D03` supported CI/docs/closure remaining
+Scope: `P2-T37/D01`–`D03` complete. PR [#246](https://github.com/agentkernel/cognitive-os/pull/246)
+merged at `main@286f7538148ba0d22f496f1f44d1af46f0f44aa0`. Task lease closed.
 
 This is an implementation report, not a C2, Gate, release, Profile, B01,
 evaluation, or Agent-benefit claim.
@@ -118,6 +118,14 @@ evaluation, or Agent-benefit claim.
 16. **Required CI `32290876044` on `3662d2b9` — pass.** Ubuntu verify, Windows
     verify, `resolve validation route`, and `required-ci` all succeeded. This is
     the D03 supported CI on the Clippy-repaired Patch-D02 head.
+17. **Required CI `32292548920` on `837f9a4c` — pass.** Ubuntu verify, Windows
+    verify, `resolve validation route`, and `required-ci` all succeeded on the
+    documentation head later merged as PR [#246](https://github.com/agentkernel/cognitive-os/pull/246).
+18. **Task merge and lease close — pass.** PR [#246](https://github.com/agentkernel/cognitive-os/pull/246)
+    merged at `main@286f7538148ba0d22f496f1f44d1af46f0f44aa0`. Local task branch
+    deleted; local `main` matches `origin/main`. Active task lease is `none`.
+    Remote `personal/P2-T37-c2a-public-mutation-path` may still need operator
+    deletion if the ref remains advertised.
 
 ## Implemented boundary
 
@@ -134,6 +142,6 @@ evaluation, or Agent-benefit claim.
 
 ## Remaining
 
-- Complete D03 merge/lease/branch: required CI `32290876044` passed at
-  `3662d2b9`. Remaining is ready/merge #246, close lease, delete task branch if
-  safe, and fast-forward local main.
+- None for P2-T37. Remote `personal/P2-T37-c2a-public-mutation-path` may still
+  exist for operator deletion. A newly preregistered B0 may be requested; this
+  report does not activate one.
