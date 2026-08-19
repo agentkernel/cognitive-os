@@ -275,3 +275,61 @@ fn admit_public_c2a_mutation_task_against_running_daemon() {
         })
     );
 }
+
+#[test]
+#[ignore = "live public-daemon observation; set COS_P2_T37_RUNTIME_ROOT and COS_P2_T37_PORT"]
+fn observe_public_c2a_task_redacted_counters() {
+    let root = PathBuf::from(
+        env::var("COS_P2_T37_RUNTIME_ROOT")
+            .expect("COS_P2_T37_RUNTIME_ROOT must name the disposable runtime"),
+    );
+    let port: u16 = env::var("COS_P2_T37_PORT")
+        .expect("COS_P2_T37_PORT must name the disposable loopback port")
+        .parse()
+        .expect("COS_P2_T37_PORT must be a u16");
+    let task_ref = env::var("COS_P2_T37_TASK_REF")
+        .unwrap_or_else(|_| "task://personal/p2-t37-public-write".to_owned());
+    let secret = common::wait_for_bootstrap_secret(&root);
+    let task_token = issue_token(port, &secret, "task");
+    let evidence = response_json(&get(
+        port,
+        &format!("/task/evidence?task_ref={}", encode_task_ref(&task_ref)),
+        &task_token,
+    ));
+    let observation = response_json(&get(
+        port,
+        &format!(
+            "/task/observation?family=o4&task_ref={}",
+            encode_task_ref(&task_ref)
+        ),
+        &task_token,
+    ));
+    let lifecycle = evidence["lifecycle"]["current_state"]
+        .as_str()
+        .unwrap_or("absent");
+    let reconcile_class = evidence["reconcile_class"].as_str().unwrap_or("absent");
+    let verification_status = evidence["latest_verification"]["status"]
+        .as_str()
+        .unwrap_or("absent");
+    let verification_current = evidence["latest_verification"]["current"]
+        .as_bool()
+        .unwrap_or(false);
+    let acceptance_current = evidence["latest_acceptance"]["current"]
+        .as_bool()
+        .unwrap_or(false);
+    let lease_acquired = observation["counters"]["lease_acquired"]["count"]
+        .as_u64()
+        .unwrap_or(0);
+    println!(
+        "{}",
+        json!({
+            "task_ref": task_ref,
+            "lifecycle": lifecycle,
+            "reconcile_class": reconcile_class,
+            "verification_status": verification_status,
+            "verification_current": verification_current,
+            "acceptance_current": acceptance_current,
+            "lease_acquired": lease_acquired
+        })
+    );
+}
