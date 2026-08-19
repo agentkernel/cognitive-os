@@ -40,7 +40,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:6d1e98d620a101104efc59ccaaf19a57f0f0b8c9777e78e502c7e409c8df9b94"
+fingerprint: "sha256:52b495db4f16fde3526e795e3311e1bab938ff9ca4e2bbf8122abd7c37641027"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---

@@ -56,6 +56,9 @@ non_claims:
   `state/cognitiveos/daemon.log`（权限 `0600`）；调度 skip 行不是公开 HTTP 事实。
   私有 candidate 适配器拒绝时，脱敏诊断（去掉 `sk-` / `api_key=` / `token=` 片段）
   会保留在该日志中。
+- `cognitive pi launch --print` 是有界的非交互 Pi 路径：Pi 从 stdin 读取 prompt 时，
+  public CLI 会保持连接，直到 Pi 退出。它仍要求 daemon 的完整 ready 投影，不向 Pi
+  传递 Provider 凭据，禁用 Pi 原生工具，也不得以直接 daemon/private-candidate 调用替代。
 
 ## 停止、重启、过期状态 —— `implemented`
 

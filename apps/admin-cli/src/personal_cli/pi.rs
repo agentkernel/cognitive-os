@@ -24,11 +24,17 @@ const PINNED_PI_VERSION: &str = "0.81.1";
 const PI_VERSION_PROBE_TIMEOUT: Duration = Duration::from_secs(5);
 const REQUIRED_READINESS_COMPONENTS: [&str; 6] =
     ["system", "database", "secret", "provider", "daemon", "pi"];
+const PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST: &str = "WorkspaceRead,WorkspaceSearch";
 
 /// Inputs accepted by `cognitive pi launch`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct PiLaunchOptions {
     pub layout_roots: LayoutRoots,
+    /// Run Pi in its supported non-interactive mode and keep the CLI attached
+    /// until Pi has consumed stdin and completed the conversation.
+    pub print_mode: bool,
+    /// Bind public Workspace candidates to an already admitted Task.
+    pub task_ref: Option<String>,
 }
 
 /// Inputs accepted by `cognitive pi configure`.
@@ -115,12 +121,23 @@ pub fn launch(options: &PiLaunchOptions) -> Result<Value, String> {
         prepare_launch_with_doctor_document(options, &endpoint_document, &doctor_document)?;
 
     verify_pinned_pi_version(&launch_plan)?;
-    let child_process = spawn_pi_client(&launch_plan)?;
+    let mut child_process = spawn_pi_client(&launch_plan)?;
+    let action = if options.print_mode {
+        let exit_status = child_process
+            .wait()
+            .map_err(|_| "Pi non-interactive conversation could not be joined".to_owned())?;
+        if !exit_status.success() {
+            return Err("Pi non-interactive conversation exited unsuccessfully".to_owned());
+        }
+        "completed"
+    } else {
+        "spawned"
+    };
 
     Ok(json!({
         "status": "ok",
         "surface": "cognitive-pi-launch",
-        "action": "spawned",
+        "action": action,
         "process_id": child_process.id(),
         "profile_claim": "not-claimed",
         "gate_claim": "not-claimed",
@@ -154,11 +171,31 @@ fn prepare_launch_with_doctor_document(
 
     Ok(PiLaunchPlan {
         executable_path,
-        arguments: vec![
-            "--extension".to_owned(),
-            path_to_argument(&extension_entry_path)?,
-        ],
-        environment: minimal_execution_environment(),
+        arguments: {
+            let mut arguments = vec![
+                "--extension".to_owned(),
+                path_to_argument(&extension_entry_path)?,
+                // Pi's explicit --tools list is a full registry allowlist. It
+                // excludes Pi-native filesystem/process tools while retaining
+                // only the daemon-governed Extension names.
+                "--tools".to_owned(),
+                PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST.to_owned(),
+            ];
+            if options.print_mode {
+                arguments.push("--print".to_owned());
+            }
+            arguments
+        },
+        environment: {
+            let mut environment = execution_environment_for_layout_roots(&options.layout_roots)?;
+            if let Some(task_ref) = &options.task_ref {
+                if !task_ref.starts_with("task://") {
+                    return Err("Pi task ref must be a canonical task:// URI".to_owned());
+                }
+                environment.insert("COGNITIVEOS_PI_TASK_REF".to_owned(), task_ref.clone());
+            }
+            environment
+        },
     })
 }
 
@@ -326,6 +363,39 @@ fn path_to_argument(path: &Path) -> Result<String, String> {
         .ok_or_else(|| "Pi path is not valid Unicode".to_owned())
 }
 
+fn execution_environment_for_layout_roots(
+    layout_roots: &LayoutRoots,
+) -> Result<BTreeMap<String, String>, String> {
+    let mut environment = minimal_execution_environment();
+    let Some(runtime_root) = &layout_roots.runtime_root else {
+        return Ok(environment);
+    };
+
+    // The Node extension resolves the daemon through XDG paths. Keep it aligned
+    // with the CLI's hermetic runtime root rather than inheriting host paths.
+    environment.insert(
+        "XDG_CONFIG_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("config"))?,
+    );
+    environment.insert(
+        "XDG_DATA_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("data"))?,
+    );
+    environment.insert(
+        "XDG_STATE_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("state"))?,
+    );
+    environment.insert(
+        "XDG_CACHE_HOME".to_owned(),
+        path_to_argument(&runtime_root.join("cache"))?,
+    );
+    environment.insert(
+        "XDG_RUNTIME_DIR".to_owned(),
+        path_to_argument(runtime_root)?,
+    );
+    Ok(environment)
+}
+
 fn minimal_execution_environment() -> BTreeMap<String, String> {
     const EXECUTION_ENVIRONMENT_ALLOWLIST: [&str; 11] = [
         "HOME",
@@ -459,6 +529,8 @@ mod tests {
             layout_roots: LayoutRoots {
                 runtime_root: Some(temporary_root.path().to_path_buf()),
             },
+            print_mode: false,
+            task_ref: None,
         }
     }
 
@@ -619,6 +691,53 @@ mod tests {
     }
 
     #[test]
+    fn launch_preparation_disables_pi_native_tools_and_preserves_print_mode() {
+        let temporary_root = tempfile::tempdir().expect("temporary root");
+        let executable_path = temporary_root.path().join("pi");
+        let extension_entry_path = temporary_root.path().join("extension.js");
+        fs::write(&executable_path, "pinned Pi placeholder").expect("Pi executable fixture");
+        fs::write(&extension_entry_path, "extension placeholder").expect("extension entry fixture");
+        write_launch_configuration(&temporary_root, &executable_path, &extension_entry_path);
+        let options = PiLaunchOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            print_mode: true,
+            task_ref: None,
+        };
+
+        let launch_plan = prepare_launch_with_doctor_document(
+            &options,
+            LOOPBACK_ENDPOINT_DOCUMENT,
+            &ready_doctor_document(),
+        )
+        .expect("ready daemon and Pi configuration produce a launch plan");
+
+        assert_eq!(
+            launch_plan.arguments,
+            vec![
+                "--extension".to_owned(),
+                extension_entry_path.display().to_string(),
+                "--tools".to_owned(),
+                "WorkspaceRead,WorkspaceSearch".to_owned(),
+                "--print".to_owned(),
+            ]
+        );
+        assert_eq!(
+            launch_plan.environment.get("XDG_CONFIG_HOME"),
+            Some(&temporary_root.path().join("config").display().to_string())
+        );
+        assert_eq!(
+            launch_plan.environment.get("XDG_STATE_HOME"),
+            Some(&temporary_root.path().join("state").display().to_string())
+        );
+        assert_eq!(
+            launch_plan.environment.get("XDG_RUNTIME_DIR"),
+            Some(&temporary_root.path().display().to_string())
+        );
+    }
+
+    #[test]
     fn launch_preparation_rejects_invalid_paths_and_missing_pi_files() {
         let temporary_root = tempfile::tempdir().expect("temporary root");
         let options = launch_options(&temporary_root);
@@ -665,7 +784,7 @@ mod tests {
     }
 
     #[test]
-    fn launch_plan_passes_only_extension_and_an_allowlisted_environment() {
+    fn launch_plan_activates_only_daemon_governed_tools_and_an_allowlisted_environment() {
         let temporary_root = tempfile::tempdir().expect("temporary root");
         let executable_path = temporary_root.path().join("pi");
         let extension_entry_path = temporary_root.path().join("index.js");
@@ -684,7 +803,9 @@ mod tests {
             launch_plan.arguments,
             vec![
                 "--extension",
-                extension_entry_path.to_str().expect("UTF-8 path")
+                extension_entry_path.to_str().expect("UTF-8 path"),
+                "--tools",
+                PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST,
             ]
         );
         assert!(!launch_plan.environment.contains_key("DEEPSEEK_API_KEY"));

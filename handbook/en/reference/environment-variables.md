@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: handbook/_meta/annotations/env-vars.json
-fingerprint: "sha256:429c2171cd68347d852d06027abdecc5d20b08f6652ced7138a1b07bd17b4734"
+fingerprint: "sha256:4b6cade9a033f81ad1e23650add217bf288a337081dbd9e79b65edf17071271e"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -25,6 +25,7 @@ Environment variables read by non-test first-party code (Rust and TypeScript). S
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION` | pi-cognitiveos, kernel-server | Set to enabled to request Pi route stage measurement on the Pi client and nested preflight/correlation echo on the daemon. Anything else, including absence, leaves both sides uninstrumented. |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_CAMPAIGN` | pi-cognitiveos | Campaign identifier the measurement session is authorized for. Required alongside the enable variable; credential-shaped values are refused. |
 | `COGNITIVEOS_PI_ROUTE_OBSERVATION_SINK` | pi-cognitiveos | Optional absolute .ndjson path an embedding campaign harness may write. The Extension never opens it, and any path inside a Personal state, runtime or config root is refused. |
+| `COGNITIVEOS_PI_TASK_REF` | cognitive pi launch, pi-cognitiveos | Task-bound public Pi launch context. The Extension submits only untrusted Workspace candidate fields to the authenticated daemon Task channel for validation and admission. |
 | `COGNITIVEOS_PRIVATE_COMPLETION_SOCKET` | pi-agent-adapter | Path of the daemon-created one-shot private completion socket handed to the Pi candidate process. |
 | `DBUS_SESSION_BUS_ADDRESS` | SecretStore backend selection | Signals a session bus for the Linux Secret Service backend probe. |
 | `HOME` | daemon, CLI, Pi extension | Fallback base for the XDG roots when the specific variables are absent. |

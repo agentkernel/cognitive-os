@@ -45,7 +45,9 @@ test("custom Pi provider configuration registers one projected model and emits b
     const events = [];
     for await (const event of stream) events.push(event.type);
     assert.deepEqual(events, ["start", "text_start", "text_delta", "text_end", "done"]);
-    assert.equal((await stream.result()).content[0]?.text, "daemon text");
+    const resultContent = (await stream.result()).content[0];
+    assert.ok(resultContent !== undefined && resultContent.type === "text");
+    assert.equal(resultContent.text, "daemon text");
     assert.deepEqual(
       daemon.requests.map((request) => `${request.method} ${request.url}`),
       [
@@ -84,6 +86,85 @@ test("Pi completion exposes only measured Provider usage and leaves cost unavail
       totalTokens: 10,
       cost: { input: undefined, output: undefined, cacheRead: undefined, cacheWrite: undefined, total: undefined },
     });
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("structured daemon tool calls become pinned Pi tool-call events", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: "{}",
+    completionBody: JSON.stringify({
+      choices: [{
+        message: {
+          content: null,
+          tool_calls: [{
+            id: "call-workspace-read",
+            type: "function",
+            function: { name: "WorkspaceRead", arguments: JSON.stringify({ target: "README.md" }) },
+          }],
+        },
+        finish_reason: "tool_calls",
+      }],
+    }),
+  });
+  try {
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint));
+    const stream = provider.streamSimple(provider.models[0]!, {
+      messages: [{ role: "user", content: "read README.md" }],
+      tools: [{
+        name: "WorkspaceRead",
+        description: "daemon-governed read",
+        parameters: { type: "object" },
+      }],
+    });
+    const eventTypes: string[] = [];
+    for await (const event of stream) eventTypes.push(event.type);
+
+    assert.deepEqual(eventTypes, ["start", "toolcall_start", "toolcall_delta", "toolcall_end", "done"]);
+    const resultContent = (await stream.result()).content[0];
+    assert.ok(resultContent !== undefined && resultContent.type === "toolCall");
+    assert.equal(resultContent.name, "WorkspaceRead");
+    assert.deepEqual(resultContent.arguments, { target: "README.md" });
+    const completionRequest = daemon.requests.at(-1);
+    assert.match(completionRequest?.body ?? "", /"tool_choice":"auto"/);
+    assert.match(completionRequest?.body ?? "", /"WorkspaceRead"/);
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("Pi tool-result continuations preserve the prior structured call", async () => {
+  const daemon = await startFakeDaemon({ bootstrapSecret: BOOTSTRAP_SECRET, statusBody: "{}" });
+  try {
+    const provider = await createDaemonProvider(clientFor(daemon.endpoint));
+    const stream = provider.streamSimple(provider.models[0]!, {
+      messages: [
+        {
+          role: "assistant",
+          content: [{
+            type: "toolCall",
+            id: "call-workspace-read",
+            name: "WorkspaceRead",
+            arguments: { target: "README.md" },
+          }],
+        },
+        {
+          role: "toolResult",
+          toolCallId: "call-workspace-read",
+          content: [{ type: "text", text: "candidate queued" }],
+        },
+      ],
+    });
+    for await (const _event of stream) {
+      // Consume the bounded completion so the fake daemon records the request.
+    }
+
+    const completionRequest = daemon.requests.at(-1);
+    assert.match(completionRequest?.body ?? "", /"role":"assistant","content":null,"tool_calls"/);
+    assert.match(completionRequest?.body ?? "", /"tool_call_id":"call-workspace-read"/);
+    assert.match(completionRequest?.body ?? "", /"role":"tool"/);
   } finally {
     await daemon.close();
   }

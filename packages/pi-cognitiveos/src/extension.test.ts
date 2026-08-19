@@ -66,6 +66,7 @@ test("registration queues the daemon provider and activates its model at session
     await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
 
     assert.deepEqual([...pi.registeredHooks].sort(), [
+      "before_agent_start",
       "project_trust",
       "session_start",
       "tool_call",
@@ -75,17 +76,64 @@ test("registration queues the daemon provider and activates its model at session
     assert.equal(pi.providers.length, 1);
     assert.deepEqual(
       pi.tools.map((tool) => tool.name).sort(),
-      ["WorkspacePatch", "WorkspaceSearch", "WorkspaceWrite"],
+      ["WorkspacePatch", "WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite"],
     );
     assert.equal(pi.selectedModels.length, 0);
 
     await pi.driveSessionStart();
     assert.equal(pi.selectedModels.length, 1);
     assert.equal(pi.selectedModels[0]?.provider, "cognitiveos");
+    assert.equal(pi.toolRegistrationCount, 8, "session binding must refresh same-name tools");
+    assert.equal(pi.tools.length, 4, "post-bind refresh must not widen the tool surface");
+    assert.deepEqual(pi.activeToolSelections, [["WorkspaceRead", "WorkspaceSearch"]]);
+
+    await pi.driveBeforeAgentStart();
+    assert.deepEqual(pi.activeToolSelections, [
+      ["WorkspaceRead", "WorkspaceSearch"],
+      ["WorkspaceRead", "WorkspaceSearch"],
+    ]);
     assert.equal(
       pi.selectedModels[0]?.baseUrl,
       `http://${daemon.endpoint}/provider/v1`,
       "Pi setModel must receive a complete runtime model rather than provider-only metadata",
+    );
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("before-agent activation fails closed when Pi leaves the allowlist empty", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: readinessProjectionBody(),
+  });
+  try {
+    const pi = new FakePi();
+    pi.suppressActiveToolActivation = true;
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+
+    await assert.rejects(
+      pi.driveBeforeAgentStart(),
+      /daemon-governed tools were not activated: WorkspaceRead, WorkspaceSearch/,
+    );
+  } finally {
+    await daemon.close();
+  }
+});
+
+test("before-agent activation fails closed when Pi omits daemon tools from its registry", async () => {
+  const daemon = await startFakeDaemon({
+    bootstrapSecret: BOOTSTRAP_SECRET,
+    statusBody: readinessProjectionBody(),
+  });
+  try {
+    const pi = new FakePi();
+    pi.suppressToolRegistration = true;
+    await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
+
+    await assert.rejects(
+      pi.driveBeforeAgentStart(),
+      /daemon-governed tools are absent from Pi's registry: WorkspaceRead, WorkspaceSearch/,
     );
   } finally {
     await daemon.close();
@@ -121,7 +169,7 @@ test("daemon Workspace* tools are registered and their execute path is I/O-free"
     const pi = new FakePi();
     await registerCognitiveOsExtension(pi, { client: clientFor(daemon.endpoint) });
 
-    for (const toolName of ["WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
+    for (const toolName of ["WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
       const decision = await pi.driveToolCall(toolName);
       assert.equal(decision, undefined, `${toolName} must be allowed for Extension execute`);
     }
@@ -129,9 +177,9 @@ test("daemon Workspace* tools are registered and their execute path is I/O-free"
     assert.ok(bash);
     assert.equal(bash.block, true);
 
-    const search = pi.tools.find((tool) => tool.name === "WorkspaceSearch");
-    assert.ok(search);
-    const result = await search.execute("call-1", { query: "TODO", target: "workspace://personal/example" });
+    const read = pi.tools.find((tool) => tool.name === "WorkspaceRead");
+    assert.ok(read);
+    const result = await read.execute("call-1", { target: "workspace://personal/example" });
     assert.equal(result.content[0]?.text, DAEMON_WORKSPACE_QUEUED_RESULT);
   } finally {
     await daemon.close();

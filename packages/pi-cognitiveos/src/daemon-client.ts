@@ -90,8 +90,9 @@ export interface SelectedModelProjection {
 
 /** The only completion result accepted by the one-shot bridge. */
 export interface BoundedCompletion {
-  readonly content: string;
-  readonly finishReason: "stop";
+  readonly content: string | undefined;
+  readonly toolCalls: readonly BoundedToolCall[];
+  readonly finishReason: "stop" | "tool_calls";
   /** Opaque campaign metadata, never a bearer or user/provider payload. */
   readonly correlationId: string;
   /**
@@ -118,6 +119,38 @@ export interface BoundedCompletion {
    */
   readonly providerUsage: ProviderUsage;
 }
+
+/** One OpenAI-compatible tool call accepted from the daemon Provider route. */
+export interface BoundedToolCall {
+  readonly id: string;
+  readonly name: string;
+  readonly arguments: Readonly<Record<string, unknown>>;
+}
+
+/** Untrusted operation fields submitted to daemon candidate admission. */
+export interface PublicPiCandidate {
+  readonly taskRef: string;
+  readonly toolRef: string;
+  readonly action: string;
+  readonly target: string;
+  readonly parameters?: Readonly<Record<string, unknown>>;
+  readonly parametersDigest: string;
+  readonly expectedStateVersion: number;
+  readonly operationDescriptorId: string;
+}
+
+/** Bounded OpenAI-compatible definition forwarded from Pi's active tool set. */
+export interface DaemonToolDefinition {
+  readonly type: "function";
+  readonly function: {
+    readonly name: string;
+    readonly description: string;
+    readonly parameters: unknown;
+  };
+}
+
+/** Bounded OpenAI-compatible conversation message forwarded through the daemon. */
+export type DaemonChatMessage = Readonly<Record<string, unknown>>;
 
 export type ProviderUsage =
   | { readonly availability: "not_available" }
@@ -165,6 +198,11 @@ export class PersonalDaemonClient {
   /** Read the daemon's validated loopback endpoint for Pi's in-memory model metadata. */
   readLoopbackEndpoint(): string {
     return readDaemonEndpoint(resolvePersonalDaemonPaths(this.environment), this.files);
+  }
+
+  /** Read the optional task binding injected by the public launcher. */
+  readPublicTaskRef(): string | undefined {
+    return this.environment["COGNITIVEOS_PI_TASK_REF"];
   }
 
   /**
@@ -235,9 +273,10 @@ export class PersonalDaemonClient {
    */
   async completeChat(
     model: string,
-    messages: readonly { readonly role: "system" | "user" | "assistant"; readonly content: string }[],
+    messages: readonly DaemonChatMessage[],
     signal?: AbortSignal,
     recorder?: PiRouteStageRecorder,
+    tools: readonly DaemonToolDefinition[] = [],
   ): Promise<BoundedCompletion> {
     if (signal?.aborted) throw abortedRequestError();
     const correlationId = recorder?.readCorrelationId() ?? createPiRouteCorrelationId();
@@ -261,7 +300,12 @@ export class PersonalDaemonClient {
           "content-type": "application/json",
           "x-cognitiveos-correlation-id": correlationId,
         },
-        body: JSON.stringify({ model, messages, stream: false }),
+        body: JSON.stringify({
+          model,
+          messages,
+          stream: false,
+          ...(tools.length === 0 ? {} : { tools, tool_choice: "auto" }),
+        }),
         ...(signal === undefined ? {} : { signal }),
       };
     } finally {
@@ -362,6 +406,37 @@ export class PersonalDaemonClient {
     assertSnapshotFirstWatch(bodyText, "Task");
     this.taskSessionToken = token;
     return bodyText;
+  }
+
+  /** Submit one untrusted public-Pi candidate to daemon-owned admission. */
+  async submitPublicCandidate(candidate: PublicPiCandidate): Promise<void> {
+    const paths = resolvePersonalDaemonPaths(this.environment);
+    const endpoint = readDaemonEndpoint(paths, this.files);
+    let token = this.taskSessionToken ?? (await this.issueSession(endpoint, paths, TASK_CHANNEL));
+    let response = await this.submitCandidate(endpoint, token, candidate);
+    if (response.status === 401) {
+      this.taskSessionToken = undefined;
+      token = await this.issueSession(endpoint, paths, TASK_CHANNEL);
+      response = await this.submitCandidate(endpoint, token, candidate);
+    }
+    const bodyText = await readBodyText(response);
+    if (response.status !== 200) {
+      this.taskSessionToken = undefined;
+      throw authOrProtocolError(response.status, bodyText, "POST /task/candidate");
+    }
+    this.taskSessionToken = token;
+    const parsedBody: unknown = JSON.parse(bodyText);
+    if (
+      typeof parsedBody !== "object" ||
+      parsedBody === null ||
+      (parsedBody as Record<string, unknown>)["admitted"] !== true
+    ) {
+      throw new DaemonClientError(
+        "PI_EXTENSION_DAEMON_PROTOCOL_ERROR",
+        "daemon candidate response did not confirm admission",
+        { httpStatus: response.status },
+      );
+    }
   }
 
   /** Drop the cached bearer, e.g. after the operator restarts the daemon. */
@@ -469,6 +544,31 @@ export class PersonalDaemonClient {
     });
   }
 
+  private async submitCandidate(
+    endpoint: string,
+    token: string,
+    candidate: PublicPiCandidate,
+  ): Promise<Response> {
+    return this.send(endpoint, "/task/candidate", {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${token}`,
+        "content-type": "application/json",
+      },
+      body: JSON.stringify({
+        schema_version: "cognitiveos.task-candidate-request/0.1",
+        task_ref: candidate.taskRef,
+        tool_ref: candidate.toolRef,
+        action: candidate.action,
+        target: candidate.target,
+        ...(candidate.parameters === undefined ? {} : { parameters: candidate.parameters }),
+        parameters_digest: candidate.parametersDigest,
+        expected_state_version: candidate.expectedStateVersion,
+        operation_descriptor_id: candidate.operationDescriptorId,
+      }),
+    });
+  }
+
   private async send(endpoint: string, route: string, init: RequestInit): Promise<Response> {
     const url = `http://${endpoint}${route}`;
     try {
@@ -559,19 +659,42 @@ export function parseBoundedCompletion(
   const message = choiceRecord["message"];
   if (typeof message !== "object" || message === null) throw completionProtocolError();
   const messageRecord = message as Record<string, unknown>;
-  if (typeof messageRecord["content"] !== "string" || "tool_calls" in messageRecord || "function_call" in messageRecord) {
-    throw completionProtocolError();
-  }
-  if (choiceRecord["finish_reason"] !== "stop") throw completionProtocolError();
+  const toolCalls = parseBoundedToolCalls(messageRecord["tool_calls"]);
+  const content = messageRecord["content"];
+  if (toolCalls.length === 0 && typeof content !== "string") throw completionProtocolError();
+  if (toolCalls.length > 0 && content !== null && content !== undefined && typeof content !== "string") throw completionProtocolError();
+  const finishReason = choiceRecord["finish_reason"];
+  if ((toolCalls.length === 0 && finishReason !== "stop") || (toolCalls.length > 0 && finishReason !== "tool_calls" && finishReason !== "stop")) throw completionProtocolError();
   return {
-    content: messageRecord["content"],
-    finishReason: "stop",
+    content: typeof content === "string" ? content : undefined,
+    toolCalls,
+    finishReason: toolCalls.length > 0 ? "tool_calls" : "stop",
     correlationId,
     loopbackHttpElapsedNanos: Math.max(1, loopbackHttpElapsedNanos),
     providerNetworkElapsedNanos: daemonReported.providerNetworkElapsedNanos,
     daemonReported,
     providerUsage: providerUsageFromDaemonResponse(record["usage"], correlationId),
   };
+}
+
+function parseBoundedToolCalls(value: unknown): readonly BoundedToolCall[] {
+  if (value === undefined) return [];
+  if (!Array.isArray(value) || value.length !== 1) throw completionProtocolError();
+  const toolCall = value[0];
+  if (typeof toolCall !== "object" || toolCall === null) throw completionProtocolError();
+  const record = toolCall as Record<string, unknown>;
+  const functionRecord = record["function"];
+  if (
+    record["type"] !== "function" ||
+    typeof record["id"] !== "string" || record["id"].length === 0 ||
+    typeof functionRecord !== "object" || functionRecord === null
+  ) throw completionProtocolError();
+  const functionValue = functionRecord as Record<string, unknown>;
+  if (typeof functionValue["name"] !== "string" || functionValue["name"].length === 0 || typeof functionValue["arguments"] !== "string") throw completionProtocolError();
+  let argumentsValue: unknown;
+  try { argumentsValue = JSON.parse(functionValue["arguments"]); } catch { throw completionProtocolError(); }
+  if (typeof argumentsValue !== "object" || argumentsValue === null || Array.isArray(argumentsValue)) throw completionProtocolError();
+  return [{ id: record["id"], name: functionValue["name"], arguments: argumentsValue as Record<string, unknown> }];
 }
 
 /** What an unauthorized, unreachable or older daemon reports: nothing. */

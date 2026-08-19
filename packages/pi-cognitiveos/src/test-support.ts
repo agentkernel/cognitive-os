@@ -81,14 +81,25 @@ export class FakePi implements ExtensionAPI {
   readonly tools: ExtensionToolDefinition[] = [];
   readonly providers: Array<{ readonly providerName: string; readonly config: ProviderConfig }> = [];
   readonly selectedModels: PiModel[] = [];
+  readonly activeToolSelections: string[][] = [];
+  toolRegistrationCount = 0;
+  suppressActiveToolActivation = false;
+  suppressToolRegistration = false;
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
   private toolCallHandler: ((event: ToolCallEvent) => Promise<ToolCallDecision>) | undefined;
+  private beforeAgentStartHandler:
+    | ((event: unknown, context: ExtensionContext) => Promise<void>)
+    | undefined;
   private sessionStartHandler:
     | ((event: unknown, context: ExtensionContext) => Promise<void>)
     | undefined;
 
   on(event: "project_trust", handler: () => Promise<ProjectTrustDecision>): void;
   on(event: "tool_call", handler: (event: ToolCallEvent) => Promise<ToolCallDecision>): void;
+  on(
+    event: "before_agent_start",
+    handler: (event: unknown, context: ExtensionContext) => Promise<void>,
+  ): void;
   on(
     event: "session_start",
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,
@@ -100,6 +111,13 @@ export class FakePi implements ExtensionAPI {
     }
     if (event === "tool_call") {
       this.toolCallHandler = handler as (event: ToolCallEvent) => Promise<ToolCallDecision>;
+      return;
+    }
+    if (event === "before_agent_start") {
+      this.beforeAgentStartHandler = handler as (
+        event: unknown,
+        context: ExtensionContext,
+      ) => Promise<void>;
       return;
     }
     if (event === "session_start") {
@@ -117,11 +135,36 @@ export class FakePi implements ExtensionAPI {
   }
 
   registerTool(tool: ExtensionToolDefinition): void {
-    this.tools.push(tool);
+    this.toolRegistrationCount += 1;
+    if (this.suppressToolRegistration) {
+      return;
+    }
+    const existingToolIndex = this.tools.findIndex(
+      (registeredTool) => registeredTool.name === tool.name,
+    );
+    if (existingToolIndex === -1) {
+      this.tools.push(tool);
+      return;
+    }
+    this.tools[existingToolIndex] = tool;
   }
 
   registerProvider(providerName: string, config: ProviderConfig): void {
     this.providers.push({ providerName, config });
+  }
+
+  getActiveTools(): readonly string[] {
+    return this.activeToolSelections.at(-1) ?? [];
+  }
+
+  getAllTools(): readonly ExtensionToolDefinition[] {
+    return this.tools;
+  }
+
+  setActiveTools(toolNames: readonly string[]): void {
+    this.activeToolSelections.push(
+      this.suppressActiveToolActivation ? [] : [...toolNames],
+    );
   }
 
   async setModel(model: PiModel): Promise<boolean> {
@@ -133,6 +176,7 @@ export class FakePi implements ExtensionAPI {
     const hooks: string[] = [];
     if (this.projectTrustHandler !== undefined) hooks.push("project_trust");
     if (this.toolCallHandler !== undefined) hooks.push("tool_call");
+    if (this.beforeAgentStartHandler !== undefined) hooks.push("before_agent_start");
     if (this.sessionStartHandler !== undefined) hooks.push("session_start");
     return hooks;
   }
@@ -149,6 +193,13 @@ export class FakePi implements ExtensionAPI {
       throw new Error("the Extension did not register a tool_call hook");
     }
     return this.toolCallHandler({ toolName });
+  }
+
+  async driveBeforeAgentStart(): Promise<void> {
+    if (this.beforeAgentStartHandler === undefined) {
+      throw new Error("the Extension did not register a before_agent_start hook");
+    }
+    await this.beforeAgentStartHandler({}, this.context);
   }
 
   async driveSessionStart(): Promise<void> {

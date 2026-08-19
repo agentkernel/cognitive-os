@@ -15,7 +15,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:dac1a24dc3bf5c47c1a7873c14f8e3afde58898dffe74f0eb9382d675935cc77"
+fingerprint: "sha256:47a7f8aaea8e0b90ab0655e0c2ff55902a006ba30b7fde572daefe2a37c4998e"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---

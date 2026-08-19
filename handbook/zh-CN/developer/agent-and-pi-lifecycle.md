@@ -13,6 +13,7 @@ sources:
   - path: crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: packages/pi-cognitiveos/src/extension.ts
   - path: apps/pi-agent-adapter/src/lib.rs
   - path: apps/pi-agent-adapter/src/main.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
@@ -30,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:b76197ba7d9faeb4493a3632c0086e87549c82edb81810896a4fa7e1e1ea648f"
+fingerprint: "sha256:468ff789b39626bc23391423ea4a12e4247ac448e1a0185deb7a8742b9d0dd2c"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -60,8 +61,13 @@ epoch CAS 下切换单一 active 指针；`SidecarSession` 绑定活进程身份
 
 `admit_pi_launch` 在以下条件不满足时一律 fail-close：Linux native（非 WSL2/
 Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径绝对且存在、版本
-精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。只传
-`--extension <绝对路径>`。
+精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。它加载已配置 Extension、禁用
+Pi 原生工具，并只显式允许 `WorkspaceRead` 与 `WorkspaceSearch`。这些 Extension 工具使用
+钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。Pi 绑定
+session 后，Extension 重新登记同名 daemon 治理定义以刷新 Pi runtime registry，然后只
+激活这两个名称。每次 agent turn 前，它会在 runtime registry 可用后重复该激活；未知名称
+会被忽略，因此任一名称不在 Pi 实际 registry 时 CognitiveOS 会 fail-close。CLI 显式的 `--tools` 列表是完整 Pi registry allowlist，因此不能激活 Pi 原生文件系统、shell 或
+mutating tools。
 
 shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi
 请求用独立不透明 id 与 daemon 测得的两个阶段关联；Node 与 Rust 单调时长始终属于分离
@@ -74,8 +80,10 @@ shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign obs
 `pi-agent-adapter`（钉住适配器，仅 `daemon-candidate` 能力）运行受限 Pi 子进程：禁
 用内置文件系统/shell 工具、skill、会话与扩展发现（`--no-builtin-tools`）、环境白名
 单、带字节上限与截止的一次性私有 socketpair、结构化 `AdapterOutcome`（绝非权威状
-态）。CognitiveOS 扩展对外广告 daemon 治理的 WorkspaceSearch/Write/Patch；适配器把
-一次此类工具调用映射到 P2-T21 candidate 路径。JSON 回退 candidate 若带
+态）。CognitiveOS 扩展对外广告 daemon 治理的
+WorkspaceRead/Search/Write/Patch；其 I/O-free Extension handler 只产出未信任
+candidate，适配器只把一次此类工具调用映射到 daemon candidate 路径。WorkspaceRead
+只携带 workspace target；其余带参数族仍使用受限参数处理。JSON 回退 candidate 若带
 `parameters`，适配器会从参数重算 `parameters_digest`（含省略、空值或非法 digest）；否则 digest 必须是
 `sha256:` 加 64 位小写十六进制。daemon 把其输出当作待准入
 candidate——仅此而已。测试用 stub 适配器可以在 stdout 发出该未信任 candidate，而不连接

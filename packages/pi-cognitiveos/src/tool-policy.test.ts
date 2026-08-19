@@ -54,8 +54,8 @@ test("the read-only allowlist is empty, so no Pi-native tool call is ever permit
   }
 });
 
-test("daemon-governed WorkspaceSearch/Write/Patch are allowed so Extension execute can run", () => {
-  for (const toolName of ["WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
+test("daemon-governed WorkspaceRead/Search/Write/Patch are allowed so Extension execute can run", () => {
+  for (const toolName of ["WorkspaceRead", "WorkspaceSearch", "WorkspaceWrite", "WorkspacePatch"]) {
     assert.equal(decideToolCall({ toolName }), undefined, `${toolName} must not be blocked`);
   }
 });

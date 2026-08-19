@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:eadc35339fb4bd280836f598f2668c802c7cde2db1cfae26dd86937f4fceda87"
+fingerprint: "sha256:35cf1b05710c30a03eacca1b5e85ea325c89cb283e2706a5138503c830e54ac3"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -29,12 +29,15 @@ non_claims:
 # Pi 对话壳
 
 `partial`：经 daemon 代理的对话、readiness 展示、状态命令，以及对外广告的
-daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shell 工具仍被拒
+daemon 治理 WorkspaceRead/Search/Write/Patch 已实现；Pi 原生文件系统/shell 工具仍被拒
 绝。资源/任务浏览面有意尚未在 shell 中开放。
 
 ## 今天能用什么
 
-通过 `cognitive pi launch` 启动 Pi。CognitiveOS 扩展随即：
+通过 `cognitive pi launch` 启动 Pi。它只加载已配置的 Extension，使用 Pi 显式工具 allowlist 排除原生工具，
+并仅向对话暴露 daemon 治理的 Workspace 工具。使用 `--runtime-root` 时，CLI 会把其
+hermetic layout roots 映射到 Pi 的 XDG 环境，使 Extension 能解析该 runtime 的 endpoint
+与本地 bootstrap secret。CognitiveOS 扩展先使用 Pi 所需的 runtime tool schema 注册工具，随后：
 
 - 经 `daemon-endpoint.json` 发现 daemon，用每次启动生成的 bootstrap secret 认证
   （management 与 task bearer 分开持有）；
@@ -43,13 +46,15 @@ daemon 治理 WorkspaceSearch/Write/Patch 已实现；Pi 原生文件系统/shel
 - 会话开始时展示 daemon readiness，首次对话被阻塞时给出警告；
 - `/cognitive-status` 命令只回答 daemon 事实。
 
-响应为单发：daemon 请求非流式补全，扩展将其作为单块输出（仅文本；图像/工具调用被拒
-绝）。
+响应为单发：daemon 请求非流式补全。扩展可输出受限文本或一个结构化的 daemon 治理
+Workspace 工具调用；图像和不受支持的工具调用形状会被拒绝。Pi 提供相应工具结果后，
+下一次 daemon 请求会使用 Provider 的标准工具续接消息角色保留该受限 assistant 工具调用
+与结果。
 
 ## 有意锁死的部分
 
 - `project_trust` 恒拒绝。Pi 原生 bash/write/edit（及其他内置工具）仍被拒绝。扩展
-  对外广告 daemon 治理的 WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
+  对外广告 daemon 治理的 WorkspaceRead/WorkspaceSearch/WorkspaceWrite/WorkspacePatch，其
   `execute` 不触碰文件系统；daemon 把这些参数作为 candidate 走 Intent/Effect。
   模型给出的纯 JSON candidate 不被信任为 digest：若带 `parameters`，适配器会重算
   `parameters_digest`（含模型省略、给出的空值或非法 digest）。adapter 诊断保留脱敏后的尾部真实错误，并以退出码区分 usage 失败（2）和运行时失败（3）。Pi 原生文件系统工具不是 C1/C2 测量臂。

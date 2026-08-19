@@ -13,6 +13,7 @@ sources:
   - path: crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: packages/pi-cognitiveos/src/extension.ts
   - path: apps/pi-agent-adapter/src/lib.rs
   - path: apps/pi-agent-adapter/src/main.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
@@ -30,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:b76197ba7d9faeb4493a3632c0086e87549c82edb81810896a4fa7e1e1ea648f"
+fingerprint: "sha256:468ff789b39626bc23391423ea4a12e4247ac448e1a0185deb7a8742b9d0dd2c"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -64,7 +65,17 @@ health. Upgrade/uninstall fence old epochs; recover/orphan negatives are tested.
 `admit_pi_launch` fail-closes unless: Linux native (not WSL2/Windows), doctor
 components all ready, sandbox adapter present, `pi.json` paths absolute and
 existing, version exactly `0.81.1`, and model egress bound to the registered
-HTTPS proxy endpoint. It passes only `--extension <absolute-path>`.
+HTTPS proxy endpoint. It passes the configured Extension, disables Pi-native
+tools, and explicitly permits only `WorkspaceRead` and `WorkspaceSearch`.
+Those Extension tools use the pinned Pi runtime's TypeBox schemas; JSON-shaped
+lookalikes are rejected during live registration. Once Pi binds its session,
+the Extension re-registers the same daemon-governed definitions to refresh
+Pi's runtime registry, then activates only those two names. Before each agent
+turn, it repeats that activation after the runtime registry is available;
+unknown names are ignored, so CognitiveOS fails closed if either name is absent
+from Pi's actual registry. The CLI's explicit `--tools` list is the full Pi
+registry allowlist, so this cannot activate Pi-native filesystem, shell, or
+mutating tools.
 
 The shell-host Provider route has an opt-in, non-authority campaign observer.
 One opaque id correlates each concurrent Pi request with two daemon-measured
@@ -81,8 +92,11 @@ locked-down Pi child: built-in filesystem/shell tools, skills, sessions and
 extension discovery disabled (`--no-builtin-tools`), env allowlist, one-shot
 private socketpair with byte caps and deadlines, structured `AdapterOutcome`
 (never authority state). The CognitiveOS Extension advertises daemon-governed
-WorkspaceSearch/Write/Patch; the adapter maps one such tool call onto the
-P2-T21 candidate path. A JSON-fallback candidate still has its
+WorkspaceRead/Search/Write/Patch; their I/O-free Extension handlers emit only
+an untrusted candidate, and the adapter maps exactly one such tool call onto
+the daemon candidate path. WorkspaceRead carries only its workspace target;
+the parameterized families retain their bounded parameter handling. A
+JSON-fallback candidate still has its
 `parameters_digest` recomputed from `parameters` when present, including an
 omitted, empty, or otherwise invalid model-supplied digest; otherwise the
 digest must be `sha256:` plus 64 lowercase hex. The daemon treats the output as a candidate for

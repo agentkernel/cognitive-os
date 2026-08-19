@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:eadc35339fb4bd280836f598f2668c802c7cde2db1cfae26dd86937f4fceda87"
+fingerprint: "sha256:35cf1b05710c30a03eacca1b5e85ea325c89cb283e2706a5138503c830e54ac3"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -29,13 +29,20 @@ non_claims:
 # The Pi shell
 
 `partial`: daemon-proxied conversation, readiness display, a status command, and
-advertised daemon-governed WorkspaceSearch/Write/Patch are implemented; Pi
+advertised daemon-governed WorkspaceRead/Search/Write/Patch are implemented; Pi
 native filesystem/shell tools stay refused. Resource/task browsing surfaces are
 deliberately not available in the shell yet.
 
 ## What works today
 
-Launch Pi through `cognitive pi launch`. The CognitiveOS extension then:
+Launch Pi through `cognitive pi launch`. It loads only the configured Extension,
+uses Pi's explicit tool allowlist to exclude Pi-native tools, and leaves only daemon-governed Workspace tools available
+to the conversation. Its fixed Pi allowlist contains only `WorkspaceRead` and
+`WorkspaceSearch`; it never activates Pi's native file or shell tools. With
+`--runtime-root`, the CLI maps its hermetic layout roots into Pi's XDG environment
+so the Extension resolves that runtime's endpoint and local bootstrap secret. The
+CognitiveOS extension uses Pi's required runtime tool schemas before it exposes
+those tools, then:
 
 - discovers the daemon via `daemon-endpoint.json` and authenticates with the
   per-boot bootstrap secret (management + task bearers, kept separate);
@@ -45,14 +52,17 @@ Launch Pi through `cognitive pi launch`. The CognitiveOS extension then:
   blocked;
 - answers `/cognitive-status` with daemon facts only.
 
-Responses are one-shot: the daemon requests a non-streaming completion and the
-extension emits it as a single block (text only; images/tool-calls are rejected).
+Responses are one-shot: the daemon requests a non-streaming completion. It emits
+bounded text or one structured daemon-governed Workspace tool call; images and
+unsupported tool-call shapes are rejected. When Pi supplies the corresponding
+tool result, the next daemon request preserves the bounded assistant tool call
+and result using the Provider's standard tool-continuation message roles.
 
 ## What is deliberately locked
 
 - `project_trust` is always denied. Pi's native bash/write/edit (and other
   built-ins) stay refused. The Extension advertises daemon-governed
-  WorkspaceSearch/WorkspaceWrite/WorkspacePatch whose execute path does not
+  WorkspaceRead/WorkspaceSearch/WorkspaceWrite/WorkspacePatch whose execute path does not
   touch the filesystem; the daemon admits those arguments as candidates on the
   Intent/Effect path. A JSON-only candidate from the model is not trusted as a
   digest: the adapter recomputes `parameters_digest` from `parameters` when

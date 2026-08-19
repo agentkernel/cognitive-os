@@ -21,7 +21,7 @@ tests:
   - packages/pi-cognitiveos/src/daemon-client.test.ts
   - packages/pi-cognitiveos/src/pi-route-observation.test.ts
   - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:a7816cf2d35618cc93c496cec19db841cf0269ae0927fc5c7e74e0e6d98162b7"
+fingerprint: "sha256:68fc36ac9d4f8a0719efcb0e9d2d77c6e36f34b3a1bb64250a0f81a4e1d48064"
 non_claims:
   - 全部 TypeScript 表面都是 candidate/observation 客户端；任何一个都不能持有权威或完成 Task。
 ---

@@ -432,7 +432,7 @@ where
         "OperationCandidateProposal",
         OPERATION_CANDIDATE_SCHEMA_VERSION,
         &admission_command.governance,
-        vec!["observation://personal/private-pi-proposer".to_owned()],
+        vec!["observation://personal/pi-candidate-proposer".to_owned()],
         vec![task_contract.header.id.0.to_owned()],
         "daemon-sealed-private-pi-candidate",
         &proposed_at,
@@ -440,7 +440,7 @@ where
     .map_err(|error| SchedulerAuthorityError::CandidateAdmissionComposition(error.to_string()))?;
     let daemon_sealed_candidate = OperationCandidateProposal {
         action: proposed_candidate.action.clone(),
-        candidate_source_ref: "observation://personal/private-pi-proposer".to_owned(),
+        candidate_source_ref: "observation://personal/pi-candidate-proposer".to_owned(),
         contract_epoch: current_contract_epoch,
         expected_state_version: proposed_candidate.expected_state_version,
         header: candidate_header,
@@ -476,7 +476,7 @@ where
                 candidate_id: admission_command.candidate_id.clone(),
                 task_ref: context_command.task_ref.clone(),
                 contract_epoch: current_contract_epoch,
-                candidate_source_ref: "observation://personal/private-pi-proposer".to_owned(),
+                candidate_source_ref: "observation://personal/pi-candidate-proposer".to_owned(),
                 tool_ref: proposed_candidate.tool_ref,
                 action: proposed_candidate.action,
                 target: proposed_candidate.target,

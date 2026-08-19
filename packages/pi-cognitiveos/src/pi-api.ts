@@ -48,19 +48,25 @@ export interface AgentToolResult {
 
 /**
  * Subset of Pi's `registerTool` record used to advertise daemon-governed
- * Workspace* operations. `parameters` is a JSON Schema object (not TypeBox)
- * so this package does not take a new runtime dependency on Pi internals.
+ * Workspace* operations. Pi validates this runtime schema during extension
+ * loading, so the concrete definition must use the pinned `typebox` schema
+ * object rather than a JSON-shaped structural imitation.
  */
 export interface ExtensionToolDefinition {
   readonly name: string;
   readonly label: string;
   readonly description: string;
-  readonly parameters: Readonly<Record<string, unknown>>;
+  readonly parameters: unknown;
   execute(
     toolCallId: string,
     params: Readonly<Record<string, unknown>>,
     signal?: AbortSignal,
   ): Promise<AgentToolResult>;
+}
+
+/** Runtime registry projection returned by Pi's public `getAllTools()` API. */
+export interface RegisteredToolDefinition {
+  readonly name: string;
 }
 
 /** Presentation-only surface Pi hands to hooks and command handlers. */
@@ -109,6 +115,14 @@ export interface PiModel {
 export interface PiCompletionContext {
   readonly systemPrompt?: string;
   readonly messages: readonly unknown[];
+  readonly tools?: readonly PiToolDefinition[];
+}
+
+/** One active Pi tool definition forwarded to an OpenAI-compatible Provider. */
+export interface PiToolDefinition {
+  readonly name: string;
+  readonly description: string;
+  readonly parameters: unknown;
 }
 
 /** The only Pi stream option honored by the daemon bridge is cancellation. */
@@ -127,7 +141,7 @@ export interface PiProviderAuth {
 
 export interface PiAssistantMessage {
   readonly role: "assistant";
-  readonly content: readonly PiTextContent[];
+  readonly content: readonly PiAssistantContent[];
   readonly api: string;
   readonly provider: string;
   readonly model: string;
@@ -157,11 +171,24 @@ export interface PiTextContent {
   readonly text: string;
 }
 
+export type PiAssistantContent = PiTextContent | PiToolCallContent;
+
+/** A structured tool call emitted by the pinned Pi Provider event protocol. */
+export interface PiToolCallContent {
+  readonly type: "toolCall";
+  readonly id: string;
+  readonly name: string;
+  readonly arguments: Readonly<Record<string, unknown>>;
+}
+
 export type PiAssistantMessageEvent =
   | { readonly type: "start"; readonly partial: PiAssistantMessage }
   | { readonly type: "text_start"; readonly contentIndex: number; readonly partial: PiTextContent }
   | { readonly type: "text_delta"; readonly contentIndex: number; readonly delta: string }
   | { readonly type: "text_end"; readonly contentIndex: number; readonly content: PiTextContent }
+  | { readonly type: "toolcall_start"; readonly contentIndex: number; readonly partial: PiAssistantMessage }
+  | { readonly type: "toolcall_delta"; readonly contentIndex: number; readonly delta: string }
+  | { readonly type: "toolcall_end"; readonly contentIndex: number; readonly toolCall: PiToolCallContent; readonly partial: PiAssistantMessage }
   | { readonly type: "done"; readonly message: PiAssistantMessage }
   | { readonly type: "error"; readonly error: PiAssistantMessage };
 
@@ -190,6 +217,7 @@ export interface ProviderConfig {
 export interface ExtensionAPI {
   on(event: "project_trust", handler: () => Promise<ProjectTrustDecision>): void;
   on(event: "tool_call", handler: (event: ToolCallEvent) => Promise<ToolCallDecision>): void;
+  on(event: "before_agent_start", handler: (event: unknown, context: ExtensionContext) => Promise<void>): void;
   on(
     event: "session_start",
     handler: (event: unknown, context: ExtensionContext) => Promise<void>,
@@ -197,5 +225,11 @@ export interface ExtensionAPI {
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
   registerTool(tool: ExtensionToolDefinition): void;
   registerProvider(providerName: string, config: ProviderConfig): void;
+  /** Return the active Pi tool names after session binding. */
+  getActiveTools(): readonly string[];
+  /** Return the actual Pi registry after extension and allowlist filtering. */
+  getAllTools(): readonly RegisteredToolDefinition[];
+  /** Activate only registered tools; Pi ignores unknown names. */
+  setActiveTools(toolNames: readonly string[]): void;
   setModel(model: PiModel): Promise<boolean>;
 }

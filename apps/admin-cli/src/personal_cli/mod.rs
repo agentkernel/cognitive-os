@@ -548,9 +548,11 @@ fn parse_pi_configure_options(
 }
 
 fn parse_pi_launch_options(flags: &BTreeMap<String, String>) -> Result<PiLaunchOptions, String> {
-    reject_unexpected_flags(flags, &["runtime-root"])?;
+    reject_unexpected_flags(flags, &["runtime-root", "print", "task-ref"])?;
     Ok(PiLaunchOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
+        print_mode: flag_bool(flags, "print")?,
+        task_ref: flags.get("task-ref").cloned(),
     })
 }
 
@@ -610,6 +612,15 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
             }
             continue;
         }
+        if flag == "--print" {
+            if flags
+                .insert("print".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --print given twice".to_owned());
+            }
+            continue;
+        }
         let Some(name) = flag.strip_prefix("--") else {
             return Err(format!("unexpected argument `{flag}`"));
         };
@@ -662,7 +673,7 @@ USAGE:
   cognitive daemon stop   [--runtime-root <dir>]
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
-  cognitive pi launch [--runtime-root <dir>]
+  cognitive pi launch [--runtime-root <dir>] [--print]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -675,7 +686,8 @@ Hard rules:
   - never writes Provider API keys to config, SQLite, env, argv, logs, or evidence
   - backup/restore never copy secret, bearer, provider-config, or authority SQLite
   - Pi configuration writes only non-secret executable and Extension paths
-  - Pi launch requires daemon-owned ready state and passes only --extension
+  - Pi launch requires daemon-owned ready state, loads only its configured Extension,
+    and disables Pi-native tools that bypass daemon authority
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
@@ -769,6 +781,8 @@ mod tests {
                 layout_roots: LayoutRoots {
                     runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
                 },
+                print_mode: false,
+                task_ref: None,
             }))
         );
 
@@ -781,6 +795,29 @@ mod tests {
         .expect_err("Pi launch must reject Provider secret flags");
 
         assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn pi_launch_accepts_noninteractive_print_mode_without_secret_flags() {
+        let command = parse_cognitive_args(&[
+            "pi".to_owned(),
+            "launch".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--print".to_owned(),
+        ])
+        .expect("parse noninteractive Pi launch command");
+
+        assert_eq!(
+            command,
+            CognitiveCommand::Pi(PiCommand::Launch(PiLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                print_mode: true,
+                task_ref: None,
+            }))
+        );
     }
 
     #[test]

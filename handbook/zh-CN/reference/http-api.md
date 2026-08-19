@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:a1889b0055c51f85548034e5611d36204ba7f94799b81d3f3a1f55ac405fe746"
+fingerprint: "sha256:55769f42070f31390a260dd3d65add9ad2486088df7708751d03bcb9435571cc"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -50,6 +50,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/intent.interpret` | task | 持久化概率性解释候选；实质歧义强制 clarification_required。 |
 | `POST` | `/task/preview` | task | 服务端签发的 digest 绑定合同预览；不持久化。 |
 | `POST` | `/task/admit` | task | 接纳精确 preview digest 并在 epoch CAS 下铸造 TaskContract。 |
+| `POST` | `/task/candidate` | task | 提交有界 public-Pi 操作字段；daemon 根据不可变 Task policy 重算参数 digest 并执行 candidate admission。 |
 | `GET` | `/task/evidence` | task | 从 authority 与 Artifact CAS 为一个 task_ref 重建有界脱敏的生命周期、Effect 对账、verification、acceptance 与持久游标证据。 |
 | `GET` | `/task/effects` | task | 返回一个 task_ref 的有界 Effect 历史：不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或在不确定时缺省，以及 report refs。拒绝 receipt、原始参数和额外查询字段。 |
 | `GET` | `/task/observation` | task | 返回一个 task_ref 的有界 O2/O3/O4/O5/O13 观测。空 collector 返回带具名 negative control 的 observed_zero；prompt/body/receipt/capability 查询键失败闭合。O5 复用脱敏 Effect 历史；O13 是持久审计游标回放，含过期游标、digest 断裂与缺口负例。不是第二套 authority API。 |
