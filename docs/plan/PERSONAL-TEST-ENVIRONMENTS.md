@@ -1,7 +1,7 @@
 # CognitiveOS Personal Test and Development Environments
 
 - Status: active environment registry
-- Last reconciled: 2026-08-18
+- Last reconciled: 2026-08-06
 - Product/task status source: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](PERSONAL-SUPPORT-MATRIX.md)
 
@@ -40,7 +40,7 @@ known-invalid syntax or a known-unsupported linker:
 | Dependent local commands | separate calls, or `if ($LASTEXITCODE -eq 0) { <next-command> }` | bash command chaining unless the command explicitly starts in bash |
 | Local documentation, consistency, TypeScript or diff verification | `DEV-WIN-GNU-01` is eligible when the command does not trigger Rust compile/link | treating a PowerShell parser rejection as a test failure |
 | Rust formatting | `DEV-WIN-GNU-01` may run `cargo fmt --all -- --check` | using formatting as build/test evidence |
-| Rust build/test/Clippy/run/bench | `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or exact-revision `linux-002` through the registered route according to the required evidence | invoking these first on `DEV-WIN-GNU-01`, whose registered result is linker exit 121 |
+| Rust build/test/Clippy/run/bench | `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or exact-revision `DEV-LINUX-NATIVE-01` according to the required evidence | invoking these first on `DEV-WIN-GNU-01`, whose registered result is linker exit 121 |
 | Windows GNU toolchain repair | a separately approved and leased P0-T01 Delivery Slice with explicit acceptance | ad hoc LLVM-MinGW, shim, PATH, Rust pin or source workaround inside a feature Slice |
 
 `COMMAND-SHELL-PS51` means a command rejected by the local PowerShell parser
@@ -60,7 +60,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `DEV-WSL2-01` | Windows WSL2 Linux guest | local Linux guest | strong local/fixture implementation evidence |
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
 | `BUILD-LINUX-EXPERIMENTAL-01` | protected experimental campaign builder | reviewed CI build/sign | experimental artifact evidence |
-| `B01-DESKTOP-002` | Ubuntu Desktop KVM guest, designated shared development/test host and B01 campaign target | **sole active B01 environment** for preregistered campaign evidence; ordinary work remains non-claim | B01 attempt evidence; ordinary test qualification is pending Git/Rust provisioning |
+| `B01-DESKTOP-002` | Ubuntu Desktop KVM campaign host | **sole active B01 environment** | individual B01 attempt evidence |
 | `B01-W-DESKTOP-001` | required clean Windows B01-W campaign VM | **not provisioned** | none; nothing may cite it until it is provisioned and qualified |
 | `FIXTURE-SYSTEMD-01` | fake-systemd/installer fixtures | deterministic fixture | lifecycle implementation evidence |
 | `FIXTURE-PROVIDER-HTTPS-01` | loopback HTTPS Provider fixture | deterministic fixture | Provider transport implementation evidence |
@@ -130,7 +130,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
   [toolchain handoff](../checkpoints/20260726-toolchain-recovery-and-worktree-landing-handoff.md)
   and [P1-T08 handoff](../checkpoints/20260729-personal-p1-t08-mvp-single-service-handoff.md).
 
-## 7. `DEV-LINUX-NATIVE-01` — `personal-linux-native-01` transport host
+## 7. `DEV-LINUX-NATIVE-01` — `personal-linux-native-01`
 
 - **Access identity:** `wuz@192.168.1.2`, non-interactive SSH. The standing
   operator authorization permits required approved Secret Store access,
@@ -141,8 +141,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 - **Registered B01 route (verified 2026-08-15):** connect to the libvirt host
   as `wuz@192.168.1.2` (host identity `hal9000`), then use SSH ProxyJump to
   `hal9001@192.168.123.160` (guest identity `hal9001-Standard-PC-Q35-ICH9-2009`).
-  The guest is `linux-002` / `B01-Desktop-Linux-002`, the designated native
-  development/test target; host-side libvirt operations must use
+  The guest is `B01-Desktop-Linux-002`; host-side libvirt operations must use
   `virsh -c qemu:///system`.
 - **Recorded platform:** Linux x86_64, non-WSL, native user-systemd/user D-Bus,
   glibc 2.35.
@@ -166,13 +165,12 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 ### Execution routing and KVM isolation
 
 Linux daemon, Pi/sidecar, installer, user-service, native integration and
-experimental deployment slices use `linux-002` (`B01-Desktop-Linux-002`) as
-their primary execution environment, reached through the registered host and
-ProxyJump route. Before a remote build, test or experimental deployment, the
-operator must create a disposable Git worktree on the guest from an already
-pushed/reviewed revision, record `git rev-parse HEAD`, and verify it equals the
-local candidate commit. An old source tree, a no-Git snapshot, or copied
-uncommitted local files are invalid test inputs.
+experimental deployment slices use this SSH host as their primary execution
+environment. Before a remote build, test or experimental deployment, the
+operator must create a disposable Git worktree from an already pushed/reviewed
+revision, record `git rev-parse HEAD`, and verify it equals the local candidate
+commit. An old source tree, a no-Git snapshot, or copied uncommitted local
+files are invalid test inputs.
 
 Windows may perform formatting, static, documentation and platform-independent
 checks, but does not substitute for this native Linux validation. If the host,
@@ -180,17 +178,13 @@ toolchain, exact revision or disposable root is unavailable, record the Linux
 check as `not-run` or blocked; do not silently fall back to Windows and label
 the result Linux-native.
 
-The host's `B01-Desktop-Linux-002` libvirt guest remains the **sole active
-formal B01 campaign environment**, and it is now also the designated ordinary
-development/test host for owner-authorized, disposable, non-claim work. Every
-ordinary run must use an exact pushed revision, an isolated cleanable root, a
-task-scoped lease, redacted output, and explicit cleanup. Ordinary work must
-not change the campaign baseline, snapshot, campaign roots, campaign
-credentials, or campaign evidence. Starting/stopping the guest, changing its
-baseline or snapshot, and any operation outside the registered development or
-campaign procedure remain restricted operations. The retired
-`B01-Clean-Linux-001` guest remains historical qualification evidence only and
-must not be restored or used as an ordinary development target.
+The host's `B01-Desktop-Linux-002` libvirt guest is the **sole active formal
+B01 campaign environment**. Ordinary development must not start, stop,
+reset, deploy to, or delete that guest outside a preregistered B01 campaign
+procedure and active campaign lease. Standing operator authorization does not
+expand this isolation boundary. The retired `B01-Clean-Linux-001` guest remains
+historical qualification evidence only and must not be restored as a B01 or
+ordinary development target.
 
 ## 8. `BUILD-LINUX-EXPERIMENTAL-01` — protected experimental builder
 
@@ -218,7 +212,7 @@ must not be restored or used as an ordinary development target.
   execution, release or Profile.
 - **Evidence:** [clean-VM handoff](../checkpoints/20260731-personal-p1-t09-b01-clean-vm-handoff.md).
 
-## 10. `B01-DESKTOP-002` — Ubuntu Desktop shared development/test environment
+## 10. `B01-DESKTOP-002` — Ubuntu Desktop campaign environment
 
 - **Platform:** Ubuntu Desktop 24.04.4 LTS, x86_64, non-WSL, PID 1 systemd,
   native user-systemd and encrypted login keyring.
@@ -232,20 +226,10 @@ must not be restored or used as an ordinary development target.
 - **Result:** attempt 1 passed executed phases, produced the expected bounded
   response in 6295 ms with `authority_side_effects:false`, and completed secret
   cleanup.
-- **Ordinary test-machine qualification (2026-08-18):** the registered
-  ProxyJump route reaches `hal9001-Standard-PC-Q35-ICH9-2009`; user systemd is
-  `running` and Node is `v22.23.2`. `git` and `rustc` are not installed or not
-  on the guest `PATH`, and non-interactive `sudo` requires a password. Until
-  Git and the pinned Rust 1.97.1 toolchain are provisioned through an approved
-  guest-administration path, native build/test validation on linux-002 is
-  `not-run`; CI remains the supported build/test fallback.
 - **Maximum evidence:** the completed ADR-0039 successor campaign `002` on this
   guest (fixed N=6, 5 successes / 1 failure, zero critical safety failures,
   complete aggregate statistics, and affirmative independent verifier
   disposition). Retained campaign `001` remains a historical fail record.
-  Ordinary development and testing on this guest is limited to
-  `experimental-local-only` / `tested-local` implementation evidence and
-  cannot be combined with the B01 denominator.
 - **Cannot claim:** G1, GMVP-LINUX, release, Profile, or P7 production trust from
   the experimental signer; B01 pass does not transfer those claims.
 - **Evidence:** [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md),

@@ -50,25 +50,14 @@ claim ceilings.
   capability, runner, or credential path is `not-run`/`not_available` — not a
   development TODO to fix mid-campaign. Optimization ideas go only into the
   final assessment's evidence-ranked priority list.
-- **Contain procedure deviations:** a static command such as `--help` that
-  enters session minting, Provider authentication, a daemon, or another
-  unpreregistered runtime path is `invalid-instrument`, not a qualification
-  sample or Provider result. Append its redacted facts immediately; retain the
-  started denominator; stop and clean up only the affected runner, daemon,
-  root, or shared credential path; and do not retry that cell or inspect
-  secret material. Continue an independently frozen cell only when it shares
-  none of those affected dependencies. A single-cell deviation does not pause
-  the entire campaign or authorize in-campaign product changes.
 - Do not claim, continue, or register any `P*-T*` implementation task or
   Delivery Slice, and do not open implementation branches or PRs.
 - Unchanged boundaries: axioms A1–A8; secret isolation (keys only through
   approved SecretStore / non-logging input paths — never argv, env, config,
-  logs, evidence, or chat); `B01-Desktop-Linux-002` campaign baseline,
-  snapshot, roots, credentials, evidence, and preregistered procedure;
-  exact pushed revisions for any remote build or staging; evidence redaction;
-  claim ceilings (`hypothesis`/non-claim — no Gate, release, Profile, or
-  Agent-benefit promotion). Ordinary linux-002 development/test use remains
-  outside this campaign and must not consume or alter campaign assets.
+  logs, evidence, or chat); `B01-Desktop-Linux-002` isolation and its
+  preregistered procedure; exact pushed revisions for any remote build or
+  staging; evidence redaction; claim ceilings (`hypothesis`/non-claim — no
+  Gate, release, Profile, or Agent-benefit promotion).
 - `COMMAND-SHELL-PS51` and `RUST-LINK-DEV-WIN-GNU-01` still apply: local shell
   is Windows PowerShell 5.1 (no `&&`/`||`), and Rust build/test runs only on
   supported CI or exact-revision native Linux.

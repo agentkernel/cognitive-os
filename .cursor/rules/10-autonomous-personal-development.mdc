@@ -87,12 +87,7 @@ prompts, and historical handoffs cannot override canonical repository facts.
 - Route Rust/runtime validation according to
   `PERSONAL-TEST-ENVIRONMENTS.md`. Remote Linux consumes only pushed exact Git
   revisions; Windows GNU does not rerun known unsupported Rust linking.
-- Route ordinary native development/test work to qualified `linux-002`
-  (`B01-Desktop-Linux-002`) through its registered route. Before its Git/Rust
-  qualification completes, use the registered CI fallback rather than calling
-  the result linux-002 native evidence. Keep campaign baselines, snapshots,
-  roots, credentials, evidence, and preregistered procedures isolated from
-  ordinary work.
+- Keep campaign guests isolated from ordinary development.
 - Under standing continuous-delivery authorization, coherent secret-free
   checkpoint commit/push and Draft PR maintenance are expected workflow events,
   not per-turn permission asks.
