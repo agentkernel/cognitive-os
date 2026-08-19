@@ -80,6 +80,7 @@ export async function registerCognitiveOsExtension(
     registerDaemonGovernedWorkspaceTools(pi);
     // This explicit allowlist keeps all native and mutating tools inactive.
     pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
+    assertDaemonGovernedToolsAreActive(pi);
     if (daemonSelectedModel === undefined) {
       await showStatus(client, context, "session_start");
       return;
@@ -116,6 +117,18 @@ export async function registerCognitiveOsExtension(
 function registerDaemonGovernedWorkspaceTools(pi: ExtensionAPI): void {
   for (const tool of daemonGovernedWorkspaceTools()) {
     pi.registerTool(tool);
+  }
+}
+
+function assertDaemonGovernedToolsAreActive(pi: ExtensionAPI): void {
+  const activeToolNames = new Set(pi.getActiveTools());
+  const missingToolNames = PUBLIC_DAEMON_GOVERNED_TOOL_NAMES.filter(
+    (toolName) => !activeToolNames.has(toolName),
+  );
+  if (missingToolNames.length > 0) {
+    throw new Error(
+      `CognitiveOS daemon-governed tools were not activated: ${missingToolNames.join(", ")}`,
+    );
   }
 }
 

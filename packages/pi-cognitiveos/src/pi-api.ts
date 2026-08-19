@@ -198,6 +198,8 @@ export interface ExtensionAPI {
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
   registerTool(tool: ExtensionToolDefinition): void;
   registerProvider(providerName: string, config: ProviderConfig): void;
+  /** Return the active Pi tool names after session binding. */
+  getActiveTools(): readonly string[];
   /** Activate only registered tools; Pi ignores unknown names. */
   setActiveTools(toolNames: readonly string[]): void;
   setModel(model: PiModel): Promise<boolean>;

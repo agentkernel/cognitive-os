@@ -134,6 +134,10 @@ export class FakePi implements ExtensionAPI {
     this.providers.push({ providerName, config });
   }
 
+  getActiveTools(): readonly string[] {
+    return this.activeToolSelections.at(-1) ?? [];
+  }
+
   setActiveTools(toolNames: readonly string[]): void {
     this.activeToolSelections.push([...toolNames]);
   }
