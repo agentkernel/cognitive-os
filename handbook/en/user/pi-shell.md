@@ -41,7 +41,8 @@ to the conversation. Its fixed Pi allowlist contains only `WorkspaceRead` and
 `WorkspaceSearch`; it never activates Pi's native file or shell tools. With
 `--runtime-root`, the CLI maps its hermetic layout roots into Pi's XDG environment
 so the Extension resolves that runtime's endpoint and local bootstrap secret. The
-CognitiveOS extension then:
+CognitiveOS extension uses Pi's required runtime tool schemas before it exposes
+those tools, then:
 
 - discovers the daemon via `daemon-endpoint.json` and authenticates with the
   per-boot bootstrap secret (management + task bearers, kept separate);

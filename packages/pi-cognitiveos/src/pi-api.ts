@@ -48,14 +48,15 @@ export interface AgentToolResult {
 
 /**
  * Subset of Pi's `registerTool` record used to advertise daemon-governed
- * Workspace* operations. `parameters` is a JSON Schema object (not TypeBox)
- * so this package does not take a new runtime dependency on Pi internals.
+ * Workspace* operations. Pi validates this runtime schema during extension
+ * loading, so the concrete definition must use the pinned `typebox` schema
+ * object rather than a JSON-shaped structural imitation.
  */
 export interface ExtensionToolDefinition {
   readonly name: string;
   readonly label: string;
   readonly description: string;
-  readonly parameters: Readonly<Record<string, unknown>>;
+  readonly parameters: unknown;
   execute(
     toolCallId: string,
     params: Readonly<Record<string, unknown>>,

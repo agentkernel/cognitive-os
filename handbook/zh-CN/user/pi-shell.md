@@ -37,7 +37,7 @@ daemon 治理 WorkspaceRead/Search/Write/Patch 已实现；Pi 原生文件系统
 通过 `cognitive pi launch` 启动 Pi。它只加载已配置的 Extension，禁用 Pi 原生工具，
 并仅向对话暴露 daemon 治理的 Workspace 工具。使用 `--runtime-root` 时，CLI 会把其
 hermetic layout roots 映射到 Pi 的 XDG 环境，使 Extension 能解析该 runtime 的 endpoint
-与本地 bootstrap secret。CognitiveOS 扩展随即：
+与本地 bootstrap secret。CognitiveOS 扩展先使用 Pi 所需的 runtime tool schema 注册工具，随后：
 
 - 经 `daemon-endpoint.json` 发现 daemon，用每次启动生成的 bootstrap secret 认证
   （management 与 task bearer 分开持有）；

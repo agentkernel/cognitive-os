@@ -64,7 +64,10 @@ health. Upgrade/uninstall fence old epochs; recover/orphan negatives are tested.
 `admit_pi_launch` fail-closes unless: Linux native (not WSL2/Windows), doctor
 components all ready, sandbox adapter present, `pi.json` paths absolute and
 existing, version exactly `0.81.1`, and model egress bound to the registered
-HTTPS proxy endpoint. It passes only `--extension <absolute-path>`.
+HTTPS proxy endpoint. It passes the configured Extension, disables Pi-native
+tools, and explicitly permits only `WorkspaceRead` and `WorkspaceSearch`.
+Those Extension tools use the pinned Pi runtime's TypeBox schemas; JSON-shaped
+lookalikes are rejected during live registration.
 
 The shell-host Provider route has an opt-in, non-authority campaign observer.
 One opaque id correlates each concurrent Pi request with two daemon-measured

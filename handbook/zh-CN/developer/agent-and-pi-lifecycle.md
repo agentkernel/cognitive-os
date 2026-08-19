@@ -60,8 +60,9 @@ epoch CAS 下切换单一 active 指针；`SidecarSession` 绑定活进程身份
 
 `admit_pi_launch` 在以下条件不满足时一律 fail-close：Linux native（非 WSL2/
 Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径绝对且存在、版本
-精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。只传
-`--extension <绝对路径>`。
+精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。它加载已配置 Extension、禁用
+Pi 原生工具，并只显式允许 `WorkspaceRead` 与 `WorkspaceSearch`。这些 Extension 工具使用
+钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。
 
 shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi
 请求用独立不透明 id 与 daemon 测得的两个阶段关联；Node 与 Rust 单调时长始终属于分离
