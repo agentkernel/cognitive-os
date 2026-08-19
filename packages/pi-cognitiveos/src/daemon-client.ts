@@ -137,6 +137,9 @@ export interface DaemonToolDefinition {
   };
 }
 
+/** Bounded OpenAI-compatible conversation message forwarded through the daemon. */
+export type DaemonChatMessage = Readonly<Record<string, unknown>>;
+
 export type ProviderUsage =
   | { readonly availability: "not_available" }
   | {
@@ -253,7 +256,7 @@ export class PersonalDaemonClient {
    */
   async completeChat(
     model: string,
-    messages: readonly { readonly role: "system" | "user" | "assistant"; readonly content: string }[],
+    messages: readonly DaemonChatMessage[],
     signal?: AbortSignal,
     recorder?: PiRouteStageRecorder,
     tools: readonly DaemonToolDefinition[] = [],
