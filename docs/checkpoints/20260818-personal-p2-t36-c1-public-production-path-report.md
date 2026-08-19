@@ -78,21 +78,14 @@ Results are appended immediately after each completed validation unit.
 | D02 registry fail-closed public diagnostic | `DEV-LINUX-NATIVE-01` exact `08eeb4a6d076e0fb5fd87945681b83406587ee2a` | partial / public tool visibility only | The cleanable worktree fetched the exact pushed revision through target-local Mihomo; locked install, Extension build, and Rust `admin-cli`/`kernel-server`/`pi-agent-adapter` build passed. Public CLI configured Pi and started the disposable daemon at `127.0.0.1:48442`. The bounded public prompt no longer reported an empty tool list: the Provider response contained a `WorkspaceRead` invocation. However, it arrived as raw DSML text rather than a Pi-native tool-call event, so Pi did not execute the Extension handler and no candidate reached the daemon. The public launcher completed with all claims `not-claimed`; no candidate validation, scheduler lease, executor dispatch, verifier, acceptance, C1, or C2 occurred. This is public tool visibility only, not C1 evidence. |
 | D02 structured Provider tool-call bridge | `DEV-WIN-GNU-01` Node/TypeScript allowlist | pass / implementation-only | The public daemon bridge now forwards only the active Pi tool definitions as bounded OpenAI-compatible function schemas and accepts exactly one structured function call with a JSON-object argument map. It converts that response into the pinned Pi `toolcall_start`/`toolcall_delta`/`toolcall_end` event sequence, preserving the Extension as the untrusted candidate producer. Text completions remain bounded; malformed, empty, multiple, or non-object tool calls fail closed. Pi Extension build and full tests passed, including a focused structured WorkspaceRead event and request-schema regression. This does not prove a public candidate, scheduler, executor, verifier, acceptance, C1, or C2 lifecycle. |
 | D02 structured Provider public WorkspaceRead retry | `DEV-LINUX-NATIVE-01` exact `f85f11c9c15ff5f4434e66c2b5a2685890ea2549` | partial / second-turn protocol blocker | The exact revision was fetched through target-local Mihomo; locked install, Extension build, and Rust `admin-cli`/`kernel-server`/`pi-agent-adapter` build passed. Public CLI configured Pi and started the disposable daemon at `127.0.0.1:48442`. Pi accepted the structured tool-call response and progressed far enough to issue its next completion after the I/O-free WorkspaceRead handler. That second request failed closed as `unsupported Pi message`, because the bridge currently accepts only user/assistant text history and does not yet serialize Pi's tool-result continuation to the bounded daemon Provider format. The public CLI returned an error, not a false completion. No candidate reached daemon authority and no scheduler lease, executor dispatch, verifier, acceptance, C1, or C2 occurred. |
+| D02 task-bound public WorkspaceRead lifecycle | `DEV-LINUX-NATIVE-01` exact `e65aaee5` | pass / C1 Read route | A fresh non-B01 runtime `/home/wuz/p2-t36-c1-fresh-20260819` used a controlled `workspace/README.md`, public `cognitive pi configure`, daemon readiness at `127.0.0.1:48443`, and an already admitted `task://personal/p2-t36-public-read-fresh`. The public stdin-fed `cognitive pi launch --print --task-ref ...` invoked real `WorkspaceRead` for `workspace://README.md`; no native or mutating Pi tool was used. Public daemon evidence records durable candidate-derived Intent and Effect, scheduler `lease_acquired: 1`, a passed independent verification report with current artifact, and daemon acceptance. The final authoritative task evidence is `COMPLETED`, `reconcile_class: closed`, with `ACCEPTANCE_GRANTED`. The disposable daemon was stopped through the public CLI. This proves the C1 WorkspaceRead production path only; it does not prove WorkspaceSearch, C2, Gate, Profile, release, benchmark, or Agent-benefit claims. |
 
 ## Remaining
 
-WorkspaceRead extension registration and adapter extraction are implemented,
-the exact Git worktree and cleanable non-B01 Pi configuration are prepared, and
-Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) exists.
-The independent P2 runtime now has public Provider readiness and passed the
-public Pi launch gate, but its old non-interactive child exited before a
-conversation. The exact pushed caller repair supplies Pi's official `--print`
-mode while keeping the prompt on stdin. The real C1 lifecycle remains not-run:
-no candidate validation, scheduler lease, dispatch, verification, or
-acceptance was observed. Do not use a private transport, SQLite edit, test
-caller, mock authority, manual database write, or any EVAL root/item to bypass
-this state. The next action is to validate and push the post-bind registry
-repair, consume that exact revision from the cleanable Linux Git worktree, and
-run one bounded non-secret WorkspaceRead conversation through the public
-`--print` path. Record separate lifecycle evidence before considering
-WorkspaceSearch.
+The public C1 WorkspaceRead route is now evidenced on exact revision `e65aaee5`.
+Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) remains
+open. The next action is one independent, fresh admitted Task using public
+`WorkspaceSearch`; it must separately produce candidate admission, scheduler
+lease, executor dispatch, independent verification, and daemon acceptance.
+Do not reuse WorkspaceRead evidence, private candidate transport, SQLite edits,
+test callers, mock authority, manual database writes, or EVAL roots/items.
