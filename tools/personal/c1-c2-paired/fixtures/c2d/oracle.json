@@ -1,0 +1,6 @@
+{
+  "class": "C2d",
+  "mechanical": true,
+  "pass_when": "ANSWER: repaired",
+  "retry": 0
+}

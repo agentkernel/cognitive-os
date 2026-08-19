@@ -29,14 +29,32 @@ before starting the next.
 ## D02 P-arm instruments
 
 6. **Failure-first P-arm broker and fixture adapter — pass (local Node).**
-   `node --test tools/test/c1_c2_paired_p_arm.test.mjs` **8/8 pass**. Broker
-   refuses non-loopback binds and secret-shaped argv/env, binds only a
-   non-secret placeholder token, and exposes no Context/Memory/Task/retry/
-   verify surface. Fixture adapter schemas match O-arm Workspace* names and
-   parameter keys; C1 read/search and C2a write/patch run inside a temp
-   fixture root; path escape and preimage mismatch fail closed.
-7. **Linux Secret Service get and live Pi — not-run.** Remaining D02 work on
-   `DEV-LINUX-NATIVE-01`. No B01 sample.
+   First landing: `node --test tools/test/c1_c2_paired_p_arm.test.mjs` **8/8
+   pass**. Broker refuses non-loopback binds and secret-shaped argv/env,
+   binds only a non-secret placeholder token, and exposes no
+   Context/Memory/Task/retry/verify surface. Fixture adapter schemas match
+   O-arm Workspace* names and parameter keys; C1 read/search and C2a
+   write/patch run inside a temp fixture root; path escape and preimage
+   mismatch fail closed.
+7. **Broker HTTP inject + Secret Service fail-closed + freeze/fairness —
+   pass (local Node).** Same focused file now **14/14 pass**. Loopback HTTP
+   broker injects upstream `Authorization` in memory, records only
+   `auth_present`/`auth_bytes`, and never returns material. Linux Secret
+   Service `get` fails closed on Windows and on secret-shaped attributes.
+   Fairness checker emits pass/fail on §2.3 axes (`b0: false`). Freeze
+   ledger has disjoint B0/B1/B2 seeds (180 ids), `retry=0`, and secret-free
+   corpus. Redactor refuses unredacted `sk-` evidence. Not B0. Not a counted
+   sample. No live Pi Provider call.
+8. **D04 documents authored — pass (docs).** B01 guest procedure (no
+   mutation), secret bind runbook, cell overlay `cells.json`, and reserved
+   EVAL-012 scaffolding
+   (`docs/evaluation/personal-perf-eval-012-preregistration.md`). EVAL-012
+   is not active. No B01 sample.
+9. **Linux Secret Service get into the broker — not-run.** Remaining D02
+   supported evidence on `DEV-LINUX-NATIVE-01` after this revision is
+   pushed. No B01 sample. Leftover remote
+   `personal/P2-T37-c2a-public-mutation-path` still advertised (`837f9a4c`).
 
-Next unit: Linux Secret Service `get` into the broker without argv/env/log
-material, still on a non-B01 host.
+Next unit: push this revision, then on `DEV-LINUX-NATIVE-01` run
+`node tools/personal/c1-c2-paired/prove-linux-secret-get.mjs` (probe item
+only; D-Bus get; never `secret-tool lookup`/`search`).

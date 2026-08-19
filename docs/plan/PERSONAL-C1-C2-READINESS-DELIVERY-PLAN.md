@@ -12,7 +12,7 @@
   gap that would force `not-run` of the C1/C2 arms. Completing packages 15–17
   is **完整真机实测**, not a substitute for packages 6–14.
 - Named implementation vehicle: **P9-T08** (measurement-only instruments and
-  freeze scaffolding). Current slice: `P9-T08/D01`.
+  freeze scaffolding). Current slice: `P9-T08/D02`.
 - Product pin: merged `main` after P2-T37
   (`286f7538148ba0d22f496f1f44d1af46f0f44aa0` and later docs-head
   `fb0e89e60cdf2e7b4101119ac921ac5b8623cc16`).
@@ -83,15 +83,15 @@ validation unit.
 | 3. C2b governed session-2 | historical product | **done** (reconfirmed) | P2-T23 PR [#222](https://github.com/agentkernel/cognitive-os/pull/222) at `main@795bfac8`. Public Memory/Skill consumption and session-2 resume. | P-arm cannot use daemon Memory/Skill. | Remaining work is package 6/7/10 fairness classification, not a new P2 product task. |
 | 4. C2c recovery | historical product | **done** (reconfirmed) | P2-T24 PR [#223](https://github.com/agentkernel/cognitive-os/pull/223) at `main@2b803e0f`. Original-key restart reconcile. | Campaign fault profile is measurement-only. | Remaining work is freeze + B0, not a new P2 product task. |
 | 5. C2d public closure | historical product | **done** (reconfirmed) | P2-T14 acceptance authority; P2-T21 `GET /task/evidence`. C1/C2a public O4/O5 observed terminal facts. | Pure-Pi completion is not OS Task completion. | Remaining work is package 6/7 oracles, not a new P2 product task. |
-| 6. Pure-Pi P arm | readiness delivery | **in progress (D02)** | Local Node 8/8: loopback broker + equivalent Workspace* fixture adapter. | Linux Secret Service `get` and live Pi remain. | Continue D02 on `DEV-LINUX-NATIVE-01`. |
-| 7. Frozen paired assets | readiness delivery | **not started** | No C1/C2 runner, corpus, oracle, redactor, seeds, or digest ledger. | Must freeze before any sample. | P9-T08/D03 after package 6. |
-| 8. B0 fairness contract | readiness delivery | **not started** | P/O equality is `not-run`. Product O-arm does not substitute. | Observable checks must exist before B0. | P9-T08/D03 encodes and proves the checker on non-B01. |
-| 9. B01 guest readiness | readiness delivery | **not started** | Route is known (`wuz@192.168.1.2` → ProxyJump `hal9001@192.168.123.160`). Isolation IDs are reserved below, not bound. | No guest mutation until EVAL activation. | P9-T08/D04 writes the checkable procedure. |
-| 10. Paired C1+C2 cell definitions | readiness delivery | **not started** | Execution plan §10 still says C1/C2 “expected not-run on current OS”. | O-arm product gap is closed; remaining gaps are P-arm/assets/fairness/guest. | D01 records the rewritten gates; D04 freezes cell manifests. |
-| 11. Secret / doctor bind path | readiness delivery | **not started** | P2-T37 Patch bind lesson exists as product evidence. | Future EVAL must not copy keyfiles. | D04 records the bind runbook as an exit criterion. |
-| 12. Environment checklist | readiness delivery | **not started** | Section 8 items were leftover `[ ]` after a “complete” assessment. | Each row must be `pass` or explicit `not-run` with recovery. | Close as a real exit table in D04. |
-| 13. Housekeeping | readiness delivery | **not started** | Remote `personal/P2-T37-c2a-public-mutation-path` is still advertised (`837f9a4c`). | Leftover ref is not a denominator. | Delete the leftover remote branch; record the fact. |
-| 14. New EVAL preregistration | readiness delivery | **not started** | EVAL-012 is **reserved**, not activated. | Activation is owner-directed and happens only after 6–13. | Write freeze/preregistration docs with no samples. |
+| 6. Pure-Pi P arm | readiness delivery | **in progress (D02)** | Local Node 14/14: loopback HTTP broker + equivalent Workspace* fixture + fairness/freeze assets. | Linux Secret Service `get` remaining. | Continue D02 on `DEV-LINUX-NATIVE-01`. |
+| 7. Frozen paired assets | readiness delivery | **assets authored, not closed** | Runner, corpus, oracle, redactor, seeds, `retry=0` in `tools/personal/c1-c2-paired/`. Local freeze test pass. | Linux digest recompute remaining. | Close after D02 Linux evidence. |
+| 8. B0 fairness contract | readiness delivery | **assets authored, not closed** | §2.3 checker plus non-B0 dry-run pass locally. | Linux observability remaining. | Close after non-B01 Linux dry-run. |
+| 9. B01 guest readiness | readiness delivery | **procedure authored, not closed** | [B01 procedure](../checkpoints/20260820-personal-c1-c2-b01-guest-procedure.md). Isolation reserved, not bound. | No guest mutation. | Record E7 `not-run` (EVAL not active). |
+| 10. Paired C1+C2 cell definitions | readiness delivery | **overlay authored, not closed** | Plan §6 plus `tools/personal/c1-c2-paired/cells.json`. | Freezeable manifests exist; Linux digest pending. | Close with D04. |
+| 11. Secret / doctor bind path | readiness delivery | **runbook authored, not closed** | [Bind runbook](../checkpoints/20260820-personal-c1-c2-secret-bind-runbook.md). | Live doctor is EVAL start gate. | E9 `not-run` until package 15. |
+| 12. Environment checklist | readiness delivery | **table exists, rows still open** | Section 8. | E1–E6/E10–E12 need Linux/housekeeping facts. | Fill after Linux + branch delete. |
+| 13. Housekeeping | readiness delivery | **not started** | Remote `personal/P2-T37-c2a-public-mutation-path` still advertised (`837f9a4c`). | Leftover ref is not a denominator. | Delete the leftover remote branch; record the fact. |
+| 14. New EVAL preregistration | readiness delivery | **scaffolding authored, not activated** | [EVAL-012 scaffolding](../evaluation/personal-perf-eval-012-preregistration.md). | Must not activate. | Cite Linux-proven digests; keep routing OFF. |
 | 15. B0 on B01 | measurement | **not started** | Forbidden until 6–14 complete and the EVAL row is active. | First live measurement. | Execute B0 qualification cells; retain every started sample. |
 | 16. B1 C1/C2 pilot | measurement | **not started** | Requires B0 pass. | Pilot seeds do not enter confirmatory N. | Execution plan §3.2 + C1/C2 addendum sample plan. |
 | 17. B2 C1/C2 confirmatory | measurement | **not started** | Requires B1. | Held-out seeds; `retry=0`; started=retained. | C1, C2a, C2b, C2c, C2d as defined in section 6. |
@@ -146,15 +146,15 @@ follows.
 | 3 | C2b governed session-2 | historical | A real user path proves daemon-authorized Memory/Skill consumption and resume without forged governance state. | **Complete (reconfirmed):** P2-T23 / PR #222. No new product gap. |
 | 4 | C2c recovery | historical | Controlled fixture crash/`OUTCOME_UNKNOWN` cases query by original key, reconcile, independently verify, and then accept or honestly remain unresolved. | **Complete (reconfirmed):** P2-T24 / PR #223. No new product gap. |
 | 5 | C2d public closure | historical | Public observations distinguish admission, receipt, Effect closure, verification, and daemon acceptance. | **Complete (reconfirmed):** P2-T14 + P2-T21 + C1/C2a public O4/O5. No new product gap. |
-| 6 | Pure-Pi P arm | readiness | Same-fixture adapter works without daemon, Extension, Task, Context, Memory, Skill, retry, cache, or verifier; credential route is approved and secret-safe; equivalent public observation exists for C1/C2 tasks. | **In progress — P9-T08/D02.** Local Node 8/8 pass. Linux SecretStore `get` remaining. No product P2 gap identified. If D02 proves the O-arm Workspace* schemas cannot be cloned without daemon authority, fail closed and register a new P2 task; never daemon-proxy as pure Pi. |
-| 7 | Frozen paired assets | readiness | Runner, fixture corpus, oracle, redactor, analysis, reset, cleanup, command manifests, seeds, `retry=0`, timeout, arm order, and all digests are frozen **before any sample**. | **Remaining — P9-T08/D03.** |
-| 8 | B0 fairness readiness | readiness | The execution-plan §2.3 equality checks (tool set, input bytes, workspace, oracle, Provider/model, timeout, retry=0, environment, cleanup) are encoded and a non-B01 run proves the runner can observe pass/fail. Product O-arm does not substitute. | **Remaining — P9-T08/D03.** Full B0 on B01 is package 15. |
-| 9 | B01 guest readiness | readiness | Checkable procedure for `B01-Desktop-Linux-002` only: new EVAL ID, new root, new ports, new SecretStore, snapshot/baseline rules, standing-authorization limits. No guest mutation in this package. | **Remaining — P9-T08/D04.** |
-| 10 | Paired C1+C2 cell definitions | readiness | Confirmatory rows no longer say “OS arm unreachable”. Each class lists remaining blockers and whether it is P/O performance-comparable or capability-gap. | **Remaining — rewritten in section 6 (D01); freezeable manifests in D04.** |
-| 11 | Secret / doctor bind path | readiness | `cognitive init --reuse-existing-secret-binding` (opaque SecretRef only; `secret_material_written: false`) then redacted doctor `secret_ref_resolves` and `first_conversation_ready: true`. No keyfile copy/link; no material on argv/stdout. | **Remaining — P9-T08/D04.** Lesson: P2-T37 Patch bind, report units 10 and 12. |
-| 12 | Environment checklist | readiness | Section 8 is an exit table: every row `pass` or explicit `not-run` with recovery before package 14. | **Remaining — P9-T08/D04.** |
-| 13 | Housekeeping | readiness | Leftover remote `personal/P2-T37-c2a-public-mutation-path` deleted or recorded absent. | **Remaining — P9-T08/D04.** |
-| 14 | New EVAL preregistration | readiness | Secret-free preregistration and freeze ledger for a **new** EVAL ID; no samples; evaluation routing still off until the owner activates the Current snapshot row. | **Remaining — P9-T08/D04.** Reserved ID: `PERSONAL-PERF-EVAL-012`. |
+| 6 | Pure-Pi P arm | readiness | Same-fixture adapter works without daemon, Extension, Task, Context, Memory, Skill, retry, cache, or verifier; credential route is approved and secret-safe; equivalent public observation exists for C1/C2 tasks. | **In progress — P9-T08/D02.** Local Node 14/14 pass. Linux SecretStore `get` remaining. No product P2 gap identified. If D02 proves the O-arm Workspace* schemas cannot be cloned without daemon authority, fail closed and register a new P2 task; never daemon-proxy as pure Pi. |
+| 7 | Frozen paired assets | readiness | Runner, fixture corpus, oracle, redactor, analysis, reset, cleanup, command manifests, seeds, `retry=0`, timeout, arm order, and all digests are frozen **before any sample**. | **Assets authored — P9-T08/D03.** Local freeze test pass; Linux digest remaining. |
+| 8 | B0 fairness readiness | readiness | The execution-plan §2.3 equality checks (tool set, input bytes, workspace, oracle, Provider/model, timeout, retry=0, environment, cleanup) are encoded and a non-B01 run proves the runner can observe pass/fail. Product O-arm does not substitute. | **Assets authored — P9-T08/D03.** Local dry-run pass; Linux observability remaining. Full B0 on B01 is package 15. |
+| 9 | B01 guest readiness | readiness | Checkable procedure for `B01-Desktop-Linux-002` only: new EVAL ID, new root, new ports, new SecretStore, snapshot/baseline rules, standing-authorization limits. No guest mutation in this package. | **Procedure authored — P9-T08/D04.** No guest mutation. |
+| 10 | Paired C1+C2 cell definitions | readiness | Confirmatory rows no longer say “OS arm unreachable”. Each class lists remaining blockers and whether it is P/O performance-comparable or capability-gap. | **Overlay authored** in section 6 and `cells.json`; Linux digest remaining. |
+| 11 | Secret / doctor bind path | readiness | `cognitive init --reuse-existing-secret-binding` (opaque SecretRef only; `secret_material_written: false`) then redacted doctor `secret_ref_resolves` and `first_conversation_ready: true`. No keyfile copy/link; no material on argv/stdout. | **Runbook authored — P9-T08/D04.** Live doctor is EVAL start gate. |
+| 12 | Environment checklist | readiness | Section 8 is an exit table: every row `pass` or explicit `not-run` with recovery before package 14. | **Table exists; Linux/housekeeping facts remaining.** |
+| 13 | Housekeeping | readiness | Leftover remote `personal/P2-T37-c2a-public-mutation-path` deleted or recorded absent. | **Remaining.** Still advertised `837f9a4c`. |
+| 14 | New EVAL preregistration | readiness | Secret-free preregistration and freeze ledger for a **new** EVAL ID; no samples; evaluation routing still off until the owner activates the Current snapshot row. | **Scaffolding authored, not activated.** Reserved ID: `PERSONAL-PERF-EVAL-012`. |
 | 15 | B0 qualification on B01 | measurement | Execution plan §3.1 + C1/C2 addendum B0: warmups, one qualification seed per class, secret scan, tool-equivalence, timeout, cleanup. Any fairness fail blocks B1. | **After** 1–14 and EVAL activation. First live measurement. |
 | 16 | B1 C1/C2 pilot | measurement | C1/C2 addendum: five pilot seeds per class, two runs per arm; classify instrumentation failures; do not enter confirmatory N. | After B0 pass. Measurement-only. |
 | 17 | B2 C1/C2 confirmatory | measurement | C1/C2 addendum: 30 held-out paired seeds per class, three runs per arm when the Provider lacks deterministic replay; `retry=0`; started=retained. | After B1. This is 完整真机实测 of C1+C2. |
@@ -447,12 +447,12 @@ Owner confirmation is required to:
 
 ## 12. Unique next action
 
-1. Close P9-T08/D01: this amended programme, formal-task registration, lease,
-   Current snapshot, and amendment checkpoint are durable on the task branch.
-2. **Execute package 6 (`P9-T08/D02`).** Local Node focused tests 8/8 are
-   recorded. Remaining: Linux Secret Service `get` into the broker on
-   `DEV-LINUX-NATIVE-01` without argv/env/log material. Do not open EVAL-012.
-   Do not start B01 samples. Do not resume unrelated `P*-T*` backlog.
+1. Local D02/D03/D04 assets are authored; focused tests **14/14 pass**.
+2. **Push, then execute Linux Secret Service `get` (`P9-T08/D02`)** on
+   `DEV-LINUX-NATIVE-01` with `prove-linux-secret-get.mjs`. Probe item only.
+   Never `secret-tool lookup`/`search`. Do not open EVAL-012. Do not start
+   B01 samples. Then close packages 6–14 with that evidence and leftover
+   branch deletion.
 
 ## 13. Completion gate
 

@@ -5,10 +5,19 @@ create Intent/Effect, Task, Context, Memory, Skill, verification, or acceptance
 state. They do not promote Gate, release, Profile, B01, or Agent-benefit.
 
 - `pure-pi-broker.mjs` — campaign-only loopback credential broker for arm `P`
-  (execution plan §2.2 option 2).
+  (execution plan §2.2 option 2). Loopback HTTP, placeholder token
+  `campaign-broker-nonsecret-token`, in-memory upstream auth, `retry=0`.
+- `linux-secret-service.mjs` / `linux-secret-get-helper.py` — Secret Service
+  `get` via D-Bus `SearchItems` + `GetSecret`. Never `secret-tool lookup` or
+  `search`. Probe store uses `secret-tool store` stdin only.
 - `workspace-fixture-adapter.mjs` — equivalent WorkspaceRead/Search/Write/Patch
   schemas for arm `P`, executing only inside a fixture root.
+- `fairness-checker.mjs` / `paired-runner.mjs` / `freeze.mjs` / `redactor.mjs`
+  — frozen seeds (`retry=0`, disjoint B0/B1/B2), §2.3 fairness observability,
+  mechanical redaction. Not B0 and not a counted sample.
+- `prove-linux-secret-get.mjs` — non-B01 Linux proof; prints redacted JSON only.
 - Focused tests: `tools/test/c1_c2_paired_p_arm.test.mjs`.
 
-Live Provider forward, Linux Secret Service `get`, and B01 samples are later
-P9-T08 slices. Closed EVAL brokers and roots are not reused.
+Closed EVAL brokers, ports `48286`–`48298` / `48386`–`48398` / `48383`, and
+SecretStore items `/12`–`/19` are not reused. B01 samples are forbidden until
+packages 6–14 complete and a new EVAL is activated.

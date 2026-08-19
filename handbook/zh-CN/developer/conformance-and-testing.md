@@ -35,8 +35,10 @@ non_claims:
 - **符合性向量**（`conformance/vectors/`，89 个）是合同派生的行为用例，由
   `conformance-runner` 执行。
 - **C1/C2 成对测量仪器**（`tools/personal/c1-c2-paired/`）仅用于 campaign：loopback
-  纯 Pi credential broker 与等价 Workspace* fixture adapter。它们不是第二
-  authority writer，也不升格 Gate、release、Profile、B01 或 Agent-benefit。聚焦测试：
+  纯 Pi credential broker（经 D-Bus 做 Secret Service `get`，禁止 `secret-tool
+  lookup`/`search`）、等价 Workspace* fixture adapter、冻结 seeds/`retry=0`，以及
+  §2.3 fairness checker。它们不是第二 authority writer，也不升格 Gate、release、
+  Profile、B01 或 Agent-benefit。聚焦测试：
   `tools/test/c1_c2_paired_p_arm.test.mjs`。
 
 ## 符合性 runner
