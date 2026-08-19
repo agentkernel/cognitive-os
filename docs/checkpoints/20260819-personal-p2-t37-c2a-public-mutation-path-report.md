@@ -81,8 +81,9 @@ evaluation, or Agent-benefit claim.
     `ready`, and `first_conversation_ready: true`. No key material was
     recaptured, copied, printed, or placed on argv.
 13. **D02 public WorkspacePatch lifecycle — fail / not closed.** Two independent
-    public Tasks (`task://personal/p2-t37-public-patch` and
-    `task://personal/p2-t37-public-patch-retry`) each acquired
+    public Tasks (`task://personal/p2-t37-public-patch`,
+    `task://personal/p2-t37-public-patch-retry`, and
+    `task://personal/p2-t37-public-patch-strict`) each acquired
     `lease_acquired: 1` after `cognitive pi launch --print --task-ref ...` with
     the repo Patch fixture, then persisted Effect `NOT_EXECUTED` /
     `reconcile_class: must_reconcile`. The workspace file remained 13 bytes,
