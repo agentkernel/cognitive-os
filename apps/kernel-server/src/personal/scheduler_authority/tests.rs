@@ -4710,14 +4710,11 @@ fn c2a_public_patch_fixture_reaches_production_sink() {
     let patch_preimage = b"c2a-patch-v1\n";
     let expected_preimage =
         "digest:sha256:575ba0739b778cf7f38f3bb74a32d1727dec211c5bcab00850966e267c2a4857";
-    let computed_preimage = format!(
-        "digest:{}",
-        workspace_image_digest(patch_preimage).expect("C2a public Patch preimage")
-    );
+    let computed_preimage = format!("digest:{}", workspace_image_digest(patch_preimage).unwrap());
     assert_eq!(computed_preimage, expected_preimage);
     let patch_payload = STANDARD
         .decode("QEAgLTEgKzEgQEAKLWMyYS1wYXRjaC12MQorYzJhLXBhdGNoLXYyCg==")
-        .expect("C2a public Patch fixture payload");
+        .unwrap();
     let layout = temporary_personal_layout();
     let candidate = production_chain_candidate(
         NativeOperationFamily::WorkspacePatch,

@@ -3,8 +3,8 @@
 Task: `P2-T37`
 Branch: `personal/P2-T37-c2a-public-mutation-path`
 Lease: `lease/personal/P2-T37/c2a-public-mutation-path`
-Scope: `P2-T37/D01` complete; `P2-T37/D02` public WorkspaceWrite complete,
-WorkspacePatch outstanding
+Scope: `P2-T37/D01` complete; `P2-T37/D02` public WorkspaceWrite and
+WorkspacePatch complete; `P2-T37/D03` supported CI/docs/closure remaining
 
 This is an implementation report, not a C2, Gate, release, Profile, B01,
 evaluation, or Agent-benefit claim.
@@ -88,9 +88,33 @@ evaluation, or Agent-benefit claim.
     the repo Patch fixture, then persisted Effect `NOT_EXECUTED` /
     `reconcile_class: must_reconcile`. The workspace file remained 13 bytes,
     SHA-256 `7c3a0a01304ba98bbe58fe47fbc45565b4477d046335828375216c739e4bdffa`.
-    Verification and acceptance stayed absent; lifecycle stayed `ACTIVE`. This
-    does not prove WorkspacePatch, C2, Gate, release, Profile, B01, or
-    Agent-benefit.
+    Verification and acceptance stayed absent; lifecycle stayed `ACTIVE`. The
+    three Intents reused the exact fixture `parameters_digest`
+    `sha256:015686ed221b3962c6e0a273ff969843df6f419f4f7640d2e6a7e7b172c66689`
+    (Pi copied the governed parameters). The workspace file was 13 bytes of
+    `c2a-patch-v1` plus a literal `n`, not `c2a-patch-v1` plus LF, so the
+    executor correctly refused. Required CI `32288802253` Ubuntu
+    `c2a_public_patch_fixture_reaches_production_sink` **ok**; Clippy failed only
+    on `clippy::expect_used` in that test. This does not prove WorkspacePatch,
+    C2, Gate, release, Profile, B01, or Agent-benefit.
+
+14. **D02 public WorkspacePatch lifecycle — pass.** After reseeding
+    `c2a-patch.txt` to the exact bytes `c2a-patch-v1` plus LF (`63 … 31 0a`,
+    SHA-256 `cb4ff53fe48499826134116581f605c9ed95cc37cfb3d0e42aac028b87c99c0f`),
+    a fresh Task `task://personal/p2-t37-public-patch-reseed` was admitted with
+    `native.workspace.patch` and launched via public
+    `cognitive pi launch --print --task-ref ...` using
+    `apps/kernel-server/tests/p2_t37_public_patch_prompt.txt`. Observation:
+    `COMPLETED`, `reconcile_class: closed`, `lease_acquired: 1`, verification
+    `passed`/`current`, `acceptance_current: true`, Effect `RECONCILED` /
+    `executed`. The workspace file became `c2a-patch-v2` plus LF
+    (`63 … 32 0a`, SHA-256
+    `2d0cc7d5defec924af77da9ea56bd991f6467fe49a80b80bfc02d3c42d0d95ac`).
+    No Pi-native filesystem or shell tool was used. This does not prove C2,
+    Gate, release, Profile, B01, or Agent-benefit.
+15. **Patch daemon stop — pass.** Public `cognitive daemon stop --runtime-root
+    /home/wuz/p2-t37-c2a-patch-20260820` reported `action: stopped`,
+    `stale_lock_removed: true`; `127.0.0.1:48446` is no longer listening.
 
 ## Implemented boundary
 
@@ -107,13 +131,10 @@ evaluation, or Agent-benefit claim.
 
 ## Remaining
 
-- Complete D02 with a public WorkspacePatch Task that reaches `COMPLETED`,
-  `lease_acquired >= 1`, current passed verification, and `ACCEPTANCE_GRANTED`.
-  Provider bind is done. Two live Patch Tasks refused at Effect `NOT_EXECUTED`.
-  Strengthen the public Patch fixture so Pi copies the governed parameters
-  exactly, then admit a fresh Task.
-- Run the daemon/API mutation negatives for malformed base64, preimage,
-  descriptor/digest/epoch drift, duplicate or mixed candidates, preimage
-  mismatch, and no mutation before daemon admission.
-- Complete D03 with supported CI, handbook/docs synchronization if required,
+- Complete D03: Clippy `expect_used` repair on the production-sink fixture test,
+  required CI on the merge HEAD, handbook/docs synchronization if required,
   acceptance mapping, and deterministic task/lease/branch closure.
+- Failure-first mutation negatives (malformed base64/preimage, descriptor/digest
+  /epoch drift, duplicate/mixed candidates, preimage mismatch) remain covered by
+  existing hermetic tests; Ubuntu `c2a_public_patch_fixture_reaches_production_sink`
+  **ok** at `40787044`. Windows GNU Rust remains `not-run`.
