@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:d9151d9e2345c60733bbd725a7ceca9ac4a8da6db31bfdbedefaf8ed94f572b3"
+fingerprint: "sha256:53b2324acb31f7761afe259b5a16d73994d3a51b0685dabd782a9b738f62d015"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---

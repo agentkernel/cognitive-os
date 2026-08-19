@@ -703,6 +703,7 @@ mod tests {
                 runtime_root: Some(temporary_root.path().to_path_buf()),
             },
             print_mode: true,
+            task_ref: None,
         };
 
         let launch_plan = prepare_launch_with_doctor_document(
