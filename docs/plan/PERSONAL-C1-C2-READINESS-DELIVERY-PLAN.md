@@ -3,9 +3,10 @@
 - Status: active navigation document; no evaluation campaign is active
 - Purpose: preserve the dependency-ordered delivery route to a **new**, not yet
   activated, C1/C2 paired benchmark readiness assessment
-- Current product task: `P2-T36` on
-  `personal/P2-T36-c1-public-production-path`
-- Current C1 implementation checkpoint: `33a95017a4fd300a622c0d3a79485f4dda1f09a5`
+- Current product route: C2a public WorkspaceWrite/Patch reconfirmation on
+  `main@3efd7011b605a32ac0c9ec114321831995f32d90`
+- Current C1 implementation checkpoint: P2-T36 closed at
+  `main@3efd7011b605a32ac0c9ec114321831995f32d90`
 - Last reconciled: 2026-08-19
 
 ## 1. Authority and use
@@ -38,15 +39,15 @@ reconciling the authoritative sources in section 1.
 
 | Package | Status | Completed, supported facts | Open boundary | Next recovery action |
 |---|---|---|---|---|
-| Plan persistence | complete | This navigation document is registered in the active P2-T36 lease and linked from `PROGRESS.md`. | Keep revision and row status current during the task. | Read this board after `PROGRESS.md`, lease, and branch reconciliation. |
+| Plan persistence | complete | This navigation document is linked from `PROGRESS.md`; the P2-T36 lease is closed and the narrow closure-ledger lease owns these fact corrections. | Keep revision and row status current during reconciliation. | Read this board after `PROGRESS.md`, lease, and branch reconciliation. |
 | P2-T36/D01: Pi candidate surface | complete | WorkspaceRead is I/O-free and daemon-governed; native Pi filesystem/shell tools remain denied. Exact Linux adapter protocol test passed **21/21**. | Unit protocol evidence is not a public C1 route. | Preserve existing negatives while testing the real public route. |
 | P2-T36/D01: exact source and base tools | complete | A cleanable, non-B01 native Linux Git worktree was refreshed from the pushed branch and detached at exact current task head `33a95017a4fd300a622c0d3a79485f4dda1f09a5`, clean. Rust adapter/admin CLI, Extension, and pinned Pi `0.81.1` build/version checks passed. The daemon, admin CLI, and adapter were rebuilt, and public Pi configuration was rewritten without secret access. | The public daemon must establish its own readiness projection from the rebuilt exact revision. | Continue with the public candidate-to-authority bridge gap. |
 | P2-T36/D02: disposable Pi configuration | complete | Public `cognitive pi configure` created a cleanable non-B01 runtime configuration referencing the pinned Pi, built Extension, and candidate adapter. No Provider material was configured or inspected. | Configuring Pi neither starts the daemon nor proves readiness or candidate execution. | Start the public daemon in that disposable runtime and capture only redacted status/doctor facts. |
-| P2-T36/D02: public C1 WorkspaceRead/Search | blocked at candidate-to-authority bridge | Exact revision `33a95017a4fd300a622c0d3a79485f4dda1f09a5` passed daemon readiness and completed a real public `--print` WorkspaceRead call plus the required tool-result continuation. The I/O-free Extension returned its bounded queued result, but no public candidate admission, scheduler lease, dispatch, verification, or acceptance was observed. Draft PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) is open. | The public composition still lacks an observable conversation -> real Pi candidate -> daemon scheduler -> executor -> verifier -> acceptance lifecycle on this exact revision. | Add the daemon-supervised public candidate admission bridge without private transport, test caller, SQLite, mock authority, or EVAL assets. |
+| P2-T36/D02: public C1 WorkspaceRead/Search | complete | Fresh non-B01 Linux runtimes independently completed public Task-bound WorkspaceRead and WorkspaceSearch through authenticated daemon candidate admission, scheduler lease, native executor, passed independent verification, and daemon acceptance; both Tasks reached `COMPLETED`. PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) is merged at `main@3efd7011`. | C1 completion does not establish C2, benchmark, or promotion claims. | Reconfirm C2a WorkspaceWrite/Patch on exact merged `main`. |
 | P2-T36/D02: provider/readiness boundary | complete | No secret was read, printed, searched, logged, or placed in command arguments. The updated owner-designated file was streamed only through non-PTY public CLI stdin; redacted doctor reports Provider SecretRef resolution, selected-model digest match, and `first_conversation_ready: true`. The independent P2 runtime did not reuse EVAL-011 state. | Pi launch is permitted only after daemon-owned readiness admits it. | Repair the public Pi conversation caller/runtime integration; do not inspect material or reuse any closed-EVAL item. |
-| P2-T36/D03: supported validation and CI | in progress | Initial Ubuntu verification passed. A previous Windows job failed on an unrelated existing reconciliation test and was retried. | Latest CI for the current pushed head is pending; no CI result may be inferred. | Observe the current CI revision; repair only task-owned failures and record unrelated failures precisely. |
-| P2-T36/D03: task closure | not started | Draft PR and incremental report exist; current exact revision has a truthful public caller blocker. | Full acceptance mapping, required validation, ready/merge, lease closure, branch cleanup, and `main` reconciliation remain. | Continue implementation on the public conversation caller before acceptance assessment or closure. |
-| C2a-C2d public O-arm | blocked by P2-T36 dependency | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | After P2-T36 closes, run the first supported public path and register the smallest uncovered product gap. |
+| P2-T36/D03: supported validation and CI | complete | Final documentation-head workflow `32245868452` passed Ubuntu, Windows, and required-ci. | C1-supported validation remains scoped to the merged product revision. | Preserve the report as C1 evidence only. |
+| P2-T36/D03: task closure | complete | PR #244 merged at `3efd7011`; the lease is archived; local/remote task branches are deleted; local `main` equals `origin/main`. | No P2-T36 closure work remains. | Select C2a per section 7. |
+| C2a-C2d public O-arm | C2a reconfirmation next | Existing P2-T21 through P2-T24 provide product evidence for candidate parameters, mutation, consumption, recovery, and observations; P2-T36 is closed. | Their real-Pi/public-path readiness must not be inferred from prior unit, fixture, or campaign evidence. | Run the first supported C2a public WorkspaceWrite/Patch path and register the smallest uncovered product gap. |
 | Pure-Pi P arm and frozen paired assets | not started | No new runner, corpus, broker, oracle, or campaign asset is in use. | Product O-arm readiness is a prerequisite; new EVAL activation remains owner-only. | Do not begin until the formal preparation boundary permits it. |
 | New C1/C2 campaign | not started / inactive | EVAL-004 through EVAL-010 remain closed and isolated. | No new EVAL ID, preregistration, root, port, SecretStore item, denominator, or sample is authorized by this plan. | Only a future owner activation may request a new preregistration and B0. |
 
@@ -60,17 +61,17 @@ report before selecting unrelated work. `Not started` is not a failure.
 
 | Stage | Status | Exact evidence or durable fact | Exit criterion | Single next action |
 |---|---|---|---|---|
-| 0. Navigation and ownership | complete | This plan is linked from `PROGRESS.md` and is an exact active-lease path. | Current task, lease, revision, report, and next action reconcile. | Reconcile canonical sources before changing the table. |
+| 0. Navigation and ownership | complete | P2-T36 is closed and archived; no active task lease exists. | Current revision, closed lease, report, and next action reconcile. | Reconcile canonical sources before claiming a C2a task. |
 | 1. P2-T36 failure-first surface proof | complete | The missing `WorkspaceRead` Extension registration was observed as the expected failure before implementation. | A focused regression proves the new surface and native Pi deny policy. | Preserve the focused negative while changing D02. |
 | 2. WorkspaceRead candidate implementation | complete | Pi Extension registration, adapter event extraction, and protocol negatives are implemented; exact native adapter protocol test is **21/21 pass**. | WorkspaceRead and WorkspaceSearch can each produce one untrusted, schema-bound candidate while built-ins fail closed. | Exercise this implementation only through the real public composition. |
 | 3. Exact native source and toolchain | complete | Cleanable non-B01 Git worktree refreshed directly from GitHub and detached at `33a95017a4fd300a622c0d3a79485f4dda1f09a5`; its status is clean. Rust 1.97.1, Node 22.19.0, and Pi 0.81.1 were verified. Exact-revision daemon/admin/adapter binaries were rebuilt and the non-secret Pi configuration was refreshed. | Public readiness is observed from the rebuilt exact revision. | Continue with the public candidate-to-authority bridge gap. |
 | 4. Public Pi configuration | complete | `cognitive pi configure` created a non-secret, cleanable non-B01 `pi.json` using the pinned Pi, Extension, and adapter. | Daemon-owned readiness can inspect the configuration without direct Provider or secret handling by Pi. | Continue with a bounded public conversation after caller recovery. |
 | 5. Daemon-owned readiness | complete | Exact-revision public daemon at `127.0.0.1:48436` reports system/database/secret/provider/daemon/Pi ready, SecretRef resolution and selected-model digest match, Pi `0.81.1`, and `first_conversation_ready: true`; Provider material was delivered only through non-PTY public CLI stdin and was never exposed to argv/environment/config/logs/evidence. | Public doctor admits Pi without exposing Provider material. | Drive one bounded public Pi conversation and capture lifecycle evidence. |
-| 6. C1 WorkspaceRead public route | blocked at candidate-to-authority bridge | Exact revision `33a95017a4fd300a622c0d3a79485f4dda1f09a5` completed a real public `--print` WorkspaceRead call and the required tool-result continuation. The I/O-free Extension returned its bounded queued result, but no public adapter/candidate admission, scheduler lease, executor dispatch, independent verifier, or daemon acceptance was observed. | Public admit -> Context -> real Pi candidate -> lease -> executor -> verifier -> acceptance is separately observable. | Add the daemon-supervised public candidate admission bridge without reusing the private candidate transport or writing authority state outside the daemon. |
-| 7. C1 WorkspaceSearch public route | not started / dependent | Search candidate path remains covered by adapter negatives, but no fair WorkspaceRead lifecycle exists to establish the preceding public composition. | Same public lifecycle completes without borrowing WorkspaceRead evidence. | Run one bounded WorkspaceSearch route only after WorkspaceRead is recorded. |
-| 8. Required CI and supported regressions | in progress | PR #244 required CI is green at the prior pushed head; new runtime evidence is currently documentation-only and the public caller blocker remains. | Required CI is green on the final implementation head, or an independently reproducible task-owned defect is repaired. | Implement caller recovery, push exact revision, then rerun supported regressions and required CI. |
-| 9. P2-T36 closure | not started | Draft PR and running report exist; stage 6 is blocked by a truthful public caller gap. | Acceptance mapping, report, handbook/docs sync, ready/merge, lease close, branch cleanup, and main reconciliation all complete. | Begin only after the caller recovery, public C1 lifecycle, and stages 5-8 pass on the same final pushed head. |
-| 10. C2 and paired-benchmark readiness | not started | C2a-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Select the first dependency-ready package only after P2-T36 closure. |
+| 6. C1 WorkspaceRead public route | complete | A fresh non-B01 Linux Task completed public Pi WorkspaceRead through candidate admission, lease, executor, passed independent verification, and daemon acceptance. | The evidence is retained in the P2-T36 report. | Reconfirm C2a without borrowing C1 evidence. |
+| 7. C1 WorkspaceSearch public route | complete | A separate fresh non-B01 Linux Task independently completed public Pi WorkspaceSearch through the same authority chain. | The evidence is retained in the P2-T36 report. | Reconfirm C2a without borrowing C1 evidence. |
+| 8. Required CI and supported regressions | complete | Final documentation-head required CI `32245868452` passed Ubuntu, Windows, and required-ci. | C1 CI is complete at the merged revision. | Use exact merged `main` for C2a reconfirmation. |
+| 9. P2-T36 closure | complete | PR #244 merged at `3efd7011`; lease/branch/main reconciliation is complete. | No P2-T36 work remains. | Select C2a under a new narrow lease only if the real public route exposes a gap. |
+| 10. C2 and paired-benchmark readiness | in progress | C1 is complete; C2a-d, P arm, frozen assets, fairness B0, and a new campaign assessment remain future dependencies. | Every section 4 package has supported evidence and no unresolved non-pass result. | Reconfirm the C2a public WorkspaceWrite/Patch path on exact merged `main`. |
 
 ### 2.2 Resume checklist
 
@@ -117,7 +118,7 @@ public-observation gap remains.
 
 | Order | Readiness package | Required outcome before advancing | Current navigation state |
 |---:|---|---|---|
-| 1 | C1 public O-arm | WorkspaceRead and WorkspaceSearch each traverse public admit -> Context -> real Pi candidate -> scheduler lease -> daemon Tool executor -> independent verifier -> daemon acceptance. | `P2-T36` in progress; WorkspaceRead Pi advertisement and adapter extraction are implemented, but public exact-revision Linux evidence is pending. |
+| 1 | C1 public O-arm | WorkspaceRead and WorkspaceSearch each traverse public admit -> Context -> real Pi candidate -> scheduler lease -> daemon Tool executor -> independent verifier -> daemon acceptance. | **Complete:** P2-T36 merged as PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) at `main@3efd7011`; independent fresh non-B01 Linux WorkspaceRead and WorkspaceSearch Tasks completed the full public chain. Final required CI `32245868452` passed Ubuntu, Windows, and required-ci. |
 | 2 | C2a mutation O-arm | WorkspaceWrite/Patch carry schema-bound input and expected preimage through public authority; Intent/Effect, original-key reconcile, independent verification, and acceptance close the Task. | Reconfirm existing P2-T21/P2-T22 path with a real Pi/public caller; register a narrowly scoped product task only for an uncovered gap. |
 | 3 | C2b governed session-2 | A real user path proves daemon-authorized Memory/Skill consumption and resume without forged governance state or private helper use. | Reconfirm P2-T23 public consumption path with a real caller; register only an uncovered product gap. |
 | 4 | C2c recovery | Controlled fixture crash/OUTCOME_UNKNOWN cases query by original key, reconcile, independently verify, and then accept or honestly remain unresolved. | Reconfirm P2-T24 plus production public caller; register only an uncovered product gap. |
@@ -127,42 +128,40 @@ public-observation gap remains.
 | 8 | B0 fairness readiness | A fresh B0 can prove P/O equality of tool set, input bytes, workspace, oracle, Provider/model, timeout, retry=0, environment, and cleanup. | Requires packages 1-7. A new EVAL ID is still not authorized by this plan. |
 | 9 | New campaign readiness assessment | A non-claim assessment references all supported evidence, allocation strategy for a new root/port/SecretStore item, Provider budget, B1-B5 freezes, and cleanup. | Must state only that a new B0 may be requested; it cannot activate or execute a campaign. |
 
-## 5. Current task route: P2-T36
+## 5. Completed task route: P2-T36
 
 ### Objective
 
-Close the smallest missing C1 product prerequisite: real Pi can select only
+Closed the smallest missing C1 product prerequisite: real Pi can select only
 daemon-governed WorkspaceRead/Search on the public `cognitive daemon start`
 composition, and the selected candidate reaches the existing daemon authority,
 executor, verifier, and acceptance chain.
 
 ### Done only when
 
-- Pi native filesystem and shell tools remain default-deny; the Extension's
+- [x] Pi native filesystem and shell tools remain default-deny; the Extension's
   `WorkspaceRead` handler remains I/O-free and candidate-only.
-- Adapter event extraction accepts exactly one valid WorkspaceRead/Search call,
+- [x] Adapter event extraction accepts exactly one valid WorkspaceRead/Search call,
   refuses Pi built-ins, unknown tools, duplicate Workspace calls, and mixed
   JSON/tool candidates.
-- A supported exact revision proves the public production caller rather than a
+- [x] A supported exact revision proves the public production caller rather than a
   SQLite injection, private transport injection, mock authority, or test-only
   caller.
-- The supported evidence records separate facts for candidate validation,
+- [x] The supported evidence records separate facts for candidate validation,
   scheduler lease, dispatch, Effect closure, verification, and acceptance.
-- The task's required CI, handbook synchronization, acceptance mapping, PR,
+- [x] The task's required CI, handbook synchronization, acceptance mapping, PR,
   merge, lease closure, and branch/main reconciliation are complete.
 
-### Current recovery sequence
+### Closure record
 
-1. Confirm branch/upstream and pushed exact head from `PROGRESS.md`.
-2. Create or update the task Draft PR before remote validation.
-3. On `DEV-LINUX-NATIVE-01`, create a disposable Git worktree from the exact
-   pushed revision. Record `git rev-parse HEAD` and verify equality.
-4. Run focused adapter and kernel-server tests, then the public daemon-start
-   C1 integration path. Retain outcomes in the P2-T36 running report as each
-   validation unit completes.
-5. If a failure is product-owned, repair it inside P2-T36 when it fits the
-   formal acceptance; otherwise register the smallest next formal task before
-   editing unrelated paths.
+1. PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) merged at
+   `main@3efd7011b605a32ac0c9ec114321831995f32d90`.
+2. Final documentation-head workflow `32245868452` completed successfully on
+   Ubuntu and Windows, including `required-ci`.
+3. The task lease is closed and archived; local `main` equals `origin/main` and
+   the local and remote task branch are deleted.
+4. Product evidence remains bounded to C1 readiness: it does not promote C2,
+   EVAL, Gate, release, Profile, B01, or Agent-benefit conclusions.
 
 ## 6. Environment configuration checklist
 
