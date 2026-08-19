@@ -13,6 +13,7 @@ sources:
   - path: crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: packages/pi-cognitiveos/src/extension.ts
   - path: apps/pi-agent-adapter/src/lib.rs
   - path: apps/pi-agent-adapter/src/main.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
@@ -30,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:fbbd8a96a9f27ab052faa6a821c46c5c2c805529cfe5295b4dc67178d1c8ef2f"
+fingerprint: "sha256:27ff7a5cadc635c41734507a3104f1efd072920515454bb3ae02aa980f069d85"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -67,7 +68,10 @@ existing, version exactly `0.81.1`, and model egress bound to the registered
 HTTPS proxy endpoint. It passes the configured Extension, disables Pi-native
 tools, and explicitly permits only `WorkspaceRead` and `WorkspaceSearch`.
 Those Extension tools use the pinned Pi runtime's TypeBox schemas; JSON-shaped
-lookalikes are rejected during live registration.
+lookalikes are rejected during live registration. Once Pi binds its session,
+the Extension refreshes the runtime tool registry and activates only those two
+registered daemon-governed names; unknown names are ignored. This post-bind
+step cannot activate Pi-native filesystem, shell, or mutating tools.
 
 The shell-host Provider route has an opt-in, non-authority campaign observer.
 One opaque id correlates each concurrent Pi request with two daemon-measured

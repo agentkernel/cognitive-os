@@ -38,7 +38,16 @@ import {
   statusLineFromProjection,
 } from "./status.js";
 import { decideToolCall } from "./tool-policy.js";
-import { daemonGovernedWorkspaceTools } from "./workspace-tools.js";
+import {
+  DAEMON_WORKSPACE_READ,
+  DAEMON_WORKSPACE_SEARCH,
+  daemonGovernedWorkspaceTools,
+} from "./workspace-tools.js";
+
+const PUBLIC_DAEMON_GOVERNED_TOOL_NAMES = [
+  DAEMON_WORKSPACE_READ,
+  DAEMON_WORKSPACE_SEARCH,
+] as const;
 
 /** Deny project trust unconditionally; governed mode authorizes nothing via Pi. */
 export const PROJECT_TRUST_DECISION = { trusted: "no" } as const;
@@ -65,6 +74,11 @@ export async function registerCognitiveOsExtension(
   let daemonSelectedModel: PiModel | undefined;
 
   pi.on("session_start", async (_event, context) => {
+    // Pi 0.81.1 builds its first registry before Extension hooks are bound.
+    // Refreshing here makes the already-registered Extension tools visible,
+    // then this explicit allowlist keeps all native/mutating tools inactive.
+    pi.refreshTools();
+    pi.setActiveTools(PUBLIC_DAEMON_GOVERNED_TOOL_NAMES);
     if (daemonSelectedModel === undefined) {
       await showStatus(client, context, "session_start");
       return;

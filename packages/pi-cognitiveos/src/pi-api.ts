@@ -198,5 +198,9 @@ export interface ExtensionAPI {
   registerCommand(commandName: string, spec: ExtensionCommandSpec): void;
   registerTool(tool: ExtensionToolDefinition): void;
   registerProvider(providerName: string, config: ProviderConfig): void;
+  /** Rebuild Pi's runtime registry after Extension hooks become session-bound. */
+  refreshTools(): void;
+  /** Activate only registered tools; Pi ignores unknown names. */
+  setActiveTools(toolNames: readonly string[]): void;
   setModel(model: PiModel): Promise<boolean>;
 }

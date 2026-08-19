@@ -57,6 +57,11 @@ handoff 只提供操作连续性，根 `plan.md` 只提供研究和细节。历�
 - 评测是 measurement-only：不修改产品代码、合同、负例、测试或 handbook 生成源来"补齐"
   能力；能力/runner/凭据缺口如实记 `not-run`/`not_available`。公理、secret、campaign
   guest 隔离、exact-revision 与证据/claim 边界全部不变。
+- 静态命令（例如 `--help`）若意外进入 session、Provider、daemon 或未冻结路径，记为
+  `invalid-instrument` procedure deviation，而非 qualification/Provider sample；立即追加
+  脱敏事实、保留已启动分母，并只停止/清理受影响的 runner、daemon、root 或共享凭据路径。
+  不重试该 cell、不检查 secret；没有共享依赖的已冻结 cell 继续执行，不能将单元偏差自动
+  扩大为整个 campaign 暂停。
 - 该行由 owner 关闭或 campaign 收口后失效；评测结束**不会**自动恢复开发续跑，backlog
   循环只在 owner 重新给出持续交付指令后恢复。
 
@@ -264,19 +269,22 @@ revision。正式 Gate guest、release/production promotion、force push、破�
 任何超出已领取 task 的系统变更仍须遵守其各自的预注册/隔离规则，不得借此授权虚假扩大
 声明。
 
-Linux daemon、Pi/sidecar、installer、user-service、native integration 和实验部署切片必须
-优先在 `personal-linux-native-01`（`wuz@192.168.1.2`）上执行。先将**已提交并可追溯的**
-revision 同步到该主机的可清理 Git worktree，再在该 exact revision 上构建、测试和记录证据；
-不得复制未提交本地代码，也不得用旧的无 Git source snapshot 替代当前 revision。Windows
-只可运行格式、静态、文档或不依赖 Linux runtime 的检查，不能替代 native Linux 结果。
+Linux daemon、Pi/sidecar、installer、user-service、native integration 和实验部署切片在
+linux-002 资格完备后必须优先在 `linux-002`（`B01-Desktop-Linux-002`，经
+`wuz@192.168.1.2` ProxyJump）上执行。先将**已提交并可追溯的** revision 同步到 guest 的
+可清理 Git worktree，再在该 exact revision 上构建、测试和记录证据；不得复制未提交本地
+代码，也不得用旧的无 Git source snapshot 替代当前 revision。资格未完备时按环境注册表
+转用 CI，不得把 Windows 检查冒充为 linux-002 native 结果。
 
-`B01-Desktop-Linux-002` 是唯一活动的专用 KVM B01 campaign guest，不能作为普通开发或
-部署目标。只有预注册 B01 lease 与 campaign procedure 可改变其状态、快照、产品安装或
-凭据。`B01-Clean-Linux-001` 已因不满足 headless Secret Service 前置条件而退役：仅保留
-历史资格失败记录，禁止把它恢复为 B01 或常规测试候选，也禁止普通开发恢复、启动、重置、
-部署或删除该 VM；其隔离状态不受 standing authorization 影响。其他实验部署只可使用 SSH
-宿主上任务声明的可清理目录；user-service 修改、最小权限提权、approved Secret Store 使用
-或外部 Provider 操作按 Standing operator authorization 自主执行。
+`B01-Desktop-Linux-002` 是唯一活动的专用 KVM B01 campaign guest，同时也是 owner 授权的
+普通开发/测试机。普通工作必须使用已提交并推送的 exact revision、独立可清理 root、
+task-scoped lease、脱敏输出和显式 cleanup；不得修改 campaign baseline、snapshot、campaign
+root、campaign credential 或 campaign evidence。只有预注册 B01 lease 与 campaign procedure
+可改变这些 campaign 资源，或执行 guest baseline/snapshot 生命周期操作。
+`B01-Clean-Linux-001` 已因不满足 headless Secret Service 前置条件而退役：仅保留历史资格失败
+记录，禁止把它恢复为 B01 或常规测试候选，也禁止普通开发恢复、启动、重置、部署或删除该 VM。
+其他实验部署只可使用 SSH 宿主上任务声明的可清理目录；user-service 修改、最小权限提权、
+approved Secret Store 使用或外部 Provider 操作按 Standing operator authorization 自主执行。
 
 ## 目录和变更边界
 

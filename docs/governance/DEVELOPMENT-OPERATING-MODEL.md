@@ -282,15 +282,18 @@ for the smallest explicit owner decision only when the next action would:
    key file into an approved Store is authorized under §2.3 and is not this
    boundary);
 2. perform a destructive or irreversible repository/data operation, force
-   push, mutate shared production infrastructure, or alter an isolated campaign
-   guest outside its preregistered procedure;
+   push, mutate shared production infrastructure, or alter the linux-002
+   campaign baseline, snapshot, campaign roots, or campaign credentials
+   outside its preregistered procedure;
 3. decide an unresolved product, normative, structural, release, support,
    security-policy, Gate-threshold, benchmark-threshold, or default-Agent
    semantic (recording an ADR-0040/0046/0047-class fixed-denominator MVP Gate
    disposition after complete registered evidence is authorized under §2.3 and
    is not this boundary);
 4. expand filesystem, network, process, model, secret, budget, privilege, or
-   capability scope beyond the registered task boundary; or
+   capability scope beyond the registered task boundary; ordinary linux-002
+   development/test use is permitted when it stays within the registered
+   disposable root and task lease; or
 5. bypass a failing test, required CI, branch protection, signature, review, or
    another governance control.
 
@@ -354,7 +357,20 @@ owns its batches, task corpus, metrics, and claim ceilings.
    procedures, exact-revision staging, and evidence-promotion boundaries (A7)
    apply unchanged; claim ceilings stay at the level the campaign's plan
    declares.
-4. **Deactivation.** The owner closes or supersedes the row, normally at
+4. **Procedure-deviation containment.** A command intended to be static (for
+   example `--help`) that starts a session, contacts a Provider, mutates a
+   campaign runtime, or otherwise enters an unpreregistered path is an
+   `invalid-instrument` procedure deviation, not a qualification sample or a
+   Provider result. Immediately append its redacted facts to the running
+   report, retain the started-sample denominator, and stop/clean up only the
+   affected runner, daemon, root, or shared credential path. Do not retry the
+   affected cell or inspect secret material. Continue an independently frozen
+   cell only when it has no shared affected runtime, root, credential path,
+   manifest, input, oracle, or cleanup dependency; otherwise record it
+   `not-run` and proceed with the next independent preregistered cell. A
+   deviation alone is not a campaign-wide pause or an authorization to change
+   product code during measurement.
+5. **Deactivation.** The owner closes or supersedes the row, normally at
    campaign closure together with the final report and lease closure. Closing
    an evaluation campaign does not itself reactivate continuous development;
    backlog continuation resumes only under a standing owner delivery

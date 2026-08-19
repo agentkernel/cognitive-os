@@ -13,6 +13,7 @@ sources:
   - path: crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: packages/pi-cognitiveos/src/extension.ts
   - path: apps/pi-agent-adapter/src/lib.rs
   - path: apps/pi-agent-adapter/src/main.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
@@ -30,7 +31,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:fbbd8a96a9f27ab052faa6a821c46c5c2c805529cfe5295b4dc67178d1c8ef2f"
+fingerprint: "sha256:27ff7a5cadc635c41734507a3104f1efd072920515454bb3ae02aa980f069d85"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -62,7 +63,10 @@ epoch CAS 下切换单一 active 指针；`SidecarSession` 绑定活进程身份
 Windows）、doctor 全组件 ready、sandbox 适配器存在、`pi.json` 路径绝对且存在、版本
 精确 `0.81.1`、模型 egress 绑定注册的 HTTPS 代理端点。它加载已配置 Extension、禁用
 Pi 原生工具，并只显式允许 `WorkspaceRead` 与 `WorkspaceSearch`。这些 Extension 工具使用
-钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。
+钉住 Pi runtime 的 TypeBox schema；JSON 形状的替代物会在 live 注册时被拒绝。Pi 绑定
+session 后，Extension 刷新 runtime tool registry，并只激活这两个已经注册的 daemon
+治理名称；未知名称会被忽略。该 post-bind 步骤不能激活 Pi 原生文件系统、shell 或
+mutating tools。
 
 shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign observer。每个并发 Pi
 请求用独立不透明 id 与 daemon 测得的两个阶段关联；Node 与 Rust 单调时长始终属于分离

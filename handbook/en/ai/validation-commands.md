@@ -12,7 +12,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:f43b60785ea64b6180ae29f910c7524667abf487881c0a82cd1f6329a5aca09e"
+fingerprint: "sha256:defad496c4c197786fa7c3add28c9678c6af35c755cfd66d7949f1ef8573b083"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---

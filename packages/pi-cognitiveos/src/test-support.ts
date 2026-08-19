@@ -81,6 +81,8 @@ export class FakePi implements ExtensionAPI {
   readonly tools: ExtensionToolDefinition[] = [];
   readonly providers: Array<{ readonly providerName: string; readonly config: ProviderConfig }> = [];
   readonly selectedModels: PiModel[] = [];
+  readonly activeToolSelections: string[][] = [];
+  refreshToolCalls = 0;
   private projectTrustHandler: (() => Promise<ProjectTrustDecision>) | undefined;
   private toolCallHandler: ((event: ToolCallEvent) => Promise<ToolCallDecision>) | undefined;
   private sessionStartHandler:
@@ -122,6 +124,14 @@ export class FakePi implements ExtensionAPI {
 
   registerProvider(providerName: string, config: ProviderConfig): void {
     this.providers.push({ providerName, config });
+  }
+
+  refreshTools(): void {
+    this.refreshToolCalls += 1;
+  }
+
+  setActiveTools(toolNames: readonly string[]): void {
+    this.activeToolSelections.push([...toolNames]);
   }
 
   async setModel(model: PiModel): Promise<boolean> {
