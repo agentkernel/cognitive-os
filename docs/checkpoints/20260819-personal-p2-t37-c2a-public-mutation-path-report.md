@@ -115,6 +115,9 @@ evaluation, or Agent-benefit claim.
 15. **Patch daemon stop — pass.** Public `cognitive daemon stop --runtime-root
     /home/wuz/p2-t37-c2a-patch-20260820` reported `action: stopped`,
     `stale_lock_removed: true`; `127.0.0.1:48446` is no longer listening.
+16. **Required CI `32290876044` on `3662d2b9` — pass.** Ubuntu verify, Windows
+    verify, `resolve validation route`, and `required-ci` all succeeded. This is
+    the D03 supported CI on the Clippy-repaired Patch-D02 head.
 
 ## Implemented boundary
 
@@ -131,10 +134,6 @@ evaluation, or Agent-benefit claim.
 
 ## Remaining
 
-- Complete D03: Clippy `expect_used` repair on the production-sink fixture test,
-  required CI on the merge HEAD, handbook/docs synchronization if required,
-  acceptance mapping, and deterministic task/lease/branch closure.
-- Failure-first mutation negatives (malformed base64/preimage, descriptor/digest
-  /epoch drift, duplicate/mixed candidates, preimage mismatch) remain covered by
-  existing hermetic tests; Ubuntu `c2a_public_patch_fixture_reaches_production_sink`
-  **ok** at `40787044`. Windows GNU Rust remains `not-run`.
+- Complete D03 merge/lease/branch: required CI `32290876044` passed at
+  `3662d2b9`. Remaining is ready/merge #246, close lease, delete task branch if
+  safe, and fast-forward local main.
