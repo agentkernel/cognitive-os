@@ -26,6 +26,12 @@ The P9-T08 dry-run forged equality with placeholder `frozen-c1-c2-prompt-v1`.
    Windows verify, `resolve validation route`, and `required-ci`.
 5. Draft PR [#249](https://github.com/agentkernel/cognitive-os/pull/249)
    mergeStateStatus `CLEAN`.
+6. Required CI docs-head `32341567321` attempt 2 — **pass** at `692c6e8a`
+   (attempt 1 Windows flake
+   `post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance`
+   rerun; unrelated to this task).
+7. Merge — **pass**: PR [#249](https://github.com/agentkernel/cognitive-os/pull/249)
+   merged at `main@bf6d5ed0`. Lease closed; local `main` matches `origin/main`.
 
 ## Acceptance mapping
 
