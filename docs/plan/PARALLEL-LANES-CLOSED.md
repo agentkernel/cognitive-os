@@ -2,7 +2,7 @@
 
 - Status: historical coordination archive; grants no writable lease
 - Owner index: [PARALLEL-LANES.md](PARALLEL-LANES.md) §3 active table
-- Updated: 2026-08-20 (P9-T08 C1/C2 paired readiness closure)
+- Updated: 2026-08-20 (P2-T38 WorkspacePatch post-state closure)
 
 Rows below are closed ownership records only. They cannot grant write access,
 block new leases, or override PROGRESS.md Current snapshot.
@@ -11,6 +11,7 @@ block new leases, or override PROGRESS.md Current snapshot.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/P2-T38/workspace-patch-post-state` | P2-T38/D01–D03 public WorkspacePatch post-state | `personal/P2-T38-workspace-patch-post-state` | 2026-08-20 | Merged PR [#248](https://github.com/agentkernel/cognitive-os/pull/248) at `main@2b4c8f17`. Linux focused kernel-server **4/4**, Clippy `-D warnings`, fmt at `5f4a538f`. Required CI `32333296569` passed Ubuntu, Windows, and required-ci at `31f8f165`. Local/remote task branches deleted; `main` matches `origin/main`. Claim ceiling `hypothesis`; no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion. |
 | `lease/personal/P9-T08/c1-c2-paired-readiness` | P9-T08/D01–D04 C1/C2 paired-benchmark readiness | `personal/P9-T08-c1-c2-paired-readiness` | 2026-08-20 | Merged PR [#247](https://github.com/agentkernel/cognitive-os/pull/247) at `main@f24c282ec1ea8ca433c2fae2a6b364164f456a78`; local and remote task branches deleted; local `main` matches `origin/main`. Packages 6–14 delivered. Required CI `32316092401` passed Ubuntu, Windows, and required-ci. `PERSONAL-PERF-EVAL-012` reserved, not active. Claim ceiling `hypothesis`; no B0, Gate, release, Profile, B01, or Agent-benefit promotion. |
 | `lease/personal/P2-T37/c2a-public-mutation-path` | P2-T37/D03 C2a public mutation path | `personal/P2-T37-c2a-public-mutation-path` | 2026-08-20 | Merged PR [#246](https://github.com/agentkernel/cognitive-os/pull/246) at `main@286f7538148ba0d22f496f1f44d1af46f0f44aa0`; local task branch deleted and local `main` matches `origin/main`. Public Write and Patch Tasks completed the full authority chain. Required CI `32290876044` and `32292548920` passed Ubuntu, Windows, and required-ci. Claim ceiling `hypothesis`; no C2, EVAL, Gate, release, Profile, B01, or Agent-benefit promotion. |
 | `lease/personal/P2-T36/c1-public-production-path` | P2-T36/D02 C1 public production path | `personal/P2-T36-c1-public-production-path` | 2026-08-19 | Merged PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) at `main@3efd7011b605a32ac0c9ec114321831995f32d90`; the local and remote task branch are deleted and local `main` matches `origin/main`. Fresh non-B01 Linux runtimes independently completed public Task-bound WorkspaceRead and WorkspaceSearch through daemon candidate admission, scheduler lease, executor, passed independent verification, and daemon acceptance. Final documentation-head required CI `32245868452` passed Ubuntu, Windows, and required-ci. Claim ceiling `hypothesis`; no C2, EVAL, Gate, release, Profile, B01, or Agent-benefit promotion. |

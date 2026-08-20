@@ -58,9 +58,21 @@ Two product defects follow:
 8. Exact-revision Linux `cargo fmt --all -- --check` — **pass** at `5f4a538f`.
 9. Exact-revision Linux `cargo clippy -p kernel-server --all-targets --locked
    -- -D warnings` — **pass** at `5f4a538f`.
-10. Required CI — **in-progress** on PR [#248](https://github.com/agentkernel/cognitive-os/pull/248)
-    run `32332563064` at `5f4a538f` (this docs head will start a follow-up
-    run).
+10. Required CI `32333296569` — **pass** at `31f8f165`: Ubuntu verify,
+    Windows verify, `resolve validation route`, and `required-ci`. The earlier
+    run `32332563064` at `5f4a538f` was cancelled after the docs-head push.
+11. Merge — **pass**: PR [#248](https://github.com/agentkernel/cognitive-os/pull/248)
+    merged at `main@2b4c8f17`. Lease closed; local and remote task branches
+    deleted; local `main` matches `origin/main`.
+
+## Acceptance mapping
+
+| Formal acceptance | Evidence |
+|---|---|
+| Raw-file SHA-256 preimage is an equivalent CAS token | Linux `workspace_patch_accepts_raw_file_sha256_as_equivalent_cas_preimage` and `c2a_raw_file_sha256_preimage_reaches_production_patch_sink` **pass**; Effect `RECONCILED`; file `c2a-patch-v2\\n` |
+| Fail-closed Patch does not request verification on a non-RECONCILED Effect | Linux `c2a_preimage_mismatch_does_not_request_verification` **pass**; file unchanged; Effect not `RECONCILED`; Task not `COMPLETED` |
+| Tagged workspace-image digest still completes | Linux `c2a_public_patch_fixture_reaches_production_sink` **pass** |
+| Supported validation | Linux fmt, Clippy `-D warnings`; required CI `32333296569` Ubuntu/Windows/required-ci |
 
 ## Non-claims
 
