@@ -22,10 +22,13 @@ payload the daemon would accept and refuse replacement bytes.
    daemon no-newline marker cases.
 3. Full tools suite — **pass 83/83**.
 4. `check-consistency`, `check-handbook`, `generate-handbook --check` — **pass**.
-5. Required CI — **not-run** until the Draft PR head is pushed.
-6. Live O-arm / P-arm sample execution — **not-run** (out of scope; no new
+5. Required CI `32359826035` — **pass** at `6fe018cf`: Ubuntu verify, Windows
+   verify, `resolve validation route`, and `required-ci`.
+6. Merge — **pass**: PR [#251](https://github.com/agentkernel/cognitive-os/pull/251)
+   merged at `main@49b66200`. Lease closed; local `main` matches `origin/main`.
+7. Live O-arm / P-arm sample execution — **not-run** (out of scope; no new
    EVAL).
-7. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`;
+8. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`;
    this task has no Rust change).
 
 ## Acceptance mapping
@@ -36,7 +39,7 @@ payload the daemon would accept and refuse replacement bytes.
 | Invalid / empty unified diff fails closed | Local test `applyUnifiedPatch matches daemon no-newline marker cases and fails closed` **pass** |
 | Valid unified diff applies to the expected post-state | same test plus `C2a frozen unified diff repairs the C2a corpus to the oracle` **pass** |
 | Freeze ledger pins `workspace_patch_payload: unified-diff` | Local freeze ledger test **pass**; corpus includes `fixtures/c2a/workspace-patch.unified.diff` |
-| Supported validation | Local tools **83/83**; required CI after push |
+| Supported validation | Local tools **83/83**; required CI `32359826035` Ubuntu/Windows/required-ci **pass** |
 | Live EVAL / B0 | **not-run**; later campaign after this task |
 
 ## Non-claims
