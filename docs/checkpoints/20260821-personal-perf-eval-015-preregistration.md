@@ -67,10 +67,10 @@ report. Missing runner or capability is `not-run`/`not_available`.
 | Secret bind | **pass** | new item `/27`; `secret_material_written: true`; `secret_ref_redacted: true`; guest stdin pipe; never `search`/`lookup` |
 | New campaign root/port | **pass** | `/home/hal9001/perfeval015-20260821` mode `0700`; daemon `48306` pid 369399; broker `48406` pid 369469; residue listeners unused |
 | C0 corpus/runner freeze | **pass** | instruments re-pathed into this root; corpus `38e282d4…`; runner adapted; stdin broker (no lookup) |
-| C0 B0 / B1 / B2 | B0 **pass**; B1 running | B0 9/9 retained; B1 90 pairs started; B2 pending |
+| C0 B0 / B1 / B2 | B0 **pass**; B1 **pass** 90/90; B2 running | N=30 frozen; 270 confirmatory pairs pid 375071 |
 | Remainder B3–B5 / T/S/UJ | pending | 24 h default deferred |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
 
 ## Unique next action
 
-Finish C0 B1 90-pair pilot, freeze B2 N=30 per family, then run C0 B2 confirmatory.
+Finish C0 B2 confirmatory (270 pairs), then MS-AUTH / T-GOV / UJ, then B3 / B4 / B5.

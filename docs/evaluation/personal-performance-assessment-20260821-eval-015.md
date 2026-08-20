@@ -27,7 +27,9 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | P-arm broker `48406` | **pass** | stdin broker pid 369469; D-Bus GetSecret paths `["27"]`; `material_written: true` to broker stdin only; health `key_loaded: true`; never `search`/`lookup` |
 | C0 B0 warmups | **pass** (discarded) | 3/3 G1 pairs both oracle True; not in denominator |
 | C0 B0 qualification | **pass** | 9/9 blocks started/retained; 0 timeout; 7/9 oracle both arms; G6/G9 both-fail (hardness). Broker 12/12 upstream_ok including warmups. Evidence secret-shaped 0/10. `retry=0` |
-| C0 B1 | running | 90 pairs (9×5 seeds 1–5 × 2 replicas); disjoint from B0 seed 0 |
+| C0 B1 | **pass** | 90/90 retained; P 81/90 (90.0%); O 80/90 (88.9%); 0 timeout; `retry=0`. B2 N frozen at 30 (not shrunk). Secret-shaped 0/12 |
+| C0 B2 N freeze | **pass** | N=30 per C0 family (formal minimum; B1 does not reduce N) |
+| C0 B2 | running | 270 confirmatory pairs; pid 375071 |
 | C0 B2 N freeze | pending | |
 | C0 B2 | pending | |
 | MS-AUTH / T-GOV / UJ2 / UJ3 / UJ4 | pending | |
@@ -83,7 +85,34 @@ oracle. Same Pi `0.81.1`, `--no-tools`, model `deepseek-v4-flash`.
 G6/G9 both-fail is family hardness (same pattern as EVAL-004 B0), not an
 arm-specific instrument defect. Evidence secret-shaped hits 0/10.
 
+## C0 B1 (2026-08-21) — pass (hypothesis / non-claim)
+
+90 paired blocks, 180/180 arm-runs retained. Pilot seeds 1–5 × 2 replicas
+per family; disjoint from B0 seed 0 and warmup 100. `retry=0`. 0 timeout /
+process_error. Evidence `b1-c0-pilot.jsonl`. Secret-shaped scan 0/12 files.
+
+| Endpoint | `P` | `O` |
+|---|---:|---:|
+| oracle completion | 81/90 = **90.0 %** | 80/90 = **88.9 %** |
+| paired wall delta median `O−P` | | **+87.3 ms** (descriptive; N=90) |
+
+Per-family (n=10 each; descriptive):
+
+| Family | `P` | `O` |
+|---|---|---|
+| G1 G2 G3 G4 A1 A4 | 10/10 | 10/10 |
+| G6 | 8/10 | 9/10 |
+| G9 | 4/10 | 3/10 |
+| A5 | 9/10 | 8/10 |
+
+B1 does not freeze B2 below 30. Independent reviewer `not_reviewed`.
+
+## B2 N freeze (2026-08-21)
+
+Formal B2 N = **30** paired seeds per C0 family from stratum
+`confirmatory` (270 pairs, 1 replica). Timeout 180 s, `retry=0`.
+
 ## Unique next action
 
-Finish C0 B1 90-pair pilot (`retry=0`), freeze B2 N=30 per family, then
-run C0 B2 confirmatory.
+Finish C0 B2 confirmatory (270 pairs), then MS-AUTH / T-GOV / UJ2 / UJ3 /
+UJ4, then B3 / B4 / B5.
