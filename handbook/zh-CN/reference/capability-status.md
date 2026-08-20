@@ -15,7 +15,7 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
   - path: apps/kernel-server/src/personal/capability_truth.rs
     symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
-fingerprint: "sha256:5882a73412fb28720ebfe3c52a06f406ac2fd53025791915e968301a51588727"
+fingerprint: "sha256:be45792734b5ab42025650ae84931cb551c29f39fdb244a07bbd743aade1c27d"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -40,7 +40,7 @@ non_claims:
 | HTTP 上的 Task control/query | unavailable | 服务方法存在、无路由 |
 | 自主调度循环 | partial | 公开 admit 在发布 runnable 行、`START` Loop 与硬 Budget 的同时持久化 owner-local Context 授权事实与租户 `personal` 撤销 epoch；首个调度 tick 用封存 ContextView 把 Loop 从 `START` 走到 `DECIDE` 再准入一条私有 Pi candidate；后续 tick 获取 lease 并激活 Task；启动修复缺失成员；唯一绑定后非重入周期 worker 可到达 candidate 准入并从生产派发 WorkspaceRead、WorkspaceSearch、WorkspaceWrite/Patch、ProcessCheck、HttpFetchReadOnly 与仅含 `check_id` 的 RegisteredCheckRun；RegisteredCheck 收口 Task 上的中间 mutation Effect 闭合后 Loop 回到 `DECIDE`，以便后续 tick 准入 RegisteredCheckRun |
 | 受治理工具执行（全部七个已登记族） | partial | 七族都有生产请求载体；WorkspaceRead、WorkspaceSearch 与 WorkspaceWrite/Patch 经周期调用者派发；ProcessCheck 在受监督进程 registry 接线前经 fail-closed 载体 staging；HttpFetchReadOnly 经评测授权的钉住 HTTPS 登记表 staging（默认为空）；RegisteredCheckRun 经不可变目录仅凭 `check_id` 派发，禁用后从 Agent 暴露中去掉 |
-| workspace write/patch 执行器 | implemented，生产调用 | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界 preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；payload + 期望 preimage 由持久 Intent 携带 |
+| workspace write/patch 执行器 | implemented，生产调用 | Linux/Windows 已测试句柄相对 no-follow 遍历/发布、有界 preimage、逐目标锁 CAS、workspace 外持久原键 receipt 与重启 orphan 恢复；payload + 期望 preimage 由持久 Intent 携带；`digest:sha256:<文件原始 SHA-256>` 与带域前缀的 workspace-image digest 等价为 CAS 令牌；Effect 仍在对账中时不请求独立 verification |
 | 独立验证与 Task 验收 | implemented；公共 C1 native-proven | 生产 WorkspaceRead 与 RegisteredCheckRun 可到达登记的独立 verifier；RegisteredCheck 只有在 CAS Evidence、精确 descriptor/file digest 与全部安全观察通过后才产生 passed report、checkpoint、一次性 continuation authority 与 Loop `OBSERVE`；WorkspaceRead 再经独立 daemon acceptance authority 完成 evidence-bound `COMPLETED` |
 | Memory remember/forget/检索/版本 | implemented | 无自动收割 |
 | Skill import/bind/revoke/explain | implemented | 脚本绝不执行 |

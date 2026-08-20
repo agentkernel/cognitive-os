@@ -121,7 +121,7 @@ personal_requirements:
     classification: direct
     statement: All external mutating tools use Intent and Effect.
     direct_registry_requirements: [REQ-EFF-001, REQ-EFF-002, REQ-EFF-003, REQ-EFF-STATE-001, REQ-OP-001]
-    tasks: [P2-T05, P2-T06, P2-T07, P2-T08, P2-T22, P2-T24, P2-T25, P5-T03, P5-T04]
+    tasks: [P2-T05, P2-T06, P2-T07, P2-T08, P2-T22, P2-T24, P2-T25, P2-T38, P5-T03, P5-T04]
     gates: [G2, B04, B12]
     evidence_status: not-run
 

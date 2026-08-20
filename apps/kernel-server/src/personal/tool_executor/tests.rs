@@ -28,6 +28,7 @@ use cognitive_provider_transport::{
 };
 use cognitive_store::{SqliteAuthorityStore, UuidV7Generator};
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::path::PathBuf;
 use std::{
     collections::BTreeMap,
@@ -2828,6 +2829,10 @@ fn image_digest(bytes: &[u8]) -> String {
     workspace_image_digest(bytes).expect("workspace image digest")
 }
 
+fn raw_file_sha256(bytes: &[u8]) -> String {
+    format!("sha256:{:x}", Sha256::digest(bytes))
+}
+
 fn workspace_mutation_call(
     action: &str,
     idempotency_key: &str,
@@ -3530,6 +3535,50 @@ fn workspace_patch_applies_only_when_every_context_line_matches() {
     assert_eq!(
         directory_entry_names(&temporary_workspace.path),
         vec!["notes.txt".to_owned()]
+    );
+}
+
+#[test]
+fn workspace_patch_accepts_raw_file_sha256_as_equivalent_cas_preimage() {
+    let temporary_workspace = TestWorkspace::new("patch-raw-sha256-preimage");
+    let target_path = temporary_workspace.path.join("c2a-patch.txt");
+    let preimage_bytes = b"c2a-patch-v1\n";
+    std::fs::write(&target_path, preimage_bytes).expect("write fixture");
+    let tagged = image_digest(preimage_bytes);
+    let raw = raw_file_sha256(preimage_bytes);
+    assert_ne!(
+        tagged, raw,
+        "EVAL-012 used sha256sum of the file, which is not the domain-tagged workspace image digest"
+    );
+
+    let executor = mutation_executor(7, &temporary_workspace);
+    let request = staged_mutation_request(
+        NativeOperationFamily::WorkspacePatch,
+        &temporary_workspace.path,
+        "workspace://c2a-patch.txt",
+        b"@@ -1 +1 @@\n-c2a-patch-v1\n+c2a-patch-v2\n",
+        WorkspacePreimage::Digest(raw),
+    );
+    executor
+        .stage_request(
+            "patch-raw-sha256".to_owned(),
+            "digest-raw".to_owned(),
+            &request,
+        )
+        .expect("stage raw-sha256 patch");
+    assert!(matches!(
+        executor.dispatch(&workspace_mutation_call(
+            "patch",
+            "patch-raw-sha256",
+            "digest-raw",
+            "workspace://c2a-patch.txt",
+            7,
+        )),
+        Ok(DispatchOutcome::Executed { .. })
+    ));
+    assert_eq!(
+        std::fs::read(&target_path).expect("target readable"),
+        b"c2a-patch-v2\n"
     );
 }
 
