@@ -64,20 +64,18 @@ under EVAL-012 remain closed measurement and must not be resumed.
 | Owner activation | **pass** | Current snapshot names `PERSONAL-PERF-EVAL-013` active |
 | Evaluation lease claimed | **pass** | `lease/personal/EVAL-013/execution-plan-b0` |
 | Product source pin | **pass** | `6c415625` |
-| Source archive + SHA-256 | pending | scp; no `.git/`; PowerShell pipes forbidden |
-| Guest identity | pending | `B01-Desktop-Linux-002` only |
-| New campaign root/port | pending | `/home/hal9001/perfeval013-20260820`; `48302`/`48402` unused |
-| Exact-source daemon/CLI/adapter binaries | pending | glibc-only `ldd` |
-| Secret bind | pending | new item `/25`; never search/lookup |
-| Local Pi `0.81.1` pin | pending | `--extension <absolute-path>` |
-| P-arm broker `48402` | pending | `secret_material_written: false` |
-| `cognitive doctor` | pending | live bind |
-| C1/C2 paired B0 | pending | fairness + C1/C2a samples; `retry=0` |
+| Source archive + SHA-256 | **pass** | 15,134,720 bytes; 1596 members; 0 `.git/`; SHA-256 `d06923c04febece5d7175cadff54a366df07cce031bf8249dc0aaeff7c92e06a`; copies used `scp` |
+| Guest identity | **pass** | `B01-Desktop-Linux-002` running; MAC `52:54:00:33:27:c1`; Ubuntu 24.04.4; uid 1000; `B01-Clean-Linux-001` shut off |
+| New campaign root/port | **pass** | `/home/hal9001/perfeval013-20260820` mode `0700`; daemon `48302` listening; `48402` unused; `48181`/`48284`/`48383`/`48300`/`48400` not reused as campaign binds |
+| Exact-source daemon/CLI/adapter binaries | **pass** | `kernel-server` `436725ec…`; `cognitive` `73bad94d…`; `pi-agent-adapter` `54ce9eaa…`; Extension `index.js` `d27f9776…`; glibc-only `ldd` |
+| Secret bind | **pass** | new item `/25`; `secret_material_written: true`; `secret_ref_redacted: true`; guest temp shredded |
+| Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…` |
+| P-arm broker `48402` | pending | start before C1 P-arm |
+| `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; daemon pid 336122 on `48302` |
+| C1/C2 paired B0 | pending | fairness + C1/C2a samples; `retry=0`; live `--append-system-prompt` 211 UTF-8 bytes |
 | Remainder of parent plan | pending | B1 only after B0 pass; honest `not-run` otherwise |
 | Cleanup | pending | stop `48302`/`48402`; clear only `/25` |
 
 ## Unique next action
 
-Complete the freeze on `B01-Desktop-Linux-002`: guest identity, new root
-`perfeval013-20260820`, exact `6c415625` binaries, SecretStore `/25`, doctor,
-then B0 qualification. Do not open B1 until B0 fairness passes.
+Run B0 qualification on this freeze. Do not open B1 until B0 fairness passes.
