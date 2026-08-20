@@ -39,7 +39,9 @@ non_claims:
 - **C1/C2 paired measurement instruments** (`tools/personal/c1-c2-paired/`) are
   campaign-only: a loopback pure-Pi credential broker (Secret Service `get` via
   D-Bus, never `secret-tool lookup`/`search`), an equivalent Workspace* fixture
-  adapter, frozen seeds/`retry=0`, and a §2.3 fairness checker. They are not a
+  adapter, frozen seeds/`retry=0`, and a §2.3 fairness checker that records
+  `system_task_prompt_bytes` from `frozen-system-task-prompt.txt` (not a shared
+  placeholder). They are not a
   second authority writer and do not promote Gate, release, Profile, B01, or
   Agent-benefit. Focused tests: `tools/test/c1_c2_paired_p_arm.test.mjs`.
 

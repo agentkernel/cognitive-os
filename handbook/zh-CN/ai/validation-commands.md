@@ -36,7 +36,7 @@ node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--pus
 pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
-node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T08 P-arm broker/fixture/fairness freeze；不是 Gate 证据
+node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T09 frozen system_task_prompt_bytes；不是 Gate 证据
 ```
 
 ## 必须走受支持 CI（Ubuntu / Windows MSVC）或 exact-revision native Linux

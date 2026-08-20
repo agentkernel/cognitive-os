@@ -28,7 +28,7 @@ import {
   frozenSeeds,
   listCorpusBytes,
 } from "../personal/c1-c2-paired/freeze.mjs";
-import { dryRunFairness, equalArmSnapshot } from "../personal/c1-c2-paired/paired-runner.mjs";
+import { dryRunFairness, equalArmSnapshot, FORBIDDEN_SHARED_PROMPT_PLACEHOLDER } from "../personal/c1-c2-paired/paired-runner.mjs";
 
 const FIXTURE_SCHEMAS = [
   { name: "WorkspaceRead", parameters: ["target"] },
@@ -202,6 +202,16 @@ test("broker injects upstream auth in memory without logging material", async ()
     await broker.close();
     await new Promise((resolve, reject) => mock.close((error) => (error ? reject(error) : resolve())));
   }
+});
+
+test("system_task_prompt_bytes is the frozen prompt length, not a shared placeholder", () => {
+  const snapshot = equalArmSnapshot();
+  assert.notEqual(snapshot.system_task_prompt_bytes, FORBIDDEN_SHARED_PROMPT_PLACEHOLDER);
+  assert.equal(typeof snapshot.system_task_prompt_bytes, "number");
+  assert.ok(snapshot.system_task_prompt_bytes > 0);
+  const p = equalArmSnapshot();
+  const o = equalArmSnapshot();
+  assert.equal(p.system_task_prompt_bytes, o.system_task_prompt_bytes);
 });
 
 test("fairness checker passes equal arms and fails a missing or mutated axis", () => {

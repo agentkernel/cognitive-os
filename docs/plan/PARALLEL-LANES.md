@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P9-T09/system-prompt-fairness` | P9-T09/D03 C1/C2 system_task_prompt_bytes | Lane-RUN | `personal/P9-T09-system-prompt-fairness` | `tools/personal/c1-c2-paired/`, `tools/test/c1_c2_paired_p_arm.test.mjs`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `docs/plan/PROGRESS.md`, `docs/plan/PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md`, `docs/plan/personal-trace.yaml`, `docs/checkpoints/20260820-personal-p9-t09-system-prompt-fairness-report.md`, `handbook/en/developer/conformance-and-testing.md`, `handbook/zh-CN/developer/conformance-and-testing.md`, `handbook/en/ai/validation-commands.md`, `handbook/zh-CN/ai/validation-commands.md`, `handbook/_meta/` | cursor-grok-4.6 / P9-T09 | 2026-08-20 / 2026-08-20 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

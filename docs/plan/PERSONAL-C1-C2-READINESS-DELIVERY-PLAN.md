@@ -5,8 +5,8 @@
   at `main@2b4c8f17`). Packages 15–17 remain closed measurement. No evaluation
   campaign is active. Next readiness/product item is P/O
   `system_task_prompt_bytes` alignment.
-- Named implementation vehicle: **none** (P2-T38 closed).
-  Current slice: none.
+- Named implementation vehicle: **P9-T09** (P/O `system_task_prompt_bytes`).
+  Current slice: `P9-T09/D03` **in-progress**.
 - Product pin: merged `main` after P2-T38
   (`2b4c8f17`; EVAL-012 product pin remained
   `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c`).
@@ -92,7 +92,7 @@ validation unit.
 | 12. Environment checklist | readiness delivery | **done** | Section 8: E1–E6 and E10–E12 `pass`; E7–E9 `not-run` (EVAL not active). | Bind at package 15. | Preserve. |
 | 13. Housekeeping | readiness delivery | **done** | Remote `personal/P2-T37-c2a-public-mutation-path` deleted; `ls-remote` empty. | Not a denominator. | Preserve. |
 | 14. New EVAL preregistration | readiness delivery | **done (reserved, not activated)** | [EVAL-012 scaffolding](../evaluation/personal-perf-eval-012-preregistration.md) cites `7dc8c999`. | Must not activate. | Owner activates Current snapshot row before B0. |
-| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | P/O system-prompt bytes still mismatch. | New EVAL only after fairness alignment and a new preregistration. |
+| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | P/O system-prompt bytes owned by **P9-T09**. | New EVAL only after P9-T09 and a new preregistration. |
 | 16. B1 C1/C2 pilot | measurement | **not-run** | Requires a future EVAL whose B0 passes. | Not opened. | Do not use EVAL-012 seeds. |
 | 17. B2 C1/C2 confirmatory | measurement | **not-run** | Requires B1. | Not opened. | Do not use EVAL-012 seeds. |
 

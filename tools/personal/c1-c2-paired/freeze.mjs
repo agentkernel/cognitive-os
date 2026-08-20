@@ -146,6 +146,7 @@ export async function buildFreezeLedger() {
     "paired-runner.mjs",
     "prove-linux-secret-get.mjs",
     "cells.json",
+    "frozen-system-task-prompt.txt",
   ];
   for (const relativePath of instruments) {
     files[relativePath] = await digestFile(relativePath);
