@@ -36,7 +36,7 @@ Activation requires **all** of:
 | Root | `/home/hal9001/perfeval012-20260820` |
 | Daemon | `127.0.0.1:48300` |
 | P-arm broker | `127.0.0.1:48400` |
-| SecretStore | planned `/20` (≠ `/12`–`/19`); bind only via `--reuse-existing-secret-binding` when a SecretRef already exists. E9 2026-08-20: store empty; recovery is owner graphical hidden-input (`--api-key-file -`) into `/20` |
+| SecretStore | new item `/24` (≠ `/12`–`/19`; planned `/20` was the reservation name) |
 | Git revision | `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c` (pushed `origin/main` after P9-T08 merge). Instrument pin used for readiness evidence: `7dc8c999729028ddb850ab858e88e2f1ba8d5bf9` |
 
 Procedure:

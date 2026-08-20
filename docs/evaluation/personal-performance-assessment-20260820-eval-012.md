@@ -24,9 +24,10 @@ EVAL-011 are not resumed. Packages 1–14 remain readiness evidence, not B0.
 | Evaluation lease claimed | **pass** | `lease/personal/EVAL-012/c1-c2-paired-b0` on `evaluation/EVAL-012-freeze` |
 | Guest identity | **pass** | `B01-Desktop-Linux-002` running; MAC `52:54:00:33:27:c1`; guest `192.168.123.160`; `B01-Clean-Linux-001` shut off, not contacted |
 | Freeze (archive/binaries/root/port) | **pass** | pin `370b26fc`; root `/home/hal9001/perfeval012-20260820` mode `0700`; `48300`/`48400` free; leftover `48181`/`48284`/`48383` untouched |
-| Secret bind | `not-run` | E9: Secret Service `login`/`session` unlocked with 0 items; product-attribute `SearchItems` 0; no SecretRef to reuse. Recovery: owner graphical hidden-input into planned `/20` |
-| Pi 0.81.1 pin | **pass** | in-campaign `@earendil-works/pi-coding-agent@0.81.1`; `cli.js --version` `0.81.1`; extension `index.js` digest matches host freeze. Doctor not yet run |
-| B0 C1 / C2a / C2b / C2c / C2d | `not-run` | blocked on E9; one qualification seed per class; three warmups per arm |
+| Secret bind | **pass** | E9: product stdin import into new item suffix `/24` (≠ `/12`–`/19`; keyring allocator skipped retired ids). `secret_material_written: true`, `secret_ref_redacted: true`, `selected_model=deepseek-v4-flash`. Guest temp shredded. No search/lookup, no `provider.json` copy |
+| Pi 0.81.1 pin | **pass** | in-campaign `@earendil-works/pi-coding-agent@0.81.1`; `cli.js --version` `0.81.1`; extension `index.js` digest matches host freeze |
+| `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; `secret_ref_resolves: true`; `selected_model_digest_matches: true`; Pi `0.81.1`; daemon `127.0.0.1:48300` pid 326605. Conversation readiness is **not** C1/C2 |
+| B0 C1 / C2a / C2b / C2c / C2d | `not-run` | E9 passed; one qualification seed per class; three warmups per arm |
 | B0 P-arm / broker `48400` | `not-run` | after O-arm bind and fairness check |
 | B1/B2 C1/C2 paired | `not-run` | B0 not started |
 | Cleanup | `not-run` | stop `48300`/`48400`; clear only the campaign SecretStore item |
@@ -98,30 +99,54 @@ In-campaign install under
 This is the pin, not doctor readiness and not a C1/C2 Task. Closed-EVAL Pi
 runtimes were not reused.
 
-## Secret bind / E9 (2026-08-20) — not-run
+## Secret bind / E9 (2026-08-20) — pass
 
-`--reuse-existing-secret-binding` requires an already-stored opaque
-SecretRef. D-Bus `SearchItems` with the product attribute triple
-(`application=cognitiveos-personal`, `provider=deepseek`,
-`purpose=provider-api-key`) returned `item_count_unlocked=0`,
-`item_count_locked=0`, `item_suffixes=[]` (`paths_only`,
-`material_written=false`). Collections `login` and `session` are unlocked
-with `item_count=0`. `gnome-keyring-daemon` is running. EVAL-010 cleanup
-cleared `/19`; that item is not reused.
+Earlier the same day, D-Bus `SearchItems` on the product attribute triple
+found 0 items (EVAL-010 had cleared `/19`). `--reuse-existing-secret-binding`
+was not executed.
 
-No `cognitive init --reuse-existing-secret-binding` was executed (it would
-encode a dangling SecretRef). No keyfile copy, no `secret-tool search` /
-`lookup`, no recapture from the owner plaintext key file, no material on
-argv/env/chat.
+Owner standing authorization (§2.3 designated local test Provider key) plus
+the 2026-08-20 “最高授权请继续自主持续推进” instruction authorized product
+stdin import into a **new** item. `cognitive init --api-key-file -` on the
+campaign runtime root reported `action: configured`,
+`secret_backend: linux-secret-tool`, `secret_material_written: true`,
+`secret_ref_redacted: true`, `selected_model: deepseek-v4-flash`,
+`snapshot_digest: fnv1a64:c58ce6f2f7521544`. Guest temp was shredded
+(`KEY_GONE`). No `secret-tool search`/`lookup`, no `provider.json` copy, no
+material on argv/env/chat/Git.
 
-Recovery (owner-only, graphical hidden-input on the guest, not this chat):
-`cognitive init --runtime-root /home/hal9001/perfeval012-20260820/runtime --provider deepseek --base-url https://api.deepseek.com/v1 --api-key-file -`
-into the **new** planned `/20` item. Then continue doctor on the same root.
+Post-import `SearchItems` (paths-only): `item_count_unlocked=1`,
+`item_suffixes=["24"]`. Item `/24` is not `/12`–`/19`. The keyring allocator
+did not reuse retired suffixes; planned `/20` was the reservation name, not
+a required path number.
+
+## Pi configure and daemon (2026-08-20) — pass
+
+Public `cognitive pi configure` wrote non-secret `pi.json` with pinned
+`cli.js` `0.81.1`, Extension `pi-cognitiveos/dist/index.js`,
+`pi-agent-adapter`, and in-archive
+`apps/pi-agent-adapter/fixtures/private_candidate_provider.mjs`.
+
+Public `cognitive daemon start --bind 127.0.0.1:48300` reported
+`action: started`, pid **326605**, `log_path` mode-managed under the
+campaign runtime. `daemon status`: `process_alive: true`,
+`bootstrap_present: true` (value not read; file mode `600`, 71 bytes).
+Listeners `48181` / `48284` / `48383` remain untouched. Broker `48400` is
+not started.
+
+## Doctor (2026-08-20) — pass
+
+Redacted `cognitive doctor --runtime-root …/runtime` (secret-shaped scan
+clean): overall `ready`, `first_conversation_ready: true`,
+`authority_side_effects: false`. Provider `secret_ref_resolves: true`,
+`selected_model_digest_matches: true`, `secret_material_exposed: false`.
+Pi `package_status=ready` / `pinned_version=0.81.1` /
+`observed_version=0.81.1`. This is conversation-shell readiness, not a
+C1/C2 Task.
 
 ## Unique next action
 
-Owner graphical hidden-input import into planned SecretStore `/20` on
-`B01-Desktop-Linux-002`. After that: `pi configure`, `cognitive daemon start`
-`--bind 127.0.0.1:48300`, redacted doctor (`first_conversation_ready: true`
-without printing material), then B0 qualification cells (`retry=0`). Do not
-open B1/B2. Do not start a counted sample before E9 pass.
+Run B0 qualification cells on this freeze (`retry=0`; three non-counted
+warmups per arm; one counted seed per class C1/C2a/C2b/C2c/C2d; retain
+every started sample). Start C1 O-arm. Do not open B1/B2. Claim ceiling
+`hypothesis`.

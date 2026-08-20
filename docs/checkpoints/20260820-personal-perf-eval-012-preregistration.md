@@ -27,7 +27,7 @@ file is not an allowed bind path.
 |---|---|---|
 | Campaign root | `/home/hal9001/perfeval012-20260820` mode `0700` | `perfeval004`…`perfeval011`, `e009`, `~/perfeval002`, `~/p9t04`, `cos-current`, P2-T37 roots |
 | Loopback port | daemon `127.0.0.1:48300`; broker `127.0.0.1:48400` | `48181`, `48282`, `48284`, `48286`–`48298`, `48383`, `48386`–`48398` |
-| SecretStore entry | planned `/20`; reuse-existing blocked (store empty). Recovery: owner graphical hidden-input `--api-key-file -` | `/12`–`/19`; never `secret-tool search`/`lookup`; never keyfile copy |
+| SecretStore entry | new item suffix `/24` (≠ `/12`–`/19`; planned `/20` was the reservation name) | `/12`–`/19`; never `secret-tool search`/`lookup`; never keyfile copy |
 | Source pin | `370b26fc` | closed-EVAL pins; unmerged task branches |
 
 `B01-Clean-Linux-001` stays out of bounds. Guest control:
@@ -48,20 +48,18 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | Guest identity | **pass** | `B01-Desktop-Linux-002` running; MAC `52:54:00:33:27:c1` = `192.168.123.160`; Ubuntu 24.04.4; uid 1000; `B01-Clean-Linux-001` shut off |
 | New campaign root/port | **pass** | `/home/hal9001/perfeval012-20260820` mode `0700`; `48300`/`48400` unused; `48181`/`48284`/`48383` untouched |
 | Exact-source daemon/CLI/adapter binaries | **pass** | `kernel-server` `cfcfdaa2…`; `cognitive` `f02931df…`; `pi-agent-adapter` `54ce9eaa…`; glibc-only `ldd` |
-| Secret bind | `not-run` | E9: product `SearchItems` 0; `login`/`session` item_count 0; no reuse of `/12`–`/19`. Recovery: owner graphical hidden-input into planned `/20` |
-| Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…`. Doctor is a later cell |
+| Secret bind | **pass** | new item `/24`; `secret_material_written: true`; `secret_ref_redacted: true`; guest temp shredded |
+| Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…` |
 | P-arm broker `48400` | `not-run` | after O-arm bind; loopback-only |
-| `cognitive doctor` | `not-run` | blocked on E9; readiness only; required before first B0 sample |
-| C1/C2 paired B0 | `not-run` | blocked on E9; one qualification seed per class; three warmups per arm |
+| `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; `secret_ref_resolves: true`; daemon pid 326605 on `48300` |
+| C1/C2 paired B0 | `not-run` | E9 passed; next: C1 O-arm warmups then counted seed `sha256:a194b2f561562663` |
 | C1/C2 paired B1/B2 | `not-run` | forbidden until B0 pass |
 | Cleanup | `not-run` | stop `48300`/`48400`; clear only the campaign SecretStore item |
 
 ## Unique next action
 
-Owner graphical hidden-input into planned SecretStore `/20` on this guest
-(`cognitive init … --api-key-file -` on the campaign runtime root). Then
-`pi configure`, daemon `127.0.0.1:48300`, redacted doctor, then B0
-(`retry=0`). Do not start a counted sample before E9 pass.
+Run B0 C1 O-arm on `B01-Desktop-Linux-002` (`retry=0`; three warmups then
+counted seed `sha256:a194b2f561562663`). Do not open B1/B2.
 
 Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
 or Agent-benefit promotion.
