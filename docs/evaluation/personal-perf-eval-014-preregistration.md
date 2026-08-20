@@ -1,8 +1,8 @@
 # PERSONAL-PERF-EVAL-014 — preregistration
 
 - Campaign ID: `PERSONAL-PERF-EVAL-014`
-- Status: **active** (2026-08-20). Evaluation routing **ON**.
-- Lease: `lease/personal/EVAL-014/execution-plan-b0`
+- Status: **closed** (2026-08-20). Evaluation routing **OFF**.
+- Lease: `lease/personal/EVAL-014/execution-plan-b0` (**closed**)
 - Branch: `evaluation/EVAL-014-freeze`
 - Claim ceiling: `hypothesis` / non-claim. Reviewer: `not_reviewed`.
 - Parent: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
@@ -17,8 +17,8 @@ This is a **new freeze**. Closed EVAL-002 and EVAL-004 through EVAL-013 are
 never resumed.
 
 Owner 2026-08-20 activated this campaign by directing continuous autonomous
-progress after P9-T12 closure (live paired executor). Do not claim P6,
-P7-T05, P7-T06, or P7-T07 while this row is active.
+progress after P9-T12 closure (live paired executor). The campaign is now
+**closed**. Do not auto-claim P6, P7-T05, P7-T06, or P7-T07.
 
 ## 1. Activation gate
 
@@ -108,4 +108,10 @@ non-secret attributes; confirm with D-Bus `SearchItems` paths. Never
 ## 7. Non-claims
 
 Activation is not B0 pass, not a paired performance result, and not Gate /
-release / Profile / B01 / Agent-benefit evidence.
+release / Profile / B01 / Agent-benefit evidence. Campaign closure does not
+resume development.
+
+## Unique next action
+
+Campaign closed 2026-08-20. Do not reopen this freeze. Wait for an explicit
+owner delivery instruction before claiming any implementation task.

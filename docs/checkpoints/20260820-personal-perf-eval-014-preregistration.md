@@ -1,7 +1,8 @@
 # PERSONAL-PERF-EVAL-014 freeze preregistration
 
 - Campaign: `PERSONAL-PERF-EVAL-014`
-- Lease: `lease/personal/EVAL-014/execution-plan-b0`
+- Lease: `lease/personal/EVAL-014/execution-plan-b0` (**closed** 2026-08-20)
+- Status: campaign **closed**. Evaluation routing **OFF**.
 - Date: 2026-08-20
 - Frozen product source: `adc40499` (`origin/main` after P9-T12 lease close;
   product merge PR [#252](https://github.com/agentkernel/cognitive-os/pull/252)
@@ -72,11 +73,11 @@ under EVAL-012/013 remain closed measurement and must not be resumed.
 | P-arm broker `48404` | **pass** | pid 345123; `secret_material_written: false`; paths `["26"]`; C1 P-arm **pass** |
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; conversation-shell readiness ≠ C1/C2 Task |
 | C1/C2 paired B0 | **pass** | C1 O/P **pass**; C2a Write+Patch O/P **pass**; fairness 13/13; secret-shaped 0/81; timeout/`retry=0`. C2b split-score; C2c `not-run`; C2d split-score |
-| B1/B2 C1/C2 paired | B1 **pass** (C1/C2a 5/5); B2 N=30 frozen; B2 executing | `runLivePairedCell` + campaign `executeArm` |
+| B1/B2 C1/C2 paired | **pass** | B1 C1/C2a 5/5; B2 C1/C2a 30/30 counted; `runLivePairedCell` + campaign `executeArm` |
 | Remainder of parent plan | `not-run` | C0/B3/B4/B5/T/S/O/UJ: overlay skip or missing runner |
-| Cleanup | `not-run` | stop `48304`/`48404` only; clear `/26` only |
+| Cleanup | **pass** | daemon `48304` pid 344759 stopped; broker `48404` pid 345123 gone; SecretStore `/26` cleared; residue listeners untouched |
 
 ## Unique next action
 
-Unique next action: B2 C1/C2a N=30 via `runLivePairedCell`. Then parent-plan
-remainder (`not-run` where runners missing) and cleanup of `48304`/`48404`/`/26`.
+Campaign closed 2026-08-20. Do not reopen this freeze. Wait for an explicit
+owner delivery instruction before claiming any implementation task.

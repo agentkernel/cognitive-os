@@ -3,11 +3,11 @@
 - Campaign: `PERSONAL-PERF-EVAL-014`
 - Freeze branch: `evaluation/EVAL-014-freeze`
 - Product pin: `adc40499`
-- Lease: `lease/personal/EVAL-014/execution-plan-b0`
+- Lease: `lease/personal/EVAL-014/execution-plan-b0` (**closed** 2026-08-20)
 - Preregistration: [20260820-personal-perf-eval-014-preregistration.md](../checkpoints/20260820-personal-perf-eval-014-preregistration.md)
 - Claim ceiling: `hypothesis` / `not_reviewed`
 - Independent reviewer: `not_reviewed`
-- Document status: **active**. Measurement-only.
+- Document status: campaign **closed**. Measurement-only. Evaluation routing OFF.
 
 Measurement-only. This report does not promote Gate, release, Profile, B01,
 or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-013 remain closed.
@@ -38,10 +38,9 @@ or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-013 remain closed.
 | B0 overall | **pass** | C1/C2a comparable + C1 fairness 13/13 + secret/timeout. C2b–d remain split-score / capability-gap |
 | B1 C1/C2 paired | **pass** (C1/C2a) | C1 5/5 counted; C2a 5/5 counted; fairness pass each cell; `retry=0`. C2b–d B1 `not-run` (not comparable) |
 | B2 N freeze | **pass** | N=30 per comparable class (`freeze.mjs` b2; n=5 B1 cannot reduce below 30) |
-| B2 C1/C2 paired | `not-run` | running after N freeze |
-| B2 C1/C2 paired | `not-run` | after B1 |
+| B2 C1/C2 paired | **pass** (C1/C2a) | C1 30/30 counted; C2a 30/30 counted; fairness pass each cell; `retry=0`; fails=0. C2b–d B2 `not-run` |
 | C0 / B3–B5 / T/S extras | `not-run` | overlay skip or missing runner |
-| Cleanup | `not-run` | stop `48304`/`48404` only |
+| Cleanup | **pass** | daemon `48304` pid 344759 stopped; broker pid 345123 gone; SecretStore `/26` cleared; residue listeners untouched; evidence secret-shaped 0/642 |
 
 ## Non-claims
 
@@ -139,12 +138,6 @@ Evidence secret-shaped scan: 0 hits in 81 files (counts only). Frozen
 `timeout_ms=120000`, `retry=0`, `max_agent_turn=8`. Never
 `secret-tool search`/`lookup`.
 
-## Unique next action
-
-B2 C1/C2a N=30 via `runLivePairedCell`. Then parent-plan remainder (`not-run`
-where runners are missing) and cleanup of `48304` / `48404` / SecretStore
-`/26`. Claim ceiling `hypothesis`.
-
 ## B1 C1 (2026-08-20) — pass; counted; retained
 
 All five frozen B1 C1 seeds ran through `runLivePairedCell` with
@@ -179,3 +172,78 @@ below 30.
 Formal B2 N = **30** paired seeds per comparable class (C1, C2a), from
 `freeze.mjs` `c1-c2-b2-heldout-v1`. B1 n=5 completion 5/5 both classes does
 not authorize shrinking N. Timeout 120000 ms, `retry=0`.
+
+## B2 C1 (2026-08-20) — pass; counted; retained
+
+30/30 frozen held-out C1 seeds. `runLivePairedCell` + campaign `executeArm`.
+Fairness `pass` on each cell. Both arms `exit_code=0`, `timed_out=false`.
+`counted_sample: true`. `b0: false`. `retry=0`. Evidence
+`b2-c1-0.json` … `b2-c1-29.json`.
+
+## B2 C2a (2026-08-20) — pass; counted; retained
+
+30/30 frozen held-out C2a Write seeds. Same runner. Fairness `pass`.
+`retry=0`. Evidence `b2-c2a-0.json` … `b2-c2a-29.json`.
+
+The cell record schema is exit/timeout/fairness only. This campaign does not
+have a frozen wall-clock or token denominator, so it reports completion
+equality and does not compute OS overhead or Agent-benefit.
+
+## Parent-plan remainder (2026-08-20) — `not-run`
+
+C0 paired G/A, B3 faults, B4 concurrency, B5 soak (1 h / 8 h / 24 h), and
+T/S/O/UJ extras: overlay skip or no frozen runner on this EVAL. 24 h default
+deferred.
+
+## Cleanup (2026-08-20) — pass
+
+Guest route unchanged. Snapshot was not restored or deleted.
+`B01-Clean-Linux-001` was not contacted. Closed EVAL roots left in place.
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48304` pid 344759 | product `cognitive daemon stop` `action=stopped` (`stale_lock_removed=true`); lock absent |
+| campaign broker `127.0.0.1:48404` pid 345123 | process gone; listener absent |
+| listeners `48181` / `48284` / `48383` | untouched |
+| EVAL-012 / EVAL-013 roots | untouched |
+| campaign root | retained `0700` at `/home/hal9001/perfeval014-20260820` |
+| SecretStore item `/26` | pre-clear suffixes `["26"]`; `secret-tool clear` on product triple; post-clear login `item_count=0` `item_suffixes=[]`; never `secret-tool search`/`lookup` |
+| evidence redactor | 642 files, secret-shaped hits 0 |
+| runtime redactor | naive `sk-[A-Za-z0-9]{10,}` matched 82 files; every token length 13 (regex floor); PEM / private-key BEGIN 0. Not treated as campaign key-length material. |
+
+## Capability matrix (hypothesis / non-claim)
+
+| Class | This freeze | Note |
+|---|---|---|
+| Public doctor / first conversation | ready | not a C1/C2 Task |
+| C1 WorkspaceSearch P/O | **pass** | B0 + B1 5/5 + B2 30/30 counted; fairness 13/13 including live 211-byte system prompt |
+| C2a WorkspaceWrite P/O | **pass** | B0 Write+Patch; B1/B2 counted Write 5/5 and 30/30 |
+| C2b Memory/Skill | split-score | O remember 201; session-2/Skill `not-run`; P fixture Read |
+| C2c Effect recovery | `not-run` | no frozen fault injector |
+| C2d verified completion | split-score | O observed C2a Patch completion; P mechanical `ANSWER: repaired` |
+| C0 paired G/A | `not-run` | no frozen live C0 executor |
+| B3 / B4 / B5 | `not-run` | no frozen runners; 24 h default deferred |
+
+## Evidence-ranked optimization priorities (hypothesis only)
+
+1. If the next question is OS overhead, freeze wall-clock / token / oracle
+   fields in campaign `executeArm` records. This EVAL's counted schema is
+   completion/fairness/timeout only.
+2. C2b session-2 resume and Skill bind need a frozen Skill package and a
+   resume path that does not restart the campaign daemon.
+3. C2c needs a frozen campaign-authorized default-off fault profile.
+4. Do not treat 100% instrumented Search/Write completion as Agent-benefit
+   or Gate evidence.
+
+## Non-claims
+
+A closed product train (P9-T09–T12) is not a performance result. B0
+qualification pass is not B1. B1 5/5 is not B2. B1/B2 counted completion
+equality is not Gate / release / Profile / B01 / Agent-benefit. Implementing
+or using the live runner is not itself a latency result. Campaign closure
+does not resume development.
+
+## Unique next action
+
+Campaign closed 2026-08-20. Do not reopen this freeze. Wait for an explicit
+owner delivery instruction before claiming any implementation task.
