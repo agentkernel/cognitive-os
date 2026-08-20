@@ -50,11 +50,28 @@ before starting the next.
    EVAL-012 scaffolding
    (`docs/evaluation/personal-perf-eval-012-preregistration.md`). EVAL-012
    is not active. No B01 sample.
-9. **Linux Secret Service get into the broker — not-run.** Remaining D02
-   supported evidence on `DEV-LINUX-NATIVE-01` after this revision is
-   pushed. No B01 sample. Leftover remote
-   `personal/P2-T37-c2a-public-mutation-path` still advertised (`837f9a4c`).
+9. **Linux Secret Service get into the broker — pass
+   (`DEV-LINUX-NATIVE-01`).** Exact pushed
+   `7dc8c999729028ddb850ab858e88e2f1ba8d5bf9` at disposable Git clone
+   `/home/wuz/p9-t08-c1-c2` (not a closed EVAL or P2-T37 root). Node v22.19.0,
+   Python 3.10.12, `python3-dbus` import ok, session bus
+   `unix:path=/run/user/1000/bus`, `rustc 1.97.1`, pnpm 10.33.2. Focused
+   tests **14/14 pass**. `prove-linux-secret-get.mjs` **ok**: D-Bus get of a
+   probe item (suffix `9`, not `/12`–`/19`), in-memory broker inject
+   (`auth_present`, 56 bytes, digest match), C1 Read + C2a Write fixture
+   calls, `secret_material_written: false`, `secret_tool_lookup: false`,
+   `secret_tool_search: false`, probe cleared (`item_count` 0). Proof JSON
+   was not secret-shaped. No live DeepSeek call. No B01 sample. No product
+   P2 gap: Workspace* schemas cloned in the fixture adapter without daemon
+   authority.
+10. **Non-B01 fairness dry-run — pass.** Same revision:
+    `fairness: pass`, `b0: false`, `retry: 0`, freeze `file_count: 17`.
+11. **Leftover remote branch — pass.**
+    `git push origin --delete personal/P2-T37-c2a-public-mutation-path`
+    succeeded; `git ls-remote --heads origin` no longer lists it (was
+    `837f9a4c`).
 
-Next unit: push this revision, then on `DEV-LINUX-NATIVE-01` run
-`node tools/personal/c1-c2-paired/prove-linux-secret-get.mjs` (probe item
-only; D-Bus get; never `secret-tool lookup`/`search`).
+Next unit: keep EVAL-012 reserved/not active. No B0/B1/B2 samples. Draft PR
+[#247](https://github.com/agentkernel/cognitive-os/pull/247) remains Draft
+until required CI is green and P9-T08 ready/merge/lease/branch/main can
+complete.
