@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P9-T08/c1-c2-paired-readiness` | P9-T08/D04 C1/C2 paired-benchmark readiness instruments | Lane-CFR | `personal/P9-T08-c1-c2-paired-readiness` | `docs/plan/PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/personal-trace.yaml`; `docs/plan/PROGRESS.md`; `docs/checkpoints/20260820-personal-c1-c2-readiness-programme-amendment.md`; `docs/checkpoints/20260820-personal-p9-t08-c1-c2-paired-readiness-report.md`; `docs/checkpoints/20260820-personal-c1-c2-b01-guest-procedure.md`; `docs/checkpoints/20260820-personal-c1-c2-secret-bind-runbook.md`; `docs/evaluation/personal-perf-eval-012-preregistration.md`; `tools/personal/c1-c2-paired/`; `tools/test/c1_c2_paired_p_arm.test.mjs`; `handbook/en/developer/conformance-and-testing.md`; `handbook/zh-CN/developer/conformance-and-testing.md`; `handbook/en/ai/validation-commands.md`; `handbook/zh-CN/ai/validation-commands.md`; `handbook/_meta/sync-policy.md` | cursor-grok-4.6 / P9-T08 D04 | 2026-08-20 / 2026-08-20 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

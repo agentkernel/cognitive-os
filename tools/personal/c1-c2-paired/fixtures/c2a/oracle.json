@@ -1,0 +1,7 @@
+{
+  "class": "C2a",
+  "target": "src/repair.ts",
+  "expected_source": "export function add(left: number, right: number): number {\n  return left + right;\n}\n",
+  "hidden_test": "tests/repair.test.ts",
+  "retry": 0
+}

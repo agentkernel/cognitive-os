@@ -36,6 +36,7 @@ node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
+node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T08 P-arm broker/fixture/fairness freeze; not Gate evidence
 ```
 
 ## Requires supported CI (Ubuntu / Windows MSVC) or exact-revision native Linux

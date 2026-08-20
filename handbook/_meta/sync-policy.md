@@ -36,6 +36,10 @@ generated: false
 5. **Checks**: `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
    `pnpm run check:consistency` must pass; CI runs them on every PR.
+   Measurement-only C1/C2 paired instruments live in
+   `tools/personal/c1-c2-paired/` and are covered by
+   `tools/test/c1_c2_paired_p_arm.test.mjs` (broker, Secret Service get helper,
+   fairness checker, freeze ledger). They are not Gate evidence.
 
 ## Enforcement layers
 

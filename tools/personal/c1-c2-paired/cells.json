@@ -1,0 +1,46 @@
+{
+  "kind": "c1-c2-cell-overlay",
+  "retry": 0,
+  "eval_id_reserved": "PERSONAL-PERF-EVAL-012",
+  "eval_active": false,
+  "classes": {
+    "C1": {
+      "comparable": true,
+      "b0_seed_count": 1,
+      "b1_seed_count": 5,
+      "b2_seed_count": 30,
+      "runs_per_arm_b1": 2,
+      "runs_per_arm_b2": 3
+    },
+    "C2a": {
+      "comparable": true,
+      "b0_seed_count": 1,
+      "b1_seed_count": 5,
+      "b2_seed_count": 30,
+      "runs_per_arm_b1": 2,
+      "runs_per_arm_b2": 3
+    },
+    "C2b": {
+      "comparable": false,
+      "class": "capability-gap / split scores",
+      "b0_seed_count": 1,
+      "b1_seed_count": 5,
+      "b2_seed_count": 30
+    },
+    "C2c": {
+      "comparable": false,
+      "class": "split scores",
+      "b0_seed_count": 1,
+      "b1_seed_count": 5,
+      "b2_seed_count": 30
+    },
+    "C2d": {
+      "comparable": false,
+      "class": "split scores",
+      "b0_seed_count": 1,
+      "b1_seed_count": 5,
+      "b2_seed_count": 30
+    }
+  },
+  "skip": ["C0", "B3", "B4", "B5", "T6", "T7", "T8", "T9", "S4", "S8"]
+}

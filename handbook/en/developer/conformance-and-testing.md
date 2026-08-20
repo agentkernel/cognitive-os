@@ -17,6 +17,7 @@ sources:
 tests:
   - tools/test/check.test.mjs
   - tools/test/p2_t28_capability_truth.test.mjs
+  - tools/test/c1_c2_paired_p_arm.test.mjs
   - .github/workflows/ci.yml
 fingerprint: "sha256:fa3576dafe87d14837215beb718bc3a1a77c5ef0061a5ead86792da5a56ad830"
 non_claims:
@@ -35,6 +36,12 @@ non_claims:
   parity.
 - **Conformance vectors** (`conformance/vectors/`, 89) are contract-derived
   behavioral cases executed by the `conformance-runner`.
+- **C1/C2 paired measurement instruments** (`tools/personal/c1-c2-paired/`) are
+  campaign-only: a loopback pure-Pi credential broker (Secret Service `get` via
+  D-Bus, never `secret-tool lookup`/`search`), an equivalent Workspace* fixture
+  adapter, frozen seeds/`retry=0`, and a §2.3 fairness checker. They are not a
+  second authority writer and do not promote Gate, release, Profile, B01, or
+  Agent-benefit. Focused tests: `tools/test/c1_c2_paired_p_arm.test.mjs`.
 
 ## The conformance runner
 
