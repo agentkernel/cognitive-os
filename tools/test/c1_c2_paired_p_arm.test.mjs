@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import http from "node:http";
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
@@ -11,7 +11,9 @@ import {
   createPurePiBroker,
 } from "../personal/c1-c2-paired/pure-pi-broker.mjs";
 import {
+  WORKSPACE_PATCH_PAYLOAD,
   WORKSPACE_TOOL_SCHEMAS,
+  applyUnifiedPatch,
   createWorkspaceFixtureAdapter,
 } from "../personal/c1-c2-paired/workspace-fixture-adapter.mjs";
 import {
@@ -22,6 +24,7 @@ import {
 import { checkFairness } from "../personal/c1-c2-paired/fairness-checker.mjs";
 import { redactPairedEvidence } from "../personal/c1-c2-paired/redactor.mjs";
 import {
+  INSTRUMENT_ROOT,
   assertDisjointSeeds,
   assertNoExtraCorpusFiles,
   buildFreezeLedger,
@@ -114,15 +117,73 @@ test("C1 WorkspaceRead and C2a WorkspaceWrite complete against a fixture root", 
   assert.equal(write.family, "WorkspaceWrite");
   const after = adapter.execute("WorkspaceRead", { target: "note.txt" });
   assert.equal(after.bytes.toString("utf8"), "patched\n");
+});
+
+test("C2a WorkspacePatch refuses replacement bytes and applies a unified diff", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "c1-c2-p-arm-"));
+  const adapter = createWorkspaceFixtureAdapter({ root });
+  writeFileSync(path.join(root, "note.txt"), "patched\n");
+  const before = adapter.execute("WorkspaceRead", { target: "note.txt" });
+  assert.throws(
+    () =>
+      adapter.execute("WorkspacePatch", {
+        target: "note.txt",
+        preimage: before.preimage,
+        input_b64: Buffer.from("reseeded\n").toString("base64"),
+      }),
+    /unexpected line outside a hunk/,
+  );
+  assert.equal(readFileSync(path.join(root, "note.txt"), "utf8"), "patched\n");
 
   const patch = adapter.execute("WorkspacePatch", {
     target: "note.txt",
-    preimage: after.preimage,
-    input_b64: Buffer.from("reseeded\n").toString("base64"),
+    preimage: before.preimage,
+    input_b64: Buffer.from("@@ -1 +1 @@\n-patched\n+reseeded\n").toString("base64"),
   });
   assert.equal(patch.family, "WorkspacePatch");
   const patched = adapter.execute("WorkspaceRead", { target: "note.txt" });
   assert.equal(patched.bytes.toString("utf8"), "reseeded\n");
+});
+
+test("C2a frozen unified diff repairs the C2a corpus to the oracle", () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), "c1-c2-c2a-"));
+  const adapter = createWorkspaceFixtureAdapter({ root });
+  const source = readFileSync(path.join(INSTRUMENT_ROOT, "fixtures/c2a/workspace/src/repair.ts"));
+  const diff = readFileSync(path.join(INSTRUMENT_ROOT, "fixtures/c2a/workspace-patch.unified.diff"));
+  const oracle = JSON.parse(
+    readFileSync(path.join(INSTRUMENT_ROOT, "fixtures/c2a/oracle.json"), "utf8"),
+  );
+  mkdirSync(path.join(root, "src"), { recursive: true });
+  writeFileSync(path.join(root, "src/repair.ts"), source);
+  const before = adapter.execute("WorkspaceRead", { target: "src/repair.ts" });
+  adapter.execute("WorkspacePatch", {
+    target: "src/repair.ts",
+    preimage: before.preimage,
+    input_b64: diff.toString("base64"),
+  });
+  const after = adapter.execute("WorkspaceRead", { target: "src/repair.ts" });
+  assert.equal(after.bytes.toString("utf8"), oracle.expected_source);
+  assert.equal(WORKSPACE_PATCH_PAYLOAD, "unified-diff");
+});
+
+test("applyUnifiedPatch matches daemon no-newline marker cases and fails closed", () => {
+  assert.equal(
+    applyUnifiedPatch("final line", "@@ -1 +1 @@\n-final line\n\\ No newline at end of file\n+final line\n"),
+    "final line\n",
+  );
+  assert.equal(
+    applyUnifiedPatch("final line\n", "@@ -1 +1 @@\n-final line\n+final line\n\\ No newline at end of file\n"),
+    "final line",
+  );
+  assert.throws(
+    () =>
+      applyUnifiedPatch(
+        "final line\n",
+        "@@ -1 +1 @@\n-final line\n\\ No newline at end of file\n+changed\n",
+      ),
+    /old-side no-newline marker contradicts the preimage/,
+  );
+  assert.throws(() => applyUnifiedPatch("a\n", ""), /patch contains no hunk/);
 });
 
 test("C2a WorkspaceWrite fails closed on preimage mismatch", () => {
@@ -265,12 +326,13 @@ test("freeze ledger has disjoint seeds, retry=0, and secret-free corpus", async 
   assert.equal(assertDisjointSeeds(seeds), 1 * 5 + 5 * 5 + 30 * 5);
   await assertNoExtraCorpusFiles();
   const bytes = await listCorpusBytes();
-  assert.equal(Object.keys(bytes).length, 7);
+  assert.equal(Object.keys(bytes).length, 8);
   const ledger = await buildFreezeLedger();
   assert.equal(ledger.retry, 0);
   assert.equal(ledger.b0, false);
   assert.equal(ledger.command_manifest.retry, 0);
   assert.equal(ledger.command_manifest.append_system_prompt, "frozen-system-task-prompt.txt");
+  assert.equal(ledger.command_manifest.workspace_patch_payload, "unified-diff");
   assert.match(ledger.files["pure-pi-broker.mjs"], /^sha256:[a-f0-9]{64}$/);
 });
 

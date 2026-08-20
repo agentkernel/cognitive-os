@@ -11,7 +11,10 @@ state. They do not promote Gate, release, Profile, B01, or Agent-benefit.
   `get` via D-Bus `SearchItems` + `GetSecret`. Never `secret-tool lookup` or
   `search`. Probe store uses `secret-tool store` stdin only.
 - `workspace-fixture-adapter.mjs` — equivalent WorkspaceRead/Search/Write/Patch
-  schemas for arm `P`, executing only inside a fixture root.
+  schemas for arm `P`, executing only inside a fixture root. `WorkspacePatch`
+  `input_b64` is a UTF-8 unified diff (`workspace_patch_payload: unified-diff`);
+  replacement bytes fail closed. Frozen C2a payload:
+  `fixtures/c2a/workspace-patch.unified.diff`.
 - `fairness-checker.mjs` / `paired-runner.mjs` / `freeze.mjs` / `redactor.mjs`
   — frozen seeds (`retry=0`, disjoint B0/B1/B2), §2.3 fairness observability,
   mechanical redaction. Not B0 and not a counted sample.

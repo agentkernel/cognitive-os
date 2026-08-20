@@ -7,7 +7,7 @@ import { createReadStream } from "node:fs";
 import { readdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { WORKSPACE_TOOL_SCHEMAS } from "./workspace-fixture-adapter.mjs";
+import { WORKSPACE_PATCH_PAYLOAD, WORKSPACE_TOOL_SCHEMAS } from "./workspace-fixture-adapter.mjs";
 import { PI_PLACEHOLDER_TOKEN } from "./pure-pi-broker.mjs";
 import { FAIRNESS_AXES } from "./fairness-checker.mjs";
 
@@ -106,12 +106,14 @@ export const COMMAND_MANIFEST = Object.freeze({
   tool_schemas: WORKSPACE_TOOL_SCHEMAS,
   fairness_axes: FAIRNESS_AXES,
   append_system_prompt: "frozen-system-task-prompt.txt",
+  workspace_patch_payload: WORKSPACE_PATCH_PAYLOAD,
 });
 
 export const CORPUS_RELATIVE_PATHS = Object.freeze([
   "fixtures/c1/workspace/note.txt",
   "fixtures/c2a/workspace/src/repair.ts",
   "fixtures/c2a/workspace/tests/repair.test.ts",
+  "fixtures/c2a/workspace-patch.unified.diff",
   "fixtures/c2a/oracle.json",
   "fixtures/c2b/procedure.txt",
   "fixtures/c2c/original-key.txt",

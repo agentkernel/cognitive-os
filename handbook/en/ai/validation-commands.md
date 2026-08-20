@@ -36,7 +36,7 @@ node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
-node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T10 live --append-system-prompt manifests; not Gate evidence
+node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T11 unified-diff WorkspacePatch; not Gate evidence
 ```
 
 ## Requires supported CI (Ubuntu / Windows MSVC) or exact-revision native Linux

@@ -1,15 +1,13 @@
 # Personal C1/C2 Paired Benchmark Readiness Delivery Plan
 
 - Status: **packages 1–14 delivered / P9-T08 merged**; **EVAL-012 closed**;
-  **P2-T38 done**; **P9-T09 done**; **P9-T10 done** (PR [#250](https://github.com/agentkernel/cognitive-os/pull/250)
-  at `main@30c4e16a`). Packages 15–17 remain closed measurement. No evaluation
-  campaign is active. Next readiness item is comparable C2a Patch payload
-  format (unified diff vs replacement bytes).
-- Named implementation vehicle: **P9-T10** (closed). Live `--append-system-prompt`
-  injection is merged. Remaining mutex before a new EVAL is comparable C2a
-  Patch format.
-- Product pin: merged `main` after P9-T10
-  (`30c4e16a`; EVAL-012 product pin remained
+  **P2-T38 done**; **P9-T09 done**; **P9-T10 done**; **P9-T11 in-progress**
+  (comparable C2a unified-diff Patch). Packages 15–17 remain closed
+  measurement. No evaluation campaign is active.
+- Named implementation vehicle: **P9-T11**. Remaining mutex before a new EVAL
+  is comparable C2a Patch format (this task).
+- Product pin: merged `main` after P9-T10 lease close
+  (`3cab4074`; EVAL-012 product pin remained
   `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c`).
 - Definition of done (this programme): after packages 1–14 execute, an owner
   can activate a **new** preregistered EVAL and immediately start **B0
@@ -80,7 +78,7 @@ validation unit.
 |---|---|---|---|---|---|
 | Plan persistence | readiness | **done** | This amended programme is the navigation source linked from `PROGRESS.md`. | Keep revision and package status current. | Retain; do not reopen packages 1–5. |
 | 1. C1 public O-arm | historical product | **done** | P2-T36 PR [#244](https://github.com/agentkernel/cognitive-os/pull/244) at `main@3efd7011`. Independent non-B01 WorkspaceRead and WorkspaceSearch Tasks completed public admit → candidate → lease → executor → verifier → acceptance. CI `32245868452` passed. | Not a paired benchmark. | Preserve; do not re-open. |
-| 2. C2a mutation O-arm | historical product | **done** (P2-T37 + P2-T38) | P2-T37 PR [#246](https://github.com/agentkernel/cognitive-os/pull/246); P2-T38 PR [#248](https://github.com/agentkernel/cognitive-os/pull/248) at `main@2b4c8f17`. Raw-file SHA-256 preimage and VERIFY-skip on unreconciled Effect. | Replacement-bytes Patch payload (EVAL-012 Priority 3) still out of scope. | Do not reopen P2-T37/P2-T38. |
+| 2. C2a mutation O-arm | historical product | **done** (P2-T37 + P2-T38) | P2-T37 PR [#246](https://github.com/agentkernel/cognitive-os/pull/246); P2-T38 PR [#248](https://github.com/agentkernel/cognitive-os/pull/248) at `main@2b4c8f17`. Raw-file SHA-256 preimage and VERIFY-skip on unreconciled Effect. | P-arm replacement-bytes Patch is **P9-T11** (`in-progress`). | Do not reopen P2-T37/P2-T38. |
 | 3. C2b governed session-2 | historical product | **done** (reconfirmed) | P2-T23 PR [#222](https://github.com/agentkernel/cognitive-os/pull/222) at `main@795bfac8`. Public Memory/Skill consumption and session-2 resume. | P-arm cannot use daemon Memory/Skill. | Remaining work is fairness classification, not a new P2 product task. |
 | 4. C2c recovery | historical product | **done** (reconfirmed) | P2-T24 PR [#223](https://github.com/agentkernel/cognitive-os/pull/223) at `main@2b803e0f`. Original-key restart reconcile. | Campaign fault profile is measurement-only. | Remaining work is freeze + B0, not a new P2 product task. |
 | 5. C2d public closure | historical product | **done** (reconfirmed) | P2-T14 acceptance authority; P2-T21 `GET /task/evidence`. C1/C2a public O4/O5 observed terminal facts. | Pure-Pi completion is not OS Task completion. | Remaining work is package 7 oracles, not a new P2 product task. |
@@ -93,7 +91,7 @@ validation unit.
 | 12. Environment checklist | readiness delivery | **done** | Section 8: E1–E6 and E10–E12 `pass`; E7–E9 `not-run` (EVAL not active). | Bind at package 15. | Preserve. |
 | 13. Housekeeping | readiness delivery | **done** | Remote `personal/P2-T37-c2a-public-mutation-path` deleted; `ls-remote` empty. | Not a denominator. | Preserve. |
 | 14. New EVAL preregistration | readiness delivery | **done (reserved, not activated)** | [EVAL-012 scaffolding](../evaluation/personal-perf-eval-012-preregistration.md) cites `7dc8c999`. | Must not activate. | Owner activates Current snapshot row before B0. |
-| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | Dry-run prompt bytes owned by **P9-T09** (**done**). Live O-arm injection owned by **P9-T10** (**done**). Comparable C2a Patch format remains. | New EVAL only after comparable C2a Patch format and a new preregistration. |
+| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | Dry-run prompt bytes owned by **P9-T09** (**done**). Live O-arm injection owned by **P9-T10** (**done**). Comparable C2a Patch format owned by **P9-T11** (**in-progress**). | New EVAL only after P9-T11 and a new preregistration. |
 | 16. B1 C1/C2 pilot | measurement | **not-run** | Requires a future EVAL whose B0 passes. | Not opened. | Do not use EVAL-012 seeds. |
 | 17. B2 C1/C2 confirmatory | measurement | **not-run** | Requires B1. | Not opened. | Do not use EVAL-012 seeds. |
 
