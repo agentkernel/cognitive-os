@@ -26,9 +26,14 @@ so a new EVAL would fail the same axis.
    `cargo fmt --all -- --check`. Rustc 1.97.1.
 4. Required CI `32350029054` — **pass** at `745c60d8`: Ubuntu verify,
    Windows verify, `resolve validation route`, and `required-ci`.
-5. Live O-arm / P-arm sample execution — **not-run** (out of scope; no new
+5. Draft PR [#250](https://github.com/agentkernel/cognitive-os/pull/250)
+   mergeStateStatus `CLEAN`. Docs-head required CI `32352242187` — **pass**
+   at `36fe0029`.
+6. Merge — **pass**: PR [#250](https://github.com/agentkernel/cognitive-os/pull/250)
+   merged at `main@30c4e16a`. Lease closed; local `main` matches `origin/main`.
+7. Live O-arm / P-arm sample execution — **not-run** (out of scope; no new
    EVAL).
-6. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`).
+8. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`).
 
 ## Acceptance mapping
 

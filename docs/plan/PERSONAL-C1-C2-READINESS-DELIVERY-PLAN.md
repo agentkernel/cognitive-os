@@ -1,13 +1,15 @@
 # Personal C1/C2 Paired Benchmark Readiness Delivery Plan
 
 - Status: **packages 1–14 delivered / P9-T08 merged**; **EVAL-012 closed**;
-  **P2-T38 done**; **P9-T09 done**; **P9-T10 in-progress** (live
-  `--append-system-prompt`). Packages 15–17 remain closed measurement. No
-  evaluation campaign is active.
-- Named implementation vehicle: **P9-T10**. Live O-arm injection is the
-  remaining fairness mutex before a new EVAL.
-- Product pin: merged `main` after P9-T09 lease close
-  (`516f3646`; EVAL-012 product pin remained
+  **P2-T38 done**; **P9-T09 done**; **P9-T10 done** (PR [#250](https://github.com/agentkernel/cognitive-os/pull/250)
+  at `main@30c4e16a`). Packages 15–17 remain closed measurement. No evaluation
+  campaign is active. Next readiness item is comparable C2a Patch payload
+  format (unified diff vs replacement bytes).
+- Named implementation vehicle: **P9-T10** (closed). Live `--append-system-prompt`
+  injection is merged. Remaining mutex before a new EVAL is comparable C2a
+  Patch format.
+- Product pin: merged `main` after P9-T10
+  (`30c4e16a`; EVAL-012 product pin remained
   `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c`).
 - Definition of done (this programme): after packages 1–14 execute, an owner
   can activate a **new** preregistered EVAL and immediately start **B0
@@ -91,7 +93,7 @@ validation unit.
 | 12. Environment checklist | readiness delivery | **done** | Section 8: E1–E6 and E10–E12 `pass`; E7–E9 `not-run` (EVAL not active). | Bind at package 15. | Preserve. |
 | 13. Housekeeping | readiness delivery | **done** | Remote `personal/P2-T37-c2a-public-mutation-path` deleted; `ls-remote` empty. | Not a denominator. | Preserve. |
 | 14. New EVAL preregistration | readiness delivery | **done (reserved, not activated)** | [EVAL-012 scaffolding](../evaluation/personal-perf-eval-012-preregistration.md) cites `7dc8c999`. | Must not activate. | Owner activates Current snapshot row before B0. |
-| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | Dry-run prompt bytes owned by **P9-T09** (**done**). Live O-arm injection is **P9-T10** (**in-progress**). | New EVAL only after P9-T10 and a new preregistration. |
+| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | Dry-run prompt bytes owned by **P9-T09** (**done**). Live O-arm injection owned by **P9-T10** (**done**). Comparable C2a Patch format remains. | New EVAL only after comparable C2a Patch format and a new preregistration. |
 | 16. B1 C1/C2 pilot | measurement | **not-run** | Requires a future EVAL whose B0 passes. | Not opened. | Do not use EVAL-012 seeds. |
 | 17. B2 C1/C2 confirmatory | measurement | **not-run** | Requires B1. | Not opened. | Do not use EVAL-012 seeds. |
 
