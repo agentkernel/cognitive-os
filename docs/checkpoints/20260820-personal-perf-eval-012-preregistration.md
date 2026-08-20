@@ -52,14 +52,14 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…` |
 | P-arm broker `48400` | `not-run` | after O-arm bind; loopback-only |
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; `secret_ref_resolves: true`; daemon pid 326605 on `48300` |
-| C1/C2 paired B0 | `not-run` | E9 passed; next: C1 O-arm warmups then counted seed `sha256:a194b2f561562663` |
+| C1/C2 paired B0 | **partial** | C1 O-arm Search+Read **pass** (seed `sha256:a194b2f561562663`). C1 P-arm and C2a–d `not-run` |
 | C1/C2 paired B1/B2 | `not-run` | forbidden until B0 pass |
 | Cleanup | `not-run` | stop `48300`/`48400`; clear only the campaign SecretStore item |
 
 ## Unique next action
 
-Run B0 C1 O-arm on `B01-Desktop-Linux-002` (`retry=0`; three warmups then
-counted seed `sha256:a194b2f561562663`). Do not open B1/B2.
+Start P-arm broker `127.0.0.1:48400` and C1 P-arm qualification. Then
+C2a–d O/P. Do not open B1/B2.
 
 Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
 or Agent-benefit promotion.

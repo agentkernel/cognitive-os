@@ -27,8 +27,9 @@ EVAL-011 are not resumed. Packages 1–14 remain readiness evidence, not B0.
 | Secret bind | **pass** | E9: product stdin import into new item suffix `/24` (≠ `/12`–`/19`; keyring allocator skipped retired ids). `secret_material_written: true`, `secret_ref_redacted: true`, `selected_model=deepseek-v4-flash`. Guest temp shredded. No search/lookup, no `provider.json` copy |
 | Pi 0.81.1 pin | **pass** | in-campaign `@earendil-works/pi-coding-agent@0.81.1`; `cli.js --version` `0.81.1`; extension `index.js` digest matches host freeze |
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; `secret_ref_resolves: true`; `selected_model_digest_matches: true`; Pi `0.81.1`; daemon `127.0.0.1:48300` pid 326605. Conversation readiness is **not** C1/C2 |
-| B0 C1 / C2a / C2b / C2c / C2d | `not-run` | E9 passed; one qualification seed per class; three warmups per arm |
-| B0 P-arm / broker `48400` | `not-run` | after O-arm bind and fairness check |
+| B0 C1 O-arm Search/Read | **pass** | 3 Search warmups + counted Search `task://personal/eval012-b0-C1-a194b2f561562663` + counted Read `…/C1-read-a194b2f561562663`; all `COMPLETED`, `lease_acquired: 1`, verification `passed`/`current`, `ACCEPTANCE_GRANTED`, `reconcile_class: closed`. Seed `sha256:a194b2f561562663`. Fixture `note.txt` digest `4fb26b79…` |
+| B0 C1 P-arm / broker `48400` | `not-run` | O-arm C1 public path is bound; next start loopback broker |
+| B0 C2a / C2b / C2c / C2d | `not-run` | after C1 pair / fairness; one qualification seed per class |
 | B1/B2 C1/C2 paired | `not-run` | B0 not started |
 | Cleanup | `not-run` | stop `48300`/`48400`; clear only the campaign SecretStore item |
 
@@ -144,9 +145,43 @@ Pi `package_status=ready` / `pinned_version=0.81.1` /
 `observed_version=0.81.1`. This is conversation-shell readiness, not a
 C1/C2 Task.
 
+## B0 C1 O-arm (2026-08-20) — pass; retained
+
+Frozen C1 fixture `note.txt` SHA-256
+`4fb26b79e8de937c59f203f9274d76998db1f063ae0de442fdbceedb6d74869b` was copied
+into the campaign workspace. Public admit used UuidV7 budget/loop ids.
+`retry=0`. Daemon pid 326605 on `127.0.0.1:48300`. Bootstrap value was not
+printed. Secret-shaped scan of Pi launch stdout/stderr: 0 hits.
+
+| Role | Task ref | O4 `lease_acquired` | Lifecycle | Verification | Acceptance |
+|---|---|---:|---|---|---|
+| warmup 1 (non-counted) | `task://personal/eval012-b0-C1-warmup-1` | 1 | `COMPLETED` / `ACCEPTANCE_GRANTED` | `passed` / `current` | `current` |
+| warmup 2 (non-counted) | `task://personal/eval012-b0-C1-warmup-2` | 1 | `COMPLETED` / `ACCEPTANCE_GRANTED` | `passed` / `current` | `current` |
+| warmup 3 (non-counted) | `task://personal/eval012-b0-C1-warmup-3` | 1 | `COMPLETED` / `ACCEPTANCE_GRANTED` | `passed` / `current` | `current` |
+| counted Search | `task://personal/eval012-b0-C1-a194b2f561562663` | 1 | `COMPLETED` / `ACCEPTANCE_GRANTED` | `passed` / `current` | `current` |
+| counted Read (same seed) | `task://personal/eval012-b0-C1-read-a194b2f561562663` | 1 | `COMPLETED` / `ACCEPTANCE_GRANTED` | `passed` / `current` | `current` |
+
+Seed `sha256:a194b2f561562663` (`c1-c2-b0-qualification-v1|C1|0`). Each Task
+has Intent and Effect refs and `reconcile_class: closed`. Public
+`cognitive pi launch --print --task-ref` queued daemon-governed
+WorkspaceSearch (`query=failing-line`, `target=workspace://`) or
+WorkspaceRead (`target=workspace://note.txt`). No Pi-native bash/edit/write.
+
+Counted B0 envelope: this is **one** C1 O-arm qualification (class × arm);
+Read is the second required tool on the same seed, not a second class.
+Warmups are non-counted.
+
+Scheduler `daemon.log` also recorded epoch-1 skips on the **private**
+candidate path (`candidate descriptor is unavailable or unsafe` on Search
+tasks; `private Pi candidate adapter rejected the request (exit code 3)` on
+Read). The public Extension path still completed. Those skips are retained
+observations, not a product fix mid-campaign.
+
+This is not C1 paired (P-arm not started), not B0 pass, and not
+Agent-benefit.
+
 ## Unique next action
 
-Run B0 qualification cells on this freeze (`retry=0`; three non-counted
-warmups per arm; one counted seed per class C1/C2a/C2b/C2c/C2d; retain
-every started sample). Start C1 O-arm. Do not open B1/B2. Claim ceiling
-`hypothesis`.
+Start P-arm broker `127.0.0.1:48400` and run C1 P-arm qualification
+(three warmups + counted seed `sha256:a194b2f561562663`). Then C2a–d.
+Do not open B1/B2. Claim ceiling `hypothesis`.
