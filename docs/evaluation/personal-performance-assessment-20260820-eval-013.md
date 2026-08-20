@@ -15,9 +15,9 @@ or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-012 remain closed.
 | Cell | Result | Note |
 |---|---|---|
 | Freeze / preregistration | **pass** | pin `6c415625`; root `/home/hal9001/perfeval013-20260820`; daemon `48302` pid 336122; SecretStore `/25`; Pi `0.81.1`; doctor overall `ready`, `first_conversation_ready: true` |
-| B0 fairness | not-run | requires live P/O observation; both arms must inject frozen prompt (211 UTF-8 bytes) |
+| B0 fairness | **pass** (C1 axes) | live P/O both injected frozen-system-task-prompt.txt (211 UTF-8 bytes); 13/13 axes pass; `b0: true` for this C1 record. Full B0 still requires C2a+ |
 | B0 C1 O-arm | **pass** | 3 Search warmups + counted Search + counted Read. All `COMPLETED` / `ACCEPTANCE_GRANTED`; verification `passed`/`current`; O4 `lease_acquired` 1. Live `--append-system-prompt` frozen file (211 UTF-8 bytes). `retry=0`. First admit `eval013-b0-C1-warmup-1` 409 retained unused; samples used fresh lowercase task refs. |
-| B0 C1 P-arm | not-run | next; broker `48402` |
+| B0 C1 P-arm | **pass** | broker `48402` pid 339769; SecretStore paths `["25"]`; `secret_material_written: false`; Pi placeholder token only. 3 Search warmups + counted Search + counted Read; Search hit `failing-line`; Read returned both note lines. Live `--append-system-prompt`. No daemon Task. `retry=0` |
 | B0 C2a Write O/P | not-run | |
 | B0 C2a Patch O/P | not-run | P-arm unified-diff is product-closed on `main`; live sample still required |
 | B1–B5, C0, extras | not-run | forbidden until B0 pass, or `not-run` if no runner |

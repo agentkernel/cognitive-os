@@ -70,9 +70,9 @@ under EVAL-012 remain closed measurement and must not be resumed.
 | Exact-source daemon/CLI/adapter binaries | **pass** | `kernel-server` `436725ec…`; `cognitive` `73bad94d…`; `pi-agent-adapter` `54ce9eaa…`; Extension `index.js` `d27f9776…`; glibc-only `ldd` |
 | Secret bind | **pass** | new item `/25`; `secret_material_written: true`; `secret_ref_redacted: true`; guest temp shredded |
 | Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…` |
-| P-arm broker `48402` | pending | start before C1 P-arm |
+| P-arm broker `48402` | **pass** | pid 339769; `secret_material_written: false`; paths `["25"]`; C1 P-arm Search+Read **pass** |
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; daemon pid 336122 on `48302` |
-| C1/C2 paired B0 | pending | fairness + C1/C2a samples; `retry=0`; live `--append-system-prompt` 211 UTF-8 bytes |
+| C1/C2 paired B0 | in-progress | C1 O/P **pass**; fairness 13/13 `system_task_prompt_bytes` **pass**; C2a next |
 | Remainder of parent plan | pending | B1 only after B0 pass; honest `not-run` otherwise |
 | Cleanup | pending | stop `48302`/`48402`; clear only `/25` |
 
