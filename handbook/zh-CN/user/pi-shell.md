@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:22c4eba394fd5586855d0bf8fdb789480038552bcfc823e227ba903ae3f6bce8"
+fingerprint: "sha256:add07d67904390629e85cd7f69f5a37107ccacd033edd071915c74a40be9deca"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -37,7 +37,8 @@ daemon 治理 WorkspaceRead/Search/Write/Patch 已实现；Pi 原生文件系统
 通过 `cognitive pi launch` 启动 Pi。它只加载已配置的 Extension，使用 Pi 显式工具 allowlist 排除原生工具，
 并仅向对话暴露 `WorkspaceRead`、`WorkspaceSearch`、`WorkspaceWrite` 与
 `WorkspacePatch` 四个 daemon 治理的 Workspace 工具，绝不激活 Pi 原生文件或 shell
-工具。使用 `--runtime-root` 时，CLI 会把其
+工具。可选 `--append-system-prompt <绝对路径>` 把已存在且非空的 UTF-8 文件转发给 Pi；
+相对路径、缺失或空文件失败闭合，文件字节不会被打印。使用 `--runtime-root` 时，CLI 会把其
 hermetic layout roots 映射到 Pi 的 XDG 环境，使 Extension 能解析该 runtime 的 endpoint
 与本地 bootstrap secret。CognitiveOS 扩展先使用 Pi 所需的 runtime tool schema 注册工具，随后：
 

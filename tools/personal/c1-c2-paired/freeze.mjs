@@ -105,6 +105,7 @@ export const COMMAND_MANIFEST = Object.freeze({
   daemon_bind: "127.0.0.1:48300",
   tool_schemas: WORKSPACE_TOOL_SCHEMAS,
   fairness_axes: FAIRNESS_AXES,
+  append_system_prompt: "frozen-system-task-prompt.txt",
 });
 
 export const CORPUS_RELATIVE_PATHS = Object.freeze([

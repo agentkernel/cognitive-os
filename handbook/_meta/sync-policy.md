@@ -39,7 +39,8 @@ generated: false
    Measurement-only C1/C2 paired instruments live in
    `tools/personal/c1-c2-paired/` and are covered by
    `tools/test/c1_c2_paired_p_arm.test.mjs` (broker, Secret Service get helper,
-   fairness checker, freeze ledger, frozen-system-task-prompt.txt). They are not Gate evidence.
+   fairness checker, freeze ledger, frozen-system-task-prompt.txt, live
+   `--append-system-prompt` command manifests). They are not Gate evidence.
 
 ## Enforcement layers
 

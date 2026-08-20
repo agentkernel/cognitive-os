@@ -64,7 +64,9 @@ non_claims:
   the public CLI attached while Pi reads its prompt from stdin and exits. It still
   requires the daemon's full ready projection, disables Pi-native tools, passes no
   Provider credential to Pi, and must not be substituted with direct
-  daemon/private-candidate calls.
+  daemon/private-candidate calls. `--append-system-prompt <absolute-path>` forwards
+  an existing non-empty UTF-8 file to Pi; it is not a Provider credential and the
+  file bytes are not printed.
 
 ## Stop, restart, stale state — `implemented`
 

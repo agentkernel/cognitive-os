@@ -552,11 +552,15 @@ fn parse_pi_configure_options(
 }
 
 fn parse_pi_launch_options(flags: &BTreeMap<String, String>) -> Result<PiLaunchOptions, String> {
-    reject_unexpected_flags(flags, &["runtime-root", "print", "task-ref"])?;
+    reject_unexpected_flags(
+        flags,
+        &["runtime-root", "print", "task-ref", "append-system-prompt"],
+    )?;
     Ok(PiLaunchOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
         print_mode: flag_bool(flags, "print")?,
         task_ref: flags.get("task-ref").cloned(),
+        append_system_prompt: flags.get("append-system-prompt").map(PathBuf::from),
     })
 }
 
@@ -691,6 +695,7 @@ USAGE:
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
   cognitive pi launch [--runtime-root <dir>] [--print]
+                       [--append-system-prompt <absolute-path>]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -705,6 +710,8 @@ Hard rules:
   - Pi configuration writes only non-secret executable and Extension paths
   - Pi launch requires daemon-owned ready state, loads only its configured Extension,
     and disables Pi-native tools that bypass daemon authority
+  - --append-system-prompt forwards an existing absolute UTF-8 file to Pi; it is not a
+    Provider credential and the file bytes are not printed
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
@@ -830,6 +837,7 @@ mod tests {
                 },
                 print_mode: false,
                 task_ref: None,
+                append_system_prompt: None,
             }))
         );
 
@@ -863,6 +871,33 @@ mod tests {
                 },
                 print_mode: true,
                 task_ref: None,
+                append_system_prompt: None,
+            }))
+        );
+    }
+
+    #[test]
+    fn pi_launch_accepts_append_system_prompt_without_secret_flags() {
+        let command = parse_cognitive_args(&[
+            "pi".to_owned(),
+            "launch".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--print".to_owned(),
+            "--append-system-prompt".to_owned(),
+            "/tmp/frozen-system-task-prompt.txt".to_owned(),
+        ])
+        .expect("parse append-system-prompt Pi launch command");
+
+        assert_eq!(
+            command,
+            CognitiveCommand::Pi(PiCommand::Launch(PiLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                print_mode: true,
+                task_ref: None,
+                append_system_prompt: Some(PathBuf::from("/tmp/frozen-system-task-prompt.txt")),
             }))
         );
     }

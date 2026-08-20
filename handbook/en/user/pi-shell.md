@@ -21,7 +21,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:22c4eba394fd5586855d0bf8fdb789480038552bcfc823e227ba903ae3f6bce8"
+fingerprint: "sha256:add07d67904390629e85cd7f69f5a37107ccacd033edd071915c74a40be9deca"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -37,7 +37,9 @@ deliberately not available in the shell yet.
 
 Launch Pi through `cognitive pi launch`. It loads only the configured Extension,
 uses Pi's explicit tool allowlist to exclude Pi-native tools, and leaves only daemon-governed Workspace tools available
-to the conversation. Its fixed Pi allowlist contains only `WorkspaceRead`,
+to the conversation. Optional `--append-system-prompt <absolute-path>` forwards an
+existing non-empty UTF-8 file to Pi; relative, missing, and empty files fail closed,
+and the file bytes are not printed. Its fixed Pi allowlist contains only `WorkspaceRead`,
 `WorkspaceSearch`, `WorkspaceWrite`, and `WorkspacePatch`; it never activates
 Pi's native file or shell tools. With
 `--runtime-root`, the CLI maps its hermetic layout roots into Pi's XDG environment

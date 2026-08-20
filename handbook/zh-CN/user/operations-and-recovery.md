@@ -59,6 +59,8 @@ non_claims:
 - `cognitive pi launch --print` 是有界的非交互 Pi 路径：Pi 从 stdin 读取 prompt 时，
   public CLI 会保持连接，直到 Pi 退出。它仍要求 daemon 的完整 ready 投影，不向 Pi
   传递 Provider 凭据，禁用 Pi 原生工具，也不得以直接 daemon/private-candidate 调用替代。
+  `--append-system-prompt <绝对路径>` 把已存在且非空的 UTF-8 文件转发给 Pi；它不是
+  Provider 凭据，文件字节不会被打印。
 
 ## 停止、重启、过期状态 —— `implemented`
 

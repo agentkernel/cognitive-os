@@ -15,7 +15,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:e1d7c616abd8ee04bade7f6f4ce8cce89fdbf7d259d663eca4af960c36d15894"
+fingerprint: "sha256:cd07ea53ea4035d386392a4e538469755d4aeb62ef0c02f1b4f885a474bfc4e3"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -36,7 +36,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive daemon status` | report daemon lock/endpoint liveness |
 | `cognitive daemon stop` | signal the recorded PID; remove lock/endpoint only after confirmed exit |
 | `cognitive pi configure` | write non-secret `pi.json` (absolute executable + extension paths) |
-| `cognitive pi launch [--task-ref <task://URI>]` | fail-closed Pi launch after full doctor readiness and exact version check; task-bound launches expose only daemon-governed WorkspaceRead/Search/Write/Patch and submit untrusted candidates to the task channel |
+| `cognitive pi launch [--task-ref <task://URI>] [--append-system-prompt <absolute-path>]` | fail-closed Pi launch after full doctor readiness and exact version check; task-bound launches expose only daemon-governed WorkspaceRead/Search/Write/Patch and submit untrusted candidates to the task channel; `--append-system-prompt` forwards an existing absolute UTF-8 file to Pi and is not a Provider credential |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |

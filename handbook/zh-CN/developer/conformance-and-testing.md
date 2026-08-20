@@ -38,7 +38,8 @@ non_claims:
   纯 Pi credential broker（经 D-Bus 做 Secret Service `get`，禁止 `secret-tool
   lookup`/`search`）、等价 Workspace* fixture adapter、冻结 seeds/`retry=0`，以及
   §2.3 fairness checker（`system_task_prompt_bytes` 取自
-  `frozen-system-task-prompt.txt` 的字节长度，而不是共享占位符）。它们不是第二
+  `frozen-system-task-prompt.txt` 的字节长度，而不是共享占位符；live P/O
+  `--append-system-prompt` 命令清单共用该文件）。它们不是第二
   authority writer，也不升格 Gate、release、
   Profile、B01 或 Agent-benefit。聚焦测试：
   `tools/test/c1_c2_paired_p_arm.test.mjs`。

@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:55111abecd7e21311e35ff342a526eac4941b1307210355d8bf533a7e13a5bfe"
+fingerprint: "sha256:e9ac32125013452c795bd101919c2e1c26aca0a4ba5446fc9db5acf65c9df072"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -37,6 +37,7 @@ USAGE:
   cognitive pi configure [--runtime-root <dir>] --executable <absolute-path>
                          --extension-entry <absolute-path>
   cognitive pi launch [--runtime-root <dir>] [--print]
+                       [--append-system-prompt <absolute-path>]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -51,6 +52,8 @@ Hard rules:
   - Pi configuration writes only non-secret executable and Extension paths
   - Pi launch requires daemon-owned ready state, loads only its configured Extension,
     and disables Pi-native tools that bypass daemon authority
+  - --append-system-prompt forwards an existing absolute UTF-8 file to Pi; it is not a
+    Provider credential and the file bytes are not printed
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path

@@ -18,7 +18,10 @@ state. They do not promote Gate, release, Profile, B01, or Agent-benefit.
 - `prove-linux-secret-get.mjs` — non-B01 Linux proof; prints redacted JSON only.
 - Focused tests: `tools/test/c1_c2_paired_p_arm.test.mjs`.
 - `frozen-system-task-prompt.txt` — shared UTF-8 prompt whose byte length is
-  the dry-run `system_task_prompt_bytes` observation (P9-T09).
+  the dry-run `system_task_prompt_bytes` observation (P9-T09). Live P/O
+  launches must pass the same file through `--append-system-prompt`
+  (P9-T10): `pi --print --append-system-prompt <absolute-file>` and
+  `cognitive pi launch --print --append-system-prompt <absolute-file>`.
 
 Closed EVAL brokers, ports `48286`–`48298` / `48386`–`48398` / `48383`, and
 SecretStore items `/12`–`/19` are not reused. B01 samples are forbidden until

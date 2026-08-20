@@ -28,7 +28,7 @@ import {
   frozenSeeds,
   listCorpusBytes,
 } from "../personal/c1-c2-paired/freeze.mjs";
-import { dryRunFairness, equalArmSnapshot, FORBIDDEN_SHARED_PROMPT_PLACEHOLDER } from "../personal/c1-c2-paired/paired-runner.mjs";
+import { dryRunFairness, equalArmSnapshot, FORBIDDEN_SHARED_PROMPT_PLACEHOLDER, frozenSystemTaskPromptBytes, frozenSystemTaskPromptPath, liveArmCommandManifest } from "../personal/c1-c2-paired/paired-runner.mjs";
 
 const FIXTURE_SCHEMAS = [
   { name: "WorkspaceRead", parameters: ["target"] },
@@ -214,6 +214,22 @@ test("system_task_prompt_bytes is the frozen prompt length, not a shared placeho
   assert.equal(p.system_task_prompt_bytes, o.system_task_prompt_bytes);
 });
 
+test("live P and O command manifests share --append-system-prompt and the freeze file", () => {
+  const promptPath = frozenSystemTaskPromptPath();
+  const manifest = liveArmCommandManifest();
+  assert.equal(manifest.system_task_prompt_bytes, frozenSystemTaskPromptBytes());
+  assert.deepEqual(manifest.p, ["pi", "--print", "--append-system-prompt", promptPath]);
+  assert.deepEqual(manifest.o, [
+    "cognitive",
+    "pi",
+    "launch",
+    "--print",
+    "--append-system-prompt",
+    promptPath,
+  ]);
+  assert.equal(manifest.p[manifest.p.length - 1], manifest.o[manifest.o.length - 1]);
+});
+
 test("fairness checker passes equal arms and fails a missing or mutated axis", () => {
   const snapshot = equalArmSnapshot();
   const pass = checkFairness({ p: snapshot, o: snapshot });
@@ -254,6 +270,7 @@ test("freeze ledger has disjoint seeds, retry=0, and secret-free corpus", async 
   assert.equal(ledger.retry, 0);
   assert.equal(ledger.b0, false);
   assert.equal(ledger.command_manifest.retry, 0);
+  assert.equal(ledger.command_manifest.append_system_prompt, "frozen-system-task-prompt.txt");
   assert.match(ledger.files["pure-pi-broker.mjs"], /^sha256:[a-f0-9]{64}$/);
 });
 

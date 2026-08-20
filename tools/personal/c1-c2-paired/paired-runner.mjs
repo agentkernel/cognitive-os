@@ -19,10 +19,25 @@ import { redactPairedEvidence } from "./redactor.mjs";
 
 export const FORBIDDEN_SHARED_PROMPT_PLACEHOLDER = "frozen-c1-c2-prompt-v1";
 
+export function frozenSystemTaskPromptPath() {
+  return path.join(INSTRUMENT_ROOT, "frozen-system-task-prompt.txt");
+}
+
 export function frozenSystemTaskPromptBytes() {
-  return Buffer.byteLength(
-    readFileSync(path.join(INSTRUMENT_ROOT, "frozen-system-task-prompt.txt")),
-  );
+  return Buffer.byteLength(readFileSync(frozenSystemTaskPromptPath()));
+}
+
+export function liveArmAppendSystemPromptArgs() {
+  return Object.freeze(["--append-system-prompt", frozenSystemTaskPromptPath()]);
+}
+
+export function liveArmCommandManifest() {
+  const promptArgs = liveArmAppendSystemPromptArgs();
+  return Object.freeze({
+    p: Object.freeze(["pi", "--print", ...promptArgs]),
+    o: Object.freeze(["cognitive", "pi", "launch", "--print", ...promptArgs]),
+    system_task_prompt_bytes: frozenSystemTaskPromptBytes(),
+  });
 }
 
 export function equalArmSnapshot(overrides = {}) {

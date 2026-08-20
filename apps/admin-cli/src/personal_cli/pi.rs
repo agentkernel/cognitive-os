@@ -36,6 +36,9 @@ pub struct PiLaunchOptions {
     pub print_mode: bool,
     /// Bind public Workspace candidates to an already admitted Task.
     pub task_ref: Option<String>,
+    /// Absolute UTF-8 file whose bytes Pi receives via `--append-system-prompt`.
+    /// Campaign fairness uses this so P-arm and O-arm send the same prompt.
+    pub append_system_prompt: Option<PathBuf>,
 }
 
 /// Inputs accepted by `cognitive pi configure`.
@@ -184,6 +187,18 @@ fn prepare_launch_with_doctor_document(
             ];
             if options.print_mode {
                 arguments.push("--print".to_owned());
+            }
+            if let Some(prompt_path) = &options.append_system_prompt {
+                validate_absolute_path(prompt_path, "append-system-prompt")?;
+                validate_existing_file(prompt_path, "append-system-prompt")?;
+                let metadata = fs::metadata(prompt_path).map_err(|_| {
+                    "append-system-prompt is missing or is not a regular file".to_owned()
+                })?;
+                if metadata.len() == 0 {
+                    return Err("append-system-prompt file must not be empty".to_owned());
+                }
+                arguments.push("--append-system-prompt".to_owned());
+                arguments.push(path_to_argument(prompt_path)?);
             }
             arguments
         },
@@ -532,6 +547,7 @@ mod tests {
             },
             print_mode: false,
             task_ref: None,
+            append_system_prompt: None,
         }
     }
 
@@ -705,6 +721,7 @@ mod tests {
             },
             print_mode: true,
             task_ref: None,
+            append_system_prompt: None,
         };
 
         let launch_plan = prepare_launch_with_doctor_document(
@@ -736,6 +753,111 @@ mod tests {
             launch_plan.environment.get("XDG_RUNTIME_DIR"),
             Some(&temporary_root.path().display().to_string())
         );
+    }
+
+    #[test]
+    fn launch_preparation_forwards_append_system_prompt_after_print() {
+        let temporary_root = tempfile::tempdir().expect("temporary root");
+        let executable_path = temporary_root.path().join("pi");
+        let extension_entry_path = temporary_root.path().join("extension.js");
+        let prompt_path = temporary_root.path().join("frozen-system-task-prompt.txt");
+        fs::write(&executable_path, "pinned Pi placeholder").expect("Pi executable fixture");
+        fs::write(&extension_entry_path, "extension placeholder").expect("extension entry fixture");
+        fs::write(&prompt_path, "CognitiveOS Personal C1/C2 paired prompt.\n")
+            .expect("frozen prompt fixture");
+        write_launch_configuration(&temporary_root, &executable_path, &extension_entry_path);
+        let options = PiLaunchOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            print_mode: true,
+            task_ref: None,
+            append_system_prompt: Some(prompt_path.clone()),
+        };
+
+        let launch_plan = prepare_launch_with_doctor_document(
+            &options,
+            LOOPBACK_ENDPOINT_DOCUMENT,
+            &ready_doctor_document(),
+        )
+        .expect("ready daemon forwards a frozen system prompt");
+
+        assert_eq!(
+            launch_plan.arguments,
+            vec![
+                "--extension".to_owned(),
+                extension_entry_path.display().to_string(),
+                "--tools".to_owned(),
+                PUBLIC_DAEMON_GOVERNED_TOOL_ALLOWLIST.to_owned(),
+                "--print".to_owned(),
+                "--append-system-prompt".to_owned(),
+                prompt_path.display().to_string(),
+            ]
+        );
+    }
+
+    #[test]
+    fn launch_preparation_rejects_relative_empty_or_missing_append_system_prompt() {
+        let temporary_root = tempfile::tempdir().expect("temporary root");
+        let executable_path = temporary_root.path().join("pi");
+        let extension_entry_path = temporary_root.path().join("extension.js");
+        fs::write(&executable_path, "pinned Pi placeholder").expect("Pi executable fixture");
+        fs::write(&extension_entry_path, "extension placeholder").expect("extension entry fixture");
+        write_launch_configuration(&temporary_root, &executable_path, &extension_entry_path);
+
+        let relative = PiLaunchOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            print_mode: true,
+            task_ref: None,
+            append_system_prompt: Some(PathBuf::from("frozen-system-task-prompt.txt")),
+        };
+        let relative_error = prepare_launch_with_doctor_document(
+            &relative,
+            LOOPBACK_ENDPOINT_DOCUMENT,
+            &ready_doctor_document(),
+        )
+        .expect_err("relative append-system-prompt must fail closed");
+        assert!(relative_error.contains("absolute"), "{relative_error}");
+
+        let missing_path = temporary_root.path().join("missing-prompt.txt");
+        let missing = PiLaunchOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            print_mode: true,
+            task_ref: None,
+            append_system_prompt: Some(missing_path),
+        };
+        let missing_error = prepare_launch_with_doctor_document(
+            &missing,
+            LOOPBACK_ENDPOINT_DOCUMENT,
+            &ready_doctor_document(),
+        )
+        .expect_err("missing append-system-prompt file must fail closed");
+        assert!(
+            missing_error.contains("missing") || missing_error.contains("not a regular file"),
+            "{missing_error}"
+        );
+
+        let empty_path = temporary_root.path().join("empty-prompt.txt");
+        fs::write(&empty_path, "").expect("empty prompt fixture");
+        let empty = PiLaunchOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary_root.path().to_path_buf()),
+            },
+            print_mode: true,
+            task_ref: None,
+            append_system_prompt: Some(empty_path),
+        };
+        let empty_error = prepare_launch_with_doctor_document(
+            &empty,
+            LOOPBACK_ENDPOINT_DOCUMENT,
+            &ready_doctor_document(),
+        )
+        .expect_err("empty append-system-prompt file must fail closed");
+        assert!(empty_error.contains("must not be empty"), "{empty_error}");
     }
 
     #[test]
