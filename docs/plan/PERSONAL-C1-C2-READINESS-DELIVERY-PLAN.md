@@ -6,7 +6,7 @@
   campaign is active. Next readiness/product item is P/O
   `system_task_prompt_bytes` alignment.
 - Named implementation vehicle: **P9-T09** (P/O `system_task_prompt_bytes`).
-  Current slice: `P9-T09/D01` **in-progress**.
+  Current slice: `P9-T09/D03` **in-progress**.
 - Product pin: merged `main` after P2-T38
   (`2b4c8f17`; EVAL-012 product pin remained
   `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c`).
