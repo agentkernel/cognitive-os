@@ -25,7 +25,9 @@ executor; it does not run B1/B2 samples.
    live cell schema, and deterministic arm order.
 3. Full tools suite — **pass 88/88**.
 4. `check-consistency`, `check-handbook`, `generate-handbook --check` — **pass**.
-5. Required CI — **not-run** until a pushed Draft PR head exists.
+5. Draft PR [#252](https://github.com/agentkernel/cognitive-os/pull/252) at
+   `f58f2b8e` — **opened (Draft)**. Required CI — **not-run** until checks
+   complete on this head.
 6. Live Provider / B01 / B1/B2 sample execution — **not-run** (out of scope).
 7. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`;
    this task has no Rust change).
