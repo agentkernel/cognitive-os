@@ -1,0 +1,4 @@
+CognitiveOS Personal C1/C2 paired system/task prompt (v2).
+P-arm and O-arm must send these exact UTF-8 bytes. A short campaign
+instruction is not an equivalent prompt for fairness axis
+system_task_prompt_bytes.

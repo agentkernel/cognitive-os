@@ -2,9 +2,12 @@
  * Paired P/O runner dry-run (P9-T08/D03). Emits a fairness record. Not B0.
  */
 
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { checkFairness } from "./fairness-checker.mjs";
 import {
   COMMAND_MANIFEST,
+  INSTRUMENT_ROOT,
   PI_SRI,
   PI_VERSION,
   RETRY,
@@ -14,12 +17,20 @@ import {
 import { WORKSPACE_TOOL_SCHEMAS } from "./workspace-fixture-adapter.mjs";
 import { redactPairedEvidence } from "./redactor.mjs";
 
+export const FORBIDDEN_SHARED_PROMPT_PLACEHOLDER = "frozen-c1-c2-prompt-v1";
+
+export function frozenSystemTaskPromptBytes() {
+  return Buffer.byteLength(
+    readFileSync(path.join(INSTRUMENT_ROOT, "frozen-system-task-prompt.txt")),
+  );
+}
+
 export function equalArmSnapshot(overrides = {}) {
   return {
     pi_package_version_sri: `${PI_VERSION}/${PI_SRI}`,
     node_version: process.version,
     provider_base_url_model: "https://api.deepseek.com|deepseek-v4-flash",
-    system_task_prompt_bytes: "frozen-c1-c2-prompt-v1",
+    system_task_prompt_bytes: frozenSystemTaskPromptBytes(),
     task_input_digest: "sha256:fixture",
     sampling_parameters: { temperature: 0, top_p: 1, seed: 1, max_output_tokens: 256 },
     timeout_retry0_max_turn: {

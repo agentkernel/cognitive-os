@@ -17,6 +17,8 @@ state. They do not promote Gate, release, Profile, B01, or Agent-benefit.
   mechanical redaction. Not B0 and not a counted sample.
 - `prove-linux-secret-get.mjs` — non-B01 Linux proof; prints redacted JSON only.
 - Focused tests: `tools/test/c1_c2_paired_p_arm.test.mjs`.
+- `frozen-system-task-prompt.txt` — shared UTF-8 prompt whose byte length is
+  the dry-run `system_task_prompt_bytes` observation (P9-T09).
 
 Closed EVAL brokers, ports `48286`–`48298` / `48386`–`48398` / `48383`, and
 SecretStore items `/12`–`/19` are not reused. B01 samples are forbidden until
