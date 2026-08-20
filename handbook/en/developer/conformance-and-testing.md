@@ -42,7 +42,10 @@ non_claims:
   adapter, frozen seeds/`retry=0`, and a §2.3 fairness checker that records
   `system_task_prompt_bytes` from `frozen-system-task-prompt.txt` (not a shared
   placeholder) and live P/O `--append-system-prompt` command manifests that share
-  that file. P-arm `WorkspacePatch` `input_b64` is a UTF-8 unified diff
+  that file. Live `runLivePairedCell` requires an injected `executeArm` (no
+  accidental spawn); `counted_sample` is true only for frozen b1/b2 cells when
+  fairness passes and both arms exit 0 without timeout. Dry-run cannot be
+  labeled counted. P-arm `WorkspacePatch` `input_b64` is a UTF-8 unified diff
   (`workspace_patch_payload: unified-diff`); replacement bytes fail closed.
   They are not a
   second authority writer and do not promote Gate, release, Profile, B01, or

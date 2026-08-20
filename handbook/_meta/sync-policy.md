@@ -40,7 +40,8 @@ generated: false
    `tools/personal/c1-c2-paired/` and are covered by
    `tools/test/c1_c2_paired_p_arm.test.mjs` (broker, Secret Service get helper,
    fairness checker, freeze ledger, frozen-system-task-prompt.txt, live
-   `--append-system-prompt` command manifests, and P-arm unified-diff
+   `--append-system-prompt` command manifests, live `runLivePairedCell`
+   (injected `executeArm`; counted b1/b2 only), and P-arm unified-diff
    WorkspacePatch). They are not Gate evidence.
 
 ## Enforcement layers

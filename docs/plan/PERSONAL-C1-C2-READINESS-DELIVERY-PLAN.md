@@ -1,20 +1,18 @@
 # Personal C1/C2 Paired Benchmark Readiness Delivery Plan
 
 - Status: **packages 1–14 delivered / P9-T08 merged**; **EVAL-012 closed**;
-  **P2-T38 done**; **P9-T09 done**; **P9-T10 done**; **P9-T11 done**
-  (PR [#251](https://github.com/agentkernel/cognitive-os/pull/251) at
-  `main@49b66200`). Packages 15–17 remain closed measurement. No evaluation
-  campaign is active. Next is a new EVAL preregistration.
-- Named implementation vehicle: **P9-T11** (closed). Comparable C2a Patch
-  format is merged. Remaining mutex before B0 is a new owner-activated EVAL.
-- Product pin: merged `main` after P9-T11
-  (`49b66200`; EVAL-012 product pin remained
-  `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c`).
+  **EVAL-013 closed** (freeze branch; B0 C1/C2a pass, B1/B2 not-run);
+  **P2-T38 done**; **P9-T09 done**; **P9-T10 done**; **P9-T11 done**;
+  **P9-T12 in-progress** (live paired executor). No evaluation campaign is
+  active. Next is P9-T12, not a new EVAL.
+- Named implementation vehicle: **P9-T12** (in-progress). Remaining mutex
+  before B1/B2 is a frozen live paired executor (execution plan §2.5).
+- Product pin: `main@6c415625c0ca12e9f8e51d139da601eb475ee231` (EVAL-013
+  product pin). P9-T11 remains merged at `49b66200`.
 - Definition of done (this programme): after packages 1–14 execute, an owner
   can activate a **new** preregistered EVAL and immediately start **B0
-  qualification on `B01-Desktop-Linux-002`** for paired C1+C2, with no
-  remaining product, adapter, asset, fairness, guest, secret, or denominator
-  gap that would force `not-run` of the C1/C2 arms. Completing packages 15–17
+  qualification on `B01-Desktop-Linux-002`** for paired C1+C2. B1/B2 still
+  require the P9-T12 live paired executor. Completing packages 15–17
   is **完整真机实测**, not a substitute for packages 6–14.
 - Last reconciled: 2026-08-20
 - Claim ceiling: `hypothesis` / non-claim. This programme never promotes Gate,
@@ -92,9 +90,10 @@ validation unit.
 | 12. Environment checklist | readiness delivery | **done** | Section 8: E1–E6 and E10–E12 `pass`; E7–E9 `not-run` (EVAL not active). | Bind at package 15. | Preserve. |
 | 13. Housekeeping | readiness delivery | **done** | Remote `personal/P2-T37-c2a-public-mutation-path` deleted; `ls-remote` empty. | Not a denominator. | Preserve. |
 | 14. New EVAL preregistration | readiness delivery | **done (reserved, not activated)** | [EVAL-012 scaffolding](../evaluation/personal-perf-eval-012-preregistration.md) cites `7dc8c999`. | Must not activate. | Owner activates Current snapshot row before B0. |
-| 15. B0 on B01 | measurement | **closed (EVAL-012)** | B0 fairness **fail** (`system_task_prompt_bytes`). C2a O Patch fail retained then closed in product by P2-T38. Do not resume this EVAL. | Dry-run prompt bytes owned by **P9-T09** (**done**). Live O-arm injection owned by **P9-T10** (**done**). Comparable C2a Patch format owned by **P9-T11** (**done**). | New EVAL only after a new preregistration. |
-| 16. B1 C1/C2 pilot | measurement | **not-run** | Requires a future EVAL whose B0 passes. | Not opened. | Do not use EVAL-012 seeds. |
-| 17. B2 C1/C2 confirmatory | measurement | **not-run** | Requires B1. | Not opened. | Do not use EVAL-012 seeds. |
+| 15. B0 on B01 | measurement | **closed (EVAL-012 then EVAL-013)** | EVAL-012 B0 fairness **fail** (`system_task_prompt_bytes`). EVAL-013 on `evaluation/EVAL-013-freeze` recorded C1/C2a P/O B0 fairness **pass** and left B1/B2 `not-run`. Do not resume either EVAL. | Dry-run prompt bytes **P9-T09** (**done**). Live O-arm injection **P9-T10** (**done**). Comparable C2a Patch **P9-T11** (**done**). Live paired executor **P9-T12** (**in-progress**). | Finish P9-T12; then a new EVAL preregistration. |
+| 15a. Live paired executor | readiness delivery | **in-progress (P9-T12)** | `paired-runner.mjs` was dry-run fairness only (`counted_sample: false`, `b0: false`). Execution plan §2.5 forbids cobbling B0 shell into a formal paired campaign. | Live `runLivePairedCell` with injected `executeArm`; no accidental spawn. | Complete P9-T12; do not start EVAL-014 here. |
+| 16. B1 C1/C2 pilot | measurement | **not-run** | Requires a future EVAL whose B0 passes **and** P9-T12 live executor. | Not opened. | Do not use EVAL-012 or EVAL-013 seeds. |
+| 17. B2 C1/C2 confirmatory | measurement | **not-run** | Requires B1. | Not opened. | Do not use EVAL-012 or EVAL-013 seeds. |
 
 ## 4. Fixed boundaries
 
