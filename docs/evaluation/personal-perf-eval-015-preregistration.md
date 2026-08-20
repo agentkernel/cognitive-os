@@ -130,6 +130,7 @@ does not promote those results.
 
 ## Unique next action
 
-Bind the new root/port/SecretStore item, copy same-pin exact-source
-binaries, import the owner key through `cognitive init --api-key-file -`,
-qualify C0 B0, then execute the remaining §9 cells in order.
+Finish B5 1 h soak (pid 397664), then B5 8 h if the 1 h exit holds.
+Record B5 24 h default deferred. Then cleanup (`48306`/`48406` and
+SecretStore `/27` only), secret scan, final assessment, and close the
+campaign row and lease.

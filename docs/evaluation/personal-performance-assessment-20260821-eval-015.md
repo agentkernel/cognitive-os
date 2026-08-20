@@ -29,14 +29,25 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C0 B0 qualification | **pass** | 9/9 blocks started/retained; 0 timeout; 7/9 oracle both arms; G6/G9 both-fail (hardness). Broker 12/12 upstream_ok including warmups. Evidence secret-shaped 0/10. `retry=0` |
 | C0 B1 | **pass** | 90/90 retained; P 81/90 (90.0%); O 80/90 (88.9%); 0 timeout; `retry=0`. B2 N frozen at 30 (not shrunk). Secret-shaped 0/12 |
 | C0 B2 N freeze | **pass** | N=30 per C0 family (formal minimum; B1 does not reduce N) |
-| C0 B2 | running | 270 confirmatory pairs; pid 375071 |
-| C0 B2 N freeze | pending | |
-| C0 B2 | pending | |
-| MS-AUTH / T-GOV / UJ2 / UJ3 / UJ4 | pending | |
-| B3 / B4 / B5 | pending | 24 h default deferred |
-| C2b session-2 / Skill | pending | campaign-local; no daemon restart for resume |
-| C2c fault profile | pending | campaign-authorized default-off; else `not-run` |
-| Cleanup | pending | |
+| C0 B2 | **pass** | 270/270 retained; P 250/270 (92.6%); O 247/270 (91.5%); delta −1.1 pp; P-only 7 / O-only 4; paired wall median `O−P` +91.1 ms; 0 timeout; `retry=0`. Evidence `b2-c0-confirmatory.jsonl` |
+| MS-AUTH negatives | **pass** (5/6) | `bind_unknown` 400 `RESOURCE_SKILL_ID_INVALID` (`ok: false` vs historical 409). Tighter validation, not a product defect. Unsealed Memory 20/20 HTTP 400; sealed-header `not-run` (no fabricated `GovernanceSeed`) |
+| MS-AUTH Skill | **pass** | unique-digest continuation 9/9 import 201 + inspect 200 + bind 201; combined with prior round-0 **10/10** |
+| T-GOV | **pass** | 7/7 `execution_ready` (Workspace* + process + http + registered_check) |
+| T2 | **pass** | 65/65 ok lifecycle (enable/disable/quarantine/channel/unauth) |
+| UJ3 daily | **pass** | health 200/200 p50 0.379 ms; CLI status n=100 p50 1.742 s; doctor n=50 p50 1.791 s; six-resource GET 50/50; isolation 401/403 as designed |
+| UJ3 task-watch | **partial** | 20/20 HTTP 403 `SHELL_CHANNEL_BINDING_MISMATCH` (expected channel isolation; same class as EVAL-004) |
+| UJ4 | **pass** | 30/30 unique read-only preview+admit; same-process watch 200/200; durable post-restart query `not_available`; no raw SQLite. Scheduler skip: `private Pi candidate adapter is not configured` (no extra Provider) |
+| UJ2 cold | **pass** | 10/10 confirmatory-A4 both arms oracle True; `--bind 127.0.0.1:48306` before each O arm; 10/10 health 200 after restart; 0 timeout; `retry=0`; wall median `O−P` +366.0 ms (cold-start descriptive) |
+| B3 mismatch/restart/pi-kill | **pass** | mismatch 10/10 `PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH`; restart 10/10 stop/start, 0 locks, 0 orphans, down_refused 10; pi_kill n=10 `killed: 0`, returncodes `{1}` |
+| B3 remaining | **pass** | deadline n=10 completed 8 / timeouts 2 (retained); broker-unavailable 10/10 then health 200; upstream timeout 10/10; oversize 10/10. Stale/`OUTCOME_UNKNOWN` `not-run` (no mutation injector in this cell) |
+| B4 local | **pass** | 932 requests, `total_non_ok=0`; profiles 1/8/16 + overload 17/33 + health-after recovery. Mixed Agent `not-run` (optional; budget reserved for B5 paired soak) |
+| C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
+| C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
+| B5 1 h | running | campaign-local plan soak pid 397664; first G1 pair completed/True both arms; local health/projection every minute; paired C0 every 5 min |
+| B5 8 h | pending | starts only if 1 h has 0 local non-OK and 0 pair timeouts |
+| B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
+| T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
+| Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
 
 ## Non-claims
 
@@ -112,7 +123,115 @@ B1 does not freeze B2 below 30. Independent reviewer `not_reviewed`.
 Formal B2 N = **30** paired seeds per C0 family from stratum
 `confirmatory` (270 pairs, 1 replica). Timeout 180 s, `retry=0`.
 
+## C0 B2 (2026-08-21) — pass (hypothesis / non-claim)
+
+270 confirmatory pairs, 540/540 arm-runs retained. Stratum `confirmatory`,
+1 replica, N=30 per family. `retry=0`. 0 timeout / process_error. Evidence
+`b2-c0-confirmatory.jsonl`.
+
+| Endpoint | `P` | `O` |
+|---|---:|---:|
+| oracle completion | 250/270 = **92.6 %** | 247/270 = **91.5 %** |
+| paired completion delta `P−O` | | **−1.1 pp** (descriptive) |
+| P-only / O-only | 7 | 4 |
+| paired wall delta median `O−P` | | **+91.1 ms** (descriptive; N=270) |
+
+Per-family (n=30; descriptive):
+
+| Family | `P` | `O` |
+|---|---|---|
+| G1 G2 G3 G4 A4 | 30/30 | 30/30 |
+| G6 | 21/30 | 21/30 |
+| G9 | 22/30 | 17/30 (−16.7 pp) |
+| A1 | 29/30 | 30/30 |
+| A5 | 28/30 | 29/30 |
+
+Versus closed EVAL-004 (~+1.7 s overhead) this pin’s C0 wall delta is ~90 ms.
+That is a descriptive observation, not an Agent-benefit or Gate claim.
+
+Broker after C0 B2: accepted 372 / rejected 0 / upstream_ok 372 (later UJ2
+added 10 P-arm calls → 422/0/422 before B5).
+
+## MS-AUTH / T-GOV / T2 / UJ3 / UJ4 (2026-08-21)
+
+Public-surface cells. Claim ceiling `hypothesis`. No raw SQLite.
+
+- **MS-AUTH negatives:** 5/6 instrument `ok`. `bind_unknown` returned 400
+  `RESOURCE_SKILL_ID_INVALID` (instrument expected 409). Unsealed Memory
+  remember 20/20 HTTP 400. Sealed-header composer `not-run`.
+- **MS-AUTH Skill:** unique-digest packages 9/9 import 201; combined with
+  prior round-0 **10/10**. Inspect 200 and bind 201 on those nine.
+- **T-GOV:** tool projection 200; 7/7 `execution_ready`.
+- **T2:** 65/65 retained lifecycle outcomes on `native.http.fetch`.
+- **UJ3 daily:** health 200/200 p50 0.379 ms; CLI status n=100 p50 1.742 s;
+  doctor n=50 p50 1.791 s; six-resource GET 50/50 each; isolation 401/403.
+- **UJ3 task-watch:** 20/20 HTTP 403 `SHELL_CHANNEL_BINDING_MISMATCH`
+  (**partial**, expected channel isolation).
+- **UJ4:** 30 unique `native.workspace.read` record/interpret/preview/admit
+  all 200; same-process watch 200/200. Durable post-restart Task query
+  remains `not_available`. Scheduler ticks skipped with
+  `private Pi candidate adapter is not configured` — no extra Provider
+  spend.
+
+## UJ2 cold (2026-08-21) — pass (hypothesis / non-claim)
+
+10 confirmatory-A4 pairs. `retry=0`. Every started sample retained.
+Daemon stop/start with `--bind 127.0.0.1:48306` before each O arm. 10/10
+post-start health 200. P 10/10 and O 10/10 oracle True. 0 timeout.
+Paired wall median `O−P` **+366.0 ms** (cold-start descriptive; not
+comparable to warm C0 B2 +91.1 ms as a benefit claim). Evidence
+`uj2-cold.jsonl`. Current daemon pid after UJ2: 397384.
+
+## B3 / B4 (2026-08-21)
+
+B3 mismatch 10/10 `PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH`. Restart
+cycle 10/10: stop_ok 10, start_ok 10, locks_after_stop 0, orphans 0,
+down_refused 10; start p50 91.7 ms. Pi-kill n=10 `killed: 0`,
+returncodes `{1}` (process already gone; retained). Remaining: deadline
+8 completed / 2 timeouts retained; broker-unavailable 10/10 (broker
+restored, health 200); upstream timeout 10/10; oversize 10/10.
+Stale/`OUTCOME_UNKNOWN` `not-run` (no mutation injector in the B3
+instrument).
+
+B4 local: 932 requests, `total_non_ok=0`. Health 1/8/16, projection
+1/8/16, overload 17/33, health-after recovery 100/100 p50 0.357 ms.
+Mixed Agent concurrency `not-run` (optional; Provider budget reserved
+for B5 paired soak).
+
+## C2b / C2c (2026-08-21) — split-score; retained
+
+C2b O-arm public lifecycle: unsealed remember **201** (`memory_id`
+present), unique frozen Skill import **201** and bind **201**, Task
+`task://personal/eval015-c2b-resume` admitted. Session-1 and session-2
+`GET /task/resource/v1/consumption` both 404
+`RESOURCE_CONSUMPTION_NOT_FOUND` with **no campaign-daemon restart**.
+Restatement `query_text` 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`.
+Consumption pins require governed resolve; this freeze’s public daemon
+does not run the private Pi candidate adapter, so pins stay absent.
+P-arm cannot share daemon Memory/Skill. Not a C1/C2a fairness fail.
+
+C2c: `POST /management/resource/v1/fault-profile` with
+`campaign_id=PERSONAL-PERF-EVAL-015` (≤32 chars, authorized prefix)
+returned 200 `faults_enabled=true` /
+`fault_point=mutation_after_receipt_before` on
+`task://personal/eval015-c2c-fault`, then default-off 200. Unauthorized
+`owner-local` 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`. Task-channel
+403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`. After UJ2 cold restarts,
+original-key `GET /task/effects` returned 200 with schema keys
+`effects` / `contract_epoch` / `effects_truncated` and no mutation
+receipts (Task never dispatched). Split-score vs P-arm fixture
+reference.
+
+## B5 (2026-08-21) — 1 h running
+
+Campaign-local `b5_plan_soak.py` pid **397664**. 1 h: local
+health/projection every minute; paired G1 confirmatory block every 5
+minutes (`retry=0`, soak label, not a B2 quality sample). First pair
+both arms `completed`/`True`. 8 h starts only if 1 h local non-OK = 0
+and pair timeouts = 0. 24 h remains default deferred.
+
 ## Unique next action
 
-Finish C0 B2 confirmatory (270 pairs), then MS-AUTH / T-GOV / UJ2 / UJ3 /
-UJ4, then B3 / B4 / B5.
+Finish B5 1 h soak, then B5 8 h if the 1 h exit holds, record 24 h
+default deferred, then cleanup + secret scan + final assessment and
+close the campaign row/lease. Do not auto-start unrelated backlog.
