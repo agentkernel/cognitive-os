@@ -6,7 +6,7 @@
   executed as measurement under EVAL-012 and must not be resumed. Product
   follow-up is **P2-T38**. No evaluation campaign is active.
 - Named implementation vehicle: **P2-T38** (public WorkspacePatch post-state).
-  Current slice: `P2-T38/D01` **in-progress**.
+  Current slice: `P2-T38/D03` **in-progress** (D01/D02 Linux pass at `5f4a538f`).
 - Definition of done (this programme): after packages 1–14 execute, an owner
   can activate a **new** preregistered EVAL and immediately start **B0
   qualification on `B01-Desktop-Linux-002`** for paired C1+C2, with no
