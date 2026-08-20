@@ -50,16 +50,15 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | Exact-source daemon/CLI/adapter binaries | **pass** | `kernel-server` `cfcfdaa2…`; `cognitive` `f02931df…`; `pi-agent-adapter` `54ce9eaa…`; glibc-only `ldd` |
 | Secret bind | **pass** | new item `/24`; `secret_material_written: true`; `secret_ref_redacted: true`; guest temp shredded |
 | Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…` |
-| P-arm broker `48400` | `not-run` | after O-arm bind; loopback-only |
+| P-arm broker `48400` | **pass** | pid 329483; `secret_material_written: false`; paths `["24"]`; C1 P-arm Search+Read **pass** |
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; `secret_ref_resolves: true`; daemon pid 326605 on `48300` |
-| C1/C2 paired B0 | **partial** | C1 O-arm Search+Read **pass** (seed `sha256:a194b2f561562663`). C1 P-arm and C2a–d `not-run` |
+| C1/C2 paired B0 | **fail** (retained) | C1 O/P Search+Read pass. C2a Write O/P pass; C2a Patch O fail / P pass. C2b–d split-score or O `not-run`. Fairness fail on `system_task_prompt_bytes`. B1/B2 not opened |
 | C1/C2 paired B1/B2 | `not-run` | forbidden until B0 pass |
-| Cleanup | `not-run` | stop `48300`/`48400`; clear only the campaign SecretStore item |
+| Owner expansion to full execution plan | **pass** | remainder of parent plan in scope on this freeze; missing runner = `not-run` |
+| Cleanup | **pass** | stop `48300`/`48400`; clear only the campaign SecretStore item; SearchItems paths empty |
 
 ## Unique next action
 
-Start P-arm broker `127.0.0.1:48400` and C1 P-arm qualification. Then
-C2a–d O/P. Do not open B1/B2.
-
-Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
-or Agent-benefit promotion.
+None. Campaign closed 2026-08-20. B0 fairness **fail** blocks B1/B2.
+Remainder of the parent plan is dispositioned `not-run`/`not_available`
+in the running report. Claim ceiling `hypothesis`; `not_reviewed`.

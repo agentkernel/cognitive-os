@@ -1,8 +1,8 @@
 # PERSONAL-PERF-EVAL-012 — preregistration
 
 - Campaign ID: `PERSONAL-PERF-EVAL-012`
-- Status: **active** (owner 2026-08-20). Evaluation routing **ON**.
-- Lease: `lease/personal/EVAL-012/c1-c2-paired-b0`
+- Status: **closed** (2026-08-20). Evaluation routing **OFF**.
+- Lease: `lease/personal/EVAL-012/c1-c2-paired-b0` (closed)
 - Branch: `evaluation/EVAL-012-freeze`
 - Claim ceiling: `hypothesis` / non-claim. Reviewer: `not_reviewed`.
 - Parent: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
@@ -62,8 +62,16 @@ the Provider lacks deterministic replay; `retry=0`; started = retained.
 Frozen cell overlay: `tools/personal/c1-c2-paired/cells.json`.
 C2b/C2c/C2d are split-score / capability-gap unless tool sets match.
 
-C0, B3–B5, T6–T9, S4/S8 are **out of 完整 C1+C2** unless the owner expands
-this EVAL after activation.
+Owner 2026-08-20 expanded this EVAL to the remainder of
+[personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
+(“完成所有”). C0, B3–B5, T6–T9, S4/S8, and the §10 matrix are now **in
+scope** on this freeze only (`370b26fc` on `B01-Desktop-Linux-002`). Missing
+frozen runner, corpus, oracle, or public observation surface stays
+`not-run` / `not_available` (measurement-only; no product fix). Independent
+reviewer remains `not_reviewed` (plan §9 step 2 cannot be reconstructed;
+B0 already started). B5 24 h stays conditional. B6 stays later-only.
+Closed EVAL-002 and EVAL-004–011 remain closed; do not reuse their
+roots, ports, SecretStore items, or denominators.
 
 ## 3.1 Instrument freeze (readiness evidence)
 
@@ -112,8 +120,13 @@ Counted C1/C2 envelope only (EVAL-004 DeepSeek ceiling style):
 | B2 | 900 | 5 × 30 seeds × 2 arms × 3 runs; after B1 |
 | **Ceiling** | **1010** | stop when this remainder is exhausted; do not invent extra cells |
 
-B0 sub-ceiling: **10** counted Provider-facing cells. A fairness fail blocks
-B1. Do not open B1/B2 spend on this freeze until B0 pass.
+B0 sub-ceiling: **10** counted Provider-facing C1/C2 cells. A fairness fail
+blocks C1/C2 B1. Do not open C1/C2 B1/B2 spend on this freeze until B0 pass.
+
+Expanded remainder (C0 G/A families, B3–B5, T/S/O/UJ rows) does **not**
+inherit extra counted Provider budget. Those cells execute only when a
+frozen runner/oracle already exists on this pin; otherwise they are
+dispositioned `not-run` / `not_available` without inventing a corpus.
 
 ## 6. Cleanup
 
