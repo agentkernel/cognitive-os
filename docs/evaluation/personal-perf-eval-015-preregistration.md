@@ -130,7 +130,7 @@ does not promote those results.
 
 ## Unique next action
 
-Finish B5 1 h soak (pid 397664), then B5 8 h if the 1 h exit holds.
-Record B5 24 h default deferred. Then cleanup (`48306`/`48406` and
-SecretStore `/27` only), secret scan, final assessment, and close the
-campaign row and lease.
+Finish B5 8 h soak (pid 397664; 1 h **pass**, 0 local non-OK, 0 pair
+timeouts). Record B5 24 h default deferred unless the 8 h slope trigger
+is met. Then cleanup (`48306`/`48406` and SecretStore `/27` only),
+secret scan, final assessment, and close the campaign row and lease.

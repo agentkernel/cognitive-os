@@ -43,8 +43,8 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | B4 local | **pass** | 932 requests, `total_non_ok=0`; profiles 1/8/16 + overload 17/33 + health-after recovery. Mixed Agent `not-run` (optional; budget reserved for B5 paired soak) |
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
-| B5 1 h | running | campaign-local plan soak pid 397664; first G1 pair completed/True both arms; local health/projection every minute; paired C0 every 5 min |
-| B5 8 h | pending | starts only if 1 h has 0 local non-OK and 0 pair timeouts |
+| B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
+| B5 8 h | running | 1 h exit held; same pid 397664 auto-started 8 h; first pair `confirmatory-G1-012` both True; pair every 10 min; hourly restart with `--bind 127.0.0.1:48306`; 24 h default deferred |
 | B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
@@ -222,16 +222,34 @@ original-key `GET /task/effects` returned 200 with schema keys
 receipts (Task never dispatched). Split-score vs P-arm fixture
 reference.
 
-## B5 (2026-08-21) — 1 h running
+## B5 1 h (2026-08-21) — pass (hypothesis / non-claim)
 
-Campaign-local `b5_plan_soak.py` pid **397664**. 1 h: local
-health/projection every minute; paired G1 confirmatory block every 5
-minutes (`retry=0`, soak label, not a B2 quality sample). First pair
-both arms `completed`/`True`. 8 h starts only if 1 h local non-OK = 0
-and pair timeouts = 0. 24 h remains default deferred.
+Campaign-local `b5_plan_soak.py` pid **397664**. Window 60/60 min,
+elapsed 3600.0 s. Local health + six-family projection every minute:
+**420/420** HTTP outcomes (`health` 60/60 status 200; projections
+360/360 status 200); `local_non_ok=0`. Paired G1 confirmatory soak
+every 5 min, `retry=0`, stratum `b5-soak-1h` (not a B2 quality
+sample): **12/12** started and retained; P 12/12 and O 12/12
+`completed`/oracle True; `pair_arm_timeouts=0`. Descriptive paired
+wall median `O−P` **+386.0 ms** (soak; not comparable to C0 B2 as a
+benefit claim). RSS/`daemon_pid` in the local rows are `null`
+(`daemon.lock` first-token parse empty); live `ss` still showed
+`kernel-server` pid 397384 on `48306` and broker 369469 on `48406`.
+Hourly restart is 8 h-only. Evidence `b5-1h-local.jsonl`,
+`b5-1h-paired.jsonl`, `b5-1h-summary.json`.
+
+## B5 8 h (2026-08-21) — running
+
+1 h exit held (`local_non_ok=0` and `pair_arm_timeouts=0`), so the
+same process auto-started the 8 h window (480 min, pair every 10 min,
+hourly cold restart with `--bind 127.0.0.1:48306`, `retry=0`). First
+8 h pair `confirmatory-G1-012` both arms `completed`/True. 24 h remains
+default deferred unless 8 h shows an unresolved slope **and** owner
+budget allows.
 
 ## Unique next action
 
-Finish B5 1 h soak, then B5 8 h if the 1 h exit holds, record 24 h
-default deferred, then cleanup + secret scan + final assessment and
-close the campaign row/lease. Do not auto-start unrelated backlog.
+Finish B5 8 h soak (pid 397664), record 24 h default deferred unless
+the 8 h slope trigger is met, then cleanup + secret scan + final
+assessment and close the campaign row/lease. Do not auto-start
+unrelated backlog.
