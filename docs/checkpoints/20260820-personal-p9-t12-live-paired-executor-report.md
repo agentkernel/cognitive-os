@@ -25,11 +25,12 @@ executor; it does not run B1/B2 samples.
    live cell schema, and deterministic arm order.
 3. Full tools suite — **pass 88/88**.
 4. `check-consistency`, `check-handbook`, `generate-handbook --check` — **pass**.
-5. Draft PR [#252](https://github.com/agentkernel/cognitive-os/pull/252) at
-   `f58f2b8e` — **opened (Draft)**. Required CI — **not-run** until checks
-   complete on this head.
-6. Live Provider / B01 / B1/B2 sample execution — **not-run** (out of scope).
-7. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`;
+5. Required CI `32370316101` — **pass** at `a7b09edd`: Ubuntu verify, Windows
+   verify, `resolve validation route`, and `required-ci`.
+6. Merge — **pass**: PR [#252](https://github.com/agentkernel/cognitive-os/pull/252)
+   merged at `main@39cf8019`. Lease closed; local `main` matches `origin/main`.
+7. Live Provider / B01 / B1/B2 sample execution — **not-run** (out of scope).
+8. Windows GNU Rust build/test/Clippy — **not-run** (`RUST-LINK-DEV-WIN-GNU-01`;
    this task has no Rust change).
 
 ## Acceptance mapping
@@ -42,7 +43,7 @@ executor; it does not run B1/B2 samples.
 | Fairness fail retained, not counted, no arm spawn | D01 test `live paired cell retains fairness fail without counting or spawning arms` |
 | Stub `executeArm` produces live schema with `append_system_prompt: true` | D02 test `stub executeArm live cell is counted only for b1/b2 with fairness pass` |
 | `counted_sample` only for b1/b2 when both arms complete | same test; b0 and timeout remain non-counted |
-| Supported validation | Local `c1_c2_paired_p_arm` **24/24**; tools suite **88/88**; `check-consistency` / `check-handbook` / `generate-handbook --check` **pass**. Required CI **not-run** until Draft PR. |
+| Supported validation | Local `c1_c2_paired_p_arm` **24/24**; tools suite **88/88**; `check-consistency` / `check-handbook` / `generate-handbook --check` **pass**. Required CI `32370316101` Ubuntu/Windows/required-ci **pass** at `a7b09edd`. |
 | Live EVAL / B1 / B2 | **not-run**; later campaign after this task |
 
 ## Non-claims
