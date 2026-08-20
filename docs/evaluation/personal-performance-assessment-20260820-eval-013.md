@@ -21,10 +21,21 @@ or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-012 remain closed.
 | B0 C2a Write O/P | **pass** | O: 3 Write warmups + counted Write `COMPLETED`/`ACCEPTANCE_GRANTED`, O4 lease 1. P: fixture writes `c2a-write\\n`. Unified live `--append-system-prompt`. `retry=0` |
 | B0 C2a Patch O/P | **pass** | O counted Patch `COMPLETED`/`ACCEPTANCE_GRANTED`, verification `passed`/`current`, lease 1, preimage `cb4ff53fe4…` (P2-T38 post-state). P counted Patch unified diff `c2a-patch-v1` → `c2a-patch-v2\\n` (P9-T11 comparable payload). |
 | B0 C2b O-arm | **partial** | public unsealed `POST /management/resource/v1/memory/remember` **201** `remembered` (`memory_id` present). Session-2 resume `not-run` (would restart campaign daemon). Skill bind `not-run` (no frozen Skill package) |
-| B0 C2b P-arm | **pass** | WorkspaceRead of frozen `procedure.txt` (exit 0, `--append-system-prompt`); P does not use daemon Memory/Skill |
+| B0 C2b P-arm | **pass** | exit 0 with live `--append-system-prompt`; stdout `Done.` (6 bytes, no procedure echo). Split-score: P does not use daemon Memory/Skill |
 | B0 C2c O-arm | `not-run` | no frozen campaign-authorized default-off fault profile / original-key injector on this EVAL |
 | B0 C2c P-arm | `not-run` | split-score fixture mutation; not opened after O `not-run` |
-| B0 C2d O/P | `not-run` | next |
+| B0 C2d O-arm | **pass** | split-score observe of counted C2a Patch: `COMPLETED` / verification `passed`/`current` / acceptance current / `reconcile_class=closed`. Pure-Pi completion is not OS Task completion |
+| B0 C2d P-arm | **pass** | mechanical oracle stdout `ANSWER: repaired\n` (exit 0, `--append-system-prompt`). Split-score vs O |
+| B0 extras | **pass** | secret-shaped hits 0/86 evidence files; `timeout_ms=120000`; `retry=0`; `max_agent_turn=8`; never `secret-tool search`/`lookup` |
+| B0 overall | **pass** | C1/C2a comparable + C1 fairness 13/13 + secret/timeout. C2b–d remain split-score / capability-gap |
+| B1 C1/C2 paired | `not-run` | `paired-runner.mjs` is dry-run fairness only; execution plan §2.5 forbids cobbling B0 shell into a formal paired campaign. Frozen B1 seeds unused |
+| B2 C1/C2 paired | `not-run` | B1 not opened; no B2 N freeze |
+| C0 paired (G/A families) | `not-run` | overlay skip + no frozen live C0 paired executor on this freeze |
+| B3 faults | `not-run` | no frozen campaign-authorized fault runner on this EVAL |
+| B4 concurrency | `not-run` | no frozen concurrency runner |
+| B5 1 h / 8 h / 24 h | `not-run` | no frozen soak runner; 1 h trigger not met; 24 h default deferred |
+| T/S/O/UJ extras | `not-run` | overlay skip / missing runner |
+| Cleanup | pending | stop `48302`/`48402` only; clear `/25` only |
 
 ## Guest identity (2026-08-20) — pass
 
@@ -102,7 +113,46 @@ on this new freeze.
 Fixture writes `c2a-write\n`. Counted Patch used the same unified-diff
 `input_b64` as O-arm; post-state `c2a-patch-v2\n`. Payload format is comparable.
 
+## B0 C2b (2026-08-20) — split-score; retained
+
+O-arm public unsealed remember returned **201** `remembered` with `memory_id`
+present. Session-2 resume `not-run` (would restart the campaign daemon). Skill
+bind `not-run` (no frozen Skill package). P-arm launch exit 0 with the same
+frozen 211-byte `--append-system-prompt`; stdout was `Done.` (6 bytes) and did
+not echo `procedure.txt`. These arms do not share a Memory/Skill tool set.
+
+## B0 C2c (2026-08-20) — `not-run`
+
+No frozen campaign-authorized default-off fault profile or original-key
+injector on this EVAL. P-arm fixture mutation was not opened after the O-arm
+gap. This is a capability gap, not a C1/C2a fairness fail.
+
+## B0 C2d (2026-08-20) — split-score; retained
+
+O-arm observed counted C2a Patch Task `task://personal/eval013-b0-c2a-patch`:
+lifecycle `COMPLETED`, verification `passed`/`current`, acceptance current,
+`reconcile_class=closed`. P-arm mechanical oracle returned `ANSWER: repaired\n`
+(exit 0). Pure-Pi completion is not OS Task completion.
+
+## B0 extras (2026-08-20) — pass
+
+Evidence secret-shaped scan: 0 hits in 86 files (counts only; matching bodies
+not copied). Frozen `timeout_ms=120000`, `retry=0`, `max_agent_turn=8`. Counted
+C1/C2a/C2d samples completed without timeout. Tool-equivalence for comparable
+classes: C1 fairness 13/13 including `visible_tool_set_schema`; C2a Patch
+`input_b64` identical across arms. Never `secret-tool search`/`lookup`.
+
+## Parent-plan remainder (2026-08-20) — `not-run`
+
+B0 fairness holds for C1/C2a, but a live B1/B2 paired executor is not frozen:
+`tools/personal/c1-c2-paired/paired-runner.mjs` emits dry-run fairness only.
+Execution plan §2.5 forbids stitching campaign-local B0 shell into a formal
+paired campaign. Frozen B1/B2 seeds were not consumed. Overlay skip plus
+missing runners: C0, B3, B4, B5 (1 h / 8 h / 24 h), T/S/O/UJ extras.
+
 ## Non-claims
 
 A closed product train (P9-T09–T11) is not a B0 pass. Matching prompt bytes
-and Patch payload format in instruments is not a counted sample.
+and Patch payload format in instruments is not a counted sample. B0
+qualification pass is not B1/B2, not C0 paired performance, not Gate / release
+/ Profile / B01 / Agent-benefit, and not a reason to edit product code.
