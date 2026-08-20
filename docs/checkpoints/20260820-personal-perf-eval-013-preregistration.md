@@ -72,7 +72,7 @@ under EVAL-012 remain closed measurement and must not be resumed.
 | Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…` |
 | P-arm broker `48402` | **pass** | pid 339769; `secret_material_written: false`; paths `["25"]`; C1 P-arm Search+Read **pass** |
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; daemon pid 336122 on `48302` |
-| C1/C2 paired B0 | in-progress | C1 O/P **pass**; fairness 13/13 `system_task_prompt_bytes` **pass**; C2a next |
+| C1/C2 paired B0 | in-progress | C1 O/P **pass**; C2a Write+Patch O/P **pass**; fairness 13/13; C2b–d next |
 | Remainder of parent plan | pending | B1 only after B0 pass; honest `not-run` otherwise |
 | Cleanup | pending | stop `48302`/`48402`; clear only `/25` |
 
