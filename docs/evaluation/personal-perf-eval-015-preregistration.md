@@ -130,9 +130,9 @@ does not promote those results.
 
 ## Unique next action
 
-Finish B5 8 h continuation (pid 403482; 1 h **pass**; first 60 min of
-8 h retained after a public-CLI 5 s start-timeout kill; kernel-server
-direct restart health 200). Record B5 24 h default deferred unless the
-8 h slope trigger is met. Then cleanup (`48306`/`48406` and
-SecretStore `/27` only), secret scan, final assessment, and close the
-campaign row and lease.
+Finish the live B5 8 h continuation (pid **406043**; prior 403482 dead;
+minutes 0–158 contiguous; 16/16 pairs; minute-120 stale-lock fail
+retained then health 200). Do not start a second continuation. Record
+B5 24 h default deferred unless the 8 h slope trigger is met. Then
+cleanup (`48306`/`48406` and SecretStore `/27` only), secret scan,
+final assessment, and close the campaign row and lease.

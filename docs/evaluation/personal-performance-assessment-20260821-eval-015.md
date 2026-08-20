@@ -44,7 +44,7 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
 | B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
-| B5 8 h | running (continuation) | First 60/480 min + 6 pairs retained (`non_ok=0`, 0 timeouts). Public `cognitive daemon start` 5 s ready-timeout killed `kernel-server` during ~1.09 GiB authority backup copy; stale `migration.lock`. Campaign-local continuation pid 403482: same `kernel-server --personal --bind 127.0.0.1:48306` without the 5 s kill; minute-60 restart health 200 in 18.5 s; pair 7 both True. 24 h default deferred |
+| B5 8 h | running (recovered continuation) | Minutes 0–158 contiguous, `local_non_ok=0`; 16/16 G1 pairs both `completed`/True; 0 arm timeouts. Pid 403482 dead. Live continuation pid **406043**; kernel **406056** on `48306` (lock pid alive); broker **369469** on `48406`. Minute-120 first restart retained fail (stale `daemon.lock`, health 0 after 600.1 s); hardened resume `START_MINUTE=120` `START_PAIR_INDEX=24` then health 200 in 31.1 s. No second continuation started. 24 h default deferred |
 | B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
@@ -253,16 +253,48 @@ Residue listeners and closed EVAL roots were untouched. Broker
 `48406` pid 369469 stayed up.
 
 Campaign-local continuation (`/tmp/eval015-b5-continue.py`, pid
-**403482**) appends minutes 60–479. Restarts spawn the same
+**403482**) appended minutes 60–119. Restarts spawn the same
 `kernel-server --personal --bind 127.0.0.1:48306 --runtime-root`
 binary the CLI uses, and wait up to 600 s for health 200. Minute-60
 restart: stale lock cleared, health 200 in **18.5 s**, kernel pid
 403486, pair 7 both `completed`/True. This does not change the
 product. Claim ceiling `hypothesis`.
 
+### Recovery heartbeat (minute 158)
+
+Two later campaign agents died on infrastructure (`BAD_DECRYPT` /
+connection failed) while 8 h was already running. Guest facts at
+recovery (short SSH; no snapshot restore; residue `48181`/`48284`/`48383`
+and `perfeval012`/`013`/`014` untouched):
+
+- Pid **403482** is dead. Live continuation pid **406043**
+  (`python3 -u /tmp/eval015-b5-continue.py`), `START_MINUTE=120`,
+  `END_MINUTE=480`, `START_PAIR_INDEX=24`. `b5-8h-summary.json` absent.
+- Campaign `kernel-server` pid **406056** listening `127.0.0.1:48306`;
+  `daemon.lock` `pid=406056` `/proc` alive; `migration.lock` absent.
+  Broker pid **369469** on `48406`.
+- Local jsonl **159** rows, minutes **0–158** with no gaps,
+  `local_non_ok` sum **0**. Paired jsonl **16/16**, P 16/16 and O 16/16
+  `completed`/True, arm non-completed **0**. Heartbeat file at minute
+  150 (`pairs=9` continuation counter; `sqlite_bytes=1_878_974_464`);
+  live store **1_945_354_240** bytes.
+- Hourly restart ledger (4 records, all retained): minute 60 public-CLI
+  fail then direct-start health 200 in 18.5 s; minute 120 first attempt
+  `stop_rc=1` / health 0 after 600.1 s (stale lock after `daemon stop`);
+  minute 120 hardened resume health 200 in **31.1 s**. Public CLI 5 s
+  start-timeout is instrumentation, not a soak-denominator fail when
+  health later returns 200.
+- A leftover guest waiter pid 406492 (`eval015-b5-wait.py 3000 summary`)
+  only polls; it does not write jsonl. No second continuation started.
+
+Unique next remains: finish this live 8 h process, then 24 h default
+deferred unless the unresolved-slope + owner-budget trigger is met,
+then cleanup and close.
+
 ## Unique next action
 
-Finish B5 8 h continuation (pid 403482), record 24 h default deferred
-unless the 8 h slope trigger is met, then cleanup + secret scan +
-final assessment and close the campaign row/lease. Do not auto-start
-unrelated backlog.
+Finish the live B5 8 h continuation (pid **406043**, last completed
+minute **158**, next hourly restart at 180). Do not start a second
+continuation. Record B5 24 h default deferred unless the 8 h slope
+trigger is met, then cleanup + secret scan + final assessment and
+close the campaign row/lease. Do not auto-start unrelated backlog.
