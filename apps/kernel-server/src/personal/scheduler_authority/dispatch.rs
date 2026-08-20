@@ -570,7 +570,7 @@ where
         UriRef::parse("correlation://personal/native-tool-dispatch")
             .map_err(|error| SchedulerAuthorityError::NativeExecution(error.to_string()))?,
     );
-    dispatch_native_worker_effect(
+    let effect_closure = dispatch_native_worker_effect(
         &effect_protocol,
         &resolved,
         executor_router,
@@ -578,6 +578,12 @@ where
         &governance_currency,
         &writer_lease,
     )?;
+    if effect_closure == SchedulerEffectClosure::PendingReconciliation {
+        // EVAL-012 C2a O-arm Patch: a fail-closed mutation left the Effect
+        // unreconciled, then begin_verification mapped that to
+        // `fixed post-state is unavailable` and skipped the scheduler row.
+        return Ok(SchedulerWorkerAttempt::AwaitingReconciliation(dispatch));
+    }
     if registered_check_journey_returns_to_decide(
         authority_store,
         &dispatch.task_ref,

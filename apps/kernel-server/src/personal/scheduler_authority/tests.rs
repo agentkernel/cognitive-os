@@ -76,6 +76,7 @@ use cognitive_store::{
     scheduler::{SchedulerRepository, SchedulerRow, SchedulerState, SchedulerWorkKey},
 };
 use serde_json::json;
+use sha2::{Digest, Sha256};
 use std::cell::Cell;
 use std::collections::BTreeMap;
 use std::io::Write;
@@ -4752,6 +4753,125 @@ fn c2a_public_patch_fixture_reaches_production_sink() {
     assert_eq!(
         std::fs::read(workspace_root.join("c2a-patch.txt")).unwrap(),
         b"c2a-patch-v2\n"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn c2a_raw_file_sha256_preimage_reaches_production_patch_sink() {
+    let patch_preimage = b"c2a-patch-v1\n";
+    let tagged_preimage = format!("digest:{}", workspace_image_digest(patch_preimage).unwrap());
+    let raw_preimage = format!("digest:sha256:{:x}", Sha256::digest(patch_preimage));
+    assert_eq!(
+        raw_preimage,
+        "digest:sha256:cb4ff53fe48499826134116581f605c9ed95cc37cfb3d0e42aac028b87c99c0f"
+    );
+    assert_ne!(tagged_preimage, raw_preimage);
+    let patch_payload = STANDARD
+        .decode("QEAgLTEgKzEgQEAKLWMyYS1wYXRjaC12MQorYzJhLXBhdGNoLXYyCg==")
+        .unwrap();
+    let layout = temporary_personal_layout();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspacePatch,
+        "workspace://c2a-patch.txt",
+        CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+            family: WorkspacePatchParametersFamily::WorkspacePatch,
+            input_b64: STANDARD.encode(&patch_payload),
+            preimage: raw_preimage,
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("c2a-patch.txt"), patch_preimage).unwrap();
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(proposer.calls.get(), 1);
+    assert_eq!(
+        store
+            .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "RECONCILED"
+    );
+    assert_eq!(
+        std::fs::read(workspace_root.join("c2a-patch.txt")).unwrap(),
+        b"c2a-patch-v2\n"
+    );
+
+    drop(repository);
+    drop(store);
+    std::fs::remove_dir_all(layout.data_dir().parent().unwrap().parent().unwrap()).unwrap();
+}
+
+#[test]
+fn c2a_preimage_mismatch_does_not_request_verification() {
+    let patch_preimage = b"c2a-patch-v1\n";
+    let patch_payload = STANDARD
+        .decode("QEAgLTEgKzEgQEAKLWMyYS1wYXRjaC12MQorYzJhLXBhdGNoLXYyCg==")
+        .unwrap();
+    let layout = temporary_personal_layout();
+    let candidate = production_chain_candidate(
+        NativeOperationFamily::WorkspacePatch,
+        "workspace://c2a-patch.txt",
+        CandidateParameters::WorkspacePatchParameters(WorkspacePatchParameters {
+            family: WorkspacePatchParametersFamily::WorkspacePatch,
+            input_b64: STANDARD.encode(&patch_payload),
+            preimage: format!("digest:sha256:{}", "0".repeat(64)),
+        }),
+    );
+    let proposer = DeterministicProductionChainProposer {
+        candidate,
+        calls: Cell::new(0),
+    };
+    let (store, mut repository) =
+        prepare_public_admission_equivalent_production_chain(&layout, &proposer.candidate);
+    let workspace_root = layout.data_dir().join("workspace");
+    std::fs::create_dir_all(&workspace_root).unwrap();
+    std::fs::write(workspace_root.join("c2a-patch.txt"), patch_preimage).unwrap();
+
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+    let authorization = assert_pi_admission_does_not_complete_task(&store, &proposer);
+    run_production_chain_tick(&layout, &store, &mut repository, &proposer);
+
+    assert_eq!(
+        std::fs::read(workspace_root.join("c2a-patch.txt")).unwrap(),
+        b"c2a-patch-v1\n"
+    );
+    let effect_state = store
+        .load_object(LifecycleDomain::Effect, &authorization.effect_object_id)
+        .unwrap()
+        .unwrap()
+        .state;
+    assert_ne!(
+        effect_state.as_str(),
+        "RECONCILED",
+        "a refused Patch must not look like a verified mutation"
+    );
+    assert_ne!(
+        store
+            .load_object(
+                LifecycleDomain::Task,
+                &authorization.worker_authorization_root_id,
+            )
+            .unwrap()
+            .unwrap()
+            .state
+            .as_str(),
+        "COMPLETED"
     );
 
     drop(repository);

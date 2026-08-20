@@ -89,5 +89,6 @@ HttpFetchReadOnly 只对 task/campaign 范围的钉住 HTTPS origin 登记表 st
 中间 WorkspaceWrite 在 RegisteredCheck 收口的 Task 上经登记边把 Loop 送回 `DECIDE`
 后，后续 tick 可准入 RegisteredCheckRun；只有该 check 的独立 verification 与
 acceptance 能完成 Task。公共 C1 WorkspaceRead 配 fixed-Effect verifier 仍走
-`ACT -> VERIFY`。
+`ACT -> VERIFY`。失败闭合的 WorkspacePatch 在 Effect 仍待对账时不会进入
+verification。
 这些执行器保证都不会把准入、Tool receipt 或相同 workspace 字节提升为 Task 完成。

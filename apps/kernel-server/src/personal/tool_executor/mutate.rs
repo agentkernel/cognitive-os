@@ -714,6 +714,7 @@ enum TargetSnapshot {
     PatchPreimageTooLarge,
     Present {
         digest: String,
+        raw_digest: String,
         patch_bytes: Option<Vec<u8>>,
     },
 }
@@ -850,6 +851,7 @@ fn read_target_snapshot(
     hasher.update(cognitive_contracts::canonical::DIGEST_PREIMAGE_PREFIX);
     hasher.update(WORKSPACE_IMAGE_DIGEST_DOMAIN.as_bytes());
     hasher.update([0]);
+    let mut raw_hasher = Sha256::new();
     let mut patch_bytes = retain_patch_preimage.then(Vec::new);
     let mut buffer = [0_u8; 64 * 1024];
     loop {
@@ -860,6 +862,7 @@ fn read_target_snapshot(
             break;
         }
         hasher.update(&buffer[..read]);
+        raw_hasher.update(&buffer[..read]);
         if let Some(bytes) = &mut patch_bytes {
             if u64::try_from(bytes.len().saturating_add(read)).unwrap_or(u64::MAX)
                 > MAXIMUM_WORKSPACE_PATCH_PREIMAGE_BYTES
@@ -871,6 +874,7 @@ fn read_target_snapshot(
     }
     Ok(TargetSnapshot::Present {
         digest: format!("sha256:{:x}", hasher.finalize()),
+        raw_digest: format!("sha256:{:x}", raw_hasher.finalize()),
         patch_bytes,
     })
 }
@@ -885,9 +889,10 @@ fn preimage_matches_snapshot(
             WorkspacePreimage::Digest(expected_digest),
             TargetSnapshot::Present {
                 digest: current_digest,
+                raw_digest,
                 ..
             },
-        ) => expected_digest == current_digest,
+        ) => expected_digest == current_digest || expected_digest == raw_digest,
         _ => false,
     }
 }

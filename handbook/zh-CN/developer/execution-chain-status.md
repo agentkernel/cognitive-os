@@ -42,7 +42,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:54b51b50882145ecf2d5696505409d860ff06723823b54fff733678b99e4013c"
+fingerprint: "sha256:9248c50fb7abe238ae0ffebc7e6cc6ad8ff7e437d001b812894a473b52d3c6ca"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -69,7 +69,7 @@ non_claims:
 | WorkspaceSearch 执行器 | implemented，生产调用 | 生产 router 从持久 Intent 携带受治理 query 并 staging 进 search sink；句柄相对 no-follow 打开、打开后类型/reparse 校验，并在枚举时执行访问上限 |
 | ProcessCheck 执行器 | implemented，生产调用 | 生产 router 会 staging 有界 process check；在 daemon 受监督进程 registry 接线前 dispatch 仍 fail closed（无环境进程观测） |
 | RegisteredCheckRun 执行器 | implemented，生产调用 | 调用载荷严格只有 `check_id`；daemon 不可变目录固定当前二进制 helper、argv、workspace-root cwd、空环境、超时、输出/进程/写入/网络边界与 descriptor digest。冻结目录绑定 `c2a.repair.typescript`（descriptor_version 2，含公开与 hidden 测试）与 `c2a.repair.rust`；oracle 是文件 digest 相等，因此削弱 hidden 测试即使源文件与公开测试完好也会失败。Intent/Effect 在 spawn 前进入持久 `EXECUTING`，原键状态跨重启保留，有界输出进入 CAS Evidence 并由登记的独立 verifier 校验 |
-| WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，生产调用 | 生产 router 从持久 Intent 携带受治理 payload + 期望 preimage 并 staging 进 mutation sink；句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理 |
+| WorkspaceWrite / WorkspacePatch 变更执行器 | implemented，生产调用 | 生产 router 从持久 Intent 携带受治理 payload + 期望 preimage 并 staging 进 mutation sink；句柄锚定的 no-follow parent/target/staging 操作；逐目标 OS 锁闭合最终 CAS 窗口；write 流式 preimage、patch 显式 preimage 上限、批准 workspace 外的持久原键 attempt/receipt 与 orphan 清理。期望 preimage `digest:sha256:<64 hex>` 可以是带域前缀的 workspace-image digest，也可以是文件原始字节的 SHA-256（sha256sum / P-arm 形式）。独立 verification 只在 Effect 已 RECONCILED 后开始 |
 | HttpFetchReadOnly 执行器，走仓库唯一受审计的 Rustls 边界（dispatch 仅 GET；无调用方 header、不跟随重定向、不继承代理、仅已登记 origin） | implemented，生产调用 | 生产 router 用 task/campaign origin 登记表 staging 钉住的 HTTPS target；白名单默认为空，因此 management 钉住精确 HTTPS origin（`host` 或 `host:port`）之前 staging fail closed；attempted/completed 状态跨重启保留；回环 TLS 证明仍见 `cognitive-provider-transport/tests/p2_t10_read_only_fetch.rs` |
 | 公开钉住 HTTPS origin 登记表 | implemented，HTTP 调用；生产咨询 | management `GET/POST /management/resource/v1/http-origin` 需 campaign 授权（`P2-T25` 或 `PERSONAL-PERF-EVAL-*`）；task 调用方被拒绝。钉从不携带凭据、header 或 body。生产 HttpFetchReadOnly 按 Intent `task_ref` 咨询该表 |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |

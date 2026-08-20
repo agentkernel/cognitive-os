@@ -104,7 +104,8 @@ A later tick can admit RegisteredCheckRun after an intermediate WorkspaceWrite
 on a RegisteredCheck-terminated Task returns the Loop to `DECIDE` through
 registered edges; only that check's independent verification plus acceptance
 may complete the Task. Public C1 WorkspaceRead with the fixed-Effect verifier
-still completes through `ACT -> VERIFY`.
+still completes through `ACT -> VERIFY`. A fail-closed WorkspacePatch does not
+enter verification while its Effect is still pending reconciliation.
 None of these executor guarantees turns admission, a Tool receipt, or matching
 workspace bytes into Task completion. P2-T14 keeps that boundary: a public C1
 WorkspaceRead can complete only from current closed Effects, the exact fixed
