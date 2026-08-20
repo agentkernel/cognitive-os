@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/EVAL-014/execution-plan-b0` | `PERSONAL-PERF-EVAL-014` owner-directed evaluation campaign; no formal task/slice | Lane-CFR + Lane-DOC | `evaluation/EVAL-014-freeze` | `docs/evaluation/`; `docs/checkpoints/`; `docs/plan/PROGRESS.md` | evaluation session | 2026-08-20 / 2026-08-20 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
