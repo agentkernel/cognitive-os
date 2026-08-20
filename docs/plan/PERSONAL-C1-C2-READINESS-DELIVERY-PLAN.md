@@ -1,6 +1,6 @@
 # Personal C1/C2 Paired Benchmark Readiness Delivery Plan
 
-- Status: **packages 1–14 delivered / awaiting P9-T08 merge** (2026-08-20).
+- Status: **packages 1–14 delivered / P9-T08 merged** (2026-08-20).
   Packages 1–5 remain historical product evidence. Packages 6–14 have
   supported readiness evidence. Packages 15–17 remain the measurement
   campaign under a newly preregistered EVAL. No evaluation campaign is
@@ -12,7 +12,7 @@
   gap that would force `not-run` of the C1/C2 arms. Completing packages 15–17
   is **完整真机实测**, not a substitute for packages 6–14.
 - Named implementation vehicle: **P9-T08** (measurement-only instruments and
-  freeze scaffolding). Current slice: `P9-T08/D02`.
+  freeze scaffolding). Current slice: `P9-T08/D04` **done**.
 - Product pin: merged `main` after P2-T37
   (`286f7538148ba0d22f496f1f44d1af46f0f44aa0` and later docs-head
   `fb0e89e60cdf2e7b4101119ac921ac5b8623cc16`).
@@ -447,10 +447,10 @@ Owner confirmation is required to:
 
 ## 12. Unique next action
 
-Packages 6–14 have supported evidence. `PERSONAL-PERF-EVAL-012` stays
-**reserved, not active**. Unique next action: keep Draft PR
-[#247](https://github.com/agentkernel/cognitive-os/pull/247) until required CI
-is green, then ready/merge/lease/branch/main for P9-T08. Do not start B0.
+Packages 1–14 are delivered and P9-T08 is merged at `main@f24c282e`.
+`PERSONAL-PERF-EVAL-012` stays **reserved, not active**. Unique next action:
+the owner activates that EVAL ID in the Current snapshot, then package 15
+(B0) may start on `B01-Desktop-Linux-002`.
 
 ## 13. Completion gate
 

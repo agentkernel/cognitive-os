@@ -1,8 +1,8 @@
 # P9-T08 C1/C2 paired-benchmark readiness — running report
 
-- Task: `P9-T08`
-- Lease: `lease/personal/P9-T08/c1-c2-paired-readiness`
-- Branch: `personal/P9-T08-c1-c2-paired-readiness`
+- Task: `P9-T08` (`done`)
+- Lease: `none` (closed `lease/personal/P9-T08/c1-c2-paired-readiness`)
+- Branch: `main@f24c282e` (task branch deleted)
 - Claim ceiling: `hypothesis` / non-claim
 - Navigation: [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](../plan/PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md)
 
@@ -71,7 +71,12 @@ before starting the next.
     succeeded; `git ls-remote --heads origin` no longer lists it (was
     `837f9a4c`).
 
-Next unit: keep EVAL-012 reserved/not active. No B0/B1/B2 samples. Draft PR
-[#247](https://github.com/agentkernel/cognitive-os/pull/247) remains Draft
-until required CI is green and P9-T08 ready/merge/lease/branch/main can
-complete.
+12. **P9-T08 merge — pass.** Required CI run `32316092401` passed Ubuntu,
+    Windows, and `required-ci` at `be05ee32`. PR
+    [#247](https://github.com/agentkernel/cognitive-os/pull/247) merged at
+    `main@f24c282ec1ea8ca433c2fae2a6b364164f456a78`. Local/remote task
+    branches deleted. Lease closed. EVAL-012 remains reserved, not active.
+    No B0 sample.
+
+Unique next action: owner activates `PERSONAL-PERF-EVAL-012` in the Current
+snapshot before any B0 on `B01-Desktop-Linux-002`.
