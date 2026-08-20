@@ -17,7 +17,11 @@ state. They do not promote Gate, release, Profile, B01, or Agent-benefit.
   `fixtures/c2a/workspace-patch.unified.diff`.
 - `fairness-checker.mjs` / `paired-runner.mjs` / `freeze.mjs` / `redactor.mjs`
   — frozen seeds (`retry=0`, disjoint B0/B1/B2), §2.3 fairness observability,
-  mechanical redaction. Not B0 and not a counted sample.
+  mechanical redaction. Dry-run fairness is not B0 and not a counted sample.
+  Live `runLivePairedCell` is campaign-only: injected `executeArm` (no
+  accidental spawn), required `--append-system-prompt` absolute freeze file,
+  deterministic arm order, `counted_sample` only for b1/b2 when fairness
+  passes and both arms exit 0 without timeout.
 - `prove-linux-secret-get.mjs` — non-B01 Linux proof; prints redacted JSON only.
 - Focused tests: `tools/test/c1_c2_paired_p_arm.test.mjs`.
 - `frozen-system-task-prompt.txt` — shared UTF-8 prompt whose byte length is
@@ -27,5 +31,5 @@ state. They do not promote Gate, release, Profile, B01, or Agent-benefit.
   `cognitive pi launch --print --append-system-prompt <absolute-file>`.
 
 Closed EVAL brokers, ports `48286`–`48298` / `48386`–`48398` / `48383`, and
-SecretStore items `/12`–`/19` are not reused. B01 samples are forbidden until
-packages 6–14 complete and a new EVAL is activated.
+SecretStore items `/12`–`/19` are not reused. B01 samples remain forbidden
+until an owner-activated EVAL after P9-T12.

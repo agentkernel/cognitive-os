@@ -24,6 +24,7 @@ import {
 import { checkFairness } from "../personal/c1-c2-paired/fairness-checker.mjs";
 import { redactPairedEvidence } from "../personal/c1-c2-paired/redactor.mjs";
 import {
+  ARM_ORDER_SEED,
   INSTRUMENT_ROOT,
   assertDisjointSeeds,
   assertNoExtraCorpusFiles,
@@ -31,7 +32,18 @@ import {
   frozenSeeds,
   listCorpusBytes,
 } from "../personal/c1-c2-paired/freeze.mjs";
-import { dryRunFairness, equalArmSnapshot, FORBIDDEN_SHARED_PROMPT_PLACEHOLDER, frozenSystemTaskPromptBytes, frozenSystemTaskPromptPath, liveArmCommandManifest } from "../personal/c1-c2-paired/paired-runner.mjs";
+import {
+  armOrderForSeed,
+  assertLiveCountedLabel,
+  assertLiveLaunchArgv,
+  dryRunFairness,
+  equalArmSnapshot,
+  FORBIDDEN_SHARED_PROMPT_PLACEHOLDER,
+  frozenSystemTaskPromptBytes,
+  frozenSystemTaskPromptPath,
+  liveArmCommandManifest,
+  runLivePairedCell,
+} from "../personal/c1-c2-paired/paired-runner.mjs";
 
 const FIXTURE_SCHEMAS = [
   { name: "WorkspaceRead", parameters: ["target"] },
@@ -341,6 +353,120 @@ test("paired runner dry-run emits a non-B0 fairness record", async () => {
   assert.equal(pass.fairness.result, "pass");
   assert.equal(pass.b0, false);
   assert.equal(pass.retry, 0);
+  assert.equal(pass.counted_sample, false);
   const fail = await dryRunFairness({ mutateAxis: "oracle_version" });
   assert.equal(fail.fairness.result, "fail");
+});
+
+test("live launch refuses secret-shaped env and missing --append-system-prompt", async () => {
+  assert.throws(
+    () => assertLiveLaunchArgv(["pi", "--print"]),
+    /append-system-prompt/,
+  );
+  await assert.rejects(
+    () =>
+      runLivePairedCell({
+        stratum: "b1",
+        classId: "C1",
+        seedIndex: 0,
+        executeArm: async () => ({ exit_code: 0 }),
+        env: { PATH: "/usr/bin", PROVIDER_API_KEY: "sk-abcdefghijklmnop" },
+        argv: ["node"],
+      }),
+    /env PROVIDER_API_KEY/,
+  );
+});
+
+test("dry-run cannot be labeled counted B1/B2", () => {
+  assert.throws(
+    () => assertLiveCountedLabel({ counted_sample: true, stratum: "b1", dry_run: true }),
+    /dry-run cannot be labeled counted/,
+  );
+  assert.throws(
+    () => assertLiveCountedLabel({ counted_sample: true, stratum: "b0", dry_run: false }),
+    /non-counted qualification/,
+  );
+});
+
+test("live paired cell retains fairness fail without counting or spawning arms", async () => {
+  let calls = 0;
+  const cell = await runLivePairedCell({
+    stratum: "b1",
+    classId: "C1",
+    seedIndex: 0,
+    mutateAxis: "oracle_version",
+    env: { PATH: "/usr/bin" },
+    argv: ["node"],
+    executeArm: async () => {
+      calls += 1;
+      return { exit_code: 0, timed_out: false };
+    },
+  });
+  assert.equal(calls, 0);
+  assert.equal(cell.kind, "c1-c2-paired-live-cell");
+  assert.equal(cell.fairness.result, "fail");
+  assert.equal(cell.counted_sample, false);
+  assert.equal(cell.b0, false);
+  assert.equal(cell.retry, 0);
+  assert.deepEqual(cell.arms, {});
+});
+
+test("stub executeArm live cell is counted only for b1/b2 with fairness pass", async () => {
+  const seen = [];
+  const executeArm = async ({ arm, argv }) => {
+    seen.push({ arm, argv });
+    assertLiveLaunchArgv(argv);
+    return { exit_code: 0, timed_out: false, append_system_prompt: true };
+  };
+  const clean = { env: { PATH: "/usr/bin" }, argv: ["node"] };
+  const b1 = await runLivePairedCell({
+    stratum: "b1",
+    classId: "C1",
+    seedIndex: 0,
+    executeArm,
+    ...clean,
+  });
+  assert.equal(b1.counted_sample, true);
+  assert.equal(b1.append_system_prompt, true);
+  assert.equal(b1.timeout_ms, 120_000);
+  assert.equal(b1.arms.p.append_system_prompt, true);
+  assert.equal(b1.arms.o.append_system_prompt, true);
+  assert.equal(b1.arms.p.exit_code, 0);
+  assert.equal(b1.arms.o.exit_code, 0);
+  assert.deepEqual(b1.arm_order, armOrderForSeed(b1.seed));
+  assert.equal(seen.length, 2);
+  assert.deepEqual(
+    seen.map((row) => row.arm),
+    b1.arm_order,
+  );
+
+  const b0 = await runLivePairedCell({
+    stratum: "b0",
+    classId: "C1",
+    seedIndex: 0,
+    executeArm,
+    ...clean,
+  });
+  assert.equal(b0.counted_sample, false);
+  assert.equal(b0.stratum, "b0");
+  assert.equal(b0.fairness.result, "pass");
+
+  const timedOut = await runLivePairedCell({
+    stratum: "b2",
+    classId: "C2a",
+    seedIndex: 0,
+    ...clean,
+    executeArm: async () => ({ exit_code: 0, timed_out: true }),
+  });
+  assert.equal(timedOut.counted_sample, false);
+});
+
+test("arm order is deterministic from ARM_ORDER_SEED plus the frozen seed", () => {
+  const seed = frozenSeeds().b1.C1[0];
+  const first = armOrderForSeed(seed);
+  const second = armOrderForSeed(seed);
+  assert.deepEqual(first, second);
+  assert.ok(first[0] === "p" || first[0] === "o");
+  assert.notEqual(first[0], first[1]);
+  assert.equal(typeof ARM_ORDER_SEED, "string");
 });

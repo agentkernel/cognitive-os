@@ -336,7 +336,7 @@ personal_requirements:
     classification: product-only
     statement: Performance and structure evolution use P7-T04 regression floors as before/after evidence. The P9-T04 comprehensive campaign adds only preregistered measurement and evidence surfaces; it creates no product Gate and cannot promote unexecuted or incomplete evidence into a release, Profile, or Agent-benefit claim.
     direct_registry_requirements: []
-    tasks: [P9-T01, P9-T02, P9-T03, P9-T04, P9-T08, P9-T09, P9-T10, P9-T11, P7-T04]
+    tasks: [P9-T01, P9-T02, P9-T03, P9-T04, P9-T08, P9-T09, P9-T10, P9-T11, P9-T12, P7-T04]
     gates: []
     evidence_status: not-run
 
