@@ -71,11 +71,11 @@ report. Missing runner or capability is `not-run`/`not_available`.
 | MS-AUTH / T-GOV / T2 / UJ2 / UJ3 / UJ4 | recorded | Skill unique-digest 10/10 combined; UJ4 30/30 admit; UJ2 cold 10/10; UJ3 task-watch **partial** 403 |
 | B3 / B4 | **pass** | B3 mismatch/restart/remaining executed; B4 932/932 local non-OK 0; mixed Agent `not-run` |
 | C2b / C2c | C2b **partial**; C2c **pass** split-score | session-2 GET without restart (404 pins); fault-profile authorized+default-off; original-key GET 200 after UJ2 |
-| B5 | 1 h **pass**; 8 h running | 60/60 min, 420/420 local, 12/12 pairs, 0 timeouts; pid 397664 auto-started 8 h; 24 h default deferred |
+| B5 | 1 h **pass**; 8 h running (continuation) | 60/60 1 h; 8 h min 0–59 retained then CLI 5 s kill on ~1.09 GiB store copy; continuation pid 403482 kernel-server-direct restart health 200; 24 h default deferred |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
 
 ## Unique next action
 
-Finish B5 8 h (pid 397664; 1 h pass). Record 24 h default deferred
+Finish B5 8 h continuation (pid 403482). Record 24 h default deferred
 unless the 8 h slope trigger is met, then cleanup + secret scan +
 close the campaign.

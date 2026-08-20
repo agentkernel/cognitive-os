@@ -44,7 +44,7 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
 | B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
-| B5 8 h | running | 1 h exit held; same pid 397664 auto-started 8 h; first pair `confirmatory-G1-012` both True; pair every 10 min; hourly restart with `--bind 127.0.0.1:48306`; 24 h default deferred |
+| B5 8 h | running (continuation) | First 60/480 min + 6 pairs retained (`non_ok=0`, 0 timeouts). Public `cognitive daemon start` 5 s ready-timeout killed `kernel-server` during ~1.09 GiB authority backup copy; stale `migration.lock`. Campaign-local continuation pid 403482: same `kernel-server --personal --bind 127.0.0.1:48306` without the 5 s kill; minute-60 restart health 200 in 18.5 s; pair 7 both True. 24 h default deferred |
 | B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
@@ -238,18 +238,31 @@ benefit claim). RSS/`daemon_pid` in the local rows are `null`
 Hourly restart is 8 h-only. Evidence `b5-1h-local.jsonl`,
 `b5-1h-paired.jsonl`, `b5-1h-summary.json`.
 
-## B5 8 h (2026-08-21) — running
+## B5 8 h (2026-08-21) — running (continuation after restart fault)
 
-1 h exit held (`local_non_ok=0` and `pair_arm_timeouts=0`), so the
-same process auto-started the 8 h window (480 min, pair every 10 min,
-hourly cold restart with `--bind 127.0.0.1:48306`, `retry=0`). First
-8 h pair `confirmatory-G1-012` both arms `completed`/True. 24 h remains
-default deferred unless 8 h shows an unresolved slope **and** owner
-budget allows.
+1 h exit held, so pid 397664 auto-started 8 h. Minutes 0–59 and 6
+G1 pairs completed with `local_non_ok=0` and `pair_arm_timeouts=0`.
+At minute 60 the instrument called public `cognitive daemon start`,
+which waits 250×20 ms then kills `kernel-server` if lock/bootstrap
+are unpublished. The campaign authority store had grown to
+**1 097 109 504 bytes** (~1.09 GiB; Python `PRAGMA integrity_check=ok`
+in 17.2 s). The 5 s CLI timeout killed the child mid backup-copy,
+left stale `migration.lock` (`pid=401940` dead), and aborted the soak
+(`ConnectionRefusedError` in `mint`). Started samples were retained.
+Residue listeners and closed EVAL roots were untouched. Broker
+`48406` pid 369469 stayed up.
+
+Campaign-local continuation (`/tmp/eval015-b5-continue.py`, pid
+**403482**) appends minutes 60–479. Restarts spawn the same
+`kernel-server --personal --bind 127.0.0.1:48306 --runtime-root`
+binary the CLI uses, and wait up to 600 s for health 200. Minute-60
+restart: stale lock cleared, health 200 in **18.5 s**, kernel pid
+403486, pair 7 both `completed`/True. This does not change the
+product. Claim ceiling `hypothesis`.
 
 ## Unique next action
 
-Finish B5 8 h soak (pid 397664), record 24 h default deferred unless
-the 8 h slope trigger is met, then cleanup + secret scan + final
-assessment and close the campaign row/lease. Do not auto-start
+Finish B5 8 h continuation (pid 403482), record 24 h default deferred
+unless the 8 h slope trigger is met, then cleanup + secret scan +
+final assessment and close the campaign row/lease. Do not auto-start
 unrelated backlog.
