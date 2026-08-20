@@ -39,7 +39,9 @@ non_claims:
   lookup`/`search`）、等价 Workspace* fixture adapter、冻结 seeds/`retry=0`，以及
   §2.3 fairness checker（`system_task_prompt_bytes` 取自
   `frozen-system-task-prompt.txt` 的字节长度，而不是共享占位符；live P/O
-  `--append-system-prompt` 命令清单共用该文件）。它们不是第二
+  `--append-system-prompt` 命令清单共用该文件）。P-arm `WorkspacePatch` 的
+  `input_b64` 是 UTF-8 unified diff（`workspace_patch_payload: unified-diff`），
+  replacement bytes 失败闭合。它们不是第二
   authority writer，也不升格 Gate、release、
   Profile、B01 或 Agent-benefit。聚焦测试：
   `tools/test/c1_c2_paired_p_arm.test.mjs`。
