@@ -11,7 +11,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
   - path: docs/product/personal/linux-1.0-scope.md
-fingerprint: "sha256:c360d8c44394fb39138f2a75795eeea63b327dd6d9c1accebe6d57d05cf43b96"
+fingerprint: "sha256:91f1a3bd03ccefc894beffbc727d519531df4f509cc70a77f08a320808651640"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---

@@ -81,7 +81,8 @@ launch 是 fail-closed 的：要求 doctor 全组件 ready 与精确钉住的 Pi
 的第一条消息经 Pi → daemon Provider 代理 → Provider；见 [Pi 对话壳](./pi-shell.md)。
 若要进行有界的非交互对话，使用 `cognitive pi launch --print`，并通过 stdin 提供
 prompt。CLI 会保持连接直到钉住的 Pi 进程退出；prompt 不是 Provider 凭据，Provider key
-不会进入命令行或环境。
+不会进入命令行或环境。可选 `--append-system-prompt <绝对路径>` 把已存在且非空的
+UTF-8 文件转发给 Pi（相对路径、缺失或空文件失败闭合）。文件字节不会被打印。
 
 ## 值得了解的失败出口
 

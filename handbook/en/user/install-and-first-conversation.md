@@ -91,7 +91,9 @@ daemon Provider proxy → Provider; see [The Pi shell](./pi-shell.md).
 For a bounded non-interactive conversation, use `cognitive pi launch --print` and
 provide the prompt on stdin. The CLI remains attached until the pinned Pi process
 exits; the prompt is not a Provider credential and no Provider key is placed in
-the command line or environment.
+the command line or environment. Optional `--append-system-prompt <absolute-path>`
+forwards an existing non-empty UTF-8 file to Pi (relative, missing, and empty
+files fail closed). File bytes are not printed.
 
 ## Failure exits worth knowing
 
