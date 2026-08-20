@@ -27,7 +27,7 @@ file is not an allowed bind path.
 |---|---|---|
 | Campaign root | `/home/hal9001/perfeval012-20260820` mode `0700` | `perfeval004`…`perfeval011`, `e009`, `~/perfeval002`, `~/p9t04`, `cos-current`, P2-T37 roots |
 | Loopback port | daemon `127.0.0.1:48300`; broker `127.0.0.1:48400` | `48181`, `48282`, `48284`, `48286`–`48298`, `48383`, `48386`–`48398` |
-| SecretStore entry | planned `/20` via `--reuse-existing-secret-binding` only | `/12`–`/19`; never `secret-tool search`/`lookup`; never keyfile copy |
+| SecretStore entry | planned `/20`; reuse-existing blocked (store empty). Recovery: owner graphical hidden-input `--api-key-file -` | `/12`–`/19`; never `secret-tool search`/`lookup`; never keyfile copy |
 | Source pin | `370b26fc` | closed-EVAL pins; unmerged task branches |
 
 `B01-Clean-Linux-001` stays out of bounds. Guest control:
@@ -43,24 +43,25 @@ PowerShell SSH pipes corrupt tar digests; copies use `scp`.
 | EVAL-002 and EVAL-004–011 remain closed | **pass** | do not reopen; do not reuse their roots/ports/SecretStore items |
 | Owner activation | **pass** | Current snapshot names `PERSONAL-PERF-EVAL-012` active |
 | Evaluation lease claimed | **pass** | `lease/personal/EVAL-012/c1-c2-paired-b0` |
-| Product source pin | **pass** (docs) | `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c`; guest archive not yet copied |
-| Source archive + SHA-256 | `not-run` | `git archive` of exact `370b26fc` on Linux; copy with `scp` |
-| Guest identity | `not-run` | confirm `B01-Desktop-Linux-002` before product install |
-| New campaign root/port | `not-run` | `/home/hal9001/perfeval012-20260820`; `48300`/`48400` unused |
-| Exact-source daemon/CLI/adapter binaries | `not-run` | `DEV-LINUX-NATIVE-01` release build from the archive |
-| Secret bind | `not-run` | `--reuse-existing-secret-binding` only; live doctor is E9 |
-| Local Pi `0.81.1` pin | `not-run` | `--extension` absolute; doctor ready is not C1/C2 |
+| Product source pin | **pass** | `370b26fcc05976c7c1c97e5510a99ed3ebc23f2c` |
+| Source archive + SHA-256 | **pass** | 15,073,280 bytes; 1590 entries; 0 `.git/`; SHA-256 `1b41aeb31b70cdd59e60a598174eca00cc3f7f2ad1d51d1a005c370b0b9c1cdd`; copies used `scp` |
+| Guest identity | **pass** | `B01-Desktop-Linux-002` running; MAC `52:54:00:33:27:c1` = `192.168.123.160`; Ubuntu 24.04.4; uid 1000; `B01-Clean-Linux-001` shut off |
+| New campaign root/port | **pass** | `/home/hal9001/perfeval012-20260820` mode `0700`; `48300`/`48400` unused; `48181`/`48284`/`48383` untouched |
+| Exact-source daemon/CLI/adapter binaries | **pass** | `kernel-server` `cfcfdaa2…`; `cognitive` `f02931df…`; `pi-agent-adapter` `54ce9eaa…`; glibc-only `ldd` |
+| Secret bind | `not-run` | E9: product `SearchItems` 0; `login`/`session` item_count 0; no reuse of `/12`–`/19`. Recovery: owner graphical hidden-input into planned `/20` |
+| Local Pi `0.81.1` pin | **pass** | in-campaign `cli.js --version` `0.81.1`; extension digest `d27f9776…`. Doctor is a later cell |
 | P-arm broker `48400` | `not-run` | after O-arm bind; loopback-only |
-| `cognitive doctor` | `not-run` | readiness only; required before first B0 sample |
-| C1/C2 paired B0 | `not-run` | one qualification seed per class; three warmups per arm |
+| `cognitive doctor` | `not-run` | blocked on E9; readiness only; required before first B0 sample |
+| C1/C2 paired B0 | `not-run` | blocked on E9; one qualification seed per class; three warmups per arm |
 | C1/C2 paired B1/B2 | `not-run` | forbidden until B0 pass |
 | Cleanup | `not-run` | stop `48300`/`48400`; clear only the campaign SecretStore item |
 
 ## Unique next action
 
-Confirm `B01-Desktop-Linux-002` identity on the registered route, then
-create the new root and freeze exact `370b26fc` binaries. Do not start a
-counted sample before E7–E9 pass or honest `not-run` with recovery.
+Owner graphical hidden-input into planned SecretStore `/20` on this guest
+(`cognitive init … --api-key-file -` on the campaign runtime root). Then
+`pi configure`, daemon `127.0.0.1:48300`, redacted doctor, then B0
+(`retry=0`). Do not start a counted sample before E9 pass.
 
 Claim ceiling `hypothesis`; `not_reviewed`. No Gate, release, Profile, B01,
 or Agent-benefit promotion.
