@@ -3,12 +3,15 @@
 - Campaign: `PERSONAL-PERF-EVAL-013`
 - Freeze branch: `evaluation/EVAL-013-freeze`
 - Product pin: `6c415625`
+- Lease: `lease/personal/EVAL-013/execution-plan-b0` (**closed** 2026-08-20)
 - Preregistration: [20260820-personal-perf-eval-013-preregistration.md](../checkpoints/20260820-personal-perf-eval-013-preregistration.md)
 - Claim ceiling: `hypothesis` / `not_reviewed`
 - Independent reviewer: `not_reviewed`
+- Document status: campaign **closed**. Measurement-only. Evaluation routing OFF.
 
 Measurement-only. This report does not promote Gate, release, Profile, B01,
-or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-012 remain closed.
+or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-012 remain closed. Do not
+append more cells on this freeze.
 
 ## Cell log (`TEST-REPORT-INCREMENTAL-01`)
 
@@ -35,7 +38,7 @@ or Agent-benefit. EVAL-002 and EVAL-004 through EVAL-012 remain closed.
 | B4 concurrency | `not-run` | no frozen concurrency runner |
 | B5 1 h / 8 h / 24 h | `not-run` | no frozen soak runner; 1 h trigger not met; 24 h default deferred |
 | T/S/O/UJ extras | `not-run` | overlay skip / missing runner |
-| Cleanup | pending | stop `48302`/`48402` only; clear `/25` only |
+| Cleanup | **pass** | daemon `48302` pid 336122 `action=stopped` (`stale_lock_removed=true`); broker pid 339769 gone; listeners `48302`/`48402` absent; residue `48181`/`48284`/`48383` untouched; SecretStore `/25` cleared; login `item_count=0`; evidence secret-shaped 0/87; runtime naive `sk-` hits are all length 13 (regex floor), PEM 0 |
 
 ## Guest identity (2026-08-20) — pass
 
@@ -150,9 +153,48 @@ Execution plan §2.5 forbids stitching campaign-local B0 shell into a formal
 paired campaign. Frozen B1/B2 seeds were not consumed. Overlay skip plus
 missing runners: C0, B3, B4, B5 (1 h / 8 h / 24 h), T/S/O/UJ extras.
 
+## Cleanup (2026-08-20) — pass
+
+Guest route unchanged. Snapshot was not restored or deleted.
+`B01-Clean-Linux-001` was not contacted. Closed EVAL roots left in place.
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48302` pid 336122 | product `cognitive daemon stop` `action=stopped` (`stale_lock_removed=true`); lock absent |
+| campaign broker `127.0.0.1:48402` pid 339769 | process gone; listener absent |
+| listeners `48181` / `48284` / `48383` | untouched |
+| EVAL-012 root | untouched at `/home/hal9001/perfeval012-20260820` |
+| campaign root | retained `0700` at `/home/hal9001/perfeval013-20260820` |
+| SecretStore item `/25` | pre-clear login suffixes `["25"]` only; `secret-tool clear` on product triple (`application=cognitiveos-personal`, `provider=deepseek`, `purpose=provider-api-key`); post-clear login `item_count=0` `item_suffixes=[]`; never `secret-tool search`/`lookup` |
+| evidence redactor | 87 files, secret-shaped hits 0 |
+| runtime redactor | naive `sk-[A-Za-z0-9]{10,}` matched 14 files; every token length 13 (regex floor); PEM / private-key BEGIN 0. Not treated as campaign key-length material. |
+
+## Capability matrix (hypothesis / non-claim)
+
+| Class | This freeze | Note |
+|---|---|---|
+| Public doctor / first conversation | ready | not a C1/C2 Task |
+| C1 WorkspaceSearch/Read P/O | **pass** | comparable; fairness 13/13 including live 211-byte system prompt |
+| C2a Write/Patch P/O | **pass** | O Patch verification `passed`/`current` (closes EVAL-012 post-state fail); P Patch same unified-diff `input_b64` |
+| C2b Memory/Skill | split-score | O remember 201; session-2/Skill `not-run`; P stdout `Done.` |
+| C2c Effect recovery | `not-run` | no frozen fault injector |
+| C2d verified completion | split-score | O observed C2a Patch completion; P mechanical `ANSWER: repaired` |
+| C0 paired G/A | `not-run` | no frozen live C0 executor |
+| B1/B2 C1/C2 paired | `not-run` | §2.5; dry-run runner only |
+| B3 / B4 / B5 | `not-run` | no frozen runners; 24 h default deferred |
+
+## Evidence-ranked optimization priorities (hypothesis only)
+
+1. Freeze a **live** campaign-only paired B1/B2 executor (output schema, arm order, cleanup) so C1/C2a qualification can become confirmatory without stitching shell. `paired-runner.mjs` today is dry-run fairness only.
+2. C2b session-2 resume and Skill bind need a frozen Skill package and a resume path that does not restart the campaign daemon.
+3. C2c needs a frozen campaign-authorized default-off fault profile on this guest; do not invent faults on `B01-Desktop-Linux-002`.
+4. C2d split-score stays until an independent oracle closes an OS Task on both arms with the same tool set.
+5. Do not treat C1/C2a B0 pass as Agent-benefit or Gate evidence.
+
 ## Non-claims
 
 A closed product train (P9-T09–T11) is not a B0 pass. Matching prompt bytes
 and Patch payload format in instruments is not a counted sample. B0
 qualification pass is not B1/B2, not C0 paired performance, not Gate / release
 / Profile / B01 / Agent-benefit, and not a reason to edit product code.
+Campaign closure does not resume development.

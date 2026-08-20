@@ -85,7 +85,6 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/EVAL-013/execution-plan-b0` | `PERSONAL-PERF-EVAL-013` full execution-plan remainder on B01-Desktop-Linux-002; no formal task/slice | Lane-CFR | `evaluation/EVAL-013-freeze` | `docs/evaluation/personal-perf-eval-013-preregistration.md`; `docs/evaluation/personal-performance-assessment-20260820-eval-013.md`; `docs/checkpoints/20260820-personal-perf-eval-013-preregistration.md`; `docs/plan/PROGRESS.md` | cursor-eval-013 / 2026-08-20 | 2026-08-20 / 2026-08-20 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
@@ -95,6 +94,7 @@ writable ownership. Only the active table above grants write access.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/EVAL-013/execution-plan-b0` | `PERSONAL-PERF-EVAL-013` full execution-plan remainder on B01-Desktop-Linux-002 | `evaluation/EVAL-013-freeze` | 2026-08-20 | B0 **pass** (C1/C2a comparable; fairness 13/13). C2b–d split-score/`not-run`. B1/B2 `not-run` (§2.5). C0/B3–B5 `not-run`. Cleanup **pass** (daemon `48302`/broker `48402` stopped, SecretStore `/25` cleared). Claim ceiling `hypothesis`; `not_reviewed`. Evaluation routing OFF. |
 | `lease/personal/P9-T11/c2a-patch-unified-diff` | P9-T11/D01–D03 comparable C2a unified-diff Patch | `personal/P9-T11-c2a-patch-unified-diff` | 2026-08-20 | Merged PR [#251](https://github.com/agentkernel/cognitive-os/pull/251) at `main@49b66200`. Local `c1_c2_paired_p_arm` **19/19**; tools suite **83/83**. Required CI `32359826035` at `6fe018cf` passed Ubuntu, Windows, and required-ci. Claim ceiling `hypothesis`; no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion. |
 | `lease/personal/P9-T10/live-prompt-injection` | P9-T10/D01–D03 live `--append-system-prompt` | `personal/P9-T10-live-prompt-injection` | 2026-08-20 | Merged PR [#250](https://github.com/agentkernel/cognitive-os/pull/250) at `main@30c4e16a`. Local `c1_c2_paired_p_arm` **16/16**. Linux exact `745c60d8` admin-cli `append_system_prompt` **3/3**, print-mode **1/1**, Clippy `-D warnings`, fmt. Required CI `32350029054` at `745c60d8`; docs-head `32352242187` at `36fe0029`. Claim ceiling `hypothesis`; no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion. |
 | `lease/personal/P2-T38/workspace-patch-post-state` | P2-T38/D01–D03 public WorkspacePatch post-state | `personal/P2-T38-workspace-patch-post-state` | 2026-08-20 | Merged PR [#248](https://github.com/agentkernel/cognitive-os/pull/248) at `main@2b4c8f17`. Linux focused kernel-server **4/4**, Clippy `-D warnings`, fmt at `5f4a538f`. Required CI `32333296569` passed Ubuntu, Windows, and required-ci at `31f8f165`. Local/remote task branches deleted; `main` matches `origin/main`. Claim ceiling `hypothesis`; no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion. EVAL-012 Priority 2 (P/O system-prompt bytes) remains open. |

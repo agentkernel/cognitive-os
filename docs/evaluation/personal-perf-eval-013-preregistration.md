@@ -1,8 +1,8 @@
 # PERSONAL-PERF-EVAL-013 — preregistration
 
 - Campaign ID: `PERSONAL-PERF-EVAL-013`
-- Status: **active** (owner 2026-08-20). Evaluation routing **ON**.
-- Lease: `lease/personal/EVAL-013/execution-plan-b0`
+- Status: **closed** (2026-08-20). Evaluation routing **OFF**.
+- Lease: `lease/personal/EVAL-013/execution-plan-b0` (closed)
 - Branch: `evaluation/EVAL-013-freeze`
 - Claim ceiling: `hypothesis` / non-claim. Reviewer: `not_reviewed`.
 - Parent: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)

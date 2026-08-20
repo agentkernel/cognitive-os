@@ -74,8 +74,9 @@ under EVAL-012 remain closed measurement and must not be resumed.
 | `cognitive doctor` | **pass** | overall `ready`; `first_conversation_ready: true`; daemon pid 336122 on `48302` |
 | C1/C2 paired B0 | **pass** | C1 O/P **pass**; C2a Write+Patch O/P **pass**; fairness 13/13; secret-shaped 0/86; timeout/`retry=0`. C2b split-score (O remember 201; P `Done.`); C2c `not-run`; C2d split-score pass |
 | Remainder of parent plan | `not-run` | B1/B2: no frozen live paired executor (§2.5). C0/B3/B4/B5/T/S/O/UJ: overlay skip or missing runner |
-| Cleanup | pending | stop `48302`/`48402`; clear only `/25` |
+| Cleanup | **pass** | daemon `48302` pid 336122 stopped; broker `48402` pid 339769 gone; SecretStore `/25` cleared; residue listeners untouched |
 
 ## Unique next action
 
-Cleanup: stop campaign daemon `48302` and broker `48402` only; `secret-tool clear` on the product attribute triple if D-Bus paths show campaign item `/25` only for that triple; confirm with D-Bus `SearchItems`/collection paths. Never `secret-tool search`/`lookup`. Do not reopen B1 on this freeze.
+Campaign closed 2026-08-20. Do not reopen this freeze. Wait for an explicit
+owner delivery instruction before claiming any implementation task.
