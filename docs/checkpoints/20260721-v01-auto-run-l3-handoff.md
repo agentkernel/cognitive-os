@@ -13,7 +13,7 @@
   1. 编排器默认 `CI=true`（无 TTY 时避免 `ERR_PNPM_ABORTED_REMOVE_MODULES_DIR_NO_TTY`）
   2. `m5_http_sse` 以 `--test-threads=1` 运行（降低 sdk-ts live 后并行 `--once` 偶发 `ConnectionReset`）
 - 旁路 dirty（`.cursor/skills/**`、职校选型 md/xlsx、`artifacts/_local/**`）**未**暂存、未提交
-- 关联计划：[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)；v0.1 [GO-with-explicit-non-claim](20260721-v01-rereview.md)
+- 关联计划：[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)；v0.1 [GO-with-explicit-non-claim](./20260721-v01-rereview.md)
 
 ## 2. 未完成 / 进行中
 

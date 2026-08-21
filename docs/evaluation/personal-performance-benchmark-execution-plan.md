@@ -1081,6 +1081,6 @@ payload 不足以支持后续复核。
 - `apps/kernel-server/src/personal/task_api.rs`
 - `apps/kernel-server/src/personal/pi_runtime.rs`
 - `packages/pi-cognitiveos/src/daemon-provider.ts`
-- [Agent benefit benchmark](agent-benefit-benchmark.md)
-- [UCR-01](personal-unified-cognitive-resource-workload.md)
+- [Agent benefit benchmark](./agent-benefit-benchmark.md)
+- [UCR-01](./personal-unified-cognitive-resource-workload.md)
 - [Test environments](../plan/PERSONAL-TEST-ENVIRONMENTS.md)

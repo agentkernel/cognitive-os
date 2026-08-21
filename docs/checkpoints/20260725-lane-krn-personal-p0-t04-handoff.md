@@ -23,7 +23,7 @@
 - Added ADR-0017 to resolve the task card's incorrect ADR-003 reference and to
   document the authority/installation two-DB non-atomicity boundary, backup
   restore procedure, and deferred XDG realization.
-- Updated `plan.md` task-card detail and `PROGRESS.md`; the formal Personal
+- Updated `docs/plan/plan.md` task-card detail and `PROGRESS.md`; the formal Personal
   ledger records `P0-T04 done` with CI execution evidence.
 
 ## 2. Completion and Local Environment Boundary

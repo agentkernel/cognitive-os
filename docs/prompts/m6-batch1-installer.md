@@ -1,6 +1,6 @@
 # M6 Batch-1：篡改拒装 tracer（Lane-RUN）
 
-> 用法：粘贴到干净 worktree 的新 Cursor Agent 会话。**前置**：Batch-0A（[m6-batch0-contracts.md](m6-batch0-contracts.md)）已合入 main。本批只做到 VERIFIED/拒绝，不做完整 sandbox/adapter/OOB。
+> 用法：粘贴到干净 worktree 的新 Cursor Agent 会话。**前置**：Batch-0A（[m6-batch0-contracts.md](./m6-batch0-contracts.md)）已合入 main。本批只做到 VERIFIED/拒绝，不做完整 sandbox/adapter/OOB。
 
 ---
 

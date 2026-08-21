@@ -5,9 +5,9 @@
 - Status: **High-Assurance extension design; does not block Ordinary Core tracer development; final review and registration pending**
 - Baseline: `origin/main@42d609b2f49e2db641f46aa99b6cc9a538a7f4fd`
   (PR #52 merge; main CI run `29922529556` Ubuntu/Windows success)
-- Inputs: [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),
-  [V02-CA-OPS-01](V02-CA-OPS-DESIGN-DECISION.md), and
-  [V02-CA-TARGET-01](V02-CA-TARGET-DESIGN-DECISION.md)
+- Inputs: [V02-CA-GOV-00](./V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),
+  [V02-CA-OPS-01](./V02-CA-OPS-DESIGN-DECISION.md), and
+  [V02-CA-TARGET-01](./V02-CA-TARGET-DESIGN-DECISION.md)
 - Structural governance:
   [ADR-0012](../adr/0012-v02-detached-signature-profile-governance.md)
 - Classification: docs-only structural design; no machine registration

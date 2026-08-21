@@ -14,7 +14,7 @@
 | 文档 | 版本/状态 | 规范范围 | 资产边界 |
 |---|---|---|---|
 | 本文 `cognitiveos.core/0.2` | v0.2 Draft / Companion Specification | 基础对象、状态、Context、Event、Capability、Effect、Loop、恢复与审计 | 已有 Core 文本要求；实现状态仍须单独声明 |
-| [RFC-0001：治理上下文、访问与知识编译](../../RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft / Normative Companion RFC | Tenant、Membership、Principal、ActorChain、Conversation、ResourceScope、ShareGrant、短期 privileged management session、混合授权、认知准入、缓存/检索隔离与执行上下文 | 治理对象族 machine schema 已由 [governed-object-contract](../../docs/standards/governed-object-contract.md) 登记 v0.1 Draft；知识对象仍为伪 schema；performance 与 management session/proposal/approval schema、registry 条目及 declarative vector 的实际登记各自决定机器边界，均不表示实现 |
+| [RFC-0001：治理上下文、访问与知识编译](../../docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft / Normative Companion RFC | Tenant、Membership、Principal、ActorChain、Conversation、ResourceScope、ShareGrant、短期 privileged management session、混合授权、认知准入、缓存/检索隔离与执行上下文 | 治理对象族 machine schema 已由 [governed-object-contract](../../docs/standards/governed-object-contract.md) 登记 v0.1 Draft；知识对象仍为伪 schema；performance 与 management session/proposal/approval schema、registry 条目及 declarative vector 的实际登记各自决定机器边界，均不表示实现 |
 
 RFC-0001 叠加于基础 Core：基础 Core 给出通用对象、状态、授权、Context Resolution、Effect 与恢复语义；RFC-0001 收紧企业多租户、并发 Conversation 和认知数据派生边界。实现声明支持 RFC-0001 时，必须显式固定其版本并提供独立测试证据，不能仅凭支持本 README 推导。
 

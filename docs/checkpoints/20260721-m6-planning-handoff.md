@@ -16,7 +16,7 @@
 |---|---|
 | `origin/main` tip（规划基线） | `3c7115c3eaa50de468505d2e125e5ad81abbf673`（PR #30） |
 | runner pins | pass **52** / not-run **32** / self-check ≥**33** |
-| M5 出口 | [20260721-m5-milestone-review.md](20260721-m5-milestone-review.md) **GO M6** |
+| M5 出口 | [20260721-m5-milestone-review.md](./20260721-m5-milestone-review.md) **GO M6** |
 | 附带条件 | D-018 持续；clients blocked；F-017 出口阻断 |
 | 本地 dirty `main` | 含 personal-blog 恢复提交且 ahead/behind；**不得**用作推送基线 |
 

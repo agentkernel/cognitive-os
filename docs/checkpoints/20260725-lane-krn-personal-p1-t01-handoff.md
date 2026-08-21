@@ -35,7 +35,7 @@
   - exclusive `migration.lock` blocks concurrent prepare
   - Unix permission assertions for 0700/0600
 - Updated ADR-0017 validation/data-layout sections for P1-T01 realization
-- Updated formal Personal ledger, `plan.md` task card, and `PROGRESS.md`
+- Updated formal Personal ledger, `docs/plan/plan.md` task card, and `PROGRESS.md`
 
 ## 3. Not completed / out of scope
 

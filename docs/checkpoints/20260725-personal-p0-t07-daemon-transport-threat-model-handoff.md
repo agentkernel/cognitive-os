@@ -22,7 +22,7 @@
   - Resource bounds table for P1-T04
   - Threat model covers CSRF, DNS rebinding, token theft, channel confusion,
     replay (plus remote exposure / secret-log non-claims)
-- Aligned root `plan.md` P0-T07 task card to ADR-0019; moved planned license
+- Aligned root `docs/plan/plan.md` P0-T07 task card to ADR-0019; moved planned license
   ADR reference on P0-T03 from ADR-019 to ADR-0020 to avoid number collision
 - Updated formal Personal ledger: P0-T07 `done`; Phase 0 done count 5 / 2
   remaining (`P0-T03`, `P0-T06`)

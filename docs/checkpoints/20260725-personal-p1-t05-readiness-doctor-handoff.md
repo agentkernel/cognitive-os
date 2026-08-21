@@ -26,7 +26,7 @@
 - Unit tests: blocked / degraded / ready+non-Pi / secret locked / SecretRef redaction
 - Process test: `tests/p1_t05_personal_readiness.rs` (auth + wrong channel + blocked projection)
 - ADR-0023 documents ownership, aggregation, and non-claims
-- Formal ledger + `plan.md` task card aligned; PROGRESS note pending commit
+- Formal ledger + `docs/plan/plan.md` task card aligned; PROGRESS note pending commit
 
 ## 3. Not completed / out of scope
 

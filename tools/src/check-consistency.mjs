@@ -325,13 +325,13 @@ if (registries) {
   }
 }
 
-// ---------- 4: relative markdown links resolve (living docs; frozen root reviews excluded)
+// ---------- 4: relative markdown links resolve (living docs; frozen architecture reviews excluded)
 
 const FROZEN_DOCS = new Set([
-  "CognitiveOS-Architecture.md",
-  "CognitiveOS-Architecture-Independent-Review.md",
-  "CognitiveOS-Review-Conclusions.md",
-  "RFC-0001-cognitiveos-governance-context-access.md",
+  "docs/architecture/cognitiveos/CognitiveOS-Architecture.md",
+  "docs/architecture/cognitiveos/CognitiveOS-Architecture-Independent-Review.md",
+  "docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md",
+  "docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md",
 ]);
 const linkPattern = /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 for (const mdAbs of listMarkdownFiles()) {
@@ -376,6 +376,9 @@ if (registries) {
   const reqPattern = /(?<![A-Z0-9-])REQ-[A-Z0-9]+(?:-[A-Z0-9]+)*/g;
   for (const mdAbs of listMarkdownFiles()) {
     const rel = toRepoRelative(mdAbs);
+    if (FROZEN_DOCS.has(rel)) {
+      continue;
+    }
     if (!LIVING_SCOPES.some((scope) => rel === scope || rel.startsWith(scope))) {
       continue;
     }

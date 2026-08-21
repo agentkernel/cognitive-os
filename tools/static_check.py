@@ -147,7 +147,7 @@ owner_missing = [r['id'] for r in reqs if not os.path.exists(r['owner_spec'].spl
 check('all owner_spec files exist', not owner_missing, str(owner_missing[:5]))
 
 informative_owner = [r['id'] for r in reqs
-                     if 'CognitiveOS-Architecture.md' in r['owner_spec']
+                     if 'docs/architecture/cognitiveos/CognitiveOS-Architecture.md' in r['owner_spec']
                      or r['owner_spec'].startswith('History/')]
 check('no informative/historical owner_spec', not informative_owner, str(informative_owner[:5]))
 

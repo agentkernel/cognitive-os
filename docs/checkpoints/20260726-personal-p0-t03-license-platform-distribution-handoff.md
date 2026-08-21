@@ -27,7 +27,7 @@
 - `docs/legal/THIRD-PARTY-NOTICES.md` (curated inventory; SBOM deferred to P7-T01)
 - `docs/plan/PERSONAL-SUPPORT-MATRIX.md`
 - Workspace license metadata: Cargo `license = "Apache-2.0"` + member `license.workspace = true`; TS `"license": "Apache-2.0"`
-- Formal ledger / PROGRESS / DEVELOPMENT-PLAN pending items / `plan.md` P0-T03 card / docs map updated
+- Formal ledger / PROGRESS / DEVELOPMENT-PLAN pending items / `docs/plan/plan.md` P0-T03 card / docs map updated
 
 ## 4. Not completed / out of scope
 

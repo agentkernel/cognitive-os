@@ -12,7 +12,7 @@ CognitiveOS Personal is a local **operating system for cognitive resources** for
 one owner and their Agents. It makes Memory, Skill, Tool, Context, Task and
 Runtime/Process visible and governable through one local product while keeping
 their domain-specific identities, stores and lifecycles separate. See
-[personal-2.0-scope.md](personal-2.0-scope.md) for the post-1.0 design baseline.
+[personal-2.0-scope.md](./personal-2.0-scope.md) for the post-1.0 design baseline.
 
 Users can work through a conversational Agent Shell or deterministic commands.
 The Rust daemon is the sole authority writer: it resolves identity and policy,
@@ -282,5 +282,5 @@ that B01 or the release gate has passed.
 `B06`, `B07`, `B10` and `B11` do not block Linux 1.0. This statement changes no
 current Gate status and claims no implementation or evidence.
 
-See [Linux 1.0 scope](linux-1.0-scope.md) for the exact target and non-claim
+See [Linux 1.0 scope](./linux-1.0-scope.md) for the exact target and non-claim
 boundary.

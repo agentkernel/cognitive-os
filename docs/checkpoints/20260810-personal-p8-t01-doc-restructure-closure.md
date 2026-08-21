@@ -19,10 +19,10 @@
 | PARALLEL-LANES closed history externalized | `docs/plan/PARALLEL-LANES-CLOSED.md`; §3.1 summary pointer |
 | ADR-0008 superseded label; milestone prompts non-executable; docs-sync status label | ADR-0008 header; `docs/prompts/milestone-m*.md` banners; docs-sync-contract |
 | PROGRESS / TEST-ENVIRONMENTS / plan structural repair + Phase 8/9 | PERSONAL-DEVELOPMENT-PLAN; PROGRESS; PERSONAL-TEST-ENVIRONMENTS |
-| Whitepaper OS / gap / pillars / ecosystem alignment | `CognitiveOS-Architecture.md` Personal 对齐章; root review/RFC currency notes |
+| Whitepaper OS / gap / pillars / ecosystem alignment | `docs/architecture/cognitiveos/CognitiveOS-Architecture.md` Personal 对齐章; root review/RFC currency notes |
 | Product/architecture extensions + headroom + personal-2.0-scope | product + architecture personal docs |
 | ADR-0041..0045 | `docs/adr/0041`–`0045` |
-| plan.md + personal-trace sync | `plan.md` Phase 8/9 cards; PERS-PR-031..034 |
+| docs/plan/plan.md + personal-trace sync | `docs/plan/plan.md` Phase 8/9 cards; PERS-PR-031..034 |
 | Local validation | `pnpm run check:consistency` OK; `git diff --check` OK; tools `check.test.mjs` OK |
 | Required Ubuntu/Windows CI | run `31383446541` pass at `cd08da7` |
 | Gate/release/Profile | **non-claim** |

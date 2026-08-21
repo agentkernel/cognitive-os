@@ -23,7 +23,7 @@ alwaysApply: true
 
 - `docs/plan/PROGRESS.md` `Current snapshot` owns current status.
 - `docs/plan/PARALLEL-LANES.md` owns active writable leases.
-- Handoffs and root `plan.md` are historical/detail sources and cannot override current facts.
+- Handoffs and `docs/plan/plan.md` are historical/detail sources and cannot override current facts.
 - Claim a non-overlapping, exact-path `lease/personal/...` before writing;
   broad protected-tree globs are invalid.
 - Deliver a smallest vertical slice; do not replace known implementation work with repeated audits.

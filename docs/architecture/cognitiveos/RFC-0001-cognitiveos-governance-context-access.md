@@ -5,10 +5,10 @@
 - **标识**：`cognitiveos.governance-context-access/0.2`
 - **发布日期**：2026-07-18
 - **时效标注（2026-08-10）**：normative companion draft；machine schemas and Personal current facts remain authoritative over narrative examples here. Personal axioms live in `docs/governance/AXIOMS.md`.
-- **依赖**：[CognitiveOS Core Companion Specification](./specs/core/README.md)
+- **依赖**：[CognitiveOS Core Companion Specification](../../../specs/core/README.md)
 - **对应白皮书**：[CognitiveOS 总体架构白皮书](./CognitiveOS-Architecture.md)
 
-> 本 RFC 是可独立评审的规范性 companion 草案，不表示实现。仓库已提供 performance report 与 management session/proposal/approval machine schema、registry 条目与 declarative conformance vector；Governance/Conversation/Execution 对象族的机器 schema 已由 [governed-object-contract](./docs/standards/governed-object-contract.md) 登记为 v0.1 Draft（机器字段名以登记 schema 为准），本文代码块仅是说明性伪 schema；Knowledge 对象仍未登记机器 schema。
+> 本 RFC 是可独立评审的规范性 companion 草案，不表示实现。仓库已提供 performance report 与 management session/proposal/approval machine schema、registry 条目与 declarative conformance vector；Governance/Conversation/Execution 对象族的机器 schema 已由 [governed-object-contract](../../standards/governed-object-contract.md) 登记为 v0.1 Draft（机器字段名以登记 schema 为准），本文代码块仅是说明性伪 schema；Knowledge 对象仍未登记机器 schema。
 
 ## 1. 规范约定、状态与范围
 
@@ -62,7 +62,7 @@
 
 ## 4. 公共对象头与伪 schema
 
-以下伪 schema 表示规范语义。治理对象族的已登记机器 schema 见 [governed-object-contract](./docs/standards/governed-object-contract.md) 与 `specs/schemas/`；登记字段名与此处示意可能不同（如 `owner_ref`/`authority_ref`/`resource_scope_ref`），机器形状以登记 schema 为准，本文伪 schema 只约束语义。
+以下伪 schema 表示规范语义。治理对象族的已登记机器 schema 见 [governed-object-contract](../../standards/governed-object-contract.md) 与 `specs/schemas/`；登记字段名与此处示意可能不同（如 `owner_ref`/`authority_ref`/`resource_scope_ref`），机器形状以登记 schema 为准，本文伪 schema 只约束语义。
 
 ```text
 GovernedObjectHeader {
@@ -592,7 +592,7 @@ ANN/全文索引 **MUST** 使用 tenant/scope/compartment 分区或等价的检�
 
 ## 17. 安全测试与验收
 
-实现声明支持本 RFC 前，至少应证明以下正例与负例；performance contract 与知识编译的 invalidation/poisoning/bounded-maintenance 场景已有 declarative vector（见 [conformance/vectors/](./conformance/vectors/)），其余场景仍是规范清单，除非 conformance 索引明确列出对应 vector。
+实现声明支持本 RFC 前，至少应证明以下正例与负例；performance contract 与知识编译的 invalidation/poisoning/bounded-maintenance 场景已有 declarative vector（见 [conformance/vectors/](../../../conformance/vectors)），其余场景仍是规范清单，除非 conformance 索引明确列出对应 vector。
 
 ### 17.1 必测正例
 
@@ -667,4 +667,4 @@ Agent Shell 是参考客户端，不是 authority。普通任务通道绑定 Aut
 
 ## 21. 机器规范化边界
 
-本 v0.2 Draft 已登记 performance report schema、PrivilegedManagementSession、ManagementActionProposal、ManagementApprovalDecision machine schema、REQ-PERF/REQ-KNOW registry 条目与 performance declarative vector；GovernanceDomainContext、Conversation、ResourceScope、ActorChain、Execution/ActivityContext 等治理对象族亦已由 [governed-object-contract](./docs/standards/governed-object-contract.md) 登记 v0.1 Draft machine schema。KnowledgeClaim、KnowledgeCompilationProfile 和 Ingest/Query/Lint 对象仍是伪 schema；后续可另行登记 JSON/CBOR schema、错误码、迁移工具与 knowledge vectors。只有实际提交、索引并固定 digest 的资产可用于机器符合性声明；schema 的存在不证明管理 session、gate 或 Shell 已实现。编号说明：v0.2 修订将 REQ-KNOW-003–008 与 registry/vector 统一为单一编号（003 Ingest 隔离、004 禁止自我佐证、005 有界维护、006 删除闭合、007 Query 过滤、008 Lint 四层），权威绑定以 [requirements.yaml](./specs/registry/requirements.yaml) 为准。
+本 v0.2 Draft 已登记 performance report schema、PrivilegedManagementSession、ManagementActionProposal、ManagementApprovalDecision machine schema、REQ-PERF/REQ-KNOW registry 条目与 performance declarative vector；GovernanceDomainContext、Conversation、ResourceScope、ActorChain、Execution/ActivityContext 等治理对象族亦已由 [governed-object-contract](../../standards/governed-object-contract.md) 登记 v0.1 Draft machine schema。KnowledgeClaim、KnowledgeCompilationProfile 和 Ingest/Query/Lint 对象仍是伪 schema；后续可另行登记 JSON/CBOR schema、错误码、迁移工具与 knowledge vectors。只有实际提交、索引并固定 digest 的资产可用于机器符合性声明；schema 的存在不证明管理 session、gate 或 Shell 已实现。编号说明：v0.2 修订将 REQ-KNOW-003–008 与 registry/vector 统一为单一编号（003 Ingest 隔离、004 禁止自我佐证、005 有界维护、006 删除闭合、007 Query 过滤、008 Lint 四层），权威绑定以 [requirements.yaml](../../../specs/registry/requirements.yaml) 为准。

@@ -4,7 +4,7 @@
 - **版本**：v0.1 Draft（machine `0.1.0-draft.1`）
 - **状态**：Draft Normative Standard（registered normative-behavior asset）
 - **日期**：2026-07-20
-- **权威边界**：本文定义 Agent 收益声明的实验设计、统计协议、声明门槛与发布阻断条件。机器证据格式由 [performance-report.schema.json](../../specs/schemas/performance-report.schema.json) 定义；指标语义沿用白皮书 [§19.4](../../CognitiveOS-Architecture.md#performance-contract) 与 [REQ-PERF-001..005](../../specs/registry/requirements.yaml)。本文不改变任何治理、授权或安全语义。
+- **权威边界**：本文定义 Agent 收益声明的实验设计、统计协议、声明门槛与发布阻断条件。机器证据格式由 [performance-report.schema.json](../../specs/schemas/performance-report.schema.json) 定义；指标语义沿用白皮书 [§19.4](../architecture/cognitiveos/CognitiveOS-Architecture.md#performance-contract) 与 [REQ-PERF-001..005](../../specs/registry/requirements.yaml)。本文不改变任何治理、授权或安全语义。
 - **适用性**：任何以 CognitiveOS（或其参考实现）名义发布的"Agent 性能收益""任务成功率提升""token/费用/时间节省""多 Agent 协作改善"声明。仅声明治理能力或非劣化的报告不受收益门槛约束，但仍受 REQ-PERF-001–004 约束。
 
 > 核心纪律：**没有测得收益时，只能声明"治理能力"或"性能不劣化"。**潜在机制、局部 microbenchmark 或主观分析不得包装成 Agent 性能提升。非劣化（B 相对 A）只能声明"治理附加成本可接受"，不能声明性能提升。

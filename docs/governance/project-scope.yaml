@@ -5,8 +5,8 @@ architecture_layer:
   id: cognitiveos-architecture
   status: reference-and-contract-foundation
   sources:
-    - CognitiveOS-Architecture.md
-    - RFC-0001-cognitiveos-governance-context-access.md
+    - docs/architecture/cognitiveos/CognitiveOS-Architecture.md
+    - docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     - specs/
     - conformance/
 active_project:

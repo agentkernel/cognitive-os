@@ -34,9 +34,11 @@ non_claims:
 
 Root files: `Cargo.toml` (workspace + shared lints), `package.json` (pnpm scripts),
 `pnpm-workspace.yaml`, `rust-toolchain.toml` (pinned 1.97.1), `AGENTS.md` (agent
-entry), `plan.md` (research detail), whitepaper + reviews + RFC-0001 (informative /
-frozen), `LICENSE`/`NOTICE` (Apache-2.0; Pi and Node are not redistributed),
-`llms.txt` (AI pointer).
+entry), `LICENSE`/`NOTICE` (Apache-2.0; Pi and Node are not redistributed),
+`llms.txt` (AI pointer). Architecture whitepaper, reviews and RFC-0001 live under
+`docs/architecture/cognitiveos/` (`FROZEN_DOCS`). Research task-card detail is
+`docs/plan/plan.md`. Owner analysis notes live under `docs/research/`
+(informative; not a backlog). Never cite `History/`.
 
 Dependency direction (enforced by crate manifests):
 `contracts → domain → kernel → {store, management, runtime} → apps`, with

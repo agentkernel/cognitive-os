@@ -18,7 +18,7 @@ tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - packages/pi-cognitiveos/src/safety.test.ts
   - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:3a72e456d6f83b9c187806d188e4feecae0d7ed482ab4fde78b6225d2d96dbac"
+fingerprint: "sha256:4434049915e38bf4384f04b027af5b52b9f08d158a0f14755a05a6ed4eb0ba42"
 non_claims:
   - Windows 本地 runtime 文件仍缺少显式 ACL 加固——OS CSPRNG 令牌生成不构成 ACL 声明。
 ---

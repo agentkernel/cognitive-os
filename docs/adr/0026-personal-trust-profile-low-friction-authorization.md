@@ -7,7 +7,7 @@
   CognitiveOS specification requirement, registry REQ, schema, transition,
   vector, Profile claim, G0 claim, or B01-B12 claim. It changes **when a human
   is asked**, not **what the system records or enforces**.
-- Related: plan.md DEC-P-20, risk R-22, §17 Deferred Backlog (企业审批),
+- Related: docs/plan/plan.md DEC-P-20, risk R-22, §17 Deferred Backlog (企业审批),
   REQ-CAP-001/002/003 (capability bind/attenuation/lease),
   REQ-RUN-003/005/008 + REQ-RES-001 (budgets/bounds), REQ-EFF-001..006
   (Intent/Effect), REQ-AUDIT-001/002, PERS-PR-022

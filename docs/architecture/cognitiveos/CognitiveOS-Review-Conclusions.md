@@ -2,10 +2,10 @@
 
 - **版本**：2.0
 - **日期**：2026-07-20
-- **时效标注（2026-08-10）**：historical dated review report；现行白皮书版本与 Personal 公理入口见 `CognitiveOS-Architecture.md`（1.0.3-personal-baseline）与 `docs/governance/AXIOMS.md`。本文不创建当前任务、lease 或 Gate 状态。
+- **时效标注（2026-08-10）**：historical dated review report；现行白皮书版本与 Personal 公理入口见 `docs/architecture/cognitiveos/CognitiveOS-Architecture.md`（1.0.3-personal-baseline）与 `docs/governance/AXIOMS.md`。本文不创建当前任务、lease 或 Gate 状态。
 - **文档性质**：Informative 审查报告。本文不构成规范义务；本轮登记的 REQ/错误码/向量均已按规范变更流程写入 registry/schema/vector 并在白皮书附录 D 1.0.1 留有迁移记录。
-- **评审对象**：[CognitiveOS-Architecture.md](./CognitiveOS-Architecture.md) v1.0.0（未提交工作区状态）及全部仓库机器资产。
-- **评审方法**：反方优先。先实测资产（不信历史计数），再逐项核验白皮书声明与 registry/schema/transition/vector 的双向一致性，推演 26 类故障场景，核验外部证据，最后在证据支持处直接修复并复验。评审期间仓库出现另一份独立只读审查报告（[CognitiveOS-Architecture-Independent-Review.md](./CognitiveOS-Architecture-Independent-Review.md)，快照 f2f826a，F-001–F-030）；本报告对其每条 finding 独立复核后逐条处置（§6.4），凡采纳修复均以静态反例复验。
+- **评审对象**：[docs/architecture/cognitiveos/CognitiveOS-Architecture.md](./CognitiveOS-Architecture.md) v1.0.0（未提交工作区状态）及全部仓库机器资产。
+- **评审方法**：反方优先。先实测资产（不信历史计数），再逐项核验白皮书声明与 registry/schema/transition/vector 的双向一致性，推演 26 类故障场景，核验外部证据，最后在证据支持处直接修复并复验。评审期间仓库出现另一份独立只读审查报告（[docs/architecture/cognitiveos/CognitiveOS-Architecture-Independent-Review.md](./CognitiveOS-Architecture-Independent-Review.md)，快照 f2f826a，F-001–F-030）；本报告对其每条 finding 独立复核后逐条处置（§6.4），凡采纳修复均以静态反例复验。
 - **变更记录**：v2.0 全文重写为本轮证据化审查报告，替代 v1.2（v1.2 的评审基线与改进项追踪已完成历史使命，其结论逐条处置见 §6）。v1.2 及更早内容可从 git 历史获取。
 
 ---
@@ -17,8 +17,8 @@
 判定依据（每条指向可核验证据）：
 
 1. **机器合同闭合**：273 条 REQ、55 个错误码、56 份 schema、5 张迁移表（54 状态/90 迁移）、74 个向量，REQ↔向量双向无孤儿、owner_spec 全部可解析、向量引用的错误码全部已登记（§8 验证记录）；非法状态组合经条件 schema 封闭并以静态反例复验（§7.1）。
-2. **状态机一致**：白皮书 §6.3 五状态机文本图与 [specs/transitions/](./specs/transitions/) 逐边一致（含 Effect `reconciliation_result` 三分、`Verification PASSED→EXPIRED`、Task 验收 guard `acceptance_authority_matches` + `verification_passed_and_current` + `fixed_post_state_unchanged`）；终态无出边、无未声明状态（脚本核验）。
-3. **收益声明有合同**：本轮新增 [Agent 收益评测合同](./docs/evaluation/agent-benefit-benchmark.md)（REQ-PERF-005），四臂设计 + 预注册门槛 + kill criteria + gaming 防护；performance-report schema 可表达 arms/CI/effect size/ablation/claim_level。修复前该能力不存在（F1）。
+2. **状态机一致**：白皮书 §6.3 五状态机文本图与 [specs/transitions/](../../../specs/transitions) 逐边一致（含 Effect `reconciliation_result` 三分、`Verification PASSED→EXPIRED`、Task 验收 guard `acceptance_authority_matches` + `verification_passed_and_current` + `fixed_post_state_unchanged`）；终态无出边、无未声明状态（脚本核验）。
+3. **收益声明有合同**：本轮新增 [Agent 收益评测合同](../../evaluation/agent-benefit-benchmark.md)（REQ-PERF-005），四臂设计 + 预注册门槛 + kill criteria + gaming 防护；performance-report schema 可表达 arms/CI/effect size/ablation/claim_level。修复前该能力不存在（F1）。
 4. **核心命题成立但未被实现证明**：仓库实现代码为 0 行，一切"正确运行"均处于"规范已登记"状态；本报告把正确性转化为可执行门禁（§7），不宣称任何能力已实现。
 
 ---
@@ -52,10 +52,10 @@ v1.2 的计数在其测量时点（v0.8 评审期）为真，但已不能描述�
 
 ### F1（P0，已修复）：Agent 收益声明无机器合同，schema 无法表达对照实验
 
-- **证据**：修复前 [performance-report.schema.json](./specs/schemas/performance-report.schema.json) 的 `baselines`/`ablations` 仅为字符串名数组；无 effect size、无逐臂结果、无 claim level；`category` 枚举无收益类；仓库全文搜索无任何 A/B/ablation 实验设计文档。
+- **证据**：修复前 [performance-report.schema.json](../../../specs/schemas/performance-report.schema.json) 的 `baselines`/`ablations` 仅为字符串名数组；无 effect size、无逐臂结果、无 claim level；`category` 枚举无收益类；仓库全文搜索无任何 A/B/ablation 实验设计文档。
 - **失败方式**：任何人都可以发布"装上 CognitiveOS 后 Agent 更快更准"的报告而无须提供对照臂、置信区间或预注册门槛；REQ-PERF-001–004 只约束报告格式与治理开销，不约束收益声明的因果证据。这直接违背最终目标 4（无收益只能声明治理/非劣化）。
 - **影响范围**：§19.4、§21 Phase 1、全部性能叙事的可信度。
-- **修复**：新增[评测合同](./docs/evaluation/agent-benefit-benchmark.md)（四臂、W1/W2/W3、六条门槛、非劣化边界、kill criteria、gaming 防护 10 条）；登记 REQ-PERF-005；schema 加 `agent_benefit` 类别与 `comparison` 块；PERF-REPORT-CONTRACT-001 增 comparison 正例 + "无对照收益声明→PERFORMANCE_REPORT_INCOMPLETE"负例；§19.4/§21 回写。
+- **修复**：新增[评测合同](../../evaluation/agent-benefit-benchmark.md)（四臂、W1/W2/W3、六条门槛、非劣化边界、kill criteria、gaming 防护 10 条）；登记 REQ-PERF-005；schema 加 `agent_benefit` 类别与 `comparison` 块；PERF-REPORT-CONTRACT-001 增 comparison 正例 + "无对照收益声明→PERFORMANCE_REPORT_INCOMPLETE"负例；§19.4/§21 回写。
 
 ### F2（P0，已修复主体，残余见 F8/F9）：关键安全负例与崩溃路径向量是空壳
 
@@ -65,7 +65,7 @@ v1.2 的计数在其测量时点（v0.8 评审期）为真，但已不能描述�
 
 ### F3（P1，已修复）：18 条 REQ 的规范权威落点指向 informative 文档
 
-- **证据**：修复前 17 条 REQ 的 `owner_spec` 指向 `CognitiveOS-Architecture.md#...` 锚点（REQ-STATE-003/004、CTX-004/008、CAP-002/003、EFF-004/006、RES-001、SEC-002、五条 PROFILE-*、PERF-002/004），另有 REQ-PROFILE-HET-001 指向 schema 文件（行为文本落在形状资产）。这与仓库自身规范优先级（digest 固定机器资产 > companion > 白皮书）及 [normative-source-and-versioning](./docs/standards/normative-source-and-versioning.md) §2/§3 的资产分类与形状/行为分离直接冲突。
+- **证据**：修复前 17 条 REQ 的 `owner_spec` 指向 `docs/architecture/cognitiveos/CognitiveOS-Architecture.md#...` 锚点（REQ-STATE-003/004、CTX-004/008、CAP-002/003、EFF-004/006、RES-001、SEC-002、五条 PROFILE-*、PERF-002/004），另有 REQ-PROFILE-HET-001 指向 schema 文件（行为文本落在形状资产）。这与仓库自身规范优先级（digest 固定机器资产 > companion > 白皮书）及 [normative-source-and-versioning](../../standards/normative-source-and-versioning.md) §2/§3 的资产分类与形状/行为分离直接冲突。
 - **失败方式**：修改白皮书叙述即事实上修改规范义务，绕开 companion 的版本纪律；实现者无法确定哪个文本是权威条文。
 - **修复**：18 条全部 repoint 至已存在对应条文的 companion（REQ-PROFILE-CVM-001 条文本轮补入 Core §15.3；REQ-PERF-002/004 条文本轮补入符合性索引）；白皮书 §1.2 对齐说明同步更新，锚点降级为检索入口。
 
@@ -227,7 +227,7 @@ CognitiveOS 与宿主 OS/Runtime/工作流/DB/消息系统/MCP/A2A 的边界（�
 
 ### 6.4 独立审查报告（F-001–F-030）逐条处置
 
-对 [CognitiveOS-Architecture-Independent-Review.md](./CognitiveOS-Architecture-Independent-Review.md) 的 30 条 finding，本报告逐条独立复核（不预设其正确）后处置如下。凡"已修复"均经静态反例复验（修复前反例 schema-valid / 修复后被拒）：
+对 [docs/architecture/cognitiveos/CognitiveOS-Architecture-Independent-Review.md](./CognitiveOS-Architecture-Independent-Review.md) 的 30 条 finding，本报告逐条独立复核（不预设其正确）后处置如下。凡"已修复"均经静态反例复验（修复前反例 schema-valid / 修复后被拒）：
 
 | Finding | 复核结论 | 处置 |
 |---|---|---|

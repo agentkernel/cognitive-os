@@ -4,7 +4,7 @@
 - Project: `cognitiveos-personal`
 - Current-status owner: [PROGRESS.md](../../plan/PROGRESS.md) `Current snapshot`
 - Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../plan/PERSONAL-DEVELOPMENT-PLAN.md)
-- Product decisions: [Personal ADRs](../../adr/)
+- Product decisions: [Personal ADRs](../../adr)
 
 This directory owns stable product intent, user concepts, release boundaries
 and user journeys. It does not own implementation status, active leases,
@@ -18,7 +18,7 @@ low-friction place to organize and govern six user-visible families: Memory,
 Skill, Tool, Context, Task and Runtime/Process. A Pi-hosted Agent Shell is the
 primary conversational entry for Linux 1.0, while the Rust daemon remains the
 sole authority writer. Post-1.0 design (see
-[personal-2.0-scope.md](personal-2.0-scope.md)) extends the same substrate to
+[personal-2.0-scope.md](./personal-2.0-scope.md)) extends the same substrate to
 independently qualified Agents under a Universal Adapter Contract.
 
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
@@ -62,11 +62,11 @@ The stable top-level spaces are:
 
 | Document | Responsibility |
 |---|---|
-| [Product design](product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
-| [Cognitive resource model](cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
-| [Linux 1.0 scope](linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
-| [Personal 2.0 scope](personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
-| [User journeys](user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
+| [Product design](./product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
+| [Cognitive resource model](./cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
+| [Linux 1.0 scope](./linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
+| [Personal 2.0 scope](./personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
+| [User journeys](./user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
 
 The baseline decisions are
 [ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md) and

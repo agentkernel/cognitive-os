@@ -4,7 +4,7 @@
 
 - 完成 `P0-T01`（固定可复现基线与支持工具链），未修改生产代码、规范、schema、向量或 generated binding。
 - 新增 [tests/baseline/README.md](../../tests/baseline/README.md)，记录可复现命令、工具链版本、CI 证据和本地测量方法。
-- 在正式台账中将 `P0-T01` 标记为 `done`，并更新 `plan.md` 与 `docs/plan/PROGRESS.md`；该 `done` 仅为 Personal 管理任务状态，不代表 G0、B01-B12、产品实现或 Profile 已符合。
+- 在正式台账中将 `P0-T01` 标记为 `done`，并更新 `docs/plan/plan.md` 与 `docs/plan/PROGRESS.md`；该 `done` 仅为 Personal 管理任务状态，不代表 G0、B01-B12、产品实现或 Profile 已符合。
 - 固定基线为 `01ceb93ec3189af599a0754f34ea76b76a363ff0`；GitHub Actions [CI run 30140381194](https://github.com/agentkernel/cognitive-os/actions/runs/30140381194) 在 `ubuntu-latest` 和 `windows-latest` 均成功。Windows job 日志确认 Rust host 为 `x86_64-pc-windows-msvc`。
 - 支持组合结论：Linux CI runner 与 Windows/MSVC CI runner 是可复现基线；本机 `x86_64-pc-windows-gnu` host 不是支持基线。
 - 提交 `11b7b01`：`docs: record Personal P0-T01 toolchain baseline`（关联 `P0-T01`）。
