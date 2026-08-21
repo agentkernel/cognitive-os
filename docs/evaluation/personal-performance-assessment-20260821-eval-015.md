@@ -44,7 +44,7 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
 | B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
-| B5 8 h | running (resumed at minute 420) | Minutes 0–419 contiguous, `local_non_ok=0`; 42/42 G1 pairs both True. Minute-420 first attempt `RESTART_FAIL` retained: disk full during ~4.19 GiB store copy (`sqlite create consistent database copy: database or disk is full`). Campaign-only `authority.before-migration.*.sqlite` backups removed (36.9 GiB); guest `/` 35 GiB free. Resume pid **414832**. Residue untouched. 24 h default deferred |
+| B5 8 h | running (pid 414832) | Minutes 0–422 contiguous, `local_non_ok=0`; 43/43 G1 pairs both True. Minute-420 disk-full fail retained; campaign backups cleared; resume health 200 in **103.8 s**, kernel **414841**. Broker 369469 on `48406`. Residue untouched. 24 h default deferred |
 | B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
@@ -353,12 +353,15 @@ backup files were deleted (36 922 511 360 bytes); residue listeners
 and closed EVAL roots were not touched. Live `authority.sqlite` and
 jsonl samples were kept. Disk after delete: 35 GiB free. Samples
 0–419 / 42 pairs retained. Hardened resume started as pid **414832**
-(`START_MINUTE=420`, `START_PAIR_INDEX=54`).
+(`START_MINUTE=420`, `START_PAIR_INDEX=54`). Minute-420 retry: health
+200 in **103.8 s**, kernel **414841**, pair 43 both True; local minutes
+**0–422** contiguous `local_non_ok=0`; **43/43** pairs. No further
+hourly restart before minute 480.
 
 ## Unique next action
 
 Finish the live B5 8 h continuation (pid **414832**, last completed
-minute **419**, resume at 420). Do not start a second continuation.
-Record B5 24 h default deferred unless the 8 h slope trigger is met,
-then cleanup + secret scan + final assessment and close the campaign
-row/lease. Do not auto-start unrelated backlog.
+minute **422**). Do not start a second continuation. Record B5 24 h
+default deferred unless the 8 h slope trigger is met, then cleanup +
+secret scan + final assessment and close the campaign row/lease. Do
+not auto-start unrelated backlog.
