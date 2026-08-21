@@ -157,6 +157,14 @@ v0.1 和 Post-v0.1 计划是 CognitiveOS 架构形成过程或验证参考，除
 
 - [evaluation/agent-benefit-benchmark.md](evaluation/agent-benefit-benchmark.md)：REQ-PERF-005 归属文档（四臂对照 + 预注册门槛）。
 
+## docs/research/（informative；非计划源）
+
+研究评审与 owner 分析。不创建任务、REQ、Gate、lease 或当前状态。
+
+- [research/20260726-frontier-review-and-environment-perception.md](research/20260726-frontier-review-and-environment-perception.md)：前沿对照与运行环境感知评审
+- [research/20260812-personal-next-batch-development-analysis.md](research/20260812-personal-next-batch-development-analysis.md)：Personal 下一批次能力分析
+- [research/20260812-personal-optimization-proposal.md](research/20260812-personal-optimization-proposal.md)：Personal 架构优化决策方案
+
 ## 其他
 
 - `apps/cognitiveos-console/PRODUCT-DESIGN.md`：informative 产品设计（状态 planned）；后端依赖台账登记于 DEVELOPMENT-PLAN Console 节。

@@ -80,8 +80,6 @@
     { "glob": "CognitiveOS-Architecture.md", "category": "legacy-docs", "reason": "informative whitepaper" },
     { "glob": "CognitiveOS-Architecture-Independent-Review.md", "category": "legacy-docs", "reason": "frozen historical review" },
     { "glob": "CognitiveOS-Review-Conclusions.md", "category": "legacy-docs", "reason": "frozen historical review" },
-    { "glob": "CognitiveOS-Personal-Next-Batch-Development-Analysis.md", "category": "legacy-docs", "reason": "informative owner analysis; not a handbook source" },
-    { "glob": "CognitiveOS-Personal-Optimization-Proposal.md", "category": "legacy-docs", "reason": "informative owner review; not a handbook source" },
     { "glob": "RFC-0001-cognitiveos-governance-context-access.md", "category": "legacy-docs", "reason": "normative companion RFC" },
     { "glob": "LICENSE", "category": "legacy-docs", "reason": "license text" },
     { "glob": "NOTICE", "category": "legacy-docs", "reason": "license notice" },
