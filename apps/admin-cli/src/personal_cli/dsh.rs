@@ -424,7 +424,7 @@ fn execution_environment_for_layout_roots(
     let mut environment = BTreeMap::new();
     for key in [
         "PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LC_ALL", "TZ", "TMPDIR", "TMP", "TEMP",
-        "SystemRoot", "WINDIR", "ComSpec", "PATHEXT",
+        "PNPM_HOME", "COREPACK_HOME", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT",
     ] {
         if let Ok(value) = std::env::var(key) {
             environment.insert(key.to_owned(), value);
@@ -523,7 +523,10 @@ mod tests {
             adapter_root: PathBuf::from("adapter"),
             revision: DSH_PACKAGE_REVISION.to_owned(),
         });
-        assert!(relative.unwrap_err().contains("absolute"), "{relative:?}");
+        assert!(
+            relative.as_ref().unwrap_err().contains("absolute"),
+            "{relative:?}"
+        );
 
         let temporary = TempDir::new().expect("temp");
         let wrong = configure(&DshConfigureOptions {
@@ -534,7 +537,10 @@ mod tests {
             adapter_root: temporary.path().join("adapter"),
             revision: "0000000000000000000000000000000000000000".to_owned(),
         });
-        assert!(wrong.unwrap_err().contains("exact pin"), "{wrong:?}");
+        assert!(
+            wrong.as_ref().unwrap_err().contains("exact pin"),
+            "{wrong:?}"
+        );
     }
 
     #[test]
@@ -616,7 +622,7 @@ mod tests {
             &ready_doctor_without_pi(),
         );
         assert!(
-            missing.unwrap_err().contains("dsh configuration is absent"),
+            missing.as_ref().unwrap_err().contains("dsh configuration is absent"),
             "{missing:?}"
         );
 
@@ -647,7 +653,7 @@ mod tests {
             &doctor.to_string(),
         );
         assert!(
-            unready.unwrap_err().contains("`secret` is not ready"),
+            unready.as_ref().unwrap_err().contains("`secret` is not ready"),
             "{unready:?}"
         );
     }

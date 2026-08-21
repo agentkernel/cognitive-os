@@ -74,9 +74,6 @@ async function materializeKeyFile(source) {
   };
 }
 
-const keyMaterial = await materializeKeyFile(apiKeyFile);
-const resolvedKeyFile = keyMaterial.path;
-
 function runSample(providerPath, extraArgs) {
   return new Promise((resolve, reject) => {
     const child = spawn(
