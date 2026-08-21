@@ -72,7 +72,9 @@ digests) live in the formal plan's evidence records — link, never copy.
 durations on each candidate-only submit. Those fields are measurement hooks
 for paired Path A (dsh → DeepSeek Flash) versus Path B (dsh → AKP → daemon →
 Flash) observation. They do not claim zero overhead, losslessness, or any
-Gate/release/Profile/B01/Agent-benefit result.
+Gate/release/Profile/B01/Agent-benefit result. The linux-002 harness
+`scripts/linux002-e2e.mjs` records those timings on live submits; it is not a
+Gate sample.
 
 Status `partial` because the daemon itself exposes no continuous performance
 instrumentation; everything here is opt-in measurement tooling.

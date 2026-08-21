@@ -63,7 +63,8 @@ T1）。campaign **结果**（哪些 cell 执行、retained 计数、digest）�
 `@cognitiveos/dsh-akp-adapter` 为每次仅 candidate 的 submit 记录 serialization、
 transport 与 total。这些字段只是 Path A（dsh → DeepSeek Flash）与 Path B
 （dsh → AKP → daemon → Flash）配对观察的测量入口，不构成零开销、无损或任何
-Gate/release/Profile/B01/Agent-benefit 结论。
+Gate/release/Profile/B01/Agent-benefit 结论。linux-002 harness
+`scripts/linux002-e2e.mjs` 会在真机 submit 上记录这些计时，不是 Gate 样本。
 
 状态 `partial` 是因为 daemon 自身不暴露持续性能仪表；这里的一切都是选择性使用的测量
 工具。

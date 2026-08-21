@@ -121,4 +121,6 @@ WorkspaceSearch 需要 query；WorkspaceWrite/Patch 需要规范 `input_b64` 与
 TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 发送
 事件。它不接收 Provider 凭据、不写权威状态，也不把 dsh 响应当作 Task 完成。linux-002
 真机只是 implementation evidence，不构成 Gate、release、Profile、B01 或 Agent-benefit。
-timing 字段只是测量入口，不能推出零开销保证。
+timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
+在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`，同样只是
+implementation evidence。

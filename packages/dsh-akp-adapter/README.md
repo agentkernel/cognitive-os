@@ -27,7 +27,8 @@ lifecycle events are accepted without authority writes. A dsh response is never
 Task completion.
 
 The adapter records serialization, transport, and total durations separately.
-It does not claim zero overhead. Measure paired dsh-direct versus
+`scripts/linux002-e2e.mjs` drives attachDshCordisPlugin over HTTP against a
+live Personal daemon. It does not claim zero overhead. Measure paired dsh-direct versus
 dsh → AKP → daemon runs with warm and cold process conditions, and report
 p50/p95, TTFT, Provider network time, and retained failures. Live linux-002
 results are implementation evidence, not a Gate, release, Profile, B01, or

@@ -145,4 +145,6 @@ a long-lived, length-bounded transport. It never receives Provider
 credentials, writes authority state, or treats a dsh response as Task
 completion. Live linux-002 runs are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit result. Timing fields are measurement
-hooks, not a zero-overhead claim.
+hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
+drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
+runtime and remains implementation evidence only.
