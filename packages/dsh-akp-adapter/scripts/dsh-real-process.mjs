@@ -13,8 +13,8 @@
 import { spawn } from "node:child_process";
 import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
-import { pathToFileURL } from "node:url";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 function arg(name, fallback) {
   const index = process.argv.indexOf(name);
@@ -34,6 +34,7 @@ if (!Number.isInteger(port) || port < 1 || !bootstrapPath || !dshRoot || !adapte
 }
 const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
 const pluginHref = pathToFileURL(join(adapterRoot, "dist", "plugin.js")).href;
+const scriptDir = dirname(fileURLToPath(import.meta.url));
 const work = join(tmpdir(), `p8t09-dsh-real-${process.pid}`);
 mkdirSync(work, { mode: 0o700, recursive: true });
 const bearerFile = join(work, "daemon.bearer");
@@ -89,6 +90,34 @@ writeFileSync(
 );
 chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
 
+function startSseBridge(upstream) {
+  const child = spawn(
+    process.execPath,
+    [join(scriptDir, "provider-sse-bridge.mjs"), "--listen", "127.0.0.1:0", "--upstream", upstream],
+    { stdio: ["ignore", "pipe", "pipe"] },
+  );
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error("sse bridge listen timeout")), 5000);
+    const onExit = (code) => {
+      clearTimeout(timer);
+      reject(new Error(`sse bridge exited ${code}`));
+    };
+    child.stdout.setEncoding("utf8");
+    child.stdout.on("data", (chunk) => {
+      const match = String(chunk).match(/listening ([^\s]+):(\d+)/);
+      if (match) {
+        clearTimeout(timer);
+        child.off("exit", onExit);
+        resolve({ child, origin: `http://127.0.0.1:${match[2]}` });
+      }
+    });
+    child.once("exit", onExit);
+  });
+}
+
+const sseBridge = await startSseBridge(`${origin}/provider/v1`);
+const providerBase = `${sseBridge.origin}/provider/v1`;
+
 writeFileSync(
   patchFile,
   [
@@ -107,7 +136,7 @@ writeFileSync(
     "            ok: true",
     "- id: llm-deepseek",
     "  config:",
-    `    baseURL: ${origin}/provider/v1`,
+    `    baseURL: ${providerBase}`,
     "    apiKeyEnv: DAEMON_BEARER",
     "",
   ].join("\n"),
@@ -171,6 +200,7 @@ child.stderr.on("data", (chunk) => {
 const exitCode = await new Promise((resolve) => {
   child.on("close", resolve);
 });
+sseBridge.child.kill("SIGTERM");
 const elapsedMs = Date.now() - started;
 const assistant = stdout.trim().split(/\r?\n/).filter((line) => line && !line.startsWith("$")).at(-1) ?? "";
 
@@ -179,7 +209,7 @@ rmSync(work, { recursive: true, force: true });
 const summary = {
   revision_pin: revisionPin ?? null,
   guest_port: port,
-  adapter: "dsh --patch cognitiveos-akp + llm-deepseek via daemon provider proxy",
+  adapter: "dsh --patch cognitiveos-akp + llm-deepseek via SSE-to-unary daemon provider proxy",
   candidate_only: true,
   dsh_response_is_not_task_completion: true,
   selected_model: selected.json?.model ?? selected.json?.selected_model ?? null,

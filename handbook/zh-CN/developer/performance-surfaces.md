@@ -67,8 +67,8 @@ transport 与 total。这些字段只是 Path A（dsh → DeepSeek Flash）与 P
 （dsh → AKP → daemon → Flash）配对观察的测量入口，不构成零开销、无损或任何
 Gate/release/Profile/B01/Agent-benefit 结论。linux-002 harness
 `scripts/linux002-e2e.mjs` 会在 shim submit 上记录这些计时；
-`scripts/dsh-real-process.mjs` 记录真实 dsh 进程经 daemon Provider 代理的墙钟时间。
-两者都不是 Gate 样本。
+`scripts/dsh-real-process.mjs` 记录真实 dsh 进程经 loopback SSE-to-unary 桥接到
+daemon Provider 代理的墙钟时间。两者都不是 Gate 样本。
 
 状态 `partial` 是因为 daemon 自身不暴露持续性能仪表；这里的一切都是选择性使用的测量
 工具。

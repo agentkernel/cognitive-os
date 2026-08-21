@@ -126,5 +126,5 @@ TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 
 timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
 在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`。
 `packages/dsh-akp-adapter/src/plugin.ts` 是 `dsh --patch` 的 Cordis `apply` 入口；
-`scripts/dsh-real-process.mjs` 运行钉住的 headless dsh，并把 Flash 经 daemon
-Provider 代理转发。两者都只是 implementation evidence。
+`scripts/dsh-real-process.mjs` 运行钉住的 headless dsh，并把 Flash 经 loopback
+SSE-to-unary 桥接到 daemon Provider 代理。两者都只是 implementation evidence。

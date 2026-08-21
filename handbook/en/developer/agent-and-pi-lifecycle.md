@@ -151,5 +151,5 @@ hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e
 drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
 runtime. `packages/dsh-akp-adapter/src/plugin.ts` is the Cordis `apply` entry
 for `dsh --patch`; `scripts/dsh-real-process.mjs` runs pinned headless dsh and
-routes Flash through the daemon Provider proxy. Both remain implementation
-evidence only.
+routes Flash through a loopback SSE-to-unary bridge onto the daemon Provider
+proxy. Both remain implementation evidence only.
