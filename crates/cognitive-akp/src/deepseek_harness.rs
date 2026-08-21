@@ -293,14 +293,13 @@ impl DeepSeekHarnessAdapter {
         if request.event.payload.is_null() {
             return Err(DshAdapterError::InvalidEvent);
         }
-        if let Some(declared_task) = request.task_ref.as_deref() {
-            if self
+        if let Some(declared_task) = request.task_ref.as_deref()
+            && self
                 .bound_task_ref
                 .as_deref()
                 .is_some_and(|bound| bound != declared_task)
-            {
-                return Err(DshAdapterError::WrongSession);
-            }
+        {
+            return Err(DshAdapterError::WrongSession);
         }
 
         let operation = match request.event.kind {
@@ -477,6 +476,7 @@ pub fn handle_jsonl_line(
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {
     use super::*;
 
@@ -617,14 +617,14 @@ mod tests {
             DeepSeekHarnessAdapter::new(default_config("0.1.1-rc.1")).expect("config");
         adapter.activate("dsh-session-1").expect("activate");
         let malformed = handle_jsonl_line(&mut adapter, "{not-json", MAX_FRAME_BYTES);
-        assert_eq!(malformed.accepted, false);
-        assert_eq!(malformed.candidate_only, true);
+        assert!(!malformed.accepted);
+        assert!(malformed.candidate_only);
         assert_eq!(malformed.error.as_deref(), Some("MALFORMED_JSON"));
 
         let oversized = "x".repeat(MAX_FRAME_BYTES + 1);
         let large = handle_jsonl_line(&mut adapter, &oversized, MAX_FRAME_BYTES);
         assert_eq!(large.error.as_deref(), Some("FRAME_TOO_LARGE"));
-        assert_eq!(large.candidate_only, true);
+        assert!(large.candidate_only);
     }
 
     #[test]
