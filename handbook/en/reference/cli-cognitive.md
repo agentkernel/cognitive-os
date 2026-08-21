@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:dfa8ad8e658da9973879a2b5214fa4f336ea52b90b1ede64b710d8f3feab63b3"
+fingerprint: "sha256:24bb902ec8867c9a93653da8f30741ba648cec059ad825ebccfa49b05811155e"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."

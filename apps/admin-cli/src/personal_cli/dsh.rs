@@ -75,7 +75,8 @@ pub fn configure(options: &DshConfigureOptions) -> Result<Value, String> {
         ));
     }
 
-    let package = bind_dsh_package_identity(&options.revision).map_err(|error| error.to_string())?;
+    let package =
+        bind_dsh_package_identity(&options.revision).map_err(|error| error.to_string())?;
     let registered =
         register_dsh_adapter(&package, false, false, false).map_err(|error| error.to_string())?;
     let opened = open_dsh_lifecycle(&registered).map_err(|error| error.to_string())?;
@@ -95,7 +96,10 @@ pub fn configure(options: &DshConfigureOptions) -> Result<Value, String> {
     fs::create_dir_all(&options.dsh_root)
         .map_err(|error| format!("unable to create dsh root: {error}"))?;
     let revision_pin_path = options.dsh_root.join(DSH_REVISION_FILE_NAME);
-    atomic_write(&revision_pin_path, format!("{}\n", options.revision).as_bytes())?;
+    atomic_write(
+        &revision_pin_path,
+        format!("{}\n", options.revision).as_bytes(),
+    )?;
 
     let configuration_path = layout.config_dir().join(DSH_CONFIG_FILE_NAME);
     let document = json!({
@@ -296,7 +300,9 @@ fn verify_revision_pin(dsh_root: &Path, expected: &str) -> Result<(), String> {
             .stdout(Stdio::piped())
             .stderr(Stdio::null())
             .output()
-            .map_err(|_| "unable to execute git rev-parse for the configured dsh root".to_owned())?;
+            .map_err(|_| {
+                "unable to execute git rev-parse for the configured dsh root".to_owned()
+            })?;
         if !output.status.success() {
             return Err("configured dsh root is not a git checkout".to_owned());
         }
@@ -423,8 +429,23 @@ fn execution_environment_for_layout_roots(
 ) -> Result<BTreeMap<String, String>, String> {
     let mut environment = BTreeMap::new();
     for key in [
-        "PATH", "HOME", "USER", "LOGNAME", "SHELL", "LANG", "LC_ALL", "TZ", "TMPDIR", "TMP", "TEMP",
-        "PNPM_HOME", "COREPACK_HOME", "SystemRoot", "WINDIR", "ComSpec", "PATHEXT",
+        "PATH",
+        "HOME",
+        "USER",
+        "LOGNAME",
+        "SHELL",
+        "LANG",
+        "LC_ALL",
+        "TZ",
+        "TMPDIR",
+        "TMP",
+        "TEMP",
+        "PNPM_HOME",
+        "COREPACK_HOME",
+        "SystemRoot",
+        "WINDIR",
+        "ComSpec",
+        "PATHEXT",
     ] {
         if let Ok(value) = std::env::var(key) {
             environment.insert(key.to_owned(), value);
@@ -510,11 +531,7 @@ mod tests {
 
     fn write_helper_tree(root: &Path) {
         fs::create_dir_all(root.join("scripts")).expect("scripts");
-        fs::write(
-            root.join("scripts/dsh-real-process.mjs"),
-            "export {}\n",
-        )
-        .expect("helper");
+        fs::write(root.join("scripts/dsh-real-process.mjs"), "export {}\n").expect("helper");
         fs::write(root.join("plugin.bundle.cjs"), "module.exports = {}\n").expect("plugin");
     }
 
@@ -527,7 +544,10 @@ mod tests {
             revision: DSH_PACKAGE_REVISION.to_owned(),
         });
         assert!(
-            relative.as_ref().expect_err("relative path").contains("absolute"),
+            relative
+                .as_ref()
+                .expect_err("relative path")
+                .contains("absolute"),
             "{relative:?}"
         );
 
@@ -541,7 +561,10 @@ mod tests {
             revision: "0000000000000000000000000000000000000000".to_owned(),
         });
         assert!(
-            wrong.as_ref().expect_err("wrong revision").contains("exact pin"),
+            wrong
+                .as_ref()
+                .expect_err("wrong revision")
+                .contains("exact pin"),
             "{wrong:?}"
         );
     }
@@ -625,7 +648,10 @@ mod tests {
             &ready_doctor_without_pi(),
         );
         assert!(
-            missing.as_ref().expect_err("missing config").contains("dsh configuration is absent"),
+            missing
+                .as_ref()
+                .expect_err("missing config")
+                .contains("dsh configuration is absent"),
             "{missing:?}"
         );
 
@@ -656,7 +682,10 @@ mod tests {
             &doctor.to_string(),
         );
         assert!(
-            unready.as_ref().expect_err("unready secret").contains("`secret` is not ready"),
+            unready
+                .as_ref()
+                .expect_err("unready secret")
+                .contains("`secret` is not ready"),
             "{unready:?}"
         );
     }
@@ -664,9 +693,7 @@ mod tests {
     #[test]
     fn launch_rejects_direct_flash_path() {
         let error = launch(&DshLaunchOptions {
-            layout_roots: LayoutRoots {
-                runtime_root: None,
-            },
+            layout_roots: LayoutRoots { runtime_root: None },
             print_mode: true,
             provider_path: DshProviderPath::Direct,
             task: None,

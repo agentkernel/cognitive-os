@@ -21,9 +21,9 @@ use std::path::PathBuf;
 
 use serde_json::Value;
 
+pub use dsh::{DshConfigureOptions, DshLaunchOptions, DshProviderPath};
 pub use init::run_init;
 pub use layout::{LayoutRoots, resolve_layout_roots};
-pub use dsh::{DshConfigureOptions, DshLaunchOptions, DshProviderPath};
 pub use pi::{PiConfigureOptions, PiLaunchOptions};
 
 /// Top-level `cognitive` verb.
@@ -608,7 +608,10 @@ fn parse_pi_launch_options(flags: &BTreeMap<String, String>) -> Result<PiLaunchO
 fn parse_dsh_configure_options(
     flags: &BTreeMap<String, String>,
 ) -> Result<DshConfigureOptions, String> {
-    reject_unexpected_flags(flags, &["runtime-root", "dsh-root", "adapter-root", "revision"])?;
+    reject_unexpected_flags(
+        flags,
+        &["runtime-root", "dsh-root", "adapter-root", "revision"],
+    )?;
     Ok(DshConfigureOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
         dsh_root: required_dsh_path_flag(flags, "dsh-root")?,
@@ -625,11 +628,7 @@ fn parse_dsh_launch_options(flags: &BTreeMap<String, String>) -> Result<DshLaunc
     let provider_path = match flags.get("path").map(String::as_str) {
         None | Some("b") => DshProviderPath::Adapter,
         Some("a") => DshProviderPath::Direct,
-        Some(other) => {
-            return Err(format!(
-                "dsh launch --path must be a or b, not `{other}`"
-            ))
-        }
+        Some(other) => return Err(format!("dsh launch --path must be a or b, not `{other}`")),
     };
     Ok(DshLaunchOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
