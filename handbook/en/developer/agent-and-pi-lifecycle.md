@@ -26,6 +26,8 @@ sources:
     symbols: ["DeepSeekHarnessAdapter"]
   - path: crates/cognitive-akp/src/bin/dsh-akp-bridge.rs
   - path: packages/dsh-akp-adapter/src/index.ts
+  - path: packages/dsh-akp-adapter/src/plugin.ts
+    symbols: ["apply", "applyDshAkpCordisPlugin"]
   - path: packages/dsh-akp-adapter/src/index.test.ts
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
@@ -39,7 +41,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:55f757f37688ac7d1398d2c6158ca019dd5b60523fc4022d2504751275243910"
+fingerprint: "sha256:f0f083acdb5c0788ae0c40153d1b96f6c39814306d1b1789797cbca670d344ba"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -147,4 +149,7 @@ completion. Live linux-002 runs are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit result. Timing fields are measurement
 hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
 drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
-runtime and remains implementation evidence only.
+runtime. `packages/dsh-akp-adapter/src/plugin.ts` is the Cordis `apply` entry
+for `dsh --patch`; `scripts/dsh-real-process.mjs` runs pinned headless dsh and
+routes Flash through the daemon Provider proxy. Both remain implementation
+evidence only.

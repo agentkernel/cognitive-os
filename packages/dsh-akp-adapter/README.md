@@ -28,8 +28,11 @@ Task completion.
 
 The adapter records serialization, transport, and total durations separately.
 `scripts/linux002-e2e.mjs` drives attachDshCordisPlugin over HTTP against a
-live Personal daemon. It does not claim zero overhead. Measure paired dsh-direct versus
-dsh → AKP → daemon runs with warm and cold process conditions, and report
-p50/p95, TTFT, Provider network time, and retained failures. Live linux-002
-results are implementation evidence, not a Gate, release, Profile, B01, or
-Agent-benefit claim.
+live Personal daemon (shim host, not the dsh CLI). `src/plugin.ts` is the
+Cordis `apply` entry loaded by `dsh --patch`; `scripts/dsh-real-process.mjs`
+boots pinned headless dsh, activates `POST /task/akp/dsh` with a task-channel
+bearer file, and points `llm-deepseek` at `POST /provider/v1/chat/completions`
+with a management-channel credential ref. The Provider key stays in
+SecretStore. Timing fields are measurement hooks, not a zero-overhead claim.
+Live linux-002 and jump-host samples are implementation evidence, not a Gate,
+release, Profile, B01, or Agent-benefit claim.

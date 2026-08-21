@@ -26,6 +26,8 @@ sources:
     symbols: ["DeepSeekHarnessAdapter"]
   - path: crates/cognitive-akp/src/bin/dsh-akp-bridge.rs
   - path: packages/dsh-akp-adapter/src/index.ts
+  - path: packages/dsh-akp-adapter/src/plugin.ts
+    symbols: ["apply", "applyDshAkpCordisPlugin"]
   - path: packages/dsh-akp-adapter/src/index.test.ts
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
@@ -39,7 +41,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:55f757f37688ac7d1398d2c6158ca019dd5b60523fc4022d2504751275243910"
+fingerprint: "sha256:f0f083acdb5c0788ae0c40153d1b96f6c39814306d1b1789797cbca670d344ba"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -122,5 +124,7 @@ TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 
 事件。它不接收 Provider 凭据、不写权威状态，也不把 dsh 响应当作 Task 完成。linux-002
 真机只是 implementation evidence，不构成 Gate、release、Profile、B01 或 Agent-benefit。
 timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
-在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`，同样只是
-implementation evidence。
+在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`。
+`packages/dsh-akp-adapter/src/plugin.ts` 是 `dsh --patch` 的 Cordis `apply` 入口；
+`scripts/dsh-real-process.mjs` 运行钉住的 headless dsh，并把 Flash 经 daemon
+Provider 代理转发。两者都只是 implementation evidence。

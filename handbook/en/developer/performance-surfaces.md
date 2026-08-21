@@ -16,9 +16,11 @@ sources:
   - path: crates/cognitive-runtime/src/task_scenario_harness.rs
   - path: packages/dsh-akp-adapter/src/index.ts
     symbols: ["DshAkpTiming"]
+  - path: packages/dsh-akp-adapter/src/plugin.ts
+    symbols: ["applyDshAkpCordisPlugin"]
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:af3beddd6990e0cb310305c300a11e4065c8b1ee0ff43f5ad81837b25607a2e0"
+fingerprint: "sha256:82d5653b0d5ec70874e0614622593bd58ac96b6d146ad27f13dec7a429749a85"
 non_claims:
   - Every surface here produces hypothesis-level, non-claim observations only; no benefit, Gate, release, or Profile result is created by this code, and campaign execution results are owned by the formal plan's evidence records.
 ---
@@ -73,8 +75,9 @@ durations on each candidate-only submit. Those fields are measurement hooks
 for paired Path A (dsh → DeepSeek Flash) versus Path B (dsh → AKP → daemon →
 Flash) observation. They do not claim zero overhead, losslessness, or any
 Gate/release/Profile/B01/Agent-benefit result. The linux-002 harness
-`scripts/linux002-e2e.mjs` records those timings on live submits; it is not a
-Gate sample.
+`scripts/linux002-e2e.mjs` records those timings on live shim submits;
+`scripts/dsh-real-process.mjs` records real dsh process elapsed time through
+the daemon Provider proxy. Neither is a Gate sample.
 
 Status `partial` because the daemon itself exposes no continuous performance
 instrumentation; everything here is opt-in measurement tooling.

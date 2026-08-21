@@ -14,7 +14,7 @@
 - Branch: `personal/P8-T09-dsh-akp-adapter`
 - Draft PR: https://github.com/agentkernel/cognitive-os/pull/254
 - Lease: `lease/personal/P8-T09/dsh-akp-adapter`
-- HEAD: `a33e58ad426edf9d77755f8530205dce983891d1`
+- HEAD: `40384e4b620d2fbc5d69c768134b052af6fd3751` (docs/shim checkpoint); Cordis plugin is uncommitted until the next push.
 - Guest kernel-server/cognitive binaries: exact `9e239b7512e706d56d3359e5ab30a6c3469c35f8`
   (Rust mapping fix). Harness JS: `a33e58ad`.
 
@@ -50,8 +50,8 @@
 | Path B shim E2E Write | **pass** | disposable `p8-t09-write.txt` 24 bytes; lifecycle `COMPLETED`; dsh response ≠ Task completion |
 | Fail-closed version/secret | **pass** | `DSH_VERSION_MISMATCH`; `SECRET_SHAPED_PAYLOAD` |
 | Fail-closed malformed/oversized | **pass** / **pass-closed** | `MALFORMED_JSON`; oversized hits front-door `REQUEST_BODY_TOO_LARGE` (400) before AKP `FRAME_TOO_LARGE` |
-| Real dsh process → Flash | **not-run** | dsh cloned on jump host at pin; guest has no full dsh install |
-| Paired Path A/B Provider timing | **not-run** | shim timings recorded; no dsh-direct Flash samples; not a lossless claim |
+| Real dsh process → Flash | **partial** | Jump-host Path A `dsh --profile headless` **pass** (`pong`, 9.66 s) at pin `528c682e` after `build:lib:host`. linux-002 real dsh→daemon Flash still **not-run**. |
+| Paired Path A/B Provider timing | **partial** | Path A one-shot 9.66 s on `DEV-LINUX-NATIVE-01` (not p50/p95). Path B daemon proxy **not-run**. Not a lossless claim. |
 | Secret residue cleanup | **pass** | daemon 420890 stopped; `secret-tool clear` product triple exit 0; tight `sk-[A-Za-z0-9]{16,}` / PEM scan 48 files, 1 skipped large, 0 hits; EVAL listeners untouched |
 | Required CI | **partial** | Ubuntu verify pass on `a33e58ad` run; Windows pending at last check |
 
@@ -76,7 +76,8 @@ and no key digest. Cleanup cleared the product SecretStore attribute triple
 
 ## Unique next action
 
-Install pinned dsh on linux-002 (or run it on the jump host against a
-forwarded daemon) for real plugin events and paired Path A (dsh → DeepSeek
-Flash) versus Path B samples; keep fail-closed restart/timeout coverage; wait
-for Windows required CI; then D04 docs/CI/merge. Do not auto-claim P6/P7.
+Run `scripts/dsh-real-process.mjs` on identity-confirmed linux-002 (or jump-host
+dsh against the guest daemon) at a pushed exact revision for Path B Flash
+through `POST /provider/v1/chat/completions`; keep fail-closed
+restart/timeout coverage; wait for required CI; then D04 docs/CI/merge. Do not
+auto-claim P6/P7.

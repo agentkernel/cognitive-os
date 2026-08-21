@@ -15,6 +15,7 @@ import {
   type DshAdapterRequest,
   type DshAdapterResponse,
 } from "./index.js";
+import { applyDshAkpCordisPlugin, name as cordisPluginName } from "./plugin.js";
 
 const schemaDigest = PINNED_AKP_SCHEMA_DIGEST;
 
@@ -142,6 +143,48 @@ test("rejects oversized frames and mismatched response sequences", async () => {
   await assert.rejects(
     () => pairing.submit({ kind: "candidate", operation: "context.one", payload: { n: 1 } }),
     (error: unknown) => error instanceof DshAdapterError && error.code === "RESPONSE_INVALID",
+  );
+});
+
+test("Cordis apply reads a bearer file and emits startup candidates", async () => {
+  assert.equal(cordisPluginName, "cognitiveos-akp");
+  const requests: DshAdapterRequest[] = [];
+  const results: number[] = [];
+  let hostListener: ((payload: unknown) => void) | undefined;
+  const adapter = applyDshAkpCordisPlugin(
+    { on: (_event, callback) => { hostListener = callback; } },
+    {
+      endpoint: "http://127.0.0.1:9/task/akp/dsh",
+      bearerFile: "/tmp/p8-t09-bearer",
+      sessionId: "dsh-cordis-test",
+      startupEvents: [{ kind: "lifecycle", operation: "adapter.ready", payload: { ok: true } }],
+    },
+    {
+      transport: { send: async (request) => { requests.push(request); return response(request); } },
+      onResult: (result) => { results.push(result.response.sequence); },
+    },
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(adapter.lastSequence, 1);
+  assert.equal(requests[0]?.event.operation, "adapter.ready");
+  assert.deepEqual(results, [1]);
+  hostListener?.({ kind: "observation", operation: "adapter.observe", payload: { n: 2 } });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(adapter.lastSequence, 2);
+});
+
+test("Cordis apply fails closed without an endpoint or bearer file", () => {
+  assert.throws(
+    () => applyDshAkpCordisPlugin({ on: () => undefined }, { endpoint: " ", bearerFile: "/tmp/x" }),
+    (error: unknown) => error instanceof DshAdapterError && error.code === "INVALID_EVENT",
+  );
+  assert.throws(
+    () => applyDshAkpCordisPlugin(
+      { on: () => undefined },
+      { endpoint: "http://127.0.0.1:9/task/akp/dsh", bearerFile: "/tmp/x" },
+      { readBearer: () => "" },
+    ),
+    (error: unknown) => error instanceof DshAdapterError && error.code === "INVALID_EVENT",
   );
 });
 
