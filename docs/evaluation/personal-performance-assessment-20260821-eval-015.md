@@ -44,7 +44,7 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
 | B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
-| B5 8 h | running (pid 408358) | Minutes 0–262 contiguous, `local_non_ok=0`; 27/27 G1 pairs both True; 0 arm timeouts. Minute-180 fail retained then health 200 in 50.4 s. Minute-240: stale lock cleared, health 200 in 108.0 s, kernel **409767** still live. Broker 369469 on `48406`. Residue untouched. 24 h default deferred |
+| B5 8 h | running (pid 408358) | Minutes 0–283 contiguous, `local_non_ok=0`; 29/29 G1 pairs both True; 0 arm timeouts. Kernel **409767** still live after minute-240 restart. Broker 369469 on `48406`. Residue untouched. 24 h default deferred |
 | B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
@@ -320,10 +320,13 @@ Progress check 2026-08-21 09:53 (short SSH; pids left alone): pid
 `local_non_ok=0`; **27/27** pairs both True; heartbeat minute 260;
 store ~2.84 GiB; residue listeners untouched. No second continuation.
 
+Later short poll: minutes **0–283** contiguous, **29/29** pairs both
+True, store ~3.03 GiB, same pids, next hourly restart at 300.
+
 ## Unique next action
 
 Finish the live B5 8 h continuation (pid **408358**, last completed
-minute **262**, next hourly restart at 300). Do not start a second
+minute **283**, next hourly restart at 300). Do not start a second
 continuation. Record B5 24 h default deferred unless the 8 h slope
 trigger is met, then cleanup + secret scan + final assessment and
 close the campaign row/lease. Do not auto-start unrelated backlog.
