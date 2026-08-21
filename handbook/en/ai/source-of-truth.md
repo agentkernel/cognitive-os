@@ -40,5 +40,7 @@ This handbook sits below all of the above: it is generated/maintained documentat
 about the implementation. If a handbook page disagrees with a canonical source, the
 canonical source wins and the handbook page must be corrected in the same delivery.
 
-Never read or cite `History/` (frozen archive). Never treat old prompts
-(`docs/prompts/`), dated handoffs, or chat context as current facts.
+Never read or cite `History/` (frozen archive). Owner analysis under
+[`docs/research/`](../../../docs/research/README.md) is informative only — never a
+task, Gate, or status source. Never treat old prompts (`docs/prompts/`), dated
+handoffs, or chat context as current facts.

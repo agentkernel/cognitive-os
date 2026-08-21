@@ -39,5 +39,6 @@ non_claims:
 本手册位于上述全部来源之下：它是关于实现的派生文档。任何手册页面与 canonical 来源冲突
 时，以 canonical 来源为准，并在同一交付中修正手册。
 
-绝不读取或引用 `History/`（冻结归档）。绝不把旧提示词（`docs/prompts/`）、带日期的
-handoff 或聊天上下文当作当前事实。
+绝不读取或引用 `History/`（冻结归档）。[`docs/research/`](../../../docs/research/README.md)
+下的 owner 分析只是 informative，绝不是任务、Gate 或状态源。绝不把旧提示词
+（`docs/prompts/`）、带日期的 handoff 或聊天上下文当作当前事实。

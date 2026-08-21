@@ -35,8 +35,10 @@ non_claims:
 Root files: `Cargo.toml` (workspace + shared lints), `package.json` (pnpm scripts),
 `pnpm-workspace.yaml`, `rust-toolchain.toml` (pinned 1.97.1), `AGENTS.md` (agent
 entry), `plan.md` (research detail), whitepaper + reviews + RFC-0001 (informative /
-frozen), `LICENSE`/`NOTICE` (Apache-2.0; Pi and Node are not redistributed),
-`llms.txt` (AI pointer).
+frozen; these stay at repo root — identity and `FROZEN_DOCS` paths),
+`LICENSE`/`NOTICE` (Apache-2.0; Pi and Node are not redistributed),
+`llms.txt` (AI pointer). Owner analysis notes live under `docs/research/`
+(informative; not a backlog). Never cite `History/`.
 
 Dependency direction (enforced by crate manifests):
 `contracts → domain → kernel → {store, management, runtime} → apps`, with

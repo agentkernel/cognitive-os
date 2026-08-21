@@ -34,8 +34,10 @@ non_claims:
 
 根文件：`Cargo.toml`（workspace + 共享 lint）、`package.json`（pnpm 脚本）、
 `pnpm-workspace.yaml`、`rust-toolchain.toml`（钉住 1.97.1）、`AGENTS.md`（代理入
-口）、`plan.md`（研究细节）、白皮书 + 评审 + RFC-0001（informative / 冻结）、
-`LICENSE`/`NOTICE`（Apache-2.0；不再分发 Pi 与 Node）、`llms.txt`（AI 指针）。
+口）、`plan.md`（研究细节）、白皮书 + 评审 + RFC-0001（informative / 冻结；必须留在
+仓库根，身份与 `FROZEN_DOCS` 路径）、`LICENSE`/`NOTICE`（Apache-2.0；不再分发 Pi 与
+Node）、`llms.txt`（AI 指针）。owner 分析笔记在 `docs/research/`（informative，不是
+backlog）。绝不引用 `History/`。
 
 依赖方向（由 crate manifest 强制）：
 `contracts → domain → kernel → {store, management, runtime} → apps`；

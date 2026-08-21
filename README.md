@@ -53,7 +53,9 @@
 | 路径 | 内容 |
 |---|---|
 | [AGENTS.md](AGENTS.md) | 开发代理入口：命令速查、硬纪律、Definition of Done、会话协议 |
+| [plan.md](plan.md) | 研究与任务卡细节；不是当前状态源 |
 | [docs/README.md](docs/README.md) | 文档地图与分类口径 |
+| [docs/research/](docs/research/README.md) | owner 分析归档；不创建任务、Gate 或当前状态 |
 | [docs/product/personal/](docs/product/personal/) | 愿景、资源模型、Linux 1.0 范围和用户旅程（不拥有当前状态） |
 | [docs/architecture/personal/](docs/architecture/personal/) | Agent Shell、managed Agent、authority、数据与恢复组合设计 |
 | [clients/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/README.md) | PC + 手机客户端项目地图与目录索引（canonical；`docs/clients/` 为兼容入口） |

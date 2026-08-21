@@ -18,6 +18,16 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 
 ## 根目录
 
+根目录 Markdown **必须留在仓库根**，不得迁入 `docs/` 或 `History/`：
+
+- [PROJECT-IDENTITY.md](governance/PROJECT-IDENTITY.md) §2.1 把白皮书、RFC、评审结论登记为架构层入口；
+- `docs/governance/project-scope.yaml` 机器钉住白皮书与 RFC 的根路径；
+- `tools/src/check-consistency.mjs` 将白皮书、RFC 与两份评审列为根相对 `FROZEN_DOCS`（活文档链接核验跳过其内部历史锚点，但路径本身不可改）；
+- RFC 路径是 `docs/traceability/matrix.yaml` 与 conformance 向量的 `owner_spec`；
+- `AGENTS.md`、Operating Model 与 handbook 事实源将根 [`plan.md`](../plan.md) 定为研究/任务卡细节源（绝非当前状态）。
+
+过程分析、战役笔记和参赛稿不放根目录。Personal owner 分析归档在 [docs/research/](research/README.md)。`History/` 是禁止引用的冻结归档，不能当作这些根文件的迁入目标。
+
 | 文档 | 类别 | 更新责任 |
 |---|---|---|
 | [CognitiveOS-Architecture.md](../CognitiveOS-Architecture.md) | informative（白皮书 v1.0.2；语义真相在 registry/schema/companion，白皮书随后对齐） | 语义/结构型变更时按 docs-sync-contract 联动 |
@@ -26,6 +36,8 @@ Personal 任务的 task/evidence/Gate/claim 正交状态以
 | [CognitiveOS-Architecture-Independent-Review.md](../CognitiveOS-Architecture-Independent-Review.md) | informative（独立审查 F-001~F-030） | 冻结；现状核验写 findings-ledger |
 | [README.md](../README.md) | informative（四区导航） | 结构变化时同批更新 |
 | [AGENTS.md](../AGENTS.md) | informative（精简代理入口；不复制治理正文） | 项目入口或流程链接变化时更新 |
+| [plan.md](../plan.md) | informative（研究/任务卡细节；非当前状态源） | 正式计划结构变化时与 PERSONAL-DEVELOPMENT-PLAN 同批对齐 |
+| [llms.txt](../llms.txt) | informative（AI 入口指针） | handbook AI 入口变化时更新 |
 | [PROJECT-IDENTITY.md](governance/PROJECT-IDENTITY.md) | governance（仓库架构层与唯一活动项目边界） | 项目身份或默认工作范围变化时更新 |
 | [project-scope.yaml](governance/project-scope.yaml) | governance-machine（项目身份机器镜像） | 与 PROJECT-IDENTITY 同批更新 |
 | [DEVELOPMENT-OPERATING-MODEL.md](governance/DEVELOPMENT-OPERATING-MODEL.md) | governance（工具无关开发/evidence/Gate/lease 规则） | 治理变更时更新 |
