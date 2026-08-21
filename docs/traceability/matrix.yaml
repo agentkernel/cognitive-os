@@ -592,7 +592,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-001
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-INVALIDATION-001
@@ -604,7 +604,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-002
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-INVALIDATION-001
@@ -616,7 +616,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-003
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-POISON-001
@@ -628,7 +628,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-004
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-POISON-001
@@ -640,7 +640,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-005
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-MAINTENANCE-001
@@ -652,7 +652,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-006
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-INVALIDATION-001
@@ -676,7 +676,7 @@ requirements:
     docs: []
   - id: REQ-MGMT-SESSION-002
     owner: management-session
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
     status: specified
     registry_tests:
       - MGMT-SESSION-DENY-002
@@ -697,7 +697,7 @@ requirements:
       Lane-CFR."
   - id: REQ-MGMT-SESSION-003
     owner: management-session
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
     status: specified
     registry_tests:
       - MGMT-SESSION-DENY-002
@@ -758,7 +758,7 @@ requirements:
     docs: []
   - id: REQ-MGMT-AUTHZ-001
     owner: management-authorization
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
     status: specified
     registry_tests:
       - MGMT-AUTHZ-004
@@ -772,7 +772,7 @@ requirements:
     docs: []
   - id: REQ-MGMT-TRUST-001
     owner: management-trust
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
     status: specified
     registry_tests:
       - MGMT-AUTHZ-004
@@ -2641,7 +2641,7 @@ requirements:
     docs: []
   - id: REQ-GOV-DISC-001
     owner: gov-disc
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
@@ -2653,7 +2653,7 @@ requirements:
     docs: []
   - id: REQ-GOV-MEM-001
     owner: gov-mem
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
@@ -2991,7 +2991,7 @@ requirements:
       behavior-executed by Lane-CFR (2026-07-21) via conformance runner (oracle twin m5_intent_chain)."
   - id: REQ-KNOW-007
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
@@ -3003,7 +3003,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-008
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
@@ -3015,7 +3015,7 @@ requirements:
     docs: []
   - id: REQ-KNOW-009
     owner: knowledge-compilation
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
@@ -3575,7 +3575,7 @@ requirements:
     docs: []
   - id: REQ-SHELL-AMBIGUITY-001
     owner: shell-ambiguity
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SHELL-TARGET-AMBIGUITY-001
@@ -3596,7 +3596,7 @@ requirements:
       - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
   - id: REQ-SHELL-ATTACH-001
     owner: shell-attach
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SHELL-DETACH-ATTACH-004
@@ -3660,7 +3660,7 @@ requirements:
       CANCEL_TOO_LATE; detach never cancels. Full Effect reconcile path + migration vectors remain CFR."
   - id: REQ-SHELL-CORRECTION-001
     owner: shell-correction
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - INTENT-SUPERSEDE-002
@@ -3757,7 +3757,7 @@ requirements:
       SHELL_TARGET_AMBIGUOUS + dispatch=false; never top-1 guess."
   - id: REQ-SHELL-UX-001
     owner: shell-ux
-    owner_spec: RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SHELL-CHANNEL-ISOLATION-003

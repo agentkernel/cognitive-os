@@ -40,7 +40,7 @@ scope 变化必须新增/更新 Personal ADR。同一 atomic delivery 内同步�
 
 1. `docs/product/personal/` 与受影响 Personal architecture 文档；
 2. `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` 的任务、typed dependency、Gate 与验收；
-3. `docs/plan/personal-trace.yaml`、`PERSONAL-SUPPORT-MATRIX.md` 与根 `plan.md` 细节；
+3. `docs/plan/personal-trace.yaml`、`PERSONAL-SUPPORT-MATRIX.md` 与 `docs/plan/plan.md` 细节；
 4. `PROGRESS.md` Current snapshot（只记录真实当前事实，不把新目标写成实现）；
 5. 受影响 campaign preregistration、environment qualification、release/claim 文档；
 6. handoff 与 consistency checks。
@@ -100,7 +100,7 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 
 ## 4. 白皮书/评审文档的特殊地位
 
-`CognitiveOS-Architecture.md`（informative）语义滞后允许存在，但必须登记：漂移在 findings-ledger 漂移节记录，修订按批次合并。两份评审文档与 `RFC-0001` 历史结论**不回改**（historical 证据），现状变化只写台账。
+`docs/architecture/cognitiveos/CognitiveOS-Architecture.md`（informative）语义滞后允许存在，但必须登记：漂移在 findings-ledger 漂移节记录，修订按批次合并。两份评审文档与 `RFC-0001` 历史结论**不回改**（historical 证据），现状变化只写台账。
 
 ## 5. CI 强制（红灯即失败）
 

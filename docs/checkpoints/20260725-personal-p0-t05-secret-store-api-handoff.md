@@ -27,7 +27,7 @@
   - environment non-leak
   - native probe never provides plaintext fallback
 - ADR-0018 documents product secret boundary and rejected alternatives.
-- Aligned `plan.md` P0-T05 task card; updated formal Personal ledger and PROGRESS.
+- Aligned `docs/plan/plan.md` P0-T05 task card; updated formal Personal ledger and PROGRESS.
 
 ## 3. Not completed / out of scope
 

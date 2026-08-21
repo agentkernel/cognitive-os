@@ -7,7 +7,7 @@
 > applies to this repository — those files now live in the external repo.
 > Its packaging recommendation was carried out (batches landed as two commits).
 > The authoritative continuation record is
-> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](20260726-toolchain-recovery-and-worktree-landing-handoff.md).
+> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](./20260726-toolchain-recovery-and-worktree-landing-handoff.md).
 > Retained unchanged below as a point-in-time record.
 
 ### 1. Purpose
@@ -61,7 +61,7 @@ Important boundary:
 - `docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md`
 - `docs/plan/personal-trace.yaml`
 - `docs/plan/PROGRESS.md`
-- `plan.md`
+- `docs/plan/plan.md`
 - `docs/checkpoints/20260726-personal-p0-t06-extension-poc-handoff.md`
 - `docs/checkpoints/20260726-personal-p2-cards-expansion-handoff.md`
 - `docs/plan/AUTOPILOT-PROMPT.md`
@@ -71,7 +71,7 @@ Scope summary:
 
 - records ADR-0026 (low-friction authorization / trust profile) and syncs its
   implications into the Personal planning surface;
-- expands the `P2-T01..P2-T08` task cards into full `plan.md` field sets;
+- expands the `P2-T01..P2-T08` task cards into full `docs/plan/plan.md` field sets;
 - aligns Personal progress text, critical-path wording, and traceability with
   the current task inventory, including the `P7-T07` destination and ADR-0018
   expiration check;
@@ -190,7 +190,7 @@ Include:
 
 - `docs/adr/0026-*`
 - Personal planning/progress/trace files
-- `plan.md`
+- `docs/plan/plan.md`
 - related Personal handoff/progress note updates
 
 Why separate it:

@@ -10,7 +10,7 @@ Editor-specific rules may summarize or link to it, but cannot silently impose a
 stricter task-status, evidence, or workflow interpretation.
 
 Repository identity and the only active product project are defined by
-[PROJECT-IDENTITY.md](PROJECT-IDENTITY.md). At present all implementation work
+[PROJECT-IDENTITY.md](./PROJECT-IDENTITY.md). At present all implementation work
 defaults to `cognitiveos-personal`; CognitiveOS specifications and reusable
 kernel assets are its architecture and contract foundation, not a second
 parallel product backlog.
@@ -30,7 +30,7 @@ Each fact has exactly one canonical owner:
 | active writable ownership | `docs/plan/PARALLEL-LANES.md` active lease table | reference a lease ID |
 | stable Personal product intent and UX | `docs/product/personal/` | link tasks/Gates without copying status |
 | Personal architecture composition | `docs/architecture/personal/` | explain registered contracts and accepted decisions without creating them |
-| detailed research and task cards | root `plan.md` | provide non-current detail |
+| detailed research and task cards | `docs/plan/plan.md` | provide non-current detail |
 | operational continuity | latest matching handoff | record `status_at_handoff` only |
 
 When two documents disagree, update the non-canonical copy or label it as a
@@ -672,7 +672,7 @@ affected paths and claims, not freeze unrelated Personal work.
 ## 8. Invariants that this model does not relax
 
 The immutable axiom list and the engineering-principle layer beneath it are
-owned solely by [AXIOMS.md](AXIOMS.md) (A1–A8 and P1–P3). This Operating Model
+owned solely by [AXIOMS.md](./AXIOMS.md) (A1–A8 and P1–P3). This Operating Model
 does not maintain a parallel numbered list.
 
 Operational restatement for daily delivery (non-normative relative to

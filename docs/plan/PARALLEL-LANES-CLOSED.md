@@ -1,7 +1,7 @@
 # PARALLEL-LANES closed lease history
 
 - Status: historical coordination archive; grants no writable lease
-- Owner index: [PARALLEL-LANES.md](PARALLEL-LANES.md) §3 active table
+- Owner index: [PARALLEL-LANES.md](./PARALLEL-LANES.md) §3 active table
 - Updated: 2026-08-22 (P8-T09 task closure)
 
 Rows below are closed ownership records only. They cannot grant write access,

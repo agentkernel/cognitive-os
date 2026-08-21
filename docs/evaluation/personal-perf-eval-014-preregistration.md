@@ -5,13 +5,13 @@
 - Lease: `lease/personal/EVAL-014/execution-plan-b0` (**closed**)
 - Branch: `evaluation/EVAL-014-freeze`
 - Claim ceiling: `hypothesis` / non-claim. Reviewer: `not_reviewed`.
-- Parent: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
+- Parent: [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md)
   v1.1. C1/C2 overlay:
   [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](../plan/PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md).
 - Freeze checkpoint:
   [20260820-personal-perf-eval-014-preregistration.md](../checkpoints/20260820-personal-perf-eval-014-preregistration.md)
 - Running report:
-  [personal-performance-assessment-20260820-eval-014.md](personal-performance-assessment-20260820-eval-014.md)
+  [personal-performance-assessment-20260820-eval-014.md](./personal-performance-assessment-20260820-eval-014.md)
 
 This is a **new freeze**. Closed EVAL-002 and EVAL-004 through EVAL-013 are
 never resumed.

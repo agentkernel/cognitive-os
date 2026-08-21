@@ -3,8 +3,8 @@
 - Status: owner-accepted product support policy
 - Original decision: ADR-0025, 2026-07-26
 - Linux 1.0 updates: ADR-0034, ADR-0036, ADR-0037 and ADR-0038
-- Current Gate status: [PROGRESS.md](PROGRESS.md) `Current snapshot`
-- Environment evidence: [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)
+- Current Gate status: [PROGRESS.md](./PROGRESS.md) `Current snapshot`
+- Environment evidence: [PERSONAL-TEST-ENVIRONMENTS.md](./PERSONAL-TEST-ENVIRONMENTS.md)
 
 This file owns supported/deferred platform and distribution policy. It does not
 copy current campaign results and is not B01-B12, `GMVP-LINUX`, release or
@@ -106,4 +106,4 @@ authorship.
 - [ADR-0037](../adr/0037-personal-unified-cognitive-resource-substrate.md)
 - [ADR-0038](../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
 - [THIRD-PARTY-NOTICES.md](../legal/THIRD-PARTY-NOTICES.md)
-- [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)
+- [PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md)

@@ -90,7 +90,7 @@ the owner-authorized security/audit/compliance review component is completed,
 with the provenance limitations below.
 
 The 2026-07-23
-[registration-readiness audit](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
+[registration-readiness audit](./V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
 revalidated every mandatory descriptor binding and found no eligible member.
 It also found no independently useful foundation asset whose identity,
 publication, digest, empty-set semantics, activation order, errors, and

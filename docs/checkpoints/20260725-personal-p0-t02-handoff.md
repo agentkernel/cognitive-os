@@ -37,7 +37,7 @@
 ## 3. Tests and evidence
 
 - Personal trace integrity check: passed. A Node/YAML check parsed
-  `personal-trace.yaml`, `requirements.yaml`, and `plan.md`; it verified 20
+  `personal-trace.yaml`, `requirements.yaml`, and `docs/plan/plan.md`; it verified 20
   PERS rows, 51 covered tasks, 21 defined Gate/benchmark IDs, valid registry
   REQ references, required empty mappings for product-only rows, and
   `not-run` evidence status for every row.

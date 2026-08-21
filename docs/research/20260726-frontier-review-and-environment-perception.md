@@ -2,7 +2,7 @@
 
 > 日期：2026-07-26
 > 分类：研究评审文档（documentation-only）。不是 REQ、schema、Gate、Profile 或任务状态变更；
-> 若采纳第 5 节建议，须按台账 §6 结构变更清单走同批修订（plan.md / personal-trace.yaml 同步，无孤儿任务）。
+> 若采纳第 5 节建议，须按台账 §6 结构变更清单走同批修订（docs/plan/plan.md / personal-trace.yaml 同步，无孤儿任务）。
 
 ## 0. 结论摘要
 

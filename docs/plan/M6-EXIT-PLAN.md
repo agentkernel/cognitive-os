@@ -1,8 +1,8 @@
 # CognitiveOS M6 出口闭合 / v0.1 重评审计划
 
 - 状态：approved（2026-07-21）；类别 plan（informative）
-- Canonical 出口计划；承接 [M6-PLAN.md](M6-PLAN.md) 未闭合出口项
-- 更新责任：出口 WP 合入与 v0.1 重评审时同步本文件与 [PROGRESS.md](PROGRESS.md)
+- Canonical 出口计划；承接 [M6-PLAN.md](./M6-PLAN.md) 未闭合出口项
+- 更新责任：出口 WP 合入与 v0.1 重评审时同步本文件与 [PROGRESS.md](./PROGRESS.md)
 
 ## 1 页执行摘要
 
@@ -172,5 +172,5 @@ R2/R3；distributed；具身/CIM；学习；M7 memory/discovery 产品面；Cons
 
 ## 相关入口
 
-- [M6-PLAN.md](M6-PLAN.md) · [DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md) · [f017-platform-matrix.md](../traceability/f017-platform-matrix.md)
+- [M6-PLAN.md](./M6-PLAN.md) · [DEVELOPMENT-PLAN.md](./DEVELOPMENT-PLAN.md) · [f017-platform-matrix.md](../traceability/f017-platform-matrix.md)
 - [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md)

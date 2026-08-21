@@ -54,7 +54,7 @@ scope and must never be included in this repository's commit or push.
 
 P1-T08, the inspectable Linux bundle installer and user service, is now the
 next dependency-unblocked task. Before implementation, set it to
-`in-progress`, read its complete card in `plan.md`, and preserve its required
+`in-progress`, read its complete card in `docs/plan/plan.md`, and preserve its required
 verifier, interruption, and rollback semantics. Do not create a fake bundle or
 claim P1-T08 acceptance before those tests and evidence exist.
 

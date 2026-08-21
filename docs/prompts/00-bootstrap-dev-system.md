@@ -8,10 +8,10 @@
 
 仓库现状（以你实际盘点为准，下列计数仅供快速定位）：
 
-- `CognitiveOS-Architecture.md` v1.0.1（informative 白皮书，正式版：架构基线定稿 + 证据闭环修订）；
-- `CognitiveOS-Review-Conclusions.md`（第一轮评审：设计基线 V1–V17、IMP-01~18）；
-- `CognitiveOS-Architecture-Independent-Review.md`（第二轮独立审查：F-001~F-030，含 11 项 P0，总判定"需要架构重构"；v1.0.1 已关闭其中一部分证据缺口，逐条现状由你核验）；
-- `RFC-0001-cognitiveos-governance-context-access.md`（v0.2 Draft normative companion）；
+- `docs/architecture/cognitiveos/CognitiveOS-Architecture.md` v1.0.1（informative 白皮书，正式版：架构基线定稿 + 证据闭环修订）；
+- `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md`（第一轮评审：设计基线 V1–V17、IMP-01~18）；
+- `docs/architecture/cognitiveos/CognitiveOS-Architecture-Independent-Review.md`（第二轮独立审查：F-001~F-030，含 11 项 P0，总判定"需要架构重构"；v1.0.1 已关闭其中一部分证据缺口，逐条现状由你核验）；
+- `docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md`（v0.2 Draft normative companion）；
 - `specs/`：11 份 companion 规范 + `registry/`（requirements/errors/state-domains 三份 YAML）+ `transitions/` 5 份状态迁移表 + `schemas/` 约 56 份 JSON Schema；
 - `conformance/`：README（15 个测试层、状态用语）+ 约 74 份声明式向量，明确无 runner；
 - `docs/`：`standards/` 4 份、`adr/` 0004/0005、`evaluation/agent-benefit-benchmark.md`（REQ-PERF-005 归属文档）、`prompts/` 既有提示词；
@@ -33,9 +33,9 @@ M1 起的功能开发由后续新会话使用你生成的接续提示词继续�
 
 按顺序只读以下内容（够用即止，不必逐字全读）：
 
-1. `CognitiveOS-Architecture.md`：§0–§4（OS 判据、双内核/三平面/七层、§4.7 最小闭环与责任矩阵）、§5–§12（安装、治理链、五状态机、状态/事件、Context、Harness、AKP、Operation/Capability/Shell、§12.12 审批分发）、§16（故障与恢复顺序）、§19–§21（评估、部署形态、路线图与规范表面冻结）；
-2. `CognitiveOS-Architecture-Independent-Review.md` 全文：重点 §1 执行摘要（可否进入实现、P0 清单）与逐条 findings；
-3. `CognitiveOS-Review-Conclusions.md` §2 设计基线与 IMP-01~18；
+1. `docs/architecture/cognitiveos/CognitiveOS-Architecture.md`：§0–§4（OS 判据、双内核/三平面/七层、§4.7 最小闭环与责任矩阵）、§5–§12（安装、治理链、五状态机、状态/事件、Context、Harness、AKP、Operation/Capability/Shell、§12.12 审批分发）、§16（故障与恢复顺序）、§19–§21（评估、部署形态、路线图与规范表面冻结）；
+2. `docs/architecture/cognitiveos/CognitiveOS-Architecture-Independent-Review.md` 全文：重点 §1 执行摘要（可否进入实现、P0 清单）与逐条 findings；
+3. `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md` §2 设计基线与 IMP-01~18；
 4. `RFC-0001`；`specs/core/README.md` 与 `specs/akp/README.md`；其余 companion 浏览结构即可；
 5. `specs/registry/*.yaml`、`specs/transitions/*.json`、`specs/schemas/`（细读 common-defs、governed-object-header、object-reference、profile-manifest、effect、performance-report）；
 6. `conformance/README.md` + 向量抽样（至少覆盖 eff-crash、management、memory、shell 各组）；

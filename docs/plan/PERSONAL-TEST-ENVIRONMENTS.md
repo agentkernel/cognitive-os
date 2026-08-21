@@ -2,8 +2,8 @@
 
 - Status: active environment registry
 - Last reconciled: 2026-08-06
-- Product/task status source: [PROGRESS.md](PROGRESS.md) `Current snapshot`
-- Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](PERSONAL-SUPPORT-MATRIX.md)
+- Product/task status source: [PROGRESS.md](./PROGRESS.md) `Current snapshot`
+- Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](./PERSONAL-SUPPORT-MATRIX.md)
 
 This registry explains where existing development and test evidence was
 obtained and the maximum claim that each environment can support. It is not a

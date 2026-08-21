@@ -20,7 +20,7 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 |---|---|---|
 | Owner activation / lease | **pass** | `PERSONAL-PERF-EVAL-015`; `lease/personal/EVAL-015/remaining-plan-cells` |
 | Guest identity | **pass** | `B01-Desktop-Linux-002` running id 35; MAC `52:54:00:33:27:c1`; Ubuntu 24.04.4; uid 1000; `B01-Clean-Linux-001` shut off; residue `48181`/`48284`/`48383` untouched; `perfeval012`/`013`/`014` present unused |
-| Carry EVAL-014 C1/C2a | **carried** | B0 pass; B1 5/5; B2 30/30 counted on pin `adc40499`. Not re-run. Report: [EVAL-014](personal-performance-assessment-20260820-eval-014.md) |
+| Carry EVAL-014 C1/C2a | **carried** | B0 pass; B1 5/5; B2 30/30 counted on pin `adc40499`. Not re-run. Report: [EVAL-014](./personal-performance-assessment-20260820-eval-014.md) |
 | Source archive | **pass** | 15,155,200 bytes; SHA-256 `0d4552c6b4bdec8b0941e6ea4470549f3b164fce2cc97174e289d465d38ef2ae`; `scp` into `/home/hal9001/perfeval015-20260821` |
 | Exact-source binaries | **pass** | host `DEV-LINUX-NATIVE-01` `--locked --release` reused by digest; `kernel-server` `436725ec…`; `cognitive` `73bad94d…`; `pi-agent-adapter` `54ce9eaa…`; Extension `d27f9776…`; Pi `0.81.1`; glibc-only |
 | Secret bind / doctor | **pass** | new item `/27`; `secret_material_written: true`; `secret_ref_redacted: true`; `selected_model: deepseek-v4-flash`; daemon pid 369399 on `48306`; doctor overall `ready`; `first_conversation_ready: true` |

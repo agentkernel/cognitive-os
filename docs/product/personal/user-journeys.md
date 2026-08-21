@@ -1,8 +1,8 @@
 # CognitiveOS Personal User Journeys
 
 - Status: target Linux 1.0 journeys
-- Product boundary: [Linux 1.0 scope](linux-1.0-scope.md)
-- Resource semantics: [Cognitive resource model](cognitive-resource-model.md)
+- Product boundary: [Linux 1.0 scope](./linux-1.0-scope.md)
+- Resource semantics: [Cognitive resource model](./cognitive-resource-model.md)
 - Authority behavior: [Personal architecture](../../architecture/personal/README.md)
 
 Each journey separates visible interaction from daemon authority facts. The

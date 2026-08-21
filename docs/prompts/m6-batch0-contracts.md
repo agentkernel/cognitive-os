@@ -41,4 +41,4 @@
 - 生成绑定入库；CI regenerate-diff 空。
 - 裁决明文写入 handoff；实现车道消费边界清晰。
 - 无规范表面扩张；四类状态用语诚实。
-- PR 可合入 main 后方启动 [m6-batch1-installer.md](m6-batch1-installer.md)。
+- PR 可合入 main 后方启动 [m6-batch1-installer.md](./m6-batch1-installer.md)。
