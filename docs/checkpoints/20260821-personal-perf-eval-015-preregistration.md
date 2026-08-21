@@ -1,8 +1,8 @@
 # PERSONAL-PERF-EVAL-015 freeze preregistration
 
 - Campaign: `PERSONAL-PERF-EVAL-015`
-- Lease: `lease/personal/EVAL-015/remaining-plan-cells`
-- Status: **active**. Evaluation routing **ON**.
+- Lease: `lease/personal/EVAL-015/remaining-plan-cells` (**closed**)
+- Status: **closed**. Evaluation routing **OFF**.
 - Date: 2026-08-21
 - Frozen product source: `adc40499` (`origin/main` after P9-T12 lease close;
   product merge PR [#252](https://github.com/agentkernel/cognitive-os/pull/252)
@@ -71,12 +71,10 @@ report. Missing runner or capability is `not-run`/`not_available`.
 | MS-AUTH / T-GOV / T2 / UJ2 / UJ3 / UJ4 | recorded | Skill unique-digest 10/10 combined; UJ4 30/30 admit; UJ2 cold 10/10; UJ3 task-watch **partial** 403 |
 | B3 / B4 | **pass** | B3 mismatch/restart/remaining executed; B4 932/932 local non-OK 0; mixed Agent `not-run` |
 | C2b / C2c | C2b **partial**; C2c **pass** split-score | session-2 GET without restart (404 pins); fault-profile authorized+default-off; original-key GET 200 after UJ2 |
-| B5 | 1 h **pass**; 8 h running (pid 414832) | 60/60 1 h; 8 h minutes 0–465 contiguous `local_non_ok=0`; 47/47 pairs; ~15 min remain; 24 h default deferred |
-| Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
+| B5 | 1 h **pass**; 8 h **pass**; 24 h default deferred | 60/60 1 h; 8 h 480/480 `local_non_ok=0`; 48/48 pairs; 7/7 hourly health 200; 4 retained instrument fails |
+| Cleanup | **pass** | stop `48306`/`48406`; clear `/27` only; residue untouched |
 
 ## Unique next action
 
-Finish the live B5 8 h continuation (pid **414832**, last minute 465).
-Do not start a second continuation. Record 24 h default deferred
-unless the 8 h slope trigger is met, then cleanup + secret scan +
-close the campaign.
+Campaign closed. Do not merge `evaluation/EVAL-015-freeze` to main
+unless the owner asks. Do not auto-claim P6 / P7.

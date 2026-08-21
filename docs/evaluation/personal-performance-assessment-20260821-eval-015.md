@@ -3,11 +3,11 @@
 - Campaign: `PERSONAL-PERF-EVAL-015`
 - Freeze branch: `evaluation/EVAL-015-freeze`
 - Product pin: `adc40499`
-- Lease: `lease/personal/EVAL-015/remaining-plan-cells`
+- Lease: `lease/personal/EVAL-015/remaining-plan-cells` (**closed** 2026-08-21)
 - Preregistration: [20260821-personal-perf-eval-015-preregistration.md](../checkpoints/20260821-personal-perf-eval-015-preregistration.md)
 - Claim ceiling: `hypothesis` / `not_reviewed`
 - Independent reviewer: `not_reviewed`
-- Document status: campaign **active**. Measurement-only.
+- Document status: campaign **closed**. Measurement-only. Evaluation routing OFF.
 
 This freeze completes parent plan §9 remainder after closed EVAL-014.
 EVAL-014 C1/C2a B0/B1/B2 on this pin are carried as prior evidence and are
@@ -44,10 +44,10 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
 | B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
-| B5 8 h | running (pid 414832) | Minutes 0–465 contiguous, `local_non_ok=0`; 47/47 G1 pairs both True. Kernel **414841**. About 15 minutes remain. Residue untouched. 24 h default deferred |
-| B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
+| B5 8 h | **pass** | 480/480 min contiguous `local_non_ok=0`; 48/48 G1 pairs both `completed`/True; 0 arm timeouts; `retry=0`. 7/7 hourly restarts reached health 200 (60/120/180/240/300/360/420). 4 retained instrumentation fails (60 CLI 5 s; 120/180 stale lock; 420 disk-full). Public CLI 5 s start-timeout is not a soak fail when health later 200. 24 h default deferred |
+| B5 24 h | default deferred | 8 h has no unresolved slope (0 local non-OK, all pairs True); owner-budget trigger unmet; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
-| Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
+| Cleanup | **pass** | daemon `48306` `action=stopped` lock absent; broker `48406` pid 369469 gone; SecretStore `/27` pre suffixes `["27"]` then `secret-tool clear` exit 0, post SearchItems 0/`[]`; residue `48181`/`48284`/`48383` untouched; roots mode `0700`; evidence 59/0 sk-hits; runtime 54/0 (3 large files skipped) |
 
 ## Non-claims
 
@@ -358,10 +358,35 @@ jsonl samples were kept. Disk after delete: 35 GiB free. Samples
 **0–422** contiguous `local_non_ok=0`; **43/43** pairs. No further
 hourly restart before minute 480.
 
+### B5 8 h final (2026-08-21) — pass (hypothesis / non-claim)
+
+Guest summary `b5-8h-summary.json` plus jsonl: **480/480** minutes
+contiguous, `local_non_ok=0`; **48/48** G1 pairs P 48/48 and O 48/48
+`completed`/True; `pair_arm_timeouts=0`; `retry=0`. Restart ledger has
+11 retained records: health 200 at minutes 60, 120, 180, 240, 300, 360,
+420; retained fails at 60 (public CLI 5 s / ~1.09 GiB copy), 120 and 180
+(stale `daemon.lock` after `daemon stop`), and 420 (`database or disk is
+full` during ~4.19 GiB copy). Campaign-only hourly
+`authority.before-migration.*.sqlite` copies were deleted (36.9 GiB) so
+the minute-420 resume could start; live sqlite and jsonl were kept.
+`b5-all-summary.json` records `b5_24h: default-deferred`. No unresolved
+8 h slope. Claim ceiling `hypothesis`.
+
+## Cleanup (2026-08-21) — pass
+
+| Check | Result |
+|---|---|
+| campaign daemon `127.0.0.1:48306` pid 414841 | product `cognitive daemon stop` `action=stopped` (`stale_lock_removed=true`); lock absent; listener gone |
+| campaign broker `127.0.0.1:48406` pid 369469 | process gone; listener absent |
+| listeners `48181` / `48284` / `48383` | untouched |
+| EVAL-012 / 013 / 014 / 004 / `cos-current` | untouched |
+| campaign root | retained `0700` at `/home/hal9001/perfeval015-20260821` |
+| SecretStore item `/27` | pre-clear suffixes `["27"]`; `secret-tool clear` on product triple; post-clear SearchItems unlocked/locked 0, `item_suffixes=[]`; never `secret-tool search`/`lookup` |
+| evidence redactor | 59 files, secret-shaped hits 0 |
+| runtime redactor | 54 files scanned, 3 skipped `>16 MiB` (live sqlite/backups); `sk-` hits 0; PEM / private-key BEGIN 0 |
+
 ## Unique next action
 
-Finish the live B5 8 h continuation (pid **414832**, last completed
-minute **465**). Do not start a second continuation. Record B5 24 h
-default deferred unless the 8 h slope trigger is met, then cleanup +
-secret scan + final assessment and close the campaign row/lease. Do
-not auto-start unrelated backlog.
+Campaign closed. Do not merge `evaluation/EVAL-015-freeze` to main unless
+the owner asks. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
+Development resumes only on a fresh owner delivery instruction.

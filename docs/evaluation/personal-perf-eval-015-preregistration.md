@@ -1,8 +1,8 @@
 # PERSONAL-PERF-EVAL-015 — preregistration
 
 - Campaign ID: `PERSONAL-PERF-EVAL-015`
-- Status: **active** (2026-08-21). Evaluation routing **ON**.
-- Lease: `lease/personal/EVAL-015/remaining-plan-cells`
+- Status: **closed** (2026-08-21). Evaluation routing **OFF**.
+- Lease: `lease/personal/EVAL-015/remaining-plan-cells` (**closed**)
 - Branch: `evaluation/EVAL-015-freeze`
 - Claim ceiling: `hypothesis` / non-claim. Reviewer: `not_reviewed`.
 - Parent: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
@@ -130,8 +130,6 @@ does not promote those results.
 
 ## Unique next action
 
-Finish the live B5 8 h continuation (pid **414832**; last completed
-minute 465; 47/47 pairs). Do not start a second continuation. Record
-B5 24 h default deferred unless the 8 h slope trigger is met. Then
-cleanup (`48306`/`48406` and SecretStore `/27` only), secret scan,
-final assessment, and close the campaign row and lease.
+Campaign closed. B5 8 h **pass** (480/480; 48/48; `local_non_ok=0`).
+B5 24 h default deferred. Cleanup **pass**. Do not merge the freeze
+branch to main unless the owner asks. Do not auto-claim P6 / P7.

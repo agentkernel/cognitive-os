@@ -2,7 +2,7 @@
 
 - Status: historical coordination archive; grants no writable lease
 - Owner index: [PARALLEL-LANES.md](PARALLEL-LANES.md) §3 active table
-- Updated: 2026-08-20 (P2-T38 WorkspacePatch post-state closure)
+- Updated: 2026-08-21 (EVAL-015 campaign closure)
 
 Rows below are closed ownership records only. They cannot grant write access,
 block new leases, or override PROGRESS.md Current snapshot.
@@ -11,6 +11,7 @@ block new leases, or override PROGRESS.md Current snapshot.
 
 | Lease ID | Task / slice | Branch | Closed | Closure |
 |---|---|---|---|---|
+| `lease/personal/EVAL-015/remaining-plan-cells` | `PERSONAL-PERF-EVAL-015` owner-directed evaluation campaign; no formal task/slice | `evaluation/EVAL-015-freeze` | 2026-08-21 | B5 8 h **pass** (480/480; 48/48; `local_non_ok=0`). B5 24 h default deferred. Cleanup **pass**. Final: [personal-performance-assessment-20260821-eval-015.md](../evaluation/personal-performance-assessment-20260821-eval-015.md). Claim ceiling `hypothesis`; `not_reviewed`. Evaluation routing OFF. Campaign closure does not resume development. |
 | `lease/personal/EVAL-014/execution-plan-b0` | `PERSONAL-PERF-EVAL-014` owner-directed evaluation campaign; no formal task/slice | `evaluation/EVAL-014-freeze` | 2026-08-20 | B0 **pass**. B1 C1/C2a 5/5 counted. B2 C1/C2a 30/30 counted via `runLivePairedCell`. Cleanup **pass**. Final: [personal-performance-assessment-20260820-eval-014.md](../evaluation/personal-performance-assessment-20260820-eval-014.md). Claim ceiling `hypothesis`; `not_reviewed`. Evaluation routing OFF. Campaign closure does not resume development. |
 | `lease/personal/P2-T38/workspace-patch-post-state` | P2-T38/D01–D03 public WorkspacePatch post-state | `personal/P2-T38-workspace-patch-post-state` | 2026-08-20 | Merged PR [#248](https://github.com/agentkernel/cognitive-os/pull/248) at `main@2b4c8f17`. Linux focused kernel-server **4/4**, Clippy `-D warnings`, fmt at `5f4a538f`. Required CI `32333296569` passed Ubuntu, Windows, and required-ci at `31f8f165`. Local/remote task branches deleted; `main` matches `origin/main`. Claim ceiling `hypothesis`; no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion. |
 | `lease/personal/P9-T08/c1-c2-paired-readiness` | P9-T08/D01–D04 C1/C2 paired-benchmark readiness | `personal/P9-T08-c1-c2-paired-readiness` | 2026-08-20 | Merged PR [#247](https://github.com/agentkernel/cognitive-os/pull/247) at `main@f24c282ec1ea8ca433c2fae2a6b364164f456a78`; local and remote task branches deleted; local `main` matches `origin/main`. Packages 6–14 delivered. Required CI `32316092401` passed Ubuntu, Windows, and required-ci. `PERSONAL-PERF-EVAL-012` reserved, not active. Claim ceiling `hypothesis`; no B0, Gate, release, Profile, B01, or Agent-benefit promotion. |
