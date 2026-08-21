@@ -58,7 +58,7 @@
     },
     {
       "id": "dsh-akp-adapter",
-      "sources": ["crates/cognitive-akp/**", "packages/dsh-akp-adapter/**", "crates/cognitive-runtime/src/dsh_agent.rs", "apps/kernel-server/src/personal/task_api.rs"],
+      "sources": ["crates/cognitive-akp/**", "packages/dsh-akp-adapter/**", "crates/cognitive-runtime/src/dsh_agent.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/tests/p8_t09_dsh_akp_live.rs"],
       "docs": ["dev.agent-pi-lifecycle", "dev.performance-perf"],
       "note": "DeepSeek Harness candidate-only AKP bridge and bounded transport"
     },
