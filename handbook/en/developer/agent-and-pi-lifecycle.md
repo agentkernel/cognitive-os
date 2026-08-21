@@ -20,6 +20,15 @@ sources:
   - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
   - path: crates/cognitive-runtime/src/non_pi_agent.rs
+  - path: crates/cognitive-runtime/src/dsh_agent.rs
+    symbols: ["register_dsh_adapter"]
+  - path: crates/cognitive-akp/src/deepseek_harness.rs
+    symbols: ["DeepSeekHarnessAdapter"]
+  - path: crates/cognitive-akp/src/bin/dsh-akp-bridge.rs
+  - path: packages/dsh-akp-adapter/src/index.ts
+  - path: packages/dsh-akp-adapter/src/plugin.ts
+    symbols: ["apply", "applyDshAkpCordisPlugin"]
+  - path: packages/dsh-akp-adapter/src/index.test.ts
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -31,7 +40,8 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:d0983d0ea8b26d1e41c3cb84d17e9d3e990efb1bd6c58c9d63085825ad5bc6b1"
+  - packages/dsh-akp-adapter/src/index.test.ts
+fingerprint: "sha256:977f99ba1041d3b94599f2d6041bce0001cbc1b215b0f34a129c3823aec4aa42"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -122,3 +132,26 @@ candidate-only capabilities), with epoch-fenced lifecycle. The first non-Pi
 qualification (OpenAI Codex CLI) is a fixture-scoped identity/lifecycle matrix
 proving independence from Pi evidence — explicitly not a network or binary
 integration.
+
+The DeepSeek Harness bridge is a candidate-only adapter. The Rust side pins
+the exact dsh git revision and the AKP request-envelope schema digest, fences
+a process-local session, enforces monotonic sequences, and rejects
+authority-shaped and secret-shaped payloads. `POST /task/akp/dsh` must be
+activated after daemon start; a restart empties the session table and fails
+closed. Workspace* candidates map onto the existing public candidate
+admission path using the native catalog: WorkspaceRead is parameter-free
+(digest still covers `{"family":"WorkspaceRead"}`); WorkspaceSearch requires
+a query; WorkspaceWrite/Patch require canonical `input_b64` and `preimage`.
+The TypeScript shim sends snake_case JSONL or HTTP frames over
+a long-lived, length-bounded transport. It never receives Provider
+credentials, writes authority state, or treats a dsh response as Task
+completion. Live linux-002 runs are implementation evidence, not a Gate,
+release, Profile, B01, or Agent-benefit result. Timing fields are measurement
+hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
+drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
+runtime and waits for Task `COMPLETED`. `packages/dsh-akp-adapter/src/plugin.ts`
+is the Cordis `apply` entry for `dsh --patch`; `scripts/dsh-real-process.mjs`
+admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
+as plugin `startupEvents` from the real dsh process, and routes Flash through
+a loopback SSE-to-unary bridge onto the daemon Provider proxy. Both remain
+implementation evidence only.

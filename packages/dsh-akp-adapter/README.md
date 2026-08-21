@@ -1,0 +1,41 @@
+# `@cognitiveos/dsh-akp-adapter`
+
+This package is the client-side bridge for DeepSeek Harness (`dsh`). It keeps
+the dsh plugin API at the edge and sends only bounded, candidate-only events to
+the CognitiveOS AKP boundary. It does not hold a daemon bearer in plugin
+payloads, a Provider key, an authority writer, or Task-completion capability.
+HTTP bearers are supplied by the harness constructor and are never logged.
+
+Pinned identity:
+
+- dsh git revision: `528c682e061696f5a160f363f236ecbf53cbd006`
+- AKP request-envelope schema digest:
+  `sha256:feeaeb0942ce2796d0155b4b9c316a87cca94eccbf7b0fd7b031a2135dd7ee7b`
+- bridge protocol: `cognitiveos.dsh-akp/0.1`
+
+The wire format is snake_case JSON so the Rust daemon can parse it. Frames are
+capped at 1 MiB. `JsonlAkpTransport` is the long-lived child-process transport;
+`HttpAkpTransport` posts to authenticated `POST /task/akp/dsh`. HTTP sessions
+must be activated after daemon start; a restart empties the process-local
+session table and fails closed.
+
+Workspace* candidates are mapped by the daemon onto the existing public
+candidate admission path using the native catalog (`native.workspace.read` /
+`search` / `write` / `patch`). WorkspaceRead is parameter-free; Search needs a
+query; Write/Patch need canonical `input_b64` and `preimage`. Observation and
+lifecycle events are accepted without authority writes. A dsh response is never
+Task completion.
+
+The adapter records serialization, transport, and total durations separately.
+`scripts/linux002-e2e.mjs` drives attachDshCordisPlugin over HTTP against a
+live Personal daemon (shim host, not the dsh CLI) and waits for Task
+`COMPLETED`. `src/plugin.ts` is the Cordis `apply` entry loaded by `dsh --patch`;
+`scripts/dsh-real-process.mjs` boots pinned headless dsh, admits disposable
+Workspace* Tasks, submits those candidates as plugin `startupEvents`, activates
+`POST /task/akp/dsh` with a task-channel bearer file, and points `llm-deepseek`
+at `POST /provider/v1/chat/completions` with a management-channel credential
+ref. dsh always requests SSE; the daemon proxy is unary, so
+`scripts/provider-sse-bridge.mjs` converts on loopback.
+The Provider key stays in SecretStore. Timing fields are measurement hooks, not a zero-overhead claim.
+Live linux-002 and jump-host samples are implementation evidence, not a Gate,
+release, Profile, B01, or Agent-benefit claim.

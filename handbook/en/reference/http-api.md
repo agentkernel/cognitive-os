@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:55769f42070f31390a260dd3d65add9ad2486088df7708751d03bcb9435571cc"
+fingerprint: "sha256:c14de136bcc1f8e4c3df39d5523f60a6f9e6586d15812f4ac3e73594e4a7abae"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -50,6 +50,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/intent.interpret` | task | Persist a probabilistic interpretation candidate; material ambiguity forces clarification_required. |
 | `POST` | `/task/preview` | task | Server-issued digest-bound contract preview; persists nothing. |
 | `POST` | `/task/admit` | task | Admit the exact preview digest and mint the TaskContract under epoch CAS. |
+| `POST` | `/task/akp/dsh` | task | Candidate-only DeepSeek Harness adapter front door. Process-local sessions are activated explicitly; Workspace* candidates map onto existing public candidate admission. Daemon restart forgets sessions and fails closed. A dsh response never completes a Task. |
 | `POST` | `/task/candidate` | task | Submit bounded public-Pi operation fields; the daemon recomputes parameter digests and performs candidate admission from the immutable Task policy. |
 | `GET` | `/task/evidence` | task | Reconstruct bounded redacted lifecycle, Effect reconciliation, verification, acceptance, and durable cursor evidence for one task_ref from authority and Artifact CAS. |
 | `GET` | `/task/effects` | task | Return bounded Effect history for one task_ref: opaque original-key digest, stage, outcome/reconcile class, mutation count 0/1 or absent when indeterminate, and report refs. Receipts, raw parameters, and extra query fields are refused. |

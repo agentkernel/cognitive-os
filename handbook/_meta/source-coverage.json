@@ -41,6 +41,7 @@
     { "glob": "apps/cognitiveos-console/**", "category": "legacy-docs", "reason": "deprecated compatibility stubs pointing at the external cognitiveos-clients repository (CLIENTS-DEC-001)" },
 
     { "glob": "packages/pi-cognitiveos/**", "category": "first-party-source", "docs": ["user.pi-shell", "dev.clients-ts"] },
+    { "glob": "packages/dsh-akp-adapter/**", "category": "first-party-source", "docs": ["dev.agent-pi-lifecycle", "dev.performance-perf"] },
     { "glob": "packages/sdk-ts/**", "category": "first-party-source", "docs": ["dev.clients-ts"] },
     { "glob": "packages/contracts-ts/**", "category": "first-party-source", "docs": ["dev.contracts-codegen"] },
 

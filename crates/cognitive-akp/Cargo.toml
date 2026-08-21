@@ -9,8 +9,13 @@ license.workspace = true
 
 [dependencies]
 cognitive-contracts = { workspace = true }
+serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+
+[[bin]]
+name = "dsh-akp-bridge"
+path = "src/bin/dsh-akp-bridge.rs"
 
 [lints]
 workspace = true

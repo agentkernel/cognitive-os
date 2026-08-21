@@ -308,6 +308,7 @@ name = "cognitive-akp"
 version = "0.0.1"
 dependencies = [
  "cognitive-contracts",
+ "serde",
  "serde_json",
  "thiserror",
 ]

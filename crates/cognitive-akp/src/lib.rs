@@ -12,6 +12,8 @@
 use cognitive_contracts::generated::akp_request_envelope::AkpRequestEnvelope;
 use serde_json::{Value, json};
 
+pub mod deepseek_harness;
+
 const VERSION: &str = "cognitiveos.akp/0.2";
 const PAYLOAD_DOMAIN: &str = "akp-payload/0.2";
 
@@ -86,7 +88,7 @@ pub fn result_ok(request: &AkpRequestEnvelope, result: Value) -> Result<Value, A
     )
 }
 
-fn digest(value: &Value) -> Result<String, AkpError> {
+pub(crate) fn digest(value: &Value) -> Result<String, AkpError> {
     let bytes = cognitive_contracts::canonical::canonical_bytes_of_value(value)
         .map_err(|e| AkpError::Malformed(e.to_string()))?;
     cognitive_contracts::canonical::digest(&bytes, PAYLOAD_DOMAIN)

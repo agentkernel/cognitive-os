@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-08-21)
+## Current snapshot (2026-08-22)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -33,7 +33,8 @@ supported scope.
 | Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | Campaign closure does not resume development. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07 |
 | Owner-directed campaign | `PERSONAL-PERF-EVAL-015` **closed** (2026-08-21) on `evaluation/EVAL-015-freeze`. Evaluation routing OFF. Carries closed EVAL-014 C1/C2a B0/B1/B2 on pin `adc40499` (not re-run). C0 B0/B1/B2 **pass** (B2 270/270). MS-AUTH/T-GOV/T2/UJ2/UJ3/UJ4/B3/B4 recorded. C2b **partial**. C2c **pass**. B5 1 h **pass** (60/60; 12/12). B5 8 h **pass** (480/480; 48/48 pairs; `local_non_ok=0`; 7/7 hourly health 200; 4 retained instrument fails). B5 24 h **default deferred**. Cleanup **pass**. EVAL-002 and EVAL-004 through EVAL-014 remain **closed**. | Plan: [execution plan](../evaluation/personal-performance-benchmark-execution-plan.md). Preregistration: [EVAL-015](../evaluation/personal-perf-eval-015-preregistration.md). Report: [EVAL-015 assessment](../evaluation/personal-performance-assessment-20260821-eval-015.md). Claim ceiling `hypothesis`; `not_reviewed`. No Gate / release / Profile / B01 / Agent-benefit promotion. | none for this campaign — wait for a fresh owner delivery instruction |
 | Owner-directed C1/C2 campaign | EVAL-014 C1/C2a **carried** (B0 pass; B1 5/5; B2 30/30 on `adc40499`). EVAL-015 C2b **partial** split-score; C2c fault-profile **pass** split-score; C2d remains EVAL-014 split-score (not re-run). | Plan: [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md). Claim ceiling `hypothesis`; no Gate, release, Profile, B01, or Agent-benefit promotion. | retain; parent-plan campaign EVAL-015 is closed |
-| Active task lease | `none` | no active evaluation or implementation lease | wait for a fresh owner delivery instruction; do not auto-claim P6/P7 |
+| Active task lease | `none` | P8-T09 lease closed with PR [#254](https://github.com/agentkernel/cognitive-os/pull/254); EVAL-015 remains closed | owner instruction was P8-T09 only; do not auto-claim P6/P7 |
+| P8-T09 DeepSeek Harness AKP adapter | **done** | linux-002 identity confirmed. Jump-host Path A `pong` **pass** (9.66 s). Real dsh→AKP→daemon→Flash + WorkspaceRead/Search/Write `COMPLETED` 2/2 at `5b1c2279` (10488 ms, 10515 ms). Shim E2E + live fail-closed matrix **pass**. Clean-runtime restart `INACTIVE` **pass**. Dirty-runtime restart **fail** (scheduler lease conflict; out of adapter slice). Cleanup **pass**. Required CI **pass** on docs HEAD `abff112c` (run `32499728681`). Running report: [P8-T09 validation](../checkpoints/20260821-dsh-akp-linux-002-validation.md). Claim ceiling `hypothesis`. | retain closure; do not auto-claim P6/P7 |
 | Benchmark readiness product train | `P2-T21` … `P2-T38` **done**; **P9-T08 done**; **P9-T09 done**; **P9-T10 done**; **P9-T11 done**; **P9-T12 done**; `PERSONAL-PERF-EVAL-012` through `PERSONAL-PERF-EVAL-015` **closed** | Navigation: [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md). Live paired executor is merged. No Gate, release, Profile, B01, or Agent-benefit conclusion follows. | campaign closed; wait for a fresh owner delivery instruction |
 | P9-T12 Live C1/C2 paired executor | **done** | Merged PR [#252](https://github.com/agentkernel/cognitive-os/pull/252) at `main@39cf8019`. Local `c1_c2_paired_p_arm` **24/24**; tools suite **88/88**. Required CI `32370316101` at `a7b09edd` passed Ubuntu, Windows, and required-ci. Lease closed. Running report: [P9-T12 validation](../checkpoints/20260820-personal-p9-t12-live-paired-executor-report.md). | retain; `PERSONAL-PERF-EVAL-014` used this executor and is now closed |
 | P9-T11 Comparable C2a Patch unified-diff | **done** | Merged PR [#251](https://github.com/agentkernel/cognitive-os/pull/251) at `main@49b66200`. Local `c1_c2_paired_p_arm` **19/19**; tools suite **83/83**. Required CI `32359826035` at `6fe018cf` passed Ubuntu, Windows, and required-ci. Lease closed. Running report: [P9-T11 validation](../checkpoints/20260820-personal-p9-t11-c2a-patch-unified-diff-report.md). | retain; P9-T12 live paired executor is closed |
@@ -124,7 +125,7 @@ supported scope.
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 103 | 96 | 0 | 1 | 6 | 7 |
+| 104 | 97 | 0 | 1 | 6 | 7 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
@@ -133,11 +134,18 @@ B01-W claims, and this campaign adds no Gate, B01, or Agent-benefit claim.
 tooling only, no Gate, contract, or release surface. `P8-T08` (docs-sync
 enforcement, PR #203) is `done`: governance/tooling only — documentation
 synchronization is now an enforced pre-commit/pre-push/pre-merge obligation.
+`P8-T09` (DeepSeek Harness candidate-only AKP adapter) is `done` via PR
+[#254](https://github.com/agentkernel/cognitive-os/pull/254). Owner instruction
+was this task only; do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P8-T09/D01` | `done` | Candidate-only protocol landed. Local TS **8/8**. Jump-host `cognitive-akp` **8/8**, fmt, Clippy `-D warnings` at `9e239b75`. Local Windows GNU Rust `not-run`. | consumed |
+| `P8-T09/D02` | `done` | `POST /task/akp/dsh` + public Workspace* mapping. Jump-host `dsh_akp_tests` **2/2**; live admission **1/1**. | consumed |
+| `P8-T09/D03` | `done` | linux-002 identity pass. Real dsh `startupEvents` WorkspaceRead/Search/Write `COMPLETED` 2/2 and Flash `pong` 2/2 at `5b1c2279`. Shim E2E + live fail-closed matrix pass. Clean-runtime restart `INACTIVE` pass. Dirty-runtime restart fail (scheduler lease conflict; daemon refused to start). Cleanup pass. Required CI pass on `5b1c2279`. | consumed |
+| `P8-T09/D04` | `done` | Required CI `32499728681` passed Ubuntu, Windows, and required-ci at docs HEAD `abff112c`. Acceptance mapped in [P8-T09 validation](../checkpoints/20260821-dsh-akp-linux-002-validation.md). PR [#254](https://github.com/agentkernel/cognitive-os/pull/254). Lease closed. | retain; do not auto-claim P6/P7 |
 | `P9-T12/D01` | `done` | Local failure-first: secret-shaped env refuses; missing `--append-system-prompt` refuses; dry-run cannot be labeled counted B1/B2; fairness fail retained with `counted_sample: false` and no arm spawn. | consumed |
 | `P9-T12/D02` | `done` | `runLivePairedCell` with injected `executeArm`: live manifests, frozen seeds, deterministic arm order, `retry=0`; counted only for b1/b2 when fairness passes and both arms exit 0 without timeout; b0 stays non-counted. | consumed |
 | `P9-T12/D03` | `done` | Merged PR [#252](https://github.com/agentkernel/cognitive-os/pull/252) at `main@39cf8019`. Required CI `32370316101` at `a7b09edd` passed Ubuntu, Windows, and required-ci. | retain; a new EVAL needs a new preregistration |

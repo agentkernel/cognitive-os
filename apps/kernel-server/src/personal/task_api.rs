@@ -7,7 +7,7 @@
 //! resumable deltas, and a resume point outside the bounded replay window
 //! fails explicitly rather than silently losing observations.
 
-use std::collections::{BTreeMap, VecDeque};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
@@ -16,6 +16,10 @@ use std::sync::Arc;
 use crate::personal::scheduler_authority::{
     PrivatePiCandidateProposer, UntrustedPiCandidate, candidate_admission_command_from_policy,
     context_resolution_command_from_policy, propose_persist_and_admit_candidate,
+};
+use cognitive_akp::deepseek_harness::{
+    BRIDGE_PROTOCOL, DeepSeekHarnessAdapter, DshAdapterError, DshAdapterRequest, DshWireResponse,
+    MAX_FRAME_BYTES, PINNED_DSH_REVISION, PluginEventKind, default_config, handle_jsonl_line,
 };
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
@@ -256,6 +260,7 @@ pub(crate) struct TaskApi {
     shared_store: Option<Arc<SqliteAuthorityStore>>,
     next_watch_sequence: u64,
     watch_events: VecDeque<(u64, Value)>,
+    dsh_sessions: HashMap<String, DeepSeekHarnessAdapter>,
 }
 
 impl TaskApi {
@@ -266,6 +271,7 @@ impl TaskApi {
             shared_store: None,
             next_watch_sequence: 1,
             watch_events: VecDeque::new(),
+            dsh_sessions: HashMap::new(),
         }
     }
 
@@ -280,6 +286,7 @@ impl TaskApi {
             shared_store: Some(store),
             next_watch_sequence: 1,
             watch_events: VecDeque::new(),
+            dsh_sessions: HashMap::new(),
         }
     }
 
@@ -302,6 +309,7 @@ impl TaskApi {
             "POST" if method_path.starts_with("POST /task/admit ") => {
                 self.admit(body, authenticated_principal)
             }
+            "POST" if method_path.starts_with("POST /task/akp/dsh ") => self.dsh_akp(body),
             "POST" if method_path.starts_with("POST /task/candidate ") => {
                 self.candidate(body, authenticated_principal)
             }
@@ -653,6 +661,192 @@ impl TaskApi {
             Ok(request) => request,
             Err(response) => return response,
         };
+        self.admit_public_candidate(request)
+    }
+
+    fn dsh_akp(&mut self, body: &[u8]) -> TaskApiResponse {
+        if body.len() > MAX_FRAME_BYTES {
+            return ok(DshWireResponse::rejected(
+                0,
+                &DshAdapterError::FrameTooLarge,
+            ));
+        }
+        let value: Value = match serde_json::from_slice(body) {
+            Ok(value) => value,
+            Err(_) => {
+                return ok(DshWireResponse::rejected(
+                    0,
+                    &DshAdapterError::MalformedJson,
+                ));
+            }
+        };
+        let op = value.get("op").and_then(Value::as_str).unwrap_or("event");
+        match op {
+            "activate" => self.dsh_activate(&value),
+            "stop" => self.dsh_stop(&value),
+            "event" => self.dsh_event(body, &value),
+            _ => ok(DshWireResponse::rejected(0, &DshAdapterError::InvalidEvent)),
+        }
+    }
+
+    fn dsh_activate(&mut self, value: &Value) -> TaskApiResponse {
+        let session_id = value
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned();
+        let dsh_version = value
+            .get("dsh_version")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        let fencing_epoch = value
+            .get("fencing_epoch")
+            .and_then(Value::as_u64)
+            .unwrap_or(0);
+        let task_ref = value
+            .get("task_ref")
+            .and_then(Value::as_str)
+            .map(str::to_owned)
+            .filter(|value| !value.trim().is_empty());
+        if dsh_version != PINNED_DSH_REVISION {
+            return ok(DshWireResponse::rejected(
+                0,
+                &DshAdapterError::DshVersionMismatch,
+            ));
+        }
+        if self.dsh_sessions.contains_key(&session_id) {
+            return ok(DshWireResponse::rejected(0, &DshAdapterError::InvalidEvent));
+        }
+        let mut config = default_config(PINNED_DSH_REVISION);
+        config.expected_fencing_epoch = fencing_epoch;
+        let mut adapter = match DeepSeekHarnessAdapter::new(config) {
+            Ok(adapter) => adapter,
+            Err(error) => return ok(DshWireResponse::rejected(0, &error)),
+        };
+        if let Err(error) = adapter.activate_fenced(&session_id, fencing_epoch, task_ref) {
+            return ok(DshWireResponse::rejected(0, &error));
+        }
+        self.dsh_sessions.insert(session_id.clone(), adapter);
+        ok(DshWireResponse::accepted(
+            0,
+            json!({
+                "session_id": session_id,
+                "bridge_protocol": BRIDGE_PROTOCOL,
+                "dsh_version": PINNED_DSH_REVISION,
+                "candidate_only": true
+            }),
+        ))
+    }
+
+    fn dsh_stop(&mut self, value: &Value) -> TaskApiResponse {
+        let session_id = value
+            .get("session_id")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        match self.dsh_sessions.remove(session_id) {
+            Some(_) => ok(DshWireResponse::accepted(
+                0,
+                json!({"stopped": true, "candidate_only": true}),
+            )),
+            None => ok(DshWireResponse::rejected(0, &DshAdapterError::Inactive)),
+        }
+    }
+
+    fn dsh_event(&mut self, body: &[u8], value: &Value) -> TaskApiResponse {
+        let line = match std::str::from_utf8(body) {
+            Ok(line) => line,
+            Err(_) => {
+                return ok(DshWireResponse::rejected(
+                    0,
+                    &DshAdapterError::MalformedJson,
+                ));
+            }
+        };
+        let request: DshAdapterRequest = match serde_json::from_value(value.clone()) {
+            Ok(request) => request,
+            Err(_) => {
+                return ok(DshWireResponse::rejected(
+                    0,
+                    &DshAdapterError::MalformedJson,
+                ));
+            }
+        };
+        let (translated, workspace, task_ref) = {
+            let Some(adapter) = self.dsh_sessions.get_mut(&request.session_id) else {
+                return ok(DshWireResponse::rejected(
+                    request.sequence,
+                    &DshAdapterError::Inactive,
+                ));
+            };
+            let translated = handle_jsonl_line(adapter, line, MAX_FRAME_BYTES);
+            if !translated.accepted {
+                return ok(translated);
+            }
+            let workspace = match adapter.workspace_candidate(&request) {
+                Ok(fields) => fields,
+                Err(error) => {
+                    return ok(DshWireResponse::rejected(request.sequence, &error));
+                }
+            };
+            let task_ref = adapter.bound_task_ref().map(str::to_owned);
+            (translated, workspace, task_ref)
+        };
+        if request.event.kind != PluginEventKind::Candidate || workspace.is_none() {
+            return ok(translated);
+        }
+        let Some(fields) = workspace else {
+            return ok(translated);
+        };
+        let Some(task_ref) = task_ref else {
+            return ok(DshWireResponse::rejected(
+                request.sequence,
+                &DshAdapterError::MissingIdentity,
+            ));
+        };
+        let public_request = PublicPiCandidateRequest {
+            schema_version: "cognitiveos.task-candidate-request/0.1".to_owned(),
+            task_ref,
+            tool_ref: fields.tool_ref,
+            action: fields.action,
+            target: fields.target,
+            parameters: fields.parameters,
+            parameters_digest: fields.parameters_digest,
+            expected_state_version: fields.expected_state_version,
+            operation_descriptor_id: fields.operation_descriptor_id,
+        };
+        let admitted = self.admit_public_candidate(public_request);
+        if admitted.status != 200 {
+            let admission: Value =
+                serde_json::from_str(&admitted.body).unwrap_or_else(|_| json!({"admitted": false}));
+            let code = admission
+                .get("code")
+                .and_then(Value::as_str)
+                .unwrap_or("TASK_CANDIDATE_ADMISSION_REJECTED")
+                .to_owned();
+            return ok(DshWireResponse {
+                accepted: false,
+                sequence: request.sequence,
+                candidate_only: true,
+                result: Some(json!({
+                    "admission": admission,
+                    "candidate_only": true
+                })),
+                error: Some(code),
+            });
+        }
+        let admission: Value =
+            serde_json::from_str(&admitted.body).unwrap_or_else(|_| json!({"admitted": true}));
+        ok(DshWireResponse::accepted(
+            request.sequence,
+            json!({
+                "akp": translated.result,
+                "admission": admission,
+                "candidate_only": true
+            }),
+        ))
+    }
+
+    fn admit_public_candidate(&mut self, request: PublicPiCandidateRequest) -> TaskApiResponse {
         if request.task_ref.trim().is_empty() || UriRef::parse(&request.task_ref).is_err() {
             return error(
                 400,
@@ -2401,5 +2595,150 @@ mod evidence_tests {
                 "history leaked {forbidden}: {serialized}"
             );
         }
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::panic, clippy::unwrap_used)]
+mod dsh_akp_tests {
+    use super::*;
+    use cognitive_akp::deepseek_harness::{BRIDGE_PROTOCOL, PINNED_DSH_REVISION};
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    fn layout() -> PersonalDataLayout {
+        let unique_suffix = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap_or_default()
+            .as_nanos();
+        let root = std::env::temp_dir().join(format!(
+            "cognitiveos-dsh-akp-{}-{unique_suffix}",
+            std::process::id()
+        ));
+        PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        )
+    }
+
+    fn schema_digest() -> &'static str {
+        cognitive_contracts::generated::akp_request_envelope::SCHEMA_DIGEST
+    }
+
+    fn event_body(sequence: u64, operation: &str, payload: Value) -> Vec<u8> {
+        serde_json::to_vec(&json!({
+            "op": "event",
+            "bridge_protocol": BRIDGE_PROTOCOL,
+            "dsh_version": PINNED_DSH_REVISION,
+            "schema_digest": schema_digest(),
+            "session_id": "dsh-session-1",
+            "fencing_epoch": 1,
+            "sequence": sequence,
+            "plugin_id": "plugin.core",
+            "correlation_id": format!("dsh-session-1:{sequence}"),
+            "deadline": "2030-01-01T00:00:00Z",
+            "event": {
+                "kind": "observation",
+                "operation": operation,
+                "payload": payload,
+                "authority_claim": false,
+                "secret_shaped": false
+            }
+        }))
+        .expect("encode")
+    }
+
+    #[test]
+    fn dsh_route_rejects_inactive_malformed_oversized_and_wrong_version() {
+        let mut api = TaskApi::new(layout());
+        let inactive = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &event_body(1, "lifecycle.observe", json!({"ok": true})),
+            "principal://local/owner",
+        );
+        assert_eq!(inactive.status, 200);
+        let inactive_body: Value = serde_json::from_str(&inactive.body).expect("json");
+        assert_eq!(inactive_body["accepted"], false);
+        assert_eq!(inactive_body["candidate_only"], true);
+        assert_eq!(inactive_body["error"], "INACTIVE");
+
+        let malformed = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            b"{not-json",
+            "principal://local/owner",
+        );
+        let malformed_body: Value = serde_json::from_str(&malformed.body).expect("json");
+        assert_eq!(malformed_body["error"], "MALFORMED_JSON");
+        assert_eq!(malformed_body["candidate_only"], true);
+
+        let oversized = vec![b'x'; MAX_FRAME_BYTES + 1];
+        let large = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &oversized,
+            "principal://local/owner",
+        );
+        let large_body: Value = serde_json::from_str(&large.body).expect("json");
+        assert_eq!(large_body["error"], "FRAME_TOO_LARGE");
+
+        let wrong_version = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            br#"{"op":"activate","dsh_version":"0.0.0","session_id":"dsh-session-1","fencing_epoch":1}"#,
+            "principal://local/owner",
+        );
+        let wrong_body: Value = serde_json::from_str(&wrong_version.body).expect("json");
+        assert_eq!(wrong_body["error"], "DSH_VERSION_MISMATCH");
+        assert_eq!(wrong_body["candidate_only"], true);
+    }
+
+    #[test]
+    fn dsh_activate_then_observation_stays_candidate_only_and_restart_fails_closed() {
+        let mut api = TaskApi::new(layout());
+        let activate = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &serde_json::to_vec(&json!({
+                "op": "activate",
+                "dsh_version": PINNED_DSH_REVISION,
+                "session_id": "dsh-session-1",
+                "fencing_epoch": 1,
+                "task_ref": "task://personal/dsh-read"
+            }))
+            .expect("encode"),
+            "principal://local/owner",
+        );
+        let activate_body: Value = serde_json::from_str(&activate.body).expect("json");
+        assert_eq!(activate_body["accepted"], true);
+        assert_eq!(activate_body["candidate_only"], true);
+
+        let observed = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &event_body(1, "lifecycle.observe", json!({"phase":"start"})),
+            "principal://local/owner",
+        );
+        let observed_body: Value = serde_json::from_str(&observed.body).expect("json");
+        assert_eq!(observed_body["accepted"], true);
+        assert_eq!(observed_body["candidate_only"], true);
+        assert_eq!(observed_body["sequence"], 1);
+
+        let duplicate = api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &event_body(1, "lifecycle.observe", json!({"phase":"retry"})),
+            "principal://local/owner",
+        );
+        let duplicate_body: Value = serde_json::from_str(&duplicate.body).expect("json");
+        assert_eq!(duplicate_body["accepted"], false);
+        assert_eq!(duplicate_body["error"], "SEQUENCE_NOT_MONOTONIC");
+
+        let mut restarted = TaskApi::new(layout());
+        let after_restart = restarted.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &event_body(2, "lifecycle.observe", json!({"phase":"after-restart"})),
+            "principal://local/owner",
+        );
+        let restart_body: Value = serde_json::from_str(&after_restart.body).expect("json");
+        assert_eq!(restart_body["accepted"], false);
+        assert_eq!(restart_body["error"], "INACTIVE");
+        assert_eq!(restart_body["candidate_only"], true);
     }
 }

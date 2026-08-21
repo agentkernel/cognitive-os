@@ -20,6 +20,15 @@ sources:
   - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
   - path: crates/cognitive-runtime/src/non_pi_agent.rs
+  - path: crates/cognitive-runtime/src/dsh_agent.rs
+    symbols: ["register_dsh_adapter"]
+  - path: crates/cognitive-akp/src/deepseek_harness.rs
+    symbols: ["DeepSeekHarnessAdapter"]
+  - path: crates/cognitive-akp/src/bin/dsh-akp-bridge.rs
+  - path: packages/dsh-akp-adapter/src/index.ts
+  - path: packages/dsh-akp-adapter/src/plugin.ts
+    symbols: ["apply", "applyDshAkpCordisPlugin"]
+  - path: packages/dsh-akp-adapter/src/index.test.ts
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -31,7 +40,8 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:d0983d0ea8b26d1e41c3cb84d17e9d3e990efb1bd6c58c9d63085825ad5bc6b1"
+  - packages/dsh-akp-adapter/src/index.test.ts
+fingerprint: "sha256:977f99ba1041d3b94599f2d6041bce0001cbc1b215b0f34a129c3823aec4aa42"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -103,3 +113,20 @@ Universal Agent Adapter Contract（`agent_adapter_manifest`）注册讲 AKP 的�
 （公网 listener 与权威写者被拒；仅 candidate 能力），生命周期 epoch fencing。首个非
 Pi 资格化（OpenAI Codex CLI）是 fixture 范围的身份/生命周期矩阵，证明证据独立于
 Pi——明确不是网络或二进制集成。
+
+DeepSeek Harness 桥接是仅 candidate 的适配器。Rust 侧钉住精确 dsh git revision 与 AKP
+request-envelope schema digest，对进程内 session 做 fencing，强制单调 sequence，并拒绝
+authority-shaped 与 secret-shaped payload。`POST /task/akp/dsh` 必须在 daemon 启动后显式
+激活；重启会清空会话表并失败闭合。Workspace* candidate 映射到既有 public candidate
+admission。WorkspaceRead 无参数对象（digest 仍覆盖 `{"family":"WorkspaceRead"}`）；
+WorkspaceSearch 需要 query；WorkspaceWrite/Patch 需要规范 `input_b64` 与 `preimage`。
+TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 发送
+事件。它不接收 Provider 凭据、不写权威状态，也不把 dsh 响应当作 Task 完成。linux-002
+真机只是 implementation evidence，不构成 Gate、release、Profile、B01 或 Agent-benefit。
+timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
+在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`，并等待 Task
+`COMPLETED`。`packages/dsh-akp-adapter/src/plugin.ts` 是 `dsh --patch` 的 Cordis
+`apply` 入口；`scripts/dsh-real-process.mjs` 会先 admit 可丢弃的
+WorkspaceRead/Search/Write Task，再由真实 dsh 进程以 plugin `startupEvents`
+提交这些 candidate，并把 Flash 经 loopback SSE-to-unary 桥接到 daemon
+Provider 代理。两者都只是 implementation evidence。

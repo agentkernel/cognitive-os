@@ -40,7 +40,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:52b495db4f16fde3526e795e3311e1bab938ff9ca4e2bbf8122abd7c37641027"
+fingerprint: "sha256:fb0d3b9085d3d7f247915039f8c8abcacd437cacea41e9067d2f10bcc5200db8"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -92,7 +92,11 @@ Fixed bounds before routing: 1 MiB body (8 MiB hard read), 16 KiB/64 headers,
 validation — each with a registered error code. Routing is handwritten prefix
 matching on `METHOD /path` strings across `server.rs`, `task_api.rs`, and
 `resource_api.rs` (the generated [HTTP reference](../reference/http-api.md)
-enumerates the full table and channels).
+enumerates the full table and channels). Authenticated `POST /task/akp/dsh`
+is a candidate-only DeepSeek Harness front door: sessions are process-local
+and must be activated after start; daemon restart forgets them and fails
+closed. Workspace* candidates reuse the existing public candidate admission
+path. A dsh response never completes a Task.
 
 The management Resource surface exposes a read-only lifecycle-preconditions
 document, Memory remember/review/forget, and Skill import/inspect/bind/
