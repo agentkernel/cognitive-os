@@ -22,7 +22,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:2363be9b271936d9d2296d942fd5a19c658e2e64ac72064ea16f7b7b35d0c6bb"
+fingerprint: "sha256:a87532f56807ec2d355b024727e17cd5643e3652e935dac5d5befe10cacd8a85"
 non_claims:
   - Every surface here produces hypothesis-level, non-claim observations only; no benefit, Gate, release, or Profile result is created by this code, and campaign execution results are owned by the formal plan's evidence records.
 ---

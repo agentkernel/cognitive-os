@@ -2,7 +2,8 @@
 /**
  * Drive pinned dsh as a real process (P8-T09 Path B LLM + Workspace* plugin events).
  *
- * dsh --profile headless --patch <generated yaml> loads ./plugin.js, activates
+ * dsh --profile headless --patch <generated yaml> loads plugin.bundle.cjs
+ * (CommonJS; Node 22.23 rejects require(esm) of dist/plugin.js), activates
  * POST /task/akp/dsh, submits admitted Workspace* candidates as startupEvents,
  * and points llm-deepseek at POST /provider/v1/chat/completions.
  * The daemon management token is read from a 0600 file. The Provider key stays
@@ -47,7 +48,6 @@ if (providerPath === "b" && (!Number.isInteger(port) || port < 1 || !bootstrapPa
 if (providerPath === "a" && !apiKeyFile) {
   throw new Error("Path A requires --api-key-file <0600-path|->");
 }
-const pluginHref = pathToFileURL(join(adapterRoot, "dist", "plugin.js")).href;
 const scriptDir = dirname(fileURLToPath(import.meta.url));
 const work = join(tmpdir(), `p8t10-dsh-real-${process.pid}`);
 mkdirSync(work, { mode: 0o700, recursive: true });
@@ -127,12 +127,14 @@ async function runDsh(patchBody) {
   });
   const elapsedMs = Date.now() - started;
   const assistant = stdout.trim().split(/\r?\n/).filter((line) => line && !line.startsWith("$")).at(-1) ?? "";
+  const stderrRedacted = redact(stderr);
   return {
     exitCode,
     elapsedMs,
     ttftMs: ttftHolder.ms,
     assistant,
-    stderrRedactedBytes: Buffer.byteLength(redact(stderr), "utf8"),
+    stderrRedactedBytes: Buffer.byteLength(stderrRedacted, "utf8"),
+    stderrPreviewRedacted: stderrRedacted.split(/\r?\n/).slice(-40).join("\n").slice(0, 2048),
   };
 }
 
@@ -161,6 +163,7 @@ if (providerPath === "a") {
     assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
     assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
     stderr_redacted_bytes: outcome.stderrRedactedBytes,
+    stderr_preview_redacted: outcome.stderrPreviewRedacted,
     workspace: null,
     non_claims: ["Gate", "release", "Profile", "B01", "Agent-benefit"],
   };
@@ -235,10 +238,14 @@ function startSseBridge(upstream) {
 const sseBridge = await startSseBridge(`${origin}/provider/v1`);
 const providerBase = `${sseBridge.origin}/provider/v1`;
 
+function pluginHrefFor(_entryName) {
+  return pathToFileURL(join(adapterRoot, "plugin.bundle.cjs")).href;
+}
+
 function pluginInsert(id, sessionId, pluginId, taskRef, events) {
   const lines = [
     `  - id: ${id}`,
-    `    name: "${pluginHref}"`,
+    `    name: "${pluginHrefFor(id)}"`,
     "    config:",
     `      endpoint: ${origin}/task/akp/dsh`,
     `      bearerFile: "${bearerFile}"`,
@@ -315,6 +322,7 @@ const summary = {
   assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
   assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
   stderr_redacted_bytes: outcome.stderrRedactedBytes,
+  stderr_preview_redacted: outcome.stderrPreviewRedacted,
   workspace: {
     read: { taskRef: readSpec.taskRef, lifecycle: readLife },
     search: { taskRef: searchSpec.taskRef, lifecycle: searchLife },

@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:4a53d55f41f00ac08f2c1f261a0f232c22a05fb1f8959e5ac09ee620ab47d180"
+fingerprint: "sha256:3529d999af79a407449bcf8bf7afaefdf88e081d5002e9f2a13f7d5292f037b6"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -131,7 +131,8 @@ timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-ak
 在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`，并等待 Task
 `COMPLETED`。`packages/dsh-akp-adapter/src/plugin.ts` 是 `dsh --patch` 的 Cordis
 `apply` 入口；`scripts/dsh-real-process.mjs` 用 `node --import tsx/esm apps/cli/src/bin.ts`
-启动钉住的 dsh（不调用 `pnpm dsh`），会先 admit 可丢弃的
+启动钉住的 dsh（不调用 `pnpm dsh`），加载 `plugin.bundle.cjs`（Node 22.23 会拒绝
+`require()` ESM `plugin.js`），会先 admit 可丢弃的
 WorkspaceRead/Search/Write Task，再由真实 dsh 进程以 plugin `startupEvents`
 提交这些 candidate，并把 Flash 经 loopback SSE-to-unary 桥接到 daemon
 Provider 代理。产品安装路径是 `cognitive dsh configure` 然后 `cognitive dsh launch`

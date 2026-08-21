@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:4a53d55f41f00ac08f2c1f261a0f232c22a05fb1f8959e5ac09ee620ab47d180"
+fingerprint: "sha256:3529d999af79a407449bcf8bf7afaefdf88e081d5002e9f2a13f7d5292f037b6"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -156,7 +156,8 @@ drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
 runtime and waits for Task `COMPLETED`. `packages/dsh-akp-adapter/src/plugin.ts`
 is the Cordis `apply` entry for `dsh --patch`; `scripts/dsh-real-process.mjs`
 starts pinned dsh with `node --import tsx/esm apps/cli/src/bin.ts` (not
-`pnpm dsh`), admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
+`pnpm dsh`), loads `plugin.bundle.cjs` because Node 22.23 rejects `require()` of
+the ESM `plugin.js`, admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
 as plugin `startupEvents` from the real dsh process, and routes Flash through
 a loopback SSE-to-unary bridge onto the daemon Provider proxy. Product install
 is `cognitive dsh configure` then `cognitive dsh launch` (Path B). Direct Flash

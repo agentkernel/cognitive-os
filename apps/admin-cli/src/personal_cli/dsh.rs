@@ -208,7 +208,7 @@ fn prepare_launch_with_doctor_document(
         &adapter_root.join("scripts/dsh-real-process.mjs"),
         "dsh real-process helper",
     )?;
-    validate_existing_file(&adapter_root.join("dist/plugin.js"), "dsh AKP plugin")?;
+    validate_existing_file(&adapter_root.join("plugin.bundle.cjs"), "dsh AKP plugin")?;
 
     let bootstrap_path = layout.local_bootstrap_secret_path();
     validate_existing_file(&bootstrap_path, "daemon bootstrap secret")?;
@@ -510,9 +510,12 @@ mod tests {
 
     fn write_helper_tree(root: &Path) {
         fs::create_dir_all(root.join("scripts")).expect("scripts");
-        fs::create_dir_all(root.join("dist")).expect("dist");
-        fs::write(root.join("scripts/dsh-real-process.mjs"), "export {}\n").expect("helper");
-        fs::write(root.join("dist/plugin.js"), "export {}\n").expect("plugin");
+        fs::write(
+            root.join("scripts/dsh-real-process.mjs"),
+            "export {}\n",
+        )
+        .expect("helper");
+        fs::write(root.join("plugin.bundle.cjs"), "module.exports = {}\n").expect("plugin");
     }
 
     #[test]

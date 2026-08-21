@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:607ee2d75a94c6550e82ab67d541d89dbf43843f8a17e79482e3a18528e544d6"
+fingerprint: "sha256:d3ca2479adb63a42a828b71005aa35238f7637212dd4cca8bbfeac1a9df9c532"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---

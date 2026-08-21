@@ -29,12 +29,15 @@ Task completion.
 The adapter records serialization, transport, and total durations separately.
 `scripts/linux002-e2e.mjs` drives attachDshCordisPlugin over HTTP against a
 live Personal daemon (shim host, not the dsh CLI) and waits for Task
-`COMPLETED`. `src/plugin.ts` is the Cordis `apply` entry loaded by `dsh --patch`;
+`COMPLETED`. `src/plugin.ts` is the Cordis `apply` entry for `dsh --patch`.
 `scripts/dsh-real-process.mjs` boots pinned headless dsh via
 `node --import tsx/esm apps/cli/src/bin.ts` (the same entry as the package.json
 `dsh` script; it does not call `pnpm dsh`, which is not portable on a guest
-without git), admits disposable
-Workspace* Tasks, submits those candidates as plugin `startupEvents`, activates
+without git). Installed Path B loads `plugin.bundle.cjs` (CommonJS
+bundle of `src/plugin.ts`) because Node 22.23 `require()` of `dist/plugin.js` fails with
+`ERR_REQUIRE_CYCLE_MODULE`. Regenerate the bundle with
+`npx esbuild src/plugin.ts --bundle --platform=node --format=cjs --outfile=plugin.bundle.cjs`
+when `src/plugin.ts` or `src/index.ts` changes. The helper admits disposable Workspace* Tasks, submits those candidates as plugin `startupEvents`, activates
 `POST /task/akp/dsh` with a task-channel bearer file, and points `llm-deepseek`
 at `POST /provider/v1/chat/completions` with a management-channel credential
 ref. dsh always requests SSE; the daemon proxy is unary, so
