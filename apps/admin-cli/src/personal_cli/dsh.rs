@@ -527,7 +527,7 @@ mod tests {
             revision: DSH_PACKAGE_REVISION.to_owned(),
         });
         assert!(
-            relative.as_ref().unwrap_err().contains("absolute"),
+            relative.as_ref().expect_err("relative path").contains("absolute"),
             "{relative:?}"
         );
 
@@ -541,7 +541,7 @@ mod tests {
             revision: "0000000000000000000000000000000000000000".to_owned(),
         });
         assert!(
-            wrong.as_ref().unwrap_err().contains("exact pin"),
+            wrong.as_ref().expect_err("wrong revision").contains("exact pin"),
             "{wrong:?}"
         );
     }
@@ -625,7 +625,7 @@ mod tests {
             &ready_doctor_without_pi(),
         );
         assert!(
-            missing.as_ref().unwrap_err().contains("dsh configuration is absent"),
+            missing.as_ref().expect_err("missing config").contains("dsh configuration is absent"),
             "{missing:?}"
         );
 
@@ -656,7 +656,7 @@ mod tests {
             &doctor.to_string(),
         );
         assert!(
-            unready.as_ref().unwrap_err().contains("`secret` is not ready"),
+            unready.as_ref().expect_err("unready secret").contains("`secret` is not ready"),
             "{unready:?}"
         );
     }
