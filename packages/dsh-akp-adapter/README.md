@@ -30,7 +30,10 @@ The adapter records serialization, transport, and total durations separately.
 `scripts/linux002-e2e.mjs` drives attachDshCordisPlugin over HTTP against a
 live Personal daemon (shim host, not the dsh CLI) and waits for Task
 `COMPLETED`. `src/plugin.ts` is the Cordis `apply` entry loaded by `dsh --patch`;
-`scripts/dsh-real-process.mjs` boots pinned headless dsh, admits disposable
+`scripts/dsh-real-process.mjs` boots pinned headless dsh via
+`node --import tsx/esm apps/cli/src/bin.ts` (the same entry as the package.json
+`dsh` script; it does not call `pnpm dsh`, which is not portable on a guest
+without git), admits disposable
 Workspace* Tasks, submits those candidates as plugin `startupEvents`, activates
 `POST /task/akp/dsh` with a task-channel bearer file, and points `llm-deepseek`
 at `POST /provider/v1/chat/completions` with a management-channel credential

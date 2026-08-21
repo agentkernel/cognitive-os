@@ -95,9 +95,14 @@ async function runDsh(patchBody) {
   writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
   const started = Date.now();
   const ttftHolder = { ms: null };
+  // Invoke the pinned CLI entry with Node. `pnpm dsh` is not portable on an
+  // installed guest: pnpm 11's deps-status check requires git, which Personal
+  // linux-002 does not ship, and copied node_modules are not a pnpm workspace
+  // root. `node --import tsx/esm apps/cli/src/bin.ts` is the same script the
+  // dsh package.json `dsh` entry runs.
   const child = spawn(
-    "pnpm",
-    ["dsh", "--profile", "headless", "--patch", patchFile, task],
+    process.execPath,
+    ["--import", "tsx/esm", join(dshRoot, "apps/cli/src/bin.ts"), "--profile", "headless", "--patch", patchFile, task],
     {
       cwd: dshRoot,
       env: childEnvironment(),
