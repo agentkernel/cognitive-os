@@ -181,6 +181,7 @@ v0.1 和 Post-v0.1 计划是 CognitiveOS 架构形成过程或验证参考，除
 - [research/20260726-frontier-review-and-environment-perception.md](./research/20260726-frontier-review-and-environment-perception.md)：前沿对照与运行环境感知评审
 - [research/20260812-personal-next-batch-development-analysis.md](./research/20260812-personal-next-batch-development-analysis.md)：Personal 下一批次能力分析
 - [research/20260812-personal-optimization-proposal.md](./research/20260812-personal-optimization-proposal.md)：Personal 架构优化决策方案
+- [research/20260821-cognitiveos-v2-restructuring-architecture.md](./research/20260821-cognitiveos-v2-restructuring-architecture.md)：CognitiveOS V2 重构架构决策（informative；非任务/Gate）
 
 ## 其他
 

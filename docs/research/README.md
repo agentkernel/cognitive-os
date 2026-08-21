@@ -10,3 +10,4 @@ current facts remain [`PROGRESS.md`](../plan/PROGRESS.md) `Current snapshot`.
 | [Frontier review and environment perception](./20260726-frontier-review-and-environment-perception.md) | 2026-07-26 |
 | [Personal next-batch development analysis](./20260812-personal-next-batch-development-analysis.md) | 2026-08-12 |
 | [Personal optimization proposal](./20260812-personal-optimization-proposal.md) | 2026-08-12 |
+| [CognitiveOS V2 restructuring architecture](./20260821-cognitiveos-v2-restructuring-architecture.md) | 2026-08-21 |
