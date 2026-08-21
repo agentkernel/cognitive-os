@@ -44,7 +44,7 @@ Agent-benefit. EVAL-002 and EVAL-004 through EVAL-014 remain closed.
 | C2b session-2 / Skill | **partial** (split-score) | O: unsealed remember 201 `memory_id` present; unique Skill import+bind 201; Task admitted; session-1/2 GET consumption 404 `RESOURCE_CONSUMPTION_NOT_FOUND` **without daemon restart**; restatement 400 `RESOURCE_CONSUMPTION_RESTATEMENT_FORBIDDEN`. Pins absent until governed resolve (adapter not configured). P-arm cannot share daemon Memory/Skill |
 | C2c fault profile | **pass** (split-score) | unauthorized campaign 403 `RESOURCE_FAULT_PROFILE_UNAUTHORIZED`; task-channel 403 `RESOURCE_FAULT_PROFILE_CHANNEL_FORBIDDEN`; `PERSONAL-PERF-EVAL-015` enable 200 `faults_enabled=true` then default-off 200. Original-key `GET /task/effects` 200 after UJ2 restarts (`effects` present, no mutation receipts). P is fixture reference |
 | B5 1 h | **pass** | 60/60 min; local 420/420 (health 60/60 + projections 360/360) `non_ok=0`; 12/12 G1 soak pairs both arms `completed`/True; 0 timeouts; `retry=0`; pid 397664 chained into 8 h. RSS `not_available` (daemon.lock pid parse empty). Soak wall median `O−P` +386.0 ms (descriptive; not B2) |
-| B5 8 h | running (recovered continuation) | Minutes 0–158 contiguous, `local_non_ok=0`; 16/16 G1 pairs both `completed`/True; 0 arm timeouts. Pid 403482 dead. Live continuation pid **406043**; kernel **406056** on `48306` (lock pid alive); broker **369469** on `48406`. Minute-120 first restart retained fail (stale `daemon.lock`, health 0 after 600.1 s); hardened resume `START_MINUTE=120` `START_PAIR_INDEX=24` then health 200 in 31.1 s. No second continuation started. 24 h default deferred |
+| B5 8 h | running (resumed at minute 180) | Minutes 0–181 contiguous, `local_non_ok=0`; 19/19 G1 pairs both True; 0 arm timeouts. Minute-180 first attempt retained fail (`stale_daemon_lock` `pid_alive` 406056, health 0 after 600.2 s). Hardened resume pid **408358** / kernel **408375**: health 200 in 50.4 s; pair 19 both True. Broker 369469 on `48406`. Residue untouched. 24 h default deferred |
 | B5 24 h | default deferred | trigger is 8 h unresolved slope **and** owner budget; not opened |
 | T4–T9 / S4/S8 / O2–O6 extras | `not-run` / `not_available` | plan §10 expected-not-run or no public observation plane; not this freeze’s mutex |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
@@ -296,18 +296,21 @@ still `pid=406056` with `/proc` absent; `48306` not listening; broker
 <defunct>` pid 407767. This is the same stale-lock class as minute 120.
 Do not start a second jsonl writer until 406043 exits.
 
-Unique next remains: wait for this live wait_health (do not
-start a second continuation). If it records `RESTART_FAIL`, resume
-from last completed minute **179** + next pair index **30**. Then 24 h
-default deferred unless the unresolved-slope + owner-budget trigger is
-met, then cleanup and close.
+Pid **406043** then exited with retained `RESTART_FAIL` at minute 180
+(`stop_rc=1`, `health_after=0`, `start_s=600.2`, `kernel_pid=407767`,
+`stale_daemon_lock.reason=pid_alive` for 406056). Samples 0–179 kept.
+Hardened campaign-local continuation (`START_MINUTE=180`,
+`START_PAIR_INDEX=30`, stale-lock retry) started as pid **408358**.
+Minute-180 retry: lock pid 406056 `/proc` absent so cleared; health 200
+in **50.4 s**; kernel **408375** on `48306`; lock pid alive; pair 19
+both `completed`/True; local minutes 0–181 contiguous `non_ok=0`.
+Residue `48181`/`48284`/`48383` untouched. Public CLI 5 s start-timeout
+is still instrumentation only.
 
 ## Unique next action
 
-Wait for live B5 8 h pid **406043** minute-180 `wait_health` (last
-completed minute **179**, 18/18 pairs, `local_non_ok=0`). Do not start
-a second continuation. If the restart fails, clear stale `daemon.lock`
-only if `/proc/<pid>` is absent and resume from minute 180 / pair
-index 30. Record B5 24 h default deferred unless the 8 h slope trigger
-is met, then cleanup + secret scan + final assessment and close the
-campaign row/lease. Do not auto-start unrelated backlog.
+Finish the live B5 8 h continuation (pid **408358**, last completed
+minute **181**, next hourly restart at 240). Do not start a second
+continuation. Record B5 24 h default deferred unless the 8 h slope
+trigger is met, then cleanup + secret scan + final assessment and
+close the campaign row/lease. Do not auto-start unrelated backlog.

@@ -71,13 +71,12 @@ report. Missing runner or capability is `not-run`/`not_available`.
 | MS-AUTH / T-GOV / T2 / UJ2 / UJ3 / UJ4 | recorded | Skill unique-digest 10/10 combined; UJ4 30/30 admit; UJ2 cold 10/10; UJ3 task-watch **partial** 403 |
 | B3 / B4 | **pass** | B3 mismatch/restart/remaining executed; B4 932/932 local non-OK 0; mixed Agent `not-run` |
 | C2b / C2c | C2b **partial**; C2c **pass** split-score | session-2 GET without restart (404 pins); fault-profile authorized+default-off; original-key GET 200 after UJ2 |
-| B5 | 1 h **pass**; 8 h running (recovered continuation) | 60/60 1 h; 8 h minutes 0–179 contiguous `local_non_ok=0`; 18/18 pairs; live pid 406043 in minute-180 wait_health; stale lock pid 406056 dead; 24 h default deferred |
+| B5 | 1 h **pass**; 8 h running (resumed at minute 180) | 60/60 1 h; 8 h minutes 0–181 contiguous `local_non_ok=0`; 19/19 pairs; pid 408358 / kernel 408375; minute-180 stale-lock fail retained then health 200 in 50.4 s; 24 h default deferred |
 | Cleanup | pending | stop `48306`/`48406`; clear `/27` only |
 
 ## Unique next action
 
-Finish the live B5 8 h continuation (pid **406043**, last minute 179,
-minute-180 wait_health in flight). Do not start a second continuation.
-If it fails, resume from minute 180 / pair index 30. Record 24 h
-default deferred unless the 8 h slope trigger is met, then cleanup +
-secret scan + close the campaign.
+Finish the live B5 8 h continuation (pid **408358**, last minute 181).
+Do not start a second continuation. Record 24 h default deferred
+unless the 8 h slope trigger is met, then cleanup + secret scan +
+close the campaign.
