@@ -14,9 +14,11 @@ sources:
   - path: crates/cognitive-runtime/src/resource_sampler.rs
   - path: crates/cognitive-runtime/src/provider_route_policy.rs
   - path: crates/cognitive-runtime/src/task_scenario_harness.rs
+  - path: packages/dsh-akp-adapter/src/index.ts
+    symbols: ["DshAkpTiming"]
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:ec4bd11fe9895d7dd8a160cca7e2f8a1f400a25d9381188a38612c635d110097"
+fingerprint: "sha256:af3beddd6990e0cb310305c300a11e4065c8b1ee0ff43f5ad81837b25607a2e0"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---
@@ -55,6 +57,13 @@ non_claims:
 `tools/personal/` 存放操作者驱动的 runner 脚本（smoke、L3 route、L3 冷旅程、L4
 T1）。campaign **结果**（哪些 cell 执行、retained 计数、digest）由正式计划的证据记
 录拥有——只链接、绝不复制。
+
+## dsh AKP 适配器计时（P8-T09）
+
+`@cognitiveos/dsh-akp-adapter` 为每次仅 candidate 的 submit 记录 serialization、
+transport 与 total。这些字段只是 Path A（dsh → DeepSeek Flash）与 Path B
+（dsh → AKP → daemon → Flash）配对观察的测量入口，不构成零开销、无损或任何
+Gate/release/Profile/B01/Agent-benefit 结论。
 
 状态 `partial` 是因为 daemon 自身不暴露持续性能仪表；这里的一切都是选择性使用的测量
 工具。

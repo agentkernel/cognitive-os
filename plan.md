@@ -1224,6 +1224,15 @@ Pi 不可以：
 - 仓库内 `.githooks/`（sh + node，跨平台）+ `pnpm run hooks:install` 一次性注册 +
   `check:docs-sync` 聚合脚本；CI 既有 handbook 步骤保持无条件全量。
 
+### P8-T09 — DeepSeek Harness candidate-only AKP adapter
+
+- 钉住 dsh 精确 revision 与 AKP request-envelope schema digest；session fencing 与单调
+  sequence；拒绝 authority-shaped / secret-shaped payload。
+- TypeScript shim 只发 candidate/observation/lifecycle；JSONL/HTTP 有界 transport；
+  daemon `POST /task/akp/dsh` 把 Workspace* 映射到既有 public candidate admission。
+- dsh 不是 authority writer；dsh 响应不是 Task 完成。linux-002 真机与 Path A/B 计时
+  只记 observation，不构成 Gate/B01/release/Profile/Agent-benefit。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

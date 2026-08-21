@@ -17,6 +17,7 @@ pub mod campaign_runner;
 pub mod channel_binding;
 pub mod compaction_benefit;
 pub mod context_compaction;
+pub mod dsh_agent;
 pub mod dynamic_tool_ecosystem;
 pub mod event_envelope;
 pub mod graded_load;
@@ -91,6 +92,11 @@ pub use compaction_benefit::{
 pub use context_compaction::{
     CompactContextArtifact, CompactionLossRecord, CompactionSourceFact, ContextCompactionError,
     plan_context_compaction,
+};
+pub use dsh_agent::{
+    DSH_ADAPTER_ID, DSH_PACKAGE_REVISION, DshAgentError, DshAgentPackageIdentity,
+    activate_dsh_lifecycle, bind_dsh_package_identity, open_dsh_lifecycle, pause_dsh_lifecycle,
+    register_dsh_adapter, stop_dsh_lifecycle,
 };
 pub use dynamic_tool_ecosystem::{
     B10_REQUIRED_OBSERVATIONS, B10QualificationObservation, CompositeChildEvidenceSlot,

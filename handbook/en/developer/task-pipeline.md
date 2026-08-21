@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:4996758857853a98259fb982807811c7c8ae6d73dee5787efafe77cb81a507c8"
+fingerprint: "sha256:aa93a5f594973bc64625f5394344a34a5d09c9e6855f294048899f2ede4ff6e6"
 non_claims:
   - Admission still does not consume a worker iteration authorization or acquire a scheduler lease; a later tick does.
 ---
