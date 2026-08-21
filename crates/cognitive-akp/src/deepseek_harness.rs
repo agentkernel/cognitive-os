@@ -19,13 +19,6 @@ pub const PINNED_DSH_REVISION: &str = "528c682e061696f5a160f363f236ecbf53cbd006"
 /// JSONL / HTTP frame ceiling shared with the TypeScript shim.
 pub const MAX_FRAME_BYTES: usize = 1_048_576;
 
-const WORKSPACE_OPS: &[&str] = &[
-    "WorkspaceRead",
-    "WorkspaceSearch",
-    "WorkspaceWrite",
-    "WorkspacePatch",
-];
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum PluginEventKind {
@@ -346,49 +339,68 @@ impl DeepSeekHarnessAdapter {
         if request.event.kind != PluginEventKind::Candidate {
             return Ok(None);
         }
-        if !WORKSPACE_OPS.contains(&request.event.operation.as_str()) {
+        let Some((tool_ref, action, operation_descriptor_id)) =
+            catalog_workspace_op(request.event.operation.as_str())
+        else {
             return Ok(None);
-        }
+        };
         let payload = request
             .event
             .payload
             .as_object()
             .ok_or(DshAdapterError::InvalidEvent)?;
-        let tool_ref = string_field(payload, "tool_ref")?;
-        let action = string_field(payload, "action")?;
-        let target = string_field(payload, "target")?;
-        if action != request.event.operation {
-            return Err(DshAdapterError::InvalidEvent);
-        }
-        let parameters = payload
-            .get("parameters")
-            .cloned()
-            .filter(|value| !value.is_null());
-        let parameters_digest = payload
-            .get("parameters_digest")
-            .and_then(Value::as_str)
-            .unwrap_or("")
-            .to_owned();
-        let expected_state_version = payload
-            .get("expected_state_version")
-            .and_then(Value::as_i64)
-            .ok_or(DshAdapterError::InvalidEvent)?;
-        let operation_descriptor_id = string_field(payload, "operation_descriptor_id")?;
-        if tool_ref.is_empty()
-            || target.is_empty()
-            || operation_descriptor_id.is_empty()
-            || expected_state_version < 1
+        if let Some(declared) = payload.get("tool_ref").and_then(Value::as_str)
+            && declared != tool_ref
         {
             return Err(DshAdapterError::InvalidEvent);
         }
+        if let Some(declared) = payload.get("action").and_then(Value::as_str)
+            && declared != action
+            && declared != request.event.operation
+        {
+            return Err(DshAdapterError::InvalidEvent);
+        }
+        if let Some(declared) = payload
+            .get("operation_descriptor_id")
+            .and_then(Value::as_str)
+            && declared != operation_descriptor_id
+        {
+            return Err(DshAdapterError::InvalidEvent);
+        }
+        let target = string_field(payload, "target")?;
+        let target = if target.starts_with("workspace://") {
+            target
+        } else {
+            format!("workspace://{target}")
+        };
+        let parameters = payload
+            .get("parameters")
+            .cloned()
+            .filter(|value| !value.is_null())
+            .unwrap_or_else(|| {
+                json!({
+                    "family": request.event.operation,
+                })
+            });
+        let expected_state_version = payload
+            .get("expected_state_version")
+            .and_then(Value::as_i64)
+            .unwrap_or(1);
+        if target == "workspace://" || expected_state_version < 1 {
+            return Err(DshAdapterError::InvalidEvent);
+        }
+        let parameters_digest = match payload.get("parameters_digest").and_then(Value::as_str) {
+            Some(digest) if !digest.trim().is_empty() => digest.to_owned(),
+            _ => digest_candidate_parameters(&parameters)?,
+        };
         Ok(Some(WorkspaceCandidateFields {
-            tool_ref,
-            action,
+            tool_ref: tool_ref.to_owned(),
+            action: action.to_owned(),
             target,
-            parameters,
+            parameters: Some(parameters),
             parameters_digest,
             expected_state_version,
-            operation_descriptor_id,
+            operation_descriptor_id: operation_descriptor_id.to_owned(),
         }))
     }
 }
@@ -402,6 +414,39 @@ fn string_field(
         .and_then(Value::as_str)
         .map(str::to_owned)
         .ok_or(DshAdapterError::InvalidEvent)
+}
+
+fn catalog_workspace_op(operation: &str) -> Option<(&'static str, &'static str, &'static str)> {
+    match operation {
+        "WorkspaceRead" => Some((
+            "native.workspace.read",
+            "read",
+            "00000000-0000-7000-8000-000000002001",
+        )),
+        "WorkspaceSearch" => Some((
+            "native.workspace.search",
+            "search",
+            "00000000-0000-7000-8000-000000002002",
+        )),
+        "WorkspaceWrite" => Some((
+            "native.workspace.write",
+            "write",
+            "00000000-0000-7000-8000-000000002003",
+        )),
+        "WorkspacePatch" => Some((
+            "native.workspace.patch",
+            "patch",
+            "00000000-0000-7000-8000-000000002004",
+        )),
+        _ => None,
+    }
+}
+
+fn digest_candidate_parameters(parameters: &Value) -> Result<String, DshAdapterError> {
+    let bytes = cognitive_contracts::canonical::canonical_bytes_of_value(parameters)
+        .map_err(|error| DshAdapterError::Akp(error.to_string()))?;
+    cognitive_contracts::canonical::digest(&bytes, "cognitiveos.personal.candidate-parameters/0.1")
+        .map_err(|error| DshAdapterError::Akp(error.to_string()))
 }
 
 fn payload_rejection(value: &Value) -> Option<DshAdapterError> {
@@ -641,20 +686,20 @@ mod tests {
         let mut read = request(1);
         read.event.operation = "WorkspaceRead".to_owned();
         read.event.payload = json!({
-            "tool_ref": "tool://workspace-read",
-            "action": "WorkspaceRead",
-            "target": "README.md",
-            "parameters_digest": format!("sha256:{}", "a".repeat(64)),
-            "expected_state_version": 1,
-            "operation_descriptor_id": "01aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            "target": "README.md"
         });
         adapter.translate(&read).expect("translate");
         let fields = adapter
             .workspace_candidate(&read)
             .expect("map")
             .expect("workspace");
-        assert_eq!(fields.action, "WorkspaceRead");
-        assert_eq!(fields.target, "README.md");
+        assert_eq!(fields.tool_ref, "native.workspace.read");
+        assert_eq!(fields.action, "read");
+        assert_eq!(fields.target, "workspace://README.md");
+        assert_eq!(
+            fields.operation_descriptor_id,
+            "00000000-0000-7000-8000-000000002001"
+        );
         assert_eq!(adapter.bound_task_ref(), Some("task://personal/dsh-read"));
     }
 }
