@@ -130,9 +130,10 @@ does not promote those results.
 
 ## Unique next action
 
-Finish the live B5 8 h continuation (pid **406043**; prior 403482 dead;
-minutes 0–158 contiguous; 16/16 pairs; minute-120 stale-lock fail
-retained then health 200). Do not start a second continuation. Record
+Finish the live B5 8 h continuation (pid **406043**; last completed
+minute 179; 18/18 pairs; minute-180 `wait_health` in flight with stale
+`daemon.lock` pid 406056 dead). Do not start a second continuation.
+If the restart fails, resume from minute 180 / pair index 30. Record
 B5 24 h default deferred unless the 8 h slope trigger is met. Then
 cleanup (`48306`/`48406` and SecretStore `/27` only), secret scan,
 final assessment, and close the campaign row and lease.

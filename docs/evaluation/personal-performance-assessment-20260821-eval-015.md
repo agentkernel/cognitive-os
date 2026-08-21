@@ -287,14 +287,27 @@ and `perfeval012`/`013`/`014` untouched):
 - A leftover guest waiter pid 406492 (`eval015-b5-wait.py 3000 summary`)
   only polls; it does not write jsonl. No second continuation started.
 
-Unique next remains: finish this live 8 h process, then 24 h default
-deferred unless the unresolved-slope + owner-budget trigger is met,
-then cleanup and close.
+Minute-180 hourly restart (observed while pid 406043 still alive): last
+completed local minute **179** (180 rows, no gaps, `local_non_ok=0`);
+paired jsonl **18/18** both True. Heartbeat file minute 180. `daemon.lock`
+still `pid=406056` with `/proc` absent; `48306` not listening; broker
+`48406` pid 369469 up; residue listeners untouched. Continuation wchan
+`hrtimer_nanosleep` (the 600 s `wait_health`); child `[kernel-server]
+<defunct>` pid 407767. This is the same stale-lock class as minute 120.
+Do not start a second jsonl writer until 406043 exits.
+
+Unique next remains: wait for this live wait_health (do not
+start a second continuation). If it records `RESTART_FAIL`, resume
+from last completed minute **179** + next pair index **30**. Then 24 h
+default deferred unless the unresolved-slope + owner-budget trigger is
+met, then cleanup and close.
 
 ## Unique next action
 
-Finish the live B5 8 h continuation (pid **406043**, last completed
-minute **158**, next hourly restart at 180). Do not start a second
-continuation. Record B5 24 h default deferred unless the 8 h slope
-trigger is met, then cleanup + secret scan + final assessment and
-close the campaign row/lease. Do not auto-start unrelated backlog.
+Wait for live B5 8 h pid **406043** minute-180 `wait_health` (last
+completed minute **179**, 18/18 pairs, `local_non_ok=0`). Do not start
+a second continuation. If the restart fails, clear stale `daemon.lock`
+only if `/proc/<pid>` is absent and resume from minute 180 / pair
+index 30. Record B5 24 h default deferred unless the 8 h slope trigger
+is met, then cleanup + secret scan + final assessment and close the
+campaign row/lease. Do not auto-start unrelated backlog.
