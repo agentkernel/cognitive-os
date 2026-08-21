@@ -9,15 +9,14 @@
 
 ## Task and lease
 
-- Task: `P8-T09` (`in-progress`)
-- Slice: `P8-T09/D03` in-progress; `D01`/`D02` implemented and Linux-validated
+- Task: `P8-T09` (`in-progress`; D03 evidence complete)
+- Slice: `P8-T09/D03` done; `P8-T09/D04` docs/CI/merge remaining
 - Branch: `personal/P8-T09-dsh-akp-adapter`
 - Draft PR: https://github.com/agentkernel/cognitive-os/pull/254
 - Lease: `lease/personal/P8-T09/dsh-akp-adapter`
-- HEAD at last Path B Flash samples: `bd8baf96919886c2e4ad13e6a06214a20efed2a1`
+- Exact revision for combined real-dsh E2E: `5b1c22790820690035b1700711a1e1eed5d19657`
 - Guest kernel-server/cognitive binaries: exact `9e239b7512e706d56d3359e5ab30a6c3469c35f8`
-  (Rust mapping unchanged since that pin). Adapter/scripts at `bd8baf96` for the
-  Flash samples; Workspace* real-dsh `startupEvents` land in the next push.
+  (Rust mapping unchanged since that pin). Adapter/scripts at `5b1c2279`.
 
 ## Pins
 
@@ -39,46 +38,45 @@
 | Check | Result | Evidence / limitation |
 |---|---|---|
 | Formal task/lease/branch | **pass** | `P8-T09`; lease active; Draft PR 254 |
-| TypeScript source build/test | **pass** (12/12) | `DEV-WIN-GNU-01` `pnpm --filter @cognitiveos/dsh-akp-adapter` after Workspace* startupEvent test |
+| TypeScript source build/test | **pass** (12/12) | `DEV-WIN-GNU-01` `pnpm --filter @cognitiveos/dsh-akp-adapter` |
 | Jump-host Rust `cognitive-akp` | **pass** (8/8) | `DEV-LINUX-NATIVE-01` at `9e239b75` `--locked` |
 | Jump-host `p8_t09_dsh_akp_live` | **pass** (1/1) | live `POST /task/akp/dsh` WorkspaceRead admission left DRAFT |
 | Jump-host `dsh_akp_tests` | **pass** (2/2) | inactive/malformed/oversized/wrong-version; restart INACTIVE |
 | Jump-host fmt / Clippy `-D warnings` | **pass** | `cognitive-akp` + `cognitive-runtime` + `kernel-server` at `9e239b75` |
 | linux-002 identity | **pass** | domain/UUID/hostname as above |
-| SecretStore DeepSeek Flash bind | **pass** (redacted) | `cognitive init --api-key-file -`; `secret_material_written: true`; `secret_ref_redacted: true`; `selected_model: deepseek-v4-flash`; doctor `secret_ref_resolves: true` |
-| Path B shim E2E Read | **pass** | `attachDshCordisPlugin` → HTTP → daemon; lifecycle `COMPLETED` |
-| Path B shim E2E Search | **pass** | admitted then `COMPLETED` |
-| Path B shim E2E Write | **pass** | disposable write file; lifecycle `COMPLETED`; dsh response ≠ Task completion |
-| Fail-closed version/secret | **pass** | `DSH_VERSION_MISMATCH`; `SECRET_SHAPED_PAYLOAD` |
-| Fail-closed malformed/oversized | **pass** / **pass-closed** | `MALFORMED_JSON`; oversized hits front-door `REQUEST_BODY_TOO_LARGE` (400) before AKP `FRAME_TOO_LARGE` |
-| Jump-host Path A Flash | **pass** | `dsh --profile headless` `pong` in 9.66 s at pin `528c682e` after `build:lib:host`. tested-local / jump-host, not linux-002 |
-| Path B real dsh → linux-002 Flash | **pass** | two retained samples at `bd8baf96`: 9566 ms and 9463 ms, `assistant_is_pong: true`, `dsh_exit: 0`. dsh on jump host; SSE bridge on jump; tunneled loopback to guest daemon Provider proxy. n=2, not p50/p95 |
-| Real-dsh Workspace* startupEvents | **not-run** | harness now admits Read/Search/Write and emits them from `dsh --patch`; needs the next pushed SHA on linux-002 |
-| Paired Path A/B Provider timing | **observation** | Path A 9.66 s (n=1, jump-host API). Path B ~9.5 s (n=2, guest API). Different hosts; not a lossless claim |
-| Secret residue cleanup | **pass** | daemon at `/home/hal9001/p8t09-11830baf` stopped; `secret-tool clear` product triple exit 0; tight `sk-[A-Za-z0-9]{16,}` / PEM scan 18 files, 2 skipped large, 0 hits; disposable jump pubkey removed; jump tunnel/key/bootstrap shredded; EVAL listeners 48181/48284/48383 untouched |
-| Required CI | **partial** | Ubuntu verify **pass** on `bd8baf96`; Windows still in progress at last check |
+| SecretStore DeepSeek Flash bind | **pass** (redacted) | `cognitive init --api-key-file -`; `secret_material_written: true`; `secret_ref_redacted: true`; `selected_model: deepseek-v4-flash` |
+| Path B shim E2E Read/Search/Write | **pass** | at `5b1c2279`: all three `accepted`/`admitted`/`COMPLETED`; dsh response ≠ Task completion |
+| Real-dsh Workspace* + Flash | **pass** | two retained `dsh --patch` samples at `5b1c2279`: Read/Search/Write `COMPLETED` and `assistant_is_pong: true` (10488 ms, 10515 ms) |
+| Fail-closed live matrix | **pass** | `DSH_VERSION_MISMATCH`; `SCHEMA_DIGEST_MISMATCH`; `BRIDGE_PROTOCOL_MISMATCH`; `STALE_FENCING_EPOCH`; `SEQUENCE_NOT_MONOTONIC`; `MALFORMED_JSON`; `SECRET_SHAPED_PAYLOAD`; unknown session `INACTIVE` |
+| Fail-closed oversized/timeout/authority | **pass** (unit / earlier live) | oversized front-door `REQUEST_BODY_TOO_LARGE`; adapter `TIMEOUT` / `AUTHORITY_CLAIM_FORBIDDEN` / `FORBIDDEN_PAYLOAD_FIELD` in TypeScript tests |
+| Clean-runtime daemon restart | **pass** | empty root `/home/hal9001/p8t09-5b1c2279-restart`: activate then stop/start; post-restart event `INACTIVE` `candidate_only: true` |
+| Dirty-runtime daemon restart | **fail** / **not-run** for AKP INACTIVE on that root | `/home/hal9001/p8t09-5b1c2279` start after Workspace* runs failed: `scheduler lease conflict: lease owner or epoch mismatch on release`. Daemon refused to serve; not an AKP session leak. Scheduler recovery is outside this adapter slice. |
+| Jump-host Path A Flash | **pass** | `dsh --profile headless` `pong` in 9.66 s at pin `528c682e`. tested-local / jump-host, not linux-002 |
+| Earlier Path B Flash-only | **pass** | two samples at `bd8baf96`: 9566 ms and 9463 ms `pong` (no Workspace* startupEvents yet) |
+| Paired Path A/B timing | **observation** | Path A 9.66 s n=1 jump-host API. Path B 10.49 s / 10.52 s n=2 at `5b1c2279` (guest API, includes Workspace* admits). Different hosts; n is tiny; not a lossless claim |
+| Secret residue cleanup | **pass** | disposable daemons stopped; `secret-tool clear` product triple (exit 1 empty stderr = no matching item); tight `sk-[A-Za-z0-9]{16,}` / PEM scan 106+13 files, 2+2 skipped large, 0 hits; jump tunnel/key/bootstrap shredded; temp pubkey absent; EVAL listeners 48181/48284/48383 untouched |
+| Required CI | **pass** | Ubuntu, Windows, and `required-ci` SUCCESS on `5b1c2279` (run `32495521633`) |
 
-## Path B shim timings (observation, not a claim)
+## Path B shim timings at `5b1c2279` (observation, not a claim)
 
-Values are nanoseconds from `@cognitiveos/dsh-akp-adapter` on one linux-002
-warm-ish run. They are not p50/p95, not Path A, and not Gate evidence.
+Nanoseconds from `@cognitiveos/dsh-akp-adapter`. Not p50/p95, not Path A, not Gate evidence.
 
 | Family | serialization | transport | total |
 |---|---:|---:|---:|
-| Read | 220977 | 83046261 | 83267238 |
-| Search | 73360 | 59540163 | 59613523 |
-| Write | 46867 | 96912401 | 96959268 |
+| Read | 227314 | 73168221 | 73395535 |
+| Search | 89956 | 90086510 | 90176466 |
+| Write | 71234 | 71027987 | 71099221 |
 
 ## Secret handling
 
 Local key file existed (length 35). Material entered linux-002 only through
 `cognitive init --api-key-file -` stdin. This checkpoint records no key bytes
-and no key digest. Cleanup cleared the product SecretStore attribute triple
+and no key digest. Cleanup targeted the product SecretStore attribute triple
 (`application=cognitiveos-personal`, `provider=deepseek`,
 `purpose=provider-api-key`) without `secret-tool search`/`lookup`.
 
 ## Unique next action
 
-Push this harness revision, confirm linux-002 identity, re-bind SecretStore
-Flash, and run `scripts/dsh-real-process.mjs` plus `scripts/linux002-e2e.mjs`
-at that exact SHA. Then required CI and D04 docs/merge. Do not auto-claim P6/P7.
+D04: docs-sync already in this checkpoint changeset; wait for required CI on
+the docs HEAD, then ready/merge/lease/branch/main. Do not auto-claim P6/P7.
+No Gate / release / Profile / B01 / Agent-benefit claim.
