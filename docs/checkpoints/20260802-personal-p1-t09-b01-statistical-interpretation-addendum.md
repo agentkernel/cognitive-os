@@ -12,12 +12,12 @@
 ## 1. Purpose and authority boundary
 
 This addendum resolves the statistical wording conflict between the
-[original preregistration](20260731-personal-p1-t09-b01-preregistration.md),
+[original preregistration](./20260731-personal-p1-t09-b01-preregistration.md),
 whose `Success threshold` row describes one attempt, and the formal plan's
 campaign-level requirement of at least 20 attempts. It is an interpretation
 and campaign-accounting addendum. It does not edit, replace, invalidate or
 rerun the original preregistration or
-[attempt 1 ledger](20260801-personal-p1-t09-b01-attempt-ledger.md).
+[attempt 1 ledger](./20260801-personal-p1-t09-b01-attempt-ledger.md).
 
 The original phrases "one clean Linux x86_64 first install", "one started
 attempt" and "no retries ... for a passing B01 claim" define the atomic

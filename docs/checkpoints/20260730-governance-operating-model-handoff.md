@@ -37,7 +37,7 @@
 - `git diff --cached --check` — passed before commit.
 - No code, schema, registry, transition, or conformance vector was changed.
 - A subsequent owner-authorized P1-T04 portability fix is recorded in
-  [its dedicated handoff](20260730-personal-p1-t04-endpoint-publication-portability-handoff.md);
+  [its dedicated handoff](./20260730-personal-p1-t04-endpoint-publication-portability-handoff.md);
   this governance handoff does not reserve any source path after closure.
 
 ## Explicit non-claims

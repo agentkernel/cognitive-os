@@ -64,8 +64,8 @@ M5 出口评审 **GO M6**（附带条件：D-018/剩余向量持续消化；clie
 
 | 批次 | 提示词 | 车道 |
 |---|---|---|
-| Batch-0A 合同绑定 + 缺口裁决 | [m6-batch0-contracts.md](m6-batch0-contracts.md) | Lane-CTR |
-| Batch-0B/1 篡改拒装 tracer | [m6-batch1-installer.md](m6-batch1-installer.md) | Lane-RUN |
+| Batch-0A 合同绑定 + 缺口裁决 | [m6-batch0-contracts.md](./m6-batch0-contracts.md) | Lane-CTR |
+| Batch-0B/1 篡改拒装 tracer | [m6-batch1-installer.md](./m6-batch1-installer.md) | Lane-RUN |
 | 后续 WP2–WP10 | 按 [M6-PLAN.md](../plan/M6-PLAN.md) §B 另开会话 | 各 owner |
 
 ## 工作分支
@@ -74,4 +74,4 @@ M5 出口评审 **GO M6**（附带条件：D-018/剩余向量持续消化；clie
 
 ## 第一个动作（若尚未完成 Batch-0A）
 
-读 `docs/plan/M6-PLAN.md` 与 findings-ledger F-017；若 bindings 未合入，先执行 [m6-batch0-contracts.md](m6-batch0-contracts.md)。若 bindings 已合入，再执行 [m6-batch1-installer.md](m6-batch1-installer.md)：先写失败测试（篡改 manifest 拒装）。
+读 `docs/plan/M6-PLAN.md` 与 findings-ledger F-017；若 bindings 未合入，先执行 [m6-batch0-contracts.md](./m6-batch0-contracts.md)。若 bindings 已合入，再执行 [m6-batch1-installer.md](./m6-batch1-installer.md)：先写失败测试（篡改 manifest 拒装）。

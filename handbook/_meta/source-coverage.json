@@ -76,11 +76,6 @@
 
     { "glob": "AGENTS.md", "category": "legacy-docs", "reason": "agent entry document; handbook adds one pointer only" },
     { "glob": "README.md", "category": "legacy-docs", "reason": "repository root readme" },
-    { "glob": "plan.md", "category": "legacy-docs", "reason": "research/task-card detail source" },
-    { "glob": "CognitiveOS-Architecture.md", "category": "legacy-docs", "reason": "informative whitepaper" },
-    { "glob": "CognitiveOS-Architecture-Independent-Review.md", "category": "legacy-docs", "reason": "frozen historical review" },
-    { "glob": "CognitiveOS-Review-Conclusions.md", "category": "legacy-docs", "reason": "frozen historical review" },
-    { "glob": "RFC-0001-cognitiveos-governance-context-access.md", "category": "legacy-docs", "reason": "normative companion RFC" },
     { "glob": "LICENSE", "category": "legacy-docs", "reason": "license text" },
     { "glob": "NOTICE", "category": "legacy-docs", "reason": "license notice" },
     { "glob": ".gitattributes", "category": "first-party-source", "docs": ["dev.dev-environments"] },

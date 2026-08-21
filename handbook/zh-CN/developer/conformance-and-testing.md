@@ -19,7 +19,7 @@ tests:
   - tools/test/p2_t28_capability_truth.test.mjs
   - tools/test/c1_c2_paired_p_arm.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:fa3576dafe87d14837215beb718bc3a1a77c5ef0061a5ead86792da5a56ad830"
+fingerprint: "sha256:25f859706272ce1b04fb22d811a1b969af18dfbf19001111dbe628a49521a58c"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---

@@ -68,7 +68,7 @@ MemoryObject 区分 observation、episode summary、decision、procedure、prefe
 
 知识发布遵循 `Evidence -> ClaimCandidate -> KnowledgeCandidate -> AdmissionDecision -> Published KnowledgeObject -> ContextView`。`KnowledgeCompilationProfile` 固定抽取、去重、冲突、citation、deterministic/policy/semantic/security lint、模型/provider/sampling 与渲染版本。
 
-REQ-KNOW-001–REQ-KNOW-009 的权威规范定义位于 [RFC-0001 §9](../../RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation)，本节不再重复定义：claim 级 provenance 与依赖边（001）、失效沿依赖图传播（002）、`Ingest` 隔离不可信内容（003）、生成内容不得自我佐证或直接发布（004）、维护 loop 有界且超界 stale/quarantine（005）、source 删除与 legal hold 的派生闭合（006）、`Query` 泄露前过滤与逐对象授权（007）、`Lint` 四层覆盖（008）、知识编译符合性负例（009）。声明 `controlled_learning` Profile 且涉及知识编译的实现 **MUST** 一并满足上述条目。
+REQ-KNOW-001–REQ-KNOW-009 的权威规范定义位于 [RFC-0001 §9](../../docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation)，本节不再重复定义：claim 级 provenance 与依赖边（001）、失效沿依赖图传播（002）、`Ingest` 隔离不可信内容（003）、生成内容不得自我佐证或直接发布（004）、维护 loop 有界且超界 stale/quarantine（005）、source 删除与 legal hold 的派生闭合（006）、`Query` 泄露前过滤与逐对象授权（007）、`Lint` 四层覆盖（008）、知识编译符合性负例（009）。声明 `controlled_learning` Profile 且涉及知识编译的实现 **MUST** 一并满足上述条目。
 
 ## 6. 发布阶段
 

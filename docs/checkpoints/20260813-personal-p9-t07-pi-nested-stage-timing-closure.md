@@ -39,7 +39,7 @@
 
 ## Validation
 
-- Failure-first/red-green ledger: [running report](20260813-personal-p9-t07-pi-nested-stage-timing-validation-report.md).
+- Failure-first/red-green ledger: [running report](./20260813-personal-p9-t07-pi-nested-stage-timing-validation-report.md).
 - Local Pi package: **90/90 pass** after merging `origin/main@d24f7d00`.
 - Exact native Linux daemon proof at unchanged implementation revision
   `554c6cf9f69af836032af207eeb04a800ac55063`: route observation **9/9**,

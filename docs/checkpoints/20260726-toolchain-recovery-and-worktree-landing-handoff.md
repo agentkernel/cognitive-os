@@ -110,7 +110,7 @@ Owner 在本窗口进行中把整个 `clients/` 文档域迁出到独立仓库
   防护"的对齐测试。
 
 计划/治理文档：ADR-0026（Personal 低摩擦授权 trust profile，DEC-P-20）落地；
-`plan.md` 的 P2-T01..P2-T08 压缩卡按 §11.1 扩写为完整强制字段集（语义零变更）；
+`docs/plan/plan.md` 的 P2-T01..P2-T08 压缩卡按 §11.1 扩写为完整强制字段集（语义零变更）；
 `PERSONAL-DEVELOPMENT-PLAN.md`/`personal-trace.yaml`/`PI-AGENT-INTEGRATION-PLAN.md`/
 `PERSONAL-SUPPORT-MATRIX.md`/`V01-AUTO-RUN-VERIFY-PERF-PLAN.md`/`PROGRESS.md` 同批对齐；
 新增研究评审 `docs/research/20260726-frontier-review-and-environment-perception.md`

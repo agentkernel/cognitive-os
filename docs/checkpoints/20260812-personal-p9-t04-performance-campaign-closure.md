@@ -4,7 +4,7 @@
 - Task: `P9-T04`
 - Campaign ID: `P9-T04-comprehensive-performance-001`
 - Registration: [ADR-0051](../adr/0051-comprehensive-performance-campaign.md) and
-  [preregistration](20260812-personal-p9-t04-performance-campaign-preregistration.md)
+  [preregistration](./20260812-personal-p9-t04-performance-campaign-preregistration.md)
 - Claim level: `hypothesis`
 - Independent verifier disposition: `not_reviewed`
 - Agent-benefit claimed: **no**

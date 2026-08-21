@@ -30,7 +30,7 @@
   - chat timeout classification + secret non-leak in Debug
   - Authorization header redaction helper
 - ADR-0021 documents discovery/probe/snapshot decisions.
-- Aligned formal Personal ledger, `plan.md` task card, and `PROGRESS.md`.
+- Aligned formal Personal ledger, `docs/plan/plan.md` task card, and `PROGRESS.md`.
 
 ## 3. Not completed / out of scope
 

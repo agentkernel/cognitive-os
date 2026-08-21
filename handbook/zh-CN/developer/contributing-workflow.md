@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:d88282228407ba45a33d1a4e081b23bd25e55ee380d5c880ed3e565d7e3f9a8d"
+fingerprint: "sha256:202974bf4f04e9a18cb9bab9e3f2e2ea51de3d83bb5b31fa2aed5e3f0a905069"
 non_claims:
   - 具约束力的工作流由 Operating Model 拥有；本页是面向贡献者的导向性摘要。
 ---

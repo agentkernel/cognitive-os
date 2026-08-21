@@ -11,9 +11,9 @@
 
 This document explains how the two Pi integration tracks compose. It is not a task backlog,
 current-status ledger, release Gate, or evidence source. Task definitions come only from
-[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md), current facts come only from the
-`Current snapshot` in [PROGRESS.md](PROGRESS.md), and writable paths come only from active leases in
-[PARALLEL-LANES.md](PARALLEL-LANES.md).
+[PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md), current facts come only from the
+`Current snapshot` in [PROGRESS.md](./PROGRESS.md), and writable paths come only from active leases in
+[PARALLEL-LANES.md](./PARALLEL-LANES.md).
 
 ## 1. Two independent roles
 
@@ -188,7 +188,7 @@ shared-budget coordination remain a separate post-1.0 capability and Gate decisi
 ## 6. Evidence and environment use
 
 Environment capabilities and claim limits are registered in
-[PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md). Local, WSL, fixture, and ordinary CI
+[PERSONAL-TEST-ENVIRONMENTS.md](./PERSONAL-TEST-ENVIRONMENTS.md). Local, WSL, fixture, and ordinary CI
 results are implementation evidence unless a formal campaign preregistration explicitly admits
 them. The B01 first-install campaign and managed-Pi B09 campaign remain distinct evidence sets.
 

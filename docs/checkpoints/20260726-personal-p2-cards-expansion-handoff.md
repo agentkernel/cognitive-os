@@ -3,7 +3,7 @@
 > **状态更新（2026-07-26，同日晚些时候）：** §2 的恢复步骤已执行——工作树已核对
 > 并落盘，§15.2 的一致性/测试命令已在恢复后的本机 Linux 工具链上真实执行。§5 的
 > owner 待办第 1 项（沙箱磁盘）已消解。后续记录见
-> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](20260726-toolchain-recovery-and-worktree-landing-handoff.md)。
+> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](./20260726-toolchain-recovery-and-worktree-landing-handoff.md)。
 > 本文以下内容保持原样，作为当时窗口的事实记录。
 
 ## 1. Session snapshot
@@ -21,11 +21,11 @@
 
 ## 2. Handoff Record (§18.5)
 
-- 当前状态: plan.md P2 压缩卡已按 §11.1 扩写为完整强制字段集；改动**未提交**，
+- 当前状态: docs/plan/plan.md P2 压缩卡已按 §11.1 扩写为完整强制字段集；改动**未提交**，
   停留在 `D:\agent-kernel` 工作树。
 - 已完成:
-  1. `plan.md` 头部新增 "P2 卡扩写批（2026-07-26）" 变更说明行。
-  2. `plan.md` §11 中 `P2-T01`..`P2-T08` 八张压缩卡逐张扩写为完整字段集
+  1. `docs/plan/plan.md` 头部新增 "P2 卡扩写批（2026-07-26）" 变更说明行。
+  2. `docs/plan/plan.md` §11 中 `P2-T01`..`P2-T08` 八张压缩卡逐张扩写为完整字段集
      （目标/价值、状态指针、证据/研究、依赖/不包含、文件、数据/API/配置/迁移、
      步骤、验收、测试、基准/性能、安全/可观测、回滚/文档、解锁、风险/不确定）。
      扩写仅补足字段、仓库锚点（`intent_chain.rs` API、`cognitive-store` 表名、
@@ -49,7 +49,7 @@
   只做 §11.1 明确要求的扩写文档工作；理由与 §12.1"被阻塞换并行任务，不空转"
   一致。扩写提前于认领执行（规则要求"认领开工时必须先扩写"，提前不违反），
   语义零变更由逐条保留原 bullet 内容保证。
-- 关键文件: `plan.md`（唯一实质改动）、
+- 关键文件: `docs/plan/plan.md`（唯一实质改动）、
   `docs/checkpoints/20260726-personal-p2-cards-expansion-handoff.md`（本文件）、
   `docs/plan/PROGRESS.md`（注记）。未触碰：代码、registry、schema、vector、
   `personal-trace.yaml`（无结构变化故无需改）、`personal-blog/`（未读未改）。

@@ -6,7 +6,7 @@
 - WP0-LAND：#31/#32 merged；#33 CI 红 → clippy/rustfmt 修复 → 超集为 [#34](https://github.com/agentkernel/cognitive-os/pull/34)（`lane/run-m6-installer-ci`）；#33 closed superseded
 - WP-CLAIM + WP-F017：冻结发布声明集；linux_native 三 deny digests + 复现命令；unit `f017_claim_freeze_digests_are_stable`
 - 默认 non-claim：InstallationStore、PERF HW 战役、D-018 交换面
-- WP-REVIEW：[20260721-v01-rereview.md](20260721-v01-rereview.md) → **GO-with-explicit-non-claim**
+- WP-REVIEW：[20260721-v01-rereview.md](./20260721-v01-rereview.md) → **GO-with-explicit-non-claim**
 - 分批提示词：`docs/prompts/m6-exit-batch0..3*.md`
 - 联动：PROGRESS、M6-PLAN 指针、docs/README、findings-ledger F-017、f017-platform-matrix
 

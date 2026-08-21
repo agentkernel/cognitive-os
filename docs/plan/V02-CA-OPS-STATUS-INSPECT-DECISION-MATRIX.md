@@ -4,7 +4,7 @@
 - Date: 2026-07-23
 - Branch: `lane/ctr-v02-ca-ops-foundation-closure`
 - Baseline: `origin/main@117df63dfd435f57cac8b700e11a200517f56d0d`
-- Foundation input: [V02-CA-OPS-FOUNDATION-01](V02-CA-OPS-FOUNDATION-DECISION-MATRIX.md)
+- Foundation input: [V02-CA-OPS-FOUNDATION-01](./V02-CA-OPS-FOUNDATION-DECISION-MATRIX.md)
 - Classification: owner-governance member-closure audit; no machine registration
 - Status: identity/classification, request/result, authority/security/verifier, error map, and audit responsibility confirmed; AUDIT machine-registration blocker forces member registration NO-GO; envelope/epoch binding not advanced
 

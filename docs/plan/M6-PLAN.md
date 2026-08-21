@@ -1,10 +1,10 @@
 # CognitiveOS M6 开发与验收计划
 
 - 状态：approved（2026-07-21）；类别 plan（informative）
-- **出口闭合与 v0.1 重评审**：见 canonical [M6-EXIT-PLAN.md](M6-EXIT-PLAN.md)（本文件保留 M6 进入/交付计划；出口 WP 以 EXIT 为准）
+- **出口闭合与 v0.1 重评审**：见 canonical [M6-EXIT-PLAN.md](./M6-EXIT-PLAN.md)（本文件保留 M6 进入/交付计划；出口 WP 以 EXIT 为准）
 - 入口证据：`origin/main` tip `3c7115c`（PR #30 pins：pass 52 / not-run 32 / self-check ≥33）；[M5 milestone review](../checkpoints/20260721-m5-milestone-review.md) **GO M6**
 - 出口：v0.1 发布评审；F-017 平台矩阵为出口硬阻断（声明集闭合见 EXIT / [f017-platform-matrix.md](../traceability/f017-platform-matrix.md)）
-- 更新责任：M6 批次合入与出口评审时同步本文件与 [PROGRESS.md](PROGRESS.md)
+- 更新责任：M6 批次合入与出口评审时同步本文件与 [PROGRESS.md](./PROGRESS.md)
 
 ## 1 页执行摘要
 
@@ -28,8 +28,8 @@
 
 ### A2. 入口证据
 
-- [DEVELOPMENT-PLAN §M6](DEVELOPMENT-PLAN.md)：入口 = M5 出口，出口 = v0.1 review。
-- [PROGRESS](PROGRESS.md)：M5 done、52/32、self-check ≥33、Profile implemented = 0。
+- [DEVELOPMENT-PLAN §M6](./DEVELOPMENT-PLAN.md)：入口 = M5 出口，出口 = v0.1 review。
+- [PROGRESS](./PROGRESS.md)：M5 done、52/32、self-check ≥33、Profile implemented = 0。
 - [M5 review §7](../checkpoints/20260721-m5-milestone-review.md)：GO M6；D-018/剩余向量持续消化；clients blocked；F-017 阻断出口。
 - Git/CI：`origin/main=3c7115c...`；开工复核：`git fetch origin main`、`git rev-parse origin/main`、`gh run list --commit $(git rev-parse origin/main)`、`git status --short --branch`。
 
@@ -114,7 +114,7 @@ flowchart LR
 ```
 
 - 单车道分支、单 crate owner、逐路径 `git add`；禁 `git add -A`。
-- 合入序 CTR → {KRN, CFR, TSC} → RUN（见 [PARALLEL-LANES](PARALLEL-LANES.md)）。
+- 合入序 CTR → {KRN, CFR, TSC} → RUN（见 [PARALLEL-LANES](./PARALLEL-LANES.md)）。
 - CTR 只做既有 schema 绑定与修正型裁决；新增 transition/schema/REQ/error 必须先证明修正型。
 - CON 可独立更新 clients gate 事实；implementation-ready 仍 blocked。
 - F-017 若需新 CI job：CFR 单独 workflow-scope PR，先获权限确认。
@@ -160,7 +160,7 @@ R2/R3 完整审批；distributed/多 Agent；具身/CIM；在线或受控学习�
 
 ## 相关入口
 
-- 规划源：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md) §1 + §M6；[PARALLEL-LANES.md](PARALLEL-LANES.md)
+- 规划源：[DEVELOPMENT-PLAN.md](./DEVELOPMENT-PLAN.md) §1 + §M6；[PARALLEL-LANES.md](./PARALLEL-LANES.md)
 - 台账：[../traceability/findings-ledger.md](../traceability/findings-ledger.md)（F-017 / D-018 / IMP-04/06/11/12）
 - 规范：[../../specs/agent-compatibility/README.md](../../specs/agent-compatibility/README.md)
 - 规划 handoff：[../checkpoints/20260721-m6-planning-handoff.md](../checkpoints/20260721-m6-planning-handoff.md)

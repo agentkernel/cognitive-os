@@ -33,7 +33,7 @@
   - hidden-input reader newline strip + env non-leak
   - JSON round-trip without secret bytes
 - ADR-0020 documents Provider config binding; ADR-0018 updated for P1-T02 delivery.
-- Aligned formal Personal ledger, `plan.md` task card, and `PROGRESS.md`.
+- Aligned formal Personal ledger, `docs/plan/plan.md` task card, and `PROGRESS.md`.
 
 ## 3. Not completed / out of scope
 

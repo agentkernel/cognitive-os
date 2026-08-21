@@ -2,16 +2,16 @@
 
 > **项目身份：** `cognitiveos-personal` 是当前唯一活动实现项目；原 CognitiveOS 设计、
 > 规范和通用实现是其架构/合同基础，不是并行项目。身份与工作范围以
-> [PROJECT-IDENTITY.md](docs/governance/PROJECT-IDENTITY.md) 为准。
+> [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md) 为准。
 > **文档状态：研究与任务卡草案；不代表实现已提供、测试已执行或 Profile 已符合。**
-> **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
+> **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
 > **研究与审计日期：2026-07-24。**
 > **审计基线：`origin/main@9b53cf4c6c2b744a60283c3ea1431a9d1090aafd`。**
 > **2026-07-26 一致性评审批：** 任务卡不再承载正式状态行；正式状态、完成日期与证据一律以台账为准。§3/§6 为审计日快照，此后交付不逐项回写。本批新增 P7-T07（Windows 安装面归宿）、P2-T08 增补 ADR-0018 例外到期核查、§9 改用 DEC-P-* 编号、§12 修正依赖图与 critical path。
-> **生产就绪与低摩擦授权批（2026-07-26）：** 新增 DEC-P-20 授权交互模型并落地 [ADR-0026](docs/adr/0026-personal-trust-profile-low-friction-authorization.md)（Tier 0/1/2 分层、准入预览为唯一默认授权点、预算硬轨、不建审批链）；P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02 卡增补对应验收 bullet；§14 增 Approval Interactions/Task 指标；§16 R-22 与 §17 企业审批行改引 ADR-0026。
+> **生产就绪与低摩擦授权批（2026-07-26）：** 新增 DEC-P-20 授权交互模型并落地 [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)（Tier 0/1/2 分层、准入预览为唯一默认授权点、预算硬轨、不建审批链）；P2-T01/P2-T02/P2-T08/P5-T01/P5-T02/P7-T02 卡增补对应验收 bullet；§14 增 Approval Interactions/Task 指标；§16 R-22 与 §17 企业审批行改引 ADR-0026。
 > **P2 卡扩写批（2026-07-26）：** 依 §11.1 状态纪律，将 P2-T01..P2-T08 压缩卡预先扩写为完整强制字段集：仅补足字段、仓库锚点与既有决策引用（ADR-0026/0018、§12.1/§12.2、§13/§14/§15）；任务范围、依赖、验收语义与 §12 依赖图均不变。documentation-only；本批 §15.2 命令因环境阻断未执行（记 not-run，见当日 handoff），不改变任何任务状态、Gate、证据或 Profile 结论。
 > **MVP-first 对齐（2026-07-29，ADR-0034）：** 保留现有任务 ID，首个生产安装路径改为 single canonical user service/48181；新增 P7-T08 / `GMVP-LINUX`。该日曾将 P3/P4 放到 scoped MVP 后，已由 2026-08-02 ADR-0037/0038 的六资源 Linux 1.0 重基线取代；P5 Tool/MCP、Windows、Web UI 与 Multi-Agent 仍不阻塞。ADR-0036 将 P5 managed-Pi/B09 slice 加入 Linux 1.0 promotion path。Multi-Agent 仍为独立 go/no-go，NO-GO 且默认关闭是合法结果。§2.1 仍是 2026-07-24 审计快照，不用于覆盖正式台账当前状态。
-> **开发治理对齐（2026-07-30）：** task status、implementation evidence、Gate 和 claim scope 正交记账；在该日记录中 P1-T09 为 `in-progress` / `tested-local`，B01 为 `not-run`。当前事实只见 `PROGRESS.md` Current snapshot。Gate/阶段依赖不再作为 isolated implementation mutex；B01 的 attempt、阈值、零容忍失败与 cleanup 边界已明确。工具无关规则见 [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)。
+> **开发治理对齐（2026-07-30）：** task status、implementation evidence、Gate 和 claim scope 正交记账；在该日记录中 P1-T09 为 `in-progress` / `tested-local`，B01 为 `not-run`。当前事实只见 `PROGRESS.md` Current snapshot。Gate/阶段依赖不再作为 isolated implementation mutex；B01 的 attempt、阈值、零容忍失败与 cleanup 边界已明确。工具无关规则见 [Development Operating Model](../governance/DEVELOPMENT-OPERATING-MODEL.md)。
 > **Linux 1.0 / managed Pi 对齐（2026-08-02，ADR-0035/0036）：** 正式计划将既有 `GMVP-LINUX` 定义为 Personal `1.0.0` release Gate。Pi-hosted Agent Shell 与 managed Pi 是独立角色；P2-T02 负责 Shell/application-service composition，P5-T01/T02/B09 负责 official npm acquisition、installation、registry/instance/supervision/lifecycle。Pi 是 1.0 唯一 product-qualified Agent；通用 adapter framework 保留给后续 Agent 的独立 qualification。本文件只同步详细卡片，不拥有当前状态。
 > **统一认知资源与 sidecar 重基线（2026-08-02，ADR-0037/0038）：** owner 已批准 Personal 作为 Memory/Skill/Tool/Context/Task/Runtime 统一认知资源基座，六类最小真实 slice 进入 Linux 1.0；Agent 路径采用 per-Agent sidecar-first，Pi 仍是唯一 qualified Agent。1.0 由 Runtime Spine、Resource Value、Product Operability 三条 active track 汇合；Context correctness 与 Memory+Skill actual consumption 进入 promotion，复杂 Context 收益、embedding/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI 和 Windows 后置。本批不改变任何 task status、attempt、evidence、Gate current status 或 Profile：P1-T09 仍 `in-progress`、B01 仍 `running`（1/至少20）、P2-T01/P2-T03 仍 `in-progress`、`GMVP-LINUX` 仍 `not-run`、Profile `implemented: 0`。本文件仍不是状态源；该 product-semantic + structural 文档批不含实现、规范变更或 Gate/release/Profile evidence。
 > **B01 successor campaign amendment（2026-08-09，ADR-0039）：** owner set separately preregistered successor `002` to fixed N=6, at least 5 successes, zero critical safety failures, complete aggregate statistics, and affirmative independent-verifier closure. Attempts 1--6 remain immutable at 5 successes / 1 failure. Transition Attempt 7 is retained but owner-waived outside the denominator because no artifact, Pi, Provider, service, or route operation occurred. Retained `001` remains its historical N=20 failure. This decision does not claim B01, release, or Profile pass; `PROGRESS.md` remains the current-status source.
@@ -702,7 +702,7 @@ Pi 不可以：
 ### P1-T07 — CognitiveOS Pi Package/Extension 与 Provider proxy
 
 - **优先级/目标/价值：** P1 收尾前的关键件；复用 Pi TUI 完成 `cognitive` 首次受治理会话，同时把"Pi 是 Shell 不是 authority"（PERS-PR-005）从纸面约束变成进程内可执行的拒绝。
-- **状态：** 以正式台账为准（[PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)）。
+- **状态：** 以正式台账为准（[PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md)）。
 - **证据/研究：** PI-01/PI-05/PI-06/PI-07（§7 来源表）；P0-T06 已固定 `@earendil-works/pi-coding-agent@0.81.1` 的版本/SRI/source commit/Node engine 于 `apps/pi-agent-adapter/src/lib.rs`，并交付 Extension fixture 与 strict-LF RPC parser；`apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 loopback front door、bootstrap secret 与 channel bearer（ADR-0022）；`crates/cognitive-secret` 已有 `ProviderKeyService`/`ProviderTransport`/`ProviderDiscoveryService`（ADR-0020/0021），但**仓库内无生产 `ProviderTransport` 实现，也无 HTTP/TLS 依赖**，且 Personal front door 单请求单连接、无 SSE。
 - **依赖：** P0-T06（Pi 表面固定）、P1-T03、P1-T04、P1-T05。P0-T06 的剩余缺口是 Linux-native 上的运行时加载证据，不阻断本任务的接口实现，按台账"开发状态解耦"注记走 `experimental-local-only`。
 - **不包含：** 真实 Task API 与 watch（P2-T02）、scheduler/worker（P2-T03/T04）、受治理工具执行与 Tool Registry（P2-T05/T06）、Memory、MCP、多 Agent、Pi 供应链 provenance verifier（Pi P2）、OS sandbox（Pi P4）。不得 vendor 或分发 Pi/Node（ADR-0025）。
@@ -933,7 +933,7 @@ Pi 不可以：
 
 ### P3-T05 — UCR-01 benefit runner 与性能基线
 
-- 实现 [UCR-01](docs/evaluation/personal-unified-cognitive-resource-workload.md) runner：同一 Task trace 使用六类资源；建立 raw run、稳定基线、CI 采集和 non-claim 报告。
+- 实现 [UCR-01](../evaluation/personal-unified-cognitive-resource-workload.md) runner：同一 Task trace 使用六类资源；建立 raw run、稳定基线、CI 采集和 non-claim 报告。
 - 预注册后可为 B02/B03/B04/B05/B08/B09/B12 分别贡献 evidence；每个 Gate 单独绑定环境、阈值和 verifier，一次 run 不自动 pass 多 Gate。
 - 固定场景 assertions 包含 cross-session recall、Skill digest reuse、required recall=100%、
   unauthorized/stale=0、duplicate Effect=0、false completion=0，以及 stable/changed Context
@@ -1166,7 +1166,7 @@ Pi 不可以：
 ## Phase 8 — 通用 Agent 适配与设计基线（研究卡；正式状态见台账）
 
 > 正式定义与状态以 `PERSONAL-DEVELOPMENT-PLAN.md` Phase 8 为准。本卡只补充研究细节。
-> 公理入口：[AXIOMS.md](docs/governance/AXIOMS.md)；决策：ADR-0041..0045。
+> 公理入口：[AXIOMS.md](../governance/AXIOMS.md)；决策：ADR-0041..0045。
 
 ### P8-T01 — 文档体系重构与 2.0 设计基线
 
@@ -1263,7 +1263,7 @@ Pi 不可以：
 本节是正式计划的研究级细化，不拥有 current status。`implementation_requires`、
 `acceptance_requires`、`promotion_requires` 的定义以正式计划为准；后两者不是 isolated
 implementation mutex。PERS-PR 映射由
-[personal-trace.yaml](docs/plan/personal-trace.yaml) 承载。
+[personal-trace.yaml](./personal-trace.yaml) 承载。
 
 后续 public contract 只登记 Lane-CTR prerequisites：`skill-manifest`、
 `operation-descriptor`、`agent-adapter-manifest`、TaskContract resource bindings、
@@ -1533,7 +1533,7 @@ full_rc_critical_path:
 | B12 | executor timeout/uncertain | dispatch→timeout→OUTCOME_UNKNOWN→query/reconcile | 不换key、不盲重试、不完成Task | recovery time/steps、original key evidence |
 
 **UCR-01 cross-Gate workload（不是新 Gate）：**
-[UCR-01](docs/evaluation/personal-unified-cognitive-resource-workload.md) 在同一 Task trace
+[UCR-01](../evaluation/personal-unified-cognitive-resource-workload.md) 在同一 Task trace
 使用 Memory、Skill、Tool、Context、Task、Runtime，可分别为 B02/B03/B04/B05/B08/B09/B12
 贡献证据。每个 Gate 必须单独 preregister exact workload digest、environment、threshold、
 failure accounting、collector 和 independent verifier；一次 run 不自动 pass 多个 Gate，

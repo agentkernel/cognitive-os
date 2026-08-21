@@ -1,7 +1,7 @@
 # V01 PERF Campaign Plan（可选升格附录）
 
 - 状态：informative appendix **默认不执行**
-- 父计划：[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)
+- 父计划：[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](./V01-AUTO-RUN-VERIFY-PERF-PLAN.md)
 - 触发闸门：`HUMAN-PERF004-CAMPAIGN`（战役）/ `HUMAN-PERF005-CLAIM`（收益）
 
 ## 默认口径（无人值守）

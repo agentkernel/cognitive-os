@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:2cf220d9d836c5b7751c394165f5e3a8a5117eb41fe510c63255f0729339ea0b"
+fingerprint: "sha256:0735922407a84f15187b27153e13e5ba801a306a9d70b230037213b41697a293"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---

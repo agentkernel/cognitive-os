@@ -10,7 +10,7 @@ sources:
   - path: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
     symbols: ["TASK-ATOMIC-DELIVERY-01", "Sources of truth"]
   - path: docs/standards/normative-source-and-versioning.md
-fingerprint: "sha256:63e3c59ce4048a0d3b2a726649c13826573992915f6aa35588f1230919d3574b"
+fingerprint: "sha256:5ba38627cb11ea164c6bb91b6cad0bc75d2edf999f885c32925334acdce04d35"
 non_claims:
   - This page routes to canonical owners; it never replaces or restates their current content.
 ---
@@ -27,13 +27,13 @@ When two sources disagree, resolve in this order (from
 5. [`docs/plan/PARALLEL-LANES.md`](../../../docs/plan/PARALLEL-LANES.md) active lease table — current writable paths.
 6. [`docs/product/personal/`](../../../docs/product/personal/README.md) and [`docs/architecture/personal/`](../../../docs/architecture/personal/README.md) — stable design intent (never current status).
 7. Latest matching handoff under [`docs/checkpoints/`](../../../docs/checkpoints/TEMPLATE.md) — operational continuity only.
-8. Root [`plan.md`](../../../plan.md) — research detail; never a status source.
+8. [`docs/plan/plan.md`](../../../docs/plan/plan.md) — research detail; never a status source.
 
 For contract semantics: exact machine assets (`specs/registry/`, `specs/schemas/`,
 `specs/transitions/`, `conformance/vectors/`) outrank normative companions
-(`specs/*/README.md`, [`RFC-0001`](../../../RFC-0001-cognitiveos-governance-context-access.md),
+(`specs/*/README.md`, [`RFC-0001`](../../../docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md),
 [`docs/standards/`](../../../docs/standards/normative-source-and-versioning.md)), which outrank the informative whitepaper
-([`CognitiveOS-Architecture.md`](../../../CognitiveOS-Architecture.md)). Immutable axioms live only in
+([`docs/architecture/cognitiveos/CognitiveOS-Architecture.md`](../../../docs/architecture/cognitiveos/CognitiveOS-Architecture.md)). Immutable axioms live only in
 [`docs/governance/AXIOMS.md`](../../../docs/governance/AXIOMS.md).
 
 This handbook sits below all of the above: it is generated/maintained documentation

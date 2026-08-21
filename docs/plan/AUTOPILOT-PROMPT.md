@@ -19,10 +19,10 @@ cognitiveos-personal 是当前唯一活动实现项目。不要启动第二个 C
 5. docs/plan/PROGRESS.md 的 Current snapshot；
 6. docs/plan/PARALLEL-LANES.md 的 active lease table；
 7. 所选 Personal task 的最新 handoff；
-8. plan.md 的同 ID 任务卡。
+8. docs/plan/plan.md 的同 ID 任务卡。
 
 启动时检查实际 git status、分支、origin/main 差异和现有 worktree。正式计划决定任务和
-Gate；PROGRESS 决定当前事实；Parallel Lanes 决定可写路径；handoff 与 plan.md 不是状态源。
+Gate；PROGRESS 决定当前事实；Parallel Lanes 决定可写路径；handoff 与 docs/plan/plan.md 不是状态源。
 禁止读取或引用 History/。未知改动不能覆盖、回退或混入；用户明确授权且已审查的改动
 可以整合进当前 lease。
 

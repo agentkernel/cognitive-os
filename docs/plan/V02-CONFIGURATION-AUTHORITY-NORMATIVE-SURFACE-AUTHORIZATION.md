@@ -7,7 +7,7 @@
 - 所有者授权状态：**approved**
 - 工作状态：**v0.2 normative surface expansion = owner-approved / design pending**
 - 分类：docs-only 治理授权；后续规范变化按 **v0.2 breaking Draft** 管理
-- 承接：[Configuration Authority Contract Sufficiency Decision](CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md) 与 [Spec-Correction Feasibility Decision](CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md)
+- 承接：[Configuration Authority Contract Sufficiency Decision](./CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md) 与 [Spec-Correction Feasibility Decision](./CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md)
 - ADR：[ADR-0009](../adr/0009-v02-configuration-authority-surface-expansion-governance.md)
 
 ## 1. 授权结论与边界

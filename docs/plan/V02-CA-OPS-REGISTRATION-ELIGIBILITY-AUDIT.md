@@ -12,7 +12,7 @@
 ## 1. Result and safety boundary
 
 No Management operation candidate currently satisfies the mandatory descriptor
-closure required by [V02-CA-OPS-01](V02-CA-OPS-DESIGN-DECISION.md). No generic
+closure required by [V02-CA-OPS-01](./V02-CA-OPS-DESIGN-DECISION.md). No generic
 operation-set or descriptor foundation can be registered without unresolved owner
 choices about identity, publication, canonical digest, empty-set semantics,
 activation order, error taxonomy, and cross-family digest dependencies.
