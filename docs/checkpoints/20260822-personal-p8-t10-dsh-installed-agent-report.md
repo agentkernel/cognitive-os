@@ -10,11 +10,11 @@
 
 ## Task and lease
 
-- Task: `P8-T10` (`in-progress` until D04 merge)
+- Task: `P8-T10` (`done`)
 - Slice: `P8-T10/D04`
 - Branch: `personal/P8-T10-dsh-installed-agent`
-- Draft PR: [#256](https://github.com/agentkernel/cognitive-os/pull/256)
-- Lease: `lease/personal/P8-T10/dsh-installed-agent`
+- PR: [#256](https://github.com/agentkernel/cognitive-os/pull/256)
+- Lease: closed `lease/personal/P8-T10/dsh-installed-agent`
 - P8-T09 remains `done` (PR [#254](https://github.com/agentkernel/cognitive-os/pull/254))
 
 ## Pins
@@ -30,14 +30,14 @@
 
 | Check | Result | Evidence / limitation |
 |---|---|---|
-| Formal task/lease/branch | **pass** | `P8-T10`; lease active; Draft PR 256 |
+| Formal task/lease/branch | **pass** | `P8-T10`; lease closed; PR 256 |
 | Jump-host admin-cli `dsh` tests | **pass** | 6/6 at `4fbffc24` on `DEV-LINUX-NATIVE-01` |
 | linux-002 identity | **pass** | libvirt domain `B01-Desktop-Linux-002`, UUID `f7bb6a52-2a0b-4ecb-8e8f-f4c60ca472a0`; guest hostname `hal9001-Standard-PC-Q35-ICH9-2009`; Ubuntu 24.04.4 |
 | `cognitive dsh configure` | **pass** linux-002 | pin `528c682e…`; `candidate_only: true`; `dsh.json` digest is not SQLite-durable daemon adapter state |
 | Installed Path B `cognitive dsh launch --print` | **pass** linux-002 | product SHA `4fbffc24`; daemon `127.0.0.1:48513`; Flash `deepseek-v4-flash`; assistant `pong`; WorkspaceRead/Search/Write `COMPLETED` (`task://personal/p8-t10-dsh-*-432579`); elapsed 11685 ms; TTFT 11517 ms; write file 24 bytes. dsh response is not Task completion |
 | Same-host Path A vs B n=5 | **pass** linux-002 | see paired table; discarded 0/5 both paths; `overhead_b_minus_a_p50_ms=172`; lossless not preset |
 | Secret residue cleanup | **pass** | disposable daemon stopped (48513 gone); `secret-tool clear` product triple exit 0; bootstrap shredded; jump ed25519 key shredded; temp `authorized_keys` line removed; EVAL listeners 48181/48284/48383 untouched. Residue scan 1458 files / 11 skipped / 1 key-shaped hit in pre-existing `/tmp/eval006-pi-cognitiveos-dist.tar` (untouched; not a P8-T10 artifact) |
-| Required CI | **fail then fix** | Ubuntu clippy `-D clippy::unwrap-used` on test `unwrap_err` at `4fbffc24` (run `32521224272`). Follow-on commit switches tests to `expect_err` |
+| Required CI | **pass** | Ubuntu clippy `-D clippy::unwrap-used` failed on test `unwrap_err` at `4fbffc24` (run `32521224272`). Follow-on `expect_err` + rustfmt at `a4b0ad09`. Required CI `32522937342` passed Ubuntu, Windows, and required-ci |
 
 ## D02 installed Path B (linux-002)
 
@@ -82,5 +82,6 @@ completion. `dsh.json` digest ≠ durable daemon adapter SQLite.
 
 ## Unique next action
 
-Land the clippy `expect_err` fix, wait for required CI on PR 256, then
-ready/merge/lease/branch/main.
+Ready/merge PR [#256](https://github.com/agentkernel/cognitive-os/pull/256),
+delete the task branch, and reconcile local `main` to `origin/main`. Do not
+auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
