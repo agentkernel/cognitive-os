@@ -12,12 +12,14 @@ sources:
   - path: crates/cognitive-runtime/src/bin/linux_bundle_installer.rs
   - path: apps/admin-cli/src/personal_cli/init.rs
     symbols: ["run_init"]
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["configure", "launch"]
 tests:
   - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:b05f40812fbcb268eefb36f151b497e07ebcf6910d72c8f93a8cfcfefeb7750c"
+fingerprint: "sha256:c6ea2d64a37ea0ada36254fba1daac85ee73d64aebf8a51fe4a0d1a257af52c7"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---
@@ -83,6 +85,19 @@ launch 是 fail-closed 的：要求 doctor 全组件 ready 与精确钉住的 Pi
 prompt。CLI 会保持连接直到钉住的 Pi 进程退出；prompt 不是 Provider 凭据，Provider key
 不会进入命令行或环境。可选 `--append-system-prompt <绝对路径>` 把已存在且非空的
 UTF-8 文件转发给 Pi（相对路径、缺失或空文件失败闭合）。文件字节不会被打印。
+
+## 5. 可选：配置并启动 DeepSeek Harness
+
+```text
+cognitive dsh configure --dsh-root <dsh 检出绝对路径> --adapter-root <dsh-akp-adapter 绝对路径> --revision 528c682e061696f5a160f363f236ecbf53cbd006
+cognitive dsh launch --print --task "Reply with the single word pong and nothing else."
+```
+
+这是仅 candidate 的 agent 路径，不是第二个 authority writer。configure 只写 pin、
+adapter 根和仅 candidate 的 adapter digest。launch 要求 daemon-owned ready
+（system/database/secret/provider/daemon）；Pi 可保持 `not_configured`。Workspace*
+candidate 仍只在 daemon Intent/Effect/verification/acceptance 路径上完成。dsh 响应
+绝不是 Task 完成。直接 Flash（`--path a`）只用于测量，`cognitive dsh launch` 会拒绝。
 
 ## 值得了解的失败出口
 

@@ -10,12 +10,15 @@ sources:
     symbols: ["parse_cognitive_args", "COGNITIVE_USAGE"]
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: apps/admin-cli/src/personal_cli/backup.rs
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["configure", "launch"]
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:cd07ea53ea4035d386392a4e538469755d4aeb62ef0c02f1b4f885a474bfc4e3"
+  - apps/admin-cli/src/personal_cli/dsh.rs
+fingerprint: "sha256:7b680b356a9e8f636ef0798e61799433b439da35aa594cd2487ae16e6ececfc1"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -37,6 +40,8 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive daemon stop` | signal the recorded PID; remove lock/endpoint only after confirmed exit |
 | `cognitive pi configure` | write non-secret `pi.json` (absolute executable + extension paths) |
 | `cognitive pi launch [--task-ref <task://URI>] [--append-system-prompt <absolute-path>]` | fail-closed Pi launch after full doctor readiness and exact version check; task-bound launches expose only daemon-governed WorkspaceRead/Search/Write/Patch and submit untrusted candidates to the task channel; `--append-system-prompt` forwards an existing absolute UTF-8 file to Pi and is not a Provider credential |
+| `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | write non-secret `dsh.json` (pinned dsh checkout, AKP adapter root, candidate-only adapter digest); revision must match the product pin |
+| `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | fail-closed dsh launch after daemon-owned ready state (Pi may stay `not_configured`); Path B loads the pinned AKP plugin and never treats a dsh response as Task completion; `--path a` is rejected here and is measurement-only via `paired-path.mjs` |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |

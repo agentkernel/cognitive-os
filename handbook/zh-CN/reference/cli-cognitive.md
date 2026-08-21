@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:e9ac32125013452c795bd101919c2e1c26aca0a4ba5446fc9db5acf65c9df072"
+fingerprint: "sha256:24bb902ec8867c9a93653da8f30741ba648cec059ad825ebccfa49b05811155e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -38,6 +38,10 @@ USAGE:
                          --extension-entry <absolute-path>
   cognitive pi launch [--runtime-root <dir>] [--print]
                        [--append-system-prompt <absolute-path>]
+  cognitive dsh configure [--runtime-root <dir>] --dsh-root <absolute-path>
+                          --adapter-root <absolute-path> --revision <git-object>
+  cognitive dsh launch [--runtime-root <dir>] [--print] [--path a|b]
+                       [--task <prompt>]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -54,6 +58,10 @@ Hard rules:
     and disables Pi-native tools that bypass daemon authority
   - --append-system-prompt forwards an existing absolute UTF-8 file to Pi; it is not a
     Provider credential and the file bytes are not printed
+  - dsh configuration writes only non-secret pin/paths and a candidate-only adapter digest
+  - dsh launch requires daemon-owned ready state (Pi may stay not_configured), loads the
+    pinned AKP plugin, and never treats a dsh response as Task completion
+  - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path

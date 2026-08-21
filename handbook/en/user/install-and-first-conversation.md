@@ -12,12 +12,14 @@ sources:
   - path: crates/cognitive-runtime/src/bin/linux_bundle_installer.rs
   - path: apps/admin-cli/src/personal_cli/init.rs
     symbols: ["run_init"]
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["configure", "launch"]
 tests:
   - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:b05f40812fbcb268eefb36f151b497e07ebcf6910d72c8f93a8cfcfefeb7750c"
+fingerprint: "sha256:c6ea2d64a37ea0ada36254fba1daac85ee73d64aebf8a51fe4a0d1a257af52c7"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---
@@ -94,6 +96,21 @@ exits; the prompt is not a Provider credential and no Provider key is placed in
 the command line or environment. Optional `--append-system-prompt <absolute-path>`
 forwards an existing non-empty UTF-8 file to Pi (relative, missing, and empty
 files fail closed). File bytes are not printed.
+
+## 5. Optional: configure and launch DeepSeek Harness
+
+```text
+cognitive dsh configure --dsh-root <abs-dsh-checkout> --adapter-root <abs-dsh-akp-adapter> --revision 528c682e061696f5a160f363f236ecbf53cbd006
+cognitive dsh launch --print --task "Reply with the single word pong and nothing else."
+```
+
+This is a candidate-only agent path, not a second authority writer. Configure
+writes only the pin, adapter root, and a candidate-only adapter digest.
+Launch requires daemon-owned ready state (system/database/secret/provider/daemon);
+Pi may stay `not_configured`. Workspace* candidates still complete only on the
+daemon Intent/Effect/verification/acceptance path. A dsh response is never Task
+completion. Direct Flash (`--path a`) is measurement-only and is refused by
+`cognitive dsh launch`.
 
 ## Failure exits worth knowing
 

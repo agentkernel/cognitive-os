@@ -19,6 +19,8 @@ sources:
   - path: apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
   - path: apps/admin-cli/src/personal_cli/backup.rs
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["launch"]
   - path: crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
@@ -31,7 +33,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:f1de465d3decd85110d3636d3861f0864f93b980d1f7b4bf604bcad12d9d2582"
+fingerprint: "sha256:14d988d2da463f177e0034edc4c6b6b6f0105bbb0ff088e034a8088fe6c3d806"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -67,6 +69,11 @@ non_claims:
   daemon/private-candidate calls. `--append-system-prompt <absolute-path>` forwards
   an existing non-empty UTF-8 file to Pi; it is not a Provider credential and the
   file bytes are not printed.
+- `cognitive dsh launch --print` is the bounded non-interactive dsh Path B:
+  it requires daemon-owned ready state (Pi may stay `not_configured`), loads
+  the pinned AKP plugin, and never treats a dsh response as Task completion.
+  Direct Flash (`--path a`) is refused; use `packages/dsh-akp-adapter/scripts/paired-path.mjs`
+  for same-host Path A vs Path B measurement only.
 
 ## Stop, restart, stale state — `implemented`
 

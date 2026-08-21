@@ -29,6 +29,10 @@ sources:
   - path: packages/dsh-akp-adapter/src/plugin.ts
     symbols: ["apply", "applyDshAkpCordisPlugin"]
   - path: packages/dsh-akp-adapter/src/index.test.ts
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["configure", "launch"]
+  - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
+  - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -41,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:977f99ba1041d3b94599f2d6041bce0001cbc1b215b0f34a129c3823aec4aa42"
+fingerprint: "sha256:27a987cc6ab3fe9afb6919ca20b467394ef54f254ffdf06c97b2bb86831c7885"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -126,7 +130,12 @@ TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 
 timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
 在身份确认后的 linux-002 上用 HTTP 驱动 `attachDshCordisPlugin`，并等待 Task
 `COMPLETED`。`packages/dsh-akp-adapter/src/plugin.ts` 是 `dsh --patch` 的 Cordis
-`apply` 入口；`scripts/dsh-real-process.mjs` 会先 admit 可丢弃的
+`apply` 入口；`scripts/dsh-real-process.mjs` 用 `node --import tsx/esm apps/cli/src/bin.ts`
+启动钉住的 dsh（不调用 `pnpm dsh`），加载 `plugin.bundle.cjs`（Node 22.23 会拒绝
+`require()` ESM `plugin.js`），会先 admit 可丢弃的
 WorkspaceRead/Search/Write Task，再由真实 dsh 进程以 plugin `startupEvents`
 提交这些 candidate，并把 Flash 经 loopback SSE-to-unary 桥接到 daemon
-Provider 代理。两者都只是 implementation evidence。
+Provider 代理。产品安装路径是 `cognitive dsh configure` 然后 `cognitive dsh launch`
+（Path B）。直接 Flash（`--path a`）只经 `scripts/paired-path.mjs` 做测量。
+`dsh.json` 里的 adapter registration digest 不是 SQLite 持久的 daemon adapter 状态。
+两者都只是 implementation evidence。

@@ -10,12 +10,15 @@ sources:
     symbols: ["parse_cognitive_args", "COGNITIVE_USAGE"]
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: apps/admin-cli/src/personal_cli/backup.rs
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["configure", "launch"]
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:cd07ea53ea4035d386392a4e538469755d4aeb62ef0c02f1b4f885a474bfc4e3"
+  - apps/admin-cli/src/personal_cli/dsh.rs
+fingerprint: "sha256:7b680b356a9e8f636ef0798e61799433b439da35aa594cd2487ae16e6ececfc1"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -36,6 +39,8 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive daemon stop` | 向记录的 PID 发信号；确认退出后才移除锁与 endpoint |
 | `cognitive pi configure` | 写非 secret 的 `pi.json`（可执行文件与扩展入口的绝对路径） |
 | `cognitive pi launch [--task-ref <task://URI>] [--append-system-prompt <absolute-path>]` | doctor 全就绪且版本精确匹配后 fail-closed 启动 Pi；任务绑定启动仅暴露 daemon 治理的 WorkspaceRead/Search/Write/Patch，并向 task 通道提交不可信 candidate；`--append-system-prompt` 把已存在的绝对 UTF-8 文件转发给 Pi，不是 Provider 凭据 |
+| `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | 写非 secret 的 `dsh.json`（钉住的 dsh 检出、AKP adapter 根、仅 candidate 的 adapter digest）；revision 必须等于产品 pin |
+| `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | daemon-owned ready 后 fail-closed 启动 dsh（Pi 可保持 `not_configured`）；Path B 加载钉住的 AKP 插件，绝不把 dsh 响应当作 Task 完成；`--path a` 在此拒绝，仅能经 `paired-path.mjs` 做测量 |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
 | `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
