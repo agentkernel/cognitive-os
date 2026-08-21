@@ -9,6 +9,8 @@ use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::process::{Child, Command};
 use std::sync::{LazyLock, Mutex};
+use std::thread;
+use std::time::Duration;
 
 use cognitive_akp::deepseek_harness::{BRIDGE_PROTOCOL, PINNED_DSH_REVISION};
 use serde_json::{Value, json};
@@ -83,6 +85,15 @@ fn send_json(port: u16, path: &str, token: &str, body: &Value) -> String {
         &format!(
             "POST {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {token}\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{encoded}",
             encoded.len()
+        ),
+    )
+}
+
+fn get(port: u16, path: &str, token: &str) -> String {
+    request(
+        port,
+        &format!(
+            "GET {path} HTTP/1.1\r\nHost: 127.0.0.1\r\nAuthorization: Bearer {token}\r\nConnection: close\r\n\r\n"
         ),
     )
 }
@@ -195,7 +206,7 @@ fn dsh_event(sequence: u64, operation: &str, kind: &str, payload: Value) -> Valu
 }
 
 #[test]
-fn live_dsh_activate_workspace_read_stays_candidate_only() {
+fn p8_t09_live_dsh_activate_workspace_read_stays_candidate_only() {
     let _guard = P8_T09_PROCESS_LOCK.lock().unwrap();
     let port = free_port();
     let root = runtime_root();
@@ -250,11 +261,36 @@ fn live_dsh_activate_workspace_read_stays_candidate_only() {
             json!({"target": "README.md"}),
         ),
     ));
-    assert_eq!(read["accepted"], true);
+    assert_eq!(
+        read["accepted"], true,
+        "workspace read must be admitted as a candidate: {read}"
+    );
     assert_eq!(read["candidate_only"], true);
     assert_eq!(read["sequence"], 1);
     assert_eq!(read["result"]["admission"]["admitted"], true);
     assert_eq!(read["result"]["candidate_only"], true);
+
+    let mut lifecycle = String::from("absent");
+    for _ in 0..20 {
+        let evidence = response_json(&get(
+            port,
+            "/task/evidence?task_ref=task%3A%2F%2Fpersonal%2Fp8-t09-dsh-read",
+            &task_token,
+        ));
+        lifecycle = evidence["lifecycle"]["current_state"]
+            .as_str()
+            .unwrap_or("absent")
+            .to_owned();
+        if lifecycle != "DRAFT" && lifecycle != "absent" {
+            break;
+        }
+        thread::sleep(Duration::from_millis(250));
+    }
+    assert_ne!(
+        lifecycle.as_str(),
+        "DRAFT",
+        "admitted WorkspaceRead must leave DRAFT; lifecycle={lifecycle}"
+    );
 
     let duplicate = response_json(&send_json(
         port,

@@ -367,37 +367,25 @@ impl DeepSeekHarnessAdapter {
         {
             return Err(DshAdapterError::InvalidEvent);
         }
-        let target = string_field(payload, "target")?;
-        let target = if target.starts_with("workspace://") {
-            target
-        } else {
-            format!("workspace://{target}")
-        };
-        let parameters = payload
-            .get("parameters")
-            .cloned()
-            .filter(|value| !value.is_null())
-            .unwrap_or_else(|| {
-                json!({
-                    "family": request.event.operation,
-                })
-            });
+        let target = workspace_target(payload, request.event.operation.as_str())?;
         let expected_state_version = payload
             .get("expected_state_version")
             .and_then(Value::as_i64)
             .unwrap_or(1);
-        if target == "workspace://" || expected_state_version < 1 {
+        if expected_state_version < 1 {
             return Err(DshAdapterError::InvalidEvent);
         }
+        let (parameters, digest_source) =
+            workspace_parameters(payload, request.event.operation.as_str())?;
         let parameters_digest = match payload.get("parameters_digest").and_then(Value::as_str) {
             Some(digest) if !digest.trim().is_empty() => digest.to_owned(),
-            _ => digest_candidate_parameters(&parameters)?,
+            _ => digest_candidate_parameters(&digest_source)?,
         };
         Ok(Some(WorkspaceCandidateFields {
             tool_ref: tool_ref.to_owned(),
             action: action.to_owned(),
             target,
-            parameters: Some(parameters),
+            parameters,
             parameters_digest,
             expected_state_version,
             operation_descriptor_id: operation_descriptor_id.to_owned(),
@@ -405,13 +393,76 @@ impl DeepSeekHarnessAdapter {
     }
 }
 
-fn string_field(
+fn workspace_target(
     payload: &serde_json::Map<String, Value>,
+    operation: &str,
+) -> Result<String, DshAdapterError> {
+    let raw = match payload.get("target").and_then(Value::as_str) {
+        Some(value) if !value.trim().is_empty() => value.to_owned(),
+        _ if operation == "WorkspaceSearch" => "workspace://".to_owned(),
+        _ => return Err(DshAdapterError::InvalidEvent),
+    };
+    let target = if raw.starts_with("workspace://") {
+        raw
+    } else {
+        format!("workspace://{raw}")
+    };
+    if target == "workspace://" && operation != "WorkspaceSearch" {
+        return Err(DshAdapterError::InvalidEvent);
+    }
+    Ok(target)
+}
+
+fn workspace_parameters(
+    payload: &serde_json::Map<String, Value>,
+    operation: &str,
+) -> Result<(Option<Value>, Value), DshAdapterError> {
+    let nested = payload.get("parameters").filter(|value| !value.is_null());
+    match operation {
+        "WorkspaceRead" => {
+            if nested.is_some() {
+                return Err(DshAdapterError::InvalidEvent);
+            }
+            let digest_source = json!({ "family": "WorkspaceRead" });
+            Ok((None, digest_source))
+        }
+        "WorkspaceSearch" => {
+            let query = payload_string(payload, nested, "query")?;
+            let parameters = json!({
+                "family": "WorkspaceSearch",
+                "query": query,
+            });
+            Ok((Some(parameters.clone()), parameters))
+        }
+        "WorkspaceWrite" | "WorkspacePatch" => {
+            let input_b64 = payload_string(payload, nested, "input_b64")?;
+            let preimage = payload_string(payload, nested, "preimage")?;
+            let parameters = json!({
+                "family": operation,
+                "input_b64": input_b64,
+                "preimage": preimage,
+            });
+            Ok((Some(parameters.clone()), parameters))
+        }
+        _ => Err(DshAdapterError::InvalidEvent),
+    }
+}
+
+fn payload_string(
+    payload: &serde_json::Map<String, Value>,
+    nested: Option<&Value>,
     key: &str,
 ) -> Result<String, DshAdapterError> {
     payload
         .get(key)
         .and_then(Value::as_str)
+        .or_else(|| {
+            nested
+                .and_then(Value::as_object)
+                .and_then(|object| object.get(key))
+                .and_then(Value::as_str)
+        })
+        .filter(|value| !value.is_empty())
         .map(str::to_owned)
         .ok_or(DshAdapterError::InvalidEvent)
 }
@@ -696,10 +747,53 @@ mod tests {
         assert_eq!(fields.tool_ref, "native.workspace.read");
         assert_eq!(fields.action, "read");
         assert_eq!(fields.target, "workspace://README.md");
+        assert_eq!(fields.parameters, None);
+        assert!(fields.parameters_digest.starts_with("sha256:"));
         assert_eq!(
             fields.operation_descriptor_id,
             "00000000-0000-7000-8000-000000002001"
         );
         assert_eq!(adapter.bound_task_ref(), Some("task://personal/dsh-read"));
+    }
+
+    #[test]
+    fn maps_workspace_search_and_rejects_read_parameter_object() {
+        let mut adapter =
+            DeepSeekHarnessAdapter::new(default_config("0.1.1-rc.1")).expect("config");
+        adapter
+            .activate_fenced(
+                "dsh-session-1",
+                1,
+                Some("task://personal/dsh-search".to_owned()),
+            )
+            .expect("activate");
+        let mut search = request(1);
+        search.event.operation = "WorkspaceSearch".to_owned();
+        search.event.payload = json!({
+            "query": "needle"
+        });
+        let fields = adapter
+            .workspace_candidate(&search)
+            .expect("map")
+            .expect("workspace");
+        assert_eq!(fields.tool_ref, "native.workspace.search");
+        assert_eq!(fields.target, "workspace://");
+        assert_eq!(
+            fields.parameters,
+            Some(json!({"family":"WorkspaceSearch","query":"needle"}))
+        );
+
+        let mut read_with_parameters = request(2);
+        read_with_parameters.event.operation = "WorkspaceRead".to_owned();
+        read_with_parameters.event.payload = json!({
+            "target": "README.md",
+            "parameters": { "family": "WorkspaceRead" }
+        });
+        assert_eq!(
+            adapter
+                .workspace_candidate(&read_with_parameters)
+                .unwrap_err(),
+            DshAdapterError::InvalidEvent
+        );
     }
 }

@@ -39,7 +39,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:2f18877ea836ef7a26c6b0c3dd995767a86555a536ae9b136c2b4e918fe25437"
+fingerprint: "sha256:55f757f37688ac7d1398d2c6158ca019dd5b60523fc4022d2504751275243910"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -137,7 +137,10 @@ a process-local session, enforces monotonic sequences, and rejects
 authority-shaped and secret-shaped payloads. `POST /task/akp/dsh` must be
 activated after daemon start; a restart empties the session table and fails
 closed. Workspace* candidates map onto the existing public candidate
-admission path. The TypeScript shim sends snake_case JSONL or HTTP frames over
+admission path using the native catalog: WorkspaceRead is parameter-free
+(digest still covers `{"family":"WorkspaceRead"}`); WorkspaceSearch requires
+a query; WorkspaceWrite/Patch require canonical `input_b64` and `preimage`.
+The TypeScript shim sends snake_case JSONL or HTTP frames over
 a long-lived, length-bounded transport. It never receives Provider
 credentials, writes authority state, or treats a dsh response as Task
 completion. Live linux-002 runs are implementation evidence, not a Gate,

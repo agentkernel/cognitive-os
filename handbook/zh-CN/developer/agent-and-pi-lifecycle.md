@@ -39,7 +39,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:2f18877ea836ef7a26c6b0c3dd995767a86555a536ae9b136c2b4e918fe25437"
+fingerprint: "sha256:55f757f37688ac7d1398d2c6158ca019dd5b60523fc4022d2504751275243910"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -116,7 +116,9 @@ DeepSeek Harness 桥接是仅 candidate 的适配器。Rust 侧钉住精确 dsh 
 request-envelope schema digest，对进程内 session 做 fencing，强制单调 sequence，并拒绝
 authority-shaped 与 secret-shaped payload。`POST /task/akp/dsh` 必须在 daemon 启动后显式
 激活；重启会清空会话表并失败闭合。Workspace* candidate 映射到既有 public candidate
-admission。TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 发送
+admission。WorkspaceRead 无参数对象（digest 仍覆盖 `{"family":"WorkspaceRead"}`）；
+WorkspaceSearch 需要 query；WorkspaceWrite/Patch 需要规范 `input_b64` 与 `preimage`。
+TypeScript shim 经长驻、长度受限的 snake_case JSONL 或 HTTP transport 发送
 事件。它不接收 Provider 凭据、不写权威状态，也不把 dsh 响应当作 Task 完成。linux-002
 真机只是 implementation evidence，不构成 Gate、release、Profile、B01 或 Agent-benefit。
 timing 字段只是测量入口，不能推出零开销保证。

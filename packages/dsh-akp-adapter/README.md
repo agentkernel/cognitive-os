@@ -21,8 +21,10 @@ session table and fails closed.
 
 Workspace* candidates are mapped by the daemon onto the existing public
 candidate admission path using the native catalog (`native.workspace.read` /
-`search` / `write` / `patch`). Observation and lifecycle events are accepted
-without authority writes. A dsh response is never Task completion.
+`search` / `write` / `patch`). WorkspaceRead is parameter-free; Search needs a
+query; Write/Patch need canonical `input_b64` and `preimage`. Observation and
+lifecycle events are accepted without authority writes. A dsh response is never
+Task completion.
 
 The adapter records serialization, transport, and total durations separately.
 It does not claim zero overhead. Measure paired dsh-direct versus

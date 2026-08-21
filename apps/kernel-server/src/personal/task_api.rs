@@ -816,15 +816,21 @@ impl TaskApi {
         };
         let admitted = self.admit_public_candidate(public_request);
         if admitted.status != 200 {
-            let code = serde_json::from_str::<Value>(&admitted.body)
-                .ok()
-                .and_then(|body| body.get("code").and_then(Value::as_str).map(str::to_owned))
-                .unwrap_or_else(|| "TASK_CANDIDATE_ADMISSION_REJECTED".to_owned());
+            let admission: Value =
+                serde_json::from_str(&admitted.body).unwrap_or_else(|_| json!({"admitted": false}));
+            let code = admission
+                .get("code")
+                .and_then(Value::as_str)
+                .unwrap_or("TASK_CANDIDATE_ADMISSION_REJECTED")
+                .to_owned();
             return ok(DshWireResponse {
                 accepted: false,
                 sequence: request.sequence,
                 candidate_only: true,
-                result: None,
+                result: Some(json!({
+                    "admission": admission,
+                    "candidate_only": true
+                })),
                 error: Some(code),
             });
         }
