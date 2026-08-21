@@ -131,8 +131,8 @@ does not promote those results.
 ## Unique next action
 
 Finish the live B5 8 h continuation (pid **408358**; last completed
-minute 324; 33/33 pairs; kernel 411171). Do not start a second
-continuation. Record B5 24 h default deferred unless the 8 h slope
-trigger is met. Then cleanup (`48306`/`48406` and SecretStore `/27`
-only), secret scan, final assessment, and close the campaign row and
-lease.
+minute 363; 37/37 pairs; kernel 412608; minute-360 health 200 in
+164.3 s). Do not start a second continuation. Record B5 24 h default
+deferred unless the 8 h slope trigger is met. Then cleanup
+(`48306`/`48406` and SecretStore `/27` only), secret scan, final
+assessment, and close the campaign row and lease.
