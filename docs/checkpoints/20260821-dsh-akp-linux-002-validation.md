@@ -14,9 +14,10 @@
 - Branch: `personal/P8-T09-dsh-akp-adapter`
 - Draft PR: https://github.com/agentkernel/cognitive-os/pull/254
 - Lease: `lease/personal/P8-T09/dsh-akp-adapter`
-- HEAD: `40384e4b620d2fbc5d69c768134b052af6fd3751` (docs/shim checkpoint); Cordis plugin is uncommitted until the next push.
+- HEAD at last Path B Flash samples: `bd8baf96919886c2e4ad13e6a06214a20efed2a1`
 - Guest kernel-server/cognitive binaries: exact `9e239b7512e706d56d3359e5ab30a6c3469c35f8`
-  (Rust mapping fix). Harness JS: `a33e58ad`.
+  (Rust mapping unchanged since that pin). Adapter/scripts at `bd8baf96` for the
+  Flash samples; Workspace* real-dsh `startupEvents` land in the next push.
 
 ## Pins
 
@@ -38,7 +39,7 @@
 | Check | Result | Evidence / limitation |
 |---|---|---|
 | Formal task/lease/branch | **pass** | `P8-T09`; lease active; Draft PR 254 |
-| TypeScript source build/test | **pass** (8/8) | `DEV-WIN-GNU-01` `pnpm --filter @cognitiveos/dsh-akp-adapter` |
+| TypeScript source build/test | **pass** (12/12) | `DEV-WIN-GNU-01` `pnpm --filter @cognitiveos/dsh-akp-adapter` after Workspace* startupEvent test |
 | Jump-host Rust `cognitive-akp` | **pass** (8/8) | `DEV-LINUX-NATIVE-01` at `9e239b75` `--locked` |
 | Jump-host `p8_t09_dsh_akp_live` | **pass** (1/1) | live `POST /task/akp/dsh` WorkspaceRead admission left DRAFT |
 | Jump-host `dsh_akp_tests` | **pass** (2/2) | inactive/malformed/oversized/wrong-version; restart INACTIVE |
@@ -46,14 +47,16 @@
 | linux-002 identity | **pass** | domain/UUID/hostname as above |
 | SecretStore DeepSeek Flash bind | **pass** (redacted) | `cognitive init --api-key-file -`; `secret_material_written: true`; `secret_ref_redacted: true`; `selected_model: deepseek-v4-flash`; doctor `secret_ref_resolves: true` |
 | Path B shim E2E Read | **pass** | `attachDshCordisPlugin` → HTTP → daemon; lifecycle `COMPLETED` |
-| Path B shim E2E Search | **pass** | admitted then `COMPLETED` (harness first sample saw `ACTIVE`; later evidence `COMPLETED`) |
-| Path B shim E2E Write | **pass** | disposable `p8-t09-write.txt` 24 bytes; lifecycle `COMPLETED`; dsh response ≠ Task completion |
+| Path B shim E2E Search | **pass** | admitted then `COMPLETED` |
+| Path B shim E2E Write | **pass** | disposable write file; lifecycle `COMPLETED`; dsh response ≠ Task completion |
 | Fail-closed version/secret | **pass** | `DSH_VERSION_MISMATCH`; `SECRET_SHAPED_PAYLOAD` |
 | Fail-closed malformed/oversized | **pass** / **pass-closed** | `MALFORMED_JSON`; oversized hits front-door `REQUEST_BODY_TOO_LARGE` (400) before AKP `FRAME_TOO_LARGE` |
-| Real dsh process → Flash | **partial** | Jump-host Path A `dsh --profile headless` **pass** (`pong`, 9.66 s) at pin `528c682e` after `build:lib:host`. linux-002 real dsh→daemon Flash still **not-run**. |
-| Paired Path A/B Provider timing | **partial** | Path A one-shot 9.66 s on `DEV-LINUX-NATIVE-01` (not p50/p95). Path B daemon proxy **not-run**. Not a lossless claim. |
-| Secret residue cleanup | **pass** | daemon 420890 stopped; `secret-tool clear` product triple exit 0; tight `sk-[A-Za-z0-9]{16,}` / PEM scan 48 files, 1 skipped large, 0 hits; EVAL listeners untouched |
-| Required CI | **partial** | Ubuntu verify pass on `a33e58ad` run; Windows pending at last check |
+| Jump-host Path A Flash | **pass** | `dsh --profile headless` `pong` in 9.66 s at pin `528c682e` after `build:lib:host`. tested-local / jump-host, not linux-002 |
+| Path B real dsh → linux-002 Flash | **pass** | two retained samples at `bd8baf96`: 9566 ms and 9463 ms, `assistant_is_pong: true`, `dsh_exit: 0`. dsh on jump host; SSE bridge on jump; tunneled loopback to guest daemon Provider proxy. n=2, not p50/p95 |
+| Real-dsh Workspace* startupEvents | **not-run** | harness now admits Read/Search/Write and emits them from `dsh --patch`; needs the next pushed SHA on linux-002 |
+| Paired Path A/B Provider timing | **observation** | Path A 9.66 s (n=1, jump-host API). Path B ~9.5 s (n=2, guest API). Different hosts; not a lossless claim |
+| Secret residue cleanup | **pass** | daemon at `/home/hal9001/p8t09-11830baf` stopped; `secret-tool clear` product triple exit 0; tight `sk-[A-Za-z0-9]{16,}` / PEM scan 18 files, 2 skipped large, 0 hits; disposable jump pubkey removed; jump tunnel/key/bootstrap shredded; EVAL listeners 48181/48284/48383 untouched |
+| Required CI | **partial** | Ubuntu verify **pass** on `bd8baf96`; Windows still in progress at last check |
 
 ## Path B shim timings (observation, not a claim)
 
@@ -76,8 +79,6 @@ and no key digest. Cleanup cleared the product SecretStore attribute triple
 
 ## Unique next action
 
-Run `scripts/dsh-real-process.mjs` on identity-confirmed linux-002 (or jump-host
-dsh against the guest daemon) at a pushed exact revision for Path B Flash
-through `POST /provider/v1/chat/completions`; keep fail-closed
-restart/timeout coverage; wait for required CI; then D04 docs/CI/merge. Do not
-auto-claim P6/P7.
+Push this harness revision, confirm linux-002 identity, re-bind SecretStore
+Flash, and run `scripts/dsh-real-process.mjs` plus `scripts/linux002-e2e.mjs`
+at that exact SHA. Then required CI and D04 docs/merge. Do not auto-claim P6/P7.

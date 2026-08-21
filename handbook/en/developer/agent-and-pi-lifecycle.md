@@ -41,7 +41,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:f0f083acdb5c0788ae0c40153d1b96f6c39814306d1b1789797cbca670d344ba"
+fingerprint: "sha256:977f99ba1041d3b94599f2d6041bce0001cbc1b215b0f34a129c3823aec4aa42"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -149,7 +149,9 @@ completion. Live linux-002 runs are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit result. Timing fields are measurement
 hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
 drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
-runtime. `packages/dsh-akp-adapter/src/plugin.ts` is the Cordis `apply` entry
-for `dsh --patch`; `scripts/dsh-real-process.mjs` runs pinned headless dsh and
-routes Flash through a loopback SSE-to-unary bridge onto the daemon Provider
-proxy. Both remain implementation evidence only.
+runtime and waits for Task `COMPLETED`. `packages/dsh-akp-adapter/src/plugin.ts`
+is the Cordis `apply` entry for `dsh --patch`; `scripts/dsh-real-process.mjs`
+admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
+as plugin `startupEvents` from the real dsh process, and routes Flash through
+a loopback SSE-to-unary bridge onto the daemon Provider proxy. Both remain
+implementation evidence only.

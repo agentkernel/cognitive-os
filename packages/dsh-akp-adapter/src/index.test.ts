@@ -173,6 +173,29 @@ test("Cordis apply reads a bearer file and emits startup candidates", async () =
   assert.equal(adapter.lastSequence, 2);
 });
 
+test("Cordis apply submits a WorkspaceRead startup candidate without authority fields", async () => {
+  const requests: DshAdapterRequest[] = [];
+  const adapter = applyDshAkpCordisPlugin(
+    { on: () => undefined },
+    {
+      endpoint: "http://127.0.0.1:9/task/akp/dsh",
+      bearerFile: "/tmp/p8-t09-bearer",
+      sessionId: "dsh-cordis-read",
+      taskRef: "task://personal/p8-t09-dsh-read",
+      startupEvents: [{ kind: "candidate", operation: "WorkspaceRead", payload: { target: "README.md" } }],
+    },
+    {
+      transport: { send: async (request) => { requests.push(request); return response(request); } },
+    },
+  );
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(adapter.lastSequence, 1);
+  assert.equal(requests[0]?.taskRef, "task://personal/p8-t09-dsh-read");
+  assert.equal(requests[0]?.event.operation, "WorkspaceRead");
+  assert.equal((requests[0]?.event.payload as { target?: string }).target, "README.md");
+  assert.equal(JSON.stringify(requests[0]?.event.payload).includes("task_ref"), false);
+});
+
 test("Cordis apply fails closed without an endpoint or bearer file", () => {
   assert.throws(
     () => applyDshAkpCordisPlugin({ on: () => undefined }, { endpoint: " ", bearerFile: "/tmp/x" }),

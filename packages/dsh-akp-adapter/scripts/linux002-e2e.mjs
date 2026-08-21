@@ -14,6 +14,7 @@ import {
   PINNED_DSH_REVISION,
   attachDshCordisPlugin,
 } from "../dist/index.js";
+import { admitTask, httpJson, issueToken, waitLifecycle } from "./daemon-task.mjs";
 
 function arg(name, fallback) {
   const index = process.argv.indexOf(name);
@@ -30,122 +31,6 @@ if (!Number.isInteger(port) || port < 1 || !bootstrapPath) {
 
 const origin = `http://127.0.0.1:${port}`;
 const secret = readFileSync(bootstrapPath, "utf8").trim();
-
-function uuid7Like(kind) {
-  const n = (Date.now() ^ process.pid ^ kind.length) >>> 0;
-  const suffix = n.toString(16).padStart(12, "0").slice(-12);
-  const variant = kind === "budget" ? "8" : "9";
-  return `00000000-0000-7000-${variant}000-${suffix}`;
-}
-
-async function httpJson(method, path, token, body) {
-  const headers = {};
-  if (token) headers.authorization = `Bearer ${token}`;
-  const init = { method, headers };
-  if (body !== undefined) {
-    headers["content-type"] = "application/json";
-    init.body = JSON.stringify(body);
-  }
-  const response = await fetch(`${origin}${path}`, init);
-  const text = await response.text();
-  let json;
-  try {
-    json = JSON.parse(text);
-  } catch {
-    json = { parse_error: true, http_status: response.status };
-  }
-  return { status: response.status, json };
-}
-
-async function issueToken(channel) {
-  const { json } = await httpJson("POST", "/local/session", "", {
-    channel,
-    principal_id: "principal://local/owner",
-    bootstrap_secret: secret,
-  });
-  const token = json.token;
-  if (typeof token !== "string" || !token) {
-    throw new Error(`session token missing for ${channel}`);
-  }
-  return token;
-}
-
-async function admitTask(token, spec) {
-  const recorded = await httpJson("POST", "/task/intent.record", token, {
-    conversation_or_scope_ref: spec.conversation,
-    raw_expression: spec.objective,
-    schema_version: "cognitiveos.task-intent-record-request/0.1",
-  });
-  const interpreted = await httpJson("POST", "/task/intent.interpret", token, {
-    schema_version: "cognitiveos.task-intent-interpret-request/0.1",
-    user_intent_record_id: recorded.json.user_intent_record_id,
-    candidate: {
-      objectives: [spec.objective],
-      constraints: [],
-      forbidden: ["bash", "edit", "write"],
-      assumptions: [],
-      ambiguities: [],
-      information_gaps: [],
-    },
-  });
-  const draft = {
-    allowed_state_domains: ["task", "effect"],
-    allowed_tools: [spec.tool],
-    budget: { semantic_calls: 4, tool_calls: 4 },
-    budget_id: uuid7Like(`budget-${spec.family}`),
-    conditions: [
-      {
-        description: "independent fixed-effect verification",
-        id: "acceptance",
-        kind: "acceptance",
-        verifier_ref: "verifier://personal/fixed-effect",
-      },
-    ],
-    deadline: "2027-12-31T00:00:00Z",
-    loop_object_id: uuid7Like(`loop-${spec.family}`),
-    max_iterations: 4,
-    max_retries: 0,
-    objective: spec.objective,
-    scope: {
-      in_scope: [`workspace ${spec.family}`],
-      out_of_scope: ["bash", "edit", "write"],
-    },
-    task_ref: spec.taskRef,
-  };
-  const previewed = await httpJson("POST", "/task/preview", token, {
-    schema_version: "cognitiveos.task-preview-request/0.1",
-    task_contract_draft: draft,
-  });
-  const admitted = await httpJson("POST", "/task/admit", token, {
-    schema_version: "cognitiveos.task-admit-request/0.1",
-    expected_current_epoch: 0,
-    preview_digest: previewed.json.preview_digest,
-    task_contract_draft: draft,
-    acceptance: {
-      accepted_by: "principal://local/owner",
-      accepted_digest: interpreted.json.interpretation_digest,
-      interpretation_id: interpreted.json.interpretation_id,
-    },
-  });
-  if (admitted.json.task_ref !== spec.taskRef) {
-    throw new Error(`admit failed for ${spec.family}: ${JSON.stringify(admitted.json)}`);
-  }
-  return spec.taskRef;
-}
-
-async function waitLifecycle(token, taskRef) {
-  const encoded = encodeURIComponent(taskRef);
-  let lifecycle = "absent";
-  for (let attempt = 0; attempt < 24; attempt += 1) {
-    const evidence = await httpJson("GET", `/task/evidence?task_ref=${encoded}`, token);
-    lifecycle = evidence.json?.lifecycle?.current_state ?? "absent";
-    if (lifecycle !== "DRAFT" && lifecycle !== "absent") {
-      return lifecycle;
-    }
-    await new Promise((resolve) => setTimeout(resolve, 250));
-  }
-  return lifecycle;
-}
 
 function pluginHost() {
   const listeners = [];
@@ -187,7 +72,7 @@ async function runFamily(token, spec, event) {
   if (!outcome?.ok) {
     return { family: spec.family, accepted: false, error: outcome?.error ?? "no adapter result" };
   }
-  const lifecycle = await waitLifecycle(token, spec.taskRef);
+  const lifecycle = await waitLifecycle(origin, token, spec.taskRef, { want: "COMPLETED" });
   return {
     family: spec.family,
     accepted: outcome.result.response.accepted === true,
@@ -212,6 +97,94 @@ async function negatives(token, taskRef) {
     fencingEpoch: 1,
     taskRef,
   });
+  const digestSession = "dsh-negative-digest";
+  await transport.activate({
+    dshVersion: PINNED_DSH_REVISION,
+    sessionId: digestSession,
+    fencingEpoch: 1,
+    taskRef,
+  });
+  const wrongDigest = await httpJson(origin, "POST", "/task/akp/dsh", token, {
+    op: "event",
+    bridge_protocol: "cognitiveos.dsh-akp/0.1",
+    dsh_version: PINNED_DSH_REVISION,
+    schema_digest: "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    session_id: digestSession,
+    fencing_epoch: 1,
+    sequence: 1,
+    plugin_id: "plugin.core",
+    correlation_id: `${digestSession}:1`,
+    deadline: "2030-01-01T00:00:00.000Z",
+    event: { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true }, authority_claim: false, secret_shaped: false },
+  });
+  const protocolSession = "dsh-negative-protocol";
+  await transport.activate({
+    dshVersion: PINNED_DSH_REVISION,
+    sessionId: protocolSession,
+    fencingEpoch: 1,
+    taskRef,
+  });
+  const wrongProtocol = await httpJson(origin, "POST", "/task/akp/dsh", token, {
+    op: "event",
+    bridge_protocol: "cognitiveos.dsh-akp/9.9",
+    dsh_version: PINNED_DSH_REVISION,
+    schema_digest: PINNED_AKP_SCHEMA_DIGEST,
+    session_id: protocolSession,
+    fencing_epoch: 1,
+    sequence: 1,
+    plugin_id: "plugin.core",
+    correlation_id: `${protocolSession}:1`,
+    deadline: "2030-01-01T00:00:00.000Z",
+    event: { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true }, authority_claim: false, secret_shaped: false },
+  });
+  const epochSession = "dsh-negative-epoch";
+  await transport.activate({
+    dshVersion: PINNED_DSH_REVISION,
+    sessionId: epochSession,
+    fencingEpoch: 1,
+    taskRef,
+  });
+  const staleEpoch = await httpJson(origin, "POST", "/task/akp/dsh", token, {
+    op: "event",
+    bridge_protocol: "cognitiveos.dsh-akp/0.1",
+    dsh_version: PINNED_DSH_REVISION,
+    schema_digest: PINNED_AKP_SCHEMA_DIGEST,
+    session_id: epochSession,
+    fencing_epoch: 9,
+    sequence: 1,
+    plugin_id: "plugin.core",
+    correlation_id: `${epochSession}:1`,
+    deadline: "2030-01-01T00:00:00.000Z",
+    event: { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true }, authority_claim: false, secret_shaped: false },
+  });
+  const dupSession = "dsh-negative-dup";
+  await transport.activate({
+    dshVersion: PINNED_DSH_REVISION,
+    sessionId: dupSession,
+    fencingEpoch: 1,
+    taskRef,
+  });
+  const firstDup = {
+    op: "event",
+    bridge_protocol: "cognitiveos.dsh-akp/0.1",
+    dsh_version: PINNED_DSH_REVISION,
+    schema_digest: PINNED_AKP_SCHEMA_DIGEST,
+    session_id: dupSession,
+    fencing_epoch: 1,
+    sequence: 1,
+    plugin_id: "plugin.core",
+    correlation_id: `${dupSession}:1`,
+    deadline: "2030-01-01T00:00:00.000Z",
+    event: { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true }, authority_claim: false, secret_shaped: false },
+  };
+  await httpJson(origin, "POST", "/task/akp/dsh", token, firstDup);
+  const duplicateSequence = await httpJson(origin, "POST", "/task/akp/dsh", token, firstDup);
+  const malformed = await fetch(`${origin}/task/akp/dsh`, {
+    method: "POST",
+    headers: { "content-type": "application/json", authorization: `Bearer ${token}` },
+    body: "{not-json",
+  });
+  const malformedJson = await malformed.json().catch(() => ({ parse_error: true }));
   const adapter = new DshAkpAdapter({
     dshVersion: PINNED_DSH_REVISION,
     schemaDigest: PINNED_AKP_SCHEMA_DIGEST,
@@ -240,39 +213,50 @@ async function negatives(token, taskRef) {
   return {
     wrongVersionAccepted: wrongVersion.accepted,
     wrongVersionError: wrongVersion.error ?? null,
+    wrongDigestAccepted: wrongDigest.json?.accepted === true,
+    wrongDigestError: wrongDigest.json?.error ?? null,
+    wrongProtocolAccepted: wrongProtocol.json?.accepted === true,
+    wrongProtocolError: wrongProtocol.json?.error ?? null,
+    staleEpochAccepted: staleEpoch.json?.accepted === true,
+    staleEpochError: staleEpoch.json?.error ?? null,
+    duplicateSequenceAccepted: duplicateSequence.json?.accepted === true,
+    duplicateSequenceError: duplicateSequence.json?.error ?? null,
+    malformedAccepted: malformedJson?.accepted === true,
+    malformedError: malformedJson?.error ?? malformedJson?.code ?? null,
     secretShaped: secretError,
   };
 }
 
-const token = await issueToken("task");
+const token = await issueToken(origin, secret, "task");
+const stamp = `${process.pid}`;
 const readSpec = {
   family: "read",
   tool: "native.workspace.read",
   conversation: "conversation://personal/p8-t09",
   objective: "read README.md",
-  taskRef: "task://personal/p8-t09-dsh-read",
-  sessionId: "dsh-session-read",
+  taskRef: `task://personal/p8-t09-dsh-read-${stamp}`,
+  sessionId: `dsh-session-read-${stamp}`,
 };
 const searchSpec = {
   family: "search",
   tool: "native.workspace.search",
   conversation: "conversation://personal/p8-t09-search",
   objective: "search the workspace for needle",
-  taskRef: "task://personal/p8-t09-dsh-search",
-  sessionId: "dsh-session-search",
+  taskRef: `task://personal/p8-t09-dsh-search-${stamp}`,
+  sessionId: `dsh-session-search-${stamp}`,
 };
 const writeSpec = {
   family: "write",
   tool: "native.workspace.write",
   conversation: "conversation://personal/p8-t09-write",
   objective: "mutate workspace through daemon-governed WorkspaceWrite",
-  taskRef: "task://personal/p8-t09-dsh-write",
-  sessionId: "dsh-session-write",
+  taskRef: `task://personal/p8-t09-dsh-write-${stamp}`,
+  sessionId: `dsh-session-write-${stamp}`,
 };
 
-await admitTask(token, readSpec);
-await admitTask(token, searchSpec);
-await admitTask(token, writeSpec);
+await admitTask(origin, token, readSpec);
+await admitTask(origin, token, searchSpec);
+await admitTask(origin, token, writeSpec);
 
 const read = await runFamily(token, readSpec, {
   kind: "candidate",
@@ -288,7 +272,7 @@ const write = await runFamily(token, writeSpec, {
   kind: "candidate",
   operation: "WorkspaceWrite",
   payload: {
-    target: "p8-t09-write.txt",
+    target: `p8-t09-write-${stamp}.txt`,
     input_b64: Buffer.from("p8-t09 disposable write\n", "utf8").toString("base64"),
     preimage: "absent",
   },
@@ -310,8 +294,16 @@ const summary = {
 process.stdout.write(`${JSON.stringify(summary)}\n`);
 const failed =
   !read.accepted ||
+  read.lifecycle !== "COMPLETED" ||
   !search.accepted ||
+  search.lifecycle !== "COMPLETED" ||
   !write.accepted ||
+  write.lifecycle !== "COMPLETED" ||
   negative.wrongVersionAccepted !== false ||
+  negative.wrongDigestAccepted !== false ||
+  negative.wrongProtocolAccepted !== false ||
+  negative.staleEpochAccepted !== false ||
+  negative.duplicateSequenceAccepted !== false ||
+  negative.malformedAccepted !== false ||
   negative.secretShaped !== "SECRET_SHAPED_PAYLOAD";
 process.exit(failed ? 1 : 0);
