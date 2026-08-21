@@ -1233,6 +1233,15 @@ Pi 不可以：
 - dsh 不是 authority writer；dsh 响应不是 Task 完成。linux-002 真机与 Path A/B 计时
   只记 observation，不构成 Gate/B01/release/Profile/Agent-benefit。
 
+### P8-T10 — Install dsh as the Personal product agent path
+
+- `cognitive dsh configure` 钉住精确 dsh revision 并写入仅 candidate 的 adapter digest；
+  `cognitive dsh launch` 是安装后的 Path B（dsh → AKP → daemon → Flash）。
+- Pi 可保持 `not_configured`；doctor overall ready + system/database/secret/provider/daemon
+  即可 launch。`--path a` 只用于配对测量，不是产品启动路径。
+- linux-002：真实 WorkspaceRead/Search 与可丢弃 Write 走 Intent/Effect/verification/acceptance；
+  同机 Path A/B n≥5。dsh 响应不是 Task 完成。不预设无损。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

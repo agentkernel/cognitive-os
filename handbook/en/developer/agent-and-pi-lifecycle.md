@@ -29,6 +29,10 @@ sources:
   - path: packages/dsh-akp-adapter/src/plugin.ts
     symbols: ["apply", "applyDshAkpCordisPlugin"]
   - path: packages/dsh-akp-adapter/src/index.test.ts
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["configure", "launch"]
+  - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
+  - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -41,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:977f99ba1041d3b94599f2d6041bce0001cbc1b215b0f34a129c3823aec4aa42"
+fingerprint: "sha256:e0aeae9a383f2701b4baa62cb77608072178c1736d1cfb40b25a675e363c7df6"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -153,5 +157,8 @@ runtime and waits for Task `COMPLETED`. `packages/dsh-akp-adapter/src/plugin.ts`
 is the Cordis `apply` entry for `dsh --patch`; `scripts/dsh-real-process.mjs`
 admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
 as plugin `startupEvents` from the real dsh process, and routes Flash through
-a loopback SSE-to-unary bridge onto the daemon Provider proxy. Both remain
-implementation evidence only.
+a loopback SSE-to-unary bridge onto the daemon Provider proxy. Product install
+is `cognitive dsh configure` then `cognitive dsh launch` (Path B). Direct Flash
+(`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter
+registration digest in `dsh.json` is not SQLite-durable daemon adapter state.
+Both remain implementation evidence only.

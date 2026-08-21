@@ -9,6 +9,7 @@
 mod backup;
 mod client;
 mod daemon;
+mod dsh;
 mod init;
 mod layout;
 mod pi;
@@ -22,6 +23,7 @@ use serde_json::Value;
 
 pub use init::run_init;
 pub use layout::{LayoutRoots, resolve_layout_roots};
+pub use dsh::{DshConfigureOptions, DshLaunchOptions, DshProviderPath};
 pub use pi::{PiConfigureOptions, PiLaunchOptions};
 
 /// Top-level `cognitive` verb.
@@ -32,6 +34,7 @@ pub enum CognitiveCommand {
     Doctor(StatusOptions),
     Daemon(DaemonCommand),
     Pi(PiCommand),
+    Dsh(DshCommand),
     Resource(ResourceCommand),
     Task(TaskCommand),
     Backup(backup::BackupOptions),
@@ -75,6 +78,13 @@ pub enum DaemonCommand {
 pub enum PiCommand {
     Configure(PiConfigureOptions),
     Launch(PiLaunchOptions),
+}
+
+/// `cognitive dsh` subcommands.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub enum DshCommand {
+    Configure(DshConfigureOptions),
+    Launch(DshLaunchOptions),
 }
 
 /// Read-only private resource projection commands.
@@ -178,12 +188,29 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
                 )),
             }
         }
+        "dsh" => {
+            let Some((subcommand, dsh_rest)) = rest.split_first() else {
+                return Err("dsh requires subcommand configure|launch".to_owned());
+            };
+            let flags = parse_flags(dsh_rest)?;
+            match subcommand.as_str() {
+                "configure" => Ok(CognitiveCommand::Dsh(DshCommand::Configure(
+                    parse_dsh_configure_options(&flags)?,
+                ))),
+                "launch" => Ok(CognitiveCommand::Dsh(DshCommand::Launch(
+                    parse_dsh_launch_options(&flags)?,
+                ))),
+                other => Err(format!(
+                    "unknown dsh subcommand `{other}` (expected configure|launch)"
+                )),
+            }
+        }
         "resource" => parse_resource_command(rest),
         "task" => parse_task_command(rest),
         "backup" => parse_backup_command(rest),
         "restore" => parse_restore_command(rest),
         other => Err(format!(
-            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|resource|task|backup|restore)"
+            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|dsh|resource|task|backup|restore)"
         )),
     }
 }
@@ -215,6 +242,20 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             Err(error) => print_operational_error(&error),
         },
         CognitiveCommand::Pi(PiCommand::Launch(options)) => match pi::launch(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
+        CognitiveCommand::Dsh(DshCommand::Configure(options)) => match dsh::configure(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
+        CognitiveCommand::Dsh(DshCommand::Launch(options)) => match dsh::launch(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
                 EXIT_SUCCESS
@@ -564,6 +605,47 @@ fn parse_pi_launch_options(flags: &BTreeMap<String, String>) -> Result<PiLaunchO
     })
 }
 
+fn parse_dsh_configure_options(
+    flags: &BTreeMap<String, String>,
+) -> Result<DshConfigureOptions, String> {
+    reject_unexpected_flags(flags, &["runtime-root", "dsh-root", "adapter-root", "revision"])?;
+    Ok(DshConfigureOptions {
+        layout_roots: LayoutRoots::from_flags(flags)?,
+        dsh_root: required_dsh_path_flag(flags, "dsh-root")?,
+        adapter_root: required_dsh_path_flag(flags, "adapter-root")?,
+        revision: flags
+            .get("revision")
+            .cloned()
+            .ok_or_else(|| "dsh configuration requires --revision <git-object>".to_owned())?,
+    })
+}
+
+fn parse_dsh_launch_options(flags: &BTreeMap<String, String>) -> Result<DshLaunchOptions, String> {
+    reject_unexpected_flags(flags, &["runtime-root", "print", "path", "task"])?;
+    let provider_path = match flags.get("path").map(String::as_str) {
+        None | Some("b") => DshProviderPath::Adapter,
+        Some("a") => DshProviderPath::Direct,
+        Some(other) => {
+            return Err(format!(
+                "dsh launch --path must be a or b, not `{other}`"
+            ))
+        }
+    };
+    Ok(DshLaunchOptions {
+        layout_roots: LayoutRoots::from_flags(flags)?,
+        print_mode: flag_bool(flags, "print")?,
+        provider_path,
+        task: flags.get("task").cloned(),
+    })
+}
+
+fn required_dsh_path_flag(flags: &BTreeMap<String, String>, name: &str) -> Result<PathBuf, String> {
+    flags
+        .get(name)
+        .map(PathBuf::from)
+        .ok_or_else(|| format!("dsh configuration requires --{name} <absolute-path>"))
+}
+
 fn required_path_flag(flags: &BTreeMap<String, String>, name: &str) -> Result<PathBuf, String> {
     flags
         .get(name)
@@ -696,6 +778,10 @@ USAGE:
                          --extension-entry <absolute-path>
   cognitive pi launch [--runtime-root <dir>] [--print]
                        [--append-system-prompt <absolute-path>]
+  cognitive dsh configure [--runtime-root <dir>] --dsh-root <absolute-path>
+                          --adapter-root <absolute-path> --revision <git-object>
+  cognitive dsh launch [--runtime-root <dir>] [--print] [--path a|b]
+                       [--task <prompt>]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -712,6 +798,10 @@ Hard rules:
     and disables Pi-native tools that bypass daemon authority
   - --append-system-prompt forwards an existing absolute UTF-8 file to Pi; it is not a
     Provider credential and the file bytes are not printed
+  - dsh configuration writes only non-secret pin/paths and a candidate-only adapter digest
+  - dsh launch requires daemon-owned ready state (Pi may stay not_configured), loads the
+    pinned AKP plugin, and never treats a dsh response as Task completion
+  - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
@@ -817,6 +907,49 @@ mod tests {
         ])
         .expect_err("Pi configuration must reject Provider secret flags");
 
+        assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn dsh_configuration_accepts_only_non_secret_path_flags() {
+        let command = parse_cognitive_args(&[
+            "dsh".to_owned(),
+            "configure".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--dsh-root".to_owned(),
+            "/opt/dsh".to_owned(),
+            "--adapter-root".to_owned(),
+            "/opt/cognitiveos/packages/dsh-akp-adapter".to_owned(),
+            "--revision".to_owned(),
+            cognitive_runtime::DSH_PACKAGE_REVISION.to_owned(),
+        ])
+        .expect("parse dsh configuration");
+        assert_eq!(
+            command,
+            CognitiveCommand::Dsh(DshCommand::Configure(DshConfigureOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+                dsh_root: PathBuf::from("/opt/dsh"),
+                adapter_root: PathBuf::from("/opt/cognitiveos/packages/dsh-akp-adapter"),
+                revision: cognitive_runtime::DSH_PACKAGE_REVISION.to_owned(),
+            }))
+        );
+
+        let rejected = parse_cognitive_args(&[
+            "dsh".to_owned(),
+            "configure".to_owned(),
+            "--dsh-root".to_owned(),
+            "/opt/dsh".to_owned(),
+            "--adapter-root".to_owned(),
+            "/opt/adapter".to_owned(),
+            "--revision".to_owned(),
+            cognitive_runtime::DSH_PACKAGE_REVISION.to_owned(),
+            "--api-key-file".to_owned(),
+            "/tmp/key".to_owned(),
+        ])
+        .expect_err("dsh configuration must reject Provider secret flags");
         assert!(rejected.contains("not accepted"), "{rejected}");
     }
 

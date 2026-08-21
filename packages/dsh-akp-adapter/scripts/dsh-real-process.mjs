@@ -9,7 +9,8 @@
  * in SecretStore on the daemon host. A dsh response is never Task completion.
  *
  * Argv only (no CognitiveOS env-var literals): --port --bootstrap-file
- * --revision --dsh-root --adapter-root --task
+ * --revision --dsh-root --adapter-root --task --provider-path a|b
+ * Path A also requires --api-key-file (0600 or "-") and never logs the key.
  */
 import { spawn } from "node:child_process";
 import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -31,13 +32,24 @@ const dshRoot = arg("--dsh-root");
 const adapterRoot = arg("--adapter-root");
 const origin = arg("--origin", `http://127.0.0.1:${port}`);
 const task = arg("--task", "Reply with the single word pong and nothing else.");
-if (!Number.isInteger(port) || port < 1 || !bootstrapPath || !dshRoot || !adapterRoot) {
-  throw new Error("--port --bootstrap-file --dsh-root --adapter-root are required");
+const providerPath = arg("--provider-path", "b");
+const apiKeyFile = arg("--api-key-file");
+const directBaseUrl = arg("--direct-base-url", "https://api.deepseek.com");
+if (providerPath !== "a" && providerPath !== "b") {
+  throw new Error("--provider-path must be a (direct Flash) or b (AKP/daemon)");
 }
-const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
+if (!dshRoot || !adapterRoot) {
+  throw new Error("--dsh-root and --adapter-root are required");
+}
+if (providerPath === "b" && (!Number.isInteger(port) || port < 1 || !bootstrapPath)) {
+  throw new Error("Path B requires --port and --bootstrap-file");
+}
+if (providerPath === "a" && !apiKeyFile) {
+  throw new Error("Path A requires --api-key-file <0600-path|->");
+}
 const pluginHref = pathToFileURL(join(adapterRoot, "dist", "plugin.js")).href;
 const scriptDir = dirname(fileURLToPath(import.meta.url));
-const work = join(tmpdir(), `p8t09-dsh-real-${process.pid}`);
+const work = join(tmpdir(), `p8t10-dsh-real-${process.pid}`);
 mkdirSync(work, { mode: 0o700, recursive: true });
 const bearerFile = join(work, "daemon.bearer");
 const patchFile = join(work, "headless-akp.yml");
@@ -48,30 +60,134 @@ function redact(error) {
   return String(error).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").replace(/sk-[A-Za-z0-9]+/g, "sk-[redacted]");
 }
 
+function childEnvironment() {
+  const allow = [
+    "PATH",
+    "HOME",
+    "USER",
+    "LOGNAME",
+    "SHELL",
+    "LANG",
+    "LC_ALL",
+    "TZ",
+    "TMPDIR",
+    "TMP",
+    "TEMP",
+    "PNPM_HOME",
+    "http_proxy",
+    "https_proxy",
+    "HTTP_PROXY",
+    "HTTPS_PROXY",
+    "no_proxy",
+    "NO_PROXY",
+  ];
+  const env = {};
+  for (const key of allow) {
+    if (process.env[key]) env[key] = process.env[key];
+  }
+  env.DSH_HOME = dshHome;
+  env.DSH_TELEMETRY_MODE = "DISABLED";
+  env.DSH_PERMISSION_MODE = "read-only";
+  return env;
+}
+
+async function runDsh(patchBody) {
+  writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
+  const started = Date.now();
+  const ttftHolder = { ms: null };
+  const child = spawn(
+    "pnpm",
+    ["dsh", "--profile", "headless", "--patch", patchFile, task],
+    {
+      cwd: dshRoot,
+      env: childEnvironment(),
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let stdout = "";
+  let stderr = "";
+  child.stdout.setEncoding("utf8");
+  child.stderr.setEncoding("utf8");
+  child.stdout.on("data", (chunk) => {
+    if (ttftHolder.ms === null && String(chunk).trim()) {
+      ttftHolder.ms = Date.now() - started;
+    }
+    stdout += chunk;
+  });
+  child.stderr.on("data", (chunk) => {
+    stderr += chunk;
+  });
+  const exitCode = await new Promise((resolve) => {
+    child.on("close", resolve);
+  });
+  const elapsedMs = Date.now() - started;
+  const assistant = stdout.trim().split(/\r?\n/).filter((line) => line && !line.startsWith("$")).at(-1) ?? "";
+  return {
+    exitCode,
+    elapsedMs,
+    ttftMs: ttftHolder.ms,
+    assistant,
+    stderrRedactedBytes: Buffer.byteLength(redact(stderr), "utf8"),
+  };
+}
+
+if (providerPath === "a") {
+  const keySource = apiKeyFile === "-" ? 0 : apiKeyFile;
+  const apiKey = readFileSync(keySource, "utf8").trim();
+  writeFileSync(
+    join(dshHome, ".credentials.yaml"),
+    `version: 1\n\nrefs:\n  DEEPSEEK_KEY: ${apiKey}\n`,
+    { encoding: "utf8", mode: 0o600 },
+  );
+  chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
+  const outcome = await runDsh(
+    ["- id: llm-deepseek", "  config:", `    baseURL: ${directBaseUrl}`, "    apiKeyEnv: DEEPSEEK_KEY", ""].join("\n"),
+  );
+  rmSync(work, { recursive: true, force: true });
+  const summary = {
+    revision_pin: revisionPin ?? null,
+    provider_path: "a",
+    adapter: "dsh --patch llm-deepseek direct Flash (no AKP, no daemon Provider proxy)",
+    candidate_only: true,
+    dsh_response_is_not_task_completion: true,
+    dsh_exit: outcome.exitCode,
+    elapsed_ms: outcome.elapsedMs,
+    ttft_ms: outcome.ttftMs,
+    assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
+    assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
+    stderr_redacted_bytes: outcome.stderrRedactedBytes,
+    workspace: null,
+    non_claims: ["Gate", "release", "Profile", "B01", "Agent-benefit"],
+  };
+  process.stdout.write(`${JSON.stringify(summary)}\n`);
+  process.exit(outcome.exitCode === 0 && summary.assistant_is_pong ? 0 : 1);
+}
+
+const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
 const taskToken = await issueToken(origin, bootstrap, "task");
 const managementToken = await issueToken(origin, bootstrap, "management");
 const stamp = `${process.pid}`;
-const writeTarget = `p8-t09-write-${stamp}.txt`;
+const writeTarget = `p8-t10-write-${stamp}.txt`;
 const readSpec = {
   family: "read",
   tool: "native.workspace.read",
-  conversation: "conversation://personal/p8-t09",
+  conversation: "conversation://personal/p8-t10",
   objective: "read README.md",
-  taskRef: `task://personal/p8-t09-dsh-read-${stamp}`,
+  taskRef: `task://personal/p8-t10-dsh-read-${stamp}`,
 };
 const searchSpec = {
   family: "search",
   tool: "native.workspace.search",
-  conversation: "conversation://personal/p8-t09-search",
+  conversation: "conversation://personal/p8-t10-search",
   objective: "search the workspace for needle",
-  taskRef: `task://personal/p8-t09-dsh-search-${stamp}`,
+  taskRef: `task://personal/p8-t10-dsh-search-${stamp}`,
 };
 const writeSpec = {
   family: "write",
   tool: "native.workspace.write",
-  conversation: "conversation://personal/p8-t09-write",
+  conversation: "conversation://personal/p8-t10-write",
   objective: "mutate workspace through daemon-governed WorkspaceWrite",
-  taskRef: `task://personal/p8-t09-dsh-write-${stamp}`,
+  taskRef: `task://personal/p8-t10-dsh-write-${stamp}`,
 };
 await admitTask(origin, taskToken, readSpec);
 await admitTask(origin, taskToken, searchSpec);
@@ -140,8 +256,8 @@ function pluginInsert(id, sessionId, pluginId, taskRef, events) {
   return lines;
 }
 
-writeFileSync(
-  patchFile,
+const selected = await httpJson(origin, "GET", "/provider/v1/selected-model", managementToken);
+const outcome = await runDsh(
   [
     "- insert:",
     ...pluginInsert("cognitiveos-akp", "dsh-real-process", "deepseek.dsh.akp", undefined, [
@@ -159,7 +275,7 @@ writeFileSync(
         operation: "WorkspaceWrite",
         payload: {
           target: writeTarget,
-          input_b64: Buffer.from("p8-t09 disposable write\n", "utf8").toString("base64"),
+          input_b64: Buffer.from("p8-t10 disposable write\n", "utf8").toString("base64"),
           preimage: "absent",
         },
       },
@@ -170,69 +286,8 @@ writeFileSync(
     "    apiKeyEnv: DAEMON_BEARER",
     "",
   ].join("\n"),
-  { encoding: "utf8", mode: 0o600 },
 );
-
-function childEnvironment() {
-  const allow = [
-    "PATH",
-    "HOME",
-    "USER",
-    "LOGNAME",
-    "SHELL",
-    "LANG",
-    "LC_ALL",
-    "TZ",
-    "TMPDIR",
-    "TMP",
-    "TEMP",
-    "PNPM_HOME",
-    "http_proxy",
-    "https_proxy",
-    "HTTP_PROXY",
-    "HTTPS_PROXY",
-    "no_proxy",
-    "NO_PROXY",
-  ];
-  const env = {};
-  for (const key of allow) {
-    if (process.env[key]) env[key] = process.env[key];
-  }
-  env.DSH_HOME = dshHome;
-  env.DSH_TELEMETRY_MODE = "DISABLED";
-  env.DSH_PERMISSION_MODE = "read-only";
-  return env;
-}
-
-const selected = await httpJson(origin, "GET", "/provider/v1/selected-model", managementToken);
-const started = Date.now();
-const child = spawn(
-  "pnpm",
-  ["dsh", "--profile", "headless", "--patch", patchFile, task],
-  {
-    cwd: dshRoot,
-    env: childEnvironment(),
-    stdio: ["ignore", "pipe", "pipe"],
-  },
-);
-
-let stdout = "";
-let stderr = "";
-child.stdout.setEncoding("utf8");
-child.stderr.setEncoding("utf8");
-child.stdout.on("data", (chunk) => {
-  stdout += chunk;
-});
-child.stderr.on("data", (chunk) => {
-  stderr += chunk;
-});
-
-const exitCode = await new Promise((resolve) => {
-  child.on("close", resolve);
-});
 sseBridge.child.kill("SIGTERM");
-const elapsedMs = Date.now() - started;
-const assistant = stdout.trim().split(/\r?\n/).filter((line) => line && !line.startsWith("$")).at(-1) ?? "";
 const [readLife, searchLife, writeLife] = await Promise.all([
   waitLifecycle(origin, taskToken, readSpec.taskRef, { want: "COMPLETED" }),
   waitLifecycle(origin, taskToken, searchSpec.taskRef, { want: "COMPLETED" }),
@@ -244,15 +299,17 @@ rmSync(work, { recursive: true, force: true });
 const summary = {
   revision_pin: revisionPin ?? null,
   guest_port: port,
+  provider_path: "b",
   adapter: "dsh --patch cognitiveos-akp Workspace* + llm-deepseek via SSE-to-unary daemon provider proxy",
   candidate_only: true,
   dsh_response_is_not_task_completion: true,
   selected_model: selected.json?.model ?? selected.json?.selected_model ?? null,
-  dsh_exit: exitCode,
-  elapsed_ms: elapsedMs,
-  assistant_preview_bytes: Buffer.byteLength(assistant, "utf8"),
-  assistant_is_pong: /^pong\.?$/i.test(assistant),
-  stderr_redacted_bytes: Buffer.byteLength(redact(stderr), "utf8"),
+  dsh_exit: outcome.exitCode,
+  elapsed_ms: outcome.elapsedMs,
+  ttft_ms: outcome.ttftMs,
+  assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
+  assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
+  stderr_redacted_bytes: outcome.stderrRedactedBytes,
   workspace: {
     read: { taskRef: readSpec.taskRef, lifecycle: readLife },
     search: { taskRef: searchSpec.taskRef, lifecycle: searchLife },
@@ -263,4 +320,4 @@ const summary = {
 process.stdout.write(`${JSON.stringify(summary)}\n`);
 const workspacePass =
   readLife === "COMPLETED" && searchLife === "COMPLETED" && writeLife === "COMPLETED";
-process.exit(exitCode === 0 && summary.assistant_is_pong && workspacePass ? 0 : 1);
+process.exit(outcome.exitCode === 0 && summary.assistant_is_pong && workspacePass ? 0 : 1);

@@ -19,6 +19,8 @@ sources:
   - path: apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
   - path: apps/admin-cli/src/personal_cli/backup.rs
+  - path: apps/admin-cli/src/personal_cli/dsh.rs
+    symbols: ["launch"]
   - path: crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
@@ -31,7 +33,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:f1de465d3decd85110d3636d3861f0864f93b980d1f7b4bf604bcad12d9d2582"
+fingerprint: "sha256:88f649fe729377abdd5917fecaa6d6d5e1d1a573874bf229e74ea04ed1504594"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -61,6 +63,10 @@ non_claims:
   传递 Provider 凭据，禁用 Pi 原生工具，也不得以直接 daemon/private-candidate 调用替代。
   `--append-system-prompt <绝对路径>` 把已存在且非空的 UTF-8 文件转发给 Pi；它不是
   Provider 凭据，文件字节不会被打印。
+- `cognitive dsh launch --print` 是有界的非交互 dsh Path B：要求 daemon-owned
+  ready（Pi 可保持 `not_configured`），加载钉住的 AKP 插件，绝不把 dsh 响应当作
+  Task 完成。直接 Flash（`--path a`）被拒绝；同机 Path A/B 测量只用
+  `packages/dsh-akp-adapter/scripts/paired-path.mjs`。
 
 ## 停止、重启、过期状态 —— `implemented`
 

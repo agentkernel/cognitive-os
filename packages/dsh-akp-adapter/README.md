@@ -39,3 +39,11 @@ ref. dsh always requests SSE; the daemon proxy is unary, so
 The Provider key stays in SecretStore. Timing fields are measurement hooks, not a zero-overhead claim.
 Live linux-002 and jump-host samples are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit claim.
+
+Product install is `cognitive dsh configure` then `cognitive dsh launch`
+(Path B). Configure writes `{dsh_root}/.cognitiveos-dsh-revision` and
+`config/cognitiveos/dsh.json` (pin, adapter root, candidate-only digest). The
+digest is not SQLite-durable daemon adapter state. Launch fail-closes `--path a`;
+same-host Path A vs Path B measurement uses `scripts/paired-path.mjs` with
+`--api-key-file` (stdin `-` or a 0600 file). A dsh response is never Task
+completion.
