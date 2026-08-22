@@ -40,7 +40,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:fc791585387f86ec20adb777c94a1d47606d9faf059f597910936708ebdc7ab8"
+fingerprint: "sha256:ae7078cba377b5730439a41026994ba23103af6dadcc611c95214dc654a7a9c8"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---

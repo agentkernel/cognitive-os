@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:13f49cdad6ece7bd06e693c3806fbe8395d682ccf66dd918de5af062cd424b47"
+fingerprint: "sha256:3dc63e22c89c37fe9a6650b7f5bf92612ca631277aba6f93959bd038ba300827"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -163,7 +163,9 @@ as plugin `startupEvents` from the real dsh process, and routes Flash through
 the daemon Provider SSE proxy (`POST /provider/v1/chat/completions` with
 `stream:true`). Product install
 is `cognitive dsh configure` then `cognitive dsh launch` (Path B). `cognitive dsh status`
-reads `GET /personal/dsh/runtime`. Direct Flash
+reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: clear`
+drops the bound pid and in-memory sessions so the projection is `INACTIVE`.
+Direct Flash
 (`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter
 registration digest in `dsh.json` is not SQLite-durable daemon adapter state.
 Both remain implementation evidence only.

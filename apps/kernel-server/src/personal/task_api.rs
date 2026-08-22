@@ -822,6 +822,7 @@ impl TaskApi {
     pub(crate) fn dsh_clear_process(&mut self) -> Value {
         self.dsh_process_id = None;
         self.dsh_last_heartbeat_unix_ms = None;
+        self.dsh_sessions.clear();
         self.dsh_runtime_snapshot()
     }
 
@@ -2876,18 +2877,10 @@ mod dsh_akp_tests {
         let heartbeat = api.dsh_heartbeat().expect("heartbeat");
         assert!(heartbeat["last_heartbeat_unix_ms"].as_u64().unwrap() > 0);
 
-        api.handle(
-            "POST /task/akp/dsh HTTP/1.1",
-            &serde_json::to_vec(&json!({
-                "op": "stop",
-                "session_id": "dsh-session-runtime"
-            }))
-            .expect("encode"),
-            "principal://local/owner",
-        );
         let cleared = api.dsh_clear_process();
         assert_eq!(cleared["state"], "INACTIVE");
         assert_eq!(cleared["process_id"], Value::Null);
+        assert_eq!(cleared["session_count"], 0);
 
         assert_eq!(
             api.dsh_bind_process(0).expect_err("pid 0 is refused"),

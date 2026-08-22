@@ -16,7 +16,7 @@
 import { spawn } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { admitTask, httpJson, issueToken, waitLifecycle } from "./daemon-task.mjs";
 
@@ -244,6 +244,27 @@ if (providerPath === "a") {
   process.exit(outcome.exitCode === 0 && summary.assistant_ok ? 0 : 1);
 }
 
+function seedDisposableWorkspace() {
+  let workspace = null;
+  if (process.env.XDG_DATA_HOME) {
+    workspace = join(process.env.XDG_DATA_HOME, "cognitiveos", "workspace");
+  } else if (bootstrapPath) {
+    const runtimeRoot = dirname(dirname(bootstrapPath));
+    workspace = join(runtimeRoot, "data", "cognitiveos", "workspace");
+  }
+  if (!workspace) {
+    throw new Error("Path B cannot infer the disposable workspace root");
+  }
+  mkdirSync(workspace, { recursive: true, mode: 0o700 });
+  writeFileSync(
+    join(workspace, "README.md"),
+    "CognitiveOS Personal disposable workspace.\nneedle\n",
+    { encoding: "utf8", mode: 0o600 },
+  );
+  return workspace;
+}
+
+const workspaceRoot = seedDisposableWorkspace();
 const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
 const taskToken = await issueToken(origin, bootstrap, "task");
 const managementToken = await issueToken(origin, bootstrap, "management");
@@ -375,6 +396,8 @@ const summary = {
     after_clear: runtimeAfterClear,
   },
   workspace: {
+    seeded_readme: true,
+    workspace_root: workspaceRoot,
     read: { taskRef: readSpec.taskRef, lifecycle: readLife },
     search: { taskRef: searchSpec.taskRef, lifecycle: searchLife },
     write: { taskRef: writeSpec.taskRef, target: writeTarget, lifecycle: writeLife },

@@ -17,7 +17,7 @@ sources:
 tests:
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:c62fb65a2d51bb393267aecb5608fa4e0a5b32c879c944b7837d840ab8661b3b"
+fingerprint: "sha256:c56c43ed21892c7f72afd0113f0ab6a373dc9a314bf15d3880e4fb24e508f2e6"
 non_claims:
   - 准入同一趟仍不消费 worker 授权、也不获取调度 lease；那是后续 tick 的事。不作 Gate、release、Profile 或 EVAL 升格。
 ---
