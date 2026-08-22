@@ -3,8 +3,8 @@
 - Task: `P8-T13`
 - Branch: `personal/P8-T13-provider-control-plane`
 - Draft PR: [#259](https://github.com/agentkernel/cognitive-os/pull/259)
-- Lease: `lease/personal/P8-T13/provider-control-plane`
-- Product evidence revision: `9427a1b3f411321dbe7626735aa062f460b566c6` (first push; Linux compile/test fail retained)
+- Lease: closed `lease/personal/P8-T13/provider-control-plane`
+- Product evidence revision: `6256f7232d458a14836b1d49d43b1465686fb0b9`
 - Claim ceiling: `hypothesis`
 - Non-claims: no Gate, release, Profile, B01, EVAL, provider-quality, or Agent-benefit promotion
 
@@ -44,14 +44,35 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `10fb686952e763217e60c5d82bc1c97f31f4c469` | **pass** | 8/8 after store Clippy allows. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-10fb6869`. rustc 1.97.1. |
 | Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | `10fb686952e763217e60c5d82bc1c97f31f4c469` | **fail** | admin-cli lib test `clippy::panic`; kernel-server collapsible_if on key rotate; needless_borrow in `store_error`; `too_many_arguments` on `handle_resource_manager_route`. Retained. |
 | Required Ubuntu CI | GitHub Actions | `10fb686952e763217e60c5d82bc1c97f31f4c469` | **fail** | run `32581900056` verify (ubuntu-latest): same four Clippy classes. Windows was still in progress at this row. Retained. |
+| `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | 1/1. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-6256f723`. rustc 1.97.1. Shared `CARGO_TARGET_DIR=/home/wuz/agent-kernel-worktrees/p8-t13-f0fee96f-target`. |
+| `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | 8/8 |
+| Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | 3/3 including Pi/dsh isolation |
+| admin-cli parse `provider_control_plane_verbs_parse_and_refuse_api_key_flag` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | 1/1 |
+| Clippy `-D warnings` workspace `--all-targets` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | `cargo clippy --workspace --all-targets --locked -- -D warnings` |
+| `cargo fmt --all -- --check` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | |
+| Required Ubuntu/Windows CI | GitHub Actions | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | run `32582360429`: resolve-validation-route, verify (ubuntu-latest), verify (windows-latest), and `required-ci` all SUCCESS |
+
+## Acceptance mapping
+
+| Formal acceptance | Evidence |
+|---|---|
+| D01 endpoint trust / SSRF / wrong-channel negatives | Linux `p8_t13_endpoint_trust` 1/1 + kernel-server test `control_plane_refuses_unauth_task_channel_and_untrusted_endpoints` at `6256f723` (embedded credentials, HTTP/private without grants, Anthropic-compatible, header injection, 401, task-channel 403) |
+| D02 named accounts, opaque Secret Store refs, delete blocked by binding | Linux store `secret_material_never_lands_in_sqlite_and_audit_rejects_key_shaped_detail` + `active_binding_blocks_account_delete_and_discovery_failure_preserves_catalog`; kernel-server `create_without_key_preserves_manual_catalog_and_blocks_delete_with_binding` |
+| D03 catalog, manual models, discovery failure preserves catalog/binding | Same kernel-server catalog test + store discovery-failure preserve |
+| D04 usage/cost/audit/retention | Linux store 8/8: unknown not zero, cache unknown, duplicate/historical cost, 30-day events / 90-day aggregates, `cost_unavailable` |
+| D05 Pi vs dsh isolation; no fallback | Linux kernel-server `pi_and_dsh_bindings_are_isolated_before_secret_store`  + store `pi_and_dsh_bindings_are_independent` |
+| D06 observe-only 80%/100% alerts; CLI callers | Linux store `budget_alerts_dedupe_at_80_and_100_and_ignore_unavailable_cost_as_zero`; admin-cli parse refuses `--api-key` |
+| D07 docs-sync, Linux, required CI | Local handbook/consistency/docs-sync **pass**; Linux Clippy+fmt **pass**; required CI `32582360429` **pass** at `6256f723` |
+| Key set/rotate/remove live Secret Store | **not-run** (no approved Secret Store in this campaign; daemon implements set/rotate/remove against opaque refs) |
+| Real provider / live Pi / live dsh qualification | **not-run** |
+| Redirect / proxy-env / oversized body / timeout transport | Reused P1-T09 fixture coverage; not re-run as P8-T13 cells |
 
 ## Blocked paths
 
-- none currently recorded for the private-candidate bound path. Custom
-  Anthropic-compatible endpoints remain refused by design. Real provider
-  calls, live Pi/dsh qualification, Gate, Profile, release, and B01 remain
-  out of scope / `not-run`.
+- none for the private-candidate bound path. Custom Anthropic-compatible
+  endpoints remain refused by design. Real provider calls, live Pi/dsh
+  qualification, Gate, Profile, release, and B01 remain `not-run`.
 
 ## Unique next action
 
-Push the remaining Clippy follow-up (CLI test allow, collapsed key-rotation let-chains, drop needless borrows, allow `too_many_arguments` on the resource-manager front door), then exact-revision Linux Clippy + required CI. Keep PR #259 Draft until Linux Clippy and required CI pass.
+Ready/merge PR [#259](https://github.com/agentkernel/cognitive-os/pull/259) after this docs-head CI, then lease/branch/main. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
