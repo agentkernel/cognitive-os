@@ -389,6 +389,7 @@ dependencies = [
  "rcgen",
  "reqwest",
  "rustls",
+ "rustls-native-certs",
 ]
 
 [[package]]

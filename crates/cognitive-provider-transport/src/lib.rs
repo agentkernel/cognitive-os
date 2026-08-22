@@ -9,11 +9,13 @@ use std::time::Duration;
 
 use cognitive_secret::{
     ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse, ProviderTransport,
-    ProviderTransportError,
+    ProviderTransportError, StreamedProviderExchange,
 };
 
 const MAX_PROVIDER_RESPONSE_BYTES: usize = 1_048_576;
 const MAX_PROVIDER_RESPONSE_READ_BYTES: u64 = 1_048_577;
+
+mod stream_http;
 
 /// Production HTTPS transport for OpenAI-compatible Provider requests.
 ///
@@ -51,6 +53,7 @@ impl RustlsProviderTransport {
         let mut client_builder = reqwest::blocking::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .timeout(timeout)
+            .tcp_nodelay(true)
             .use_rustls_tls();
         for certificate_der in &self.additional_root_certificates_der {
             let certificate = reqwest::Certificate::from_der(certificate_der).map_err(|_| {
@@ -111,6 +114,25 @@ impl ProviderTransport for RustlsProviderTransport {
             body: response_body,
         })
     }
+
+    fn exchange_stream(
+        &self,
+        request: &ProviderHttpRequest,
+        on_status: &mut dyn FnMut(u16) -> Result<(), ProviderTransportError>,
+        on_chunk: &mut dyn FnMut(&[u8]) -> Result<(), ProviderTransportError>,
+    ) -> Result<StreamedProviderExchange, ProviderTransportError> {
+        validate_transport_request(request)?;
+        if request.cancel_requested {
+            return Err(ProviderTransportError::Timeout);
+        }
+
+        stream_http::exchange_stream(
+            &self.additional_root_certificates_der,
+            request,
+            on_status,
+            on_chunk,
+        )
+    }
 }
 
 fn validate_transport_request(request: &ProviderHttpRequest) -> Result<(), ProviderTransportError> {
@@ -143,6 +165,22 @@ fn map_reqwest_error(error: reqwest::Error) -> ProviderTransportError {
         ProviderTransportError::Network {
             detail: "Provider HTTPS exchange failed",
         }
+    }
+}
+
+/// HTTP/1.1 SSE often ends by closing the TCP session. Rustls then reports
+/// UnexpectedEof when the peer omits TLS close_notify. That is end-of-stream,
+/// not a truncated body the caller can retry as a fresh exchange.
+fn is_provider_stream_closed(error: &std::io::Error) -> bool {
+    matches!(
+        error.kind(),
+        std::io::ErrorKind::UnexpectedEof
+            | std::io::ErrorKind::ConnectionReset
+            | std::io::ErrorKind::BrokenPipe
+            | std::io::ErrorKind::ConnectionAborted
+    ) || {
+        let message = error.to_string();
+        message.contains("close_notify") || message.contains("peer closed")
     }
 }
 
@@ -403,6 +441,21 @@ mod tests {
                 .expect_err("unsafe Provider URL must be rejected before egress");
             assert!(matches!(error, ProviderTransportError::Policy { .. }));
         }
+    }
+
+    #[test]
+    fn stream_close_without_tls_notify_is_end_of_stream() {
+        assert!(super::is_provider_stream_closed(&std::io::Error::new(
+            std::io::ErrorKind::UnexpectedEof,
+            "peer closed connection without sending TLS close_notify"
+        )));
+        assert!(super::is_provider_stream_closed(&std::io::Error::from(
+            std::io::ErrorKind::ConnectionReset
+        )));
+        assert!(!super::is_provider_stream_closed(&std::io::Error::new(
+            std::io::ErrorKind::TimedOut,
+            "timed out"
+        )));
     }
 
     #[test]

@@ -14,10 +14,10 @@
  * Path A also requires --api-key-file (0600 or "-") and never logs the key.
  */
 import { spawn } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { fileURLToPath, pathToFileURL } from "node:url";
+import { pathToFileURL } from "node:url";
 import { admitTask, httpJson, issueToken, waitLifecycle } from "./daemon-task.mjs";
 
 function arg(name, fallback) {
@@ -32,7 +32,9 @@ const revisionPin = arg("--revision");
 const dshRoot = arg("--dsh-root");
 const adapterRoot = arg("--adapter-root");
 const origin = arg("--origin", `http://127.0.0.1:${port}`);
-const task = arg("--task", "Reply with the single word pong and nothing else.");
+const DEFAULT_LLM_TASK =
+  "Reply with one sentence that summarizes this text and nothing else: CognitiveOS Personal is a local-first OS for governed agent work.";
+const task = arg("--task", DEFAULT_LLM_TASK);
 const providerPath = arg("--provider-path", "b");
 const apiKeyFile = arg("--api-key-file");
 const directBaseUrl = arg("--direct-base-url", "https://api.deepseek.com");
@@ -48,8 +50,7 @@ if (providerPath === "b" && (!Number.isInteger(port) || port < 1 || !bootstrapPa
 if (providerPath === "a" && !apiKeyFile) {
   throw new Error("Path A requires --api-key-file <0600-path|->");
 }
-const scriptDir = dirname(fileURLToPath(import.meta.url));
-const work = join(tmpdir(), `p8t10-dsh-real-${process.pid}`);
+const work = join(tmpdir(), `p8t11-dsh-real-${process.pid}`);
 mkdirSync(work, { mode: 0o700, recursive: true });
 const bearerFile = join(work, "daemon.bearer");
 const patchFile = join(work, "headless-akp.yml");
@@ -88,27 +89,97 @@ function childEnvironment() {
   env.DSH_HOME = dshHome;
   env.DSH_TELEMETRY_MODE = "DISABLED";
   env.DSH_PERMISSION_MODE = "read-only";
+  const compileCache = join(dshRoot, ".cognitiveos-node-compile-cache");
+  mkdirSync(compileCache, { mode: 0o700, recursive: true });
+  env.NODE_COMPILE_CACHE = compileCache;
   return env;
 }
 
-async function runDsh(patchBody) {
+async function bindRuntime(origin, token, processId) {
+  return httpJson(origin, "POST", "/personal/dsh/runtime", token, {
+    schema_version: 1,
+    surface: "personal-dsh-runtime",
+    op: "bind",
+    process_id: processId,
+  });
+}
+
+async function clearRuntime(origin, token) {
+  return httpJson(origin, "POST", "/personal/dsh/runtime", token, {
+    schema_version: 1,
+    surface: "personal-dsh-runtime",
+    op: "clear",
+  });
+}
+
+function dshCliInvocation(root) {
+  const compiled = join(root, "apps/cli/lib/bin.js");
+  const compiledHostGraph = join(root, "packages/api/gateway/lib/index.js");
+  if (existsSync(compiled) && existsSync(compiledHostGraph)) {
+    return { args: [compiled], mode: "compiled-lib" };
+  }
+  return {
+    args: ["--import", "tsx/esm", join(root, "apps/cli/src/bin.ts")],
+    mode: "tsx-source",
+  };
+}
+
+function llmDeepseekPatch(baseURL, apiKeyEnv) {
+  return [
+    "- id: llm-deepseek",
+    "  config:",
+    `    baseURL: ${baseURL}`,
+    `    apiKeyEnv: ${apiKeyEnv}`,
+    "    thinking: disabled",
+    "    reasoningEffort: off",
+    "    maxTokens: 256",
+    "",
+  ].join("\n");
+}
+
+function assistantLooksComplete(text) {
+  const trimmed = String(text || "").trim();
+  if (!trimmed) return false;
+  if (/^pong\.?$/i.test(trimmed)) return true;
+  return trimmed.split(/\s+/).length >= 4;
+}
+
+function runtimeFacts(payload) {
+  const json = payload?.json ?? payload ?? {};
+  return {
+    state: json.state ?? null,
+    session_count: json.session_count ?? null,
+    process_id_bound: Number.isFinite(json.process_id),
+    process_alive: json.process_alive ?? null,
+    fencing_epochs: Array.isArray(json.sessions)
+      ? json.sessions.map((session) => session.fencing_epoch)
+      : [],
+  };
+}
+
+async function runDsh(patchBody, runtime) {
   writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
   const started = Date.now();
   const ttftHolder = { ms: null };
-  // Invoke the pinned CLI entry with Node. `pnpm dsh` is not portable on an
-  // installed guest: pnpm 11's deps-status check requires git, which Personal
-  // linux-002 does not ship, and copied node_modules are not a pnpm workspace
-  // root. `node --import tsx/esm apps/cli/src/bin.ts` is the same script the
-  // dsh package.json `dsh` entry runs.
+  // Prefer the compiled host CLI (`apps/cli/lib/bin.js`) when `build:lib`
+  // outputs exist. `pnpm dsh` is not portable on an installed guest (pnpm 11
+  // deps-status wants git). tsx-from-source on a 2 vCPU guest was ~11 s of
+  // harness bootstrap before any Provider byte; compiled-lib is the product
+  // launch path. Fallback remains `node --import tsx/esm apps/cli/src/bin.ts`.
+  const cli = dshCliInvocation(dshRoot);
   const child = spawn(
     process.execPath,
-    ["--import", "tsx/esm", join(dshRoot, "apps/cli/src/bin.ts"), "--profile", "headless", "--patch", patchFile, task],
+    [...cli.args, "--profile", "headless", "--patch", patchFile, task],
     {
       cwd: dshRoot,
       env: childEnvironment(),
       stdio: ["ignore", "pipe", "pipe"],
     },
   );
+  let runtimeAfterBind = null;
+  if (runtime) {
+    runtimeAfterBind = runtimeFacts(await bindRuntime(runtime.origin, runtime.token, child.pid));
+  }
   let stdout = "";
   let stderr = "";
   child.stdout.setEncoding("utf8");
@@ -135,6 +206,8 @@ async function runDsh(patchBody) {
     assistant,
     stderrRedactedBytes: Buffer.byteLength(stderrRedacted, "utf8"),
     stderrPreviewRedacted: stderrRedacted.split(/\r?\n/).slice(-40).join("\n").slice(0, 2048),
+    runtimeAfterBind,
+    cliMode: cli.mode,
   };
 }
 
@@ -147,9 +220,7 @@ if (providerPath === "a") {
     { encoding: "utf8", mode: 0o600 },
   );
   chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
-  const outcome = await runDsh(
-    ["- id: llm-deepseek", "  config:", `    baseURL: ${directBaseUrl}`, "    apiKeyEnv: DEEPSEEK_KEY", ""].join("\n"),
-  );
+  const outcome = await runDsh(llmDeepseekPatch(directBaseUrl, "DEEPSEEK_KEY"));
   rmSync(work, { recursive: true, force: true });
   const summary = {
     revision_pin: revisionPin ?? null,
@@ -160,17 +231,40 @@ if (providerPath === "a") {
     dsh_exit: outcome.exitCode,
     elapsed_ms: outcome.elapsedMs,
     ttft_ms: outcome.ttftMs,
+    cli_mode: outcome.cliMode,
     assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
     assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
+    assistant_ok: assistantLooksComplete(outcome.assistant),
     stderr_redacted_bytes: outcome.stderrRedactedBytes,
     stderr_preview_redacted: outcome.stderrPreviewRedacted,
     workspace: null,
     non_claims: ["Gate", "release", "Profile", "B01", "Agent-benefit"],
   };
   process.stdout.write(`${JSON.stringify(summary)}\n`);
-  process.exit(outcome.exitCode === 0 && summary.assistant_is_pong ? 0 : 1);
+  process.exit(outcome.exitCode === 0 && summary.assistant_ok ? 0 : 1);
 }
 
+function seedDisposableWorkspace() {
+  let workspace = null;
+  if (process.env.XDG_DATA_HOME) {
+    workspace = join(process.env.XDG_DATA_HOME, "cognitiveos", "workspace");
+  } else if (bootstrapPath) {
+    const runtimeRoot = dirname(dirname(bootstrapPath));
+    workspace = join(runtimeRoot, "data", "cognitiveos", "workspace");
+  }
+  if (!workspace) {
+    throw new Error("Path B cannot infer the disposable workspace root");
+  }
+  mkdirSync(workspace, { recursive: true, mode: 0o700 });
+  writeFileSync(
+    join(workspace, "README.md"),
+    "CognitiveOS Personal disposable workspace.\nneedle\n",
+    { encoding: "utf8", mode: 0o600 },
+  );
+  return workspace;
+}
+
+const workspaceRoot = seedDisposableWorkspace();
 const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
 const taskToken = await issueToken(origin, bootstrap, "task");
 const managementToken = await issueToken(origin, bootstrap, "management");
@@ -210,34 +304,6 @@ writeFileSync(
 );
 chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
 
-function startSseBridge(upstream) {
-  const child = spawn(
-    process.execPath,
-    [join(scriptDir, "provider-sse-bridge.mjs"), "--listen", "127.0.0.1:0", "--upstream", upstream],
-    { stdio: ["ignore", "pipe", "pipe"] },
-  );
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error("sse bridge listen timeout")), 5000);
-    const onExit = (code) => {
-      clearTimeout(timer);
-      reject(new Error(`sse bridge exited ${code}`));
-    };
-    child.stdout.setEncoding("utf8");
-    child.stdout.on("data", (chunk) => {
-      const match = String(chunk).match(/listening ([^\s]+):(\d+)/);
-      if (match) {
-        clearTimeout(timer);
-        child.off("exit", onExit);
-        resolve({ child, origin: `http://127.0.0.1:${match[2]}` });
-      }
-    });
-    child.once("exit", onExit);
-  });
-}
-
-const sseBridge = await startSseBridge(`${origin}/provider/v1`);
-const providerBase = `${sseBridge.origin}/provider/v1`;
-
 function pluginHrefFor(_entryName) {
   return pathToFileURL(join(adapterRoot, "plugin.bundle.cjs")).href;
 }
@@ -269,6 +335,7 @@ function pluginInsert(id, sessionId, pluginId, taskRef, events) {
 }
 
 const selected = await httpJson(origin, "GET", "/provider/v1/selected-model", managementToken);
+const providerBase = `${origin}/provider/v1`;
 const outcome = await runDsh(
   [
     "- insert:",
@@ -287,19 +354,17 @@ const outcome = await runDsh(
         operation: "WorkspaceWrite",
         payload: {
           target: writeTarget,
-          input_b64: Buffer.from("p8-t10 disposable write\n", "utf8").toString("base64"),
+          input_b64: Buffer.from("p8-t11 disposable write\n", "utf8").toString("base64"),
           preimage: "absent",
         },
       },
     ]),
-    "- id: llm-deepseek",
-    "  config:",
-    `    baseURL: ${providerBase}`,
-    "    apiKeyEnv: DAEMON_BEARER",
-    "",
+    llmDeepseekPatch(providerBase, "DAEMON_BEARER"),
   ].join("\n"),
+  { origin, token: managementToken },
 );
-sseBridge.child.kill("SIGTERM");
+const runtimeAfterRun = runtimeFacts(await httpJson(origin, "GET", "/personal/dsh/runtime", managementToken));
+const runtimeAfterClear = runtimeFacts(await clearRuntime(origin, managementToken));
 const [readLife, searchLife, writeLife] = await Promise.all([
   waitLifecycle(origin, taskToken, readSpec.taskRef, { want: "COMPLETED" }),
   waitLifecycle(origin, taskToken, searchSpec.taskRef, { want: "COMPLETED" }),
@@ -312,18 +377,27 @@ const summary = {
   revision_pin: revisionPin ?? null,
   guest_port: port,
   provider_path: "b",
-  adapter: "dsh --patch cognitiveos-akp Workspace* + llm-deepseek via SSE-to-unary daemon provider proxy",
+  adapter: "dsh --patch cognitiveos-akp Workspace* + llm-deepseek via daemon Provider SSE proxy",
   candidate_only: true,
   dsh_response_is_not_task_completion: true,
   selected_model: selected.json?.model ?? selected.json?.selected_model ?? null,
   dsh_exit: outcome.exitCode,
   elapsed_ms: outcome.elapsedMs,
   ttft_ms: outcome.ttftMs,
+  cli_mode: outcome.cliMode,
   assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
   assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
+  assistant_ok: assistantLooksComplete(outcome.assistant),
   stderr_redacted_bytes: outcome.stderrRedactedBytes,
   stderr_preview_redacted: outcome.stderrPreviewRedacted,
+  runtime: {
+    after_bind: outcome.runtimeAfterBind,
+    after_run: runtimeAfterRun,
+    after_clear: runtimeAfterClear,
+  },
   workspace: {
+    seeded_readme: true,
+    workspace_root: workspaceRoot,
     read: { taskRef: readSpec.taskRef, lifecycle: readLife },
     search: { taskRef: searchSpec.taskRef, lifecycle: searchLife },
     write: { taskRef: writeSpec.taskRef, target: writeTarget, lifecycle: writeLife },
@@ -333,4 +407,4 @@ const summary = {
 process.stdout.write(`${JSON.stringify(summary)}\n`);
 const workspacePass =
   readLife === "COMPLETED" && searchLife === "COMPLETED" && writeLife === "COMPLETED";
-process.exit(outcome.exitCode === 0 && summary.assistant_is_pong && workspacePass ? 0 : 1);
+process.exit(outcome.exitCode === 0 && summary.assistant_ok && workspacePass ? 0 : 1);

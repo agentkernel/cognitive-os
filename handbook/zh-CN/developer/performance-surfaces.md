@@ -22,7 +22,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:a87532f56807ec2d355b024727e17cd5643e3652e935dac5d5befe10cacd8a85"
+fingerprint: "sha256:8c7f30cf4c587fd3a33969b6ff134d9aa2ef62aa65605a684d654c9da698abd3"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---
@@ -62,7 +62,7 @@ non_claims:
 T1）。campaign **结果**（哪些 cell 执行、retained 计数、digest）由正式计划的证据记
 录拥有——只链接、绝不复制。
 
-## dsh AKP 适配器计时（P8-T09 / P8-T10）
+## dsh AKP 适配器计时（P8-T09 / P8-T11）
 
 `@cognitiveos/dsh-akp-adapter` 为每次仅 candidate 的 submit 记录 serialization、
 transport 与 total。这些字段只是 Path A（dsh → DeepSeek Flash）与 Path B
@@ -70,9 +70,12 @@ transport 与 total。这些字段只是 Path A（dsh → DeepSeek Flash）与 P
 Gate/release/Profile/B01/Agent-benefit 结论。linux-002 harness
 `scripts/linux002-e2e.mjs` 会在 shim submit 上记录这些计时并等待 Task
 `COMPLETED`；`scripts/dsh-real-process.mjs` 记录真实 dsh 进程墙钟时间与首次
-stdout（TTFT hook）：Path B 经 loopback SSE-to-unary 桥接到 daemon Provider
-代理，Path A 直连 Flash；`scripts/paired-path.mjs` 在同一主机重复两条路径。
-Workspace* `startupEvents` 仍是 candidate 事件。都不是 Gate 样本。
+stdout（TTFT hook）：Path B 经 daemon Provider SSE 代理，Path A 直连 Flash。
+helper 在存在 `build:lib` 产物时优先用编译后的 `apps/cli/lib/bin.js`；在 2 vCPU
+guest 上从 tsx 源码启动此前大约要 10 s 的 harness 引导。
+`scripts/provider-raw-probe.mjs` 在同一主机上不经 dsh 测量；`scripts/paired-path.mjs`
+在同一主机重复两条路径。Workspace* `startupEvents` 仍是 candidate 事件。都不是
+Gate 样本。
 
 状态 `partial` 是因为 daemon 自身不暴露持续性能仪表；这里的一切都是选择性使用的测量
 工具。

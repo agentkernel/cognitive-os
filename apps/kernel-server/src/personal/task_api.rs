@@ -12,14 +12,16 @@ use std::fs::{self, OpenOptions};
 use std::io::Write;
 use std::path::Path;
 use std::sync::Arc;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use crate::personal::scheduler_authority::{
     PrivatePiCandidateProposer, UntrustedPiCandidate, candidate_admission_command_from_policy,
     context_resolution_command_from_policy, propose_persist_and_admit_candidate,
 };
 use cognitive_akp::deepseek_harness::{
-    BRIDGE_PROTOCOL, DeepSeekHarnessAdapter, DshAdapterError, DshAdapterRequest, DshWireResponse,
-    MAX_FRAME_BYTES, PINNED_DSH_REVISION, PluginEventKind, default_config, handle_jsonl_line,
+    AdapterState, BRIDGE_PROTOCOL, DeepSeekHarnessAdapter, DshAdapterError, DshAdapterRequest,
+    DshWireResponse, MAX_FRAME_BYTES, PINNED_DSH_REVISION, PluginEventKind, default_config,
+    handle_jsonl_line,
 };
 use cognitive_contracts::generated::common_defs::Digest;
 use cognitive_contracts::generated::governed_object_header::GovernedObjectHeaderSensitivity;
@@ -261,6 +263,8 @@ pub(crate) struct TaskApi {
     next_watch_sequence: u64,
     watch_events: VecDeque<(u64, Value)>,
     dsh_sessions: HashMap<String, DeepSeekHarnessAdapter>,
+    dsh_process_id: Option<u32>,
+    dsh_last_heartbeat_unix_ms: Option<u64>,
 }
 
 impl TaskApi {
@@ -272,6 +276,8 @@ impl TaskApi {
             next_watch_sequence: 1,
             watch_events: VecDeque::new(),
             dsh_sessions: HashMap::new(),
+            dsh_process_id: None,
+            dsh_last_heartbeat_unix_ms: None,
         }
     }
 
@@ -287,6 +293,8 @@ impl TaskApi {
             next_watch_sequence: 1,
             watch_events: VecDeque::new(),
             dsh_sessions: HashMap::new(),
+            dsh_process_id: None,
+            dsh_last_heartbeat_unix_ms: None,
         }
     }
 
@@ -750,6 +758,72 @@ impl TaskApi {
             )),
             None => ok(DshWireResponse::rejected(0, &DshAdapterError::Inactive)),
         }
+    }
+
+    /// Observation-only snapshot of dsh sessions and an optional bound process.
+    /// Process liveness on Linux uses `/proc/{pid}` existence only; cmdline and
+    /// environ are never opened. This is not an authority writer.
+    pub(crate) fn dsh_runtime_snapshot(&self) -> Value {
+        let sessions: Vec<Value> = self
+            .dsh_sessions
+            .iter()
+            .map(|(session_id, adapter)| {
+                json!({
+                    "session_id": session_id,
+                    "state": dsh_adapter_state_name(adapter.state()),
+                    "fencing_epoch": adapter.fencing_epoch(),
+                    "last_sequence": adapter.last_sequence(),
+                    "task_ref": adapter.bound_task_ref(),
+                })
+            })
+            .collect();
+        let process_alive = self.dsh_process_id.and_then(dsh_process_alive);
+        let state = if process_alive == Some(false) {
+            "CRASHED"
+        } else if !self.dsh_sessions.is_empty() || self.dsh_process_id.is_some() {
+            "ACTIVE"
+        } else {
+            "INACTIVE"
+        };
+        json!({
+            "schema_version": 1,
+            "surface": "personal-dsh-runtime",
+            "state": state,
+            "session_count": self.dsh_sessions.len(),
+            "sessions": sessions,
+            "process_id": self.dsh_process_id,
+            "process_alive": process_alive,
+            "last_heartbeat_unix_ms": self.dsh_last_heartbeat_unix_ms,
+            "candidate_only": true,
+            "authority_side_effects": false,
+            "dsh_response_is_not_task_completion": true,
+            "gate_claim": "not-claimed",
+            "profile_claim": "not-claimed",
+        })
+    }
+
+    pub(crate) fn dsh_bind_process(&mut self, process_id: u32) -> Result<Value, String> {
+        if process_id == 0 {
+            return Err("process_id must be a nonzero pid".to_owned());
+        }
+        self.dsh_process_id = Some(process_id);
+        self.dsh_last_heartbeat_unix_ms = Some(unix_ms_now());
+        Ok(self.dsh_runtime_snapshot())
+    }
+
+    pub(crate) fn dsh_heartbeat(&mut self) -> Result<Value, String> {
+        if self.dsh_process_id.is_none() && self.dsh_sessions.is_empty() {
+            return Err("dsh runtime is inactive".to_owned());
+        }
+        self.dsh_last_heartbeat_unix_ms = Some(unix_ms_now());
+        Ok(self.dsh_runtime_snapshot())
+    }
+
+    pub(crate) fn dsh_clear_process(&mut self) -> Value {
+        self.dsh_process_id = None;
+        self.dsh_last_heartbeat_unix_ms = None;
+        self.dsh_sessions.clear();
+        self.dsh_runtime_snapshot()
     }
 
     fn dsh_event(&mut self, body: &[u8], value: &Value) -> TaskApiResponse {
@@ -2442,6 +2516,35 @@ fn persist_governance_root(
     })
 }
 
+fn dsh_adapter_state_name(state: AdapterState) -> &'static str {
+    match state {
+        AdapterState::Registered => "REGISTERED",
+        AdapterState::Active => "ACTIVE",
+        AdapterState::Stopped => "STOPPED",
+    }
+}
+
+fn unix_ms_now() -> u64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|elapsed| u64::try_from(elapsed.as_millis()).unwrap_or(u64::MAX))
+        .unwrap_or(0)
+}
+
+/// Linux: `/proc/{pid}` directory existence only. Never open cmdline/environ.
+/// Other hosts report unknown rather than inventing a crash.
+fn dsh_process_alive(process_id: u32) -> Option<bool> {
+    #[cfg(unix)]
+    {
+        Some(std::path::Path::new(&format!("/proc/{process_id}")).is_dir())
+    }
+    #[cfg(not(unix))]
+    {
+        let _ = process_id;
+        None
+    }
+}
+
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::panic)]
 mod evidence_tests {
@@ -2740,5 +2843,48 @@ mod dsh_akp_tests {
         assert_eq!(restart_body["accepted"], false);
         assert_eq!(restart_body["error"], "INACTIVE");
         assert_eq!(restart_body["candidate_only"], true);
+    }
+
+    #[test]
+    fn dsh_runtime_snapshot_tracks_sessions_bind_and_clear() {
+        let mut api = TaskApi::new(layout());
+        let inactive = api.dsh_runtime_snapshot();
+        assert_eq!(inactive["state"], "INACTIVE");
+        assert_eq!(inactive["session_count"], 0);
+        assert_eq!(inactive["candidate_only"], true);
+        assert_eq!(inactive["dsh_response_is_not_task_completion"], true);
+
+        api.handle(
+            "POST /task/akp/dsh HTTP/1.1",
+            &serde_json::to_vec(&json!({
+                "op": "activate",
+                "dsh_version": PINNED_DSH_REVISION,
+                "session_id": "dsh-session-runtime",
+                "fencing_epoch": 1
+            }))
+            .expect("encode"),
+            "principal://local/owner",
+        );
+        let active = api.dsh_runtime_snapshot();
+        assert_eq!(active["state"], "ACTIVE");
+        assert_eq!(active["session_count"], 1);
+        assert_eq!(active["sessions"][0]["session_id"], "dsh-session-runtime");
+        assert_eq!(active["sessions"][0]["fencing_epoch"], 1);
+
+        let bound = api.dsh_bind_process(std::process::id()).expect("bind");
+        assert_eq!(bound["process_id"], std::process::id());
+        assert_eq!(bound["state"], "ACTIVE");
+        let heartbeat = api.dsh_heartbeat().expect("heartbeat");
+        assert!(heartbeat["last_heartbeat_unix_ms"].as_u64().unwrap() > 0);
+
+        let cleared = api.dsh_clear_process();
+        assert_eq!(cleared["state"], "INACTIVE");
+        assert_eq!(cleared["process_id"], Value::Null);
+        assert_eq!(cleared["session_count"], 0);
+
+        assert_eq!(
+            api.dsh_bind_process(0).expect_err("pid 0 is refused"),
+            "process_id must be a nonzero pid"
+        );
     }
 }

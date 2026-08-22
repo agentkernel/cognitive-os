@@ -123,6 +123,25 @@ pub fn observation_response_headers(
     )
 }
 
+/// Streaming success headers flush before Provider network total is known, so
+/// they never include `X-CognitiveOS-Provider-Network-Nanos`. Correlation is
+/// still echoed when the observation gate is open.
+pub fn observation_streaming_response_headers(
+    authorized: bool,
+    correlation_id: Result<&str, CorrelationRefusal>,
+) -> String {
+    if !authorized {
+        return String::new();
+    }
+    let Ok(correlation_id) = correlation_id else {
+        return String::new();
+    };
+    if !is_opaque_correlation_id(correlation_id) {
+        return String::new();
+    }
+    format!("X-CognitiveOS-Correlation-Id: {correlation_id}\r\n")
+}
+
 #[cfg(test)]
 #[allow(clippy::expect_used, clippy::unwrap_used)]
 mod tests {

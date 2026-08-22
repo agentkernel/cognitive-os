@@ -29,6 +29,7 @@ function percentile(values, p) {
 }
 
 const helper = join(dirname(fileURLToPath(import.meta.url)), "dsh-real-process.mjs");
+const rawProbe = join(dirname(fileURLToPath(import.meta.url)), "provider-raw-probe.mjs");
 const n = Number(arg("--n", "5"));
 const dshRoot = arg("--dsh-root");
 const adapterRoot = arg("--adapter-root");
@@ -36,7 +37,10 @@ const revision = arg("--revision");
 const apiKeyFile = arg("--api-key-file");
 const port = arg("--port");
 const bootstrapFile = arg("--bootstrap-file");
-const task = arg("--task", "Reply with the single word pong and nothing else.");
+const DEFAULT_LLM_TASK =
+  "Reply with one sentence that summarizes this text and nothing else: CognitiveOS Personal is a local-first OS for governed agent work.";
+const task = arg("--task", DEFAULT_LLM_TASK);
+const runRaw = process.argv.includes("--raw");
 if (!Number.isInteger(n) || n < 1 || !dshRoot || !adapterRoot || !revision || !apiKeyFile) {
   throw new Error("--n --dsh-root --adapter-root --revision --api-key-file are required");
 }
@@ -115,7 +119,7 @@ function runSample(providerPath, extraArgs) {
       resolve({
         path: providerPath,
         exit: code,
-        ok: code === 0 && parsed?.assistant_is_pong === true,
+        ok: code === 0 && (parsed?.assistant_ok === true || parsed?.assistant_is_pong === true),
         elapsed_ms: parsed?.elapsed_ms ?? null,
         ttft_ms: parsed?.ttft_ms ?? null,
         workspace: parsed?.workspace ?? null,
@@ -130,6 +134,39 @@ function runSample(providerPath, extraArgs) {
 const keyMaterial = await materializeKeyFile(apiKeyFile);
 const resolvedKeyFile = keyMaterial.path;
 try {
+  let raw = null;
+  if (runRaw) {
+    raw = await new Promise((resolve, reject) => {
+      const child = spawn(
+        process.execPath,
+        [rawProbe, "--api-key-file", resolvedKeyFile, "--prompt", task],
+        { stdio: ["ignore", "pipe", "pipe"] },
+      );
+      let stdout = "";
+      child.stdout.setEncoding("utf8");
+      child.stdout.on("data", (chunk) => {
+        stdout += chunk;
+      });
+      child.on("close", (code) => {
+        const line = stdout.trim().split(/\r?\n/).filter(Boolean).at(-1) ?? "";
+        let parsed = null;
+        try {
+          parsed = JSON.parse(line);
+        } catch {
+          parsed = null;
+        }
+        resolve({
+          exit: code,
+          elapsed_ms: parsed?.elapsed_ms ?? null,
+          ttfb_ms: parsed?.ttfb_ms ?? null,
+          status: parsed?.status ?? null,
+          stream: parsed?.stream ?? null,
+          body_bytes: parsed?.body_bytes ?? null,
+        });
+      });
+      child.on("error", reject);
+    });
+  }
   const retained = { a: [], b: [] };
   const discarded = { a: 0, b: 0 };
   for (const path of ["a", "b"]) {
@@ -184,17 +221,19 @@ try {
       : null;
 
   const report = {
-    kind: "p8-t10-paired-path-observation",
+    kind: "p8-t11-paired-path-observation",
     same_host: true,
     n_requested: n,
+    raw_provider: raw,
     path_a: pathA,
     path_b: pathB,
     overhead_b_minus_a_p50_ms: overhead,
     lossless_preset: false,
     limitations: [
-      "Provider network dominates wall time; n is small",
-      "Path B includes Workspace* admits plus SSE-to-unary conversion",
+      "Provider network still dominates wall time when the model is slow; n is small",
+      "Path B includes Workspace* admits plus daemon SSE proxy; Path A is LLM-only direct Flash",
       "TTFT is first stdout byte of the dsh process, not a streaming token timestamp",
+      "NODE_COMPILE_CACHE is set for the dsh Node/tsx child; first sample may still be cold",
     ],
     non_claims: ["Gate", "release", "Profile", "B01", "Agent-benefit", "lossless"],
   };

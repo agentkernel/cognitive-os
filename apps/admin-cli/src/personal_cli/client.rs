@@ -73,6 +73,16 @@ impl PersonalDaemonClient {
         self.get_authorized("/personal/doctor")
     }
 
+    /// `GET /personal/dsh/runtime` observation of dsh sessions and process bind.
+    pub fn get_dsh_runtime(&self) -> Result<String, PersonalDaemonClientError> {
+        self.get_authorized("/personal/dsh/runtime")
+    }
+
+    /// `POST /personal/dsh/runtime` observation bind/heartbeat/clear.
+    pub fn post_dsh_runtime(&self, body: &str) -> Result<String, PersonalDaemonClientError> {
+        self.post_authorized("/personal/dsh/runtime", body)
+    }
+
     /// `GET /resource/v1/projection` through the management-only projection channel.
     pub fn get_resource_projection(
         &self,

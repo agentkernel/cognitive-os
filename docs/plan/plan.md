@@ -1242,6 +1242,15 @@ Pi 不可以：
 - linux-002：真实 WorkspaceRead/Search 与可丢弃 Write 走 Intent/Effect/verification/acceptance；
   同机 Path A/B n≥5。dsh 响应不是 Task 完成。不预设无损。
 
+### P8-T11 — Provider streaming, dsh OS runtime inspect, real-task A/B
+
+- Public Provider proxy 把 `stream:true` 以 SSE 透传到 selected Flash，禁止再经
+  SSE-to-unary 桥等待完整 JSON；Pi 与 private-candidate 保持 unary。
+- `GET /personal/dsh/runtime` 与 `cognitive dsh status` 观察 session/process/lifecycle。
+- linux-002：raw Provider / Path A / 已安装 Path B；真实 read/search/write + 非 `pong`
+  LLM 任务；n≥5。P8-T10 ~10.5 s 主因是 guest 上 tsx-from-source，不是 Provider TTFB。
+  产品路径优先编译后的 `apps/cli/lib/bin.js`。dsh 响应不是 Task 完成。不预设无损。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

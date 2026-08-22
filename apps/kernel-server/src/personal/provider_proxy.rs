@@ -1,7 +1,9 @@
-//! Daemon-owned, non-streaming Provider proxy for the Pi Personal surface.
+//! Daemon-owned Provider proxy for the Pi Personal surface.
 //!
 //! The proxy is deliberately not an authority writer. It only attaches the
 //! daemon-resolved Provider credential to a bounded outbound HTTPS request.
+//! Public `stream:true` requests are forwarded as SSE; private-candidate and
+//! Pi conversation clients remain unary.
 
 use std::time::Instant;
 
@@ -72,6 +74,26 @@ pub struct TimedProviderResponse {
     pub provider_network_elapsed_nanos: u128,
 }
 
+/// Streaming public-proxy outcome. Body bytes are delivered only through the
+/// caller's chunk callback.
+pub struct TimedStreamedProviderResponse {
+    pub status: u16,
+    pub preflight_elapsed_nanos: u128,
+    /// First upstream body byte, measured for campaign telemetry. Not a wire header
+    /// because SSE headers are flushed before the stream ends.
+    #[allow(dead_code)]
+    pub first_byte_nanos: u128,
+    pub provider_network_elapsed_nanos: u128,
+    #[allow(dead_code)]
+    pub body_bytes: usize,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+struct ValidatedChatRequest {
+    model: String,
+    stream: bool,
+}
+
 impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport, T> {
     /// Build a proxy around the daemon-owned secret backend and transport.
     pub fn new(
@@ -102,8 +124,48 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         &self,
         request_body: &[u8],
     ) -> Result<TimedProviderResponse, ProviderProxyError> {
-        let requested_model = validate_chat_request(request_body)?;
-        self.forward_selected_chat_completion(requested_model, request_body)
+        let validated = validate_chat_request(request_body)?;
+        if validated.stream {
+            return Err(ProviderProxyError::StreamingUnsupported);
+        }
+        self.forward_selected_chat_completion(validated.model, request_body)
+    }
+
+    /// Forward one public `stream:true` completion, flushing upstream SSE bytes
+    /// through the caller's callbacks without waiting for a unary JSON body.
+    ///
+    /// `on_preflight` runs after SecretStore/selected-model work and before any
+    /// upstream byte. `on_status` runs after the upstream status is known and
+    /// before the first body chunk.
+    pub fn forward_streaming_chat_completion(
+        &self,
+        request_body: &[u8],
+        on_preflight: &mut dyn FnMut(u128) -> Result<(), ProviderProxyError>,
+        on_status: &mut dyn FnMut(u16) -> Result<(), ProviderProxyError>,
+        on_chunk: &mut dyn FnMut(&[u8]) -> Result<(), ProviderProxyError>,
+    ) -> Result<TimedStreamedProviderResponse, ProviderProxyError> {
+        let validated = validate_chat_request(request_body)?;
+        if !validated.stream {
+            return Err(ProviderProxyError::InvalidRequest);
+        }
+        let (request, preflight_elapsed_nanos) =
+            self.prepare_selected_request(validated.model, request_body, true)?;
+        on_preflight(preflight_elapsed_nanos)?;
+        let streamed = self
+            .transport
+            .exchange_stream(
+                &request,
+                &mut |status| on_status(status).map_err(proxy_callback_to_transport),
+                &mut |chunk| on_chunk(chunk).map_err(proxy_callback_to_transport),
+            )
+            .map_err(map_transport_error)?;
+        Ok(TimedStreamedProviderResponse {
+            status: streamed.status,
+            preflight_elapsed_nanos,
+            first_byte_nanos: streamed.first_byte_nanos,
+            provider_network_elapsed_nanos: streamed.provider_network_elapsed_nanos,
+            body_bytes: streamed.body_bytes,
+        })
     }
 
     /// Forward one private Pi candidate completion and reject any upstream
@@ -115,9 +177,12 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
         let sanitized_body = sanitize_private_candidate_request(request_body)?;
-        let requested_model = validate_chat_request(&sanitized_body)?;
+        let validated = validate_chat_request(&sanitized_body)?;
+        if validated.stream {
+            return Err(ProviderProxyError::StreamingUnsupported);
+        }
         let timed_response =
-            self.forward_selected_chat_completion(requested_model, &sanitized_body)?;
+            self.forward_selected_chat_completion(validated.model, &sanitized_body)?;
         validate_private_candidate_response(&timed_response.response)?;
         Ok(timed_response.response)
     }
@@ -127,6 +192,26 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         requested_model: String,
         request_body: &[u8],
     ) -> Result<TimedProviderResponse, ProviderProxyError> {
+        let (request, preflight_elapsed_nanos) =
+            self.prepare_selected_request(requested_model, request_body, false)?;
+        let provider_network_started_at = Instant::now();
+        let response = self
+            .transport
+            .exchange(&request)
+            .map_err(map_transport_error)?;
+        Ok(TimedProviderResponse {
+            response,
+            preflight_elapsed_nanos,
+            provider_network_elapsed_nanos: provider_network_started_at.elapsed().as_nanos().max(1),
+        })
+    }
+
+    fn prepare_selected_request(
+        &self,
+        requested_model: String,
+        request_body: &[u8],
+        stream: bool,
+    ) -> Result<(ProviderHttpRequest, u128), ProviderProxyError> {
         let preflight_started_at = Instant::now();
         let provider_key_service =
             ProviderKeyService::new(self.secret_store, self.config_repository.clone());
@@ -148,6 +233,13 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         let authorization_value =
             bearer_authorization_header_value(provider_material.expose_bytes())
                 .map_err(|_| ProviderProxyError::SecretUnavailable)?;
+        let mut headers = vec![
+            ("Authorization".to_owned(), authorization_value),
+            ("Content-Type".to_owned(), "application/json".to_owned()),
+        ];
+        if stream {
+            headers.push(("Accept".to_owned(), "text/event-stream".to_owned()));
+        }
         let request = ProviderHttpRequest {
             method: ProviderHttpMethod::Post,
             url: format!(
@@ -155,28 +247,12 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
                 provider_config.base_url().trim_end_matches('/'),
                 PROVIDER_CHAT_COMPLETIONS_PATH
             ),
-            headers: vec![
-                ("Authorization".to_owned(), authorization_value),
-                ("Content-Type".to_owned(), "application/json".to_owned()),
-            ],
+            headers,
             body: Some(request_body.to_vec()),
             timeout_ms: 60_000,
             cancel_requested: false,
         };
-        // Preflight ends where the credential is bound to a built request, so
-        // the two stages are disjoint and neither absorbs the other.
-        let preflight_elapsed_nanos = preflight_started_at.elapsed().as_nanos().max(1);
-        let provider_network_started_at = Instant::now();
-        let response = self
-            .transport
-            .exchange(&request)
-            .map_err(map_transport_error)?;
-        Ok(TimedProviderResponse {
-            response,
-            preflight_elapsed_nanos,
-            // Campaign evidence refuses zero-duration stages.
-            provider_network_elapsed_nanos: provider_network_started_at.elapsed().as_nanos().max(1),
-        })
+        Ok((request, preflight_started_at.elapsed().as_nanos().max(1)))
     }
 }
 
@@ -242,21 +318,26 @@ fn private_candidate_message_is_text_only(
     }
 }
 
-fn validate_chat_request(request_body: &[u8]) -> Result<String, ProviderProxyError> {
+fn validate_chat_request(request_body: &[u8]) -> Result<ValidatedChatRequest, ProviderProxyError> {
     let request_json: serde_json::Value =
         serde_json::from_slice(request_body).map_err(|_| ProviderProxyError::InvalidRequest)?;
     let request_object = request_json
         .as_object()
         .ok_or(ProviderProxyError::InvalidRequest)?;
-    if request_object.get("stream") == Some(&serde_json::Value::Bool(true)) {
-        return Err(ProviderProxyError::StreamingUnsupported);
-    }
-    request_object
+    let stream = request_object.get("stream") == Some(&serde_json::Value::Bool(true));
+    let model = request_object
         .get("model")
         .and_then(serde_json::Value::as_str)
         .filter(|model_id| !model_id.is_empty())
         .map(str::to_owned)
-        .ok_or(ProviderProxyError::InvalidRequest)
+        .ok_or(ProviderProxyError::InvalidRequest)?;
+    Ok(ValidatedChatRequest { model, stream })
+}
+
+fn proxy_callback_to_transport(_error: ProviderProxyError) -> ProviderTransportError {
+    ProviderTransportError::Network {
+        detail: "streaming callback failed",
+    }
 }
 
 fn map_provider_key_error(error: ProviderKeyServiceError) -> ProviderProxyError {
@@ -291,7 +372,9 @@ mod tests {
     use std::sync::{Arc, Mutex};
     use std::time::{SystemTime, UNIX_EPOCH};
 
-    use super::{ProviderProxyError, ProviderProxyService, validate_chat_request};
+    use super::{
+        ProviderProxyError, ProviderProxyService, ValidatedChatRequest, validate_chat_request,
+    };
     #[cfg(unix)]
     use super::{sanitize_private_candidate_request, validate_private_candidate_response};
     use cognitive_secret::{
@@ -327,6 +410,51 @@ mod tests {
         }
     }
 
+    struct DelayedStreamTransport {
+        delay: std::time::Duration,
+        chunks: Vec<Vec<u8>>,
+    }
+
+    impl ProviderTransport for DelayedStreamTransport {
+        fn exchange(
+            &self,
+            _request: &ProviderHttpRequest,
+        ) -> Result<ProviderHttpResponse, ProviderTransportError> {
+            Err(ProviderTransportError::Policy {
+                detail: "delayed stream transport is streaming-only",
+            })
+        }
+
+        fn exchange_stream(
+            &self,
+            _request: &ProviderHttpRequest,
+            on_status: &mut dyn FnMut(u16) -> Result<(), ProviderTransportError>,
+            on_chunk: &mut dyn FnMut(&[u8]) -> Result<(), ProviderTransportError>,
+        ) -> Result<cognitive_secret::StreamedProviderExchange, ProviderTransportError> {
+            let started = std::time::Instant::now();
+            on_status(200)?;
+            let mut body_bytes = 0_usize;
+            let mut first_byte_nanos = None;
+            for (index, chunk) in self.chunks.iter().enumerate() {
+                if index > 0 {
+                    std::thread::sleep(self.delay);
+                }
+                if first_byte_nanos.is_none() && !chunk.is_empty() {
+                    first_byte_nanos = Some(started.elapsed().as_nanos().max(1));
+                }
+                on_chunk(chunk)?;
+                body_bytes += chunk.len();
+            }
+            let provider_network_elapsed_nanos = started.elapsed().as_nanos().max(1);
+            Ok(cognitive_secret::StreamedProviderExchange {
+                status: 200,
+                first_byte_nanos: first_byte_nanos.unwrap_or(provider_network_elapsed_nanos),
+                provider_network_elapsed_nanos,
+                body_bytes,
+            })
+        }
+    }
+
     fn temporary_provider_config_path() -> PathBuf {
         let timestamp_nanos = SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -340,15 +468,112 @@ mod tests {
     }
 
     #[test]
-    fn streaming_and_malformed_requests_are_rejected_before_secret_resolution() {
+    fn streaming_requests_are_validated_without_rejecting_stream_true() {
         assert_eq!(
             validate_chat_request(br#"{"stream":true,"messages":[]}"#),
-            Err(ProviderProxyError::StreamingUnsupported)
+            Err(ProviderProxyError::InvalidRequest)
+        );
+        assert_eq!(
+            validate_chat_request(br#"{"model":"test-model","stream":true,"messages":[]}"#),
+            Ok(ValidatedChatRequest {
+                model: "test-model".to_owned(),
+                stream: true,
+            })
         );
         assert_eq!(
             validate_chat_request(b"not-json"),
             Err(ProviderProxyError::InvalidRequest)
         );
+    }
+
+    #[test]
+    fn unary_forward_still_refuses_stream_true() {
+        let transport = CapturingTransport::default();
+        let config_path = temporary_provider_config_path();
+        let store = EphemeralSecretStore::default();
+        let service = ProviderProxyService::new(
+            &store,
+            ProviderConfigRepository::from_file_path(&config_path),
+            &transport,
+        );
+        let error = service
+            .forward_chat_completion_with_timing(
+                br#"{"model":"test-model","stream":true,"messages":[]}"#,
+            )
+            .err()
+            .expect("unary path must refuse stream:true");
+        assert_eq!(error, ProviderProxyError::StreamingUnsupported);
+        assert!(transport.requests().is_empty());
+    }
+
+    #[test]
+    fn streaming_forward_flushes_the_first_chunk_before_the_delayed_last() {
+        let config_path = temporary_provider_config_path();
+        let config_repository = ProviderConfigRepository::from_file_path(&config_path);
+        let secret_store = EphemeralSecretStore::default();
+        let provider_key_service =
+            ProviderKeyService::new(&secret_store, config_repository.clone());
+        provider_key_service
+            .configure_provider(
+                "deepseek",
+                "https://provider.example.invalid/v1",
+                SecretMaterial::from_bytes(b"synthetic-provider-key-p8-t11".to_vec())
+                    .expect("synthetic material"),
+                None,
+            )
+            .expect("provider configuration");
+        provider_key_service
+            .selected_model_repository()
+            .store(&SelectedModel::new("test-model", "fnv1a64:test", true).expect("selected model"))
+            .expect("selected model store");
+        let transport = DelayedStreamTransport {
+            delay: std::time::Duration::from_millis(250),
+            chunks: vec![
+                b"data: {\"delta\":\"first\"}\n\n".to_vec(),
+                b"data: [DONE]\n\n".to_vec(),
+            ],
+        };
+        let proxy = ProviderProxyService::new(&secret_store, config_repository, &transport);
+        let chunk_times = std::sync::Arc::new(Mutex::new(Vec::new()));
+        let started = std::time::Instant::now();
+        let mut on_preflight = |_nanos: u128| Ok(());
+        let mut on_status = |_status: u16| Ok(());
+        let mut on_chunk = {
+            let chunk_times = std::sync::Arc::clone(&chunk_times);
+            move |chunk: &[u8]| {
+                if !chunk.is_empty() {
+                    chunk_times
+                        .lock()
+                        .expect("chunk times")
+                        .push(started.elapsed());
+                }
+                Ok(())
+            }
+        };
+        let streamed = proxy
+            .forward_streaming_chat_completion(
+                br#"{"model":"test-model","stream":true,"messages":[]}"#,
+                &mut on_preflight,
+                &mut on_status,
+                &mut on_chunk,
+            )
+            .expect("streaming forward");
+        assert_eq!(streamed.status, 200);
+        assert!(streamed.first_byte_nanos > 0);
+        assert!(streamed.first_byte_nanos <= streamed.provider_network_elapsed_nanos);
+        let times = chunk_times.lock().expect("chunk times");
+        assert!(times.len() >= 2, "expected at least two flushed chunks");
+        assert!(
+            times[times.len() - 1].saturating_sub(times[0])
+                >= std::time::Duration::from_millis(150),
+            "first chunk must flush before the delayed last chunk"
+        );
+        std::fs::remove_dir_all(
+            config_path
+                .parent()
+                .expect("temporary config parent directory"),
+        )
+        .expect("temporary config cleanup");
     }
 
     #[test]

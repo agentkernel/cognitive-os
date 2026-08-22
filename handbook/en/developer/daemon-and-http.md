@@ -40,7 +40,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:fb0d3b9085d3d7f247915039f8c8abcacd437cacea41e9067d2f10bcc5200db8"
+fingerprint: "sha256:ae7078cba377b5730439a41026994ba23103af6dadcc611c95214dc654a7a9c8"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -178,8 +178,10 @@ proved the backend cannot answer, drop material immediately, and do not cache
 readiness across requests (no stale-ready TTL). Doctor adds redacted
 six-resource/vault/operability sections. The Provider
 proxy validates config + selected model, resolves the secret in memory, and
-forwards via the bounded Rustls transport. Successful proxy responses always
-carry `X-CognitiveOS-Provider-Network-Nanos`. Nested preflight timing and the
+forwards via the bounded Rustls transport. Unary proxy success responses carry
+`X-CognitiveOS-Provider-Network-Nanos`. Public management `stream:true` is
+forwarded as HTTP/1.1 SSE without waiting for the last event; streaming
+success omits that network-nanos header because SSE headers flush first. Nested preflight timing and the
 correlation echo are denied unless `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled`
 and the request carries one well-formed opaque correlation id; malformed or
 duplicate ids are ignored, the product body is unchanged, and the observer

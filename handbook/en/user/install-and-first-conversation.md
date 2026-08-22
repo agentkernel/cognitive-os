@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:c6ea2d64a37ea0ada36254fba1daac85ee73d64aebf8a51fe4a0d1a257af52c7"
+fingerprint: "sha256:a841f24c10516eee74af3bf3140d86a0bc98fa34376388b2921f270807517783"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---
@@ -101,7 +101,8 @@ files fail closed). File bytes are not printed.
 
 ```text
 cognitive dsh configure --dsh-root <abs-dsh-checkout> --adapter-root <abs-dsh-akp-adapter> --revision 528c682e061696f5a160f363f236ecbf53cbd006
-cognitive dsh launch --print --task "Reply with the single word pong and nothing else."
+cognitive dsh launch --print --task "Reply with one sentence that summarizes this text and nothing else: CognitiveOS Personal is a local-first OS for governed agent work."
+cognitive dsh status
 ```
 
 This is a candidate-only agent path, not a second authority writer. Configure

@@ -40,7 +40,7 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:fb0d3b9085d3d7f247915039f8c8abcacd437cacea41e9067d2f10bcc5200db8"
+fingerprint: "sha256:ae7078cba377b5730439a41026994ba23103af6dadcc611c95214dc654a7a9c8"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -149,8 +149,9 @@ readiness 从文件系统/配置事实评估六组件（`blocked | degraded | re
 评估只绑定一次 SecretStore：secret 探针与 provider 的 `secret_ref` 解析共用该后端，
 探针已证明后端无法作答时不再发起 `get`，材料立即丢弃，也不跨请求缓存就绪结果
 （没有 stale-ready TTL）。doctor 追加脱敏的六资源/vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
-Rustls 传输转发。成功的代理响应始终携带 `X-CognitiveOS-Provider-Network-Nanos`。
-嵌套 preflight 计时与 correlation 回显默认拒绝，仅当
+Rustls 传输转发。一元代理成功响应携带 `X-CognitiveOS-Provider-Network-Nanos`。
+公开 management `stream:true` 按 HTTP/1.1 SSE 转发，不等待最后一个事件；流式成功
+省略该网络耗时头，因为 SSE 响应头会先刷新。嵌套 preflight 计时与 correlation 回显默认拒绝，仅当
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明
 correlation id 时才发出；畸形或重复的 id 被忽略，产品 body 不变，观测器不写任何
 东西。一次性私有 Unix socket（`POST /chat/completions`）只服务 daemon 启

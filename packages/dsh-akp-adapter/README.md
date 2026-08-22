@@ -31,17 +31,21 @@ The adapter records serialization, transport, and total durations separately.
 live Personal daemon (shim host, not the dsh CLI) and waits for Task
 `COMPLETED`. `src/plugin.ts` is the Cordis `apply` entry for `dsh --patch`.
 `scripts/dsh-real-process.mjs` boots pinned headless dsh via
-`node --import tsx/esm apps/cli/src/bin.ts` (the same entry as the package.json
-`dsh` script; it does not call `pnpm dsh`, which is not portable on a guest
-without git). Installed Path B loads `plugin.bundle.cjs` (CommonJS
+`apps/cli/lib/bin.js` when host `build:lib` outputs are present (the published
+CLI entry). If those compiled files are absent it falls back to
+`node --import tsx/esm apps/cli/src/bin.ts`. It does not call `pnpm dsh`, which
+is not portable on a guest without git. On a 2 vCPU guest the tsx-from-source
+path spends ~10 s bootstrapping the harness before any Provider byte.
+Installed Path B loads `plugin.bundle.cjs` (CommonJS
 bundle of `src/plugin.ts`) because Node 22.23 `require()` of `dist/plugin.js` fails with
 `ERR_REQUIRE_CYCLE_MODULE`. Regenerate the bundle with
 `npx esbuild src/plugin.ts --bundle --platform=node --format=cjs --outfile=plugin.bundle.cjs`
 when `src/plugin.ts` or `src/index.ts` changes. The helper admits disposable Workspace* Tasks, submits those candidates as plugin `startupEvents`, activates
 `POST /task/akp/dsh` with a task-channel bearer file, and points `llm-deepseek`
 at `POST /provider/v1/chat/completions` with a management-channel credential
-ref. dsh always requests SSE; the daemon proxy is unary, so
-`scripts/provider-sse-bridge.mjs` converts on loopback.
+ref. dsh always requests SSE; the public daemon proxy forwards `stream:true` as
+HTTP/1.1 SSE (no SSE-to-unary bridge on Path B). The helper pins Flash
+`thinking: disabled`, `reasoningEffort: off`, and `maxTokens: 256`.
 The Provider key stays in SecretStore. Timing fields are measurement hooks, not a zero-overhead claim.
 Live linux-002 and jump-host samples are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit claim.

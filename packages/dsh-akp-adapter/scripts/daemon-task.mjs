@@ -106,7 +106,7 @@ export async function admitTask(origin, token, spec) {
 
 export async function waitLifecycle(origin, token, taskRef, options = {}) {
   const want = options.want ?? "COMPLETED";
-  const attempts = options.attempts ?? 60;
+  const attempts = options.attempts ?? 120;
   const delayMs = options.delayMs ?? 250;
   const encoded = encodeURIComponent(taskRef);
   let lifecycle = "absent";

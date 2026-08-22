@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:c14de136bcc1f8e4c3df39d5523f60a6f9e6586d15812f4ac3e73594e4a7abae"
+fingerprint: "sha256:68ff89e281e0dde97a2ef8dd70090419bd7368b4b7c7c2b1df21e9090ec56a00"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -33,7 +33,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/personal/status` | management | Component status projection (system, database, secret, provider, daemon, pi); Provider facts and SecretStore resolution use one loaded config snapshot. |
 | `GET` | `/personal/readiness` | management | Alias of the snapshot-consistent status projection. |
 | `GET` | `/personal/doctor` | management | Redacted snapshot-consistent diagnostic projection including six-resource, headless-vault, and operability sections. |
-| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; non-streaming, selected-model-bound; secrets resolved server-side only. Success responses always carry `X-CognitiveOS-Provider-Network-Nanos`. When `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and the request carries one well-formed opaque `campaign-<32 lowercase hex>` correlation id, the daemon also echoes that id and reports `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore work, disjoint from the network exchange). Malformed or duplicate correlation headers are ignored; the product body is unchanged and nothing is persisted. |
+| `GET` | `/personal/dsh/runtime` | management | Observation-only dsh runtime projection: process-local sessions, fencing epoch, optional bound pid liveness via `/proc/{pid}` existence (never cmdline/environ). States are INACTIVE, ACTIVE, or CRASHED. A dsh response is never Task completion. |
+| `POST` | `/personal/dsh/runtime` | management | Observation-only bind/heartbeat/clear of a dsh process id. Not an authority writer. Invalid schema/op/pid fail closed. |
+| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; selected-model-bound; secrets resolved server-side only. Unary `stream:false` success responses carry `X-CognitiveOS-Provider-Network-Nanos`. Public `stream:true` is forwarded as SSE (`text/event-stream`) and flushes upstream bytes without waiting for a unary JSON body; streaming success omits the network-nanos header because it is unknown when headers flush. Pi conversations and private-candidate remain unary. When `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and the request carries one well-formed opaque `campaign-<32 lowercase hex>` correlation id, the daemon also echoes that id and reports `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore work, disjoint from the network exchange). Malformed or duplicate correlation headers are ignored; the product body is unchanged and nothing is persisted. |
 | `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection. |
 | `GET` | `/resource/v1/projection` | management | Private versioned six-family resource projection (family + version query). |
 | `GET` | `/resource/v1/watch` | management | Family-scoped resource watch with optional resume_from cursor. |

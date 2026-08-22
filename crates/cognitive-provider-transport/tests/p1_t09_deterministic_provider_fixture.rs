@@ -289,3 +289,71 @@ fn timeout_oversize_and_redirect_are_bounded_and_fail_closed() {
     assert_eq!(redirect_response.status, 302);
     assert_eq!(redirect_fixture.observations().lines().count(), 1);
 }
+
+#[test]
+fn delayed_sse_delivers_the_first_chunk_before_the_last() {
+    use std::sync::{Arc, Mutex};
+    use std::time::Instant;
+
+    let fixture = RunningProviderFixture::spawn("delayed-sse");
+    let transport = fixture.transport();
+    let request = ProviderHttpRequest {
+        method: ProviderHttpMethod::Post,
+        url: format!("{}/chat/completions", fixture.base_url),
+        headers: vec![("Content-Type".to_owned(), "application/json".to_owned())],
+        body: Some(
+            br#"{"model":"p1-t09-deterministic-chat-model","stream":true,"messages":[]}"#.to_vec(),
+        ),
+        timeout_ms: 5_000,
+        cancel_requested: false,
+    };
+    // Clock first-byte from HTTP status, not from TCP/TLS connect. Windows CI
+    // can spend ~2 s on the loopback handshake; that is not the unary-wait
+    // defect this test exists to catch.
+    let header_at = Arc::new(Mutex::new(None::<Instant>));
+    let chunk_times = Arc::new(Mutex::new(Vec::new()));
+    let mut on_status = {
+        let header_at = Arc::clone(&header_at);
+        move |_status: u16| {
+            *header_at.lock().expect("header time") = Some(Instant::now());
+            Ok(())
+        }
+    };
+    let mut on_chunk = {
+        let chunk_times = Arc::clone(&chunk_times);
+        let header_at = Arc::clone(&header_at);
+        move |chunk: &[u8]| {
+            if !chunk.is_empty() {
+                let origin = header_at
+                    .lock()
+                    .expect("header time")
+                    .expect("status callback runs before body chunks");
+                chunk_times
+                    .lock()
+                    .expect("chunk times")
+                    .push(origin.elapsed());
+            }
+            Ok(())
+        }
+    };
+    let streamed = transport
+        .exchange_stream(&request, &mut on_status, &mut on_chunk)
+        .expect("delayed SSE fixture streams");
+    assert_eq!(streamed.status, 200);
+    let times = chunk_times.lock().expect("chunk times");
+    assert!(
+        times.len() >= 2,
+        "expected at least two streamed chunks, got {}",
+        times.len()
+    );
+    let first = times[0];
+    let last = times[times.len() - 1];
+    assert!(
+        last.saturating_sub(first) >= std::time::Duration::from_millis(150),
+        "first chunk must arrive before the delayed last chunk: first={first:?} last={last:?}"
+    );
+    assert!(
+        first < std::time::Duration::from_millis(200),
+        "first streamed byte after headers must not wait for the delayed last event: {first:?}"
+    );
+}

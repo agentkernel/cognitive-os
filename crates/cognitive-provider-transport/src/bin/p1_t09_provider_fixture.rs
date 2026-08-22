@@ -24,6 +24,7 @@ enum FixtureScenario {
     Timeout,
     Oversized,
     Redirect,
+    DelayedSse,
 }
 
 impl FixtureScenario {
@@ -36,6 +37,7 @@ impl FixtureScenario {
             "timeout" => Ok(Self::Timeout),
             "oversized" => Ok(Self::Oversized),
             "redirect" => Ok(Self::Redirect),
+            "delayed-sse" => Ok(Self::DelayedSse),
             _ => Err("unsupported deterministic Provider fixture scenario"),
         }
     }
@@ -123,12 +125,18 @@ fn handle_connection(
     server_configuration: Arc<ServerConfig>,
     options: &FixtureOptions,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    tcp_stream.set_nodelay(true)?;
     tcp_stream.set_read_timeout(Some(Duration::from_secs(2)))?;
-    tcp_stream.set_write_timeout(Some(Duration::from_secs(2)))?;
+    tcp_stream.set_write_timeout(Some(Duration::from_secs(5)))?;
     let server_connection = ServerConnection::new(server_configuration)?;
     let mut tls_stream = StreamOwned::new(server_connection, tcp_stream);
     let request = read_request(&mut tls_stream)?;
     record_observation(&request, &options.observations_output)?;
+
+    if options.scenario == FixtureScenario::DelayedSse {
+        write_delayed_sse(&mut tls_stream)?;
+        return Ok(());
+    }
 
     let response = fixture_response(options.scenario, &request);
     if options.scenario == FixtureScenario::Timeout {
@@ -136,6 +144,45 @@ fn handle_connection(
     }
     let _ = tls_stream.write_all(&response);
     let _ = tls_stream.flush();
+    Ok(())
+}
+
+fn write_delayed_sse(
+    tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let header = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n";
+    tls_stream.write_all(header)?;
+    flush_tls(tls_stream)?;
+    write_http_chunk(
+        tls_stream,
+        b"data: {\"choices\":[{\"delta\":{\"content\":\"pong\"}}]}\n\n",
+    )?;
+    std::thread::sleep(Duration::from_millis(250));
+    write_http_chunk(tls_stream, b"data: [DONE]\n\n")?;
+    write_http_chunk(tls_stream, b"")?;
+    tls_stream.conn.send_close_notify();
+    flush_tls(tls_stream)?;
+    Ok(())
+}
+
+fn write_http_chunk(
+    tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
+    data: &[u8],
+) -> Result<(), Box<dyn std::error::Error>> {
+    write!(tls_stream, "{:x}\r\n", data.len())?;
+    tls_stream.write_all(data)?;
+    tls_stream.write_all(b"\r\n")?;
+    flush_tls(tls_stream)?;
+    Ok(())
+}
+
+fn flush_tls(
+    tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    while tls_stream.conn.wants_write() {
+        tls_stream.conn.write_tls(&mut tls_stream.sock)?;
+    }
+    tls_stream.sock.flush()?;
     Ok(())
 }
 

@@ -23,7 +23,7 @@ tests:
   - apps/kernel-server/tests/p2_t26_observation_plane.rs
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:eacf63f52d1f7c8973317b70f89e38878653a262e5d83888a6b30134bf9db242"
+fingerprint: "sha256:4d5e3ef2857188d1b6ee1bfb7adf04427b27ab35f8555b7185e61dc32364fb64"
 non_claims:
   - 准入仍不消费 worker iteration authorization，也不获取调度 lease；那是后续 tick 的事。
 ---
