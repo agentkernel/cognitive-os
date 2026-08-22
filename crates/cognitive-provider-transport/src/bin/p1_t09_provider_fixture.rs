@@ -150,9 +150,13 @@ fn handle_connection(
 fn write_delayed_sse(
     tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    // rustls Writer::flush is a no-op; the default 64KiB plaintext/TLS buffer
+    // would otherwise hold the first SSE event until close_notify. Cap at one
+    // byte so each HTTP chunk becomes a TLS record that complete_io can send.
+    tls_stream.conn.set_buffer_limit(Some(1));
     let header = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n";
     tls_stream.write_all(header)?;
-    tls_stream.flush()?;
+    flush_tls(tls_stream)?;
     write_http_chunk(
         tls_stream,
         b"data: {\"choices\":[{\"delta\":{\"content\":\"pong\"}}]}\n\n",
@@ -161,7 +165,7 @@ fn write_delayed_sse(
     write_http_chunk(tls_stream, b"data: [DONE]\n\n")?;
     write_http_chunk(tls_stream, b"")?;
     tls_stream.conn.send_close_notify();
-    tls_stream.flush()?;
+    flush_tls(tls_stream)?;
     Ok(())
 }
 
@@ -172,7 +176,17 @@ fn write_http_chunk(
     write!(tls_stream, "{:x}\r\n", data.len())?;
     tls_stream.write_all(data)?;
     tls_stream.write_all(b"\r\n")?;
-    tls_stream.flush()?;
+    flush_tls(tls_stream)?;
+    Ok(())
+}
+
+fn flush_tls(
+    tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    while tls_stream.conn.wants_write() {
+        tls_stream.conn.complete_io(&mut tls_stream.sock)?;
+    }
+    tls_stream.sock.flush()?;
     Ok(())
 }
 

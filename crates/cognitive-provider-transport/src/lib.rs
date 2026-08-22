@@ -47,12 +47,18 @@ impl RustlsProviderTransport {
     fn build_client(
         &self,
         timeout: Duration,
+        streaming: bool,
     ) -> Result<reqwest::blocking::Client, ProviderTransportError> {
         let mut client_builder = reqwest::blocking::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .timeout(timeout)
             .tcp_nodelay(true)
             .use_rustls_tls();
+        if streaming {
+            // SSE first-byte delivery is HTTP/1.1 chunked. HTTP/2 plus pooled
+            // connections can hold the first DATA frame until the stream ends.
+            client_builder = client_builder.http1_only().pool_max_idle_per_host(0);
+        }
         for certificate_der in &self.additional_root_certificates_der {
             let certificate = reqwest::Certificate::from_der(certificate_der).map_err(|_| {
                 ProviderTransportError::Policy {
@@ -80,7 +86,7 @@ impl ProviderTransport for RustlsProviderTransport {
         }
 
         let timeout = Duration::from_millis(u64::from(request.timeout_ms));
-        let client = self.build_client(timeout)?;
+        let client = self.build_client(timeout, false)?;
         let method = match request.method {
             ProviderHttpMethod::Get => reqwest::Method::GET,
             ProviderHttpMethod::Post => reqwest::Method::POST,
@@ -125,7 +131,7 @@ impl ProviderTransport for RustlsProviderTransport {
         }
 
         let timeout = Duration::from_millis(u64::from(request.timeout_ms));
-        let client = self.build_client(timeout)?;
+        let client = self.build_client(timeout, true)?;
         let method = match request.method {
             ProviderHttpMethod::Get => reqwest::Method::GET,
             ProviderHttpMethod::Post => reqwest::Method::POST,
