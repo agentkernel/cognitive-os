@@ -1523,6 +1523,7 @@ fn handle_task_fault_profile_forbidden(
     )
 }
 
+#[allow(clippy::too_many_arguments)] // Shared daemon state is explicit at the connection boundary.
 fn handle_resource_manager_route(
     stream: &mut TcpStream,
     method_path: &str,
