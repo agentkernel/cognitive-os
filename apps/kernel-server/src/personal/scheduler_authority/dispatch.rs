@@ -1008,6 +1008,7 @@ pub(crate) fn run_private_scheduler_tick_with_store(
     // absent from a hermetic runtime or test fixture.
     let proposer = LazyConfiguredPrivatePiCandidateProposer {
         provider_config_dir: provider_config_dir.to_path_buf(),
+        authority_store: authority_store.clone(),
     };
     run_private_scheduler_tick_with_store_and_proposer(
         authority_store,
@@ -1020,6 +1021,7 @@ pub(crate) fn run_private_scheduler_tick_with_store(
 
 struct LazyConfiguredPrivatePiCandidateProposer {
     provider_config_dir: PathBuf,
+    authority_store: SqliteAuthorityStore,
 }
 
 impl PrivatePiCandidateProposer for LazyConfiguredPrivatePiCandidateProposer {
@@ -1031,9 +1033,12 @@ impl PrivatePiCandidateProposer for LazyConfiguredPrivatePiCandidateProposer {
     ) -> Result<UntrustedPiCandidate, String> {
         let pi_config = load_pi_config(&self.provider_config_dir)
             .map_err(|_| "daemon-private Pi candidate transport is not configured".to_owned())?;
-        let proposer = ConfiguredPrivatePiCandidateProposer::new(
-            PrivatePiCandidateProcess::from_config(&pi_config, &self.provider_config_dir),
-        );
+        let proposer =
+            ConfiguredPrivatePiCandidateProposer::new(PrivatePiCandidateProcess::from_config(
+                &pi_config,
+                &self.provider_config_dir,
+                Some(self.authority_store.clone()),
+            ));
         proposer.propose_candidate(resolved_context, task_ref, contract_epoch)
     }
 }

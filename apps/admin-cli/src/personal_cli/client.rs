@@ -198,6 +198,20 @@ impl PersonalDaemonClient {
         self.post_authorized("/management/resource/v1/backup/preflight", &body)
     }
 
+    /// `GET` a management Provider Control Plane path.
+    pub fn get_authorized_public(&self, path: &str) -> Result<String, PersonalDaemonClientError> {
+        self.get_authorized(path)
+    }
+
+    /// `POST` a management Provider Control Plane path.
+    pub fn post_authorized_public(
+        &self,
+        path: &str,
+        body: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
+        self.post_authorized(path, body)
+    }
+
     fn get_authorized(&self, path: &str) -> Result<String, PersonalDaemonClientError> {
         self.get_with_token(path, &self.management_token, "management")
     }

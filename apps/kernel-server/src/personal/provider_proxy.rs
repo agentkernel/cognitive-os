@@ -13,6 +13,7 @@ use cognitive_secret::{
     ProviderKeyService, ProviderKeyServiceError, ProviderTransport, ProviderTransportError,
     SecretStore, SelectedModelRepository, bearer_authorization_header_value,
 };
+use cognitive_store::SqliteAuthorityStore;
 
 const PROVIDER_CHAT_COMPLETIONS_PATH: &str = "/chat/completions";
 
@@ -25,6 +26,8 @@ pub enum ProviderProxyError {
     InvalidRequest,
     SelectedModelUnavailable,
     SelectedModelMismatch,
+    BindingMismatch,
+    AccountUnavailable,
     TransportUnavailable,
     UpstreamRequestFailed,
 }
@@ -39,6 +42,8 @@ impl ProviderProxyError {
             Self::InvalidRequest => "PERSONAL_PROVIDER_REQUEST_INVALID",
             Self::SelectedModelUnavailable => "PERSONAL_PROVIDER_SELECTED_MODEL_UNAVAILABLE",
             Self::SelectedModelMismatch => "PERSONAL_PROVIDER_SELECTED_MODEL_MISMATCH",
+            Self::BindingMismatch => "PERSONAL_PROVIDER_BINDING_MISMATCH",
+            Self::AccountUnavailable => "PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE",
             Self::TransportUnavailable => "PERSONAL_PROVIDER_TRANSPORT_UNAVAILABLE",
             Self::UpstreamRequestFailed => "PERSONAL_PROVIDER_UPSTREAM_REQUEST_FAILED",
         }
@@ -51,7 +56,11 @@ impl ProviderProxyError {
             | Self::SecretUnavailable
             | Self::SelectedModelUnavailable
             | Self::TransportUnavailable => 503,
-            Self::StreamingUnsupported | Self::InvalidRequest | Self::SelectedModelMismatch => 400,
+            Self::StreamingUnsupported
+            | Self::InvalidRequest
+            | Self::SelectedModelMismatch
+            | Self::BindingMismatch => 400,
+            Self::AccountUnavailable => 409,
             Self::UpstreamRequestFailed => 502,
         }
     }
@@ -171,15 +180,47 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
     /// Forward one private Pi candidate completion and reject any upstream
     /// response shape that could carry a tool call or multiple candidates.
     /// The Provider credential remains confined to this daemon-owned service.
+    /// When `authority_store` carries a Pi control-plane binding, that binding
+    /// is the only allowed account+model; `provider.json` is not a fallback.
     #[cfg(unix)]
     pub fn forward_private_candidate_completion(
         &self,
         request_body: &[u8],
     ) -> Result<ProviderHttpResponse, ProviderProxyError> {
+        self.forward_private_candidate_completion_bound(request_body, None)
+    }
+
+    #[cfg(unix)]
+    pub fn forward_private_candidate_completion_bound(
+        &self,
+        request_body: &[u8],
+        authority_store: Option<&SqliteAuthorityStore>,
+    ) -> Result<ProviderHttpResponse, ProviderProxyError> {
         let sanitized_body = sanitize_private_candidate_request(request_body)?;
         let validated = validate_chat_request(&sanitized_body)?;
         if validated.stream {
             return Err(ProviderProxyError::StreamingUnsupported);
+        }
+        if let Some(store) = authority_store {
+            match super::provider_control_plane::plan_bound_proxy(
+                store,
+                super::provider_control_plane::PI_AGENT,
+                &sanitized_body,
+                false,
+            ) {
+                Ok(Some(plan)) => {
+                    let response = super::provider_control_plane::execute_bound_unary_plan(
+                        store,
+                        super::provider_control_plane::PI_AGENT,
+                        plan,
+                    )
+                    .map_err(map_bound_plan_error)?;
+                    validate_private_candidate_response(&response)?;
+                    return Ok(response);
+                }
+                Err(error) => return Err(map_bound_plan_error(error)),
+                Ok(None) => {}
+            }
         }
         let timed_response =
             self.forward_selected_chat_completion(validated.model, &sanitized_body)?;
@@ -337,6 +378,35 @@ fn validate_chat_request(request_body: &[u8]) -> Result<ValidatedChatRequest, Pr
 fn proxy_callback_to_transport(_error: ProviderProxyError) -> ProviderTransportError {
     ProviderTransportError::Network {
         detail: "streaming callback failed",
+    }
+}
+
+#[cfg(unix)]
+fn map_bound_plan_error(
+    error: super::provider_control_plane::BoundPlanError,
+) -> ProviderProxyError {
+    match error {
+        super::provider_control_plane::BoundPlanError::BindingMismatch => {
+            ProviderProxyError::BindingMismatch
+        }
+        super::provider_control_plane::BoundPlanError::AccountUnavailable => {
+            ProviderProxyError::AccountUnavailable
+        }
+        super::provider_control_plane::BoundPlanError::SecretUnavailable => {
+            ProviderProxyError::SecretUnavailable
+        }
+        super::provider_control_plane::BoundPlanError::InvalidRequest => {
+            ProviderProxyError::InvalidRequest
+        }
+        super::provider_control_plane::BoundPlanError::StreamingUnsupported => {
+            ProviderProxyError::StreamingUnsupported
+        }
+        super::provider_control_plane::BoundPlanError::Trust => {
+            ProviderProxyError::TransportUnavailable
+        }
+        super::provider_control_plane::BoundPlanError::UpstreamFailed => {
+            ProviderProxyError::UpstreamRequestFailed
+        }
     }
 }
 

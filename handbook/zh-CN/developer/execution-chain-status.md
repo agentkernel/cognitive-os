@@ -42,7 +42,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:173be57466ef5404cc18441e50d51eb43e91f09f01a57bb8a53657b4b073ee19"
+fingerprint: "sha256:ce6dc2e373032ad3d5870f26dba59346be33b5ed4dc40401086822bb9f55ec75"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。

@@ -24,10 +24,10 @@ non_claims:
 | `crates/cognitive-contracts` | canonical JSON/digest、schema codegen、53 个生成 Rust 绑定、55 码错误注册表、golden 奇偶 | `canonical.rs`、`bin/contracts-codegen.rs`、`generated/mod.rs` |
 | `crates/cognitive-domain` | ID、capability 算术、内嵌转移表、版本 | `transitions.rs`（`table`、`find_edge`）、`capability.rs`（`intersect_chain`） |
 | `crates/cognitive-kernel` | 确定性权威内核：10 步转移门、intent chain、context 管线/缓存、Effect 协议、loop/WIA/continuation、恢复、tool registry、ports | `engine.rs`（`TransitionEngine`）、`intent_chain.rs`、`effects.rs`（`EffectProtocol`）、`harness.rs`（`LoopDriver`）、`ports.rs` |
-| `crates/cognitive-store` | SQLite WAL 适配器：迁移 v1–v24（安装库 v1–v4）、调度 lease、Memory/Skill/Context/Artifact 存储、排除 secret 的备份归档 | `sqlite/`、`migration.rs`、`personal_db.rs`（`prepare_personal_databases`）、`scheduler.rs`、`personal_backup.rs` |
+| `crates/cognitive-store` | SQLite WAL 适配器：迁移 v1–v25（安装库 v1–v4）、调度 lease、Memory/Skill/Context/Artifact 存储、Provider Control Plane、排除 secret 的备份归档 | `sqlite/`、`migration.rs`、`personal_db.rs`（`prepare_personal_databases`）、`scheduler.rs`、`provider_control_plane.rs`、`personal_backup.rs` |
 | `crates/cognitive-runtime` | 执行层：Linux bundle 校验/安装/服务、Pi 获取/注册/生命周期、adapter/hook/压缩/学习规划器、性能面 | `installer.rs`、`linux_bundle*.rs`、`agent_registration.rs`、`scheduler_service.rs`、`perf.rs` |
 | `crates/cognitive-management` | 确定性管理面（inspect/stop/revoke/reconcile）、特权会话、R1 审批、审计端口、TaskApplicationService | `plane.rs`（`ManagementPlane`）、`session.rs`、`task_application.rs` |
-| `crates/cognitive-secret` | SecretStore 后端（Linux Secret Service；Windows Credential Manager；其余 fail-closed）、Provider 配置/发现/传输 | `store.rs`（`SecretStore`）、`backend_select.rs`、`provider_service.rs`、`provider_transport.rs` |
+| `crates/cognitive-secret` | SecretStore 后端（Linux Secret Service；Windows Credential Manager；其余 fail-closed）、Provider 配置/发现/传输、端点信任 | `store.rs`（`SecretStore`）、`backend_select.rs`、`provider_service.rs`、`provider_transport.rs`、`endpoint_trust.rs` |
 | `crates/cognitive-provider-transport` | 用于确定性测试的 loopback TLS Provider fixture | `bin/p1_t09_provider_fixture.rs` |
 | `crates/cognitive-akp` | AKP 0.2 信封解析/digest、内存 watch log | `lib.rs`（`parse_request`、`WatchLog`） |
 | `crates/cognitive-conformance` | 符合性 runner：89 向量、五态报告、41 项自检翻转 | `src/main.rs`、`src/exec/` |
@@ -44,7 +44,8 @@ non_claims:
 - CLI 初始化：`cognitive init` → `prepare_personal_databases` → `SecretStore` → `ProviderDiscoveryService` → 快照持久化。
 - daemon 启动：`serve_personal_loopback` → 迁移 → 恢复 → 绑定 → endpoint 发布 → 唯一可取消的周期调度 worker。
 - Task 准入：`POST /task/*` → `TaskApi` → `KernelTaskApplicationService` → `cognitive_kernel::intent_chain` → SQLite。
-- Pi 对话：Pi 扩展 → `POST /provider/v1/chat/completions` → daemon 持有的 SecretStore + `RustlsProviderTransport`。
+- Pi 对话：Pi 扩展 → `POST /provider/v1/chat/completions` → 绑定账户或 `provider.json` + daemon 持有的 SecretStore。
+- DeepSeek harness Path B：dsh 插件 → `POST /provider/v1/dsh/chat/completions` → 独立的 `agent://personal/dsh` binding 或 `provider.json`。
 - 安装：`deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate（单服务事务）。
 
 不得掩盖的执行接线缺口列于[执行链状态](../developer/execution-chain-status.md)。

@@ -133,14 +133,20 @@ pub(crate) struct PrivatePiCandidateProcess {
     configured_candidate_extension_entry_path: Option<PathBuf>,
     #[cfg(unix)]
     provider_config_dir: PathBuf,
+    #[cfg(unix)]
+    authority_store: Option<cognitive_store::SqliteAuthorityStore>,
 }
 
 impl PrivatePiCandidateProcess {
     // The scheduler caller is added separately; retain this narrow
     // construction boundary instead of exposing Pi paths outside this module.
-    pub(crate) fn from_config(config: &PiConfig, provider_config_dir: &Path) -> Self {
+    pub(crate) fn from_config(
+        config: &PiConfig,
+        provider_config_dir: &Path,
+        authority_store: Option<cognitive_store::SqliteAuthorityStore>,
+    ) -> Self {
         #[cfg(not(unix))]
-        let _ = (config, provider_config_dir);
+        let _ = (config, provider_config_dir, authority_store);
         Self {
             #[cfg(unix)]
             configured_executable_path: config.executable_path.clone(),
@@ -152,6 +158,8 @@ impl PrivatePiCandidateProcess {
                 .clone(),
             #[cfg(unix)]
             provider_config_dir: provider_config_dir.to_path_buf(),
+            #[cfg(unix)]
+            authority_store,
         }
     }
 
@@ -189,11 +197,24 @@ impl PrivatePiCandidateProcess {
             .as_deref()
             .filter(|path| path.is_file())
             .ok_or_else(|| "private Pi candidate extension is not configured".to_owned())?;
-        let selected_model = SelectedModelRepository::under_config_dir(&self.provider_config_dir)
-            .load()
-            .map_err(|_| "private Pi selected model is unavailable".to_owned())?
-            .ok_or_else(|| "private Pi selected model is unavailable".to_owned())?;
-        let socket = PrivateCompletionSocket::create(&self.provider_config_dir)?;
+        let selected_model = match self.authority_store.as_ref().and_then(|store| {
+            super::provider_control_plane::selected_binding_model(
+                store,
+                super::provider_control_plane::PI_AGENT,
+            )
+        }) {
+            Some(model) => model,
+            None => SelectedModelRepository::under_config_dir(&self.provider_config_dir)
+                .load()
+                .map_err(|_| "private Pi selected model is unavailable".to_owned())?
+                .ok_or_else(|| "private Pi selected model is unavailable".to_owned())?
+                .model_id()
+                .to_owned(),
+        };
+        let socket = PrivateCompletionSocket::create_with_store(
+            &self.provider_config_dir,
+            self.authority_store.clone(),
+        )?;
         let socket_path = socket
             .path()
             .to_str()
@@ -217,7 +238,7 @@ impl PrivatePiCandidateProcess {
             .arg("--pi")
             .arg(executable_path)
             .arg("--model")
-            .arg(selected_model.model_id())
+            .arg(&selected_model)
             .arg("--work-dir")
             .arg(socket.runtime_dir())
             .arg("--config-dir")
@@ -329,11 +350,22 @@ struct PrivateCompletionSocket {
 
 #[cfg(unix)]
 impl PrivateCompletionSocket {
-    fn create(config_dir: &Path) -> Result<Self, String> {
-        Self::create_with_socket_parent(config_dir, &private_completion_socket_parent())
+    fn create_with_store(
+        config_dir: &Path,
+        authority_store: Option<cognitive_store::SqliteAuthorityStore>,
+    ) -> Result<Self, String> {
+        Self::create_with_socket_parent(
+            config_dir,
+            &private_completion_socket_parent(),
+            authority_store,
+        )
     }
 
-    fn create_with_socket_parent(config_dir: &Path, socket_parent: &Path) -> Result<Self, String> {
+    fn create_with_socket_parent(
+        config_dir: &Path,
+        socket_parent: &Path,
+        authority_store: Option<cognitive_store::SqliteAuthorityStore>,
+    ) -> Result<Self, String> {
         let socket_directory = config_dir.join("private-completions");
         fs::create_dir_all(&socket_directory)
             .map_err(|_| "private completion socket directory is unavailable".to_owned())?;
@@ -369,8 +401,9 @@ impl PrivateCompletionSocket {
             .set_nonblocking(true)
             .map_err(|_| "private completion socket could not be configured".to_owned())?;
         let provider_config_dir = config_dir.to_path_buf();
-        let server =
-            thread::spawn(move || serve_one_private_completion(listener, provider_config_dir));
+        let server = thread::spawn(move || {
+            serve_one_private_completion(listener, provider_config_dir, authority_store)
+        });
         Ok(Self {
             runtime_directory,
             socket_path,
@@ -408,7 +441,11 @@ impl Drop for PrivateCompletionSocket {
 }
 
 #[cfg(unix)]
-fn serve_one_private_completion(listener: UnixListener, config_dir: PathBuf) -> Result<(), String> {
+fn serve_one_private_completion(
+    listener: UnixListener,
+    config_dir: PathBuf,
+    authority_store: Option<cognitive_store::SqliteAuthorityStore>,
+) -> Result<(), String> {
     let started = Instant::now();
     let stream = loop {
         match listener.accept() {
@@ -425,11 +462,15 @@ fn serve_one_private_completion(listener: UnixListener, config_dir: PathBuf) -> 
             Err(_) => return Err("private completion socket refused a connection".to_owned()),
         }
     };
-    forward_one_private_completion(stream, &config_dir)
+    forward_one_private_completion(stream, &config_dir, authority_store.as_ref())
 }
 
 #[cfg(unix)]
-fn forward_one_private_completion(mut stream: UnixStream, config_dir: &Path) -> Result<(), String> {
+fn forward_one_private_completion(
+    mut stream: UnixStream,
+    config_dir: &Path,
+    authority_store: Option<&cognitive_store::SqliteAuthorityStore>,
+) -> Result<(), String> {
     stream
         .set_read_timeout(Some(PRIVATE_COMPLETION_TIMEOUT))
         .map_err(|_| "private completion socket read timeout is unavailable".to_owned())?;
@@ -443,7 +484,7 @@ fn forward_one_private_completion(mut stream: UnixStream, config_dir: &Path) -> 
         &transport,
     );
     let response = service
-        .forward_private_candidate_completion(body)
+        .forward_private_candidate_completion_bound(body, authority_store)
         .map_err(|_| "private completion provider request was refused".to_owned())?;
     if response.status != 200 || response.body.len() > PRIVATE_PI_CANDIDATE_FRAME_LIMIT {
         return Err("private completion provider response exceeds transport limit".to_owned());
@@ -1081,7 +1122,7 @@ mod tests {
             candidate_adapter_path: None,
             candidate_extension_entry_path: None,
         };
-        let error = PrivatePiCandidateProcess::from_config(&config, Path::new("/tmp"))
+        let error = PrivatePiCandidateProcess::from_config(&config, Path::new("/tmp"), None)
             .propose(&request)
             .expect_err("oversized Context must be rejected before spawning Pi");
         assert_eq!(
@@ -1100,7 +1141,7 @@ mod tests {
         ));
         fs::create_dir(&temporary_directory).expect("create temporary config directory");
 
-        let socket = PrivateCompletionSocket::create(&temporary_directory)
+        let socket = PrivateCompletionSocket::create_with_store(&temporary_directory, None)
             .expect("create private completion socket");
         let socket_path = socket.path().to_path_buf();
         let runtime_directory = socket.runtime_dir().to_path_buf();
@@ -1148,6 +1189,7 @@ mod tests {
         let socket = PrivateCompletionSocket::create_with_socket_parent(
             &temporary_directory,
             &socket_parent,
+            None,
         )
         .expect("long config_dir must still bind a short completion socket");
         assert!(

@@ -17,7 +17,8 @@ use cognitive_kernel::ports::{
 };
 use cognitive_runtime::loopback_transport::{self, LoopbackTransportStage};
 use cognitive_secret::{
-    ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
+    ProviderConfigRepository, ProviderTransport, SelectedModelRepository,
+    select_production_secret_store,
 };
 use cognitive_store::{
     PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases,
@@ -636,11 +637,57 @@ fn dispatch_http_route(
     if method_path.starts_with("POST /local/session ") {
         return handle_session_issue(stream, body, authority);
     }
+    if method_path.starts_with("POST /provider/v1/dsh/chat/completions ") {
+        return handle_provider_proxy_route(
+            stream,
+            headers,
+            body,
+            layout,
+            authority,
+            authority_store,
+            provider_control_plane::DSH_AGENT,
+        );
+    }
     if method_path.starts_with("POST /provider/v1/chat/completions ") {
-        return handle_provider_proxy_route(stream, headers, body, layout, authority);
+        return handle_provider_proxy_route(
+            stream,
+            headers,
+            body,
+            layout,
+            authority,
+            authority_store,
+            provider_control_plane::PI_AGENT,
+        );
+    }
+    if method_path.starts_with("GET /provider/v1/dsh/selected-model ") {
+        return handle_selected_model_route(
+            stream,
+            headers,
+            layout,
+            authority,
+            authority_store,
+            provider_control_plane::DSH_AGENT,
+        );
     }
     if method_path.starts_with("GET /provider/v1/selected-model ") {
-        return handle_selected_model_route(stream, headers, layout, authority);
+        return handle_selected_model_route(
+            stream,
+            headers,
+            layout,
+            authority,
+            authority_store,
+            provider_control_plane::PI_AGENT,
+        );
+    }
+    if provider_control_plane::matches(&method_path) {
+        return handle_provider_control_plane_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            authority,
+            authority_store,
+        );
     }
     if method_path.starts_with("GET /personal/dsh/runtime ")
         || method_path.starts_with("POST /personal/dsh/runtime ")
@@ -1524,6 +1571,55 @@ fn handle_task_fault_profile_forbidden(
 }
 
 #[allow(clippy::too_many_arguments)] // Shared daemon state is explicit at the connection boundary.
+fn handle_provider_control_plane_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if provider_control_plane::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = provider_control_plane::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = provider_control_plane::handle(method_path, body, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
 fn handle_resource_manager_route(
     stream: &mut TcpStream,
     method_path: &str,
@@ -1614,6 +1710,8 @@ fn handle_provider_proxy_route(
     request_body: &[u8],
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+    agent: &str,
 ) -> Result<(), String> {
     let _ = stream.set_nodelay(true);
     let Some(token) = extract_bearer_token(headers) else {
@@ -1638,6 +1736,35 @@ fn handle_provider_proxy_route(
     }
     drop(authority_guard);
 
+    let stream_requested = request_asks_for_stream(request_body);
+    match provider_control_plane::plan_bound_proxy(
+        authority_store.as_ref(),
+        agent,
+        request_body,
+        stream_requested,
+    ) {
+        Ok(Some(plan)) => {
+            return handle_bound_provider_proxy(
+                stream,
+                headers,
+                authority_store.as_ref(),
+                agent,
+                plan,
+                stream_requested,
+            );
+        }
+        Err(error) => {
+            let mapped = map_bound_plan_error(error);
+            return write_error_response(
+                stream,
+                mapped.status_code(),
+                mapped.code(),
+                "provider proxy request was not completed",
+            );
+        }
+        Ok(None) => {}
+    }
+
     let secret_backend = select_production_secret_store();
     let transport = RustlsProviderTransport::default();
     let service = ProviderProxyService::new(
@@ -1645,11 +1772,9 @@ fn handle_provider_proxy_route(
         ProviderConfigRepository::under_config_dir(layout.config_dir()),
         &transport,
     );
-    // Measurement is resolved from the request headers and the daemon's own
-    // authorization only. It cannot change which request is forwarded.
     let correlation_id = route_observation::extract_correlation_id(headers);
     let observation_authorized = route_observation::route_observation_authorized();
-    if request_asks_for_stream(request_body) {
+    if stream_requested {
         return handle_provider_proxy_streaming(
             stream,
             request_body,
@@ -1677,6 +1802,197 @@ fn handle_provider_proxy_route(
             stream,
             error.status_code(),
             error.code(),
+            "provider proxy request was not completed",
+        ),
+    }
+}
+
+fn map_bound_plan_error(error: provider_control_plane::BoundPlanError) -> ProviderProxyError {
+    match error {
+        provider_control_plane::BoundPlanError::BindingMismatch => {
+            ProviderProxyError::BindingMismatch
+        }
+        provider_control_plane::BoundPlanError::AccountUnavailable => {
+            ProviderProxyError::AccountUnavailable
+        }
+        provider_control_plane::BoundPlanError::SecretUnavailable => {
+            ProviderProxyError::SecretUnavailable
+        }
+        provider_control_plane::BoundPlanError::InvalidRequest => {
+            ProviderProxyError::InvalidRequest
+        }
+        provider_control_plane::BoundPlanError::StreamingUnsupported => {
+            ProviderProxyError::StreamingUnsupported
+        }
+        provider_control_plane::BoundPlanError::Trust => ProviderProxyError::TransportUnavailable,
+        provider_control_plane::BoundPlanError::UpstreamFailed => {
+            ProviderProxyError::UpstreamRequestFailed
+        }
+    }
+}
+
+fn handle_bound_provider_proxy(
+    stream: &mut TcpStream,
+    headers: &str,
+    authority_store: &SqliteAuthorityStore,
+    agent: &str,
+    plan: provider_control_plane::BoundProxyPlan,
+    stream_requested: bool,
+) -> Result<(), String> {
+    let correlation_id = route_observation::extract_correlation_id(headers);
+    let observation_authorized = route_observation::route_observation_authorized();
+    if stream_requested {
+        if plan.uses_http || plan.anthropic {
+            return write_error_response(
+                stream,
+                ProviderProxyError::StreamingUnsupported.status_code(),
+                ProviderProxyError::StreamingUnsupported.code(),
+                "provider proxy request was not completed",
+            );
+        }
+        let transport = RustlsProviderTransport::default();
+        return handle_bound_provider_streaming(
+            stream,
+            &transport,
+            authority_store,
+            agent,
+            plan,
+            observation_authorized,
+            correlation_id.as_deref().map_err(|refusal| *refusal),
+        );
+    }
+    let started = Instant::now();
+    match provider_control_plane::execute_bound_unary_plan(authority_store, agent, plan) {
+        Ok(response) => {
+            let elapsed_nanos = started.elapsed().as_nanos().max(1);
+            write_provider_response(
+                stream,
+                response.status,
+                &response.body,
+                elapsed_nanos,
+                &route_observation::observation_response_headers(
+                    observation_authorized,
+                    correlation_id.as_deref().map_err(|refusal| *refusal),
+                    route_observation::NestedProviderStages {
+                        preflight_elapsed_nanos: 1,
+                        provider_network_elapsed_nanos: elapsed_nanos,
+                    },
+                ),
+            )
+        }
+        Err(error) => {
+            let mapped = map_bound_plan_error(error);
+            write_error_response(
+                stream,
+                mapped.status_code(),
+                mapped.code(),
+                "provider proxy request was not completed",
+            )
+        }
+    }
+}
+
+#[allow(clippy::too_many_arguments)]
+fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Sized>(
+    stream: &mut TcpStream,
+    transport: &T,
+    authority_store: &SqliteAuthorityStore,
+    agent: &str,
+    plan: provider_control_plane::BoundProxyPlan,
+    observation_authorized: bool,
+    correlation_id: Result<&str, route_observation::CorrelationRefusal>,
+) -> Result<(), String> {
+    let stream_cell = std::cell::RefCell::new(stream);
+    let sse_started = std::cell::Cell::new(false);
+    let error_body = std::cell::RefCell::new(Vec::new());
+    let observation_headers = route_observation::observation_streaming_response_headers(
+        observation_authorized,
+        correlation_id,
+    );
+    let outcome = {
+        let mut on_status = |status: u16| {
+            if status == 200 {
+                write_provider_sse_headers(&mut *stream_cell.borrow_mut(), 1, &observation_headers)
+                    .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
+                sse_started.set(true);
+            }
+            Ok(())
+        };
+        let mut on_chunk = |chunk: &[u8]| {
+            if sse_started.get() {
+                let write_started = Instant::now();
+                {
+                    let mut stream = stream_cell.borrow_mut();
+                    stream
+                        .write_all(chunk)
+                        .and_then(|()| stream.flush())
+                        .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
+                }
+                loopback_transport::add_response_write(
+                    write_started.elapsed().as_nanos(),
+                    u64::try_from(chunk.len()).unwrap_or(u64::MAX),
+                );
+            } else {
+                error_body.borrow_mut().extend_from_slice(chunk);
+            }
+            Ok(())
+        };
+        transport.exchange_stream(
+            &plan.request,
+            &mut |status| {
+                on_status(status).map_err(|_| cognitive_secret::ProviderTransportError::Network {
+                    detail: "streaming callback failed",
+                })
+            },
+            &mut |chunk| {
+                on_chunk(chunk).map_err(|_| cognitive_secret::ProviderTransportError::Network {
+                    detail: "streaming callback failed",
+                })
+            },
+        )
+    };
+    provider_control_plane::record_proxy_usage(
+        authority_store,
+        &plan.account,
+        &plan.model_id,
+        agent,
+        b"{}",
+        0,
+        if outcome
+            .as_ref()
+            .map(|timed| timed.status == 200)
+            .unwrap_or(false)
+        {
+            "ok"
+        } else {
+            "failed"
+        },
+    );
+    let stream = stream_cell.into_inner();
+    match outcome {
+        Ok(timed) if sse_started.get() => {
+            let _ = timed;
+            Ok(())
+        }
+        Ok(timed) => write_provider_response(
+            stream,
+            timed.status,
+            &error_body.into_inner(),
+            timed.provider_network_elapsed_nanos,
+            &route_observation::observation_response_headers(
+                observation_authorized,
+                correlation_id,
+                route_observation::NestedProviderStages {
+                    preflight_elapsed_nanos: 1,
+                    provider_network_elapsed_nanos: timed.provider_network_elapsed_nanos,
+                },
+            ),
+        ),
+        Err(_) if sse_started.get() => Ok(()),
+        Err(_) => write_error_response(
+            stream,
+            ProviderProxyError::UpstreamRequestFailed.status_code(),
+            ProviderProxyError::UpstreamRequestFailed.code(),
             "provider proxy request was not completed",
         ),
     }
@@ -1915,6 +2231,8 @@ fn handle_selected_model_route(
     headers: &str,
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+    agent: &str,
 ) -> Result<(), String> {
     let Some(token) = extract_bearer_token(headers) else {
         return write_error_response(
@@ -1938,8 +2256,27 @@ fn handle_selected_model_route(
     }
     drop(authority_guard);
 
-    // This route reads only the dedicated non-secret carrier. It never creates
-    // a SecretStore or resolves Provider material.
+    if let Some(model_id) =
+        provider_control_plane::selected_binding_model(authority_store.as_ref(), agent)
+    {
+        return write_json_response(
+            stream,
+            200,
+            &json!({
+                "schema_version": 1,
+                "surface": "personal-provider-selected-model",
+                "selected_model": model_id,
+                "selected_snapshot_digest": "binding",
+                "chat_capable": true,
+                "authority_side_effects": false,
+                "binding_agent": agent,
+            })
+            .to_string(),
+        );
+    }
+
+    // Unbound agents still read the dedicated non-secret carrier. This never
+    // creates a SecretStore or resolves Provider material.
     match SelectedModelRepository::under_config_dir(layout.config_dir()).load() {
         Ok(Some(selected_model)) => write_json_response(
             stream,

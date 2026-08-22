@@ -9,6 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/observation.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/kernel-server/src/personal/pinned_https.rs
+  - path: apps/kernel-server/src/personal/provider_control_plane.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
   - path: apps/kernel-server/src/personal/resource_manager.rs
   - path: apps/kernel-server/src/personal/server.rs
@@ -16,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:58e3b406177e8d0732b3f54f83149b26a8b45ee244795366fb2d5cf5cebb4db4"
+fingerprint: "sha256:54756ba5b8293ebdfe0cf6b9ec2cfccc604689db62336db66f125435ea585220"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -36,8 +37,40 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/personal/doctor` | management | 快照一致的脱敏诊断投影，含六资源、headless vault 与可运维性小节。 |
 | `GET` | `/personal/dsh/runtime` | management | 仅观测的 dsh runtime 投影：进程内会话、fencing epoch、可选绑定 pid 存活（仅 `/proc/{pid}` 是否存在，永不打开 cmdline/environ）。状态为 INACTIVE、ACTIVE 或 CRASHED。dsh 响应绝不完成 Task。 |
 | `POST` | `/personal/dsh/runtime` | management | 仅观测地 bind/heartbeat/clear 一个 dsh 进程 pid。不是 authority writer。非法 schema/op/pid 失败闭合。 |
-| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；绑定 selected model；secret 仅在服务端解析。一元 `stream:false` 成功响应携带 `X-CognitiveOS-Provider-Network-Nanos`。公开 `stream:true` 按 SSE（`text/event-stream`）转发，并在不等待一元 JSON body 的情况下刷新上游字节；流式成功省略 network-nanos 头，因为刷新响应头时总时长未知。Pi 对话与 private-candidate 保持一元。当 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明 `campaign-<32 位小写 hex>` correlation id 时，daemon 还会回显该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略；产品 body 不变，且绝不持久化。 |
-| `GET` | `/provider/v1/selected-model` | management | 非 secret 的 selected-model 投影。 |
+| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Pi 路径 Provider 代理（`agent://personal/pi`）。存在控制面 binding 时，请求 model 必须匹配该 binding，且无回退。未绑定 agent 仍使用 `provider.json` / `selected-model.json`。secret 仅在服务端解析。一元 `stream:false` 成功响应携带 `X-CognitiveOS-Provider-Network-Nanos`。公开 `stream:true` 按 SSE（`text/event-stream`）转发，并在不等待一元 JSON body 的情况下刷新上游字节；流式成功省略 network-nanos 头，因为刷新响应头时总时长未知。Pi 对话与 private-candidate 保持一元。当 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明 `campaign-<32 位小写 hex>` correlation id 时，daemon 还会回显该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略；产品 body 不变，且绝不持久化。 |
+| `GET` | `/provider/v1/selected-model` | management | Pi 路径的非 secret selected-model 投影。存在控制面 binding 时，该 binding 的 model 即为 selected model（`selected_snapshot_digest: binding`）。 |
+| `POST` | `/provider/v1/dsh/chat/completions` | management | daemon 持有的 DeepSeek harness 路径 Provider 代理（`agent://personal/dsh`）。与 Pi 路由独立：向 `/provider/v1/chat/completions` POST 不能满足 dsh binding。binding 不符失败闭合且无回退。未绑定 dsh 仍使用 `provider.json` / `selected-model.json`。 |
+| `GET` | `/provider/v1/dsh/selected-model` | management | DeepSeek harness 路径的非 secret selected-model 投影。与 Pi selected-model 路由独立。 |
+| `GET` | `/management/providers/accounts` | management | 列出命名 Provider Control Plane 账户（仅不透明 secret_ref；绝无 API key 材料）。 |
+| `POST` | `/management/providers/accounts` | management | 创建命名的 OpenAI 官方、Anthropic 官方或 OpenAI 兼容账户。自定义 HTTP/私网端点需要持久授权。可选 api_key 只消费一次进入 Secret Store 且永不返回。创建时的发现仅前台执行。 |
+| `GET` | `/management/providers/accounts/inspect` | management | 按 id 检视一个 Provider 账户（脱敏；无 key 材料）。 |
+| `POST` | `/management/providers/accounts/update` | management | 更新端点信任。权威、DNS 范围扩大或 HTTPS→HTTP 需要 reconfirm。 |
+| `POST` | `/management/providers/accounts/delete` | management | 删除账户。存在活动 agent binding 时失败闭合（409）。 |
+| `POST` | `/management/providers/accounts/key` | management | 为一个账户设置、轮换或移除 Secret Store 密钥。材料永不写入 SQLite。 |
+| `GET` | `/management/providers/models` | management | 列出一个账户的已发现与手动配置模型。 |
+| `POST` | `/management/providers/models/refresh` | management | 前台模型发现。失败记录可审计错误，且不得清空目录或 binding。 |
+| `POST` | `/management/providers/models/add` | management | 手动添加模型（`manually_configured`），可选百万 token 单价。 |
+| `POST` | `/management/providers/models/set-price` | management | 为一个模型设置新的价格版本。历史用量保留其记录的定价版本。 |
+| `GET` | `/management/agent-bindings` | management | 列出固定的 agent 账户+provider+model binding（仅 pi 与 dsh）。 |
+| `POST` | `/management/agent-bindings` | management | 设置一个固定 binding。无自动回退、负载均衡或隐式模型切换。 |
+| `POST` | `/management/agent-bindings/remove` | management | 移除一个 agent binding。 |
+| `GET` | `/management/usage` | management | 查询保留的用量事件。未知 token/成本值绝不会被当成 0。 |
+| `GET` | `/management/budgets` | management | 列出仅观察的 token/金额预算。 |
+| `POST` | `/management/budgets` | management | 为账户或 agent 设置月度 token/金额预算。告警不阻断调用。 |
+| `POST` | `/management/budgets/remove` | management | 移除一个预算。 |
+| `GET` | `/management/alerts` | management | 列出 80%/100% 预算告警（去重；仅观察）。 |
+| `POST` | `/management/alerts/acknowledge` | management | 确认一条预算告警。 |
+| `GET` | `/management/audit` | management | 查询控制面审计事件（无密钥、prompt 或可逆载荷）。 |
+| `GET` | `/task/providers/accounts` | task | 禁止：Provider Control Plane 仅限 management 通道。 |
+| `POST` | `/task/providers/accounts` | task | 禁止：Provider Control Plane 仅限 management 通道。 |
+| `GET` | `/task/agent-bindings` | task | 禁止：agent binding 仅限 management 通道。 |
+| `POST` | `/task/agent-bindings` | task | 禁止：agent binding 仅限 management 通道。 |
+| `GET` | `/task/usage` | task | 禁止：用量查询仅限 management 通道。 |
+| `GET` | `/task/budgets` | task | 禁止：预算仅限 management 通道。 |
+| `POST` | `/task/budgets` | task | 禁止：预算仅限 management 通道。 |
+| `GET` | `/task/alerts` | task | 禁止：告警仅限 management 通道。 |
+| `POST` | `/task/alerts` | task | 禁止：告警仅限 management 通道。 |
+| `GET` | `/task/audit` | task | 禁止：审计查询仅限 management 通道。 |
 | `GET` | `/resource/v1/projection` | management | 私有版本化六资源族投影（family + version 查询参数）。 |
 | `GET` | `/resource/v1/watch` | management | 按资源族的 watch，支持可选 resume_from 游标。 |
 | `GET` | `/management/resource/v1/list` | management | 通用 Resource Manager 有界族页（Tool catalog+overlay、未墓碑 Memory、Skill binding、当前 Task contract；Context/Runtime 诚实为空）。不是通用 Resource 表。 |

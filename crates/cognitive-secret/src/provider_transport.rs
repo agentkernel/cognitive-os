@@ -205,6 +205,12 @@ impl<T: ProviderTransport + ?Sized> ProviderTransport for std::sync::Arc<T> {
 
 /// Header name that may carry the Provider API key.
 pub const AUTHORIZATION_HEADER_NAME: &str = "Authorization";
+/// Official Anthropic native key header. Callers cannot supply this template.
+pub const ANTHROPIC_API_KEY_HEADER_NAME: &str = "x-api-key";
+/// Official Anthropic version header name.
+pub const ANTHROPIC_VERSION_HEADER_NAME: &str = "anthropic-version";
+/// Pinned Anthropic API version for official adapter requests.
+pub const ANTHROPIC_API_VERSION: &str = "2023-06-01";
 
 /// Build a Bearer Authorization header value from UTF-8 secret material.
 ///
@@ -232,6 +238,27 @@ pub fn bearer_authorization_header_value(
 /// True when a header name is Authorization (ASCII case-insensitive).
 pub fn is_authorization_header_name(name: &str) -> bool {
     name.eq_ignore_ascii_case(AUTHORIZATION_HEADER_NAME)
+        || name.eq_ignore_ascii_case(ANTHROPIC_API_KEY_HEADER_NAME)
+}
+
+/// Build the official Anthropic `x-api-key` header value from UTF-8 material.
+///
+/// Callers must not log, persist, or include this value in errors.
+pub fn anthropic_api_key_header_value(material: &[u8]) -> Result<String, ProviderTransportError> {
+    let token = std::str::from_utf8(material).map_err(|_| ProviderTransportError::Policy {
+        detail: "provider api key material is not valid utf-8",
+    })?;
+    if token.is_empty() {
+        return Err(ProviderTransportError::Policy {
+            detail: "provider api key material is empty",
+        });
+    }
+    if token.chars().any(|character| character.is_control()) {
+        return Err(ProviderTransportError::Policy {
+            detail: "provider api key material contains control characters",
+        });
+    }
+    Ok(token.to_owned())
 }
 
 /// Redact header values that may carry credentials for Debug output.

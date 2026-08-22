@@ -12,6 +12,7 @@ sources:
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
   - path: crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
+  - path: crates/cognitive-store/src/provider_control_plane.rs
   - path: crates/cognitive-store/src/sqlite/store.rs
     symbols: ["SqliteAuthorityStore"]
   - path: crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -20,9 +21,10 @@ sources:
     symbols: ["SchedulerRepository", "acquire_eligible_lease"]
 tests:
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
+  - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - crates/cognitive-store/tests/m2_acceptance.rs
   - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:2f8fb39363f7575850f9509565e65f573acf8ae616286ff371a48da1c7f34425"
+fingerprint: "sha256:ac8f7f43c6f9229539b2ecd1c7160697ee013e655081cf0251eb801a7de76ee5"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -32,10 +34,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v24）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v25）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v24）
+## 权威库迁移图（v1–v25）
 
 | 版本 | 新增 |
 |---|---|
@@ -47,11 +49,12 @@ non_claims:
 | v16–v20 | Memory candidate/decision/object、FTS5 派生索引、tombstone（forget → +expire → +supersede）、版本谱系 |
 | v21–v23 | Skill package/revision/binding、binding 撤销、revision 谱系 |
 | v24 | 按 Task/epoch/request/session 绑定的只追加 Memory/Skill 消费记录 |
+| v25 | Provider Control Plane 账户、模型、binding、用量事件/聚合、预算、告警、审计 |
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；唯一派生表是
 `memory_search_fts`（可重建；检索先跑权威过滤 CTE 再 `MATCH`）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v24 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v25 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

@@ -12,13 +12,14 @@ sources:
   - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch", "status"]
+  - path: apps/admin-cli/src/personal_cli/provider.rs
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:01f30484a40692d33eeb43c0b3a1cccf8e048de7d1b07e978b0cf183287965c9"
+fingerprint: "sha256:c2530a12d769b6024685299cf21c06a17035b202cbb72a94ec3208a066233cdf"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -46,6 +47,11 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | common Resource Manager read envelope (management channel) |
 | `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | common Resource Manager mutation onto existing Skill/Tool sinks; not generic create/execute/complete |
+| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane accounts; `--api-key-file` only; custom HTTP/private endpoints need `--allow-insecure-http` / `--allow-private-network` |
+| `cognitive provider key set\|rotate\|remove` | Secret Store key ops via the daemon; never SQLite |
+| `cognitive provider models refresh\|list\|add\|set-price` | foreground discovery, manual models, prices |
+| `cognitive agent binding set\|show\|list\|remove` | fixed pi/dsh account+provider+model binding; no fallback |
+| `cognitive usage query` / `cognitive budget set\|list\|remove` / `cognitive alerts list\|acknowledge` / `cognitive audit query` | usage/cost/audit and observe-only budgets |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |
 | `cognitive backup [--output <dir>]` | write a secret-excluding digest-bound archive (no authority SQLite / provider-config / bearer) |

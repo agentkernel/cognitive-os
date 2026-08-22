@@ -28,6 +28,7 @@ pub mod memory_store;
 pub mod migration;
 pub mod personal_backup;
 pub mod personal_db;
+pub mod provider_control_plane;
 pub mod scheduler;
 pub mod skill_store;
 pub mod sqlite;
@@ -66,6 +67,13 @@ pub use personal_backup::{
 pub use personal_db::{
     PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,
     installation_migration_plan, prepare_personal_databases,
+};
+pub use provider_control_plane::{
+    AgentProviderBindingRecord, BUILTIN_PRICE_TABLE_VERSION, CostOutcome, NewUsageEvent,
+    PROVIDER_CONTROL_PLANE_SCHEMA_V25, ProviderAccountRecord, ProviderControlPlaneError,
+    ProviderControlPlaneStore, ProviderModelRecord, USAGE_AGGREGATE_RETENTION_MS,
+    USAGE_EVENT_RETENTION_MS, UsageSample, apply_builtin_prices, compute_cost, now_ms,
+    provider_control_plane_migration_entry, usage_from_anthropic_json, usage_from_openai_json,
 };
 pub use sqlite::SqliteAuthorityStore;
 

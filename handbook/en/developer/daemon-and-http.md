@@ -28,6 +28,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/resource_manager.rs
     symbols: ["handle", "matches"]
+  - path: apps/kernel-server/src/personal/provider_control_plane.rs
+    symbols: ["handle", "matches"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -43,7 +45,8 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:9a42e809a5c4b3d6e489aeeb6cfe815e4cb544c66057be5d449b26897ab26236"
+  - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
+fingerprint: "sha256:9ff5551a8cab2a402623cc952eec8da5c16ed84e0c2e8b7564e1501e7cc6d07a"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -119,6 +122,16 @@ rejected as restatement. Forgotten, revoked, or digest-drifted pins fail
 closed before the response, and Memory/Skill bodies never appear. Session 2
 and post-restart GET read the same durable row; a caller `query_text` POST
 cannot replace those pins.
+
+Management Provider Control Plane routes (`/management/providers/*`,
+`/management/agent-bindings`, `/management/usage`, `/management/budgets`,
+`/management/alerts`, `/management/audit`) require a management bearer.
+Task-channel aliases fail closed (`PROVIDER_CONTROL_CHANNEL_FORBIDDEN`).
+Named accounts persist only an opaque Secret Store `secret_ref`. Bound Pi
+traffic uses `POST /provider/v1/chat/completions`; bound DeepSeek harness
+traffic uses `POST /provider/v1/dsh/chat/completions`. Unbound agents still
+use `provider.json`. Private-candidate completion uses the same Pi binding
+when present and fails closed on mismatch; Pi never reads the Secret Store.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.

@@ -9,6 +9,7 @@ sources:
   - path: apps/kernel-server/src/personal/observation.rs
   - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/kernel-server/src/personal/pinned_https.rs
+  - path: apps/kernel-server/src/personal/provider_control_plane.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
   - path: apps/kernel-server/src/personal/resource_manager.rs
   - path: apps/kernel-server/src/personal/server.rs
@@ -16,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:58e3b406177e8d0732b3f54f83149b26a8b45ee244795366fb2d5cf5cebb4db4"
+fingerprint: "sha256:54756ba5b8293ebdfe0cf6b9ec2cfccc604689db62336db66f125435ea585220"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -36,8 +37,40 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/personal/doctor` | management | Redacted snapshot-consistent diagnostic projection including six-resource, headless-vault, and operability sections. |
 | `GET` | `/personal/dsh/runtime` | management | Observation-only dsh runtime projection: process-local sessions, fencing epoch, optional bound pid liveness via `/proc/{pid}` existence (never cmdline/environ). States are INACTIVE, ACTIVE, or CRASHED. A dsh response is never Task completion. |
 | `POST` | `/personal/dsh/runtime` | management | Observation-only bind/heartbeat/clear of a dsh process id. Not an authority writer. Invalid schema/op/pid fail closed. |
-| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy; selected-model-bound; secrets resolved server-side only. Unary `stream:false` success responses carry `X-CognitiveOS-Provider-Network-Nanos`. Public `stream:true` is forwarded as SSE (`text/event-stream`) and flushes upstream bytes without waiting for a unary JSON body; streaming success omits the network-nanos header because it is unknown when headers flush. Pi conversations and private-candidate remain unary. When `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and the request carries one well-formed opaque `campaign-<32 lowercase hex>` correlation id, the daemon also echoes that id and reports `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore work, disjoint from the network exchange). Malformed or duplicate correlation headers are ignored; the product body is unchanged and nothing is persisted. |
-| `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection. |
+| `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy for the Pi agent path (`agent://personal/pi`). When a control-plane binding exists, the request model must match that binding and there is no fallback. Unbound agents still use `provider.json` / `selected-model.json`. Secrets resolve server-side only. Unary `stream:false` success responses carry `X-CognitiveOS-Provider-Network-Nanos`. Public `stream:true` is forwarded as SSE (`text/event-stream`) and flushes upstream bytes without waiting for a unary JSON body; streaming success omits the network-nanos header because it is unknown when headers flush. Pi conversations and private-candidate remain unary. When `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and the request carries one well-formed opaque `campaign-<32 lowercase hex>` correlation id, the daemon also echoes that id and reports `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore work, disjoint from the network exchange). Malformed or duplicate correlation headers are ignored; the product body is unchanged and nothing is persisted. |
+| `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection for the Pi agent path. A control-plane binding, when present, is the selected model (`selected_snapshot_digest: binding`). |
+| `POST` | `/provider/v1/dsh/chat/completions` | management | Daemon-owned Provider proxy for the DeepSeek harness path (`agent://personal/dsh`). Independent of the Pi route: a dsh binding cannot be satisfied by posting to `/provider/v1/chat/completions`. Binding mismatch fails closed with no fallback. Unbound dsh still uses `provider.json` / `selected-model.json`. |
+| `GET` | `/provider/v1/dsh/selected-model` | management | Non-secret selected-model projection for the DeepSeek harness path. Independent of the Pi selected-model route. |
+| `GET` | `/management/providers/accounts` | management | List named Provider Control Plane accounts (opaque secret_ref only; never API key material). |
+| `POST` | `/management/providers/accounts` | management | Create a named OpenAI official, Anthropic official, or OpenAI-compatible account. Custom HTTP/private endpoints require durable grants. Optional api_key is consumed once into Secret Store and never returned. Discovery on create is foreground-only. |
+| `GET` | `/management/providers/accounts/inspect` | management | Inspect one Provider account by id (redacted; no key material). |
+| `POST` | `/management/providers/accounts/update` | management | Update endpoint trust. Authority, DNS-scope expansion, or HTTPS→HTTP requires reconfirm. |
+| `POST` | `/management/providers/accounts/delete` | management | Delete an account. Active agent bindings fail closed (409). |
+| `POST` | `/management/providers/accounts/key` | management | Set, rotate, or remove the Secret Store key for one account. Material is never persisted in SQLite. |
+| `GET` | `/management/providers/models` | management | List discovered and manually configured models for one account. |
+| `POST` | `/management/providers/models/refresh` | management | Foreground model discovery. Failure records an auditable error and must not wipe the catalog or bindings. |
+| `POST` | `/management/providers/models/add` | management | Manually add a model (`manually_configured`) with optional per-million prices. |
+| `POST` | `/management/providers/models/set-price` | management | Set a new price version for one model. Historical usage keeps its recorded pricing version. |
+| `GET` | `/management/agent-bindings` | management | List fixed agent account+provider+model bindings (pi and dsh only). |
+| `POST` | `/management/agent-bindings` | management | Set one fixed binding. No auto fallback, load balancing, or implicit model switch. |
+| `POST` | `/management/agent-bindings/remove` | management | Remove one agent binding. |
+| `GET` | `/management/usage` | management | Query retained usage events. Unknown token/cost values are never coerced to zero. |
+| `GET` | `/management/budgets` | management | List observe-only token/amount budgets. |
+| `POST` | `/management/budgets` | management | Set a monthly token/amount budget for an account or agent. Alerts do not block calls. |
+| `POST` | `/management/budgets/remove` | management | Remove one budget. |
+| `GET` | `/management/alerts` | management | List 80%/100% budget alerts (deduped; observe-only). |
+| `POST` | `/management/alerts/acknowledge` | management | Acknowledge one budget alert. |
+| `GET` | `/management/audit` | management | Query control-plane audit events (no keys, prompts, or reversible payloads). |
+| `GET` | `/task/providers/accounts` | task | Forbidden: Provider Control Plane is management-channel only. |
+| `POST` | `/task/providers/accounts` | task | Forbidden: Provider Control Plane is management-channel only. |
+| `GET` | `/task/agent-bindings` | task | Forbidden: agent bindings are management-channel only. |
+| `POST` | `/task/agent-bindings` | task | Forbidden: agent bindings are management-channel only. |
+| `GET` | `/task/usage` | task | Forbidden: usage query is management-channel only. |
+| `GET` | `/task/budgets` | task | Forbidden: budgets are management-channel only. |
+| `POST` | `/task/budgets` | task | Forbidden: budgets are management-channel only. |
+| `GET` | `/task/alerts` | task | Forbidden: alerts are management-channel only. |
+| `POST` | `/task/alerts` | task | Forbidden: alerts are management-channel only. |
+| `GET` | `/task/audit` | task | Forbidden: audit query is management-channel only. |
 | `GET` | `/resource/v1/projection` | management | Private versioned six-family resource projection (family + version query). |
 | `GET` | `/resource/v1/watch` | management | Family-scoped resource watch with optional resume_from cursor. |
 | `GET` | `/management/resource/v1/list` | management | Common Resource Manager bounded family page (tool catalog+overlay, non-tombstoned Memory, Skill bindings, current Task contracts; honest empty Context/Runtime). Not a generic Resource table. |

@@ -1261,6 +1261,19 @@ Pi 不可以：
 - `cognitive resource` 是真实调用者。watch 不另开 SSE。无公开 generic Resource DTO。
 - 真机实测走 `DEV-LINUX-NATIVE-01`，不是 B01 guest。
 
+### P8-T13 — LLM Provider Control Plane
+
+- 映射临时设计卡 PCP-T01..PCP-T07 到正式任务 `P8-T13`。官方 OpenAI / 官方 Anthropic /
+  自定义 OpenAI 兼容端点；禁止第三方 Anthropic 兼容端点。
+- 多命名账户；每个 agent 固定 account+provider+model binding；无回退/负载均衡/自动路由。
+- API key 只进批准 Secret Store；daemon 是唯一 authority writer；不出现在 SQLite /
+  普通配置 / argv / env / 服务单元 / 日志 / CLI / audit / 夹具 / 证据。
+- 创建时前台发现一次；之后只在显式 refresh。发现失败保留账户/目录/binding。
+- Pi 走 `/provider/v1/chat/completions`；DeepSeek harness 独立走 `/provider/v1/dsh/*`。
+- 用量四类 token；`unknown` 不作 0；缺价 `cost_unavailable`。预算告警仅观察。
+- 本阶段无 Web/Desktop 控制面。Cockpit/CC Switch 只作交互参考。
+- 真机实测走 `DEV-LINUX-NATIVE-01`，不是 B01 guest。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）
