@@ -49,6 +49,12 @@ pub struct DshLaunchOptions {
     pub task: Option<String>,
 }
 
+/// Inputs accepted by `cognitive dsh status`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct DshStatusOptions {
+    pub layout_roots: LayoutRoots,
+}
+
 /// Path A is dsh → DeepSeek Flash direct. Path B is dsh → AKP → daemon → Flash.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum DshProviderPath {
@@ -153,6 +159,20 @@ pub fn launch(options: &DshLaunchOptions) -> Result<Value, String> {
         prepare_launch_with_doctor_document(options, &endpoint_document, &doctor_document)?;
 
     let mut child_process = spawn_dsh_helper(&launch_plan)?;
+    let process_id = child_process.id();
+    PersonalDaemonClient::connect(&endpoint, &layout)
+        .and_then(|client| {
+            client.post_dsh_runtime(
+                &json!({
+                    "schema_version": 1,
+                    "surface": "personal-dsh-runtime",
+                    "op": "bind",
+                    "process_id": process_id,
+                })
+                .to_string(),
+            )
+        })
+        .map_err(|error| error.to_string())?;
     let action = if options.print_mode {
         let exit_status = child_process
             .wait()
@@ -180,6 +200,18 @@ pub fn launch(options: &DshLaunchOptions) -> Result<Value, String> {
         "authority_side_effects": false,
         "conversation_claim": "not-claimed",
     }))
+}
+
+/// Read the daemon-owned dsh runtime projection. Observation-only.
+pub fn status(options: &DshStatusOptions) -> Result<Value, String> {
+    let layout = build_layout(&options.layout_roots).map_err(|error| error.to_string())?;
+    let endpoint_document = fs::read_to_string(layout.state_dir().join(DAEMON_ENDPOINT_FILE_NAME))
+        .map_err(|_| "daemon endpoint is absent; run `cognitive daemon start`".to_owned())?;
+    let endpoint = parse_loopback_endpoint(&endpoint_document)?;
+    let body = PersonalDaemonClient::connect(&endpoint, &layout)
+        .and_then(|client| client.get_dsh_runtime())
+        .map_err(|error| error.to_string())?;
+    serde_json::from_str(&body).map_err(|_| "dsh runtime projection is not JSON".to_owned())
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

@@ -15,7 +15,7 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
   - path: apps/kernel-server/src/personal/capability_truth.rs
     symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
-fingerprint: "sha256:2bef93924185f2af8138d963f32c9f06f29be1a1f30dab83aafa7788ccd75d35"
+fingerprint: "sha256:ab329699ef401f7c3aa47227cc855da1fadb6458b84b9e7b9bea7159f7c49494"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -31,8 +31,9 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | systemd user service + health-gated activation | implemented | — |
 | `cognitive init` (layout, secrets, discovery, selected model) | implemented | — |
 | Daemon loopback HTTP + channel auth + bounds | implemented | bearer RNG non-cryptographic |
-| Provider proxy (non-streaming chat) | implemented | streaming unsupported |
+| Provider proxy (unary chat + public SSE) | implemented | Pi/private-candidate stay unary; no disconnect-to-cancel |
 | SecretStore | implemented (Linux Secret Service; Windows Credential Manager) | headless vault designed; macOS unavailable |
+| dsh runtime inspect | implemented | `/proc` liveness is Linux-only; Windows reports unknown rather than CRASHED |
 | Pi shell conversation via daemon | implemented | one-shot, text-only |
 | Pi tool use inside shell | unavailable | all built-ins denied by policy |
 | Task record/interpret/preview/admit | implemented | — |

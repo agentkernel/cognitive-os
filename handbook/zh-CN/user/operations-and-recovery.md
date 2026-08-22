@@ -33,7 +33,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:14d988d2da463f177e0034edc4c6b6b6f0105bbb0ff088e034a8088fe6c3d806"
+fingerprint: "sha256:fa2ed40ba7a06d9b989a6c247b690114c0f68e29d56e2d7dd86866253e47ed3a"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -67,6 +67,9 @@ non_claims:
   ready（Pi 可保持 `not_configured`），加载钉住的 AKP 插件，绝不把 dsh 响应当作
   Task 完成。直接 Flash（`--path a`）被拒绝；同机 Path A/B 测量只用
   `packages/dsh-akp-adapter/scripts/paired-path.mjs`。
+- `cognitive dsh status` 读取 `GET /personal/dsh/runtime`：由进程内会话与可选绑定
+  pid 得到 INACTIVE / ACTIVE / CRASHED。Linux 存活只看 `/proc/{pid}` 是否存在
+  （永不打开 cmdline/environ）。它不是 authority writer。
 
 ## 停止、重启、过期状态 —— `implemented`
 

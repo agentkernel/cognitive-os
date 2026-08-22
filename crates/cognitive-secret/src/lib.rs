@@ -55,8 +55,8 @@ pub use provider_snapshot::{
 };
 pub use provider_transport::{
     AUTHORIZATION_HEADER_NAME, ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse,
-    ProviderTransport, ProviderTransportError, bearer_authorization_header_value,
-    is_authorization_header_name, redacted_headers,
+    ProviderTransport, ProviderTransportError, StreamedProviderExchange,
+    bearer_authorization_header_value, is_authorization_header_name, redacted_headers,
 };
 pub use secret_input::read_secret_material_from_reader;
 pub use selected_model::{

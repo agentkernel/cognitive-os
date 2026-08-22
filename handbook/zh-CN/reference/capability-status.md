@@ -15,7 +15,7 @@ sources:
   - path: crates/cognitive-management/src/task_application.rs
   - path: apps/kernel-server/src/personal/capability_truth.rs
     symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
-fingerprint: "sha256:2bef93924185f2af8138d963f32c9f06f29be1a1f30dab83aafa7788ccd75d35"
+fingerprint: "sha256:ab329699ef401f7c3aa47227cc855da1fadb6458b84b9e7b9bea7159f7c49494"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -31,8 +31,9 @@ non_claims:
 | systemd 用户服务 + 健康门激活 | implemented | — |
 | `cognitive init`（布局、secret、发现、选型） | implemented | — |
 | daemon loopback HTTP + 通道认证 + 界限 | implemented | bearer 随机源非密码学 |
-| Provider 代理（非流式对话） | implemented | 不支持流式 |
+| Provider 代理（一元对话 + 公开 SSE） | implemented | Pi/private-candidate 保持一元；无 disconnect-to-cancel |
 | SecretStore | implemented（Linux Secret Service；Windows Credential Manager） | headless vault 为 designed；macOS 不可用 |
+| dsh runtime inspect | implemented | `/proc` 存活仅 Linux；Windows 报告 unknown 而非 CRASHED |
 | 经 daemon 的 Pi 对话 | implemented | 单发、仅文本 |
 | Pi shell 内工具使用 | unavailable | 策略拒绝全部内置工具 |
 | Task record/interpret/preview/admit | implemented | — |

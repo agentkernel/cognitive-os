@@ -207,6 +207,21 @@ impl DeepSeekHarnessAdapter {
         self.bound_task_ref.as_deref()
     }
 
+    /// Fenced session id, if the adapter is active.
+    pub fn session_id(&self) -> Option<&str> {
+        self.session_id.as_deref()
+    }
+
+    /// Fencing epoch this adapter was constructed to enforce.
+    pub fn fencing_epoch(&self) -> u64 {
+        self.config.expected_fencing_epoch
+    }
+
+    /// Last accepted plugin event sequence, if any.
+    pub fn last_sequence(&self) -> Option<u64> {
+        self.last_sequence
+    }
+
     pub fn activate(&mut self, session_id: &str) -> Result<(), DshAdapterError> {
         self.activate_fenced(session_id, self.config.expected_fencing_epoch, None)
     }

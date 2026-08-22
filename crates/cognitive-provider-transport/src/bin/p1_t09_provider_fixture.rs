@@ -24,6 +24,7 @@ enum FixtureScenario {
     Timeout,
     Oversized,
     Redirect,
+    DelayedSse,
 }
 
 impl FixtureScenario {
@@ -36,6 +37,7 @@ impl FixtureScenario {
             "timeout" => Ok(Self::Timeout),
             "oversized" => Ok(Self::Oversized),
             "redirect" => Ok(Self::Redirect),
+            "delayed-sse" => Ok(Self::DelayedSse),
             _ => Err("unsupported deterministic Provider fixture scenario"),
         }
     }
@@ -123,12 +125,18 @@ fn handle_connection(
     server_configuration: Arc<ServerConfig>,
     options: &FixtureOptions,
 ) -> Result<(), Box<dyn std::error::Error>> {
+    tcp_stream.set_nodelay(true)?;
     tcp_stream.set_read_timeout(Some(Duration::from_secs(2)))?;
-    tcp_stream.set_write_timeout(Some(Duration::from_secs(2)))?;
+    tcp_stream.set_write_timeout(Some(Duration::from_secs(5)))?;
     let server_connection = ServerConnection::new(server_configuration)?;
     let mut tls_stream = StreamOwned::new(server_connection, tcp_stream);
     let request = read_request(&mut tls_stream)?;
     record_observation(&request, &options.observations_output)?;
+
+    if options.scenario == FixtureScenario::DelayedSse {
+        write_delayed_sse(&mut tls_stream)?;
+        return Ok(());
+    }
 
     let response = fixture_response(options.scenario, &request);
     if options.scenario == FixtureScenario::Timeout {
@@ -136,6 +144,20 @@ fn handle_connection(
     }
     let _ = tls_stream.write_all(&response);
     let _ = tls_stream.flush();
+    Ok(())
+}
+
+fn write_delayed_sse(
+    tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let header = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n";
+    tls_stream.write_all(header)?;
+    tls_stream.flush()?;
+    tls_stream.write_all(b"data: {\"choices\":[{\"delta\":{\"content\":\"pong\"}}]}\n\n")?;
+    tls_stream.flush()?;
+    std::thread::sleep(Duration::from_millis(250));
+    tls_stream.write_all(b"data: [DONE]\n\n")?;
+    tls_stream.flush()?;
     Ok(())
 }
 

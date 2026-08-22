@@ -72,6 +72,21 @@ pub struct ProviderHttpResponse {
     pub body: Vec<u8>,
 }
 
+/// Metadata for one streaming Provider exchange. Body bytes are delivered only
+/// through the caller's chunk callback and are never retained here.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub struct StreamedProviderExchange {
+    /// HTTP status code from the upstream Provider.
+    pub status: u16,
+    /// Wall time from dispatch until the first non-empty body byte, or the
+    /// full network duration when the body is empty.
+    pub first_byte_nanos: u128,
+    /// Wall time of the complete upstream exchange.
+    pub provider_network_elapsed_nanos: u128,
+    /// Bounded number of body bytes delivered to the caller.
+    pub body_bytes: usize,
+}
+
 impl fmt::Debug for ProviderHttpResponse {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         formatter
@@ -131,6 +146,25 @@ pub trait ProviderTransport {
         &self,
         request: &ProviderHttpRequest,
     ) -> Result<ProviderHttpResponse, ProviderTransportError>;
+
+    /// Perform one streaming Provider HTTP exchange.
+    ///
+    /// `on_status` is invoked once the upstream status is known and before any
+    /// body byte. `on_chunk` is invoked for each non-empty body fragment in
+    /// arrival order. Implementations must not log Authorization values or
+    /// body bytes. The default is a policy refusal so existing unary transports
+    /// stay fail-closed.
+    fn exchange_stream(
+        &self,
+        request: &ProviderHttpRequest,
+        on_status: &mut dyn FnMut(u16) -> Result<(), ProviderTransportError>,
+        on_chunk: &mut dyn FnMut(&[u8]) -> Result<(), ProviderTransportError>,
+    ) -> Result<StreamedProviderExchange, ProviderTransportError> {
+        let _ = (request, on_status, on_chunk);
+        Err(ProviderTransportError::Policy {
+            detail: "streaming Provider exchange is not implemented by this transport",
+        })
+    }
 }
 
 impl<T: ProviderTransport + ?Sized> ProviderTransport for &T {
@@ -140,6 +174,15 @@ impl<T: ProviderTransport + ?Sized> ProviderTransport for &T {
     ) -> Result<ProviderHttpResponse, ProviderTransportError> {
         (**self).exchange(request)
     }
+
+    fn exchange_stream(
+        &self,
+        request: &ProviderHttpRequest,
+        on_status: &mut dyn FnMut(u16) -> Result<(), ProviderTransportError>,
+        on_chunk: &mut dyn FnMut(&[u8]) -> Result<(), ProviderTransportError>,
+    ) -> Result<StreamedProviderExchange, ProviderTransportError> {
+        (**self).exchange_stream(request, on_status, on_chunk)
+    }
 }
 
 impl<T: ProviderTransport + ?Sized> ProviderTransport for std::sync::Arc<T> {
@@ -148,6 +191,15 @@ impl<T: ProviderTransport + ?Sized> ProviderTransport for std::sync::Arc<T> {
         request: &ProviderHttpRequest,
     ) -> Result<ProviderHttpResponse, ProviderTransportError> {
         (**self).exchange(request)
+    }
+
+    fn exchange_stream(
+        &self,
+        request: &ProviderHttpRequest,
+        on_status: &mut dyn FnMut(u16) -> Result<(), ProviderTransportError>,
+        on_chunk: &mut dyn FnMut(&[u8]) -> Result<(), ProviderTransportError>,
+    ) -> Result<StreamedProviderExchange, ProviderTransportError> {
+        (**self).exchange_stream(request, on_status, on_chunk)
     }
 }
 

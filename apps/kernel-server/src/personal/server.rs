@@ -32,7 +32,7 @@ use super::bounds::{
 use super::fault_profile;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::pinned_https;
-use super::provider_proxy::{ProviderProxyService, RustlsProviderTransport};
+use super::provider_proxy::{ProviderProxyError, ProviderProxyService, RustlsProviderTransport};
 use super::readiness::{
     ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
     status_projection_json,
@@ -640,6 +640,11 @@ fn dispatch_http_route(
     }
     if method_path.starts_with("GET /provider/v1/selected-model ") {
         return handle_selected_model_route(stream, headers, layout, authority);
+    }
+    if method_path.starts_with("GET /personal/dsh/runtime ")
+        || method_path.starts_with("POST /personal/dsh/runtime ")
+    {
+        return handle_dsh_runtime_route(stream, &method_path, headers, body, authority, task_api);
     }
     if method_path.starts_with("POST /management/context-authorization/facts ") {
         return handle_context_authorization_fact_admission(
@@ -1524,6 +1529,7 @@ fn handle_provider_proxy_route(
     layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
 ) -> Result<(), String> {
+    let _ = stream.set_nodelay(true);
     let Some(token) = extract_bearer_token(headers) else {
         return write_error_response(
             stream,
@@ -1557,6 +1563,15 @@ fn handle_provider_proxy_route(
     // authorization only. It cannot change which request is forwarded.
     let correlation_id = route_observation::extract_correlation_id(headers);
     let observation_authorized = route_observation::route_observation_authorized();
+    if request_asks_for_stream(request_body) {
+        return handle_provider_proxy_streaming(
+            stream,
+            request_body,
+            &service,
+            observation_authorized,
+            correlation_id.as_deref().map_err(|refusal| *refusal),
+        );
+    }
     match service.forward_chat_completion_with_timing(request_body) {
         Ok(timed_response) => write_provider_response(
             stream,
@@ -1579,6 +1594,234 @@ fn handle_provider_proxy_route(
             "provider proxy request was not completed",
         ),
     }
+}
+
+fn request_asks_for_stream(request_body: &[u8]) -> bool {
+    serde_json::from_slice::<serde_json::Value>(request_body)
+        .ok()
+        .and_then(|value| value.get("stream").and_then(serde_json::Value::as_bool))
+        == Some(true)
+}
+
+fn handle_provider_proxy_streaming<T: cognitive_secret::ProviderTransport + ?Sized>(
+    stream: &mut TcpStream,
+    request_body: &[u8],
+    service: &ProviderProxyService<'_, T>,
+    observation_authorized: bool,
+    correlation_id: Result<&str, route_observation::CorrelationRefusal>,
+) -> Result<(), String> {
+    let stream_cell = std::cell::RefCell::new(stream);
+    let sse_started = std::cell::Cell::new(false);
+    let error_body = std::cell::RefCell::new(Vec::new());
+    let preflight_elapsed_nanos = std::cell::Cell::new(0_u128);
+    let observation_headers = route_observation::observation_streaming_response_headers(
+        observation_authorized,
+        correlation_id,
+    );
+    let outcome = {
+        let mut on_preflight = |nanos: u128| {
+            preflight_elapsed_nanos.set(nanos);
+            Ok(())
+        };
+        let mut on_status = |status: u16| {
+            if status == 200 {
+                write_provider_sse_headers(
+                    &mut *stream_cell.borrow_mut(),
+                    preflight_elapsed_nanos.get(),
+                    &observation_headers,
+                )
+                .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
+                sse_started.set(true);
+            }
+            Ok(())
+        };
+        let mut on_chunk = |chunk: &[u8]| {
+            if sse_started.get() {
+                let write_started = Instant::now();
+                {
+                    let mut stream = stream_cell.borrow_mut();
+                    stream
+                        .write_all(chunk)
+                        .and_then(|()| stream.flush())
+                        .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
+                }
+                loopback_transport::add_response_write(
+                    write_started.elapsed().as_nanos(),
+                    u64::try_from(chunk.len()).unwrap_or(u64::MAX),
+                );
+            } else {
+                error_body.borrow_mut().extend_from_slice(chunk);
+            }
+            Ok(())
+        };
+        service.forward_streaming_chat_completion(
+            request_body,
+            &mut on_preflight,
+            &mut on_status,
+            &mut on_chunk,
+        )
+    };
+    let stream = stream_cell.into_inner();
+    match outcome {
+        Ok(timed) if sse_started.get() => {
+            let _ = timed;
+            Ok(())
+        }
+        Ok(timed) => write_provider_response(
+            stream,
+            timed.status,
+            &error_body.into_inner(),
+            timed.provider_network_elapsed_nanos,
+            &route_observation::observation_response_headers(
+                observation_authorized,
+                correlation_id,
+                route_observation::NestedProviderStages {
+                    preflight_elapsed_nanos: timed.preflight_elapsed_nanos,
+                    provider_network_elapsed_nanos: timed.provider_network_elapsed_nanos,
+                },
+            ),
+        ),
+        Err(error) if sse_started.get() => {
+            let _ = error;
+            Ok(())
+        }
+        Err(error) => write_error_response(
+            stream,
+            error.status_code(),
+            error.code(),
+            "provider proxy request was not completed",
+        ),
+    }
+}
+
+fn write_provider_sse_headers(
+    stream: &mut impl Write,
+    preflight_elapsed_nanos: u128,
+    observation_headers: &str,
+) -> Result<(), String> {
+    let header = format!(
+        "HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nX-CognitiveOS-Daemon-Preflight-Nanos: {preflight_elapsed_nanos}\r\n{observation_headers}Connection: close\r\n\r\n"
+    );
+    let write_started = Instant::now();
+    let outcome = stream
+        .write_all(header.as_bytes())
+        .and_then(|()| stream.flush());
+    loopback_transport::add_response_write(
+        write_started.elapsed().as_nanos(),
+        u64::try_from(header.len()).unwrap_or(u64::MAX),
+    );
+    outcome.map_err(|error| error.to_string())
+}
+
+fn handle_dsh_runtime_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    task_api: &Arc<Mutex<TaskApi>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Management, Instant::now())
+    {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+
+    let mut task_api = task_api
+        .lock()
+        .map_err(|_| "task API lock poisoned".to_owned())?;
+    if method_path.starts_with("GET /personal/dsh/runtime ") {
+        return write_json_response(stream, 200, &task_api.dsh_runtime_snapshot().to_string());
+    }
+
+    let request_json: serde_json::Value = match serde_json::from_slice(body) {
+        Ok(value) => value,
+        Err(_) => {
+            return write_error_response(
+                stream,
+                400,
+                "DSH_RUNTIME_INVALID_REQUEST",
+                "dsh runtime request must be JSON",
+            );
+        }
+    };
+    let schema_version = request_json
+        .get("schema_version")
+        .and_then(serde_json::Value::as_u64);
+    let surface = request_json
+        .get("surface")
+        .and_then(serde_json::Value::as_str);
+    if schema_version != Some(1) || surface != Some("personal-dsh-runtime") {
+        return write_error_response(
+            stream,
+            400,
+            "DSH_RUNTIME_INVALID_REQUEST",
+            "dsh runtime request schema is not personal-dsh-runtime/1",
+        );
+    }
+    let op = request_json
+        .get("op")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+    let snapshot = match op {
+        "bind" => {
+            let Some(process_id) = request_json
+                .get("process_id")
+                .and_then(serde_json::Value::as_u64)
+                .and_then(|value| u32::try_from(value).ok())
+            else {
+                return write_error_response(
+                    stream,
+                    400,
+                    "DSH_RUNTIME_INVALID_REQUEST",
+                    "dsh runtime bind requires a nonzero process_id",
+                );
+            };
+            match task_api.dsh_bind_process(process_id) {
+                Ok(snapshot) => snapshot,
+                Err(detail) => {
+                    return write_error_response(
+                        stream,
+                        400,
+                        "DSH_RUNTIME_INVALID_REQUEST",
+                        &detail,
+                    );
+                }
+            }
+        }
+        "heartbeat" => match task_api.dsh_heartbeat() {
+            Ok(snapshot) => snapshot,
+            Err(detail) => {
+                return write_error_response(stream, 409, "DSH_RUNTIME_INACTIVE", &detail);
+            }
+        },
+        "clear" => task_api.dsh_clear_process(),
+        _ => {
+            return write_error_response(
+                stream,
+                400,
+                "DSH_RUNTIME_INVALID_REQUEST",
+                "dsh runtime op must be bind, heartbeat, or clear",
+            );
+        }
+    };
+    write_json_response(stream, 200, &snapshot.to_string())
 }
 
 fn handle_selected_model_route(

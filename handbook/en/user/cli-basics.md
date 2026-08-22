@@ -11,14 +11,14 @@ sources:
   - path: apps/admin-cli/src/personal_cli/daemon.rs
   - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: apps/admin-cli/src/personal_cli/dsh.rs
-    symbols: ["configure", "launch"]
+    symbols: ["configure", "launch", "status"]
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:7b680b356a9e8f636ef0798e61799433b439da35aa594cd2487ae16e6ececfc1"
+fingerprint: "sha256:b55917b421dba6c2d3c71b2601ebb957e8cef3a57b7d14f5d43515c13deabb6e"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -42,6 +42,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive pi launch [--task-ref <task://URI>] [--append-system-prompt <absolute-path>]` | fail-closed Pi launch after full doctor readiness and exact version check; task-bound launches expose only daemon-governed WorkspaceRead/Search/Write/Patch and submit untrusted candidates to the task channel; `--append-system-prompt` forwards an existing absolute UTF-8 file to Pi and is not a Provider credential |
 | `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | write non-secret `dsh.json` (pinned dsh checkout, AKP adapter root, candidate-only adapter digest); revision must match the product pin |
 | `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | fail-closed dsh launch after daemon-owned ready state (Pi may stay `not_configured`); Path B loads the pinned AKP plugin and never treats a dsh response as Task completion; `--path a` is rejected here and is measurement-only via `paired-path.mjs` |
+| `cognitive dsh status` | authenticated observation of dsh sessions/fencing and optional bound pid liveness (`GET /personal/dsh/runtime`); not Task completion |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |

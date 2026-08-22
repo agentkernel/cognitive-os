@@ -30,7 +30,7 @@ sources:
     symbols: ["apply", "applyDshAkpCordisPlugin"]
   - path: packages/dsh-akp-adapter/src/index.test.ts
   - path: apps/admin-cli/src/personal_cli/dsh.rs
-    symbols: ["configure", "launch"]
+    symbols: ["configure", "launch", "status"]
   - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:27a987cc6ab3fe9afb6919ca20b467394ef54f254ffdf06c97b2bb86831c7885"
+fingerprint: "sha256:db1098aed89188fbd2c70befcdecbbac3b0c83f890e441e2abbed274472daa8e"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -95,8 +95,8 @@ The shell-host Provider route has an opt-in, non-authority campaign observer.
 One opaque id correlates each concurrent Pi request with two daemon-measured
 stages; Node and Rust monotonic durations remain separate clock domains.
 Completed, cancelled and failed attempts have explicit terminal records, while a
-disabled session emits none. The route is non-streaming; `stream:true` remains a
-stable pre-secret-resolution refusal. Provider usage is never estimated or
+disabled session emits none. Pi conversations stay unary (`stream:false`). The
+public management Provider proxy may forward `stream:true` as SSE. Provider usage is never estimated or
 accepted from a runner-built object.
 
 ## Candidate production role
@@ -159,8 +159,10 @@ starts pinned dsh with `node --import tsx/esm apps/cli/src/bin.ts` (not
 `pnpm dsh`), loads `plugin.bundle.cjs` because Node 22.23 rejects `require()` of
 the ESM `plugin.js`, admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
 as plugin `startupEvents` from the real dsh process, and routes Flash through
-a loopback SSE-to-unary bridge onto the daemon Provider proxy. Product install
-is `cognitive dsh configure` then `cognitive dsh launch` (Path B). Direct Flash
+the daemon Provider SSE proxy (`POST /provider/v1/chat/completions` with
+`stream:true`). Product install
+is `cognitive dsh configure` then `cognitive dsh launch` (Path B). `cognitive dsh status`
+reads `GET /personal/dsh/runtime`. Direct Flash
 (`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter
 registration digest in `dsh.json` is not SQLite-durable daemon adapter state.
 Both remain implementation evidence only.

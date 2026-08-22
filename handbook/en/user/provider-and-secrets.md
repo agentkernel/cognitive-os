@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:765f8bdaf7e39fa3a453cc7e096a1313b886a3b170edacf4671c407a35f2e52e"
+fingerprint: "sha256:c5d29fb1cd34ff9534422c6af3310f66f58badd813fdd1fef3bc89a769bc40ba"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -48,13 +48,16 @@ operation refuses; there is deliberately no plaintext fallback. Rotation:
 Clients never talk to the Provider. The daemon owns egress:
 
 1. `POST /provider/v1/chat/completions` (management channel) validates the request
-   against `provider.json` and `selected-model.json` — streaming and model mismatch
-   are rejected.
+   against `provider.json` and `selected-model.json`. Public `stream:true` is
+   forwarded as SSE; Pi conversations and private-candidate stay unary. Model
+   mismatch still fails closed.
 2. The daemon resolves the `SecretRef` in memory and attaches the bearer header.
 3. `RustlsProviderTransport` enforces HTTPS-only, no redirects, no URL user-info,
    header CR/LF rejection, a 1 MiB response cap, and a caller timeout.
-4. Successful proxy responses carry an `X-CognitiveOS-Provider-Network-Nanos`
-   header (daemon-measured Provider network time only). Clients may send one
+4. Unary proxy success responses carry an `X-CognitiveOS-Provider-Network-Nanos`
+   header (daemon-measured Provider network time only). Streaming success omits
+   that header because the total is unknown when SSE headers flush; it still
+   reports `X-CognitiveOS-Daemon-Preflight-Nanos`. Clients may send one
    opaque `campaign-<32 lowercase hex>` `x-cognitiveos-correlation-id` request
    header. The daemon never persists it. When
    `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and that header is well-formed, the

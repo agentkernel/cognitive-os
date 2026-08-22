@@ -22,7 +22,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:a87532f56807ec2d355b024727e17cd5643e3652e935dac5d5befe10cacd8a85"
+fingerprint: "sha256:22c138b0091e962f9286b0603df8b2651d7fe2399d907910dc1f9558157147a1"
 non_claims:
   - Every surface here produces hypothesis-level, non-claim observations only; no benefit, Gate, release, or Profile result is created by this code, and campaign execution results are owned by the formal plan's evidence records.
 ---
@@ -70,7 +70,7 @@ Added by the campaign task and consumed by preregistered runs, not by the daemon
 cold journey, L4 T1). Campaign **results** (which cells ran, retained counts,
 digests) live in the formal plan's evidence records — link, never copy.
 
-## dsh AKP adapter timing (P8-T09 / P8-T10)
+## dsh AKP adapter timing (P8-T09 / P8-T11)
 
 `@cognitiveos/dsh-akp-adapter` records serialization, transport, and total
 durations on each candidate-only submit. Those fields are measurement hooks
@@ -79,10 +79,11 @@ Flash) observation. They do not claim zero overhead, losslessness, or any
 Gate/release/Profile/B01/Agent-benefit result. The linux-002 harness
 `scripts/linux002-e2e.mjs` records those timings on live shim submits and waits
 for Task `COMPLETED`; `scripts/dsh-real-process.mjs` records real dsh process
-elapsed time and first stdout (TTFT hook) through a loopback SSE-to-unary
-bridge onto the daemon Provider proxy (Path B) or direct Flash (Path A);
-`scripts/paired-path.mjs` repeats both on one host. Workspace* `startupEvents`
-are still candidate events. None of this is a Gate sample.
+elapsed time and first stdout (TTFT hook) through the daemon Provider SSE
+proxy (Path B) or direct Flash (Path A); `scripts/provider-raw-probe.mjs`
+measures the same host without dsh; `scripts/paired-path.mjs` repeats Path A/B
+on one host. Workspace* `startupEvents` are still candidate events. None of
+this is a Gate sample.
 
 Status `partial` because the daemon itself exposes no continuous performance
 instrumentation; everything here is opt-in measurement tooling.

@@ -15,7 +15,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:c14de136bcc1f8e4c3df39d5523f60a6f9e6586d15812f4ac3e73594e4a7abae"
+fingerprint: "sha256:54022f8bae8e961dd24b39492af48d639b89bee417cee8bcacb4d4f13ee24690"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -33,7 +33,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/personal/status` | management | 组件状态投影（system、database、secret、provider、daemon、pi）；Provider 事实与 SecretStore 解析使用同一份已加载配置快照。 |
 | `GET` | `/personal/readiness` | management | 快照一致 status 投影的别名。 |
 | `GET` | `/personal/doctor` | management | 快照一致的脱敏诊断投影，含六资源、headless vault 与可运维性小节。 |
-| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；非流式、绑定 selected model；secret 仅在服务端解析。成功响应始终携带 `X-CognitiveOS-Provider-Network-Nanos`。当 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明 `campaign-<32 位小写 hex>` correlation id 时，daemon 还会回显该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略；产品 body 不变，且绝不持久化。 |
+| `GET` | `/personal/dsh/runtime` | management | 仅观测的 dsh runtime 投影：进程内会话、fencing epoch、可选绑定 pid 存活（仅 `/proc/{pid}` 是否存在，永不打开 cmdline/environ）。状态为 INACTIVE、ACTIVE 或 CRASHED。dsh 响应绝不完成 Task。 |
+| `POST` | `/personal/dsh/runtime` | management | 仅观测地 bind/heartbeat/clear 一个 dsh 进程 pid。不是 authority writer。非法 schema/op/pid 失败闭合。 |
+| `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Provider 代理；绑定 selected model；secret 仅在服务端解析。一元 `stream:false` 成功响应携带 `X-CognitiveOS-Provider-Network-Nanos`。公开 `stream:true` 按 SSE（`text/event-stream`）转发，并在不等待一元 JSON body 的情况下刷新上游字节；流式成功省略 network-nanos 头，因为刷新响应头时总时长未知。Pi 对话与 private-candidate 保持一元。当 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明 `campaign-<32 位小写 hex>` correlation id 时，daemon 还会回显该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略；产品 body 不变，且绝不持久化。 |
 | `GET` | `/provider/v1/selected-model` | management | 非 secret 的 selected-model 投影。 |
 | `GET` | `/resource/v1/projection` | management | 私有版本化六资源族投影（family + version 查询参数）。 |
 | `GET` | `/resource/v1/watch` | management | 按资源族的 watch，支持可选 resume_from 游标。 |

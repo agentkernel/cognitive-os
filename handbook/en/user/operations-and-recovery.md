@@ -33,7 +33,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:14d988d2da463f177e0034edc4c6b6b6f0105bbb0ff088e034a8088fe6c3d806"
+fingerprint: "sha256:fa2ed40ba7a06d9b989a6c247b690114c0f68e29d56e2d7dd86866253e47ed3a"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -74,6 +74,10 @@ non_claims:
   the pinned AKP plugin, and never treats a dsh response as Task completion.
   Direct Flash (`--path a`) is refused; use `packages/dsh-akp-adapter/scripts/paired-path.mjs`
   for same-host Path A vs Path B measurement only.
+- `cognitive dsh status` reads `GET /personal/dsh/runtime`: INACTIVE / ACTIVE /
+  CRASHED from process-local sessions plus an optional bound pid. Linux liveness
+  is `/proc/{pid}` existence only (never cmdline/environ). It is not an
+  authority writer.
 
 ## Stop, restart, stale state — `implemented`
 

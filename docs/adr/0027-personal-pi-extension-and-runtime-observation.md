@@ -10,6 +10,10 @@
   role; ADR-0036 replaces the Linux 1.0 default user-installed Pi path with
   product-owned official npm acquisition. This ADR's non-authority Extension,
   secret, readiness and tool-denial boundaries remain in force.
+- Amended 2026-08-22 (P8-T11): the public management `POST /provider/v1/chat/completions`
+  route may forward `stream:true` as SSE. Pi conversations and the private-candidate
+  proxy remain unary. Local-disconnect-to-upstream-abort is still not a cancellation
+  contract.
 
 ## Context
 
@@ -186,14 +190,21 @@ cancellation and output-redaction surfaces without improving the daemon-owned
 secret boundary. In particular, command arguments and inherited environment
 are forbidden credential paths.
 
-### Non-streaming is the explicit P1 scope
+### Streaming scope (P1 unary; P8-T11 public SSE)
 
-The Personal front door is currently single-request/single-connection and has
-no SSE writer, backpressure protocol, or local-disconnect-to-upstream-abort
-path. Therefore `stream: true` is explicitly rejected with
-`PERSONAL_PROVIDER_STREAMING_UNSUPPORTED`; P1 first conversations use a bounded
-non-streaming request/response exchange. Streaming requires a separate
-contract and test batch before it can be enabled.
+P1 first conversations use a bounded non-streaming request/response exchange.
+The private-candidate Provider proxy and the Pi Extension conversation client
+still send `stream: false`. `PERSONAL_PROVIDER_STREAMING_UNSUPPORTED` remains
+the fail-closed code when a private-candidate request asks for a stream.
+
+P8-T11 adds the deferred public-proxy contract: a management-channel
+`stream: true` request is forwarded to the selected model as SSE, and the
+daemon flushes upstream bytes to the local caller without waiting for a complete
+unary JSON body. Selected-model, SecretStore, and HTTPS-only pins are unchanged.
+The daemon still does not implement local-disconnect-to-upstream-abort; a dropped
+loopback client does not become a cancellation authority. Trailing
+`X-CognitiveOS-Provider-Network-Nanos` is omitted on streaming success responses
+because the total is unknown when headers are flushed.
 
 This decision implements only the daemon egress boundary. The pinned Pi
 Extension API mirror does not currently expose a supported completion-provider
