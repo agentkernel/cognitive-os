@@ -13,7 +13,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:180070e348f91d996e67ec715de0296345faf4e9e84af0f6cadf329fe07266d8"
+fingerprint: "sha256:4d3919ecbcba80612e399cf8335c7435be056f99cb16f7dd5245586a21fff292"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---

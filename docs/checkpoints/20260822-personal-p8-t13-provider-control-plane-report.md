@@ -32,6 +32,10 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **fail** | kernel-server compile: unresolved `provider_control_plane` in `server.rs`; `store_error`/`trust_error` param shadows `fn error`; E0502 key-op document borrow. Retained. |
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `77cb1410324658f8df46fcba2f4e690d99a47f13` | **fail** | E0282 bound-stream callback `Ok(())` missing error type after `ProviderTransport` import cleanup. Retained. |
 | Required Ubuntu/Windows CI | GitHub Actions | `19cc7945f5227ec61c967534cdbb95df6e6afaf2` | **fail** | `RUSTFLAGS=-D warnings`: unused `mut` on bound-stream callbacks; unused `SqliteAuthorityStore` import on Windows; unused unix-only `forward_private_candidate_completion` wrapper. Retained. |
+| `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **pass** | 1/1 public + 7/7 lib endpoint_trust. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-f0fee96f`. rustc 1.97.1. |
+| `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **pass** | 8/8 including 90-day aggregate, 100% alert, period rollover |
+| Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **fail** | 2/3. Isolation test expected `409 Conflict`; proxy error writer emitted `409 Error`. Retained. Follow-up maps 409 to Conflict. |
+| admin-cli parse / Clippy | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **not-run** | script stopped after kernel-server test failure |
 
 ## Blocked paths
 
@@ -42,4 +46,4 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 
 ## Unique next action
 
-Push the `-D warnings` compile fix, then exact-revision Linux focused tests at the new HEAD. Keep PR #259 Draft until Linux + required CI pass.
+Push the 409 Conflict reason-phrase fix, then exact-revision Linux focused tests at the new HEAD. Keep PR #259 Draft until Linux + required CI pass.
