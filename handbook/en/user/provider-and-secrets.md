@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:c5d29fb1cd34ff9534422c6af3310f66f58badd813fdd1fef3bc89a769bc40ba"
+fingerprint: "sha256:15d8e95e5dc4a6ac954b0acdc75493cdb295046f968c14482158630a546cc17d"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -53,7 +53,10 @@ Clients never talk to the Provider. The daemon owns egress:
    mismatch still fails closed.
 2. The daemon resolves the `SecretRef` in memory and attaches the bearer header.
 3. `RustlsProviderTransport` enforces HTTPS-only, no redirects, no URL user-info,
-   header CR/LF rejection, a 1 MiB response cap, and a caller timeout.
+   header CR/LF rejection, a 1 MiB response cap, and a caller timeout. Public
+   `stream:true` reads HTTP/1.1 TLS records directly so the first SSE event is
+   not held until the last event. Hermetic additional roots replace the platform
+   CA store for that transport instance; production loads platform roots once.
 4. Unary proxy success responses carry an `X-CognitiveOS-Provider-Network-Nanos`
    header (daemon-measured Provider network time only). Streaming success omits
    that header because the total is unknown when SSE headers flush; it still

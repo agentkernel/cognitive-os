@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:c5d29fb1cd34ff9534422c6af3310f66f58badd813fdd1fef3bc89a769bc40ba"
+fingerprint: "sha256:15d8e95e5dc4a6ac954b0acdc75493cdb295046f968c14482158630a546cc17d"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---
@@ -49,7 +49,9 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
    private-candidate 保持一元。模型不符仍失败闭合。
 2. daemon 在内存中解析 `SecretRef` 并附加 bearer 头。
 3. `RustlsProviderTransport` 强制 HTTPS-only、禁跳转、禁 URL user-info、拒绝头部
-   CR/LF、1 MiB 响应上限与调用方超时。
+   CR/LF、1 MiB 响应上限与调用方超时。公开 `stream:true` 直接读取 HTTP/1.1 TLS
+   记录，因此首个 SSE 事件不会等到最后一个事件才下发。该传输实例上的 hermetic
+   additional root 替换（而非叠加）平台 CA；生产路径的平台根只加载一次。
 4. 一元代理成功响应携带 `X-CognitiveOS-Provider-Network-Nanos` 头（仅 daemon 测得的
    Provider 网络耗时）。流式成功省略该头，因为刷新 SSE 响应头时总时长未知；仍报告
    `X-CognitiveOS-Daemon-Preflight-Nanos`。客户端可发送一条不透明的 `campaign-<32 位小写 hex>`

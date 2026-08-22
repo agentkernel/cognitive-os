@@ -79,8 +79,12 @@ pub struct TimedProviderResponse {
 pub struct TimedStreamedProviderResponse {
     pub status: u16,
     pub preflight_elapsed_nanos: u128,
+    /// First upstream body byte, measured for campaign telemetry. Not a wire header
+    /// because SSE headers are flushed before the stream ends.
+    #[allow(dead_code)]
     pub first_byte_nanos: u128,
     pub provider_network_elapsed_nanos: u128,
+    #[allow(dead_code)]
     pub body_bytes: usize,
 }
 
@@ -492,14 +496,13 @@ mod tests {
             ProviderConfigRepository::from_file_path(&config_path),
             &transport,
         );
-        assert_eq!(
-            service
-                .forward_chat_completion_with_timing(
-                    br#"{"model":"test-model","stream":true,"messages":[]}"#
-                )
-                .expect_err("unary path must refuse stream:true"),
-            ProviderProxyError::StreamingUnsupported
-        );
+        let error = service
+            .forward_chat_completion_with_timing(
+                br#"{"model":"test-model","stream":true,"messages":[]}"#,
+            )
+            .err()
+            .expect("unary path must refuse stream:true");
+        assert_eq!(error, ProviderProxyError::StreamingUnsupported);
         assert!(transport.requests().is_empty());
     }
 
