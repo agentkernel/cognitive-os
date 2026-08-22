@@ -2,7 +2,7 @@
 
 - Task: `P8-T13`
 - Branch: `personal/P8-T13-provider-control-plane`
-- Draft PR: [#259](https://github.com/agentkernel/cognitive-os/pull/259)
+- Draft PR: [#259](https://github.com/agentkernel/cognitive-os/pull/259) **merged** at `main@0e8ccad9`
 - Lease: closed `lease/personal/P8-T13/provider-control-plane`
 - Product evidence revision: `6256f7232d458a14836b1d49d43b1465686fb0b9`
 - Claim ceiling: `hypothesis`
@@ -76,4 +76,4 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 
 ## Unique next action
 
-Ready/merge PR [#259](https://github.com/agentkernel/cognitive-os/pull/259) after this docs-head CI, then lease/branch/main. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
+Merged PR [#259](https://github.com/agentkernel/cognitive-os/pull/259) at `main@0e8ccad9`. Lease and task branch closed. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
