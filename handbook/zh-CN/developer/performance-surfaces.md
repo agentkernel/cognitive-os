@@ -22,7 +22,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:22c138b0091e962f9286b0603df8b2651d7fe2399d907910dc1f9558157147a1"
+fingerprint: "sha256:f4127c357aecb25766ef67c0637c67109af18d1b0f340e8d23a8831d41f6612d"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---
@@ -70,7 +70,9 @@ transport 与 total。这些字段只是 Path A（dsh → DeepSeek Flash）与 P
 Gate/release/Profile/B01/Agent-benefit 结论。linux-002 harness
 `scripts/linux002-e2e.mjs` 会在 shim submit 上记录这些计时并等待 Task
 `COMPLETED`；`scripts/dsh-real-process.mjs` 记录真实 dsh 进程墙钟时间与首次
-stdout（TTFT hook）：Path B 经 daemon Provider SSE 代理，Path A 直连 Flash；
+stdout（TTFT hook）：Path B 经 daemon Provider SSE 代理，Path A 直连 Flash。
+helper 在存在 `build:lib` 产物时优先用编译后的 `apps/cli/lib/bin.js`；在 2 vCPU
+guest 上从 tsx 源码启动此前大约要 10 s 的 harness 引导。
 `scripts/provider-raw-probe.mjs` 在同一主机上不经 dsh 测量；`scripts/paired-path.mjs`
 在同一主机重复两条路径。Workspace* `startupEvents` 仍是 candidate 事件。都不是
 Gate 样本。

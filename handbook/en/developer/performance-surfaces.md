@@ -22,7 +22,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:22c138b0091e962f9286b0603df8b2651d7fe2399d907910dc1f9558157147a1"
+fingerprint: "sha256:f4127c357aecb25766ef67c0637c67109af18d1b0f340e8d23a8831d41f6612d"
 non_claims:
   - Every surface here produces hypothesis-level, non-claim observations only; no benefit, Gate, release, or Profile result is created by this code, and campaign execution results are owned by the formal plan's evidence records.
 ---
@@ -80,8 +80,11 @@ Gate/release/Profile/B01/Agent-benefit result. The linux-002 harness
 `scripts/linux002-e2e.mjs` records those timings on live shim submits and waits
 for Task `COMPLETED`; `scripts/dsh-real-process.mjs` records real dsh process
 elapsed time and first stdout (TTFT hook) through the daemon Provider SSE
-proxy (Path B) or direct Flash (Path A); `scripts/provider-raw-probe.mjs`
-measures the same host without dsh; `scripts/paired-path.mjs` repeats Path A/B
+proxy (Path B) or direct Flash (Path A). The helper prefers compiled
+`apps/cli/lib/bin.js` when `build:lib` outputs exist; tsx-from-source on a
+2 vCPU guest was previously ~10 s of harness bootstrap.
+`scripts/provider-raw-probe.mjs` measures the same host without dsh;
+`scripts/paired-path.mjs` repeats Path A/B
 on one host. Workspace* `startupEvents` are still candidate events. None of
 this is a Gate sample.
 

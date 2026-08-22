@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:db1098aed89188fbd2c70befcdecbbac3b0c83f890e441e2abbed274472daa8e"
+fingerprint: "sha256:13f49cdad6ece7bd06e693c3806fbe8395d682ccf66dd918de5af062cd424b47"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -155,7 +155,8 @@ hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e
 drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
 runtime and waits for Task `COMPLETED`. `packages/dsh-akp-adapter/src/plugin.ts`
 is the Cordis `apply` entry for `dsh --patch`; `scripts/dsh-real-process.mjs`
-starts pinned dsh with `node --import tsx/esm apps/cli/src/bin.ts` (not
+starts pinned dsh with compiled `apps/cli/lib/bin.js` when host `build:lib`
+outputs exist, otherwise `node --import tsx/esm apps/cli/src/bin.ts` (not
 `pnpm dsh`), loads `plugin.bundle.cjs` because Node 22.23 rejects `require()` of
 the ESM `plugin.js`, admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
 as plugin `startupEvents` from the real dsh process, and routes Flash through

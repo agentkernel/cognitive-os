@@ -14,7 +14,7 @@
  * Path A also requires --api-key-file (0600 or "-") and never logs the key.
  */
 import { spawn } from "node:child_process";
-import { chmodSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { pathToFileURL } from "node:url";
@@ -89,7 +89,7 @@ function childEnvironment() {
   env.DSH_HOME = dshHome;
   env.DSH_TELEMETRY_MODE = "DISABLED";
   env.DSH_PERMISSION_MODE = "read-only";
-  const compileCache = join(dshHome, "compile-cache");
+  const compileCache = join(dshRoot, ".cognitiveos-node-compile-cache");
   mkdirSync(compileCache, { mode: 0o700, recursive: true });
   env.NODE_COMPILE_CACHE = compileCache;
   return env;
@@ -110,6 +110,31 @@ async function clearRuntime(origin, token) {
     surface: "personal-dsh-runtime",
     op: "clear",
   });
+}
+
+function dshCliInvocation(root) {
+  const compiled = join(root, "apps/cli/lib/bin.js");
+  const compiledHostGraph = join(root, "packages/api/gateway/lib/index.js");
+  if (existsSync(compiled) && existsSync(compiledHostGraph)) {
+    return { args: [compiled], mode: "compiled-lib" };
+  }
+  return {
+    args: ["--import", "tsx/esm", join(root, "apps/cli/src/bin.ts")],
+    mode: "tsx-source",
+  };
+}
+
+function llmDeepseekPatch(baseURL, apiKeyEnv) {
+  return [
+    "- id: llm-deepseek",
+    "  config:",
+    `    baseURL: ${baseURL}`,
+    `    apiKeyEnv: ${apiKeyEnv}`,
+    "    thinking: disabled",
+    "    reasoningEffort: off",
+    "    maxTokens: 256",
+    "",
+  ].join("\n");
 }
 
 function assistantLooksComplete(text) {
@@ -136,14 +161,15 @@ async function runDsh(patchBody, runtime) {
   writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
   const started = Date.now();
   const ttftHolder = { ms: null };
-  // Invoke the pinned CLI entry with Node. `pnpm dsh` is not portable on an
-  // installed guest: pnpm 11's deps-status check requires git, which Personal
-  // linux-002 does not ship, and copied node_modules are not a pnpm workspace
-  // root. `node --import tsx/esm apps/cli/src/bin.ts` is the same script the
-  // dsh package.json `dsh` entry runs.
+  // Prefer the compiled host CLI (`apps/cli/lib/bin.js`) when `build:lib`
+  // outputs exist. `pnpm dsh` is not portable on an installed guest (pnpm 11
+  // deps-status wants git). tsx-from-source on a 2 vCPU guest was ~11 s of
+  // harness bootstrap before any Provider byte; compiled-lib is the product
+  // launch path. Fallback remains `node --import tsx/esm apps/cli/src/bin.ts`.
+  const cli = dshCliInvocation(dshRoot);
   const child = spawn(
     process.execPath,
-    ["--import", "tsx/esm", join(dshRoot, "apps/cli/src/bin.ts"), "--profile", "headless", "--patch", patchFile, task],
+    [...cli.args, "--profile", "headless", "--patch", patchFile, task],
     {
       cwd: dshRoot,
       env: childEnvironment(),
@@ -181,6 +207,7 @@ async function runDsh(patchBody, runtime) {
     stderrRedactedBytes: Buffer.byteLength(stderrRedacted, "utf8"),
     stderrPreviewRedacted: stderrRedacted.split(/\r?\n/).slice(-40).join("\n").slice(0, 2048),
     runtimeAfterBind,
+    cliMode: cli.mode,
   };
 }
 
@@ -193,9 +220,7 @@ if (providerPath === "a") {
     { encoding: "utf8", mode: 0o600 },
   );
   chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
-  const outcome = await runDsh(
-    ["- id: llm-deepseek", "  config:", `    baseURL: ${directBaseUrl}`, "    apiKeyEnv: DEEPSEEK_KEY", ""].join("\n"),
-  );
+  const outcome = await runDsh(llmDeepseekPatch(directBaseUrl, "DEEPSEEK_KEY"));
   rmSync(work, { recursive: true, force: true });
   const summary = {
     revision_pin: revisionPin ?? null,
@@ -206,6 +231,7 @@ if (providerPath === "a") {
     dsh_exit: outcome.exitCode,
     elapsed_ms: outcome.elapsedMs,
     ttft_ms: outcome.ttftMs,
+    cli_mode: outcome.cliMode,
     assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
     assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
     assistant_ok: assistantLooksComplete(outcome.assistant),
@@ -312,11 +338,7 @@ const outcome = await runDsh(
         },
       },
     ]),
-    "- id: llm-deepseek",
-    "  config:",
-    `    baseURL: ${providerBase}`,
-    "    apiKeyEnv: DAEMON_BEARER",
-    "",
+    llmDeepseekPatch(providerBase, "DAEMON_BEARER"),
   ].join("\n"),
   { origin, token: managementToken },
 );
@@ -341,6 +363,7 @@ const summary = {
   dsh_exit: outcome.exitCode,
   elapsed_ms: outcome.elapsedMs,
   ttft_ms: outcome.ttftMs,
+  cli_mode: outcome.cliMode,
   assistant_preview_bytes: Buffer.byteLength(outcome.assistant, "utf8"),
   assistant_is_pong: /^pong\.?$/i.test(outcome.assistant),
   assistant_ok: assistantLooksComplete(outcome.assistant),
