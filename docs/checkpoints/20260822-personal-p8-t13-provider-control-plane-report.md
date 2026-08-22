@@ -31,6 +31,7 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **pass** | 8/8 |
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **fail** | kernel-server compile: unresolved `provider_control_plane` in `server.rs`; `store_error`/`trust_error` param shadows `fn error`; E0502 key-op document borrow. Retained. |
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `77cb1410324658f8df46fcba2f4e690d99a47f13` | **fail** | E0282 bound-stream callback `Ok(())` missing error type after `ProviderTransport` import cleanup. Retained. |
+| Required Ubuntu/Windows CI | GitHub Actions | `19cc7945f5227ec61c967534cdbb95df6e6afaf2` | **fail** | `RUSTFLAGS=-D warnings`: unused `mut` on bound-stream callbacks; unused `SqliteAuthorityStore` import on Windows; unused unix-only `forward_private_candidate_completion` wrapper. Retained. |
 
 ## Blocked paths
 
@@ -41,4 +42,4 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 
 ## Unique next action
 
-Push the compile-fix revision, then exact-revision Linux focused tests at the new HEAD. Keep PR #259 Draft until Linux + required CI pass.
+Push the `-D warnings` compile fix, then exact-revision Linux focused tests at the new HEAD. Keep PR #259 Draft until Linux + required CI pass.

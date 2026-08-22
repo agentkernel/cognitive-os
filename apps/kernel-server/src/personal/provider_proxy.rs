@@ -13,6 +13,7 @@ use cognitive_secret::{
     ProviderKeyService, ProviderKeyServiceError, ProviderTransport, ProviderTransportError,
     SecretStore, SelectedModelRepository, bearer_authorization_header_value,
 };
+#[cfg(unix)]
 use cognitive_store::SqliteAuthorityStore;
 
 const PROVIDER_CHAT_COMPLETIONS_PATH: &str = "/chat/completions";
@@ -182,14 +183,6 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
     /// The Provider credential remains confined to this daemon-owned service.
     /// When `authority_store` carries a Pi control-plane binding, that binding
     /// is the only allowed account+model; `provider.json` is not a fallback.
-    #[cfg(unix)]
-    pub fn forward_private_candidate_completion(
-        &self,
-        request_body: &[u8],
-    ) -> Result<ProviderHttpResponse, ProviderProxyError> {
-        self.forward_private_candidate_completion_bound(request_body, None)
-    }
-
     #[cfg(unix)]
     pub fn forward_private_candidate_completion_bound(
         &self,

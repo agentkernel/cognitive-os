@@ -322,16 +322,35 @@ fn retention_drops_old_events_and_keeps_recent_aggregates() {
             provider_kind: "openai_official".to_owned(),
             model_id: "gpt-4o".to_owned(),
             agent_instance_id: "agent://personal/pi".to_owned(),
-            sample,
+            sample: sample.clone(),
             duration_ms: Some(1),
             outcome: "ok".to_owned(),
             metering_source: "unavailable".to_owned(),
             estimation_method: None,
-            cost: unavailable,
+            cost: unavailable.clone(),
         })
         .expect("new");
-    let (dropped_events, _) = store.apply_retention(now).expect("retain");
-    assert_eq!(dropped_events, 1);
+    let very_old = now - (100 * 24 * 60 * 60 * 1000);
+    store
+        .record_usage(&NewUsageEvent {
+            event_id: "very-old".to_owned(),
+            idempotency_key: "very-old".to_owned(),
+            recorded_at_ms: very_old,
+            account_id: "acct-openai-work".to_owned(),
+            provider_kind: "openai_official".to_owned(),
+            model_id: "gpt-4o".to_owned(),
+            agent_instance_id: "agent://personal/pi".to_owned(),
+            sample: sample.clone(),
+            duration_ms: Some(1),
+            outcome: "ok".to_owned(),
+            metering_source: "unavailable".to_owned(),
+            estimation_method: None,
+            cost: unavailable.clone(),
+        })
+        .expect("very-old");
+    let (dropped_events, dropped_aggregates) = store.apply_retention(now).expect("retain");
+    assert_eq!(dropped_events, 2);
+    assert_eq!(dropped_aggregates, 1);
     assert_eq!(store.list_usage_events(0).expect("left").len(), 1);
 }
 
@@ -377,6 +396,86 @@ fn budget_alerts_dedupe_at_80_and_100_and_ignore_unavailable_cost_as_zero() {
         .maybe_issue_budget_alerts(1_800_000_000_000)
         .expect("dedupe");
     assert!(again.is_empty());
+
+    store
+        .record_usage(&NewUsageEvent {
+            event_id: "u2".to_owned(),
+            idempotency_key: "u2".to_owned(),
+            recorded_at_ms: 1_800_000_000_000,
+            account_id: "acct-openai-work".to_owned(),
+            provider_kind: "openai_official".to_owned(),
+            model_id: "gpt-4o".to_owned(),
+            agent_instance_id: "agent://personal/pi".to_owned(),
+            sample: UsageSample {
+                input_tokens: Some(20),
+                output_tokens: Some(0),
+                cache_read_tokens: None,
+                cache_write_tokens: None,
+            },
+            duration_ms: Some(1),
+            outcome: "ok".to_owned(),
+            metering_source: "unavailable".to_owned(),
+            estimation_method: None,
+            cost: compute_cost(
+                &UsageSample {
+                    input_tokens: Some(20),
+                    output_tokens: Some(0),
+                    cache_read_tokens: None,
+                    cache_write_tokens: None,
+                },
+                None,
+            ),
+        })
+        .expect("u2");
+    let at_ceiling = store
+        .maybe_issue_budget_alerts(1_800_000_000_000)
+        .expect("100");
+    assert_eq!(
+        at_ceiling,
+        vec![("bud-1".to_owned(), "exceeded_100".to_owned())]
+    );
+    assert!(
+        store
+            .maybe_issue_budget_alerts(1_800_000_000_000)
+            .expect("100 dedupe")
+            .is_empty()
+    );
+
+    let next_month = 1_803_000_000_000;
+    store
+        .record_usage(&NewUsageEvent {
+            event_id: "u3".to_owned(),
+            idempotency_key: "u3".to_owned(),
+            recorded_at_ms: next_month,
+            account_id: "acct-openai-work".to_owned(),
+            provider_kind: "openai_official".to_owned(),
+            model_id: "gpt-4o".to_owned(),
+            agent_instance_id: "agent://personal/pi".to_owned(),
+            sample: UsageSample {
+                input_tokens: Some(80),
+                output_tokens: Some(0),
+                cache_read_tokens: None,
+                cache_write_tokens: None,
+            },
+            duration_ms: Some(1),
+            outcome: "ok".to_owned(),
+            metering_source: "unavailable".to_owned(),
+            estimation_method: None,
+            cost: compute_cost(
+                &UsageSample {
+                    input_tokens: Some(80),
+                    output_tokens: Some(0),
+                    cache_read_tokens: None,
+                    cache_write_tokens: None,
+                },
+                None,
+            ),
+        })
+        .expect("u3");
+    let rolled = store
+        .maybe_issue_budget_alerts(next_month)
+        .expect("period rollover");
+    assert_eq!(rolled, vec![("bud-1".to_owned(), "warning_80".to_owned())]);
 
     store
         .upsert_budget(

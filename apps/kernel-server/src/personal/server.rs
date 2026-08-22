@@ -1910,7 +1910,7 @@ fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Siz
         correlation_id,
     );
     let outcome = {
-        let mut on_status = |status: u16| -> Result<(), ProviderProxyError> {
+        let on_status = |status: u16| -> Result<(), ProviderProxyError> {
             if status == 200 {
                 write_provider_sse_headers(&mut *stream_cell.borrow_mut(), 1, &observation_headers)
                     .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
@@ -1918,7 +1918,7 @@ fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Siz
             }
             Ok(())
         };
-        let mut on_chunk = |chunk: &[u8]| -> Result<(), ProviderProxyError> {
+        let on_chunk = |chunk: &[u8]| -> Result<(), ProviderProxyError> {
             if sse_started.get() {
                 let write_started = Instant::now();
                 {
