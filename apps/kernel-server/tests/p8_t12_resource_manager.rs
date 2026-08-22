@@ -7,7 +7,7 @@ use std::io::{Read, Write};
 use std::net::TcpListener;
 use std::ops::{Deref, DerefMut};
 use std::process::{Child, Command};
-use std::time::Duration;
+use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
 use cognitive_domain::ObjectId;
 use serde_json::{Value, json};
@@ -357,6 +357,10 @@ fn resource_manager_lists_memory_and_binds_then_revokes_skill_through_existing_s
     let mut daemon = spawn_personal(port, &runtime_root);
     let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
     let management_token = issue_token(port, &secret, "management");
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs() as i64;
 
     let remember = send_json(
         port,
@@ -366,7 +370,9 @@ fn resource_manager_lists_memory_and_binds_then_revokes_skill_through_existing_s
         &json!({
             "text": "p8-t12 remembered procedure",
             "governance_scope": "workspace://personal/p8-t12",
-            "retention_expires_at_unix_seconds": 4_102_444_800_i64
+            "target_scope": "workspace://personal/p8-t12",
+            "purpose": "task_execution",
+            "retention_expires_at_unix_seconds": now + 3_600
         }),
     );
     assert!(remember.contains("HTTP/1.1 201 "), "{remember}");
