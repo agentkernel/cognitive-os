@@ -126,6 +126,10 @@ pub const USAGE_AGGREGATE_RETENTION_MS: i64 = 90 * 24 * 60 * 60 * 1000;
 /// Versioned built-in prices: USD per million tokens, as decimal text.
 pub const BUILTIN_PRICE_TABLE_VERSION: &str = "builtin-2026-08";
 
+type UsageEventProjection = (String, String, Option<i64>, String);
+type BudgetProjection = (String, String, String, Option<i64>, Option<i64>);
+type AlertProjection = (String, String, String, i64, Option<i64>);
+
 /// v25 migration entry.
 pub fn provider_control_plane_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(25, PROVIDER_CONTROL_PLANE_SCHEMA_V25)
@@ -558,6 +562,7 @@ impl ProviderControlPlaneStore {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)] // Four price columns stay explicit at the store edge.
     pub fn set_model_prices(
         &self,
         account_id: &str,
@@ -828,7 +833,7 @@ impl ProviderControlPlaneStore {
     pub fn list_usage_events(
         &self,
         since_ms: i64,
-    ) -> Result<Vec<(String, String, Option<i64>, String)>, ProviderControlPlaneError> {
+    ) -> Result<Vec<UsageEventProjection>, ProviderControlPlaneError> {
         let conn = self.lock()?;
         let mut statement = conn
             .prepare(
@@ -907,10 +912,7 @@ impl ProviderControlPlaneStore {
         Ok(())
     }
 
-    pub fn list_budgets(
-        &self,
-    ) -> Result<Vec<(String, String, String, Option<i64>, Option<i64>)>, ProviderControlPlaneError>
-    {
+    pub fn list_budgets(&self) -> Result<Vec<BudgetProjection>, ProviderControlPlaneError> {
         let conn = self.lock()?;
         let mut statement = conn
             .prepare(
@@ -1013,9 +1015,7 @@ impl ProviderControlPlaneStore {
         Ok(issued)
     }
 
-    pub fn list_alerts(
-        &self,
-    ) -> Result<Vec<(String, String, String, i64, Option<i64>)>, ProviderControlPlaneError> {
+    pub fn list_alerts(&self) -> Result<Vec<AlertProjection>, ProviderControlPlaneError> {
         let conn = self.lock()?;
         let mut statement = conn
             .prepare(
@@ -1059,6 +1059,7 @@ impl ProviderControlPlaneStore {
         Ok(())
     }
 
+    #[allow(clippy::too_many_arguments)] // Audit columns stay explicit; no secret material.
     pub fn append_audit(
         &self,
         audit_id: &str,
@@ -1131,10 +1132,7 @@ impl ProviderControlPlaneStore {
                 .map_err(unavailable("leak scan query"))?;
             while let Some(row) = rows.next().map_err(unavailable("leak scan row"))? {
                 for index in 0..column_count {
-                    let value: Option<String> = match row.get(index) {
-                        Ok(value) => value,
-                        Err(_) => None,
-                    };
+                    let value: Option<String> = row.get(index).unwrap_or_default();
                     if value.is_some_and(|text| text.contains(needle)) {
                         return Ok(true);
                     }
@@ -1147,10 +1145,10 @@ impl ProviderControlPlaneStore {
 
 /// Compute cost. Unknown tokens are never treated as zero.
 pub fn compute_cost(sample: &UsageSample, model: Option<&ProviderModelRecord>) -> CostOutcome {
-    let cache_hit_rate_unknown = match (sample.input_tokens, sample.cache_read_tokens) {
-        (Some(input), Some(cache_read)) if input >= cache_read && input > 0 => false,
-        _ => true,
-    };
+    let cache_hit_rate_unknown = !matches!(
+        (sample.input_tokens, sample.cache_read_tokens),
+        (Some(input), Some(cache_read)) if input >= cache_read && input > 0
+    );
     let Some(model) = model else {
         return CostOutcome {
             cost_micros: None,

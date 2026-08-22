@@ -36,6 +36,11 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **pass** | 8/8 including 90-day aggregate, 100% alert, period rollover |
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **fail** | 2/3. Isolation test expected `409 Conflict`; proxy error writer emitted `409 Error`. Retained. Follow-up maps 409 to Conflict. |
 | admin-cli parse / Clippy | `DEV-LINUX-NATIVE-01` | `f0fee96f9ede29bf1f7d75e1d8434c7250bf85ac` | **not-run** | script stopped after kernel-server test failure |
+| `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **pass** | 1/1. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-deb60d12`. rustc 1.97.1. |
+| `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **pass** | 8/8 |
+| Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **pass** | 3/3 including Pi/dsh isolation |
+| admin-cli parse `provider_control_plane_verbs_parse_and_refuse_api_key_flag` | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **pass** | 1/1 |
+| Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **fail** | cognitive-store: too_many_arguments, type_complexity, manual_unwrap_or_default, match_like_matches_macro. Retained. |
 
 ## Blocked paths
 
@@ -46,4 +51,4 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 
 ## Unique next action
 
-Push the 409 Conflict reason-phrase fix, then exact-revision Linux focused tests at the new HEAD. Keep PR #259 Draft until Linux + required CI pass.
+Push the store Clippy fix, then exact-revision Linux Clippy + required CI. Keep PR #259 Draft until Linux Clippy and required CI pass.

@@ -152,7 +152,7 @@ auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
-| `P8-T13/D01` | `in-progress` | Failure-first tests written. Linux endpoint_trust **pass** and store **8/8** at `f0fee96f`; kernel-server **fail** 2/3 (`409 Error` vs `409 Conflict`). | push 409 reason-phrase fix then exact-revision Linux |
+| `P8-T13/D01` | `in-progress` | Linux at `deb60d12`: endpoint_trust 1/1, store 8/8, kernel-server 3/3, admin-cli parse 1/1. Clippy **fail** on cognitive-store. | push store Clippy fix then exact-revision Linux Clippy |
 | `P8-T13/D02` | `ready` | Accounts/Secret Store/key/delete-with-binding implemented; Linux evidence not yet. | consume after D01 Linux pass |
 | `P8-T13/D03` | `ready` | Official/custom discovery, catalog, manual models, prices implemented; Linux evidence not yet. | consume after D02 |
 | `P8-T13/D04` | `ready` | Usage/audit/retention/cost_unavailable store path implemented; Linux evidence not yet. | consume after D03 |
