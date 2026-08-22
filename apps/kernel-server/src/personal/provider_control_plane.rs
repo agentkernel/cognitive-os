@@ -473,12 +473,11 @@ fn bind_key_and_discover(
             );
         }
     };
-    if let Some(previous) = account.secret_ref.as_deref() {
-        if rotate {
-            if let Ok(previous_ref) = cognitive_secret::SecretRef::from_opaque(previous) {
-                let _ = store.delete(&previous_ref);
-            }
-        }
+    if rotate
+        && let Some(previous) = account.secret_ref.as_deref()
+        && let Ok(previous_ref) = cognitive_secret::SecretRef::from_opaque(previous)
+    {
+        let _ = store.delete(&previous_ref);
     }
     if let Err(error) = plane.update_account_secret_and_status(
         account_id,
@@ -1240,13 +1239,13 @@ fn trust_error(err: EndpointTrustError) -> ResourceApiResponse {
 fn store_error(err: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {
     match err {
         cognitive_store::ProviderControlPlaneError::Conflict { detail } => {
-            error(409, "PROVIDER_CONTROL_CONFLICT", &detail)
+            error(409, "PROVIDER_CONTROL_CONFLICT", detail)
         }
         cognitive_store::ProviderControlPlaneError::NotFound { detail } => {
-            error(404, "PROVIDER_CONTROL_NOT_FOUND", &detail)
+            error(404, "PROVIDER_CONTROL_NOT_FOUND", detail)
         }
         cognitive_store::ProviderControlPlaneError::Invalid { detail } => {
-            error(400, "PROVIDER_CONTROL_INVALID", &detail)
+            error(400, "PROVIDER_CONTROL_INVALID", detail)
         }
         cognitive_store::ProviderControlPlaneError::Unavailable { .. } => {
             error(503, "PROVIDER_CONTROL_UNAVAILABLE", "store unavailable")

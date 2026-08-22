@@ -1620,6 +1620,7 @@ fn handle_provider_control_plane_route(
     )
 }
 
+#[allow(clippy::too_many_arguments)] // Shared daemon state is explicit at the connection boundary.
 fn handle_resource_manager_route(
     stream: &mut TcpStream,
     method_path: &str,

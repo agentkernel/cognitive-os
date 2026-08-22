@@ -1090,7 +1090,7 @@ Hard rules:
 Exit codes: 0 success, 1 operational error, 2 usage error.";
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
 

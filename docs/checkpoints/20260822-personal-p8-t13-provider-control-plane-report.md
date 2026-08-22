@@ -41,14 +41,17 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **pass** | 3/3 including Pi/dsh isolation |
 | admin-cli parse `provider_control_plane_verbs_parse_and_refuse_api_key_flag` | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **pass** | 1/1 |
 | Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | `deb60d12ffa87181dcc595e96b0ba34145282954` | **fail** | cognitive-store: too_many_arguments, type_complexity, manual_unwrap_or_default, match_like_matches_macro. Retained. |
+| `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `10fb686952e763217e60c5d82bc1c97f31f4c469` | **pass** | 8/8 after store Clippy allows. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-10fb6869`. rustc 1.97.1. |
+| Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | `10fb686952e763217e60c5d82bc1c97f31f4c469` | **fail** | admin-cli lib test `clippy::panic`; kernel-server collapsible_if on key rotate; needless_borrow in `store_error`; `too_many_arguments` on `handle_resource_manager_route`. Retained. |
+| Required Ubuntu CI | GitHub Actions | `10fb686952e763217e60c5d82bc1c97f31f4c469` | **fail** | run `32581900056` verify (ubuntu-latest): same four Clippy classes. Windows was still in progress at this row. Retained. |
 
 ## Blocked paths
 
-- none currently recorded for the private-candidate bound path (wired in this
-  change set; Linux/CI still `not-run`). Custom Anthropic-compatible endpoints
-  remain refused by design. Real provider calls, Gate, Profile, release, and B01
-  remain out of scope.
+- none currently recorded for the private-candidate bound path. Custom
+  Anthropic-compatible endpoints remain refused by design. Real provider
+  calls, live Pi/dsh qualification, Gate, Profile, release, and B01 remain
+  out of scope / `not-run`.
 
 ## Unique next action
 
-Push the store Clippy fix, then exact-revision Linux Clippy + required CI. Keep PR #259 Draft until Linux Clippy and required CI pass.
+Push the remaining Clippy follow-up (CLI test allow, collapsed key-rotation let-chains, drop needless borrows, allow `too_many_arguments` on the resource-manager front door), then exact-revision Linux Clippy + required CI. Keep PR #259 Draft until Linux Clippy and required CI pass.
