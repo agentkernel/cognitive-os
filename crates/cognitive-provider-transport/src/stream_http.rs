@@ -491,6 +491,7 @@ fn map_io_error(error: std::io::Error) -> ProviderTransportError {
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::split_https_url;
 
