@@ -154,14 +154,16 @@ impl ProviderTransport for RustlsProviderTransport {
         let mut first_byte_nanos = None;
         let mut buffer = [0_u8; 4096];
         loop {
-            let read = response
-                .read(&mut buffer)
-                .map_err(|_| ProviderTransportError::Network {
-                    detail: "failed to read Provider stream",
-                })?;
-            if read == 0 {
-                break;
-            }
+            let read = match response.read(&mut buffer) {
+                Ok(0) => break,
+                Ok(bytes_read) => bytes_read,
+                Err(error) if is_provider_stream_closed(&error) => break,
+                Err(_) => {
+                    return Err(ProviderTransportError::Network {
+                        detail: "failed to read Provider stream",
+                    });
+                }
+            };
             if body_bytes.saturating_add(read) > MAX_PROVIDER_RESPONSE_BYTES {
                 return Err(ProviderTransportError::Policy {
                     detail: "Provider response exceeds local limit",
@@ -214,6 +216,22 @@ fn map_reqwest_error(error: reqwest::Error) -> ProviderTransportError {
         ProviderTransportError::Network {
             detail: "Provider HTTPS exchange failed",
         }
+    }
+}
+
+/// HTTP/1.1 SSE often ends by closing the TCP session. Rustls then reports
+/// UnexpectedEof when the peer omits TLS close_notify. That is end-of-stream,
+/// not a truncated body the caller can retry as a fresh exchange.
+fn is_provider_stream_closed(error: &std::io::Error) -> bool {
+    matches!(
+        error.kind(),
+        std::io::ErrorKind::UnexpectedEof
+            | std::io::ErrorKind::ConnectionReset
+            | std::io::ErrorKind::BrokenPipe
+            | std::io::ErrorKind::ConnectionAborted
+    ) || {
+        let message = error.to_string();
+        message.contains("close_notify") || message.contains("peer closed")
     }
 }
 
@@ -474,6 +492,21 @@ mod tests {
                 .expect_err("unsafe Provider URL must be rejected before egress");
             assert!(matches!(error, ProviderTransportError::Policy { .. }));
         }
+    }
+
+    #[test]
+    fn stream_close_without_tls_notify_is_end_of_stream() {
+        assert!(super::is_provider_stream_closed(&std::io::Error::new(
+            std::io::ErrorKind::UnexpectedEof,
+            "peer closed connection without sending TLS close_notify"
+        )));
+        assert!(super::is_provider_stream_closed(&std::io::Error::from(
+            std::io::ErrorKind::ConnectionReset
+        )));
+        assert!(!super::is_provider_stream_closed(&std::io::Error::new(
+            std::io::ErrorKind::TimedOut,
+            "timed out"
+        )));
     }
 
     #[test]

@@ -150,13 +150,28 @@ fn handle_connection(
 fn write_delayed_sse(
     tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let header = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nConnection: close\r\n\r\n";
+    let header = b"HTTP/1.1 200 OK\r\nContent-Type: text/event-stream\r\nCache-Control: no-cache\r\nTransfer-Encoding: chunked\r\nConnection: close\r\n\r\n";
     tls_stream.write_all(header)?;
     tls_stream.flush()?;
-    tls_stream.write_all(b"data: {\"choices\":[{\"delta\":{\"content\":\"pong\"}}]}\n\n")?;
-    tls_stream.flush()?;
+    write_http_chunk(
+        tls_stream,
+        b"data: {\"choices\":[{\"delta\":{\"content\":\"pong\"}}]}\n\n",
+    )?;
     std::thread::sleep(Duration::from_millis(250));
-    tls_stream.write_all(b"data: [DONE]\n\n")?;
+    write_http_chunk(tls_stream, b"data: [DONE]\n\n")?;
+    write_http_chunk(tls_stream, b"")?;
+    tls_stream.conn.send_close_notify();
+    tls_stream.flush()?;
+    Ok(())
+}
+
+fn write_http_chunk(
+    tls_stream: &mut StreamOwned<ServerConnection, TcpStream>,
+    data: &[u8],
+) -> Result<(), Box<dyn std::error::Error>> {
+    write!(tls_stream, "{:x}\r\n", data.len())?;
+    tls_stream.write_all(data)?;
+    tls_stream.write_all(b"\r\n")?;
     tls_stream.flush()?;
     Ok(())
 }
