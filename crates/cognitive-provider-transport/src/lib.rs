@@ -15,6 +15,8 @@ use cognitive_secret::{
 const MAX_PROVIDER_RESPONSE_BYTES: usize = 1_048_576;
 const MAX_PROVIDER_RESPONSE_READ_BYTES: u64 = 1_048_577;
 
+mod stream_http;
+
 /// Production HTTPS transport for OpenAI-compatible Provider requests.
 ///
 /// The transport accepts only credential-free HTTPS request URLs, disables
@@ -47,18 +49,12 @@ impl RustlsProviderTransport {
     fn build_client(
         &self,
         timeout: Duration,
-        streaming: bool,
     ) -> Result<reqwest::blocking::Client, ProviderTransportError> {
         let mut client_builder = reqwest::blocking::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
             .timeout(timeout)
             .tcp_nodelay(true)
             .use_rustls_tls();
-        if streaming {
-            // SSE first-byte delivery is HTTP/1.1 chunked. HTTP/2 plus pooled
-            // connections can hold the first DATA frame until the stream ends.
-            client_builder = client_builder.http1_only().pool_max_idle_per_host(0);
-        }
         for certificate_der in &self.additional_root_certificates_der {
             let certificate = reqwest::Certificate::from_der(certificate_der).map_err(|_| {
                 ProviderTransportError::Policy {
@@ -86,7 +82,7 @@ impl ProviderTransport for RustlsProviderTransport {
         }
 
         let timeout = Duration::from_millis(u64::from(request.timeout_ms));
-        let client = self.build_client(timeout, false)?;
+        let client = self.build_client(timeout)?;
         let method = match request.method {
             ProviderHttpMethod::Get => reqwest::Method::GET,
             ProviderHttpMethod::Post => reqwest::Method::POST,
@@ -130,65 +126,12 @@ impl ProviderTransport for RustlsProviderTransport {
             return Err(ProviderTransportError::Timeout);
         }
 
-        let timeout = Duration::from_millis(u64::from(request.timeout_ms));
-        let client = self.build_client(timeout, true)?;
-        let method = match request.method {
-            ProviderHttpMethod::Get => reqwest::Method::GET,
-            ProviderHttpMethod::Post => reqwest::Method::POST,
-        };
-        let mut request_builder = client.request(method, &request.url);
-        let mut has_accept = false;
-        for (header_name, header_value) in &request.headers {
-            if header_name.eq_ignore_ascii_case("accept") {
-                has_accept = true;
-            }
-            request_builder = request_builder.header(header_name, header_value);
-        }
-        if !has_accept {
-            request_builder = request_builder.header("Accept", "text/event-stream");
-        }
-        if let Some(request_body) = &request.body {
-            request_builder = request_builder.body(request_body.clone());
-        }
-
-        let network_started_at = std::time::Instant::now();
-        let mut response = request_builder.send().map_err(map_reqwest_error)?;
-        let status = response.status().as_u16();
-        on_status(status)?;
-
-        let mut body_bytes = 0_usize;
-        let mut first_byte_nanos = None;
-        let mut buffer = [0_u8; 4096];
-        loop {
-            let read = match response.read(&mut buffer) {
-                Ok(0) => break,
-                Ok(bytes_read) => bytes_read,
-                Err(error) if is_provider_stream_closed(&error) => break,
-                Err(_) => {
-                    return Err(ProviderTransportError::Network {
-                        detail: "failed to read Provider stream",
-                    });
-                }
-            };
-            if body_bytes.saturating_add(read) > MAX_PROVIDER_RESPONSE_BYTES {
-                return Err(ProviderTransportError::Policy {
-                    detail: "Provider response exceeds local limit",
-                });
-            }
-            if first_byte_nanos.is_none() {
-                first_byte_nanos = Some(network_started_at.elapsed().as_nanos().max(1));
-            }
-            on_chunk(&buffer[..read])?;
-            body_bytes += read;
-        }
-
-        let provider_network_elapsed_nanos = network_started_at.elapsed().as_nanos().max(1);
-        Ok(StreamedProviderExchange {
-            status,
-            first_byte_nanos: first_byte_nanos.unwrap_or(provider_network_elapsed_nanos),
-            provider_network_elapsed_nanos,
-            body_bytes,
-        })
+        stream_http::exchange_stream(
+            &self.additional_root_certificates_der,
+            request,
+            on_status,
+            on_chunk,
+        )
     }
 }
 
