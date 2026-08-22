@@ -10,12 +10,13 @@ sources:
   - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
+  - path: apps/kernel-server/src/personal/resource_manager.rs
   - path: apps/kernel-server/src/personal/server.rs
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:68ff89e281e0dde97a2ef8dd70090419bd7368b4b7c7c2b1df21e9090ec56a00"
+fingerprint: "sha256:a6b9a93ceb501634b7aeec23c6e3cfea52fe69486cdd167b88f9db1900c18d6a"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -39,6 +40,28 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/provider/v1/selected-model` | management | 非 secret 的 selected-model 投影。 |
 | `GET` | `/resource/v1/projection` | management | 私有版本化六资源族投影（family + version 查询参数）。 |
 | `GET` | `/resource/v1/watch` | management | 按资源族的 watch，支持可选 resume_from 游标。 |
+| `GET` | `/management/resource/v1/list` | management | 通用 Resource Manager 有界族页（Tool catalog+overlay、未墓碑 Memory、Skill binding、当前 Task contract；Context/Runtime 诚实为空）。不是通用 Resource 表。 |
+| `GET` | `/management/resource/v1/inspect` | management | 通用 Resource Manager 按稳定 ID 与当前 object version 检视一条资源。 |
+| `POST` | `/management/resource/v1/bind` | management | 通用 bind 分发（Skill bind 接到既有 authority sink）。需要 family、id、expected_version、idempotency_key。 |
+| `POST` | `/management/resource/v1/unbind` | management | 通用 unbind 分发（Skill unbind 映射到既有撤销）。 |
+| `POST` | `/management/resource/v1/enable` | management | 通用 enable 分发（Tool overlay enable，带 expected-version 守卫）。 |
+| `POST` | `/management/resource/v1/disable` | management | 通用 disable 分发（Tool overlay disable，带 expected-version 守卫）。 |
+| `POST` | `/management/resource/v1/revoke` | management | 通用 revoke 分发（Skill binding 撤销或 Tool overlay 撤销）。Memory forget 不是此动词。 |
+| `POST` | `/management/resource/v1/create` | management | 拒绝：generic create 不是 Resource Manager 操作。 |
+| `POST` | `/management/resource/v1/install` | management | 拒绝：generic install 不是 Resource Manager 操作。 |
+| `POST` | `/management/resource/v1/execute` | management | 拒绝：generic execute 不是 Resource Manager 操作。 |
+| `POST` | `/management/resource/v1/complete` | management | 拒绝：generic complete 不是 Resource Manager 操作。 |
+| `GET` | `/task/resource/v1/list` | task | 禁止：Resource Manager list 仅限 management 通道。 |
+| `GET` | `/task/resource/v1/inspect` | task | 禁止：Resource Manager inspect 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/bind` | task | 禁止：Resource Manager bind 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/unbind` | task | 禁止：Resource Manager unbind 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/enable` | task | 禁止：Resource Manager enable 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/disable` | task | 禁止：Resource Manager disable 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/revoke` | task | 禁止：Resource Manager revoke 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/create` | task | 禁止：Resource Manager create 仅限 management 通道（即便在 management 也被拒绝）。 |
+| `POST` | `/task/resource/v1/install` | task | 禁止：Resource Manager install 仅限 management 通道（即便在 management 也被拒绝）。 |
+| `POST` | `/task/resource/v1/execute` | task | 禁止：Resource Manager execute 仅限 management 通道（即便在 management 也被拒绝）。 |
+| `POST` | `/task/resource/v1/complete` | task | 禁止：Resource Manager complete 仅限 management 通道（即便在 management 也被拒绝）。 |
 | `POST` | `/management/context-authorization/facts` | management | 追加 Context 授权事实集。 |
 | `POST` | `/management/context-authorization/revocations` | management | 追加 Context 撤销事实（推进租户撤销 epoch）。 |
 | `GET` | `/management/resource/v1/memory/object` | management | 按 id 读取一个不可变 Memory 对象。 |

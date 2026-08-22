@@ -18,7 +18,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:b55917b421dba6c2d3c71b2601ebb957e8cef3a57b7d14f5d43515c13deabb6e"
+fingerprint: "sha256:01f30484a40692d33eeb43c0b3a1cccf8e048de7d1b07e978b0cf183287965c9"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -44,15 +44,16 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | fail-closed dsh launch after daemon-owned ready state (Pi may stay `not_configured`); Path B loads the pinned AKP plugin and never treats a dsh response as Task completion; `--path a` is rejected here and is measurement-only via `paired-path.mjs` |
 | `cognitive dsh status` | authenticated observation of dsh sessions/fencing and optional bound pid liveness (`GET /personal/dsh/runtime`); not Task completion |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
+| `cognitive resource list/inspect --family <…> [--id <id>]` | common Resource Manager read envelope (management channel) |
+| `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | common Resource Manager mutation onto existing Skill/Tool sinks; not generic create/execute/complete |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |
 | `cognitive backup [--output <dir>]` | write a secret-excluding digest-bound archive (no authority SQLite / provider-config / bearer) |
 | `cognitive restore --archive <dir> [--preflight]` | preflight then overlay live files from a verified archive; `--preflight` mutates nothing |
 
 Two honest quirks (also flagged in the generated
-[CLI reference](../reference/cli-cognitive.md)): the built-in usage text does not yet
-list `resource`/`task`, and `--runtime-root <dir>` (accepted by every verb) is the
-hermetic-test escape hatch that relocates the whole layout.
+[CLI reference](../reference/cli-cognitive.md)): `--runtime-root <dir>` (accepted
+by every verb) is the hermetic-test escape hatch that relocates the whole layout.
 
 The separate `admin-cli` binary is the management fallback (inspect / stop / revoke
 / reconcile plus agent lifecycle verbs) and requires a privileged session document;

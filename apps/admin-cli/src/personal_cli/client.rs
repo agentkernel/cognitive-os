@@ -83,6 +83,62 @@ impl PersonalDaemonClient {
         self.post_authorized("/personal/dsh/runtime", body)
     }
 
+    /// `GET /management/resource/v1/list` through the management channel.
+    pub fn list_resources(&self, family: &str) -> Result<String, PersonalDaemonClientError> {
+        self.get_authorized(&format!("/management/resource/v1/list?family={family}"))
+    }
+
+    /// `GET /management/resource/v1/inspect` through the management channel.
+    pub fn inspect_resource(
+        &self,
+        family: &str,
+        id: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
+        let encoded_id = percent_encode_query_component(id);
+        self.get_authorized(&format!(
+            "/management/resource/v1/inspect?family={family}&id={encoded_id}"
+        ))
+    }
+
+    /// Common Resource Manager mutation (`bind|unbind|enable|disable|revoke`).
+    pub fn mutate_resource(
+        &self,
+        operation: &str,
+        family: &str,
+        id: &str,
+        expected_version: i64,
+        idempotency_key: &str,
+        extra_payload: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
+        let mut document = serde_json::json!({
+            "family": family,
+            "id": id,
+            "expected_version": expected_version,
+            "idempotency_key": idempotency_key,
+        });
+        if !extra_payload.trim().is_empty() {
+            let extra = serde_json::from_str::<Value>(extra_payload).map_err(|error| {
+                PersonalDaemonClientError::Protocol {
+                    detail: format!("resource --payload is not JSON: {error}"),
+                }
+            })?;
+            let Some(object) = extra.as_object() else {
+                return Err(PersonalDaemonClientError::Protocol {
+                    detail: "resource --payload must be a JSON object".to_owned(),
+                });
+            };
+            if let Some(root) = document.as_object_mut() {
+                for (key, value) in object {
+                    root.insert(key.clone(), value.clone());
+                }
+            }
+        }
+        self.post_authorized_ok(
+            &format!("/management/resource/v1/{operation}"),
+            &document.to_string(),
+        )
+    }
+
     /// `GET /resource/v1/projection` through the management-only projection channel.
     pub fn get_resource_projection(
         &self,
@@ -183,7 +239,7 @@ impl PersonalDaemonClient {
         );
         let response = http_exchange(&self.endpoint, &wire)?;
         let (status, response_body) = split_http_response(&response)?;
-        if status == 200 {
+        if status == 200 || status == 201 {
             return Ok(response_body);
         }
         if status == 401 || status == 403 {
@@ -195,6 +251,14 @@ impl PersonalDaemonClient {
             status,
             body: response_body,
         })
+    }
+
+    fn post_authorized_ok(
+        &self,
+        path: &str,
+        body: &str,
+    ) -> Result<String, PersonalDaemonClientError> {
+        self.post_authorized(path, body)
     }
 }
 

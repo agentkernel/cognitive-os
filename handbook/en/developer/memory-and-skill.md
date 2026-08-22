@@ -22,7 +22,8 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:82958cf8b301b5911a4e18d9421d4efe214d2d2badf7c2f61754997d12eeeab3"
+  - apps/kernel-server/tests/p8_t12_resource_manager.rs
+fingerprint: "sha256:533041e14638e3cbe085677daa0be1cee801da0d55f923fc0c33390677e1cec3"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -63,7 +64,11 @@ bindings keep their exact pins — they never drift to a successor.
 
 The management channel publishes lifecycle preconditions, admits Memory
 remember/review/forget plus Skill import/revision-inspect/bind/supersede/revoke
-without direct SQLite access. Public remember accepts unsealed owner fields
+without direct SQLite access. The common Resource Manager (`GET
+/management/resource/v1/list|inspect`) projects non-tombstoned Memory objects
+and Skill bindings from those same authority rows; it is not a generic Resource
+table, and Memory forget remains the family `forget` verb rather than Manager
+`revoke`. Public remember accepts unsealed owner fields
 (`text`, scope, purpose, retention); the daemon loads the persisted
 `GovernanceSeed` and composes sealed headers. A sealed `WorkspaceContextSource`
 plus `MemoryCandidate` envelope remains valid for callers that already have

@@ -33,7 +33,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:fa2ed40ba7a06d9b989a6c247b690114c0f68e29d56e2d7dd86866253e47ed3a"
+fingerprint: "sha256:04c8eb2378017df5834821fc9368f209ea9fe4f3a617dd5e7f1997c582ea6ba6"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -109,7 +109,8 @@ index rebuild. Authority migrations now include v24 append-only Memory/Skill
 consumption records; a later session may reuse exact pins, but forget, revoke,
 digest drift, or a competing record fail closed instead of resurrecting
 forgotten facts. Management Memory/Skill lifecycle rows and Skill revision
-lineage remain inspectable after daemon restart. Public Memory remember may send
+lineage remain inspectable after daemon restart, including through
+`cognitive resource list|inspect`. Public Memory remember may send
 unsealed owner fields; the daemon composes sealed headers from its persisted
 governance root.
 

@@ -88,11 +88,14 @@ pub enum DshCommand {
     Status(DshStatusOptions),
 }
 
-/// Read-only private resource projection commands.
+/// Private resource projection and common Resource Manager commands.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ResourceCommand {
     Get(ResourceOptions),
     Watch(ResourceOptions),
+    List(ResourceListOptions),
+    Inspect(ResourceInspectOptions),
+    Mutate(ResourceMutateOptions),
 }
 
 /// Read-only Task observation commands.
@@ -107,6 +110,39 @@ pub struct ResourceOptions {
     pub status: StatusOptions,
     pub family: String,
     pub resume_from: Option<u64>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResourceListOptions {
+    pub status: StatusOptions,
+    pub family: String,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResourceInspectOptions {
+    pub status: StatusOptions,
+    pub family: String,
+    pub id: String,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ResourceMutateOperation {
+    Bind,
+    Unbind,
+    Enable,
+    Disable,
+    Revoke,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct ResourceMutateOptions {
+    pub status: StatusOptions,
+    pub family: String,
+    pub id: String,
+    pub expected_version: i64,
+    pub idempotency_key: String,
+    pub operation: ResourceMutateOperation,
+    pub payload: String,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -288,6 +324,13 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
         CognitiveCommand::Resource(ResourceCommand::Watch(options)) => {
             fetch_resource_projection(&options, true)
         }
+        CognitiveCommand::Resource(ResourceCommand::List(options)) => fetch_resource_list(&options),
+        CognitiveCommand::Resource(ResourceCommand::Inspect(options)) => {
+            fetch_resource_inspect(&options)
+        }
+        CognitiveCommand::Resource(ResourceCommand::Mutate(options)) => {
+            fetch_resource_mutate(&options)
+        }
         CognitiveCommand::Task(TaskCommand::Watch(options)) => fetch_task_watch(&options),
         CognitiveCommand::Task(TaskCommand::Evidence(options)) => fetch_task_evidence(&options),
         CognitiveCommand::Backup(options) => match backup::run_backup(&options) {
@@ -332,13 +375,101 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
 
 fn parse_resource_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
     let Some((subcommand, remaining_arguments)) = arguments.split_first() else {
-        return Err("resource requires subcommand get|watch".to_owned());
+        return Err(
+            "resource requires subcommand get|watch|list|inspect|bind|unbind|enable|disable|revoke"
+                .to_owned(),
+        );
     };
     let flags = parse_flags(remaining_arguments)?;
-    reject_unexpected_flags(
-        &flags,
-        &["runtime-root", "endpoint", "family", "resume-from"],
-    )?;
+    match subcommand.as_str() {
+        "get" | "watch" => {
+            reject_unexpected_flags(
+                &flags,
+                &["runtime-root", "endpoint", "family", "resume-from"],
+            )?;
+            let family = required_resource_family(&flags)?;
+            let resume_from = parse_optional_cursor(&flags)?;
+            let status = parse_status_options(&flags)?;
+            let options = ResourceOptions {
+                status,
+                family,
+                resume_from,
+            };
+            if subcommand == "get" && options.resume_from.is_some() {
+                return Err("resource get does not accept --resume-from".to_owned());
+            }
+            if subcommand == "get" {
+                Ok(CognitiveCommand::Resource(ResourceCommand::Get(options)))
+            } else {
+                Ok(CognitiveCommand::Resource(ResourceCommand::Watch(options)))
+            }
+        }
+        "list" => {
+            reject_unexpected_flags(&flags, &["runtime-root", "endpoint", "family"])?;
+            Ok(CognitiveCommand::Resource(ResourceCommand::List(
+                ResourceListOptions {
+                    status: parse_status_options(&flags)?,
+                    family: required_resource_family(&flags)?,
+                },
+            )))
+        }
+        "inspect" => {
+            reject_unexpected_flags(&flags, &["runtime-root", "endpoint", "family", "id"])?;
+            Ok(CognitiveCommand::Resource(ResourceCommand::Inspect(
+                ResourceInspectOptions {
+                    status: parse_status_options(&flags)?,
+                    family: required_resource_family(&flags)?,
+                    id: required_resource_flag(&flags, "id")?,
+                },
+            )))
+        }
+        "bind" | "unbind" | "enable" | "disable" | "revoke" => {
+            reject_unexpected_flags(
+                &flags,
+                &[
+                    "runtime-root",
+                    "endpoint",
+                    "family",
+                    "id",
+                    "expected-version",
+                    "idempotency-key",
+                    "payload",
+                ],
+            )?;
+            let operation = match subcommand.as_str() {
+                "bind" => ResourceMutateOperation::Bind,
+                "unbind" => ResourceMutateOperation::Unbind,
+                "enable" => ResourceMutateOperation::Enable,
+                "disable" => ResourceMutateOperation::Disable,
+                _ => ResourceMutateOperation::Revoke,
+            };
+            let expected_version = flags
+                .get("expected-version")
+                .ok_or_else(|| {
+                    "resource mutation requires --expected-version <integer>".to_owned()
+                })?
+                .parse::<i64>()
+                .map_err(|_| "--expected-version must be an integer".to_owned())?;
+            Ok(CognitiveCommand::Resource(ResourceCommand::Mutate(
+                ResourceMutateOptions {
+                    status: parse_status_options(&flags)?,
+                    family: required_resource_family(&flags)?,
+                    id: required_resource_flag(&flags, "id")?,
+                    expected_version,
+                    idempotency_key: required_resource_flag(&flags, "idempotency-key")?,
+                    operation,
+                    payload: flags.get("payload").cloned().unwrap_or_default(),
+                },
+            )))
+        }
+        _ => Err(
+            "resource requires subcommand get|watch|list|inspect|bind|unbind|enable|disable|revoke"
+                .to_owned(),
+        ),
+    }
+}
+
+fn required_resource_family(flags: &BTreeMap<String, String>) -> Result<String, String> {
     let family = flags
         .get("family")
         .cloned()
@@ -346,21 +477,15 @@ fn parse_resource_command(arguments: &[String]) -> Result<CognitiveCommand, Stri
     if !["memory", "skill", "tool", "context", "task", "runtime"].contains(&family.as_str()) {
         return Err("resource --family must be memory|skill|tool|context|task|runtime".to_owned());
     }
-    let resume_from = parse_optional_cursor(&flags)?;
-    let status = parse_status_options(&flags)?;
-    let options = ResourceOptions {
-        status,
-        family,
-        resume_from,
-    };
-    match subcommand.as_str() {
-        "get" if options.resume_from.is_none() => {
-            Ok(CognitiveCommand::Resource(ResourceCommand::Get(options)))
-        }
-        "get" => Err("resource get does not accept --resume-from".to_owned()),
-        "watch" => Ok(CognitiveCommand::Resource(ResourceCommand::Watch(options))),
-        _ => Err("resource requires subcommand get|watch".to_owned()),
-    }
+    Ok(family)
+}
+
+fn required_resource_flag(flags: &BTreeMap<String, String>, name: &str) -> Result<String, String> {
+    flags
+        .get(name)
+        .cloned()
+        .filter(|value| !value.trim().is_empty())
+        .ok_or_else(|| format!("resource command requires --{name}"))
 }
 
 fn parse_backup_command(arguments: &[String]) -> Result<CognitiveCommand, String> {
@@ -444,6 +569,68 @@ fn parse_optional_cursor(flags: &BTreeMap<String, String>) -> Result<Option<u64>
                 .map_err(|_| "--resume-from must be an unsigned integer".to_owned())
         })
         .transpose()
+}
+
+fn fetch_resource_list(options: &ResourceListOptions) -> i32 {
+    match connect_resource_client(&options.status) {
+        Ok(client) => print_resource_client_result(client.list_resources(&options.family)),
+        Err(code) => code,
+    }
+}
+
+fn fetch_resource_inspect(options: &ResourceInspectOptions) -> i32 {
+    match connect_resource_client(&options.status) {
+        Ok(client) => {
+            print_resource_client_result(client.inspect_resource(&options.family, &options.id))
+        }
+        Err(code) => code,
+    }
+}
+
+fn fetch_resource_mutate(options: &ResourceMutateOptions) -> i32 {
+    let operation = match options.operation {
+        ResourceMutateOperation::Bind => "bind",
+        ResourceMutateOperation::Unbind => "unbind",
+        ResourceMutateOperation::Enable => "enable",
+        ResourceMutateOperation::Disable => "disable",
+        ResourceMutateOperation::Revoke => "revoke",
+    };
+    match connect_resource_client(&options.status) {
+        Ok(client) => print_resource_client_result(client.mutate_resource(
+            operation,
+            &options.family,
+            &options.id,
+            options.expected_version,
+            &options.idempotency_key,
+            &options.payload,
+        )),
+        Err(code) => code,
+    }
+}
+
+fn connect_resource_client(status: &StatusOptions) -> Result<client::PersonalDaemonClient, i32> {
+    let layout = match layout::build_layout(&status.layout_roots) {
+        Ok(layout) => layout,
+        Err(error) => return Err(print_operational_error(&error.to_string())),
+    };
+    let endpoint = match resolve_endpoint(status, &layout) {
+        Ok(endpoint) => endpoint,
+        Err(error) => return Err(print_operational_error(&error)),
+    };
+    match client::PersonalDaemonClient::connect(&endpoint, &layout) {
+        Ok(client) => Ok(client),
+        Err(error) => Err(print_operational_error(&error.to_string())),
+    }
+}
+
+fn print_resource_client_result(result: Result<String, client::PersonalDaemonClientError>) -> i32 {
+    match result {
+        Ok(body) => {
+            println!("{body}");
+            EXIT_SUCCESS
+        }
+        Err(error) => print_operational_error(&error.to_string()),
+    }
 }
 
 fn fetch_resource_projection(options: &ResourceOptions, watch: bool) -> i32 {
@@ -800,6 +987,17 @@ USAGE:
   cognitive dsh launch [--runtime-root <dir>] [--print] [--path a|b]
                        [--task <prompt>]
   cognitive dsh status [--runtime-root <dir>]
+  cognitive resource get|watch [--runtime-root <dir>] [--endpoint <host:port>]
+                       --family <memory|skill|tool|context|task|runtime>
+                       [--resume-from <cursor>]
+  cognitive resource list [--runtime-root <dir>] [--endpoint <host:port>]
+                       --family <memory|skill|tool|context|task|runtime>
+  cognitive resource inspect [--runtime-root <dir>] [--endpoint <host:port>]
+                       --family <memory|skill|tool|context|task|runtime> --id <id>
+  cognitive resource bind|unbind|enable|disable|revoke
+                       [--runtime-root <dir>] [--endpoint <host:port>]
+                       --family <family> --id <id> --expected-version <n>
+                       --idempotency-key <key> [--payload <json-object>]
   cognitive task watch [--runtime-root <dir>] [--endpoint <host:port>]
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
@@ -821,6 +1019,7 @@ Hard rules:
     pinned AKP plugin, and never treats a dsh response as Task completion
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
+  - resource list/inspect/bind|unbind|enable|disable|revoke call the management Resource Manager; get/watch remain the private projection
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
@@ -1167,5 +1366,64 @@ mod tests {
         ])
         .expect_err("backup must reject secret flags");
         assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn resource_manager_verbs_parse_common_envelope_flags() {
+        let list = parse_cognitive_args(&[
+            "resource".to_owned(),
+            "list".to_owned(),
+            "--family".to_owned(),
+            "tool".to_owned(),
+        ])
+        .expect("parse resource list");
+        assert_eq!(
+            list,
+            CognitiveCommand::Resource(ResourceCommand::List(ResourceListOptions {
+                status: StatusOptions {
+                    layout_roots: LayoutRoots { runtime_root: None },
+                    endpoint_override: None,
+                },
+                family: "tool".to_owned(),
+            }))
+        );
+
+        let disable = parse_cognitive_args(&[
+            "resource".to_owned(),
+            "disable".to_owned(),
+            "--family".to_owned(),
+            "tool".to_owned(),
+            "--id".to_owned(),
+            "native.workspace.read".to_owned(),
+            "--expected-version".to_owned(),
+            "1".to_owned(),
+            "--idempotency-key".to_owned(),
+            "p8-t12-disable-1".to_owned(),
+        ])
+        .expect("parse resource disable");
+        assert_eq!(
+            disable,
+            CognitiveCommand::Resource(ResourceCommand::Mutate(ResourceMutateOptions {
+                status: StatusOptions {
+                    layout_roots: LayoutRoots { runtime_root: None },
+                    endpoint_override: None,
+                },
+                family: "tool".to_owned(),
+                id: "native.workspace.read".to_owned(),
+                expected_version: 1,
+                idempotency_key: "p8-t12-disable-1".to_owned(),
+                operation: ResourceMutateOperation::Disable,
+                payload: String::new(),
+            }))
+        );
+
+        let unknown = parse_cognitive_args(&[
+            "resource".to_owned(),
+            "create".to_owned(),
+            "--family".to_owned(),
+            "tool".to_owned(),
+        ])
+        .expect_err("generic create is not a CLI verb");
+        assert!(unknown.contains("get|watch|list|inspect"), "{unknown}");
     }
 }

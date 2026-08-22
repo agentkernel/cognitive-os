@@ -7,10 +7,13 @@ status: partial
 generated: false
 sources:
   - path: docs/architecture/personal/system-architecture.md
+  - path: docs/architecture/personal/resource-manager-architecture.md
+  - path: docs/product/personal/resource-manager-design.md
   - path: apps/kernel-server/src/personal/mod.rs
+  - path: apps/kernel-server/src/personal/resource_manager.rs
   - path: crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:78a56c3592b480eb51f51657803e52428fc241ed65bbba096f6ae8e8ee429294"
+fingerprint: "sha256:648dda8d09dbe6d12e0beb48fbc169233f075829020e0c723f0e75620e350868"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -37,8 +40,9 @@ digest 钉住转移表与 `cognitive-contracts` 的 canonical digest 校验。
 - **体验层**：`cognitive` CLI、Pi 扩展、TypeScript SDK/Shell 库——全部是经 loopback
   HTTP、持通道绑定 bearer 的真实客户端。`implemented`。
 - **应用服务**：`TaskApi`（record/interpret/preview/admit + watch）与私有六族资源投
-  影 + Memory/Skill 路由。上述操作 `implemented`；`control`/`query_intent` 与通用
-  `ResourceApplicationService` 词汇（bind/unbind/enable/…）未暴露。
+  影 + Memory/Skill 路由，以及 `resource_manager.rs` 中的 management Resource Manager
+  信封（`list`/`inspect`/`bind`/`unbind`/`enable`/`disable`/`revoke`）。上述操作
+  `implemented`；`control`/`query_intent` 仍未暴露。watch 仍走 `/resource/v1/watch`。
 - **域服务**：六族的权威存储 + kernel 服务齐备（见各域页面）。存储/服务层
   `implemented`。
 - **执行层**：每个原语都存在（调度 CAS lease、封存 Context、candidate 准入、工具执行

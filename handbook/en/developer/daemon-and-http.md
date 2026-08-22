@@ -26,6 +26,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/resource_manager.rs
+    symbols: ["handle", "matches"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -40,7 +42,8 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:ae7078cba377b5730439a41026994ba23103af6dadcc611c95214dc654a7a9c8"
+  - apps/kernel-server/tests/p8_t12_resource_manager.rs
+fingerprint: "sha256:d6f5448d0242d08279a134443b4cbb2d58c39c7284680d67862deae8fc825c66"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -90,8 +93,8 @@ Two credential planes, deliberately unrelated:
 Fixed bounds before routing: 1 MiB body (8 MiB hard read), 16 KiB/64 headers,
 10 s/30 s timeouts, 32/16 connection caps, Cookie rejection, optional Host
 validation — each with a registered error code. Routing is handwritten prefix
-matching on `METHOD /path` strings across `server.rs`, `task_api.rs`, and
-`resource_api.rs` (the generated [HTTP reference](../reference/http-api.md)
+matching on `METHOD /path` strings across `server.rs`, `task_api.rs`,
+`resource_api.rs`, and `resource_manager.rs` (the generated [HTTP reference](../reference/http-api.md)
 enumerates the full table and channels). Authenticated `POST /task/akp/dsh`
 is a candidate-only DeepSeek Harness front door: sessions are process-local
 and must be activated after start; daemon restart forgets them and fails
@@ -99,8 +102,11 @@ closed. Workspace* candidates reuse the existing public candidate admission
 path. A dsh response never completes a Task.
 
 The management Resource surface exposes a read-only lifecycle-preconditions
-document, Memory remember/review/forget, and Skill import/inspect/bind/
-supersede/revoke. Public remember accepts unsealed owner fields and the daemon
+document, Memory remember/review/forget, Skill import/inspect/bind/supersede/
+revoke, and the common Resource Manager envelope (`GET/POST
+/management/resource/v1/{list,inspect,bind,unbind,enable,disable,revoke}`).
+Generic create/install/execute/complete and the same paths on the task channel
+fail closed. Watch stays on `GET /resource/v1/watch`. Public remember accepts unsealed owner fields and the daemon
 composes sealed headers from its persisted `GovernanceSeed`; a sealed
 source+candidate envelope remains valid. Callers must not mint sealed headers
 on the unsealed path. Mutations require a management

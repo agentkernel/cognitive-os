@@ -12,7 +12,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:90756ca97944428b3e331530636a1eab4806306d20e2529f5a5a74b267188d49"
+fingerprint: "sha256:a54dc671076b25a76d1b42b3e5defea840c135af4d6cadf51671e7ca578663bd"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -46,6 +46,7 @@ cargo build --workspace --locked
 cargo test --workspace --locked -- --test-threads=1
 cargo test -p kernel-server tool_executor --locked -- --test-threads=1
 cargo test -p kernel-server p4_t05_resource_api --locked -- --test-threads=1
+cargo test -p kernel-server --test p8_t12_resource_manager --locked -- --test-threads=1
 cargo test -p pi-agent-adapter --locked -- --test-threads=1
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo run -p cognitive-conformance --bin conformance-runner
@@ -74,6 +75,9 @@ P2-T30 公开 admit 调度 lease 覆盖是 kernel-server 聚焦测试
 P2-T33 私有 candidate 主机路径覆盖是
 `apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs` 以及
 `provider_proxy` 的私有 candidate 单元测试（仅 Linux/CI；Windows GNU `not-run`）。
+P8-T12 Resource Manager 覆盖是 `apps/kernel-server/tests/p8_t12_resource_manager.rs`
+（management list/inspect/mutate、task 通道 403、generic create 拒绝；仅 Linux/CI；
+Windows GNU `not-run`）。
 
 ## CI 在每个 PR 上强制什么
 

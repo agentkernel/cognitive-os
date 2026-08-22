@@ -453,6 +453,30 @@ fn agent_exposure(file: &LifecycleFile, task_ref: &str) -> AgentExposure {
     }
 }
 
+pub(crate) fn current_lifecycle_state(
+    layout: &PersonalDataLayout,
+    operation_id: &str,
+) -> Result<ToolLifecycleState, ToolLifecycleResponse> {
+    if catalog_descriptor(operation_id).is_none() {
+        return Err(error(
+            404,
+            "RESOURCE_TOOL_UNKNOWN",
+            "operation_id is not registered",
+        ));
+    }
+    let file = load_file(layout)?;
+    Ok(overlay_state(&file, operation_id))
+}
+
+pub(crate) fn lifecycle_object_version(state: ToolLifecycleState) -> i64 {
+    match state {
+        ToolLifecycleState::Enabled => 1,
+        ToolLifecycleState::Disabled => 2,
+        ToolLifecycleState::Quarantined => 3,
+        ToolLifecycleState::Revoked => 4,
+    }
+}
+
 fn overlay_state(file: &LifecycleFile, operation_id: &str) -> ToolLifecycleState {
     file.overlays
         .iter()

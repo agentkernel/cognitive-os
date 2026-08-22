@@ -26,6 +26,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
+  - path: apps/kernel-server/src/personal/resource_manager.rs
+    symbols: ["handle", "matches"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -40,7 +42,8 @@ tests:
   - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:ae7078cba377b5730439a41026994ba23103af6dadcc611c95214dc654a7a9c8"
+  - apps/kernel-server/tests/p8_t12_resource_manager.rs
+fingerprint: "sha256:d6f5448d0242d08279a134443b4cbb2d58c39c7284680d67862deae8fc825c66"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -82,14 +85,18 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain
 
 路由前的固定界限：1 MiB 请求体（硬读 8 MiB）、16 KiB/64 头、10 s/30 s 超时、32/16
 连接上限、拒绝 Cookie、可选 Host 校验——各配注册错误码。路由是对 `METHOD /path` 字符
-串的手写前缀匹配，分布在 `server.rs`、`task_api.rs`、`resource_api.rs`（生成的
+串的手写前缀匹配，分布在 `server.rs`、`task_api.rs`、`resource_api.rs`、
+`resource_manager.rs`（生成的
 [HTTP 参考](../reference/http-api.md)枚举完整表与通道）。已认证的
 `POST /task/akp/dsh` 是仅 candidate 的 DeepSeek Harness 前门：会话只存在于进程内，
 必须在启动后显式激活；daemon 重启后会话被遗忘并失败闭合。Workspace* candidate 复用
 既有 public candidate admission。dsh 响应绝不完成 Task。
 
 management Resource 表面提供只读生命周期前置条件、Memory remember/review/forget，
-以及 Skill import/inspect/bind/supersede/revoke。公开 remember 接受未封存的 owner
+Skill import/inspect/bind/supersede/revoke，以及通用 Resource Manager 信封
+（`GET/POST /management/resource/v1/{list,inspect,bind,unbind,enable,disable,revoke}`）。
+generic create/install/execute/complete 与 task 通道上的相同路径失败闭合。watch 仍走
+`GET /resource/v1/watch`。公开 remember 接受未封存的 owner
 字段，由 daemon 用持久 `GovernanceSeed` 组合封存 header；带封存
 source+candidate 的信封仍然有效。未封存路径上调用方不得自行铸造 header。
 变更必须持有 management bearer；task bearer 在进入 handler 前失败。创建成功使用

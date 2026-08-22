@@ -38,6 +38,7 @@ use super::readiness::{
     status_projection_json,
 };
 use super::resource_api::ResourceApi;
+use super::resource_manager;
 use super::route_observation;
 use super::scheduler_authority::{
     reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
@@ -719,6 +720,18 @@ fn dispatch_http_route(
             authority,
         );
     }
+    if resource_manager::matches(&method_path) {
+        return handle_resource_manager_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+            authority_store,
+            resource_api,
+        );
+    }
     if method_path.starts_with("GET /management/resource/")
         || method_path.starts_with("POST /management/resource/")
     {
@@ -803,6 +816,18 @@ fn dispatch_http_route(
             stream,
             headers,
             body,
+            authority,
+            authority_store,
+            resource_api,
+        );
+    }
+    if resource_manager::matches(&method_path) {
+        return handle_resource_manager_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
             authority,
             authority_store,
             resource_api,
@@ -1494,6 +1519,66 @@ fn handle_task_fault_profile_forbidden(
         stream,
         response.status,
         "application/json",
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_resource_manager_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+    resource_api: &Arc<Mutex<ResourceApi>>,
+) -> Result<(), String> {
+    if resource_manager::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = resource_manager::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let resource_api = resource_api
+        .lock()
+        .map_err(|_| "resource projection lock poisoned".to_owned())?;
+    let response = resource_manager::handle(
+        method_path,
+        body,
+        layout,
+        authority_store.as_ref(),
+        &resource_api,
+    );
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
         response.body.as_bytes(),
     )
 }

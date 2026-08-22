@@ -1146,7 +1146,11 @@ impl ResourceApi {
         }
     }
 
-    fn bind_skill(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    pub(crate) fn bind_skill(
+        &self,
+        body: &[u8],
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
         let Ok(document) = serde_json::from_slice::<Value>(body) else {
             return error(
                 400,

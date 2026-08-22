@@ -24,6 +24,7 @@ mod provider_proxy;
 mod readiness;
 mod registered_check;
 mod resource_api;
+mod resource_manager;
 mod route_observation;
 mod scheduler_authority;
 mod server;

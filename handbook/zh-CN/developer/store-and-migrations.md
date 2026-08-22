@@ -89,6 +89,10 @@ bytes 位于 Artifact CAS；两个 immediate 事务复用既有 governed-object/
 record 表，并在 candidate 与最终 acceptance CAS 更新前重查当前合同、精确 fixed state、
 最新 report、完整闭合 Effect 集合与 fencing。
 
+Resource Manager 的 list/inspect 辅助方法（`list_non_tombstoned_memory_objects`、
+`load_non_tombstoned_memory_object`、`list_skill_bindings`）是对这些 v16–v23 行的
+inherent store 读取。它们不新增 migration，也不发明第七族表。
+
 ## 用户备份归档
 
 `write_personal_backup_archive` 把 config/data/state/artifact 文件复制进 digest

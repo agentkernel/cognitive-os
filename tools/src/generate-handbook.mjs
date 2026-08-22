@@ -145,8 +145,8 @@ function buildCliCognitive(readSource) {
   const source = "apps/admin-cli/src/personal_cli/mod.rs";
   const usage = extractRustStringConst(readSource(source), "COGNITIVE_USAGE");
   const intro = {
-    en: `# \`cognitive\` CLI\n\nThe deterministic Personal product CLI (binary \`cognitive\`, crate \`admin-cli\`). It is a non-authority client: it prepares layout/configuration, launches and observes the daemon, and reads authenticated projections. The verbs \`resource get|watch\` and \`task watch\` exist in the implementation but are not listed in the usage text below (a recorded implementation gap).\n\nVerbatim usage text from \`COGNITIVE_USAGE\`:\n`,
-    "zh-CN": `# \`cognitive\` CLI\n\n确定性的 Personal 产品 CLI（二进制 \`cognitive\`，crate \`admin-cli\`）。它是非权威客户端：准备布局/配置、启动并观察 daemon、读取已认证投影。实现中还存在 \`resource get|watch\` 与 \`task watch\` 动词，但未列入下方 usage 文本（已记录的实现缺口）。\n\n以下为 \`COGNITIVE_USAGE\` 常量的原文：\n`,
+    en: `# \`cognitive\` CLI\n\nThe deterministic Personal product CLI (binary \`cognitive\`, crate \`admin-cli\`). It is a non-authority client: it prepares layout/configuration, launches and observes the daemon, and reads authenticated projections. \`resource list|inspect|bind|unbind|enable|disable|revoke\` call the management Resource Manager; \`resource get|watch\` remain the private six-family projection.\n\nVerbatim usage text from \`COGNITIVE_USAGE\`:\n`,
+    "zh-CN": `# \`cognitive\` CLI\n\n确定性的 Personal 产品 CLI（二进制 \`cognitive\`，crate \`admin-cli\`）。它是非权威客户端：准备布局/配置、启动并观察 daemon、读取已认证投影。\`resource list|inspect|bind|unbind|enable|disable|revoke\` 调用 management Resource Manager；\`resource get|watch\` 仍是私有六族投影。\n\n以下为 \`COGNITIVE_USAGE\` 常量的原文：\n`,
   };
   const block = `\n\`\`\`text\n${usage}\n\`\`\`\n`;
   return { sources: [source], bodies: { en: intro.en + block, "zh-CN": intro["zh-CN"] + block } };
@@ -185,6 +185,7 @@ function buildHttpApi(readSource, trackedPaths) {
   const definitionSources = [
     "apps/kernel-server/src/personal/task_api.rs",
     "apps/kernel-server/src/personal/resource_api.rs",
+    "apps/kernel-server/src/personal/resource_manager.rs",
   ];
   const corpusSources = [
     ...definitionSources,

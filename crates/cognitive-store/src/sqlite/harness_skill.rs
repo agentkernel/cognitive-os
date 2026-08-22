@@ -435,3 +435,66 @@ impl SkillStore for SqliteAuthorityStore {
             .map_err(unavailable("explain Skill binding"))
     }
 }
+
+impl SqliteAuthorityStore {
+    /// Bounded list of Skill bindings plus whether each has a revocation.
+    pub fn list_skill_bindings(
+        &self,
+        limit: usize,
+    ) -> Result<(Vec<(SkillBindingRow, bool)>, bool), StorePortError> {
+        let fetch = i64::try_from(limit.saturating_add(1)).unwrap_or(i64::MAX);
+        let connection = self.lock()?;
+        let mut statement = connection
+            .prepare(
+                "SELECT binding_id, revision_id, workspace_scope, target_kind, target_ref, status, canonical_json,
+                        EXISTS(
+                            SELECT 1 FROM skill_binding_revocations
+                            WHERE skill_binding_revocations.binding_id = skill_bindings.binding_id
+                        )
+                 FROM skill_bindings
+                 ORDER BY binding_id
+                 LIMIT ?1",
+            )
+            .map_err(unavailable("prepare list Skill bindings"))?;
+        let rows = statement
+            .query_map([fetch], |row| {
+                Ok((
+                    SkillBindingRow {
+                        binding_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(
+                            |error| {
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    0,
+                                    rusqlite::types::Type::Text,
+                                    Box::new(error),
+                                )
+                            },
+                        )?,
+                        revision_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(
+                            |error| {
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    1,
+                                    rusqlite::types::Type::Text,
+                                    Box::new(error),
+                                )
+                            },
+                        )?,
+                        workspace_scope: row.get(2)?,
+                        target_kind: row.get(3)?,
+                        target_ref: row.get(4)?,
+                        status: row.get(5)?,
+                        canonical_json: row.get(6)?,
+                    },
+                    row.get::<_, i64>(7)? != 0,
+                ))
+            })
+            .map_err(unavailable("query list Skill bindings"))?;
+        let mut bindings = rows
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read Skill bindings"))?;
+        let truncated = bindings.len() > limit;
+        if truncated {
+            bindings.truncate(limit);
+        }
+        Ok((bindings, truncated))
+    }
+}
