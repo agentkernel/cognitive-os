@@ -484,7 +484,7 @@ fn wrap_tool_domain(
 
 fn list_tools(layout: &PersonalDataLayout) -> ResourceApiResponse {
     let mut resources = Vec::new();
-    for descriptor in BUILTIN_TOOL_CATALOG {
+    for descriptor in BUILTIN_TOOL_CATALOG.iter() {
         match tool_envelope(layout, &descriptor.operation_id) {
             Ok(envelope) => resources.push(envelope),
             Err(response) => return response,
