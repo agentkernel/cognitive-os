@@ -482,7 +482,7 @@ impl ProviderControlPlaneStore {
         catalog_revision: i64,
         models: &[ProviderModelRecord],
     ) -> Result<(), ProviderControlPlaneError> {
-        let conn = self.lock()?;
+        let mut conn = self.lock()?;
         let tx = conn
             .transaction()
             .map_err(unavailable("begin catalog tx"))?;
@@ -775,7 +775,7 @@ impl ProviderControlPlaneStore {
         }
         let period_start = calendar_month_start_ms(event.recorded_at_ms);
         let priced = i64::from(event.cost.cost_status == "priced");
-        let unavailable = i64::from(event.cost.cost_status != "priced");
+        let unavailable_cost_calls = i64::from(event.cost.cost_status != "priced");
         conn.execute(
             "INSERT INTO llm_usage_aggregates (
                 period_start_ms, period_kind, account_id, agent_instance_id, model_id,
@@ -818,7 +818,7 @@ impl ProviderControlPlaneStore {
                 event.sample.cache_write_tokens,
                 event.cost.cost_micros,
                 priced,
-                unavailable
+                unavailable_cost_calls
             ],
         )
         .map_err(unavailable("upsert aggregate"))?;

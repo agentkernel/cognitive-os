@@ -2,9 +2,9 @@
 
 - Task: `P8-T13`
 - Branch: `personal/P8-T13-provider-control-plane`
-- Draft PR: not opened yet
+- Draft PR: [#259](https://github.com/agentkernel/cognitive-os/pull/259)
 - Lease: `lease/personal/P8-T13/provider-control-plane`
-- Product evidence revision: pending first push
+- Product evidence revision: `9427a1b3f411321dbe7626735aa062f460b566c6` (first push; Linux compile/test fail retained)
 - Claim ceiling: `hypothesis`
 - Non-claims: no Gate, release, Profile, B01, EVAL, provider-quality, or Agent-benefit promotion
 
@@ -25,6 +25,8 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | `p8_t13_endpoint_trust` / `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | pending push | **not-run** | |
 | Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | pending push | **not-run** | Windows GNU linking forbidden |
 | Required Ubuntu/Windows CI | GitHub Actions | pending Draft PR | **not-run** | |
+| `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `9427a1b3f411321dbe7626735aa062f460b566c6` | **fail** | public test injected `Authorization: Bearer`; daemon wire auth allows that header. Retained. Follow-up asserts `X-Api-Key` injection. |
+| `cognitive-store` compile (`p8_t13_provider_store`) | `DEV-LINUX-NATIVE-01` | `9427a1b3f411321dbe7626735aa062f460b566c6` | **fail** | E0618 `unavailable` local shadows helper; E0596 `Connection::transaction` needs `&mut self`. Blocks kernel-server/admin-cli tests. Retained. |
 
 ## Blocked paths
 
@@ -35,4 +37,4 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 
 ## Unique next action
 
-Push this branch, open one Draft PR, then exact-revision Linux focused tests.
+Push the compile-fix revision, then exact-revision Linux focused tests at the new HEAD. Keep PR #259 Draft until Linux + required CI pass.

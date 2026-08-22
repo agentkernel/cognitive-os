@@ -36,7 +36,7 @@ fn public_api_refuses_anthropic_compatible_http_private_and_header_injection() {
     );
     assert_eq!(
         reject_caller_headers(
-            &[("Authorization".to_owned(), "Bearer override".to_owned())],
+            &[("X-Api-Key".to_owned(), "secret".to_owned())],
             ProviderKind::OpenaiCompatible
         ),
         Err(EndpointTrustError::ArbitraryHeaderForbidden)
