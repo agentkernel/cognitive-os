@@ -1248,7 +1248,8 @@ Pi 不可以：
   SSE-to-unary 桥等待完整 JSON；Pi 与 private-candidate 保持 unary。
 - `GET /personal/dsh/runtime` 与 `cognitive dsh status` 观察 session/process/lifecycle。
 - linux-002：raw Provider / Path A / 已安装 Path B；真实 read/search/write + 非 `pong`
-  LLM 任务；n≥5。dsh 响应不是 Task 完成。不预设无损。
+  LLM 任务；n≥5。P8-T10 ~10.5 s 主因是 guest 上 tsx-from-source，不是 Provider TTFB。
+  产品路径优先编译后的 `apps/cli/lib/bin.js`。dsh 响应不是 Task 完成。不预设无损。
 
 ---
 
