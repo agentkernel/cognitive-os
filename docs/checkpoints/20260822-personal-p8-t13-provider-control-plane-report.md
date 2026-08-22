@@ -30,6 +30,7 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **pass** | 1/1 after X-Api-Key negative. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-f825d17f`. rustc 1.97.1. |
 | `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **pass** | 8/8 |
 | Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **fail** | kernel-server compile: unresolved `provider_control_plane` in `server.rs`; `store_error`/`trust_error` param shadows `fn error`; E0502 key-op document borrow. Retained. |
+| Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `77cb1410324658f8df46fcba2f4e690d99a47f13` | **fail** | E0282 bound-stream callback `Ok(())` missing error type after `ProviderTransport` import cleanup. Retained. |
 
 ## Blocked paths
 
