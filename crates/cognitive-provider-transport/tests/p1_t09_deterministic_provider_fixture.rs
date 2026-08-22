@@ -307,17 +307,31 @@ fn delayed_sse_delivers_the_first_chunk_before_the_last() {
         timeout_ms: 5_000,
         cancel_requested: false,
     };
+    // Clock first-byte from HTTP status, not from TCP/TLS connect. Windows CI
+    // can spend ~2 s on the loopback handshake; that is not the unary-wait
+    // defect this test exists to catch.
+    let header_at = Arc::new(Mutex::new(None::<Instant>));
     let chunk_times = Arc::new(Mutex::new(Vec::new()));
-    let started = Instant::now();
-    let mut on_status = |_status: u16| Ok(());
+    let mut on_status = {
+        let header_at = Arc::clone(&header_at);
+        move |_status: u16| {
+            *header_at.lock().expect("header time") = Some(Instant::now());
+            Ok(())
+        }
+    };
     let mut on_chunk = {
         let chunk_times = Arc::clone(&chunk_times);
+        let header_at = Arc::clone(&header_at);
         move |chunk: &[u8]| {
             if !chunk.is_empty() {
+                let origin = header_at
+                    .lock()
+                    .expect("header time")
+                    .expect("status callback runs before body chunks");
                 chunk_times
                     .lock()
                     .expect("chunk times")
-                    .push(started.elapsed());
+                    .push(origin.elapsed());
             }
             Ok(())
         }
@@ -340,6 +354,6 @@ fn delayed_sse_delivers_the_first_chunk_before_the_last() {
     );
     assert!(
         first < std::time::Duration::from_millis(200),
-        "first streamed byte must not wait for the delayed last event: {first:?}"
+        "first streamed byte after headers must not wait for the delayed last event: {first:?}"
     );
 }

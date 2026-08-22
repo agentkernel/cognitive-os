@@ -69,7 +69,7 @@ SSE pass-through; runtime `op: clear` drops in-memory sessions.
 | Raw vs Path A vs Path B n=5 | **pass** linux-002 at `4b191740` | see tables; discarded 0/5 both paths; Path B retained implies Workspace* `COMPLETED` + assistant_ok (helper exit 0) |
 | Secret residue cleanup | **pass** | disposable daemon 48521 stopped; EVAL 48181/48284/48383 untouched; `secret-tool clear` product triple rc 0; bootstrap shredded; jump ed25519 `/tmp/p8t11-jump` absent; `# p8t11-temp` authorized_keys lines removed (2). Residue scan 19574 files / 11 skipped / 7 pattern hits: 5 in pinned dsh **vendor test fixtures**, 1 skipped pre-existing `/tmp/eval006-pi-cognitiveos-dist.tar` (untouched), 1 `/tmp/node-compile-cache` V8 cache (not opened; likely vendor `sk-` literals). Key file existence/length only: 35 bytes |
 | Jump-host Rust | **pass** | `DEV-LINUX-NATIVE-01` at `4b191740`: `cognitive-provider-transport` unit+integration including delayed-sse first-chunk-before-last and UnexpectedEof-as-EOS; `p8_t11_dsh_runtime` 1/1; admin-cli `dsh` 7/7; Clippy `-D warnings` for transport + kernel-server `--all-targets`; `cargo fmt --all -- --check`. Local Windows GNU Rust `not-run` |
-| Required CI | pending | PR 257 run `32549721560` failed consistency (`P8-T11 has 2 in-progress delivery slices`); D01/D02 marked done in the D04 docs commit |
+| Required CI | pending retry | Ubuntu `32550651605` **pass** at `3b54cb68`. Windows failed `delayed_sse_delivers_the_first_chunk_before_the_last` because the 200 ms first-byte budget included loopback TLS handshake (~2.07 s). Follow-on test clocks first-byte from HTTP status, still requiring last−first ≥ 150 ms |
 
 ## D03 installed Path B (linux-002)
 
