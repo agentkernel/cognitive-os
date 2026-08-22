@@ -6,7 +6,7 @@
 
 use std::io::{Read, Write};
 use std::net::{TcpStream, ToSocketAddrs};
-use std::sync::Arc;
+use std::sync::{Arc, OnceLock};
 use std::time::{Duration, Instant};
 
 use rustls::pki_types::{CertificateDer, ServerName};
@@ -30,7 +30,6 @@ pub(crate) fn exchange_stream(
     let timeout = Duration::from_millis(u64::from(request.timeout_ms));
     let (host, port, path) = split_https_url(&request.url)?;
     let mut tls = connect_tls(additional_root_certificates_der, &host, port, timeout)?;
-    tls.conn.set_buffer_limit(Some(1));
     write_http_request(&mut tls, &host, port, path.as_str(), request)?;
     flush_tls(&mut tls)?;
 
@@ -115,27 +114,7 @@ fn connect_tls(
     port: u16,
     timeout: Duration,
 ) -> Result<StreamOwned<ClientConnection, TcpStream>, ProviderTransportError> {
-    let mut roots = RootCertStore::empty();
-    let native = rustls_native_certs::load_native_certs();
-    for certificate in native.certs {
-        let _ = roots.add(certificate);
-    }
-    for certificate_der in additional_root_certificates_der {
-        roots
-            .add(CertificateDer::from(certificate_der.clone()))
-            .map_err(|_| ProviderTransportError::Policy {
-                detail: "additional Provider root certificate is invalid",
-            })?;
-    }
-    if roots.is_empty() {
-        return Err(ProviderTransportError::Policy {
-            detail: "Provider TLS root store is empty",
-        });
-    }
-    let mut config = ClientConfig::builder()
-        .with_root_certificates(roots)
-        .with_no_client_auth();
-    config.alpn_protocols = vec![b"http/1.1".to_vec()];
+    let config = stream_client_config(additional_root_certificates_der)?;
     let server_name =
         ServerName::try_from(host.to_owned()).map_err(|_| ProviderTransportError::Policy {
             detail: "Provider TLS server name is invalid",
@@ -176,7 +155,7 @@ fn connect_tls(
         .map_err(|_| ProviderTransportError::Network {
             detail: "Provider HTTPS exchange failed",
         })?;
-    let connection = ClientConnection::new(Arc::new(config), server_name).map_err(|_| {
+    let connection = ClientConnection::new(config, server_name).map_err(|_| {
         ProviderTransportError::Backend {
             detail: "failed to construct Rustls Provider transport",
         }
@@ -245,7 +224,7 @@ fn flush_tls(
 ) -> Result<(), ProviderTransportError> {
     while tls.conn.wants_write() {
         tls.conn
-            .complete_io(&mut tls.sock)
+            .write_tls(&mut tls.sock)
             .map_err(|_| ProviderTransportError::Network {
                 detail: "Provider HTTPS exchange failed",
             })?;
@@ -255,6 +234,52 @@ fn flush_tls(
         .map_err(|_| ProviderTransportError::Network {
             detail: "Provider HTTPS exchange failed",
         })
+}
+
+fn stream_client_config(
+    additional_root_certificates_der: &[Vec<u8>],
+) -> Result<Arc<ClientConfig>, ProviderTransportError> {
+    if additional_root_certificates_der.is_empty() {
+        static PRODUCTION: OnceLock<Arc<ClientConfig>> = OnceLock::new();
+        if let Some(config) = PRODUCTION.get() {
+            return Ok(Arc::clone(config));
+        }
+        let config = build_client_config(&[])?;
+        return Ok(Arc::clone(PRODUCTION.get_or_init(|| config)));
+    }
+    build_client_config(additional_root_certificates_der)
+}
+
+fn build_client_config(
+    additional_root_certificates_der: &[Vec<u8>],
+) -> Result<Arc<ClientConfig>, ProviderTransportError> {
+    let mut roots = RootCertStore::empty();
+    if additional_root_certificates_der.is_empty() {
+        for certificate in rustls_native_certs::load_native_certs().certs {
+            let _ = roots.add(certificate);
+        }
+    } else {
+        // Hermetic fixtures supply their own CA and must not pay platform CA
+        // load on the first-byte path. Additional roots replace, not extend,
+        // the platform store for that transport instance.
+        for certificate_der in additional_root_certificates_der {
+            roots
+                .add(CertificateDer::from(certificate_der.clone()))
+                .map_err(|_| ProviderTransportError::Policy {
+                    detail: "additional Provider root certificate is invalid",
+                })?;
+        }
+    }
+    if roots.is_empty() {
+        return Err(ProviderTransportError::Policy {
+            detail: "Provider TLS root store is empty",
+        });
+    }
+    let mut config = ClientConfig::builder()
+        .with_root_certificates(roots)
+        .with_no_client_auth();
+    config.alpn_protocols = vec![b"http/1.1".to_vec()];
+    Ok(Arc::new(config))
 }
 
 struct TlsHttp {
