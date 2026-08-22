@@ -51,6 +51,7 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | Clippy `-D warnings` workspace `--all-targets` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | `cargo clippy --workspace --all-targets --locked -- -D warnings` |
 | `cargo fmt --all -- --check` | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | |
 | Required Ubuntu/Windows CI | GitHub Actions | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | run `32582360429`: resolve-validation-route, verify (ubuntu-latest), verify (windows-latest), and `required-ci` all SUCCESS |
+| Independent re-read of Linux log | `DEV-LINUX-NATIVE-01` | `6256f7232d458a14836b1d49d43b1465686fb0b9` | **pass** | `/tmp/p8-t13-6256f723.log` ends `=== ALL_PASS ===`; HEAD and rustc 1.97.1 match. Not a second execution. |
 
 ## Acceptance mapping
 
