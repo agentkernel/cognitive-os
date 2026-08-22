@@ -24,7 +24,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:4da7d91d08e86d81550a91c0c7338661a64b09b8c405d011d2329ab2bc7e829c"
+fingerprint: "sha256:f099918dfd248af17a9fc1680675876719ddc940c3c1f71f8b1d929e7572c16f"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---

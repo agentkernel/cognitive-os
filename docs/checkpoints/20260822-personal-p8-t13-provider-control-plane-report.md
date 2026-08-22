@@ -27,6 +27,9 @@ Per `TEST-REPORT-INCREMENTAL-01`, each finished unit is appended below.
 | Required Ubuntu/Windows CI | GitHub Actions | pending Draft PR | **not-run** | |
 | `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `9427a1b3f411321dbe7626735aa062f460b566c6` | **fail** | public test injected `Authorization: Bearer`; daemon wire auth allows that header. Retained. Follow-up asserts `X-Api-Key` injection. |
 | `cognitive-store` compile (`p8_t13_provider_store`) | `DEV-LINUX-NATIVE-01` | `9427a1b3f411321dbe7626735aa062f460b566c6` | **fail** | E0618 `unavailable` local shadows helper; E0596 `Connection::transaction` needs `&mut self`. Blocks kernel-server/admin-cli tests. Retained. |
+| `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **pass** | 1/1 after X-Api-Key negative. Worktree `/home/wuz/agent-kernel-worktrees/p8-t13-f825d17f`. rustc 1.97.1. |
+| `p8_t13_provider_store` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **pass** | 8/8 |
+| Focused `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `f825d17fe4ae8799065cbf23ac404c32adab9f94` | **fail** | kernel-server compile: unresolved `provider_control_plane` in `server.rs`; `store_error`/`trust_error` param shadows `fn error`; E0502 key-op document borrow. Retained. |
 
 ## Blocked paths
 

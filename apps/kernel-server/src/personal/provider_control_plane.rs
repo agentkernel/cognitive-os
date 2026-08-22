@@ -8,10 +8,10 @@ use cognitive_kernel::ports::IdGenerator;
 use cognitive_provider_transport::{InsecureHttpProviderTransport, RustlsProviderTransport};
 use cognitive_secret::{
     EndpointTrustError, EndpointTrustGrant, ProviderHttpMethod, ProviderHttpRequest,
-    ProviderHttpResponse, ProviderKind, ProviderTransport, SecretMaterial, SecretStore,
-    TrustedEndpoint, anthropic_api_key_header_value, bearer_authorization_header_value,
-    evaluate_resolved_targets, provider_account_secret_attributes, provider_secret_label,
-    reject_caller_headers, select_production_secret_store,
+    ProviderHttpResponse, ProviderKind, ProviderTransport, SecretMaterial, TrustedEndpoint,
+    anthropic_api_key_header_value, bearer_authorization_header_value, evaluate_resolved_targets,
+    provider_account_secret_attributes, provider_secret_label, reject_caller_headers,
+    select_production_secret_store,
 };
 use cognitive_store::{
     AgentProviderBindingRecord, ProviderAccountRecord, ProviderControlPlaneStore,
@@ -368,8 +368,12 @@ fn set_or_remove_key(body: &[u8], plane: &ProviderControlPlaneStore) -> Resource
             "key operation requires id",
         );
     };
-    let op = document.get("op").and_then(Value::as_str).unwrap_or("set");
-    match op {
+    let op = document
+        .get("op")
+        .and_then(Value::as_str)
+        .unwrap_or("set")
+        .to_owned();
+    match op.as_str() {
         "remove" => remove_key(plane, &account_id),
         "set" | "rotate" => {
             let Some(api_key) = take_string(&mut document, "api_key") else {
@@ -1229,20 +1233,20 @@ fn binding_json(binding: &AgentProviderBindingRecord) -> Value {
     })
 }
 
-fn trust_error(error: EndpointTrustError) -> ResourceApiResponse {
-    error(400, error.code(), error.code())
+fn trust_error(err: EndpointTrustError) -> ResourceApiResponse {
+    error(400, err.code(), err.code())
 }
 
-fn store_error(error: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {
-    match error {
+fn store_error(err: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {
+    match err {
         cognitive_store::ProviderControlPlaneError::Conflict { detail } => {
-            error(409, "PROVIDER_CONTROL_CONFLICT", detail)
+            error(409, "PROVIDER_CONTROL_CONFLICT", &detail)
         }
         cognitive_store::ProviderControlPlaneError::NotFound { detail } => {
-            error(404, "PROVIDER_CONTROL_NOT_FOUND", detail)
+            error(404, "PROVIDER_CONTROL_NOT_FOUND", &detail)
         }
         cognitive_store::ProviderControlPlaneError::Invalid { detail } => {
-            error(400, "PROVIDER_CONTROL_INVALID", detail)
+            error(400, "PROVIDER_CONTROL_INVALID", &detail)
         }
         cognitive_store::ProviderControlPlaneError::Unavailable { .. } => {
             error(503, "PROVIDER_CONTROL_UNAVAILABLE", "store unavailable")

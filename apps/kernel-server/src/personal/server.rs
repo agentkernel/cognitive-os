@@ -17,8 +17,7 @@ use cognitive_kernel::ports::{
 };
 use cognitive_runtime::loopback_transport::{self, LoopbackTransportStage};
 use cognitive_secret::{
-    ProviderConfigRepository, ProviderTransport, SelectedModelRepository,
-    select_production_secret_store,
+    ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
 };
 use cognitive_store::{
     PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases,
@@ -33,6 +32,7 @@ use super::bounds::{
 use super::fault_profile;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::pinned_https;
+use super::provider_control_plane;
 use super::provider_proxy::{ProviderProxyError, ProviderProxyService, RustlsProviderTransport};
 use super::readiness::{
     ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
