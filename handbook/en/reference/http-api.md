@@ -10,12 +10,13 @@ sources:
   - path: apps/kernel-server/src/personal/pi_runtime.rs
   - path: apps/kernel-server/src/personal/pinned_https.rs
   - path: apps/kernel-server/src/personal/resource_api.rs
+  - path: apps/kernel-server/src/personal/resource_manager.rs
   - path: apps/kernel-server/src/personal/server.rs
   - path: apps/kernel-server/src/personal/task_api.rs
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:68ff89e281e0dde97a2ef8dd70090419bd7368b4b7c7c2b1df21e9090ec56a00"
+fingerprint: "sha256:58e3b406177e8d0732b3f54f83149b26a8b45ee244795366fb2d5cf5cebb4db4"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -39,6 +40,28 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection. |
 | `GET` | `/resource/v1/projection` | management | Private versioned six-family resource projection (family + version query). |
 | `GET` | `/resource/v1/watch` | management | Family-scoped resource watch with optional resume_from cursor. |
+| `GET` | `/management/resource/v1/list` | management | Common Resource Manager bounded family page (tool catalog+overlay, non-tombstoned Memory, Skill bindings, current Task contracts; honest empty Context/Runtime). Not a generic Resource table. |
+| `GET` | `/management/resource/v1/inspect` | management | Common Resource Manager inspect of one stable ID and current object version. |
+| `POST` | `/management/resource/v1/bind` | management | Common bind dispatcher (Skill bind onto existing authority sink). Requires family, id, expected_version, idempotency_key. |
+| `POST` | `/management/resource/v1/unbind` | management | Common unbind dispatcher (Skill unbind maps to existing revocation). |
+| `POST` | `/management/resource/v1/enable` | management | Common enable dispatcher (Tool overlay enable with expected-version guards). |
+| `POST` | `/management/resource/v1/disable` | management | Common disable dispatcher (Tool overlay disable with expected-version guards). |
+| `POST` | `/management/resource/v1/revoke` | management | Common revoke dispatcher (Skill binding revoke or Tool overlay revoke). Memory forget is not this verb. |
+| `POST` | `/management/resource/v1/create` | management | Refused: generic create is not a Resource Manager operation. |
+| `POST` | `/management/resource/v1/install` | management | Refused: generic install is not a Resource Manager operation. |
+| `POST` | `/management/resource/v1/execute` | management | Refused: generic execute is not a Resource Manager operation. |
+| `POST` | `/management/resource/v1/complete` | management | Refused: generic complete is not a Resource Manager operation. |
+| `GET` | `/task/resource/v1/list` | task | Forbidden: Resource Manager list is management-channel only. |
+| `GET` | `/task/resource/v1/inspect` | task | Forbidden: Resource Manager inspect is management-channel only. |
+| `POST` | `/task/resource/v1/bind` | task | Forbidden: Resource Manager bind is management-channel only. |
+| `POST` | `/task/resource/v1/unbind` | task | Forbidden: Resource Manager unbind is management-channel only. |
+| `POST` | `/task/resource/v1/enable` | task | Forbidden: Resource Manager enable is management-channel only. |
+| `POST` | `/task/resource/v1/disable` | task | Forbidden: Resource Manager disable is management-channel only. |
+| `POST` | `/task/resource/v1/revoke` | task | Forbidden: Resource Manager revoke is management-channel only. |
+| `POST` | `/task/resource/v1/create` | task | Forbidden: Resource Manager create is management-channel only (and refused even on management). |
+| `POST` | `/task/resource/v1/install` | task | Forbidden: Resource Manager install is management-channel only (and refused even on management). |
+| `POST` | `/task/resource/v1/execute` | task | Forbidden: Resource Manager execute is management-channel only (and refused even on management). |
+| `POST` | `/task/resource/v1/complete` | task | Forbidden: Resource Manager complete is management-channel only (and refused even on management). |
 | `POST` | `/management/context-authorization/facts` | management | Append a Context authorization fact set. |
 | `POST` | `/management/context-authorization/revocations` | management | Append a Context revocation fact (advances tenant revocation epoch). |
 | `GET` | `/management/resource/v1/memory/object` | management | Load one immutable Memory object by id. |

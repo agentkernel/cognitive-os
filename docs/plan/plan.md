@@ -1251,6 +1251,16 @@ Pi 不可以：
   LLM 任务；n≥5。P8-T10 ~10.5 s 主因是 guest 上 tsx-from-source，不是 Provider TTFB。
   产品路径优先编译后的 `apps/cli/lib/bin.js`。dsh 响应不是 Task 完成。不预设无损。
 
+### P8-T12 — Resource Manager common envelope
+
+- 为 `docs/product/personal/resource-manager-design.md` 与
+  `docs/architecture/personal/resource-manager-architecture.md` 落地已指定的
+  `ResourceApplicationService` 词汇（list/inspect/watch/bind/unbind/enable/disable/revoke）。
+- management HTTP 信封；task 通道与 generic create/install/execute/complete 失败闭合。
+- list/inspect 只投影既有 authority 事实；Skill/Tool 变异接到既有 sinks。
+- `cognitive resource` 是真实调用者。watch 不另开 SSE。无公开 generic Resource DTO。
+- 真机实测走 `DEV-LINUX-NATIVE-01`，不是 B01 guest。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

@@ -7,10 +7,13 @@ status: partial
 generated: false
 sources:
   - path: docs/architecture/personal/system-architecture.md
+  - path: docs/architecture/personal/resource-manager-architecture.md
+  - path: docs/product/personal/resource-manager-design.md
   - path: apps/kernel-server/src/personal/mod.rs
+  - path: apps/kernel-server/src/personal/resource_manager.rs
   - path: crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:78a56c3592b480eb51f51657803e52428fc241ed65bbba096f6ae8e8ee429294"
+fingerprint: "sha256:e90bd1dd2658a9c8a373fa23da19f29bc51411fc3baba48dd6bcc601812b8d0d"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -40,9 +43,10 @@ What exists today:
 - **Experience**: `cognitive` CLI, Pi extension, TypeScript SDK/Shell library —
   all real clients over loopback HTTP with channel-bound bearers. `implemented`.
 - **Application services**: `TaskApi` (record/interpret/preview/admit + watch) and
-  the private six-family resource projection + Memory/Skill routes. `implemented`
-  for those operations; `control`/`query_intent` and a generic
-  `ResourceApplicationService` vocabulary (bind/unbind/enable/…) are not exposed.
+  the private six-family resource projection + Memory/Skill routes, plus the
+  management Resource Manager envelope (`list`/`inspect`/`bind`/`unbind`/`enable`/
+  `disable`/`revoke`) in `resource_manager.rs`. `implemented` for those operations;
+  `control`/`query_intent` remain unexposed. Watch stays on `/resource/v1/watch`.
 - **Domain services**: authority stores + kernel services exist for all six
   families (see the per-domain pages). `implemented` at the storage/service level.
 - **Execution layer**: every primitive exists (scheduler CAS leases, sealed

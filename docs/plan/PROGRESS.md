@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-08-22 P8-T11)
+## Current snapshot (2026-08-22 P8-T12)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -30,11 +30,12 @@ supported scope.
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | Campaign closure does not resume development. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07 |
-| Owner-directed campaign | `PERSONAL-PERF-EVAL-015` **closed** (2026-08-21) on `evaluation/EVAL-015-freeze`. Evaluation routing OFF. Carries closed EVAL-014 C1/C2a B0/B1/B2 on pin `adc40499` (not re-run). C0 B0/B1/B2 **pass** (B2 270/270). MS-AUTH/T-GOV/T2/UJ2/UJ3/UJ4/B3/B4 recorded. C2b **partial**. C2c **pass**. B5 1 h **pass** (60/60; 12/12). B5 8 h **pass** (480/480; 48/48 pairs; `local_non_ok=0`; 7/7 hourly health 200; 4 retained instrument fails). B5 24 h **default deferred**. Cleanup **pass**. EVAL-002 and EVAL-004 through EVAL-014 remain **closed**. | Plan: [execution plan](../evaluation/personal-performance-benchmark-execution-plan.md). Preregistration: [EVAL-015](../evaluation/personal-perf-eval-015-preregistration.md). Report: [EVAL-015 assessment](../evaluation/personal-performance-assessment-20260821-eval-015.md). Claim ceiling `hypothesis`; `not_reviewed`. No Gate / release / Profile / B01 / Agent-benefit promotion. | none for this campaign — wait for a fresh owner delivery instruction |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | P8-T12 Resource Manager is `done`. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07 |
+| Owner-directed campaign | `PERSONAL-PERF-EVAL-015` **closed** (2026-08-21) on `evaluation/EVAL-015-freeze`. Evaluation routing OFF. Owner 2026-08-22 redirected this session to P8-T12 Resource Manager delivery; do not resume evaluation. Carries closed EVAL-014 C1/C2a B0/B1/B2 on pin `adc40499` (not re-run). C0 B0/B1/B2 **pass** (B2 270/270). MS-AUTH/T-GOV/T2/UJ2/UJ3/UJ4/B3/B4 recorded. C2b **partial**. C2c **pass**. B5 1 h **pass** (60/60; 12/12). B5 8 h **pass** (480/480; 48/48 pairs; `local_non_ok=0`; 7/7 hourly health 200; 4 retained instrument fails). B5 24 h **default deferred**. Cleanup **pass**. EVAL-002 and EVAL-004 through EVAL-014 remain **closed**. | Plan: [execution plan](../evaluation/personal-performance-benchmark-execution-plan.md). Preregistration: [EVAL-015](../evaluation/personal-perf-eval-015-preregistration.md). Report: [EVAL-015 assessment](../evaluation/personal-performance-assessment-20260821-eval-015.md). Claim ceiling `hypothesis`; `not_reviewed`. No Gate / release / Profile / B01 / Agent-benefit promotion. | none for this campaign — P8-T12 is the owner delivery |
 | Owner-directed C1/C2 campaign | EVAL-014 C1/C2a **carried** (B0 pass; B1 5/5; B2 30/30 on `adc40499`). EVAL-015 C2b **partial** split-score; C2c fault-profile **pass** split-score; C2d remains EVAL-014 split-score (not re-run). | Plan: [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](./PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md). Claim ceiling `hypothesis`; no Gate, release, Profile, B01, or Agent-benefit promotion. | retain; parent-plan campaign EVAL-015 is closed |
-| Active task lease | `none` | P8-T11 closed on PR [#257](https://github.com/agentkernel/cognitive-os/pull/257). P8-T10 remains `done` on PR [#256](https://github.com/agentkernel/cognitive-os/pull/256). P8-T09 remains `done`. EVAL-015 remains closed. | do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07 |
+| Active task lease | `none` | P8-T12 closed. Owner asked only for Resource Manager delivery. | do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07 |
 | P8-T11 Provider streaming + dsh runtime inspect | **done** | linux-002 identity pass at `4b191740`. Root cause of P8-T10 ~10.5 s: tsx-from-source on the 2 vCPU guest, not Provider TTFB (raw stream 1056 ms / TTFB 270 ms). Compiled dsh CLI Path A p50 3181 ms vs Path B 3654 ms (overhead 473 ms); n=5/5 discarded 0. Public SSE pass-through; `cognitive dsh status` ACTIVE→CRASHED→INACTIVE. Cleanup **pass**. Required CI `32551050984` at `849c01a5` passed Ubuntu, Windows, and required-ci. Draft PR [#257](https://github.com/agentkernel/cognitive-os/pull/257). Running report: [P8-T11 report](../checkpoints/20260822-personal-p8-t11-provider-stream-dsh-runtime-report.md). Claim ceiling `hypothesis`. | retain closure; do not auto-claim P6/P7 |
+| P8-T12 Resource Manager | **done** | Linux `DEV-LINUX-NATIVE-01` at `1adbdd13`: focused kernel-server **3/3**, admin-cli parse **1/1**, Clippy `-D warnings` kernel-server+admin-cli, fmt. Required CI `32561124182` passed Ubuntu, Windows, and required-ci. Draft PR [#258](https://github.com/agentkernel/cognitive-os/pull/258). Running report: [P8-T12 report](../checkpoints/20260822-personal-p8-t12-resource-manager-report.md). Claim ceiling `hypothesis`. | retain closure; do not auto-claim P6/P7 |
 | P8-T10 Install dsh as Personal agent path | **done** | linux-002 identity pass. Installed `cognitive dsh launch --print` Path B Workspace* `COMPLETED` + Flash `pong` at `4fbffc24`. Same-host n=5 Path A p50 10628 ms vs Path B p50 10800 ms (overhead 172 ms). Cleanup **pass**. Required CI `32522937342` at `a4b0ad09` passed Ubuntu, Windows, and required-ci. Running report: [P8-T10 report](../checkpoints/20260822-personal-p8-t10-dsh-installed-agent-report.md). Claim ceiling `hypothesis`. | retain closure; P8-T11 is the owner follow-on |
 | P8-T09 DeepSeek Harness AKP adapter | **done** | linux-002 identity confirmed. Jump-host Path A `pong` **pass** (9.66 s). Real dsh→AKP→daemon→Flash + WorkspaceRead/Search/Write `COMPLETED` 2/2 at `5b1c2279` (10488 ms, 10515 ms). Shim E2E + live fail-closed matrix **pass**. Clean-runtime restart `INACTIVE` **pass**. Dirty-runtime restart **fail** (scheduler lease conflict; out of adapter slice). Cleanup **pass**. Required CI **pass** on docs HEAD `abff112c` (run `32499728681`). Running report: [P8-T09 validation](../checkpoints/20260821-dsh-akp-linux-002-validation.md). Claim ceiling `hypothesis`. | retain closure; P8-T10 is the owner follow-on |
 | Benchmark readiness product train | `P2-T21` … `P2-T38` **done**; **P9-T08 done**; **P9-T09 done**; **P9-T10 done**; **P9-T11 done**; **P9-T12 done**; `PERSONAL-PERF-EVAL-012` through `PERSONAL-PERF-EVAL-015` **closed** | Navigation: [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](./PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md). Live paired executor is merged. No Gate, release, Profile, B01, or Agent-benefit conclusion follows. | campaign closed; wait for a fresh owner delivery instruction |
@@ -127,7 +128,7 @@ supported scope.
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 106 | 99 | 0 | 1 | 6 | 7 |
+| 107 | 100 | 0 | 1 | 6 | 7 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
@@ -142,12 +143,17 @@ synchronization is now an enforced pre-commit/pre-push/pre-merge obligation.
 Owner follow-on `P8-T11` is `done` via PR
 [#257](https://github.com/agentkernel/cognitive-os/pull/257): Provider SSE
 pass-through, compiled-lib dsh launch, dsh OS runtime inspect, and real-task
-Path A/B. Do not auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
+Path A/B. Owner delivery `P8-T12` (Resource Manager) is `done`. Do not
+auto-claim P6 / P7-T05 / P7-T06 / P7-T07.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P8-T12/D01` | `done` | Failure-first negatives pass on exact Linux `1adbdd13` (`p8_t12_resource_manager` 3/3). | consumed |
+| `P8-T12/D02` | `done` | List/inspect + mutating dispatcher + CLI caller covered by the same 3/3 plus admin-cli parse 1/1 at `1adbdd13`. | consumed |
+| `P8-T12/D03` | `done` | Native Linux 真机实测 **pass** at `1adbdd13` on `wuz@192.168.1.2`: tests, Clippy `-D warnings`, fmt. Not B01. | consumed |
+| `P8-T12/D04` | `done` | Required CI `32561124182` at `1adbdd13` passed Ubuntu, Windows, and required-ci. Report: [P8-T12 report](../checkpoints/20260822-personal-p8-t12-resource-manager-report.md). | retain; do not auto-claim P6/P7 |
 | `P8-T11/D01` | `done` | Public SSE pass-through; Path B no longer uses the SSE-to-unary bridge; Pi/private-candidate stay unary. Local adapter tests **12/12**. | consumed |
 | `P8-T11/D02` | `done` | `GET`/`POST /personal/dsh/runtime` + `cognitive dsh status`; linux-002 live `ACTIVE` then `CRASHED` then `INACTIVE`. Process liveness is `/proc/{pid}` existence only. | consumed |
 | `P8-T11/D03` | `done` | linux-002 identity pass. Raw 1056 ms / Path A p50 3181 ms / Path B p50 3654 ms at `4b191740`; n=5/5; Workspace* `COMPLETED`; cleanup **pass**. | consumed |

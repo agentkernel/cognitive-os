@@ -542,3 +542,105 @@ impl MemoryStore for SqliteAuthorityStore {
             .map_err(unavailable("commit Memory FTS rebuild"))
     }
 }
+
+impl SqliteAuthorityStore {
+    /// Bounded list of admitted Memory objects that are not tombstoned.
+    pub fn list_non_tombstoned_memory_objects(
+        &self,
+        limit: usize,
+    ) -> Result<(Vec<MemoryObjectRow>, bool), StorePortError> {
+        let fetch = i64::try_from(limit.saturating_add(1)).unwrap_or(i64::MAX);
+        let connection = self.lock()?;
+        let mut statement = connection
+            .prepare(
+                "SELECT memory_id, candidate_id, decision_id, canonical_json
+                 FROM memory_objects
+                 WHERE NOT EXISTS (
+                     SELECT 1 FROM memory_tombstones
+                     WHERE memory_tombstones.memory_id = memory_objects.memory_id
+                 )
+                 ORDER BY memory_id
+                 LIMIT ?1",
+            )
+            .map_err(unavailable("prepare list Memory objects"))?;
+        let rows = statement
+            .query_map([fetch], |row| {
+                Ok(MemoryObjectRow {
+                    memory_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            0,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?,
+                    candidate_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            1,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?,
+                    decision_id: ObjectId::parse(&row.get::<_, String>(2)?).map_err(|error| {
+                        rusqlite::Error::FromSqlConversionFailure(
+                            2,
+                            rusqlite::types::Type::Text,
+                            Box::new(error),
+                        )
+                    })?,
+                    canonical_json: row.get(3)?,
+                })
+            })
+            .map_err(unavailable("query list Memory objects"))?;
+        let mut objects = rows
+            .collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("read Memory objects"))?;
+        let truncated = objects.len() > limit;
+        if truncated {
+            objects.truncate(limit);
+        }
+        Ok((objects, truncated))
+    }
+
+    /// Load one admitted Memory object, hiding tombstoned rows.
+    pub fn load_non_tombstoned_memory_object(
+        &self,
+        memory_id: &ObjectId,
+    ) -> Result<Option<MemoryObjectRow>, StorePortError> {
+        let connection = self.lock()?;
+        connection
+            .query_row(
+                "SELECT candidate_id, decision_id, canonical_json FROM memory_objects
+                 WHERE memory_id=?1 AND NOT EXISTS (
+                     SELECT 1 FROM memory_tombstones
+                     WHERE memory_tombstones.memory_id = memory_objects.memory_id
+                 )",
+                (memory_id.as_str(),),
+                |row| {
+                    Ok(MemoryObjectRow {
+                        memory_id: memory_id.clone(),
+                        candidate_id: ObjectId::parse(&row.get::<_, String>(0)?).map_err(
+                            |error| {
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    0,
+                                    rusqlite::types::Type::Text,
+                                    Box::new(error),
+                                )
+                            },
+                        )?,
+                        decision_id: ObjectId::parse(&row.get::<_, String>(1)?).map_err(
+                            |error| {
+                                rusqlite::Error::FromSqlConversionFailure(
+                                    1,
+                                    rusqlite::types::Type::Text,
+                                    Box::new(error),
+                                )
+                            },
+                        )?,
+                        canonical_json: row.get(2)?,
+                    })
+                },
+            )
+            .optional()
+            .map_err(unavailable("load listed Memory object"))
+    }
+}

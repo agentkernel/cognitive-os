@@ -169,7 +169,7 @@ personal_requirements:
     classification: product-only
     statement: The Pi-hosted Agent Shell and deterministic CLI call the same daemon Task and management application services while task and management credentials, caches, retries, and projections remain isolated.
     direct_registry_requirements: []
-    tasks: [P1-T05, P1-T06, P1-T07, P2-T02, P5-T02]
+    tasks: [P1-T05, P1-T06, P1-T07, P2-T02, P5-T02, P8-T12]
     gates: [G2, B02]
     evidence_status: not-run
 
@@ -287,7 +287,7 @@ personal_requirements:
     classification: product-only
     statement: Linux 1.0 exposes minimum real Memory, Skill, Tool, Context, Task, and Runtime slices through daemon-owned application services and a private versioned Personal projection without merging their authority or schemas.
     direct_registry_requirements: []
-    tasks: [P2-T02, P2-T05, P2-T08, P2-T22, P2-T23, P2-T25, P2-T28, P3-T01, P3-T02, P3-T03, P3-T06, P4-T01, P4-T02, P4-T03, P4-T04, P4-T05, P4-T06, P7-T01, P7-T03, P7-T08]
+    tasks: [P2-T02, P2-T05, P2-T08, P2-T22, P2-T23, P2-T25, P2-T28, P3-T01, P3-T02, P3-T03, P3-T06, P4-T01, P4-T02, P4-T03, P4-T04, P4-T05, P4-T06, P7-T01, P7-T03, P7-T08, P8-T12]
     gates: [B02, B03, B04, B05, B08, B12, GMVP-LINUX]
     evidence_status: not-run
 

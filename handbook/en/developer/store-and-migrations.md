@@ -101,6 +101,11 @@ the existing governed-object/event/transition-record tables and recheck current
 contract, exact fixed state, newest report, complete closed Effect set, and
 fencing before the candidate and final acceptance CAS updates.
 
+Resource Manager list/inspect helpers (`list_non_tombstoned_memory_objects`,
+`load_non_tombstoned_memory_object`, `list_skill_bindings`) are inherent store
+reads over those same v16–v23 rows. They add no migration and invent no seventh
+family table.
+
 ## User backup archive
 
 `write_personal_backup_archive` copies config/data/state/artifact files into a

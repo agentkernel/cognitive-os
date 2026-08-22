@@ -22,7 +22,8 @@ tests:
   - crates/cognitive-store/tests/p4_t02_memory_search.rs
   - crates/cognitive-store/tests/p4_t04_skill_store.rs
   - apps/kernel-server/tests/p4_t05_resource_api.rs
-fingerprint: "sha256:82958cf8b301b5911a4e18d9421d4efe214d2d2badf7c2f61754997d12eeeab3"
+  - apps/kernel-server/tests/p8_t12_resource_manager.rs
+fingerprint: "sha256:533041e14638e3cbe085677daa0be1cee801da0d55f923fc0c33390677e1cec3"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -57,6 +58,9 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 
 management 通道发布生命周期前置条件，并在不直连 SQLite 的情况下完成 Memory
 remember/review/forget 与 Skill import/revision-inspect/bind/supersede/revoke。
+通用 Resource Manager（`GET /management/resource/v1/list|inspect`）从同一权威行投影
+未墓碑 Memory 对象与 Skill binding；它不是通用 Resource 表，Memory forget 仍是族
+`forget` 动词而不是 Manager `revoke`。
 公开 remember 接受未封存的 owner 字段（`text`、scope、purpose、retention）；daemon
 加载持久 `GovernanceSeed` 并组合封存 header。已持有封存
 `WorkspaceContextSource` + `MemoryCandidate` 信封的调用方仍可走原路径。评测或测试

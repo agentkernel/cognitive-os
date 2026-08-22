@@ -18,7 +18,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:b55917b421dba6c2d3c71b2601ebb957e8cef3a57b7d14f5d43515c13deabb6e"
+fingerprint: "sha256:01f30484a40692d33eeb43c0b3a1cccf8e048de7d1b07e978b0cf183287965c9"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -43,14 +43,15 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | daemon-owned ready 后 fail-closed 启动 dsh（Pi 可保持 `not_configured`）；Path B 加载钉住的 AKP 插件，绝不把 dsh 响应当作 Task 完成；`--path a` 在此拒绝，仅能经 `paired-path.mjs` 做测量 |
 | `cognitive dsh status` | 认证后观察 dsh 会话/fencing 与可选绑定 pid 存活（`GET /personal/dsh/runtime`）；不是 Task 完成 |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
+| `cognitive resource list/inspect --family <…> [--id <id>]` | 通用 Resource Manager 只读信封（management 通道） |
+| `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | 通用 Resource Manager 变异，接到既有 Skill/Tool sinks；不是 generic create/execute/complete |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
 | `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
 | `cognitive backup [--output <dir>]` | 写入排除 secret 的 digest 绑定归档（不含 authority SQLite / provider-config / bearer） |
 | `cognitive restore --archive <dir> [--preflight]` | 预检后从已验证归档覆盖 live 文件；`--preflight` 不变更 |
 
-两个诚实的怪癖（生成的 [CLI 参考](../reference/cli-cognitive.md)中同样标注）：内置
-usage 文本尚未列出 `resource`/`task`；所有动词都接受的 `--runtime-root <dir>` 是密封
-测试逃生口，会整体搬迁布局。
+两个诚实的怪癖（生成的 [CLI 参考](../reference/cli-cognitive.md)中同样标注）：所有动词
+都接受的 `--runtime-root <dir>` 是密封测试逃生口，会整体搬迁布局。
 
 独立的 `admin-cli` 二进制是管理回退入口（inspect / stop / revoke / reconcile 及
 agent 生命周期动词），需要特权会话文档；见 [admin-cli 参考](../reference/cli-admin.md)
