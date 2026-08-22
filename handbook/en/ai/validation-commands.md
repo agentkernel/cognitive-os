@@ -12,7 +12,7 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:a54dc671076b25a76d1b42b3e5defea840c135af4d6cadf51671e7ca578663bd"
+fingerprint: "sha256:e68018bf2aa66b2083ed39ecc4b247cd4a598def45064a4ea060223b167666c4"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -47,6 +47,9 @@ cargo test --workspace --locked -- --test-threads=1
 cargo test -p kernel-server tool_executor --locked -- --test-threads=1
 cargo test -p kernel-server p4_t05_resource_api --locked -- --test-threads=1
 cargo test -p kernel-server --test p8_t12_resource_manager --locked -- --test-threads=1
+cargo test -p kernel-server --test p8_t13_provider_control_plane --locked -- --test-threads=1
+cargo test -p cognitive-secret --test p8_t13_endpoint_trust --locked -- --test-threads=1
+cargo test -p cognitive-store --test p8_t13_provider_store --locked -- --test-threads=1
 cargo test -p pi-agent-adapter --locked -- --test-threads=1
 cargo clippy --workspace --all-targets --locked -- -D warnings
 cargo run -p cognitive-conformance --bin conformance-runner
@@ -80,6 +83,12 @@ P2-T33 private-candidate host-path coverage is
 `not-run`).
 P8-T12 Resource Manager coverage is `apps/kernel-server/tests/p8_t12_resource_manager.rs`
 (management list/inspect/mutate, task-channel 403, generic create refuse;
+Linux/CI only; Windows GNU `not-run`).
+P8-T13 Provider Control Plane coverage is
+`apps/kernel-server/tests/p8_t13_provider_control_plane.rs`,
+`crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs`, and
+`crates/cognitive-store/tests/p8_t13_provider_store.rs`
+(endpoint trust/SSRF negatives, catalog preservation, Pi vs dsh binding isolation;
 Linux/CI only; Windows GNU `not-run`).
 
 ## What CI enforces on every PR

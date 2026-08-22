@@ -14,12 +14,17 @@ sources:
   - path: crates/cognitive-secret/src/provider_transport.rs
     symbols: ["ProviderHttpRequest"]
   - path: apps/kernel-server/src/personal/provider_proxy.rs
+  - path: crates/cognitive-secret/src/endpoint_trust.rs
+    symbols: ["TrustedEndpoint", "ProviderKind"]
+  - path: apps/kernel-server/src/personal/provider_control_plane.rs
 tests:
   - crates/cognitive-secret/tests/p1_t02_provider_secret.rs
   - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
   - apps/kernel-server/tests/p1_t07_provider_proxy.rs
   - apps/kernel-server/tests/p9_t07_route_observation.rs
-fingerprint: "sha256:15d8e95e5dc4a6ac954b0acdc75493cdb295046f968c14482158630a546cc17d"
+  - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
+  - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
+fingerprint: "sha256:266356c80282656671b6d64bddd68874dc48286b076fc08ded8074c2af474b67"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---
@@ -38,15 +43,19 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
 
 后端选择基于探测且 fail-closed：在其他平台（今天的 macOS），或密钥环/凭据库锁定、不
 可用时，一切 secret 操作拒绝执行；有意不提供明文回退。轮换：
-`cognitive init --rotate-key`。
+`cognitive init --rotate-key`。命名控制面账户改用
+`cognitive provider key set|rotate|remove --api-key-file`，不要把 key 放进 argv。
 
 ## Provider 流量如何流动
 
 客户端从不直连 Provider。egress 由 daemon 独占：
 
-1. `POST /provider/v1/chat/completions`（management 通道）按 `provider.json` 与
-   `selected-model.json` 校验请求。公开 `stream:true` 按 SSE 转发；Pi 对话与
-   private-candidate 保持一元。模型不符仍失败闭合。
+1. `POST /provider/v1/chat/completions`（management 通道，Pi 路径）校验请求。若
+   `agent://personal/pi` 已有控制面 binding，请求 model 必须匹配且无回退。未绑定
+   agent    仍使用 `provider.json` 与 `selected-model.json`。公开 `stream:true` 按 SSE
+   转发；Pi 对话与 private-candidate 保持一元，且在存在 Pi binding 时使用该绑定账户
+   而不是 `provider.json`。模型不符仍失败闭合。DeepSeek
+   harness 走独立的 `POST /provider/v1/dsh/chat/completions`（`agent://personal/dsh`）。
 2. daemon 在内存中解析 `SecretRef` 并附加 bearer 头。
 3. `RustlsProviderTransport` 强制 HTTPS-only、禁跳转、禁 URL user-info、拒绝头部
    CR/LF、1 MiB 响应上限与调用方超时。公开 `stream:true` 直接读取 HTTP/1.1 TLS

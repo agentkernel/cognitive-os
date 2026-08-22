@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:3dc63e22c89c37fe9a6650b7f5bf92612ca631277aba6f93959bd038ba300827"
+fingerprint: "sha256:8e8fb02603561e6c92068c1baa9c7be03a3840c35ee87615aa8b4fc1510729b1"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -160,7 +160,7 @@ outputs exist, otherwise `node --import tsx/esm apps/cli/src/bin.ts` (not
 `pnpm dsh`), loads `plugin.bundle.cjs` because Node 22.23 rejects `require()` of
 the ESM `plugin.js`, admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
 as plugin `startupEvents` from the real dsh process, and routes Flash through
-the daemon Provider SSE proxy (`POST /provider/v1/chat/completions` with
+the daemon Provider SSE proxy (`POST /provider/v1/dsh/chat/completions` with
 `stream:true`). Product install
 is `cognitive dsh configure` then `cognitive dsh launch` (Path B). `cognitive dsh status`
 reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: clear`

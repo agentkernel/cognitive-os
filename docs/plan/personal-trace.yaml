@@ -202,7 +202,7 @@ personal_requirements:
     classification: product-only
     statement: API keys do not appear in configuration, SQLite, Pi, environment, logs, or evidence.
     direct_registry_requirements: []
-    tasks: [P0-T05, P1-T02, P1-T07, P1-T09, P2-T06, P7-T03, P7-T08]
+    tasks: [P0-T05, P1-T02, P1-T07, P1-T09, P2-T06, P7-T03, P7-T08, P8-T13]
     gates: [G1, B01, GMVP-LINUX, G7, RC]
     evidence_status: not-run
 
@@ -337,6 +337,14 @@ personal_requirements:
     statement: Performance and structure evolution use P7-T04 regression floors as before/after evidence. The P9-T04 comprehensive campaign adds only preregistered measurement and evidence surfaces; it creates no product Gate and cannot promote unexecuted or incomplete evidence into a release, Profile, or Agent-benefit claim.
     direct_registry_requirements: []
     tasks: [P9-T01, P9-T02, P9-T03, P9-T04, P9-T08, P9-T09, P9-T10, P9-T11, P9-T12, P7-T04]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-035
+    classification: product-only
+    statement: Owner-local LLM Provider Control Plane accounts, Secret Store opaque refs, endpoint trust, fixed agent bindings, usage/cost/audit, and observe-only budgets do not introduce fallback routing, third-party Anthropic-compatible endpoints, Web/Desktop control surfaces, or keys outside the approved Secret Store.
+    direct_registry_requirements: []
+    tasks: [P8-T13]
     gates: []
     evidence_status: not-run
 

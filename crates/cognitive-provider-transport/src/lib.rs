@@ -52,6 +52,7 @@ impl RustlsProviderTransport {
     ) -> Result<reqwest::blocking::Client, ProviderTransportError> {
         let mut client_builder = reqwest::blocking::Client::builder()
             .redirect(reqwest::redirect::Policy::none())
+            .no_proxy()
             .timeout(timeout)
             .tcp_nodelay(true)
             .use_rustls_tls();
@@ -139,6 +140,91 @@ fn validate_transport_request(request: &ProviderHttpRequest) -> Result<(), Provi
     if !request.url.starts_with("https://") || request.url.contains('@') {
         return Err(ProviderTransportError::Policy {
             detail: "Provider request URL must be credential-free HTTPS",
+        });
+    }
+    if request.timeout_ms == 0 {
+        return Err(ProviderTransportError::Policy {
+            detail: "Provider request timeout must be non-zero",
+        });
+    }
+    if request
+        .headers
+        .iter()
+        .any(|(name, value)| name.contains(['\r', '\n']) || value.contains(['\r', '\n']))
+    {
+        return Err(ProviderTransportError::Policy {
+            detail: "Provider request header contains an invalid line break",
+        });
+    }
+    Ok(())
+}
+
+/// Explicit-grant plaintext HTTP transport for custom OpenAI-compatible
+/// endpoints. Never used for official providers. Same redirect, proxy, timeout,
+/// and size bounds as the HTTPS transport.
+#[derive(Debug, Default)]
+pub struct InsecureHttpProviderTransport;
+
+impl ProviderTransport for InsecureHttpProviderTransport {
+    fn exchange(
+        &self,
+        request: &ProviderHttpRequest,
+    ) -> Result<ProviderHttpResponse, ProviderTransportError> {
+        validate_insecure_http_request(request)?;
+        if request.cancel_requested {
+            return Err(ProviderTransportError::Timeout);
+        }
+        let timeout = Duration::from_millis(u64::from(request.timeout_ms));
+        let client = reqwest::blocking::Client::builder()
+            .redirect(reqwest::redirect::Policy::none())
+            .no_proxy()
+            .timeout(timeout)
+            .tcp_nodelay(true)
+            .build()
+            .map_err(|_| ProviderTransportError::Backend {
+                detail: "failed to construct insecure HTTP Provider transport",
+            })?;
+        let method = match request.method {
+            ProviderHttpMethod::Get => reqwest::Method::GET,
+            ProviderHttpMethod::Post => reqwest::Method::POST,
+        };
+        let mut request_builder = client.request(method, &request.url);
+        for (header_name, header_value) in &request.headers {
+            request_builder = request_builder.header(header_name, header_value);
+        }
+        if let Some(request_body) = &request.body {
+            request_builder = request_builder.body(request_body.clone());
+        }
+        let mut response = request_builder.send().map_err(map_reqwest_error)?;
+        let mut response_body = Vec::new();
+        let bytes_read = response
+            .by_ref()
+            .take(MAX_PROVIDER_RESPONSE_READ_BYTES)
+            .read_to_end(&mut response_body)
+            .map_err(|_| ProviderTransportError::Network {
+                detail: "failed to read Provider response",
+            })?;
+        if bytes_read > MAX_PROVIDER_RESPONSE_BYTES {
+            return Err(ProviderTransportError::Policy {
+                detail: "Provider response exceeds local limit",
+            });
+        }
+        Ok(ProviderHttpResponse {
+            status: response.status().as_u16(),
+            body: response_body,
+        })
+    }
+}
+
+fn validate_insecure_http_request(
+    request: &ProviderHttpRequest,
+) -> Result<(), ProviderTransportError> {
+    if !request.url.starts_with("http://")
+        || request.url.starts_with("https://")
+        || request.url.contains('@')
+    {
+        return Err(ProviderTransportError::Policy {
+            detail: "insecure Provider request URL must be credential-free HTTP",
         });
     }
     if request.timeout_ms == 0 {

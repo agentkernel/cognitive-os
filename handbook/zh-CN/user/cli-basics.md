@@ -12,13 +12,14 @@ sources:
   - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch", "status"]
+  - path: apps/admin-cli/src/personal_cli/provider.rs
 tests:
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:01f30484a40692d33eeb43c0b3a1cccf8e048de7d1b07e978b0cf183287965c9"
+fingerprint: "sha256:993aa11e17cb1372bb09c9646f0921ee5ce3daf47bff8527e4dab4754e8c7c59"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -45,6 +46,11 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | 通用 Resource Manager 只读信封（management 通道） |
 | `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | 通用 Resource Manager 变异，接到既有 Skill/Tool sinks；不是 generic create/execute/complete |
+| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane 账户；只用 `--api-key-file`；自定义 HTTP/私网端点需要 `--allow-insecure-http` / `--allow-private-network` |
+| `cognitive provider key set\|rotate\|remove` | 经 daemon 的 Secret Store 密钥操作；永不写 SQLite |
+| `cognitive provider models refresh\|list\|add\|set-price` | 前台发现、手动模型、价格 |
+| `cognitive agent binding set\|show\|list\|remove` | 固定 pi/dsh 账户+provider+model binding；无回退 |
+| `cognitive usage query` / `cognitive budget set\|list\|remove` / `cognitive alerts list\|acknowledge` / `cognitive audit query` | 用量/成本/审计与仅观察预算 |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
 | `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
 | `cognitive backup [--output <dir>]` | 写入排除 secret 的 digest 绑定归档（不含 authority SQLite / provider-config / bearer） |

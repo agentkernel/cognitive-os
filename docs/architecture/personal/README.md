@@ -61,6 +61,7 @@ remain distinct even when an implementation co-locates some of them.
 |---|---|
 | [System architecture](./system-architecture.md) | layered control plane, six domains, common projection, execution boundary and future Linux/hardware ports |
 | [Resource Manager](./resource-manager-architecture.md) | common ResourceApplicationService HTTP envelope, authority sources, and fail-closed generics (P8-T12) |
+| [Provider Control Plane](./provider-control-plane.md) | daemon-owned provider registry, Secret Store boundary, transport, usage ledger, pricing, and alerts |
 | [Agent Shell and Agent lifecycle](./agent-shell-and-agent-lifecycle.md) | Pi dual roles, strict runtime identity, sidecar supervision, channels and lifecycle operations |
 | [Authority, data and recovery](./authority-data-and-recovery.md) | authority data, control/data-plane separation, mutation permits, evidence and restart/reconciliation order |
 | [Agent adapter contract](./agent-adapter-contract.md) | universal AKP adapter capabilities, lifecycle, negatives (P8 design) |

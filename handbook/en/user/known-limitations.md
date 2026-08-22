@@ -13,7 +13,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:a59349b7a1476916ab9191df968a927c860df2815fe3cf18212b7d578ef0fbff"
+fingerprint: "sha256:79dbb3dc50673b5fffdb8f8087e1f6a8fdbf4a2ae4f1574dec3f5fd6b64d61df"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -39,7 +39,11 @@ current fact of the code.
   and must be re-entered after a machine move. Managed Pi recover is not yet
   wired on this path.
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
-  Pi shell has no resource/task browsing UX yet.
+  Pi shell has no resource/task browsing UX yet. Provider Control Plane in this
+  phase is daemon API + CLI only.
+- Budget alerts are observe/query only; they do not block or reroute Provider calls.
+- Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
+  URLs are refused.
 - Pi conversations are one-shot per exchange (no streaming, text only, fixed
   8192/1024 window constants at the client).
 - `TaskApplicationService` implements `control`/`query_intent`, but no HTTP route

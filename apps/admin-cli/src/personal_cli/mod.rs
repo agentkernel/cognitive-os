@@ -13,6 +13,7 @@ mod dsh;
 mod init;
 mod layout;
 mod pi;
+mod provider;
 mod secret_input;
 mod url;
 
@@ -37,6 +38,12 @@ pub enum CognitiveCommand {
     Dsh(DshCommand),
     Resource(ResourceCommand),
     Task(TaskCommand),
+    Provider(provider::ProviderCommand),
+    AgentBinding(provider::BindingCommand),
+    Usage(StatusOptions),
+    Budget(provider::BudgetCommand),
+    Alerts(provider::AlertCommand),
+    Audit(StatusOptions),
     Backup(backup::BackupOptions),
     Restore(backup::RestoreOptions),
 }
@@ -247,10 +254,16 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
         }
         "resource" => parse_resource_command(rest),
         "task" => parse_task_command(rest),
+        "provider" => provider::parse_provider_args(rest),
+        "agent" => provider::parse_agent_args(rest),
+        "usage" => provider::parse_usage_args(rest),
+        "budget" => provider::parse_budget_args(rest),
+        "alerts" => provider::parse_alerts_args(rest),
+        "audit" => provider::parse_audit_args(rest),
         "backup" => parse_backup_command(rest),
         "restore" => parse_restore_command(rest),
         other => Err(format!(
-            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|dsh|resource|task|backup|restore)"
+            "unknown verb `{other}` (expected init|status|doctor|daemon|pi|dsh|resource|task|provider|agent|usage|budget|alerts|audit|backup|restore)"
         )),
     }
 }
@@ -333,6 +346,12 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
         }
         CognitiveCommand::Task(TaskCommand::Watch(options)) => fetch_task_watch(&options),
         CognitiveCommand::Task(TaskCommand::Evidence(options)) => fetch_task_evidence(&options),
+        CognitiveCommand::Provider(command) => provider::run_provider(command),
+        CognitiveCommand::AgentBinding(command) => provider::run_binding(command),
+        CognitiveCommand::Usage(options) => provider::run_usage(&options),
+        CognitiveCommand::Budget(command) => provider::run_budget(command),
+        CognitiveCommand::Alerts(command) => provider::run_alerts(command),
+        CognitiveCommand::Audit(options) => provider::run_audit(&options),
         CognitiveCommand::Backup(options) => match backup::run_backup(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
@@ -608,7 +627,9 @@ fn fetch_resource_mutate(options: &ResourceMutateOptions) -> i32 {
     }
 }
 
-fn connect_resource_client(status: &StatusOptions) -> Result<client::PersonalDaemonClient, i32> {
+pub(crate) fn connect_resource_client(
+    status: &StatusOptions,
+) -> Result<client::PersonalDaemonClient, i32> {
     let layout = match layout::build_layout(&status.layout_roots) {
         Ok(layout) => layout,
         Err(error) => return Err(print_operational_error(&error.to_string())),
@@ -746,7 +767,9 @@ fn parse_init_options(flags: &BTreeMap<String, String>) -> Result<InitOptions, S
     })
 }
 
-fn parse_status_options(flags: &BTreeMap<String, String>) -> Result<StatusOptions, String> {
+pub(crate) fn parse_status_options(
+    flags: &BTreeMap<String, String>,
+) -> Result<StatusOptions, String> {
     Ok(StatusOptions {
         layout_roots: LayoutRoots::from_flags(flags)?,
         endpoint_override: flags.get("endpoint").cloned(),
@@ -857,7 +880,7 @@ fn required_path_flag(flags: &BTreeMap<String, String>, name: &str) -> Result<Pa
         .ok_or_else(|| format!("Pi configuration requires --{name} <absolute-path>"))
 }
 
-fn reject_unexpected_flags(
+pub(crate) fn reject_unexpected_flags(
     flags: &BTreeMap<String, String>,
     allowed_flags: &[&str],
 ) -> Result<(), String> {
@@ -872,7 +895,7 @@ fn reject_unexpected_flags(
     Ok(())
 }
 
-fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
+pub(crate) fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
     let mut flags = BTreeMap::new();
     let mut iter = args.iter();
     while let Some(flag) = iter.next() {
@@ -927,6 +950,33 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
             }
             continue;
         }
+        if flag == "--allow-private-network" {
+            if flags
+                .insert("allow-private-network".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --allow-private-network given twice".to_owned());
+            }
+            continue;
+        }
+        if flag == "--allow-insecure-http" {
+            if flags
+                .insert("allow-insecure-http".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --allow-insecure-http given twice".to_owned());
+            }
+            continue;
+        }
+        if flag == "--reconfirm" {
+            if flags
+                .insert("reconfirm".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --reconfirm given twice".to_owned());
+            }
+            continue;
+        }
         let Some(name) = flag.strip_prefix("--") else {
             return Err(format!("unexpected argument `{flag}`"));
         };
@@ -940,7 +990,7 @@ fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, String> {
     Ok(flags)
 }
 
-fn flag_bool(flags: &BTreeMap<String, String>, name: &str) -> Result<bool, String> {
+pub(crate) fn flag_bool(flags: &BTreeMap<String, String>, name: &str) -> Result<bool, String> {
     match flags.get(name).map(String::as_str) {
         None => Ok(false),
         Some("true") | Some("1") | Some("yes") => Ok(true),
@@ -948,7 +998,7 @@ fn flag_bool(flags: &BTreeMap<String, String>, name: &str) -> Result<bool, Strin
     }
 }
 
-fn print_operational_error(message: &str) -> i32 {
+pub(crate) fn print_operational_error(message: &str) -> i32 {
     let payload = serde_json::json!({
         "status": "error",
         "surface": "cognitive-cli",
@@ -1002,6 +1052,17 @@ USAGE:
                        [--resume-from <cursor>]
   cognitive task evidence [--runtime-root <dir>] [--endpoint <host:port>]
                           --task-ref <task-uri>
+  cognitive provider account create --name <id> --provider-kind <openai_official|anthropic_official|openai_compatible>
+                       [--endpoint-url <url>] [--api-key-file <path|->]
+                       [--allow-private-network] [--allow-insecure-http]
+  cognitive provider account list|show|update|delete [--id <acct>] [--endpoint-url <url>] [--reconfirm]
+  cognitive provider key set|rotate|remove --id <acct> [--api-key-file <path|->]
+  cognitive provider models refresh|list|add|set-price --account-id <acct> [--model-id <id>]
+  cognitive agent binding set|show|list|remove [--agent pi|dsh] [--account-id <acct>] [--model-id <id>]
+  cognitive usage query
+  cognitive budget set|list|remove [--scope-kind account|agent] [--scope-id <id>]
+  cognitive alerts list|acknowledge [--alert-id <id>]
+  cognitive audit query
   cognitive backup  [--runtime-root <dir>] [--endpoint <host:port>] [--output <dir>]
   cognitive restore [--runtime-root <dir>] [--endpoint <host:port>]
                     (--archive <dir> | --archive-id <id>) [--preflight]
@@ -1020,6 +1081,7 @@ Hard rules:
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
   - resource list/inspect/bind|unbind|enable|disable|revoke call the management Resource Manager; get/watch remain the private projection
+  - provider/agent/usage/budget/alerts/audit call the management Provider Control Plane; keys use --api-key-file only
   - never advances Task/Effect/Verification authority state
   - daemon start appends kernel-server stdout/stderr to state/cognitiveos/daemon.log (mode 0600)
   - admin-cli management verbs remain available as the emergency path
@@ -1028,7 +1090,7 @@ Hard rules:
 Exit codes: 0 success, 1 operational error, 2 usage error.";
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
+#[allow(clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
 
@@ -1425,5 +1487,59 @@ mod tests {
         ])
         .expect_err("generic create is not a CLI verb");
         assert!(unknown.contains("get|watch|list|inspect"), "{unknown}");
+    }
+
+    #[test]
+    fn provider_control_plane_verbs_parse_and_refuse_api_key_flag() {
+        let create = parse_cognitive_args(&[
+            "provider".to_owned(),
+            "account".to_owned(),
+            "create".to_owned(),
+            "--name".to_owned(),
+            "openai-work".to_owned(),
+            "--provider-kind".to_owned(),
+            "openai_official".to_owned(),
+        ])
+        .expect("parse provider account create");
+        match create {
+            CognitiveCommand::Provider(provider::ProviderCommand::Account(
+                provider::AccountCommand::Create(options),
+            )) => {
+                assert_eq!(options.name, "openai-work");
+                assert_eq!(options.provider_kind, "openai_official");
+            }
+            other => panic!("unexpected command {other:?}"),
+        }
+
+        let refused = parse_cognitive_args(&[
+            "provider".to_owned(),
+            "key".to_owned(),
+            "set".to_owned(),
+            "--id".to_owned(),
+            "acct-1".to_owned(),
+            "--api-key".to_owned(),
+            "sk-live-should-never-parse".to_owned(),
+        ])
+        .expect_err("CLI must refuse --api-key");
+        assert!(refused.contains("--api-key"), "{refused}");
+
+        let binding = parse_cognitive_args(&[
+            "agent".to_owned(),
+            "binding".to_owned(),
+            "set".to_owned(),
+            "--agent".to_owned(),
+            "dsh".to_owned(),
+            "--account-id".to_owned(),
+            "acct-1".to_owned(),
+            "--model-id".to_owned(),
+            "deepseek-chat".to_owned(),
+        ])
+        .expect("parse agent binding set");
+        match binding {
+            CognitiveCommand::AgentBinding(provider::BindingCommand::Set(options)) => {
+                assert_eq!(options.agent, "dsh");
+            }
+            other => panic!("unexpected command {other:?}"),
+        }
     }
 }

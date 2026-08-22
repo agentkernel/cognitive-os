@@ -19,7 +19,7 @@ tests:
   - tools/test/p2_t28_capability_truth.test.mjs
   - tools/test/c1_c2_paired_p_arm.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:b965be66274a04818114171081cf625095cac4443539839a737e05ce05bf1650"
+fingerprint: "sha256:b03829354db5a8cd792e2e2d55de6e99ab33196305bd3d3e12a1ba8c1b30e504"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---

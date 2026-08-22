@@ -145,8 +145,8 @@ function buildCliCognitive(readSource) {
   const source = "apps/admin-cli/src/personal_cli/mod.rs";
   const usage = extractRustStringConst(readSource(source), "COGNITIVE_USAGE");
   const intro = {
-    en: `# \`cognitive\` CLI\n\nThe deterministic Personal product CLI (binary \`cognitive\`, crate \`admin-cli\`). It is a non-authority client: it prepares layout/configuration, launches and observes the daemon, and reads authenticated projections. \`resource list|inspect|bind|unbind|enable|disable|revoke\` call the management Resource Manager; \`resource get|watch\` remain the private six-family projection.\n\nVerbatim usage text from \`COGNITIVE_USAGE\`:\n`,
-    "zh-CN": `# \`cognitive\` CLI\n\n确定性的 Personal 产品 CLI（二进制 \`cognitive\`，crate \`admin-cli\`）。它是非权威客户端：准备布局/配置、启动并观察 daemon、读取已认证投影。\`resource list|inspect|bind|unbind|enable|disable|revoke\` 调用 management Resource Manager；\`resource get|watch\` 仍是私有六族投影。\n\n以下为 \`COGNITIVE_USAGE\` 常量的原文：\n`,
+    en: `# \`cognitive\` CLI\n\nThe deterministic Personal product CLI (binary \`cognitive\`, crate \`admin-cli\`). It is a non-authority client: it prepares layout/configuration, launches and observes the daemon, and reads authenticated projections. \`resource list|inspect|bind|unbind|enable|disable|revoke\` call the management Resource Manager; \`resource get|watch\` remain the private six-family projection. \`provider\`, \`agent binding\`, \`usage\`, \`budget\`, \`alerts\`, and \`audit\` call the management Provider Control Plane; keys use \`--api-key-file\` only.\n\nVerbatim usage text from \`COGNITIVE_USAGE\`:\n`,
+    "zh-CN": `# \`cognitive\` CLI\n\n确定性的 Personal 产品 CLI（二进制 \`cognitive\`，crate \`admin-cli\`）。它是非权威客户端：准备布局/配置、启动并观察 daemon、读取已认证投影。\`resource list|inspect|bind|unbind|enable|disable|revoke\` 调用 management Resource Manager；\`resource get|watch\` 仍是私有六族投影。\`provider\`、\`agent binding\`、\`usage\`、\`budget\`、\`alerts\` 与 \`audit\` 调用 management Provider Control Plane；密钥只用 \`--api-key-file\`。\n\n以下为 \`COGNITIVE_USAGE\` 常量的原文：\n`,
   };
   const block = `\n\`\`\`text\n${usage}\n\`\`\`\n`;
   return { sources: [source], bodies: { en: intro.en + block, "zh-CN": intro["zh-CN"] + block } };
@@ -186,6 +186,7 @@ function buildHttpApi(readSource, trackedPaths) {
     "apps/kernel-server/src/personal/task_api.rs",
     "apps/kernel-server/src/personal/resource_api.rs",
     "apps/kernel-server/src/personal/resource_manager.rs",
+    "apps/kernel-server/src/personal/provider_control_plane.rs",
   ];
   const corpusSources = [
     ...definitionSources,

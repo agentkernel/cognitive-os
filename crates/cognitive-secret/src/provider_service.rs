@@ -77,6 +77,20 @@ pub fn provider_secret_attributes(
     ])?)
 }
 
+/// Account-scoped SecretStore attributes. The account id is metadata only;
+/// it never carries key material.
+pub fn provider_account_secret_attributes(
+    account_id: &str,
+    provider_kind: &str,
+) -> Result<SecretAttributes, ProviderKeyServiceError> {
+    Ok(SecretAttributes::from_pairs(vec![
+        ("application".into(), "cognitiveos-personal".into()),
+        ("provider".into(), provider_kind.to_owned()),
+        ("account_id".into(), account_id.to_owned()),
+        ("purpose".into(), "provider-api-key".into()),
+    ])?)
+}
+
 /// Build the desktop collection label for a Provider API key item.
 pub fn provider_secret_label() -> Result<SecretLabel, ProviderKeyServiceError> {
     Ok(SecretLabel::new(PROVIDER_SECRET_LABEL)?)

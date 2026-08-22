@@ -15,6 +15,7 @@
 
 mod backend_select;
 mod backends;
+mod endpoint_trust;
 mod error;
 mod linux_secret_tool;
 mod material;
@@ -35,6 +36,11 @@ pub use backends::{
     EphemeralSecretStore, LinuxSecretServiceProbe, SecretServiceSimulation,
     SimulatedSecretServiceStore, UnavailableSecretStore,
 };
+pub use endpoint_trust::{
+    ANTHROPIC_OFFICIAL_ENDPOINT, EndpointTrustError, EndpointTrustGrant, NetworkScope,
+    OPENAI_OFFICIAL_ENDPOINT, ProviderKind, TrustedEndpoint, evaluate_resolved_targets,
+    reject_caller_headers,
+};
 pub use error::SecretError;
 pub use linux_secret_tool::LinuxSecretToolStore;
 pub use material::{SecretAttributes, SecretLabel, SecretMaterial, SecretRef};
@@ -47,16 +53,19 @@ pub use provider_probe::{
     ProviderReadinessSnapshot,
 };
 pub use provider_service::{
-    ProviderKeyService, ProviderKeyServiceError, provider_secret_attributes, provider_secret_label,
+    ProviderKeyService, ProviderKeyServiceError, provider_account_secret_attributes,
+    provider_secret_attributes, provider_secret_label,
 };
 pub use provider_snapshot::{
     DiscoveredModel, PROVIDER_PROBE_VERSION, PROVIDER_SNAPSHOT_SCHEMA_VERSION, ProbeErrorClass,
     ProbeOutcome, ProviderCapabilityFlags, ProviderCapabilitySnapshot, ProviderSnapshotError,
 };
 pub use provider_transport::{
+    ANTHROPIC_API_KEY_HEADER_NAME, ANTHROPIC_API_VERSION, ANTHROPIC_VERSION_HEADER_NAME,
     AUTHORIZATION_HEADER_NAME, ProviderHttpMethod, ProviderHttpRequest, ProviderHttpResponse,
     ProviderTransport, ProviderTransportError, StreamedProviderExchange,
-    bearer_authorization_header_value, is_authorization_header_name, redacted_headers,
+    anthropic_api_key_header_value, bearer_authorization_header_value,
+    is_authorization_header_name, redacted_headers,
 };
 pub use secret_input::read_secret_material_from_reader;
 pub use selected_model::{

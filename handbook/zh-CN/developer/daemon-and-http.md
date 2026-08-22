@@ -28,6 +28,8 @@ sources:
     symbols: ["handle"]
   - path: apps/kernel-server/src/personal/resource_manager.rs
     symbols: ["handle", "matches"]
+  - path: apps/kernel-server/src/personal/provider_control_plane.rs
+    symbols: ["handle", "matches"]
   - path: apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -43,7 +45,8 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:9a42e809a5c4b3d6e489aeeb6cfe815e4cb544c66057be5d449b26897ab26236"
+  - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
+fingerprint: "sha256:e76d3ba9856c06a0814183fa0017f61e2693f23205ce09f33262cb0020f6866e"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -106,6 +109,15 @@ task 通道通过 `GET /task/resource/v1/consumption?task_ref=…` 读取 daemon
 `query_text` 与 `skill_binding_id` 视为用户重述并被拒绝。遗忘、撤销或 digest
 漂移的钉在响应前失败闭合，且绝不返回 Memory/Skill 正文。session 2 与重启后的
 GET 读取同一持久行；带调用方 `query_text` 的 POST 不能替换这些钉。
+
+management Provider Control Plane 路由（`/management/providers/*`、
+`/management/agent-bindings`、`/management/usage`、`/management/budgets`、
+`/management/alerts`、`/management/audit`）需要 management bearer。task 通道别名
+失败闭合（`PROVIDER_CONTROL_CHANNEL_FORBIDDEN`）。命名账户只持久化不透明的
+Secret Store `secret_ref`。已绑定 Pi 流量走 `POST /provider/v1/chat/completions`；
+已绑定 DeepSeek harness 走 `POST /provider/v1/dsh/chat/completions`。未绑定 agent
+仍使用 `provider.json`。private-candidate 补全在存在 Pi binding 时使用同一 binding，
+模型不符失败闭合；Pi 从不读取 Secret Store。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

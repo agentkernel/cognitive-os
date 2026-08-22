@@ -21,6 +21,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["launch"]
+  - path: apps/admin-cli/src/personal_cli/provider.rs
   - path: crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
@@ -33,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:04c8eb2378017df5834821fc9368f209ea9fe4f3a617dd5e7f1997c582ea6ba6"
+fingerprint: "sha256:b4e7da60d5ba6824527135f5b2b564237b567b41976a59e70771e8e9afcb358e"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -127,6 +128,14 @@ Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixe
 或 revoke；Agent 暴露立即跟随该 overlay，且永不改写不可变 descriptor。普通 Task
 调用方可读取当前最窄暴露集合并记录选择收据，但不能 enable、disable、quarantine
 或 revoke Tool。
+
+## Provider Control Plane —— `partial`
+
+`cognitive provider …`、`cognitive agent binding …`、`cognitive usage query`、
+`cognitive budget …`、`cognitive alerts …` 与 `cognitive audit query` 只调用
+daemon management 表面。密钥经 `--api-key-file` 进入 Secret Store；永不出现在
+SQLite、argv 或 CLI 输出。预算告警只观察/查询，不阻断也不改路。自定义 HTTP 或
+私网端点需要持久的 `--allow-insecure-http` / `--allow-private-network` 授权。
 
 ## 备份与恢复 —— `partial`
 

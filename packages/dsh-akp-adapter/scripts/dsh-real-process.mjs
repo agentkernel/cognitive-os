@@ -5,7 +5,7 @@
  * dsh --profile headless --patch <generated yaml> loads plugin.bundle.cjs
  * (CommonJS; Node 22.23 rejects require(esm) of dist/plugin.js), activates
  * POST /task/akp/dsh, submits admitted Workspace* candidates as startupEvents,
- * and points llm-deepseek at POST /provider/v1/chat/completions.
+ * and points llm-deepseek at POST /provider/v1/dsh/chat/completions.
  * The daemon management token is read from a 0600 file. The Provider key stays
  * in SecretStore on the daemon host. A dsh response is never Task completion.
  *
@@ -334,8 +334,8 @@ function pluginInsert(id, sessionId, pluginId, taskRef, events) {
   return lines;
 }
 
-const selected = await httpJson(origin, "GET", "/provider/v1/selected-model", managementToken);
-const providerBase = `${origin}/provider/v1`;
+const selected = await httpJson(origin, "GET", "/provider/v1/dsh/selected-model", managementToken);
+const providerBase = `${origin}/provider/v1/dsh`;
 const outcome = await runDsh(
   [
     "- insert:",

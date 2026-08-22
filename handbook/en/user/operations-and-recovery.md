@@ -21,6 +21,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/backup.rs
   - path: apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["launch"]
+  - path: apps/admin-cli/src/personal_cli/provider.rs
   - path: crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: crates/cognitive-store/src/personal_db.rs
@@ -33,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:04c8eb2378017df5834821fc9368f209ea9fe4f3a617dd5e7f1997c582ea6ba6"
+fingerprint: "sha256:b4e7da60d5ba6824527135f5b2b564237b567b41976a59e70771e8e9afcb358e"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -153,6 +154,16 @@ quarantine, or revoke one by `operation_id`; Agent exposure follows that overlay
 immediately and never rewrites the immutable descriptor. Ordinary Task callers
 can read the current least exposure set and record a selection receipt, but they
 cannot enable, disable, quarantine, or revoke Tools.
+
+## Provider Control Plane — `partial`
+
+`cognitive provider …`, `cognitive agent binding …`, `cognitive usage query`,
+`cognitive budget …`, `cognitive alerts …`, and `cognitive audit query` call the
+daemon management surface only. Keys enter the Secret Store through
+`--api-key-file`; they never appear in SQLite, argv, or CLI output. Budget
+alerts are observe-only and do not block or reroute calls. Custom HTTP or
+private-network endpoints require durable `--allow-insecure-http` /
+`--allow-private-network` grants.
 
 ## Backup and restore — `partial`
 
