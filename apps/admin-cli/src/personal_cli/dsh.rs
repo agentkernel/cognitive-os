@@ -652,8 +652,11 @@ mod tests {
     fn write_web_dist(dsh_root: &Path) {
         let dist = dsh_root.join("apps/web/dist");
         fs::create_dir_all(&dist).expect("web dist");
-        fs::write(dist.join("index.html"), "<!doctype html><title>DeepSeek Harness</title>\n")
-            .expect("index");
+        fs::write(
+            dist.join("index.html"),
+            "<!doctype html><title>DeepSeek Harness</title>\n",
+        )
+        .expect("index");
     }
 
     fn headless_opts(
@@ -824,20 +827,18 @@ mod tests {
 
     #[test]
     fn launch_rejects_direct_flash_path() {
-        let error = launch(&headless_opts(
-            None,
-            true,
-            DshProviderPath::Direct,
-            None,
-        ))
-        .expect_err("direct path must stay measurement-only");
+        let error = launch(&headless_opts(None, true, DshProviderPath::Direct, None))
+            .expect_err("direct path must stay measurement-only");
         assert!(error.contains("measurement-only"), "{error}");
     }
 
     #[test]
     fn web_listen_refuses_non_loopback_and_missing_dist() {
         let refused = normalize_web_listen("0.0.0.0", 3080).expect_err("wildcard");
-        assert!(refused.contains("loopback") || refused.contains("refused"), "{refused}");
+        assert!(
+            refused.contains("loopback") || refused.contains("refused"),
+            "{refused}"
+        );
         assert!(normalize_web_listen("192.168.1.2", 3080).is_err());
         assert_eq!(
             normalize_web_listen("localhost", 3080).expect("localhost"),

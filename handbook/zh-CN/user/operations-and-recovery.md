@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:2f5825461c67e45c56e7297584b2173cac4c4f9c60771a38c8b015609a213f9e"
+fingerprint: "sha256:3cab351b53cd63bf7f5bbfbf2dab5dcbea41453602ac2ae2d03a286c517d8409"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---

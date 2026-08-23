@@ -881,15 +881,14 @@ fn parse_dsh_launch_options(flags: &BTreeMap<String, String>) -> Result<DshLaunc
 }
 
 fn parse_dsh_web_options(flags: &BTreeMap<String, String>) -> Result<DshLaunchOptions, String> {
-    reject_unexpected_flags(
-        flags,
-        &["runtime-root", "path", "host", "port", "no-open"],
-    )?;
+    reject_unexpected_flags(flags, &["runtime-root", "path", "host", "port", "no-open"])?;
     if flag_bool(flags, "print")? {
         return Err("dsh web does not accept --print; use `cognitive dsh launch --print` for headless Path B".to_owned());
     }
     if flags.contains_key("task") {
-        return Err("dsh web does not accept --task; the native panel is a long-running process".to_owned());
+        return Err(
+            "dsh web does not accept --task; the native panel is a long-running process".to_owned(),
+        );
     }
     if flag_bool(flags, "open")? {
         return Err(
@@ -1030,10 +1029,7 @@ pub(crate) fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, S
             continue;
         }
         if flag == "--open" {
-            if flags
-                .insert("open".to_owned(), "true".to_owned())
-                .is_some()
-            {
+            if flags.insert("open".to_owned(), "true".to_owned()).is_some() {
                 return Err("flag --open given twice".to_owned());
             }
             continue;
