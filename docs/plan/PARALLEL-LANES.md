@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P7-T05/web-ui` | P7-T05/D01 Web UI readiness | Lane-TSC | `personal/P7-T05-web-ui` | `docs/adr/0053-personal-web-ui-stack.md`; `docs/architecture/personal/web-ui-architecture.md`; `docs/architecture/personal/web-ui-route-inventory.json`; `docs/architecture/personal/README.md`; `docs/product/personal/web-ui-design.md`; `docs/product/personal/README.md`; `docs/plan/p7-t05-web-ui-task-card.md`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/plan.md`; `docs/README.md`; `docs/checkpoints/20260823-personal-p7-t05-web-ui-report.md`; `tools/src/p7_t05_web_ui_inventory.mjs`; `tools/test/p7_t05_web_ui_inventory.test.mjs`; `handbook/en/ai/validation-commands.md`; `handbook/zh-CN/ai/validation-commands.md`; `handbook/en/developer/conformance-and-testing.md`; `handbook/zh-CN/developer/conformance-and-testing.md`; `handbook/en/user/known-limitations.md`; `handbook/zh-CN/user/known-limitations.md`; `handbook/_meta/sync-policy.md` | Cursor P7-T05 continuous-delivery session | 2026-08-23 / 2026-08-23 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no

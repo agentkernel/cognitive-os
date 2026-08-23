@@ -10,10 +10,11 @@ sources:
   - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: docs/adr/0053-personal-web-ui-stack.md
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:79dbb3dc50673b5fffdb8f8087e1f6a8fdbf4a2ae4f1574dec3f5fd6b64d61df"
+fingerprint: "sha256:3a3af0e100f7e89f7df6b86e070dac6168c44166dab86aa647ecaaf68c98c671"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -38,9 +39,12 @@ current fact of the code.
   overlay live files after preflight. Provider keys stay in the Secret Store
   and must be re-entered after a machine move. Managed Pi recover is not yet
   wired on this path.
-- **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
-  Pi shell has no resource/task browsing UX yet. Provider Control Plane in this
-  phase is daemon API + CLI only — see
+- **No Web UI in this repository**: [ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md)
+  accepted React + TypeScript + Vite and same-origin daemon `/ui/` serving, but
+  the SPA lives in `cognitiveos-clients/pc/web/` and is not checked out here.
+  There is no Windows/macOS installation product and no multi-agent
+  orchestration. The Pi shell has no resource/task browsing UX yet. Provider
+  Control Plane in this phase is daemon API + CLI only — see
   [Provider Control Plane](./provider-control-plane.md).
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible

@@ -12,7 +12,9 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:e68018bf2aa66b2083ed39ecc4b247cd4a598def45064a4ea060223b167666c4"
+  - path: tools/src/p7_t05_web_ui_inventory.mjs
+    symbols: ["validateWebUiRouteInventory"]
+fingerprint: "sha256:5c275c2aafef23f2c6fdcf904c97b60b23d1a3bd0c23d27707ed38e94de7eaee"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -36,7 +38,7 @@ node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
-node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T12 live paired executor + unified-diff WorkspacePatch; not Gate evidence
+node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 D01 route inventory; not a SPA or Gate result
 ```
 
 ## Requires supported CI (Ubuntu / Windows MSVC) or exact-revision native Linux
@@ -90,6 +92,12 @@ P8-T13 Provider Control Plane coverage is
 `crates/cognitive-store/tests/p8_t13_provider_store.rs`
 (endpoint trust/SSRF negatives, catalog preservation, Pi vs dsh binding isolation;
 Linux/CI only; Windows GNU `not-run`).
+P7-T05/D01 Web UI route inventory is
+`tools/test/p7_t05_web_ui_inventory.test.mjs` against
+`docs/architecture/personal/web-ui-route-inventory.json` (invented lifecycle,
+missing daemon route, Task-channel secrets, Web storage, and browser-direct
+targets fail closed). It is not a SPA implementation, browser journey, Gate,
+or release result.
 
 ## What CI enforces on every PR
 

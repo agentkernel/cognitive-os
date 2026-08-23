@@ -10,10 +10,11 @@ sources:
   - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: docs/adr/0053-personal-web-ui-stack.md
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:79dbb3dc50673b5fffdb8f8087e1f6a8fdbf4a2ae4f1574dec3f5fd6b64d61df"
+fingerprint: "sha256:3a3af0e100f7e89f7df6b86e070dac6168c44166dab86aa647ecaaf68c98c671"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -32,8 +33,11 @@ non_claims:
 - **备份/恢复排除 secret 与 authority SQLite**；`cognitive backup` / `restore` 与
   management HTTP 路由写入 digest 绑定归档，并在预检后覆盖 live 文件。Provider
   key 留在 Secret Store，换机后需重新录入。managed Pi recover 尚未接在这条路径上。
-- **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
-  UX。本阶段 Provider Control Plane 只有 daemon API 与 CLI——见
+- **本仓库无 Web UI**：[ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md)
+  已接受 React + TypeScript + Vite 与 daemon 同源 `/ui/` 静态服务，但 SPA 落在
+  `cognitiveos-clients/pc/web/`，此处没有 approved checkout。无 Windows/macOS
+  安装产品，也无多 agent 编排。Pi shell 尚无资源/任务浏览 UX。本阶段 Provider
+  Control Plane 只有 daemon API 与 CLI——见
   [Provider Control Plane](./provider-control-plane.md)。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage

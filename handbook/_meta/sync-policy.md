@@ -32,7 +32,10 @@ generated: false
    the PR". The docs-sync gate fails a commit/push whose mapped source changes
    carry no handbook update; the only escape is an explicit
    `DOCS_IMPACT_NONE="<concrete reason>"` acknowledgment, recorded in the
-   commit/PR description (blank or trivial reasons are rejected).
+   commit/PR description (blank or trivial reasons are rejected). Tools fixtures
+   such as the P7-T05 Web UI route inventory
+   (`tools/src/p7_t05_web_ui_inventory.mjs`) follow this same routing: they are
+   not a reason to skip handbook review.
 5. **Checks**: `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
    `pnpm run check:consistency` must pass; CI runs them on every PR.

@@ -12,7 +12,9 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
-fingerprint: "sha256:e68018bf2aa66b2083ed39ecc4b247cd4a598def45064a4ea060223b167666c4"
+  - path: tools/src/p7_t05_web_ui_inventory.mjs
+    symbols: ["validateWebUiRouteInventory"]
+fingerprint: "sha256:5c275c2aafef23f2c6fdcf904c97b60b23d1a3bd0c23d27707ed38e94de7eaee"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -36,7 +38,7 @@ node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--pus
 pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
-node --test tools/test/c1_c2_paired_p_arm.test.mjs  # P9-T12 live paired executor + unified-diff WorkspacePatch；不是 Gate 证据
+node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 D01 路由清单；不是 SPA 或 Gate 结果
 ```
 
 ## 必须走受支持 CI（Ubuntu / Windows MSVC）或 exact-revision native Linux
@@ -87,6 +89,11 @@ P8-T13 Provider Control Plane 覆盖是
 `crates/cognitive-store/tests/p8_t13_provider_store.rs`
 （端点信任/SSRF 负例、目录保留、Pi 与 dsh binding 隔离；仅 Linux/CI；Windows GNU
 `not-run`）。
+P7-T05/D01 Web UI 路由清单是
+`tools/test/p7_t05_web_ui_inventory.test.mjs`，对照
+`docs/architecture/personal/web-ui-route-inventory.json`（伪造 lifecycle、缺失
+daemon 路由、Task 通道 secret、Web storage、浏览器直连目标 fail closed）。它不是
+SPA 实现、浏览器旅程、Gate 或 release 结果。
 
 ## CI 在每个 PR 上强制什么
 

@@ -1,0 +1,361 @@
+{
+  "schema": "cognitiveos.personal.web-ui-route-inventory/0.1",
+  "claim_ceiling": "hypothesis",
+  "linux_1_0_blocking": false,
+  "stack_adr": "docs/adr/0053-personal-web-ui-stack.md",
+  "client_repo": "https://github.com/agentkernel/cognitiveos-clients",
+  "client_path": "pc/web/",
+  "session_storage": "memory",
+  "serving_path": "daemon-same-origin-static",
+  "cors_mode": "same-origin-only",
+  "csrf_mode": "no-cookie-explicit-bearer",
+  "browser_forbidden_targets": [
+    "sqlite",
+    "secretstore",
+    "filesystem",
+    "shell",
+    "provider-direct"
+  ],
+  "operations": [
+    {
+      "id": "local-session",
+      "ui_capability": "Issue channel-scoped session",
+      "method_path": "POST /local/session",
+      "channel": "bootstrap",
+      "disposition": "available"
+    },
+    {
+      "id": "home-status",
+      "ui_capability": "Home status",
+      "method_path": "GET /personal/status",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "home-readiness",
+      "ui_capability": "Home readiness",
+      "method_path": "GET /personal/readiness",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "home-doctor",
+      "ui_capability": "Home doctor",
+      "method_path": "GET /personal/doctor",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "home-health",
+      "ui_capability": "Daemon liveness",
+      "method_path": "GET /personal/health",
+      "channel": "unauthenticated-loopback",
+      "disposition": "available"
+    },
+    {
+      "id": "resource-list",
+      "ui_capability": "Agent and six-family inventory",
+      "method_path": "GET /management/resource/v1/list",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "resource-inspect",
+      "ui_capability": "Agent and resource detail",
+      "method_path": "GET /management/resource/v1/inspect",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "resource-watch",
+      "ui_capability": "Resource watch",
+      "method_path": "GET /resource/v1/watch",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-account-list",
+      "ui_capability": "Provider account list",
+      "method_path": "GET /management/providers/accounts",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-account-inspect",
+      "ui_capability": "Provider account inspect",
+      "method_path": "GET /management/providers/accounts/inspect",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-account-create",
+      "ui_capability": "Create Provider account",
+      "method_path": "POST /management/providers/accounts",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-account-update",
+      "ui_capability": "Update Provider account",
+      "method_path": "POST /management/providers/accounts/update",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-account-delete",
+      "ui_capability": "Delete Provider account",
+      "method_path": "POST /management/providers/accounts/delete",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-account-key",
+      "ui_capability": "Rotate or delete Provider key via SecretStore",
+      "method_path": "POST /management/providers/accounts/key",
+      "channel": "management",
+      "disposition": "available",
+      "secret_bearing": true
+    },
+    {
+      "id": "provider-model-list",
+      "ui_capability": "Provider model catalog",
+      "method_path": "GET /management/providers/models",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-model-refresh",
+      "ui_capability": "Bounded model/capability probe",
+      "method_path": "POST /management/providers/models/refresh",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "provider-model-add",
+      "ui_capability": "Manually add a model",
+      "method_path": "POST /management/providers/models/add",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "agent-binding-list",
+      "ui_capability": "Agent Provider binding list",
+      "method_path": "GET /management/agent-bindings",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "agent-binding-set",
+      "ui_capability": "Set fixed Agent Provider binding",
+      "method_path": "POST /management/agent-bindings",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "agent-binding-remove",
+      "ui_capability": "Remove Agent Provider binding",
+      "method_path": "POST /management/agent-bindings/remove",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "usage-query",
+      "ui_capability": "Usage projection",
+      "method_path": "GET /management/usage",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "budget-list",
+      "ui_capability": "Soft budget projection",
+      "method_path": "GET /management/budgets",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "alert-list",
+      "ui_capability": "Alert projection",
+      "method_path": "GET /management/alerts",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "audit-query",
+      "ui_capability": "Audit projection",
+      "method_path": "GET /management/audit",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
+      "id": "task-preview",
+      "ui_capability": "Task preview",
+      "method_path": "POST /task/preview",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-admit",
+      "ui_capability": "Task admit",
+      "method_path": "POST /task/admit",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-watch",
+      "ui_capability": "Task watch",
+      "method_path": "GET /task/watch",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-evidence",
+      "ui_capability": "Task evidence",
+      "method_path": "GET /task/evidence",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-effects",
+      "ui_capability": "Effect history",
+      "method_path": "GET /task/effects",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-observation",
+      "ui_capability": "Bounded Process/Agent observation",
+      "method_path": "GET /task/observation",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-cancel",
+      "ui_capability": "Cancel Task",
+      "channel": "task",
+      "disposition": "unavailable",
+      "ui_render": "not-run",
+      "missing_dependency": "TaskApplicationService control exists without a typed HTTP cancel route; handbook known-limitations records this gap"
+    },
+    {
+      "id": "agent-pause",
+      "ui_capability": "Pause Agent instance",
+      "channel": "management",
+      "disposition": "unavailable",
+      "ui_render": "not-run",
+      "missing_dependency": "Official Pi pause is admin-cli/runtime library only; no typed management HTTP route"
+    },
+    {
+      "id": "agent-resume",
+      "ui_capability": "Resume Agent instance",
+      "channel": "management",
+      "disposition": "unavailable",
+      "ui_render": "not-run",
+      "missing_dependency": "Official Pi resume is admin-cli/runtime library only; no typed management HTTP route"
+    },
+    {
+      "id": "agent-stop",
+      "ui_capability": "Stop Agent instance",
+      "channel": "management",
+      "disposition": "unavailable",
+      "ui_render": "not-run",
+      "missing_dependency": "Official Pi stop is admin-cli/runtime library only; no typed management HTTP route"
+    },
+    {
+      "id": "agent-restart",
+      "ui_capability": "Restart Agent instance",
+      "channel": "management",
+      "disposition": "unavailable",
+      "ui_render": "not-run",
+      "missing_dependency": "No typed restart HTTP route; recover is admin-cli/runtime library only"
+    },
+    {
+      "id": "agent-quarantine",
+      "ui_capability": "Quarantine Agent instance",
+      "channel": "management",
+      "disposition": "unavailable",
+      "ui_render": "not-run",
+      "missing_dependency": "Tool quarantine HTTP exists; Agent-instance quarantine HTTP does not"
+    },
+    {
+      "id": "detach-observation",
+      "ui_capability": "Detach watch without stopping durable work",
+      "channel": "task",
+      "disposition": "client-only",
+      "must_not_invoke": ["task-cancel", "agent-stop", "agent-pause"]
+    },
+    {
+      "id": "task-provider-accounts-forbidden",
+      "ui_capability": "Provider accounts on Task channel",
+      "method_path": "GET /task/providers/accounts",
+      "channel": "task",
+      "disposition": "forbidden_cross_channel"
+    },
+    {
+      "id": "task-provider-accounts-write-forbidden",
+      "ui_capability": "Provider account writes on Task channel",
+      "method_path": "POST /task/providers/accounts",
+      "channel": "task",
+      "disposition": "forbidden_cross_channel"
+    },
+    {
+      "id": "task-agent-bindings-forbidden",
+      "ui_capability": "Agent bindings on Task channel",
+      "method_path": "GET /task/agent-bindings",
+      "channel": "task",
+      "disposition": "forbidden_cross_channel"
+    },
+    {
+      "id": "task-resource-list-forbidden",
+      "ui_capability": "Resource Manager list on Task channel",
+      "method_path": "GET /task/resource/v1/list",
+      "channel": "task",
+      "disposition": "forbidden_cross_channel"
+    }
+  ],
+  "forbidden_routes": [
+    {
+      "method_path": "POST /management/agent/transition",
+      "reason": "no generic browser-driven lifecycle"
+    },
+    {
+      "method_path": "POST /management/lifecycle",
+      "reason": "no generic lifecycle endpoint"
+    },
+    {
+      "method_path": "POST /task/complete",
+      "reason": "browser must not complete Tasks"
+    },
+    {
+      "method_path": "POST /task/cancel",
+      "reason": "no typed HTTP cancel; UI renders not-run rather than inventing the route"
+    },
+    {
+      "method_path": "POST /management/resource/v1/complete",
+      "reason": "Resource Manager refuses generic complete"
+    },
+    {
+      "method_path": "POST /management/resource/v1/create",
+      "reason": "Resource Manager refuses generic create"
+    },
+    {
+      "method_path": "POST /management/resource/v1/install",
+      "reason": "Resource Manager refuses generic install"
+    },
+    {
+      "method_path": "POST /management/resource/v1/execute",
+      "reason": "Resource Manager refuses generic execute"
+    }
+  ],
+  "client_checkout": {
+    "status": "missing_local",
+    "searched": [
+      "D:/cognitiveos-clients",
+      "sibling of D:/agent-kernel",
+      "C:/Users/wuron/cognitiveos-clients"
+    ],
+    "remote": "https://github.com/agentkernel/cognitiveos-clients",
+    "blocked_paths": ["cognitiveos-clients/pc/web/"],
+    "owner": "repository owner",
+    "recovery_action": "Clone or register an approved cognitiveos-clients checkout and re-authorize P7-T05 D02–D07 on that tree; do not recreate clients/** inside agent-kernel and do not implement the SPA in apps/cognitiveos-console"
+  }
+}
