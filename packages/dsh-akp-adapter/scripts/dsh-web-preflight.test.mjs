@@ -6,11 +6,17 @@ import { join } from "node:path";
 import {
   DEFAULT_WEB_HOST,
   DEFAULT_WEB_PORT,
+  PATH_B_WEB_DAEMON_KEY_REF,
+  PATH_B_WEB_OFFICIAL_KEY_REF,
   assertFrontendDist,
   assertLoopbackHost,
+  assertPathBProviderBase,
   assertWebPort,
   frontendDistIndex,
   listenUrl,
+  pathBWebChildExtras,
+  pathBWebCredentialsYaml,
+  pathBWebSettingsYaml,
 } from "./dsh-web-preflight.mjs";
 
 test("loopback hosts are accepted and 0.0.0.0 is refused", () => {
@@ -42,4 +48,21 @@ test("missing frontend dist fails closed", () => {
   assert.equal(assertFrontendDist(root), index);
   assert.equal(listenUrl("127.0.0.1", 3080), "http://127.0.0.1:3080");
   rmSync(root, { recursive: true, force: true });
+});
+
+test("Path B web settings and credentials stay on the daemon bearer", () => {
+  const base = "http://127.0.0.1:48681/provider/v1/dsh";
+  assert.equal(assertPathBProviderBase(`${base}/`), base);
+  assert.throws(() => assertPathBProviderBase("https://api.deepseek.com"), /loopback daemon/);
+  assert.throws(() => pathBWebCredentialsYaml(""), /non-empty/);
+  const yaml = pathBWebCredentialsYaml("mgmt-token-fixture");
+  assert.match(yaml, new RegExp(`${PATH_B_WEB_DAEMON_KEY_REF}: "mgmt-token-fixture"`));
+  assert.match(yaml, new RegExp(`${PATH_B_WEB_OFFICIAL_KEY_REF}: "mgmt-token-fixture"`));
+  assert.equal(yaml.includes("sk-"), false);
+  const settings = pathBWebSettingsYaml(base, "ui-onboarding:\n  welcomeNoticeVersion: keep-me\n");
+  assert.match(settings, /welcomeNoticeVersion: keep-me/);
+  assert.match(settings, /baseURL: http:\/\/127\.0\.0\.1:48681\/provider\/v1\/dsh/);
+  assert.match(settings, new RegExp(`apiKeyEnv: ${PATH_B_WEB_DAEMON_KEY_REF}`));
+  assert.deepEqual(pathBWebChildExtras(base), { DEEPSEEK_BASE_URL: base });
+  assert.equal(Object.keys(pathBWebChildExtras(base)).some((key) => /API_KEY|SECRET|TOKEN|BEARER/i.test(key)), false);
 });

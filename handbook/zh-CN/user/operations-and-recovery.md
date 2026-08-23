@@ -75,7 +75,8 @@ non_claims:
 - `cognitive dsh web` 启动原生 dsh 控制面板（`dsh --profile web --no-open`），默认
   `http://127.0.0.1:3080`。这不是 Personal `/ui/`。只绑定 loopback（拒绝
   `--host 0.0.0.0`）。钉住的 dsh 根必须有 `apps/web/dist`（`pnpm run build`）。
-  Path B 仍走 daemon Provider 代理与 SecretStore；不要把 API key 写入 dsh `.env`。
+  Path B 仍走 daemon Provider 代理与 SecretStore；Models 页不应再索要第二把
+  DeepSeek 密钥。不要把 SecretStore 材料写入 dsh `.env`。
   面板会话绝不是 Task 完成。SSH guest 上保持 `--no-open`（产品默认）。
 - `cognitive dsh status` 读取 `GET /personal/dsh/runtime`：由进程内会话与可选绑定
   pid 得到 INACTIVE / ACTIVE / CRASHED。Linux 存活只看 `/proc/{pid}` 是否存在

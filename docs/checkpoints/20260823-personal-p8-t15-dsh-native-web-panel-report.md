@@ -15,7 +15,7 @@ Draft PR: https://github.com/agentkernel/cognitive-os/pull/265
 | Slice | Status | Evidence |
 |---|---|---|
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
-| D02 linux-002 listen + GET `/` HTML | done | Listen + HTML **pass**. Post-panel Path B with P8-T15 adapter **pass** (`deepseek-v4-flash`, `assistant_ok`, Workspace* `COMPLETED`). Prior `--print` fail was the restored p8t10 helper reading the Pi binding. |
+| D02 linux-002 listen + GET `/` HTML | in-progress | Listen + HTML **pass**. Post-panel Path B with P8-T15 adapter **pass** (`deepseek-v4-flash`, `assistant_ok`, Workspace* `COMPLETED`). Prior `--print` fail was the restored p8t10 helper reading the Pi binding. Kept `in-progress` so the active lease slice `P8-T15/D02` still matches Layer 2 until task close. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
 
 ## Validation log
@@ -111,7 +111,9 @@ Not a P8-T15 product defect: launching the native panel does not clobber the dae
 - `32636212950` at `2ba8103a` **fail** (slice status `not-started`; lease heartbeat/date; lease owned `PARALLEL-LANES.md`).
 - Bookkeeping repair `92e00b74`. rustfmt+fingerprints `b233fcc3`. `DEFAULT_WEB_PORT` Clippy fix `0376e942`.
 - `32637705326` at `0376e942`: Ubuntu verify **pass**; Windows superseded by later HEAD run.
-- `32638483500` at `bbcbd118`: Ubuntu verify **pass**; Windows verify **pending** at this cell.
+- `32638483500` at `bbcbd118`: Ubuntu verify **pass**; Windows verify **pending** at the diagnosis cell.
+- `32637705326` at product SHA `0376e942`: Ubuntu, Windows, and `required-ci` **pass**.
+- `32638903795` at docs SHA `93b02ca5`: Ubuntu/Windows **fail** (`CURRENT_SNAPSHOT_LEASE_MISMATCH`: lease `P8-T15/D02` vs Layer 2 D02 marked `done`). Repaired by keeping D02 `in-progress` until task close.
 
 ## Operator start (linux-002, after overlay)
 
@@ -130,6 +132,75 @@ Not a P8-T15 product defect: launching the native panel does not clobber the dae
 
 `cognitive dsh web` prints JSON and returns; the helper/node pair keep listening.
 
+### 2026-08-23 — owner ask: start native panel and open in a browser
+
+Reconfigured `dsh.json` to overlay-with-dist `/home/hal9001/p8t15-2ba8103a/dsh` + P8-T15 adapter, then:
+
+`/home/hal9001/p8t15-0376e942/bin/cognitive dsh web --runtime-root /home/hal9001/p8t13-owner-ops/runtime --host 127.0.0.1 --port 3080 --no-open`
+
+Listen: node PID **482145** `127.0.0.1:3080`; helper **482129**. P7-T05 daemon **465376** / `:48681` left running. Hung **430838** not killed.
+
+`GET /` **200** `text/html` title **DSH Local Build** (14555 B); SPA JS **200** 399361 B; sidebar + conversation plugins **200**. Manifest name `DeepSeek Harness`. Guest Firefox (Wayland) opened `http://127.0.0.1:3080/`. Windows two-hop forward `GET /` **200**. No Flash chat turn claimed. Process left running.
+
+### 2026-08-23 — owner ask: GUI browser on linux-002 desktop
+
+dsh web **reused** (not restarted): node **482145** / helper **482129** on `127.0.0.1:3080`. `GET /` still **200** title `DSH Local Build`, `__DSH_BOOT__` present, not `/ui/`. Daemon **465376** left up.
+
+Graphical session `loginctl` **4**: `seat0` `tty2` `Type=wayland` user `hal9001`. Initially `LockedHint=yes`. `org.gnome.ScreenSaver.SetActive false` cleared the lock (`LockedHint=no`). `loginctl activate 4` was refused (interactive auth).
+
+Browser commands (non-headless, desktop user bus):
+
+```
+systemd-run --user --collect \
+  --setenv=DISPLAY=:0 --setenv=WAYLAND_DISPLAY=wayland-0 \
+  --setenv=XDG_RUNTIME_DIR=/run/user/1000 \
+  --setenv=DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/1000/bus \
+  --setenv=XAUTHORITY=/run/user/1000/.mutter-Xwaylandauth.0ITHT3 \
+  firefox --new-window http://127.0.0.1:3080/
+```
+
+Same env with `xdg-open http://127.0.0.1:3080/`. Then DBus `org.mozilla.firefox.OpenURL` on the existing snap Firefox → `openurl_ok`.
+
+GUI evidence: Firefox PID **471883** environ `XDG_SESSION_TYPE=wayland` `DISPLAY=:0` `WAYLAND_DISPLAY=wayland-0`; **9** ESTABLISHED sockets `firefox → 127.0.0.1:3080`. Headed compositor screenshot **blocked** (`org.gnome.Shell.Screenshot` `AccessDenied` from SSH). `wmctrl`/`xdotool` not installed; X11 `_NET_CLIENT_LIST` empty on this Wayland session. No screenshot path.
+
+URL opened: `http://127.0.0.1:3080`. Web + Firefox left running.
+
+### 2026-08-23 — owner report: dsh 密钥 error + Provider panel will not open
+
+Guest Firefox **471883** had sockets only to `:3080` (native dsh), not Personal `:48681`. Confirmed surfaces:
+
+| Surface | URL | Result |
+|---|---|---|
+| Native dsh panel | `http://127.0.0.1:3080/` | **200** `DSH Local Build` |
+| Personal SPA shell | `http://127.0.0.1:48681/ui/` | **200** `CognitiveOS Personal` |
+| Personal Providers (HashRouter) | `http://127.0.0.1:48681/ui/#/providers` | **200** same `index.html` (hash not sent to server) |
+| Personal Providers (path) | `http://127.0.0.1:48681/ui/providers` | **404** `LOCAL_UI_ASSET_NOT_FOUND` (no SPA fallback) |
+| Personal Providers (no `/ui`) | `http://127.0.0.1:48681/providers` | **404** `PERSONAL_ROUTE_NOT_FOUND` |
+
+**Native dsh 密钥 (P8-T15, this lease).** Live `--patch` already pointed `llm-deepseek` at `http://127.0.0.1:48681/provider/v1/dsh` + `DAEMON_BEARER`. The Models page joins the official catalog default `DEEPSEEK_API_KEY` and `credentials.describe`; `$DSH_HOME/.credentials.yaml` only had `DAEMON_BEARER`. Settings document had no `llm-deepseek` overlay, so dynamic config could still treat official DeepSeek as missing/invalid. Settings-models copy: `credentialMissing` = `API 密钥缺失`; placeholder base URL `https://api.deepseek.com`. No SecretStore material was copied.
+
+Product fix in `packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs` + `dsh-real-process.mjs` `runWebPathB`:
+
+- persist `settings.yaml` `llm-deepseek.baseURL` = loopback Path B origin and `apiKeyEnv: DAEMON_BEARER`
+- write both `DAEMON_BEARER` and `DEEPSEEK_API_KEY` in `.credentials.yaml` as the **daemon management bearer** (JSON-quoted; 0600)
+- set child `DEEPSEEK_BASE_URL` only (refuse secret-shaped child env keys)
+
+Focused negative: `dsh-web-preflight.test.mjs` **4/4** (refuses `https://api.deepseek.com`, empty token, and secret-shaped child extras).
+
+linux-002 retest (replaced **482129/482145** only; daemon **465376** left up):
+
+- helper **487806**, node **487821** on `127.0.0.1:3080`; `cognitive dsh status` `ACTIVE` / `process_alive=true`; start log `selected_model=deepseek-v4-flash`
+- cred refs `DAEMON_BEARER` + `DEEPSEEK_API_KEY`; settings Path B / no `api.deepseek.com`
+- dump-config `llm-deepseek.baseURL` Path B, `apiKeyEnv: DAEMON_BEARER`
+- `POST /provider/v1/dsh/chat/completions` with the stored bearer **200**, `assistant_is_pong=true` (probe class only; token not printed)
+- Firefox **471883** still has long-lived sockets to `:3080` (12). Snap DBus `OpenURL` on the profile dest returned success for `http://127.0.0.1:48681/ui/#/providers`; Personal SPA is a short HTTP load (session-gate has no websocket), so zero lingering `:48681` sockets is expected. Refresh native Models on the desktop.
+
+Remaining native-dsh gap: `@deepseek-ai/dsh-web-search-deepseek` still names `DEEPSEEK_API_KEY`. The alias makes Models show that row configured; a **web-search** call would still hit official DeepSeek with the management bearer and fail. Chat / Path B is the product path.
+
+**Personal Providers (P7-T05, lease closed — not mixed).** Clients source `App.tsx` is `HashRouter`; live bundle serves `/ui/` with path routes `/providers` behind the same hash-history helper. Unauthenticated view is the session gate (`This page needs a management session… Paste this daemon's bootstrap secret — not a Provider LLM API key.`), not a sidebar bounce. `GET /management/providers/accounts` is **401** without a session. `xdg-open http://127.0.0.1:48681/ui/#/providers` from the guest session returned gio **Not Found** (desktop opener mishandles the hash). No sockets from Firefox to `:48681` after SSH `--new-tab` attempts. Not fixed on this lease: no SPA fallback in `kernel-server` `web_ui_relative_asset`, and P7-T05/clients are not writable here. Operator URL is `http://127.0.0.1:48681/ui/#/providers` after a management session. Unique follow-up if that still fails: owner reopens P7-T05 / a new UI task.
+
+grok-4.6 remains the independent Pi binding; dsh Path B stayed Flash. No SQLite edit.
+
 ## Non-claims
 
 - UI up is not Task completion.
@@ -140,4 +211,4 @@ Not a P8-T15 product defect: launching the native panel does not clobber the dae
 
 ## Unique next action
 
-Wait for PR 265 Windows/required-ci on `32638483500` at `bbcbd118` (Ubuntu already pass). If Windows or docs-head fails, repair on this branch and push. Keep Draft. Do not auto-claim P6 / P7-T06 / P7-T07.
+On linux-002 desktop Firefox, refresh `http://127.0.0.1:3080` Models — official DeepSeek should show configured (Path B bearer), not 密钥缺失. Open Personal Providers only as `http://127.0.0.1:48681/ui/#/providers` and paste the daemon bootstrap (not a Provider key) if the session gate appears. Keep web **487821/487806** and daemon **465376** running. Do not auto-claim P6 / P7-T06 / P7-T07. UI up is not Task completion.

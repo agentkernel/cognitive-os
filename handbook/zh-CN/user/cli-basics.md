@@ -42,7 +42,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive pi launch [--task-ref <task://URI>] [--append-system-prompt <absolute-path>]` | doctor 全就绪且版本精确匹配后 fail-closed 启动 Pi；任务绑定启动仅暴露 daemon 治理的 WorkspaceRead/Search/Write/Patch，并向 task 通道提交不可信 candidate；`--append-system-prompt` 把已存在的绝对 UTF-8 文件转发给 Pi，不是 Provider 凭据 |
 | `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | 写非 secret 的 `dsh.json`（钉住的 dsh 检出、AKP adapter 根、仅 candidate 的 adapter digest）；revision 必须等于产品 pin |
 | `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | daemon-owned ready 后 fail-closed 启动 dsh（Pi 可保持 `not_configured`）；Path B 加载钉住的 AKP 插件，绝不把 dsh 响应当作 Task 完成；`--path a` 在此拒绝，仅能经 `paired-path.mjs` 做测量 |
-| `cognitive dsh web [--host 127.0.0.1] [--port 3080] [--no-open]` | 启动 **原生** dsh 控制面板（`dsh --profile web`），不是 Personal `/ui/`。默认 `http://127.0.0.1:3080`。仅 loopback；拒绝 `--host 0.0.0.0`。需要在钉住的 dsh 根执行 `pnpm run build` 得到 `apps/web/dist`。Path B 仍走 daemon Provider 代理 / SecretStore。面板会话绝不是 Task 完成 |
+| `cognitive dsh web [--host 127.0.0.1] [--port 3080] [--no-open]` | 启动 **原生** dsh 控制面板（`dsh --profile web`），不是 Personal `/ui/`。默认 `http://127.0.0.1:3080`。仅 loopback；拒绝 `--host 0.0.0.0`。需要在钉住的 dsh 根执行 `pnpm run build` 得到 `apps/web/dist`。Path B 仍走 daemon Provider 代理 / SecretStore，不需要在 dsh `.env` 再放一把密钥。面板会话绝不是 Task 完成 |
 | `cognitive dsh status` | 认证后观察 dsh 会话/fencing 与可选绑定 pid 存活（`GET /personal/dsh/runtime`）；不是 Task 完成 |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | 通用 Resource Manager 只读信封（management 通道） |

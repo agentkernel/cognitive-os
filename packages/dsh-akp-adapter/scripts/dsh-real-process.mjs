@@ -26,6 +26,9 @@ import {
   assertLoopbackHost,
   assertWebPort,
   listenUrl,
+  pathBWebChildExtras,
+  pathBWebCredentialsYaml,
+  pathBWebSettingsYaml,
 } from "./dsh-web-preflight.mjs";
 
 function arg(name, fallback) {
@@ -76,7 +79,7 @@ function redact(error) {
   return String(error).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").replace(/sk-[A-Za-z0-9]+/g, "sk-[redacted]");
 }
 
-function childEnvironment() {
+function childEnvironment(extra = {}) {
   const allow = [
     "PATH",
     "HOME",
@@ -107,6 +110,12 @@ function childEnvironment() {
   const compileCache = join(dshRoot, ".cognitiveos-node-compile-cache");
   mkdirSync(compileCache, { mode: 0o700, recursive: true });
   env.NODE_COMPILE_CACHE = compileCache;
+  for (const [key, value] of Object.entries(extra)) {
+    if (/API_KEY|SECRET|TOKEN|PASSWORD|BEARER/i.test(key)) {
+      throw new Error(`child environment refuses secret-shaped key ${key}`);
+    }
+    env[key] = value;
+  }
   return env;
 }
 
@@ -186,12 +195,6 @@ async function runWebPathB() {
   const managementToken = await issueToken(origin, bootstrap, "management");
   writeFileSync(bearerFile, `${taskToken}\n`, { encoding: "utf8", mode: 0o600 });
   chmodSync(bearerFile, 0o600);
-  writeFileSync(
-    join(dshHome, ".credentials.yaml"),
-    `version: 1\n\nrefs:\n  DAEMON_BEARER: ${managementToken}\n`,
-    { encoding: "utf8", mode: 0o600 },
-  );
-  chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
   const selected = await httpJson(
     origin,
     "GET",
@@ -199,6 +202,16 @@ async function runWebPathB() {
     managementToken,
   );
   const providerBase = `${origin}/provider/v1/dsh`;
+  const settingsPath = join(dshHome, "settings.yaml");
+  const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
+  writeFileSync(settingsPath, pathBWebSettingsYaml(providerBase, existingSettings), {
+    encoding: "utf8",
+  });
+  writeFileSync(join(dshHome, ".credentials.yaml"), pathBWebCredentialsYaml(managementToken), {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
   const patchBody = [
     "- insert:",
     ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
@@ -223,7 +236,7 @@ async function runWebPathB() {
     ],
     {
       cwd: dshRoot,
-      env: childEnvironment(),
+      env: childEnvironment(pathBWebChildExtras(providerBase)),
       stdio: ["ignore", "inherit", "inherit"],
     },
   );

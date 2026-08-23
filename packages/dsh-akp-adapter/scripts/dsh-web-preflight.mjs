@@ -76,3 +76,74 @@ export function listenUrl(host, port) {
   }
   return `http://${bound}:${boundPort}`;
 }
+
+/** Runtime Path B credential ref used by the `--patch` llm-deepseek overlay. */
+export const PATH_B_WEB_DAEMON_KEY_REF = "DAEMON_BEARER";
+/**
+ * Official DeepSeek catalog ref the Models page still describes by default.
+ * Path B aliases this to the daemon management bearer — never a SecretStore key.
+ */
+export const PATH_B_WEB_OFFICIAL_KEY_REF = "DEEPSEEK_API_KEY";
+
+export function assertPathBProviderBase(providerBase) {
+  const base = String(providerBase ?? "").trim().replace(/\/$/, "");
+  const allowed = /^https?:\/\/(127\.0\.0\.\d+|\[::1\]|::1):(\d{1,5})\/provider\/v1\/dsh$/i;
+  const match = allowed.exec(base);
+  if (!match) {
+    throw new Error(
+      "Path B web settings baseURL must be a loopback daemon /provider/v1/dsh origin",
+    );
+  }
+  const port = Number(match[2]);
+  if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    throw new Error("Path B web settings baseURL port must be 1..65535");
+  }
+  return base;
+}
+
+/**
+ * `$DSH_HOME/.credentials.yaml` for native web Path B.
+ * Both refs are the daemon management bearer so Models `credentials.describe`
+ * reports configured without a second SecretStore copy or dsh `.env` key.
+ */
+export function pathBWebCredentialsYaml(managementToken) {
+  const token = String(managementToken ?? "");
+  if (!token.trim()) {
+    throw new Error("Path B web credentials require a non-empty daemon management token");
+  }
+  const quoted = JSON.stringify(token);
+  return [
+    "version: 1",
+    "",
+    "refs:",
+    `  ${PATH_B_WEB_DAEMON_KEY_REF}: ${quoted}`,
+    `  ${PATH_B_WEB_OFFICIAL_KEY_REF}: ${quoted}`,
+    "",
+  ].join("\n");
+}
+
+/**
+ * Persist llm-deepseek onto the settings document the Models page joins,
+ * so dynamic config cannot fall back to api.deepseek.com + missing DEEPSEEK_API_KEY.
+ */
+export function pathBWebSettingsYaml(providerBase, existingYaml) {
+  const base = assertPathBProviderBase(providerBase);
+  let welcome = "2026-08-13.1";
+  const match = String(existingYaml ?? "").match(/welcomeNoticeVersion:\s*(\S+)/);
+  if (match) {
+    welcome = match[1];
+  }
+  return [
+    "ui-onboarding:",
+    `  welcomeNoticeVersion: ${welcome}`,
+    "llm-deepseek:",
+    `  baseURL: ${base}`,
+    `  apiKeyEnv: ${PATH_B_WEB_DAEMON_KEY_REF}`,
+    "",
+  ].join("\n");
+}
+
+/** Non-secret child env: official-catalog fallback URL only. Never an API key. */
+export function pathBWebChildExtras(providerBase) {
+  return { DEEPSEEK_BASE_URL: assertPathBProviderBase(providerBase) };
+}

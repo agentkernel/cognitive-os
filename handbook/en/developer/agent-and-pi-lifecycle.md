@@ -32,6 +32,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch", "status"]
   - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
+  - path: packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
@@ -45,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:a0750558618efd89c751635a755a2e33a58b0e39fb9808c6d8dc74155efde574"
+fingerprint: "sha256:18ce0deebace2e45e76a7436e3e7d309c66c1bd9d2abc26bd007502b671c4963"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -165,7 +166,10 @@ the daemon Provider SSE proxy (`POST /provider/v1/dsh/chat/completions` with
 is `cognitive dsh configure` then `cognitive dsh launch` (Path B). `cognitive dsh web`
 starts the native panel (`dsh --profile web --no-open`, default
 `http://127.0.0.1:3080`) after `pnpm run build` has produced `apps/web/dist`; it
-is not Personal `/ui/`. `cognitive dsh status`
+is not Personal `/ui/`. Web Path B writes `$DSH_HOME/settings.yaml` so
+`llm-deepseek` stays on `POST /provider/v1/dsh/chat/completions` and aliases the
+official Models catalog ref to the daemon management bearer — not a SecretStore
+copy and not a dsh `.env` key. `cognitive dsh status`
 reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: clear`
 drops the bound pid and in-memory sessions so the projection is `INACTIVE`.
 Direct Flash

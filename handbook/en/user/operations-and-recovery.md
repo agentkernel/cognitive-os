@@ -83,7 +83,8 @@ non_claims:
   at `http://127.0.0.1:3080` by default. This is not Personal `/ui/`. Bind is
   loopback only (`--host 0.0.0.0` is refused). The pinned dsh root must contain
   `apps/web/dist` (`pnpm run build`). Path B still uses the daemon Provider
-  proxy and SecretStore; do not put API keys in dsh `.env`. A panel session is
+  proxy and SecretStore; the Models page should not ask for a second DeepSeek
+  key. Do not copy SecretStore material into dsh `.env`. A panel session is
   never Task completion. On SSH guests pass `--no-open` (already the product default).
 - `cognitive dsh status` reads `GET /personal/dsh/runtime`: INACTIVE / ACTIVE /
   CRASHED from process-local sessions plus an optional bound pid. Linux liveness
