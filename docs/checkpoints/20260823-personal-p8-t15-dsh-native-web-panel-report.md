@@ -6,10 +6,10 @@ Native panel ≠ Personal SPA. Personal UI is `http://127.0.0.1:<daemon>/ui/` (P
 Native dsh panel is `cognitive dsh web` → `dsh --profile web --no-open`, default
 `http://127.0.0.1:3080`.
 
-Exact product revision on jump/guest binary: `da37ac1d33271eb0430300a60bc2fecf55934a54`.
+Exact product revision on jump/guest binary: `14aadf2709e64b4e91a770acb9b5c9c7f42eaba8`.
 dsh pin unchanged: `528c682e061696f5a160f363f236ecbf53cbd006`.
 Draft PR: https://github.com/agentkernel/cognitive-os/pull/265
-Clients Apply button: https://github.com/agentkernel/cognitiveos-clients/pull/4 @ `a191e79`
+Clients Apply copy: https://github.com/agentkernel/cognitiveos-clients/pull/4
 
 ## Slices
 
@@ -18,7 +18,7 @@ Clients Apply button: https://github.com/agentkernel/cognitiveos-clients/pull/4 
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
 | D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
-| D04 Apply Cos binding to running web | in-progress | Path B remaps native catalog ids to the dsh binding. HTTP `op=apply` **pass**. SPA Apply button shipped. CLI apply **fail** after dirty daemon replace (`doctor.provider=blocked`). |
+| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay coded at `14aadf27`. leftover grok-on-DeepSeek Path B is Cos 400 (not DeepSeek allowlist). Native settings/Models overlay Cos catalog. Flash Path B pong still works. No grok-capable Cos account on this runtime. |
 
 ## Validation log
 
@@ -301,6 +301,41 @@ Restart is **not** required for Cos Path B/chat once the new daemon is up: remap
 
 Claim ceiling `hypothesis`. UI up is not Task completion.
 
+### 2026-08-23 — grok was posted to DeepSeek; fix routing + presentation
+
+**Exact hop (verified, not assumed).** `plan_bound_proxy` for `agent://personal/dsh` rewrote `model` → Cos binding `grok-4.6`, then POSTed that body to the **bound account** `acct-01a02dee-…` whose endpoint host is `api.deepseek.com`. DeepSeek’s allowlist then returned `supported API model names are deepseek-v4-pro, deepseek-v4-flash, and deepseek-v4-flash-vision-exp, but you passed grok-4.6`. Wrong hop, not “need restart”.
+
+This runtime has **one** Cos account (`openai_compatible` / `api.deepseek.com`). `grok_capable_accounts=0`. Pi `grok-4.6` is a separate binding on the same DeepSeek account and was not used for dsh.
+
+**Shipped** at `14aadf27` Draft PR [#265](https://github.com/agentkernel/cognitive-os/pull/265):
+
+- `model_servable_on_account`: DeepSeek hosts only serve `deepseek-*`; `grok-*` only on non-DeepSeek `openai_compatible`.
+- `models add` / `binding set` → HTTP 400 `PROVIDER_MODEL_ENDPOINT_MISMATCH`.
+- Path B leftover grok-on-DeepSeek → HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` **before** any upstream POST (does not hit DeepSeek).
+- Native web settings + `--patch` overlay Cos selected-model and that account catalog (`DAEMON_BEARER` / Path B loopback only; no Provider key in dsh `.env`).
+- Path B `cognitive dsh web` / `apply` no longer requires Pi `provider.json` ready.
+
+**Jump-host** `14aadf27`: admin-cli `dsh` **10/10**; `p8_t11` **1/1**; `p8_t13` **5/5**; recovered-terminal **1/1**; Clippy `-D warnings`; fmt. Node preflight **4/4**.
+
+**linux-002** (replaced **494681** only; EVAL / **430838** / Firefox left):
+
+| Check | Result |
+|---|---|
+| New daemon | **499615** `127.0.0.1:48681` `--runtime-root /home/hal9001/p8t13-owner-ops/runtime` binary `/home/hal9001/p8t15-14aadf27/bin/kernel-server` |
+| Leftover dsh binding grok rev 12 | Path B `model=deepseek-chat` → **400** `PERSONAL_PROVIDER_BINDING_MISMATCH`; `deepseek_allowlist=false` |
+| Add/bind grok on DeepSeek account | **400** `PROVIDER_MODEL_ENDPOINT_MISMATCH` |
+| Grok-capable Cos account | **none** (missing non-DeepSeek `openai_compatible`, e.g. xAI / `api.x.ai`) |
+| HTTP apply leftover grok | **200** `applied_model=grok-4.6` `model_endpoint_compatible=false` `path_b_will_fail_closed=true` |
+| `cognitive dsh apply` | **pass** `restart_performed=true` (doctor provider blocked is no longer a launch mutex) |
+| Native settings after grok apply | `model: grok-4.6` plus Cos catalog (`grok-4.6`, Flash, vision-exp, pro). `baseURL` Path B loopback; `apiKeyEnv: DAEMON_BEARER`; no `api.deepseek.com` |
+| Patch overlay | same Cos model + catalog |
+| Flash bind rev 13 + apply | settings `model: deepseek-v4-flash` + Cos catalog; Path B **200** `response_model=deepseek-v4-flash` assistant `pong` |
+| `:3080` | Cos `p8t10-a17edfad/dsh` one listener, title `DSH Local Build`. Index HTML is a SPA shell (no model ids in first document). Models/conversation chrome is the settings/patch overlay above. |
+
+Cannot re-bind grok after Flash: control plane now refuses grok on this DeepSeek-only account. That is the honest fail-closed. Do not invent an xAI account or copy keys.
+
+Claim ceiling `hypothesis`. UI up is not Task completion.
+
 ## Unique next action
 
-On the linux-002 desktop: Personal `/ui/#/bindings` (new session — paste this daemon's bootstrap, not a Provider key) → **Apply to running dsh**. Native panel `http://127.0.0.1:3080` (keep **495523/495509/494681/471883/430838**). Do not auto-claim P6 / P7-T06 / P7-T07. D04 stays `in-progress` until CLI apply/web works when doctor provider is blocked, or doctor is honest-ready again.
+Owner: add a grok-capable Cos account (non-DeepSeek `openai_compatible`, SecretStore key) then bind dsh to that account + grok and Apply. Until then dsh stays on Flash (working Path B). Keep **499615** / `:3080` / **430838** / Firefox. Do not auto-claim P6 / P7-T06 / P7-T07. D04 stays `in-progress` until headed conversation+Models chrome is scraped or the owner accepts settings/patch overlay as the native catalog proof.
