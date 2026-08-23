@@ -24,13 +24,26 @@
 2. Local Rust build/test **not-run** (`RUST-LINK-DEV-WIN-GNU-01`).
 3. Daemon Origin/Referer + `GET /ui` front-door tests written in
    `apps/kernel-server/src/personal/server.rs` (foreign/null/https/wrong-port
-   Origin; missing bundle `not_available`; path traversal). Execution
-   **not-run** locally; routed to CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 /
-   `DEV-LINUX-NATIVE-01`.
-4. Browser/SPA journeys **not-run** / **not_available**: no approved
+   Origin; missing bundle `not_available`; path traversal).
+4. `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2`, `hal9000`) at exact
+   `05a3afa13cfba405d7fb5030810b0e8d4fc47b5c`, worktree
+   `/home/wuz/agent-kernel-worktrees/p7-t05-05a3afa1` (removed after the run),
+   rustc 1.97.1, `CARGO_TARGET_DIR` shared:
+   - `browser_origin_allowlist_rejects_foreign_and_null` **pass**
+   - `web_ui_paths_reject_traversal_and_percent_encoding` **pass**
+   - `foreign_origin_is_rejected_on_the_front_door` **pass**
+   - `matching_loopback_origin_is_accepted_on_health` **pass**
+   - `missing_ui_bundle_is_not_available_not_a_fake_spa` **pass**
+   - `web_ui_serves_index_with_csp_and_rejects_traversal` **pass**
+   - `cargo clippy -p kernel-server --all-targets --locked -- -D warnings` **pass**
+   - `cargo fmt --all -- --check` **pass**
+   Not B01. Worktree cleaned.
+5. Required CI `32614594696` at `05a3afa1` **pass** (Ubuntu, Windows, required-ci).
+6. Browser/SPA journeys **not-run** / **not_available**: no approved
    `cognitiveos-clients` checkout.
-5. Linux/native live UI **not-run**: blocked on the same checkout.
-6. Secret-redaction SPA negatives **not-run**: no SPA to instrument.
+7. Linux/native live UI (browser against daemon-served SPA) **not-run**: blocked
+   on the same checkout.
+8. Secret-redaction SPA negatives **not-run**: no SPA to instrument.
    Inventory proves the key route is management-only and forbids DOM/storage
    persistence in the client policy; that is not live redaction evidence.
 
@@ -70,5 +83,6 @@ Honest missing typed HTTP (UI must render unavailable/not-run):
 
 ## Unique next action
 
-Owner provides the approved client checkout. Keep this Draft PR; do not
+Owner provides the approved client checkout. Keep Draft PR
+[#261](https://github.com/agentkernel/cognitive-os/pull/261); do not
 merge as `done`; do not auto-claim P6 / P7-T06 / P7-T07.
