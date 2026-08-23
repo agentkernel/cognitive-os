@@ -2146,6 +2146,7 @@ fn write_provider_sse_headers(
     outcome.map_err(|error| error.to_string())
 }
 
+#[allow(clippy::too_many_arguments)] // Shared daemon state is explicit at the connection boundary.
 fn handle_dsh_runtime_route(
     stream: &mut TcpStream,
     method_path: &str,
@@ -2335,15 +2336,14 @@ fn apply_dsh_binding_to_runtime(
     if let Some(expected) = request_json
         .get("expected_revision")
         .and_then(serde_json::Value::as_i64)
+        && expected != binding.revision
     {
-        if expected != binding.revision {
-            return write_error_response(
-                stream,
-                409,
-                "PROVIDER_BINDING_REVISION_STALE",
-                "expected_revision does not match the current dsh binding revision",
-            );
-        }
+        return write_error_response(
+            stream,
+            409,
+            "PROVIDER_BINDING_REVISION_STALE",
+            "expected_revision does not match the current dsh binding revision",
+        );
     }
     if plane
         .get_model(&binding.account_id, &binding.model_id)

@@ -24,7 +24,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:0e16eec3051c5d928edd8ff6c9bf9a26b18d9a352a2aca17cd5031dba3425d6c"
+fingerprint: "sha256:a8691fb12d46608d672498e77fd4abf0158f735bc0abfdc89ef380415f2c4999"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---

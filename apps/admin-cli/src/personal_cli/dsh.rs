@@ -308,15 +308,15 @@ pub fn apply(options: &DshStatusOptions) -> Result<Value, String> {
     if report.get("applied") != Some(&json!(true)) {
         return Err("dsh apply was not accepted by the daemon".to_owned());
     }
-    if let Some(process_id) = report.get("process_id").and_then(Value::as_u64) {
-        if process_id > 1 {
-            #[cfg(unix)]
-            {
-                let _ = Command::new("kill")
-                    .args(["-TERM", &process_id.to_string()])
-                    .status();
-                std::thread::sleep(Duration::from_millis(800));
-            }
+    if let Some(process_id) = report.get("process_id").and_then(Value::as_u64)
+        && process_id > 1
+    {
+        #[cfg(unix)]
+        {
+            let _ = Command::new("kill")
+                .args(["-TERM", &process_id.to_string()])
+                .status();
+            std::thread::sleep(Duration::from_millis(800));
         }
     }
     let restarted = launch(&DshLaunchOptions {

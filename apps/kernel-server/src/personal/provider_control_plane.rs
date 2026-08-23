@@ -1596,6 +1596,7 @@ pub(crate) fn anthropic_messages_to_openai_chat(body: &[u8]) -> Result<Vec<u8>, 
 }
 
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
 
