@@ -15,7 +15,7 @@ Draft PR: https://github.com/agentkernel/cognitive-os/pull/265
 | Slice | Status | Evidence |
 |---|---|---|
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
-| D02 linux-002 listen + GET `/` HTML | in-progress | Listen + HTML **pass**. Headless Path B `--print` after the panel **fail** (`grok-4.6` / `INVALID_REQUEST`). |
+| D02 linux-002 listen + GET `/` HTML | done | Listen + HTML **pass**. Post-panel Path B with P8-T15 adapter **pass** (`deepseek-v4-flash`, `assistant_ok`, Workspace* `COMPLETED`). Prior `--print` fail was the restored p8t10 helper reading the Pi binding. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
 
 ## Validation log
@@ -77,11 +77,41 @@ Two runs of `cognitive dsh launch --print --path b` with the new binary against 
 
 Hypothesis (not proven): native web session changed the live daemon selected model to `grok-4.6` while the file snapshot stayed Flash. Not claimed as Agent-benefit; not claimed as a Flash-through-panel turn.
 
+### 2026-08-23 — grok-4.6 diagnosis + Path B retry (pass)
+
+Redacted facts on the same Personal runtime (`/home/hal9001/p8t13-owner-ops/runtime`) against P7-T05 daemon PID **465376** / `127.0.0.1:48681`. No keys read or printed. SQLite not hand-edited. Pi binding left unchanged.
+
+| Surface | Model | Digest / agent |
+|---|---|---|
+| Disk `selected-model.json` | `deepseek-v4-flash` | file snapshot (`fnv1a64:2da8aee1…`) |
+| `GET /provider/v1/dsh/selected-model` | `deepseek-v4-flash` | `binding` / `agent://personal/dsh` |
+| `GET /provider/v1/selected-model` | `grok-4.6` | `binding` / `agent://personal/pi` |
+| `cognitive agent binding list` | dsh `deepseek-v4-flash` rev 2; pi `grok-4.6` rev 1 | same account `acct-01a02dee-…` (`d10-sidebar-live`, `openai_compatible`) |
+
+`grok-4.6` is the independent **P7-T05 UI Pi binding**, not a dsh/file mutation by `cognitive dsh web`. Web start on this task's helper already logged `selected_model=deepseek-v4-flash`. No Flash restore was required; dsh was already the intended Path B model.
+
+The earlier post-panel `--print` **fail** used restored **p8t10** adapter scripts, which still `GET /provider/v1/selected-model` and point `llm-deepseek` at `POST /provider/v1/chat/completions` (Pi plane). That helper therefore logged Pi `grok-4.6` and the DeepSeek-compatible account rejected it (`INVALID_REQUEST`). P8-T15 helper uses `/provider/v1/dsh/selected-model` and `/provider/v1/dsh/chat/completions`.
+
+`:3080` was already closed (no native web helper/node). Cleared leftover `CRASHED` dsh runtime via `POST /personal/dsh/runtime` `op=clear` → `INACTIVE` / 0 sessions. Did not kill 465376 or hung 430838.
+
+Retry cell (P8-T15 adapter `/home/hal9001/p8t15-0376e942/adapter` + p8t10 dsh tree; binary `0376e942`):
+
+- `cognitive dsh launch --print --path b` **pass** (`pathb_rc=0`)
+- `selected_model=deepseek-v4-flash`
+- `dsh_exit=0`, `assistant_ok=true`, `assistant_preview_bytes=95`, `assistant_is_pong=false`
+- `elapsed_ms=12270`, `ttft_ms=11925`, `cli_mode=tsx-source`
+- Workspace read/search/write all `COMPLETED`
+- Restored `dsh.json` to `/home/hal9001/p8t10-a17edfad/{dsh,adapter}`
+- Daemon 465376 still listening; dsh status `INACTIVE`
+
+Not a P8-T15 product defect: launching the native panel does not clobber the daemon Path B model. No code change and no focused negative added. Not claimed as Agent-benefit.
+
 ### Required CI
 
 - `32636212950` at `2ba8103a` **fail** (slice status `not-started`; lease heartbeat/date; lease owned `PARALLEL-LANES.md`).
 - Bookkeeping repair `92e00b74`. rustfmt+fingerprints `b233fcc3`. `DEFAULT_WEB_PORT` Clippy fix `0376e942`.
-- `32637705326` at `0376e942`: Ubuntu verify **pass**; Windows verify pending at report time.
+- `32637705326` at `0376e942`: Ubuntu verify **pass**; Windows superseded by later HEAD run.
+- `32638483500` at `bbcbd118`: Ubuntu verify **pass**; Windows verify **pending** at this cell.
 
 ## Operator start (linux-002, after overlay)
 
@@ -105,9 +135,9 @@ Hypothesis (not proven): native web session changed the live daemon selected mod
 - UI up is not Task completion.
 - Path A remains measurement-only.
 - No live Flash turn through the native panel is claimed.
-- Headless Path B after the panel is **fail**, not a pass.
+- Headless Path B after the panel with the **P8-T15** helper is **pass** on Flash. The earlier fail was the restored p8t10 helper reading the Pi `grok-4.6` binding.
 - Do not stop P7-T05 daemon PID 465376 / port 48681 unless this task started a replacement.
 
 ## Unique next action
 
-Diagnose why helper `GET selected-model` became `grok-4.6` after native web while `selected-model.json` stayed `deepseek-v4-flash`; restore Flash if that is still the operator selection; retry `cognitive dsh launch --print --path b` with web stopped. Wait for Windows job on `32637705326`. Do not auto-claim P6 / P7-T06 / P7-T07.
+Wait for PR 265 Windows/required-ci on `32638483500` at `bbcbd118` (Ubuntu already pass). If Windows or docs-head fails, repair on this branch and push. Keep Draft. Do not auto-claim P6 / P7-T06 / P7-T07.
