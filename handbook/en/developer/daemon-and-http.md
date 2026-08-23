@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:316091701264530be54424efede00419bb301b5cf3ebd78014e8cebb7cb5ec05"
+fingerprint: "sha256:9942b8c0c97f0e2cbc2a6d071d77b86b74df4a75a7ab8ac794116f6c209973fc"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---

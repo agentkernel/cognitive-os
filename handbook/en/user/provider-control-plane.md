@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:3683c83673c50248120968df0f965f10c21e2818476b12f7f8ddef6151315c65"
+fingerprint: "sha256:f0112a035be21665ec56f48b3c0ce24490a2800d48cfe5ffc0792336318f081e"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
@@ -231,7 +231,11 @@ cognitive agent binding remove --agent pi
 ```
 
 `set` fails with `PROVIDER_MODEL_NOT_FOUND` unless that model is already in
-the account catalog (discover it or `models add` it). HTTP `POST
+the account catalog (discover it or `models add` it). Catalog membership is
+not enough: a DeepSeek host only serves `deepseek-*`, and `grok-*` is only
+servable on a non-DeepSeek `openai_compatible` account (for example xAI).
+`models add` and `binding set` fail closed with
+`PROVIDER_MODEL_ENDPOINT_MISMATCH` otherwise. HTTP `POST
 /management/agent-bindings` accepts optional integer `expected_revision`
 (current binding revision, or `0` when unbound). A mismatch is HTTP 409
 `PROVIDER_BINDING_REVISION_STALE`; omit the field to keep CLI compatibility.
@@ -244,7 +248,10 @@ Pi private-candidate call also uses the binding rather than `provider.json`.
 If a **Pi** request `model` does not match the Pi binding, the proxy fails closed with
 HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH`. The **dsh** Path B proxy rewrites
 the request model to the Cos `agent://personal/dsh` binding so native catalog
-ids still chat with the assigned model. Personal `/ui/` Bindings has **Apply to
+ids still chat with the assigned model on the **bound account**. If that
+account cannot serve the bound model (grok on `api.deepseek.com`), Path B
+fail-closes with HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` and does not
+POST to DeepSeek. Personal `/ui/` Bindings has **Apply to
 running dsh** (`POST /personal/dsh/runtime` `op=apply`). A revoked account or missing
 key is HTTP 409 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`. Official Anthropic
 bindings do not support public SSE (`stream:true`).
@@ -323,6 +330,7 @@ thresholds as it reads. Acknowledge takes `--alert-id`.
 | `PROVIDER_DISCOVERY_FAILED` (transport) or `PROVIDER_DISCOVERY_MALFORMED` | Network, TLS, or unexpected `/models` JSON. Account stays `degraded`; bindings stay. |
 | `PROVIDER_KEY_MISSING` | Set a key before refresh or bound calls. |
 | `PROVIDER_MODEL_NOT_FOUND` | `models refresh` or `models add` before `agent binding set`. |
+| `PROVIDER_MODEL_ENDPOINT_MISMATCH` | Bind grok only on a grok-capable non-DeepSeek `openai_compatible` account. Do not add grok to a DeepSeek catalog. |
 | `PERSONAL_PROVIDER_BINDING_MISMATCH` | The request model is not the bound model. Change the binding or send the bound id. No fallback. |
 | HTTP 409 `PROVIDER_BINDING_REVISION_STALE` | Re-read the binding revision and retry the confirmed `expected_revision`. |
 | `PROVIDER_CONTROL_CONFLICT` on delete | `agent binding remove` first. |

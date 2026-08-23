@@ -23,7 +23,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:119052a9f5b97251e847b791880b2b0913e575da20d8a82456cc0747f1784d35"
+fingerprint: "sha256:573dd36f017d1c65bbf16eaeb6ac4b84035e462577870ced60d04782a79afc5a"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---

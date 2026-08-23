@@ -122,18 +122,53 @@ export function pathBWebCredentialsYaml(managementToken) {
   ].join("\n");
 }
 
+function safeCatalogId(value) {
+  const id = String(value ?? "").trim();
+  if (!id || /[\s#:]/.test(id)) {
+    return "";
+  }
+  return id;
+}
+
+/**
+ * Cos-assigned model first, then Cos-listed models for that account.
+ * Ids must be YAML-safe; never include secrets.
+ */
+export function pathBWebCatalogModels(rawModels, selectedModel) {
+  const seen = new Set();
+  const out = [];
+  const push = (id, name) => {
+    const modelId = safeCatalogId(id);
+    if (!modelId || seen.has(modelId)) {
+      return;
+    }
+    seen.add(modelId);
+    const label = safeCatalogId(name) || modelId;
+    out.push({ id: modelId, name: label });
+  };
+  push(selectedModel, selectedModel);
+  for (const row of Array.isArray(rawModels) ? rawModels : []) {
+    if (typeof row === "string") {
+      push(row, row);
+    } else if (row && typeof row === "object") {
+      push(row.id ?? row.model_id, row.name ?? row.id ?? row.model_id);
+    }
+  }
+  return out;
+}
+
 /**
  * Persist llm-deepseek onto the settings document the Models page joins,
- * so dynamic config cannot fall back to api.deepseek.com + missing DEEPSEEK_API_KEY.
+ * so dynamic config cannot fall back to api.deepseek.com + official DeepSeek names.
  */
-export function pathBWebSettingsYaml(providerBase, existingYaml, selectedModel) {
+export function pathBWebSettingsYaml(providerBase, existingYaml, selectedModel, catalogModels) {
   const base = assertPathBProviderBase(providerBase);
   let welcome = "2026-08-13.1";
   const match = String(existingYaml ?? "").match(/welcomeNoticeVersion:\s*(\S+)/);
   if (match) {
     welcome = match[1];
   }
-  const model = String(selectedModel ?? "").trim();
+  const model = safeCatalogId(selectedModel);
   const lines = [
     "ui-onboarding:",
     `  welcomeNoticeVersion: ${welcome}`,
@@ -141,8 +176,16 @@ export function pathBWebSettingsYaml(providerBase, existingYaml, selectedModel) 
     `  baseURL: ${base}`,
     `  apiKeyEnv: ${PATH_B_WEB_DAEMON_KEY_REF}`,
   ];
-  if (model && !/[\s#:]/.test(model)) {
+  if (model) {
     lines.push(`  model: ${model}`);
+  }
+  const models = pathBWebCatalogModels(catalogModels, model);
+  if (models.length) {
+    lines.push("  models:");
+    for (const item of models) {
+      lines.push(`    - id: ${item.id}`);
+      lines.push(`      name: ${item.name}`);
+    }
   }
   lines.push("");
   return lines.join("\n");

@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:ef1d42398fa5a3e68a2e843f2692ffde05b239dd38085ffabfddc512ac325091"
+fingerprint: "sha256:cf7baf1e4ceadedda6fd4c2033477088b654fd77528edd6e38297d44d9c783a8"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -85,14 +85,18 @@ Hard rules:
   - --append-system-prompt forwards an existing absolute UTF-8 file to Pi; it is not a
     Provider credential and the file bytes are not printed
   - dsh configuration writes only non-secret pin/paths and a candidate-only adapter digest
-  - dsh launch requires daemon-owned ready state (Pi may stay not_configured), loads the
-    pinned AKP plugin, and never treats a dsh response as Task completion
+  - dsh launch requires daemon-owned system/database/secret/daemon ready (Pi and the
+    Pi provider.json component may stay blocked). Path B uses the Cos Provider
+    control plane + SecretStore, loads the pinned AKP plugin, and never treats a
+    dsh response as Task completion
   - dsh web starts the native dsh control panel (`dsh --profile web --no-open`) on
     loopback only (default http://127.0.0.1:3080). This is not Personal `/ui/`.
-    Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy.
+    Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy
+    and overlays the Cos-assigned dsh model plus that account catalog.
     A panel session is never Task completion.
   - dsh apply POSTs /personal/dsh/runtime op=apply (Cos dsh binding → selected-model)
     and restarts only the Cos-installed `cognitive dsh web` pair on loopback 3080
+    so conversation and Models show the Cos-assigned model
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
     (web refuses --host 0.0.0.0 and --path a)

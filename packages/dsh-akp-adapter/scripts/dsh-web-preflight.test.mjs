@@ -15,6 +15,7 @@ import {
   frontendDistIndex,
   listenUrl,
   pathBWebChildExtras,
+  pathBWebCatalogModels,
   pathBWebCredentialsYaml,
   pathBWebSettingsYaml,
 } from "./dsh-web-preflight.mjs";
@@ -63,11 +64,18 @@ test("Path B web settings and credentials stay on the daemon bearer", () => {
     base,
     "ui-onboarding:\n  welcomeNoticeVersion: keep-me\n",
     "grok-4.6",
+    [{ model_id: "deepseek-v4-flash" }, { model_id: "grok-4.6" }],
   );
   assert.match(settings, /welcomeNoticeVersion: keep-me/);
   assert.match(settings, /baseURL: http:\/\/127\.0\.0\.1:48681\/provider\/v1\/dsh/);
   assert.match(settings, new RegExp(`apiKeyEnv: ${PATH_B_WEB_DAEMON_KEY_REF}`));
   assert.match(settings, /model: grok-4\.6/);
+  assert.match(settings, /models:\n    - id: grok-4\.6\n      name: grok-4\.6\n    - id: deepseek-v4-flash/);
+  assert.equal(settings.includes("api.deepseek.com"), false);
+  assert.deepEqual(pathBWebCatalogModels([{ model_id: "deepseek-v4-flash" }], "grok-4.6"), [
+    { id: "grok-4.6", name: "grok-4.6" },
+    { id: "deepseek-v4-flash", name: "deepseek-v4-flash" },
+  ]);
   assert.deepEqual(pathBWebChildExtras(base), { DEEPSEEK_BASE_URL: base });
   assert.equal(Object.keys(pathBWebChildExtras(base)).some((key) => /API_KEY|SECRET|TOKEN|BEARER/i.test(key)), false);
 });

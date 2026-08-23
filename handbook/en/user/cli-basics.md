@@ -19,7 +19,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:13df8d8a2d2b538509769a3e96d88054e042f834e50fd7ea17ca6ffcb7f215ed"
+fingerprint: "sha256:504f9c3bd48e91464d6b4b98a9010e69100f4b1759c60b1dcbd6c10d2c9aa813"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -42,9 +42,9 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive pi configure` | write non-secret `pi.json` (absolute executable + extension paths) |
 | `cognitive pi launch [--task-ref <task://URI>] [--append-system-prompt <absolute-path>]` | fail-closed Pi launch after full doctor readiness and exact version check; task-bound launches expose only daemon-governed WorkspaceRead/Search/Write/Patch and submit untrusted candidates to the task channel; `--append-system-prompt` forwards an existing absolute UTF-8 file to Pi and is not a Provider credential |
 | `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | write non-secret `dsh.json` (pinned dsh checkout, AKP adapter root, candidate-only adapter digest); revision must match the product pin |
-| `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | fail-closed dsh launch after daemon-owned ready state (Pi may stay `not_configured`); Path B loads the pinned AKP plugin and never treats a dsh response as Task completion; `--path a` is rejected here and is measurement-only via `paired-path.mjs` |
-| `cognitive dsh web [--host 127.0.0.1] [--port 3080] [--no-open]` | start the **native** dsh control panel (`dsh --profile web`), not Personal `/ui/`. Default `http://127.0.0.1:3080`. Loopback only; `--host 0.0.0.0` is refused. Requires `apps/web/dist` from `pnpm run build` in the pinned dsh root. Path B still uses the daemon Provider proxy / SecretStore and does not need a second key in dsh `.env`. A panel session is never Task completion |
-| `cognitive dsh apply` | publish the Cos dsh binding as Path B selected-model (`POST /personal/dsh/runtime` `op=apply`) and restart only the Cos-installed native web pair. Chat uses the Cos-assigned model; native Models may still list DeepSeek |
+| `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | fail-closed dsh launch after daemon-owned system/database/secret/daemon ready (Pi and Pi `provider.json` may stay blocked); Path B uses the Cos Provider control plane + SecretStore, loads the pinned AKP plugin, and never treats a dsh response as Task completion; `--path a` is rejected here and is measurement-only via `paired-path.mjs` |
+| `cognitive dsh web [--host 127.0.0.1] [--port 3080] [--no-open]` | start the **native** dsh control panel (`dsh --profile web`), not Personal `/ui/`. Default `http://127.0.0.1:3080`. Loopback only; `--host 0.0.0.0` is refused. Requires `apps/web/dist` from `pnpm run build` in the pinned dsh root. Path B still uses the daemon Provider proxy / SecretStore and overlays the Cos-assigned dsh model plus that account catalog. Do not put a second key in dsh `.env`. A panel session is never Task completion |
+| `cognitive dsh apply` | publish the Cos dsh binding as Path B selected-model (`POST /personal/dsh/runtime` `op=apply`) and restart only the Cos-installed native web pair so conversation and Models show the Cos-assigned model. Chat uses the bound account (never DeepSeek when Cos assigned grok) |
 | `cognitive dsh status` | authenticated observation of dsh sessions/fencing and optional bound pid liveness (`GET /personal/dsh/runtime`); not Task completion |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | common Resource Manager read envelope (management channel) |

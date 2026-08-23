@@ -2358,6 +2358,10 @@ fn apply_dsh_binding_to_runtime(
             "dsh binding model is not in that account catalog",
         );
     }
+    let account = plane.get_account(&binding.account_id).ok().flatten();
+    let model_endpoint_compatible = account.as_ref().is_some_and(|account| {
+        provider_control_plane::model_servable_on_account(account, &binding.model_id)
+    });
     if let Ok(selected) = SelectedModel::new(binding.model_id.clone(), "binding", true) {
         let _ = SelectedModelRepository::under_config_dir(layout.config_dir()).store(&selected);
     }
@@ -2372,8 +2376,10 @@ fn apply_dsh_binding_to_runtime(
     applied["catalog_ok"] = json!(true);
     applied["dsh_root_ok"] = json!(true);
     applied["revision_pin_ok"] = json!(true);
-    applied["native_catalog_may_still_list_deepseek"] = json!(true);
-    applied["path_b_uses_cos_binding"] = json!(true);
+    applied["native_catalog_overlays_cos_binding"] = json!(true);
+    applied["path_b_uses_bound_account"] = json!(true);
+    applied["model_endpoint_compatible"] = json!(model_endpoint_compatible);
+    applied["path_b_will_fail_closed"] = json!(!model_endpoint_compatible);
     applied["restart_required_for_native_models_chrome"] = json!(true);
     applied["restart_performed"] = json!(false);
     write_json_response(stream, 200, &applied.to_string())

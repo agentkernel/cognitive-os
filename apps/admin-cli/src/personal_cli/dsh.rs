@@ -31,7 +31,7 @@ const DSH_CONFIG_SURFACE: &str = "personal-dsh-config";
 const DSH_REVISION_FILE_NAME: &str = ".cognitiveos-dsh-revision";
 const PERSONAL_DOCTOR_SCHEMA_VERSION: u64 = 1;
 const PERSONAL_DOCTOR_SURFACE: &str = "personal-doctor";
-const REQUIRED_DSH_COMPONENTS: [&str; 5] = ["system", "database", "secret", "provider", "daemon"];
+const REQUIRED_DSH_COMPONENTS: [&str; 4] = ["system", "database", "secret", "daemon"];
 pub(crate) const DEFAULT_WEB_HOST: &str = "127.0.0.1";
 pub(crate) const DEFAULT_WEB_PORT: u16 = 3080;
 
@@ -518,9 +518,6 @@ fn validate_doctor_readiness(document: &str) -> Result<(), String> {
     {
         return Err("daemon doctor projection has an unsupported contract".to_owned());
     }
-    if doctor_object.get("overall").and_then(Value::as_str) != Some("ready") {
-        return Err("daemon is not ready for a dsh agent launch".to_owned());
-    }
     let components = doctor_object
         .get("components")
         .and_then(Value::as_array)
@@ -960,5 +957,28 @@ mod tests {
         assert!(plan.arguments.contains(&"3080".to_owned()));
         assert!(plan.arguments.contains(&"--dsh-home".to_owned()));
         assert!(!plan.arguments.contains(&"--task".to_owned()));
+
+        let mut provider_blocked: Value =
+            serde_json::from_str(&ready_doctor_without_pi()).expect("doctor");
+        provider_blocked["overall"] = json!("blocked");
+        provider_blocked["first_conversation_ready"] = json!(false);
+        provider_blocked["components"][3]["status"] = json!("blocked");
+        let blocked_provider = prepare_launch_with_doctor_document(
+            &DshLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(temporary.path().to_path_buf()),
+                },
+                print_mode: false,
+                provider_path: DshProviderPath::Adapter,
+                task: None,
+                web_mode: true,
+                listen_host: DEFAULT_WEB_HOST.to_owned(),
+                listen_port: DEFAULT_WEB_PORT,
+            },
+            &endpoint_document(),
+            &provider_blocked.to_string(),
+        )
+        .expect("Path B web ignores Pi provider.json blocked");
+        assert!(blocked_provider.arguments.contains(&"web".to_owned()));
     }
 }

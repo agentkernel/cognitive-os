@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:3683c83673c50248120968df0f965f10c21e2818476b12f7f8ddef6151315c65"
+fingerprint: "sha256:f0112a035be21665ec56f48b3c0ce24490a2800d48cfe5ffc0792336318f081e"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -209,7 +209,10 @@ cognitive agent binding remove --agent pi
 ```
 
 除非该模型已在账户目录中（发现它或 `models add`），`set` 会以
-`PROVIDER_MODEL_NOT_FOUND` 失败。HTTP `POST /management/agent-bindings` 接受可选
+`PROVIDER_MODEL_NOT_FOUND` 失败。仅在目录中还不够：DeepSeek 主机只服务
+`deepseek-*`，`grok-*` 只能绑到非 DeepSeek 的 `openai_compatible` 账户（例如 xAI）。
+否则 `models add` 与 `binding set` 以 `PROVIDER_MODEL_ENDPOINT_MISMATCH` 失败闭合。
+HTTP `POST /management/agent-bindings` 接受可选
 整数 `expected_revision`（当前 binding revision，未绑定时为 `0`）。不匹配时 HTTP
 409 `PROVIDER_BINDING_REVISION_STALE`；省略该字段以保持 CLI 兼容。`show` 在解析时
 要求 `--agent`，但当前调用与 `list` 相同的列表端点（不过滤）。用 `list` 查看两个
@@ -219,8 +222,10 @@ Pi 流量使用 `POST /provider/v1/chat/completions`。DeepSeek harness 流量�
 `POST /provider/v1/dsh/chat/completions` 路由。已绑定的 Pi 私有 candidate 调用也使用
 binding 而不是 `provider.json`。若 **Pi** 请求的 `model` 与 Pi binding 不符，代理以 HTTP 400
 `PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合。**dsh** Path B 代理会把请求模型改写为
-Cos `agent://personal/dsh` binding，因此原生目录 id 仍能用 Cos 指定的模型对话。
-Personal `/ui/` Bindings 有 **Apply to running dsh**（`POST /personal/dsh/runtime`
+Cos `agent://personal/dsh` binding，因此原生目录 id 仍能用 Cos 指定的模型、走
+**绑定账户** 对话。若该账户不能服务绑定模型（grok 绑在 `api.deepseek.com`），
+Path B 以 HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合，不会向 DeepSeek
+发请求。Personal `/ui/` Bindings 有 **Apply to running dsh**（`POST /personal/dsh/runtime`
 `op=apply`）。已吊销账户或缺失 key 是 HTTP 409
 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`。官方 Anthropic binding 不支持公共 SSE
 （`stream:true`）。
@@ -292,6 +297,7 @@ cognitive alerts acknowledge --alert-id YOUR-ALERT-ID
 | `PROVIDER_DISCOVERY_FAILED`（传输）或 `PROVIDER_DISCOVERY_MALFORMED` | 网络、TLS 或意外的 `/models` JSON。账户保持 `degraded`；binding 保留。 |
 | `PROVIDER_KEY_MISSING` | 在 refresh 或绑定调用前 set key。 |
 | `PROVIDER_MODEL_NOT_FOUND` | 在 `agent binding set` 之前 `models refresh` 或 `models add`。 |
+| `PROVIDER_MODEL_ENDPOINT_MISMATCH` | 只把 grok 绑到能服务 grok 的非 DeepSeek `openai_compatible` 账户。不要把 grok 加进 DeepSeek 目录。 |
 | `PERSONAL_PROVIDER_BINDING_MISMATCH` | 请求模型不是绑定模型。更改 binding 或发送已绑定 id。没有回退。 |
 | HTTP 409 `PROVIDER_BINDING_REVISION_STALE` | 重新读取 binding revision，再用确认过的 `expected_revision` 重试。 |
 | 删除时的 `PROVIDER_CONTROL_CONFLICT` | 先 `agent binding remove`。 |

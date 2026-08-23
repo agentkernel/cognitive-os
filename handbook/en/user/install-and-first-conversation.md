@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:f967be43c7316100104cab733c2789fbc014d9f5869c3edde2d88e643e39b24b"
+fingerprint: "sha256:32b5f585b9b7854459fe3b4c73dfe809632e04ed9995bcb79d66f0aa90ef5f2e"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---

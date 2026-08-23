@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:aa7028db7f02880e795768dc305f6a0e57a4cf11b14f86d0413f57c9cad90050"
+fingerprint: "sha256:fa889fbcca03dfa4b663dc4696dd3298e44df93c37c5a0147f9bcae0c802077d"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -69,8 +69,9 @@ non_claims:
   `--append-system-prompt <绝对路径>` 把已存在且非空的 UTF-8 文件转发给 Pi；它不是
   Provider 凭据，文件字节不会被打印。
 - `cognitive dsh launch --print` 是有界的非交互 dsh Path B：要求 daemon-owned
-  ready（Pi 可保持 `not_configured`），加载钉住的 AKP 插件，绝不把 dsh 响应当作
-  Task 完成。直接 Flash（`--path a`）被拒绝；同机 Path A/B 测量只用
+  的 system/database/secret/daemon 就绪（Pi 与 Pi `provider.json` 可保持
+  blocked），加载钉住的 AKP 插件，绝不把 dsh 响应当作 Task 完成。直接 Flash
+  （`--path a`）被拒绝；同机 Path A/B 测量只用
   `packages/dsh-akp-adapter/scripts/paired-path.mjs`。
 - `cognitive dsh web` 启动原生 dsh 控制面板（`dsh --profile web --no-open`），默认
   `http://127.0.0.1:3080`。这不是 Personal `/ui/`。只绑定 loopback（拒绝
@@ -79,9 +80,11 @@ non_claims:
   DeepSeek 密钥。不要把 SecretStore 材料写入 dsh `.env`。
   面板会话绝不是 Task 完成。SSH guest 上保持 `--no-open`（产品默认）。
 - `cognitive dsh apply` 把 Cos dsh Agent binding 发布为 Path B selected-model
-  （`POST /personal/dsh/runtime` `op=apply`），并只重启 Cos 安装的原生 web 进程对。
-  对话使用 Cos 指定的模型；原生 Models 仍可能只列出 DeepSeek。web 为 INACTIVE
-  或模型不在该账户目录时失败闭合。
+  （`POST /personal/dsh/runtime` `op=apply`），并只重启 Cos 安装的原生 web 进程对，
+  使对话与 Models 显示 Cos 指定模型及该账户目录。聊天走绑定账户（Cos 指定 grok
+  时绝不会发到 DeepSeek）。web 为 INACTIVE 或模型不在该账户目录时失败闭合。
+  遗留的 grok-on-DeepSeek binding 会以 `PERSONAL_PROVIDER_BINDING_MISMATCH`
+  失败闭合 Path B，而不是向 DeepSeek 发请求。
 - `cognitive dsh status` 读取 `GET /personal/dsh/runtime`：由进程内会话与可选绑定
   pid 得到 INACTIVE / ACTIVE / CRASHED。Linux 存活只看 `/proc/{pid}` 是否存在
   （永不打开 cmdline/environ）。它不是 authority writer。UI 起来也不是 Task 完成。

@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:aa7028db7f02880e795768dc305f6a0e57a4cf11b14f86d0413f57c9cad90050"
+fingerprint: "sha256:fa889fbcca03dfa4b663dc4696dd3298e44df93c37c5a0147f9bcae0c802077d"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -75,8 +75,9 @@ non_claims:
   an existing non-empty UTF-8 file to Pi; it is not a Provider credential and the
   file bytes are not printed.
 - `cognitive dsh launch --print` is the bounded non-interactive dsh Path B:
-  it requires daemon-owned ready state (Pi may stay `not_configured`), loads
-  the pinned AKP plugin, and never treats a dsh response as Task completion.
+  it requires daemon-owned system/database/secret/daemon ready (Pi and Pi
+  `provider.json` may stay blocked), loads the pinned AKP plugin, and never
+  treats a dsh response as Task completion.
   Direct Flash (`--path a`) is refused; use `packages/dsh-akp-adapter/scripts/paired-path.mjs`
   for same-host Path A vs Path B measurement only.
 - `cognitive dsh web` starts the native dsh control panel (`dsh --profile web --no-open`)
@@ -88,9 +89,11 @@ non_claims:
   never Task completion. On SSH guests pass `--no-open` (already the product default).
 - `cognitive dsh apply` publishes the Cos dsh Agent binding as Path B
   selected-model (`POST /personal/dsh/runtime` `op=apply`) and restarts only the
-  Cos-installed native web pair. Chat uses the Cos-assigned model; native Models
-  may still list DeepSeek. Apply fails closed when web is INACTIVE or the model
-  is not in that account catalog.
+  Cos-installed native web pair so conversation and Models show the Cos-assigned
+  model and that account catalog. Chat uses the bound account (never DeepSeek
+  when Cos assigned grok). Apply fails closed when web is INACTIVE or the model
+  is not in that account catalog. A leftover grok-on-DeepSeek binding fail-closes
+  Path B with `PERSONAL_PROVIDER_BINDING_MISMATCH` instead of posting to DeepSeek.
 - `cognitive dsh status` reads `GET /personal/dsh/runtime`: INACTIVE / ACTIVE /
   CRASHED from process-local sessions plus an optional bound pid. Linux liveness
   is `/proc/{pid}` existence only (never cmdline/environ). It is not an

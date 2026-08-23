@@ -28,6 +28,7 @@ import {
   listenUrl,
   pathBWebChildExtras,
   pathBWebCredentialsYaml,
+  pathBWebCatalogModels,
   pathBWebSettingsYaml,
 } from "./dsh-web-preflight.mjs";
 
@@ -148,8 +149,8 @@ function dshCliInvocation(root) {
   };
 }
 
-function llmDeepseekPatch(baseURL, apiKeyEnv) {
-  return [
+function llmDeepseekPatch(baseURL, apiKeyEnv, selectedModel, catalogModels) {
+  const lines = [
     "- id: llm-deepseek",
     "  config:",
     `    baseURL: ${baseURL}`,
@@ -157,8 +158,46 @@ function llmDeepseekPatch(baseURL, apiKeyEnv) {
     "    thinking: disabled",
     "    reasoningEffort: off",
     "    maxTokens: 256",
-    "",
-  ].join("\n");
+  ];
+  const model = String(selectedModel ?? "").trim();
+  if (model && !/[\s#:]/.test(model)) {
+    lines.push(`    model: ${model}`);
+  }
+  const models = pathBWebCatalogModels(catalogModels, model);
+  if (models.length) {
+    lines.push("    models:");
+    for (const item of models) {
+      lines.push(`      - id: ${item.id}`);
+      lines.push(`        name: ${item.name}`);
+    }
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
+async function loadCosDshOverlay(origin, managementToken, selectedFallback) {
+  const fallback = String(selectedFallback ?? "").trim();
+  try {
+    const bindings = await httpJson(origin, "GET", "/management/agent-bindings", managementToken);
+    const rows = Array.isArray(bindings.json?.bindings) ? bindings.json.bindings : [];
+    const dsh = rows.find(
+      (row) => row && row.agent === "agent://personal/dsh" && row.status === "active",
+    );
+    const model = String(dsh?.model_id ?? fallback).trim();
+    let catalog = [];
+    if (dsh?.account_id) {
+      const listed = await httpJson(
+        origin,
+        "GET",
+        `/management/providers/models?account_id=${encodeURIComponent(dsh.account_id)}`,
+        managementToken,
+      );
+      catalog = Array.isArray(listed.json?.models) ? listed.json.models : [];
+    }
+    return { model, catalog: pathBWebCatalogModels(catalog, model) };
+  } catch {
+    return { model: fallback, catalog: pathBWebCatalogModels([], fallback) };
+  }
 }
 
 function assistantLooksComplete(text) {
@@ -201,16 +240,17 @@ async function runWebPathB() {
     "/provider/v1/dsh/selected-model",
     managementToken,
   );
+  const overlay = await loadCosDshOverlay(
+    origin,
+    managementToken,
+    selected.json?.model ?? selected.json?.selected_model,
+  );
   const providerBase = `${origin}/provider/v1/dsh`;
   const settingsPath = join(dshHome, "settings.yaml");
   const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
   writeFileSync(
     settingsPath,
-    pathBWebSettingsYaml(
-      providerBase,
-      existingSettings,
-      selected.json?.model ?? selected.json?.selected_model,
-    ),
+    pathBWebSettingsYaml(providerBase, existingSettings, overlay.model, overlay.catalog),
     {
       encoding: "utf8",
     },
@@ -225,7 +265,7 @@ async function runWebPathB() {
     ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
       { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true, mode: "web" } },
     ]),
-    llmDeepseekPatch(providerBase, "DAEMON_BEARER"),
+    llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
   ].join("\n");
   writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
   const child = spawn(
@@ -455,6 +495,11 @@ function pluginInsert(id, sessionId, pluginId, taskRef, events) {
 }
 
 const selected = await httpJson(origin, "GET", "/provider/v1/dsh/selected-model", managementToken);
+const overlay = await loadCosDshOverlay(
+  origin,
+  managementToken,
+  selected.json?.model ?? selected.json?.selected_model,
+);
 const providerBase = `${origin}/provider/v1/dsh`;
 const outcome = await runDsh(
   [
@@ -479,7 +524,7 @@ const outcome = await runDsh(
         },
       },
     ]),
-    llmDeepseekPatch(providerBase, "DAEMON_BEARER"),
+    llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
   ].join("\n"),
   { origin, token: managementToken },
 );
@@ -500,7 +545,7 @@ const summary = {
   adapter: "dsh --patch cognitiveos-akp Workspace* + llm-deepseek via daemon Provider SSE proxy",
   candidate_only: true,
   dsh_response_is_not_task_completion: true,
-  selected_model: selected.json?.model ?? selected.json?.selected_model ?? null,
+  selected_model: overlay.model || selected.json?.model || selected.json?.selected_model || null,
   dsh_exit: outcome.exitCode,
   elapsed_ms: outcome.elapsedMs,
   ttft_ms: outcome.ttftMs,

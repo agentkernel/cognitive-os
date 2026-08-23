@@ -492,3 +492,114 @@ fn binding_expected_revision_rejects_stale_cas() {
 
     let _ = std::fs::remove_dir_all(runtime_root);
 }
+
+#[test]
+fn deepseek_account_refuses_grok_catalog_and_binding() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-compat-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let deepseek = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "deepseek-only",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.deepseek.com"
+        }),
+    );
+    let deepseek_id = deepseek["account"]["id"].as_str().unwrap().to_owned();
+    let grok_on_deepseek = send_json(
+        port,
+        "POST",
+        "/management/providers/models/add",
+        &management_token,
+        &json!({"account_id": deepseek_id, "model_id": "grok-4.6"}),
+    );
+    assert!(
+        grok_on_deepseek.contains("400 Bad Request"),
+        "{grok_on_deepseek}"
+    );
+    assert!(grok_on_deepseek.contains("PROVIDER_MODEL_ENDPOINT_MISMATCH"));
+
+    add_manual_model(port, &management_token, &deepseek_id, "deepseek-v4-flash");
+    let bind_grok = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings",
+        &management_token,
+        &json!({
+            "agent": "dsh",
+            "account_id": deepseek_id,
+            "model_id": "grok-4.6"
+        }),
+    );
+    assert!(
+        bind_grok.contains("404 Not Found") || bind_grok.contains("400 Bad Request"),
+        "{bind_grok}"
+    );
+    assert!(
+        bind_grok.contains("PROVIDER_MODEL_NOT_FOUND")
+            || bind_grok.contains("PROVIDER_MODEL_ENDPOINT_MISMATCH"),
+        "{bind_grok}"
+    );
+
+    let official = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "openai-official",
+            "provider_kind": "openai_official"
+        }),
+    );
+    let official_id = official["account"]["id"].as_str().unwrap().to_owned();
+    let grok_on_official = send_json(
+        port,
+        "POST",
+        "/management/providers/models/add",
+        &management_token,
+        &json!({"account_id": official_id, "model_id": "grok-4.6"}),
+    );
+    assert!(
+        grok_on_official.contains("400 Bad Request"),
+        "{grok_on_official}"
+    );
+    assert!(grok_on_official.contains("PROVIDER_MODEL_ENDPOINT_MISMATCH"));
+
+    let xai = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "xai-grok",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.x.ai/v1"
+        }),
+    );
+    let xai_id = xai["account"]["id"].as_str().unwrap().to_owned();
+    add_manual_model(port, &management_token, &xai_id, "grok-4.6");
+    set_binding(port, &management_token, "dsh", &xai_id, "grok-4.6");
+
+    let proxied = send_json(
+        port,
+        "POST",
+        "/provider/v1/dsh/chat/completions",
+        &management_token,
+        &json!({
+            "model": "deepseek-chat",
+            "messages": [{"role":"user","content":"hi"}]
+        }),
+    );
+    assert!(proxied.contains("409 Conflict"), "{proxied}");
+    assert!(proxied.contains("PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE"));
+    assert!(!proxied.contains("supported API model names"));
+    assert!(!proxied.contains("api.deepseek.com"));
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
