@@ -46,11 +46,11 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | 通用 Resource Manager 只读信封（management 通道） |
 | `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | 通用 Resource Manager 变异，接到既有 Skill/Tool sinks；不是 generic create/execute/complete |
-| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane 账户；只用 `--api-key-file`；自定义 HTTP/私网端点需要 `--allow-insecure-http` / `--allow-private-network` |
+| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane 账户；只用 `--api-key-file`；自定义 HTTP/私网端点需要 `--allow-insecure-http` / `--allow-private-network`。细节见 [Provider Control Plane](./provider-control-plane.md) |
 | `cognitive provider key set\|rotate\|remove` | 经 daemon 的 Secret Store 密钥操作；永不写 SQLite |
 | `cognitive provider models refresh\|list\|add\|set-price` | 前台发现、手动模型、价格 |
 | `cognitive agent binding set\|show\|list\|remove` | 固定 pi/dsh 账户+provider+model binding；无回退 |
-| `cognitive usage query` / `cognitive budget set\|list\|remove` / `cognitive alerts list\|acknowledge` / `cognitive audit query` | 用量/成本/审计与仅观察预算 |
+| `cognitive usage query` / `cognitive budget set\|list\|remove` / `cognitive alerts list\|acknowledge` / `cognitive audit query` | 用量/成本/审计与仅观察预算；本阶段 `usage`/`audit` 无过滤器 |
 | `cognitive task watch [--resume-from N]` | 跟随有界 Task watch 流（task 通道） |
 | `cognitive task evidence --task-ref <URI>` | 读取由持久 authority 与 Artifact CAS 重建的有界脱敏终态证据（task 通道） |
 | `cognitive backup [--output <dir>]` | 写入排除 secret 的 digest 绑定归档（不含 authority SQLite / provider-config / bearer） |

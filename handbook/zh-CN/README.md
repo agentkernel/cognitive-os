@@ -12,8 +12,8 @@ generated: false
 么、可做什么、看到什么、在做什么、以什么身份运行——本手册精确记录实现今天真实支持的
 内容。
 
-- **[用户指南](./user/README.md)** —— 安装、首次对话、CLI、secret、Pi 对话壳、资源
-  模型、运维、安全、限制。
+- **[用户指南](./user/README.md)** —— 安装、首次对话、CLI、secret、Provider Control
+  Plane、Pi 对话壳、资源模型、运维、安全、限制。
 - **[开发者指南](./developer/README.md)** —— 仓库地图、权威内核、存储、HTTP 面、执
   行链状态、各域、测试、工作流。
 - **[参考手册](./reference/README.md)** —— 生成的 CLI/HTTP/错误/配置/环境变量/状态

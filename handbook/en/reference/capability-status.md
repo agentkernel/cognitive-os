@@ -32,6 +32,7 @@ Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 | `cognitive init` (layout, secrets, discovery, selected model) | implemented | — |
 | Daemon loopback HTTP + channel auth + bounds | implemented | bearer RNG non-cryptographic |
 | Provider proxy (unary chat + public SSE) | implemented | Pi/private-candidate stay unary; no disconnect-to-cancel |
+| Provider Control Plane (named accounts, bindings, usage CLI) | partial | daemon API + `cognitive` CLI only; no Web/desktop panel; usage/audit query has no filters |
 | SecretStore | implemented (Linux Secret Service; Windows Credential Manager) | headless vault designed; macOS unavailable |
 | dsh runtime inspect | implemented | `/proc` liveness is Linux-only; Windows reports unknown rather than CRASHED |
 | Pi shell conversation via daemon | implemented | one-shot, text-only |

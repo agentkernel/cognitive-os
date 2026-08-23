@@ -26,7 +26,11 @@ Owner-local CLI / management session
 
 The daemon alone writes account metadata, bindings, usage, budgets, alerts,
 audit facts, and Secret Store references. This document creates no evidence,
-Gate, Profile, release, or provider-quality claim.
+Gate, Profile, release, or provider-quality claim. Shipped operator usage of the
+CLI (no Web or desktop panel in this phase) is in
+[`handbook/en/user/provider-control-plane.md`](../../../handbook/en/user/provider-control-plane.md)
+(zh-CN:
+[`handbook/zh-CN/user/provider-control-plane.md`](../../../handbook/zh-CN/user/provider-control-plane.md)).
 
 ## Mutation and authority sequence
 

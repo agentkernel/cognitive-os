@@ -64,6 +64,13 @@ a later disposable runtime needs the same already-stored item, pass
 another key capture. If no production secret backend is usable the command fails
 closed — there is no plaintext fallback.
 
+Named accounts, key rotation, fixed agent bindings, and usage queries are a
+separate operator surface after the daemon is running:
+[Provider Control Plane](./provider-control-plane.md). That surface is CLI talking
+to the daemon only; there is no Web or desktop control panel in this phase.
+`cognitive init` remains the first-conversation path (`provider.json` /
+`selected-model.json`) until you set a control-plane binding.
+
 ## 3. Start and check the daemon
 
 ```text

@@ -16,7 +16,12 @@ accounts, rotate API keys without exposing key material, discover or manually
 register models, bind an installed agent to one fixed account/model, inspect
 input/output/cache token usage, and receive cost/soft-budget alerts. The first
 delivery is daemon API, durable metadata, audit, usage queries, and CLI. A web
-or desktop panel is deferred.
+or desktop panel is deferred. Operator usage of the shipped CLI is in
+[`handbook/en/user/provider-control-plane.md`](../../../handbook/en/user/provider-control-plane.md)
+(zh-CN:
+[`handbook/zh-CN/user/provider-control-plane.md`](../../../handbook/zh-CN/user/provider-control-plane.md)).
+This page remains the product-design record and does not copy current task or Gate
+status.
 
 ## Scope
 
@@ -127,11 +132,14 @@ cognitive provider account create|list|show|update|delete
 cognitive provider key set|rotate|remove
 cognitive provider models refresh|list|add|set-price
 cognitive agent binding set|show|list|remove
-cognitive usage query [filters]
+cognitive usage query
 cognitive budget set|list|remove
 cognitive alerts list|acknowledge
-cognitive audit query [filters]
+cognitive audit query
 ```
+
+Shipped `cognitive usage query` and `cognitive audit query` take no filters.
+Exact flags live with the CLI implementation and the handbook usage page.
 
 The CLI projects the authenticated daemon service and never opens SQLite or
 resolves secrets. Responses contain IDs, redacted endpoint metadata, usage
