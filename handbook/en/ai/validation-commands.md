@@ -97,7 +97,10 @@ P7-T05/D01 Web UI route inventory is
 `docs/architecture/personal/web-ui-route-inventory.json` (invented lifecycle,
 missing daemon route, Task-channel secrets, Web storage, and browser-direct
 targets fail closed). It is not a SPA implementation, browser journey, Gate,
-or release result.
+or release result. Daemon Origin/Referer and `GET /ui` serving tests live in
+`apps/kernel-server/src/personal/server.rs` (foreign/null Origin,
+missing-bundle `not_available`, path traversal); they require supported
+Rust linking (CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 / DEV-LINUX-NATIVE-01).
 
 ## What CI enforces on every PR
 

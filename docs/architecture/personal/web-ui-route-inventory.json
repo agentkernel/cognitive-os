@@ -53,6 +53,13 @@
       "disposition": "available"
     },
     {
+      "id": "web-ui-bundle",
+      "ui_capability": "Same-origin static SPA serving",
+      "method_path": "GET /ui",
+      "channel": "unauthenticated-loopback",
+      "disposition": "available"
+    },
+    {
       "id": "resource-list",
       "ui_capability": "Agent and six-family inventory",
       "method_path": "GET /management/resource/v1/list",

@@ -49,8 +49,9 @@ separation, request bounds and error envelopes remain authoritative.
 cookies stay forbidden; the product origin is daemon-served `/ui/` on loopback;
 CORS is not used; a present `Origin`/`Referer` must be the daemon's own
 loopback origin. The SPA must not assume that a browser bearer or same-origin
-deployment is itself a security boundary. Origin/Referer enforcement in the
-daemon is an in-repo follow-on of ADR-0053.
+deployment is itself a security boundary. The daemon front door enforces the
+Origin/Referer allowlist (`LOCAL_ORIGIN_HEADER_REJECTED`) and serves `GET /ui`
+from `data_dir()/ui` (503 `not_available` when the bundle is absent).
 
 Session material is memory-only by default. The client must not persist
 management/task tokens, bootstrap material or SecretRefs in localStorage,

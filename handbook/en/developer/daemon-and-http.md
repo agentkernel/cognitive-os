@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:e76d3ba9856c06a0814183fa0017f61e2693f23205ce09f33262cb0020f6866e"
+fingerprint: "sha256:66eb32c1f537eca86e4621a49556e2a80e6972e385e3c219b4934bbfbe09063f"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -94,8 +94,13 @@ Two credential planes, deliberately unrelated:
 ## Request hygiene
 
 Fixed bounds before routing: 1 MiB body (8 MiB hard read), 16 KiB/64 headers,
-10 s/30 s timeouts, 32/16 connection caps, Cookie rejection, optional Host
-validation — each with a registered error code. Routing is handwritten prefix
+10 s/30 s timeouts, 32/16 connection caps, Cookie rejection, Host
+validation, and ADR-0053 Origin/Referer allowlist (`LOCAL_ORIGIN_HEADER_REJECTED`
+when a present Origin or Referer is not this daemon's loopback HTTP origin;
+missing Origin remains allowed for CLI/curl) — each with a stable error
+code. `GET /ui` serves the pinned static bundle from `data_dir()/ui` with CSP
+`default-src 'self'`; a missing bundle is `503` `not_available`
+(`LOCAL_UI_BUNDLE_UNAVAILABLE`) and is not a readiness claim. Routing is handwritten prefix
 matching on `METHOD /path` strings across `server.rs`, `task_api.rs`,
 `resource_api.rs`, and `resource_manager.rs` (the generated [HTTP reference](../reference/http-api.md)
 enumerates the full table and channels). Authenticated `POST /task/akp/dsh`

@@ -22,10 +22,15 @@
    - detach observation must not invoke cancel/stop
    - canonical inventory matches daemon source and ADR-0053
 2. Local Rust build/test **not-run** (`RUST-LINK-DEV-WIN-GNU-01`).
-3. Browser/SPA journeys **not-run** / **not_available**: no approved
+3. Daemon Origin/Referer + `GET /ui` front-door tests written in
+   `apps/kernel-server/src/personal/server.rs` (foreign/null/https/wrong-port
+   Origin; missing bundle `not_available`; path traversal). Execution
+   **not-run** locally; routed to CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 /
+   `DEV-LINUX-NATIVE-01`.
+4. Browser/SPA journeys **not-run** / **not_available**: no approved
    `cognitiveos-clients` checkout.
-4. Linux/native live UI **not-run**: blocked on the same checkout.
-5. Secret-redaction SPA negatives **not-run**: no SPA to instrument.
+5. Linux/native live UI **not-run**: blocked on the same checkout.
+6. Secret-redaction SPA negatives **not-run**: no SPA to instrument.
    Inventory proves the key route is management-only and forbids DOM/storage
    persistence in the client policy; that is not live redaction evidence.
 
@@ -36,8 +41,8 @@ Accepted [ADR-0053](../adr/0053-personal-web-ui-stack.md):
 - React + TypeScript + Vite in `cognitiveos-clients/pc/web/`
 - daemon same-origin `/ui/` serving; Vite preview is not the product origin
 - memory-only sessions; cookies forbidden
-- Origin/Referer loopback allowlist decided; daemon enforcement is an
-  in-repo follow-on
+- Origin/Referer loopback allowlist **enforced** (`LOCAL_ORIGIN_HEADER_REJECTED`)
+- `GET /ui` without a bundle is `503` `not_available` (`LOCAL_UI_BUNDLE_UNAVAILABLE`) with CSP
 - MIT/Apache/BSD runtime deps only
 
 Frozen inventory:

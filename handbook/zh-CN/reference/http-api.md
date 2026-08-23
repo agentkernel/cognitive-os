@@ -17,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:960358cd14d4ed2d66c14508831ca72d09b1f390a10a571417ff5a47e8579bdd"
+fingerprint: "sha256:0af859d2001ec9e744527c113df2f52f3eb7179460cf555ac8a0184dfa54808e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -32,6 +32,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 |---|---|---|---|
 | `POST` | `/local/session` | none | 凭 bootstrap secret 证明铸造通道绑定的本地 bearer（management 或 task）。 |
 | `GET` | `/personal/health` | none | 免认证的有界存活探测；有意不构成 readiness 声明。 |
+| `GET` | `/ui` | none | 在 data_dir()/ui 下免认证同源静态 Web UI。缺少 bundle 时返回 503 not_available（LOCAL_UI_BUNDLE_UNAVAILABLE）并带 CSP。若请求携带 Origin/Referer，必须是本 daemon 的 loopback HTTP origin。不构成 readiness、Gate 或 Profile 声明。 |
 | `GET` | `/personal/status` | management | 组件状态投影（system、database、secret、provider、daemon、pi）；Provider 事实与 SecretStore 解析使用同一份已加载配置快照。 |
 | `GET` | `/personal/readiness` | management | 快照一致 status 投影的别名。 |
 | `GET` | `/personal/doctor` | management | 快照一致的脱敏诊断投影，含六资源、headless vault 与可运维性小节。 |

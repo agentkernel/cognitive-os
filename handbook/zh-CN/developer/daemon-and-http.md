@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:e76d3ba9856c06a0814183fa0017f61e2693f23205ce09f33262cb0020f6866e"
+fingerprint: "sha256:66eb32c1f537eca86e4621a49556e2a80e6972e385e3c219b4934bbfbe09063f"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -87,7 +87,12 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](./execution-chain
 ## 请求卫生
 
 路由前的固定界限：1 MiB 请求体（硬读 8 MiB）、16 KiB/64 头、10 s/30 s 超时、32/16
-连接上限、拒绝 Cookie、可选 Host 校验——各配注册错误码。路由是对 `METHOD /path` 字符
+连接上限、拒绝 Cookie、Host 校验，以及 ADR-0053 Origin/Referer 允许列表（当请求携带
+的 Origin 或 Referer 不是本 daemon 的 loopback HTTP origin 时返回
+`LOCAL_ORIGIN_HEADER_REJECTED`；缺少 Origin 仍允许 CLI/curl）——各配稳定错误码。
+`GET /ui` 从 `data_dir()/ui` 提供钉住的静态 bundle，并带 CSP `default-src 'self'`；
+缺少 bundle 时为 `503` `not_available`（`LOCAL_UI_BUNDLE_UNAVAILABLE`），不构成
+readiness 声明。路由是对 `METHOD /path` 字符
 串的手写前缀匹配，分布在 `server.rs`、`task_api.rs`、`resource_api.rs`、
 `resource_manager.rs`（生成的
 [HTTP 参考](../reference/http-api.md)枚举完整表与通道）。已认证的

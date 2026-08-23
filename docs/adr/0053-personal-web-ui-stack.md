@@ -57,9 +57,9 @@ accepted; D02–D07 SPA work is blocked on that checkout.
    `Referer`, when present, must match the daemon's own loopback origin
    (`http://127.0.0.1:<port>`, `http://localhost:<port>`, or
    `http://[::1]:<port>`). Missing Origin remains allowed for CLI/curl.
-   Non-loopback Origin/Referer is rejected. The daemon does not yet enforce
-   the Origin/Referer allowlist; that in-repo control is a follow-on of this
-   decision and is not a reason to invent cookie auth.
+   Non-loopback Origin/Referer is rejected with `LOCAL_ORIGIN_HEADER_REJECTED`.
+   The Personal front door enforces this allowlist on every request, including
+   `GET /ui`. Cookie auth remains forbidden.
 5. **Host:** existing `LOCAL_HOST_HEADER_REJECTED` loopback Host check stays.
 
 ### 3. Session and secret handling
@@ -142,11 +142,10 @@ Agent-benefit claims.
 - D02–D07 SPA slices stay blocked until the owner provides an approved
   `cognitiveos-clients` checkout. Missing checkout is `blocked` /
   `not_available`, not a pass and not a reason to invent `clients/**`.
-- A later in-repo daemon change may enforce the Origin/Referer allowlist and
-  serve `/ui/` from a configured asset directory. That change is still P7-T05
-  and still must not invent public Task/lifecycle contracts.
-- Completing this ADR does not implement a Web UI, pass a Gate, or change
-  Linux 1.0 scope.
+- A later in-repo daemon change may still refine `/ui/` asset bounds. Completing
+  this ADR does not implement the SPA, pass a Gate, or change Linux 1.0 scope.
+  Origin/Referer enforcement and missing-bundle `GET /ui` → `not_available`
+  are now daemon front-door behavior.
 
 ## Compliance checks
 

@@ -108,7 +108,7 @@ clone or register that checkout and re-authorize D02–D07. Do not recreate
 
 | Slice | Focus | Required exit evidence |
 |---|---|---|
-| D01 | Readiness, technical ADR, route/contract inventory, session/serving decision and threat model | **complete (in-repo):** ADR-0053 accepted; inventory + 8/8 Node negatives; serving/session/CORS/CSRF decided; missing typed lifecycle HTTP recorded `not-run`. SPA not implemented. |
+| D01 | Readiness, technical ADR, route/contract inventory, session/serving decision and threat model | **in-progress (in-repo complete except SPA):** ADR-0053 accepted; inventory + Node negatives; Origin/Referer allowlist and `GET /ui` missing-bundle `not_available` on the daemon front door. SPA not implemented. |
 | D02 | SPA shell, local auth/session bootstrap, Home and Agent inventory/detail | management/task channel isolation, redacted readiness, Agent identity separation |
 | D03 | Provider account forms, SecretStore handoff and connectivity/model probes | secret-leak negatives, endpoint policy errors, probe result semantics |
 | D04 | Agent Provider binding and revision-aware confirmation | fixed binding, CAS/idempotency, no-fallback negatives |

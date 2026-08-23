@@ -58,6 +58,10 @@ non_claims:
   `not_run`/`not_configured` reports — redaction validators more than live probes).
 - `GET /personal/health` (no auth) is liveness only — the installer and service
   controller use it; don't read readiness into it.
+- `GET /ui` (no auth) serves the same-origin static Web UI from `data_dir()/ui`
+  with CSP `default-src 'self'`. A missing bundle is `503` `not_available`
+  (`LOCAL_UI_BUNDLE_UNAVAILABLE`) and is not readiness. A browser `Origin` or
+  `Referer`, when present, must be this daemon's loopback HTTP origin.
 - Service logs: `journalctl --user -u cognitiveos-personal.service`. CLI
   `cognitive daemon start` also appends kernel-server stdout/stderr to
   `state/cognitiveos/daemon.log` (mode `0600`); scheduler skip lines are not a

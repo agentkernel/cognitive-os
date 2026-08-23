@@ -54,6 +54,10 @@ non_claims:
   小节（当前为静态 `not_run`/`not_configured` 报告——更多是脱敏校验器而非实时探针）。
 - `GET /personal/health`（免认证）仅是存活探测——安装器与服务控制器使用它；不要把
   readiness 读进去。
+- `GET /ui`（免认证）从 `data_dir()/ui` 提供同源静态 Web UI，并带 CSP
+  `default-src 'self'`。缺少 bundle 时为 `503` `not_available`
+  （`LOCAL_UI_BUNDLE_UNAVAILABLE`），不构成 readiness。若请求携带 `Origin` 或
+  `Referer`，必须是本 daemon 的 loopback HTTP origin。
 - 服务日志：`journalctl --user -u cognitiveos-personal.service`。CLI
   `cognitive daemon start` 还会把 kernel-server 的 stdout/stderr 追加到
   `state/cognitiveos/daemon.log`（权限 `0600`）；调度 skip 行不是公开 HTTP 事实。
