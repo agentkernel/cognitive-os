@@ -10,7 +10,7 @@ describe("provider request policy", () => {
       /header injection/,
     );
     expect(() =>
-      rejectCallerHeaderInjection({ display_name: "ok", provider_kind: "openai" }),
+      rejectCallerHeaderInjection({ display_name: "ok", provider_kind: "openai_official" }),
     ).not.toThrow();
   });
 });

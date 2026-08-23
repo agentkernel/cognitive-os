@@ -3,6 +3,7 @@ export type ChannelClass = "management" | "task";
 const memory: {
   management?: string;
   task?: string;
+  principal?: string;
 } = {};
 
 function assertMemoryOnlyStore(): void {
@@ -33,6 +34,15 @@ export function rememberBearer(channel: ChannelClass, token: string): void {
   memory[channel] = token;
 }
 
+export function rememberPrincipal(principal: string): void {
+  assertMemoryOnlyStore();
+  memory.principal = principal;
+}
+
+export function sessionPrincipal(): string {
+  return memory.principal ?? "principal://local/owner";
+}
+
 export function bearer(channel: ChannelClass): string | undefined {
   return memory[channel];
 }
@@ -40,6 +50,7 @@ export function bearer(channel: ChannelClass): string | undefined {
 export function clearSession(): void {
   memory.management = undefined;
   memory.task = undefined;
+  memory.principal = undefined;
 }
 
 export function exportClientState(): Record<string, never> {

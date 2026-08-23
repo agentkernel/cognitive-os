@@ -5,12 +5,22 @@ import { AGENT_IDENTITY_KEYS, mergeIdentities, type AgentIdentities } from "./id
 import {
   acceptBindingMutation,
   displayCost,
+  dispatchAllowed,
   escapeUntrustedText,
   inferCompletionFromObservation,
+  redactSecrets,
   unavailableLabel,
 } from "./policy";
-import { clearSession, rememberBearer, sessionHasChannel } from "./session";
+import {
+  PROVIDER_KINDS,
+  capabilityDisposition,
+  classifyProbe,
+  requiresTrustConfirmation,
+} from "./probe";
+import { clearSession, rememberBearer, rememberPrincipal, sessionHasChannel, sessionPrincipal } from "./session";
+import { interpretCandidate, workspaceSearchDraft } from "./taskDraft";
 import { createWatchController } from "./watch";
+import { isWatchResumeStale, latestSequence, parseSse } from "./watchSse";
 
 type LoadState = {
   status: "loading" | "ready" | "empty" | "denied" | "disconnected" | "unknown" | "not-run";
@@ -81,9 +91,16 @@ function JsonPanel({ title, value }: { title: string; value: unknown }) {
   return (
     <section className="panel">
       <h3>{title}</h3>
-      <pre>{JSON.stringify(value ?? {}, null, 2)}</pre>
+      <pre>{JSON.stringify(redactSecrets(value ?? {}), null, 2)}</pre>
     </section>
   );
+}
+
+function secretPresence(value: unknown): string {
+  if (value == null || value === "" || value === "absent") {
+    return "absent";
+  }
+  return "present";
 }
 
 function Shell({ children }: { children: React.ReactNode }) {
@@ -128,13 +145,14 @@ function RequireSession({
 
 function SessionPage() {
   const [secret, setSecret] = useState("");
-  const [principal, setPrincipal] = useState("owner-local");
-  const [message, setMessage] = useState<string>("Session tokens stay in memory only.");
+  const [principal, setPrincipal] = useState("principal://local/owner");
+  const [message, setMessage] = useState("Session tokens stay in memory only.");
 
   async function issue(event: React.FormEvent) {
     event.preventDefault();
     const bootstrap = secret;
     setSecret("");
+    rememberPrincipal(principal);
     const management = await issueChannelSession("management", principal, bootstrap);
     const task = await issueChannelSession("task", principal, bootstrap);
     if (management.ok && management.token) {
@@ -250,11 +268,13 @@ function identitiesFromResource(item: Record<string, unknown>): AgentIdentities 
 function AgentsPage() {
   const [runtime, setRuntime] = useState<LoadState>({ status: "loading" });
   const [bindings, setBindings] = useState<LoadState>({ status: "loading" });
+  const [dsh, setDsh] = useState<LoadState>({ status: "loading" });
 
   useEffect(() => {
     void (async () => {
       setRuntime(await load("/management/resource/v1/list?family=runtime", "management"));
       setBindings(await load("/management/agent-bindings", "management"));
+      setDsh(await load("/personal/dsh/runtime", "management"));
     })();
   }, []);
 
@@ -303,6 +323,7 @@ function AgentsPage() {
         </table>
       )}
       <JsonPanel title="Bindings projection" value={bindings.body} />
+      <JsonPanel title="dsh runtime (process liveness is not Task completion)" value={dsh.body} />
     </>
   );
 }
@@ -355,6 +376,10 @@ function AgentDetailPage() {
 
 function ProvidersPage() {
   const [accounts, setAccounts] = useState<LoadState>({ status: "loading" });
+  const [kind, setKind] = useState<(typeof PROVIDER_KINDS)[number]>("openai_official");
+  const [allowPrivate, setAllowPrivate] = useState(false);
+  const [allowInsecure, setAllowInsecure] = useState(false);
+  const [trustConfirmed, setTrustConfirmed] = useState(false);
   const [message, setMessage] = useState("Keys travel only in the key POST body, then SecretStore.");
 
   async function refresh() {
@@ -368,12 +393,21 @@ function ProvidersPage() {
   async function create(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
+    const needsTrust = requiresTrustConfirmation({
+      kind,
+      allowPrivateNetwork: allowPrivate,
+      allowInsecureHttp: allowInsecure,
+    });
+    if (needsTrust && !trustConfirmed) {
+      setMessage("Trust confirmation is required before persisting a private or HTTP endpoint.");
+      return;
+    }
     const body = {
       display_name: String(form.get("display_name") ?? ""),
-      provider_kind: String(form.get("provider_kind") ?? ""),
+      provider_kind: kind,
       endpoint: String(form.get("endpoint") ?? "") || undefined,
-      allow_private_network: form.get("allow_private_network") === "on",
-      allow_insecure_http: form.get("allow_insecure_http") === "on",
+      allow_private_network: allowPrivate,
+      allow_insecure_http: allowInsecure,
     };
     rejectCallerHeaderInjection(body);
     const result = await readJson("/management/providers/accounts", "management", {
@@ -381,12 +415,26 @@ function ProvidersPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
-    setMessage(result.ok ? "Account created without embedding a key in the create form." : `HTTP ${result.status}`);
+    const created = asRecord(asRecord(result.body).account);
+    setMessage(
+      result.ok
+        ? `Account created (${String(created.id ?? "unknown")}). Enter the API key on the account page; it is not in this create form.`
+        : `HTTP ${result.status} ${String(asRecord(result.body).code ?? "")}`,
+    );
     event.currentTarget.reset();
+    setKind("openai_official");
+    setAllowPrivate(false);
+    setAllowInsecure(false);
+    setTrustConfirmed(false);
     await refresh();
   }
 
   const rows = asList(accounts.body, ["accounts", "items"]).map(asRecord);
+  const needsTrust = requiresTrustConfirmation({
+    kind,
+    allowPrivateNetwork: allowPrivate,
+    allowInsecureHttp: allowInsecure,
+  });
 
   return (
     <>
@@ -395,8 +443,9 @@ function ProvidersPage() {
       <form onSubmit={create}>
         <h3>Create named account</h3>
         <p className="muted">
-          Trust confirmation happens on the daemon. The browser does not write SecretStore.
-          Create first; rotate the key on the account page.
+          Sequence: validate → trust confirmation when required → persist account → secret input on
+          the account page → SecretStore write → bounded probe. The browser does not write
+          SecretStore and does not call the Provider.
         </p>
         <label>
           Display name
@@ -404,22 +453,52 @@ function ProvidersPage() {
         </label>
         <label>
           Kind
-          <select name="provider_kind" required defaultValue="openai">
-            <option value="openai">openai</option>
-            <option value="anthropic">anthropic</option>
-            <option value="openai_compatible">openai_compatible</option>
+          <select
+            name="provider_kind"
+            required
+            value={kind}
+            onChange={(event) => setKind(event.target.value as (typeof PROVIDER_KINDS)[number])}
+          >
+            {PROVIDER_KINDS.map((item) => (
+              <option key={item} value={item}>
+                {item}
+              </option>
+            ))}
           </select>
         </label>
         <label>
           Endpoint
-          <input name="endpoint" placeholder="https://api.openai.com/v1" />
+          <input name="endpoint" placeholder="only for openai_compatible" />
         </label>
         <label>
-          <input type="checkbox" name="allow_private_network" /> Allow private network
+          <input
+            type="checkbox"
+            name="allow_private_network"
+            checked={allowPrivate}
+            onChange={(event) => setAllowPrivate(event.target.checked)}
+          />{" "}
+          Allow private network
         </label>
         <label>
-          <input type="checkbox" name="allow_insecure_http" /> Allow insecure HTTP
+          <input
+            type="checkbox"
+            name="allow_insecure_http"
+            checked={allowInsecure}
+            onChange={(event) => setAllowInsecure(event.target.checked)}
+          />{" "}
+          Allow insecure HTTP
         </label>
+        {needsTrust ? (
+          <label>
+            <input
+              type="checkbox"
+              name="trust_confirmed"
+              checked={trustConfirmed}
+              onChange={(event) => setTrustConfirmed(event.target.checked)}
+            />{" "}
+            I confirm this private-network or HTTP endpoint grant
+          </label>
+        ) : null}
         <button type="submit">Create account</button>
       </form>
       <p role="status">{message}</p>
@@ -442,7 +521,7 @@ function ProvidersPage() {
               <td>{String(row.display_name ?? "")}</td>
               <td>{String(row.provider_kind ?? "")}</td>
               <td>{String(row.status ?? "unknown")}</td>
-              <td>{String(row.secret_ref ?? "absent")}</td>
+              <td>{secretPresence(row.secret_ref)}</td>
               <td>
                 <NavLink to={`/providers/${encodeURIComponent(String(row.id))}`}>Open</NavLink>
               </td>
@@ -459,6 +538,7 @@ function ProviderDetailPage() {
   const [account, setAccount] = useState<LoadState>({ status: "loading" });
   const [models, setModels] = useState<LoadState>({ status: "loading" });
   const [key, setKey] = useState("");
+  const [probeClass, setProbeClass] = useState("unknown");
   const [message, setMessage] = useState("Key field is memory-only and cleared after submit.");
 
   async function refresh() {
@@ -484,17 +564,24 @@ function ProviderDetailPage() {
     event.preventDefault();
     const apiKey = key;
     setKey("");
-    const body = { id, op: "rotate", api_key: apiKey };
+    const op = secretPresence(record.secret_ref) === "present" ? "rotate" : "set";
+    const body = { id, op, api_key: apiKey };
     rejectCallerHeaderInjection(body);
     const result = await readJson("/management/providers/accounts/key", "management", {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify(body),
     });
+    const probe = classifyProbe({
+      ok: result.ok,
+      httpStatus: result.status,
+      body: result.body,
+    });
+    setProbeClass(probe.class);
     setMessage(
       result.ok
-        ? "Key handed to daemon SecretStore path. Response redacted."
-        : `HTTP ${result.status}`,
+        ? `Key handed to daemon SecretStore path. Probe class ${probe.label}. Response redacted.`
+        : `HTTP ${result.status} ${String(asRecord(result.body).code ?? "")} · ${probe.label}`,
     );
     await refresh();
   }
@@ -505,7 +592,41 @@ function ProviderDetailPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    setMessage(result.ok ? `Probe completed in ${result.ms} ms.` : `Probe HTTP ${result.status}`);
+    const classified = classifyProbe({
+      ok: result.ok,
+      httpStatus: result.status,
+      body: result.body,
+    });
+    setProbeClass(classified.class);
+    setMessage(
+      result.ok
+        ? `Reachability not implied. Model discovery ${classified.label} in ${result.ms} ms. Capability ${capabilityDisposition(undefined)}.`
+        : `Probe HTTP ${result.status} · ${classified.label} · ${classified.nextAction}`,
+    );
+    await refresh();
+  }
+
+  async function removeKey() {
+    const result = await readJson("/management/providers/accounts/key", "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id, op: "remove" }),
+    });
+    setMessage(result.ok ? "Key removed; account revoked." : `HTTP ${result.status}`);
+    await refresh();
+  }
+
+  async function deleteAccount() {
+    const result = await readJson("/management/providers/accounts/delete", "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    setMessage(
+      result.ok
+        ? "Account deleted."
+        : `HTTP ${result.status} ${String(asRecord(result.body).code ?? "")}. Active Agent bindings block delete.`,
+    );
     await refresh();
   }
 
@@ -518,12 +639,21 @@ function ProviderDetailPage() {
       <StateNote state={account} />
       <section className="panel">
         <p>Status: {String(record.status ?? "unknown")}</p>
+        <p>Kind: {String(record.provider_kind ?? "unknown")}</p>
+        <p>Endpoint: {String(record.endpoint ?? "unknown")}</p>
+        <p>Network scope: {String(record.network_scope ?? "unknown")}</p>
         <p>Catalog revision: {String(record.catalog_revision ?? "unknown")}</p>
-        <p>Secret: {String(record.secret_ref ?? "absent")}</p>
+        <p>Secret: {secretPresence(record.secret_ref)}</p>
         <p>Last discovery error: {String(record.last_discovery_error ?? "none")}</p>
+        <p>Probe class: {probeClass}</p>
+        <p>Capability: {capabilityDisposition(undefined)}</p>
       </section>
       <form onSubmit={rotate}>
         <h3>SecretStore handoff</h3>
+        <p className="muted">
+          The key is sent once on the management channel and cleared from this field. SecretRef is
+          not a resolvable credential in the browser.
+        </p>
         <label>
           API key
           <input
@@ -533,10 +663,16 @@ function ProviderDetailPage() {
             onChange={(event) => setKey(event.target.value)}
           />
         </label>
-        <button type="submit">Rotate key via daemon</button>
+        <button type="submit">Set or rotate key via daemon</button>
+        <button type="button" onClick={() => void removeKey()}>
+          Remove key
+        </button>
       </form>
       <button type="button" onClick={() => void probe()}>
         Bounded model/capability probe
+      </button>
+      <button type="button" onClick={() => void deleteAccount()}>
+        Delete account
       </button>
       <p role="status">{message}</p>
       <table>
@@ -567,6 +703,9 @@ function ProviderDetailPage() {
 function BindingsPage() {
   const [bindings, setBindings] = useState<LoadState>({ status: "loading" });
   const [accounts, setAccounts] = useState<LoadState>({ status: "loading" });
+  const [models, setModels] = useState<LoadState>({ status: "empty" });
+  const [agent, setAgent] = useState("pi");
+  const [accountId, setAccountId] = useState("");
   const [message, setMessage] = useState("At most one active fixed account+model per Agent.");
 
   async function refresh() {
@@ -578,23 +717,36 @@ function BindingsPage() {
     void refresh();
   }, []);
 
+  useEffect(() => {
+    if (!accountId) {
+      setModels({ status: "empty" });
+      return;
+    }
+    void (async () => {
+      setModels(
+        await load(
+          `/management/providers/models?account_id=${encodeURIComponent(accountId)}`,
+          "management",
+        ),
+      );
+    })();
+  }, [accountId]);
+
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    const agent = String(form.get("agent") ?? "");
-    const accountId = String(form.get("account_id") ?? "");
     const modelId = String(form.get("model_id") ?? "");
     const expectedRevision = Number(form.get("expected_revision"));
     const current = asList(bindings.body, ["bindings", "items"])
       .map(asRecord)
-      .find((row) => row.agent === agent);
+      .find((row) => String(row.agent).endsWith(agent) || String(row.agent) === agent);
     const account = asList(accounts.body, ["accounts", "items"])
       .map(asRecord)
       .find((row) => row.id === accountId);
+    const currentRevision = current ? Number(current.revision ?? 0) : 0;
     const gate = acceptBindingMutation({
       expectedRevision: Number.isFinite(expectedRevision) ? expectedRevision : undefined,
-      currentRevision: current ? Number(current.revision ?? 0) : expectedRevision,
-      accountStatus: account ? String(account.status) : undefined,
+      currentRevision,
       fallback: form.get("fallback") === "on",
       perRequestOverride: form.get("per_request") === "on",
     });
@@ -602,40 +754,100 @@ function BindingsPage() {
       setMessage(gate.reason);
       return;
     }
+    const confirmed = form.get("confirm_binding") === "on";
+    if (!confirmed) {
+      setMessage(
+        `Confirm the fixed binding: agent ${agent}, account ${accountId}, model ${modelId}, expected revision ${expectedRevision}. No fallback.`,
+      );
+      return;
+    }
     const result = await readJson("/management/agent-bindings", "management", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ agent, account_id: accountId, model_id: modelId }),
+      body: JSON.stringify({
+        agent,
+        account_id: accountId,
+        model_id: modelId,
+        expected_revision: expectedRevision,
+      }),
     });
-    setMessage(result.ok ? "Binding stored." : `HTTP ${result.status}`);
+    const callable = dispatchAllowed({
+      accountStatus: account ? String(account.status) : undefined,
+      bindingStatus: "active",
+    });
+    setMessage(
+      result.ok
+        ? `Binding stored. Dispatch ${callable ? "allowed" : "blocked until the account is usable"}.`
+        : `HTTP ${result.status} ${String(asRecord(result.body).code ?? "")}`,
+    );
+    await refresh();
+  }
+
+  async function remove(target: string) {
+    const result = await readJson("/management/agent-bindings/remove", "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ agent: target }),
+    });
+    setMessage(result.ok ? "Binding removed." : `HTTP ${result.status}`);
     await refresh();
   }
 
   const rows = asList(bindings.body, ["bindings", "items"]).map(asRecord);
+  const accountRows = asList(accounts.body, ["accounts", "items"]).map(asRecord);
+  const modelRows = asList(models.body, ["models", "items"]).map(asRecord);
+  const current = rows.find((row) => String(row.agent).endsWith(agent) || String(row.agent) === agent);
+  const expectedDefault = current ? Number(current.revision ?? 0) : 0;
 
   return (
     <>
       <h2>Agent Provider bindings</h2>
       <StateNote state={bindings} />
       <form onSubmit={submit}>
+        <p className="muted">
+          One active <code>account + provider + model</code> per Agent. Stale expected_revision is
+          rejected by the daemon. Unbound, revoked, or degraded accounts cannot dispatch.
+        </p>
         <label>
           Agent
-          <select name="agent" required defaultValue="pi">
+          <select name="agent" required value={agent} onChange={(event) => setAgent(event.target.value)}>
             <option value="pi">pi</option>
             <option value="dsh">dsh</option>
           </select>
         </label>
         <label>
-          Account id
-          <input name="account_id" required />
+          Account
+          <select
+            name="account_id"
+            required
+            value={accountId}
+            onChange={(event) => setAccountId(event.target.value)}
+          >
+            <option value="">Select account</option>
+            {accountRows.map((row) => (
+              <option key={String(row.id)} value={String(row.id)}>
+                {String(row.display_name ?? row.id)} ({String(row.status ?? "unknown")})
+              </option>
+            ))}
+          </select>
         </label>
         <label>
-          Model id
-          <input name="model_id" required />
+          Model
+          <select name="model_id" required>
+            {modelRows.map((model) => (
+              <option key={String(model.model_id)} value={String(model.model_id)}>
+                {String(model.model_id)}
+              </option>
+            ))}
+          </select>
         </label>
         <label>
           Expected revision
-          <input name="expected_revision" type="number" required defaultValue={0} />
+          <input name="expected_revision" type="number" required defaultValue={expectedDefault} key={expectedDefault} />
+        </label>
+        <label>
+          <input type="checkbox" name="confirm_binding" /> Confirm this exact Agent, account, model,
+          and revision
         </label>
         <label>
           <input type="checkbox" name="fallback" /> Request fallback (must be rejected)
@@ -655,18 +867,33 @@ function BindingsPage() {
             <th>Model</th>
             <th>Revision</th>
             <th>Status</th>
+            <th>Dispatch</th>
+            <th />
           </tr>
         </thead>
         <tbody>
-          {rows.map((row) => (
-            <tr key={String(row.agent)}>
-              <td>{String(row.agent)}</td>
-              <td>{String(row.account_id)}</td>
-              <td>{String(row.model_id)}</td>
-              <td>{String(row.revision)}</td>
-              <td>{String(row.status)}</td>
-            </tr>
-          ))}
+          {rows.map((row) => {
+            const account = accountRows.find((item) => item.id === row.account_id);
+            const callable = dispatchAllowed({
+              accountStatus: account ? String(account.status) : "unknown",
+              bindingStatus: String(row.status),
+            });
+            return (
+              <tr key={String(row.agent)}>
+                <td>{String(row.agent)}</td>
+                <td>{String(row.account_id)}</td>
+                <td>{String(row.model_id)}</td>
+                <td>{String(row.revision)}</td>
+                <td>{String(row.status)}</td>
+                <td>{callable ? "callable" : "blocked"}</td>
+                <td>
+                  <button type="button" onClick={() => void remove(String(row.agent))}>
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            );
+          })}
         </tbody>
       </table>
     </>
@@ -676,19 +903,31 @@ function BindingsPage() {
 function TasksPage() {
   const [effects, setEffects] = useState<LoadState>({ status: "loading" });
   const [observation, setObservation] = useState<LoadState>({ status: "loading" });
+  const [evidence, setEvidence] = useState<LoadState>({ status: "empty" });
   const watch = useMemo(() => createWatchController(), []);
   const [watchState, setWatchState] = useState(watch.state);
-  const [taskRef, setTaskRef] = useState("task://personal/example");
+  const [taskRef, setTaskRef] = useState("");
+  const [objective, setObjective] = useState("search the workspace for needle");
+  const [previewDigest, setPreviewDigest] = useState("");
+  const [interpretationId, setInterpretationId] = useState("");
+  const [acceptedDigest, setAcceptedDigest] = useState("");
+  const [draft, setDraft] = useState<ReturnType<typeof workspaceSearchDraft> | null>(null);
+  const [runMessage, setRunMessage] = useState("Admit uses the typed Task channel only.");
+  const [resumeFrom, setResumeFrom] = useState<number | undefined>(undefined);
 
   async function refresh(ref: string) {
+    if (!ref) {
+      return;
+    }
     const encoded = encodeURIComponent(ref);
     setEffects(await load(`/task/effects?task_ref=${encoded}`, "task"));
     setObservation(await load(`/task/observation?task_ref=${encoded}`, "task"));
-    const evidence = await load(`/task/evidence?task_ref=${encoded}`, "task");
+    const nextEvidence = await load(`/task/evidence?task_ref=${encoded}`, "task");
+    setEvidence(nextEvidence);
     const inferred = inferCompletionFromObservation({
       processExit: 0,
       providerResponse: observation.body,
-      httpReceipt: evidence.body,
+      httpReceipt: nextEvidence.body,
       streamClosed: true,
     });
     if (inferred !== "unknown") {
@@ -697,8 +936,130 @@ function TasksPage() {
     setWatchState(watch.state);
   }
 
+  async function pollWatch() {
+    const path =
+      resumeFrom == null ? "/task/watch" : `/task/watch?resume_from=${encodeURIComponent(String(resumeFrom))}`;
+    const result = await readJson(path, "task");
+    if (isWatchResumeStale(result.status, result.body)) {
+      watch.noteGap();
+      setWatchState(watch.state);
+      setResumeFrom(undefined);
+      setRunMessage("Watch cursor gap: snapshot reload required. Completion stays unknown.");
+      return;
+    }
+    const text =
+      typeof result.body === "string"
+        ? result.body
+        : typeof asRecord(result.body).raw === "string"
+          ? String(asRecord(result.body).raw)
+          : JSON.stringify(result.body ?? {});
+    const frames = parseSse(text);
+    for (const frame of frames) {
+      const id = frame.id ?? JSON.stringify(frame.data);
+      watch.accept({
+        id,
+        cursor: frame.id ?? String(latestSequence(frames) ?? ""),
+        kind: frame.event,
+      });
+    }
+    const latest = latestSequence(frames);
+    if (latest != null) {
+      setResumeFrom(latest);
+    }
+    setWatchState(watch.state);
+  }
+
+  async function startTask(event: React.FormEvent) {
+    event.preventDefault();
+    const principal = sessionPrincipal();
+    const recorded = await readJson("/task/intent.record", "task", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        schema_version: "cognitiveos.task-intent-record-request/0.1",
+        conversation_or_scope_ref: "conversation://personal/web-ui",
+        raw_expression: objective,
+      }),
+    });
+    if (!recorded.ok) {
+      setRunMessage(`intent.record HTTP ${recorded.status}`);
+      return;
+    }
+    const userIntentRecordId = String(asRecord(recorded.body).user_intent_record_id ?? "");
+    const interpreted = await readJson("/task/intent.interpret", "task", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        schema_version: "cognitiveos.task-intent-interpret-request/0.1",
+        user_intent_record_id: userIntentRecordId,
+        candidate: interpretCandidate(objective),
+      }),
+    });
+    if (!interpreted.ok) {
+      setRunMessage(`intent.interpret HTTP ${interpreted.status}`);
+      return;
+    }
+    const nextDraft = workspaceSearchDraft(objective);
+    setDraft(nextDraft);
+    const previewed = await readJson("/task/preview", "task", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        schema_version: "cognitiveos.task-preview-request/0.1",
+        task_contract_draft: nextDraft,
+      }),
+    });
+    if (!previewed.ok) {
+      setRunMessage(`preview HTTP ${previewed.status}`);
+      return;
+    }
+    const digest = String(asRecord(previewed.body).preview_digest ?? "");
+    setPreviewDigest(digest);
+    setInterpretationId(String(asRecord(interpreted.body).interpretation_id ?? ""));
+    setAcceptedDigest(String(asRecord(interpreted.body).interpretation_digest ?? ""));
+    setRunMessage(
+      `Preview ready for ${principal}. Digest bound. Confirm admit; HTTP 200 is not Task completion.`,
+    );
+  }
+
+  async function admitTask() {
+    if (!draft || !previewDigest || !interpretationId) {
+      setRunMessage("Preview first.");
+      return;
+    }
+    const principal = sessionPrincipal();
+    const admitted = await readJson("/task/admit", "task", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        schema_version: "cognitiveos.task-admit-request/0.1",
+        expected_current_epoch: 0,
+        preview_digest: previewDigest,
+        task_contract_draft: draft,
+        acceptance: {
+          accepted_by: principal,
+          accepted_digest: acceptedDigest,
+          interpretation_id: interpretationId,
+        },
+      }),
+    });
+    const ref = String(asRecord(admitted.body).task_ref ?? draft.task_ref);
+    setTaskRef(ref);
+    setRunMessage(
+      admitted.ok
+        ? `Admitted ${ref}. Watch and projections are observations, not completion.`
+        : `admit HTTP ${admitted.status} ${String(asRecord(admitted.body).code ?? "")}`,
+    );
+    if (admitted.ok) {
+      await refresh(ref);
+      await pollWatch();
+    }
+  }
+
   useEffect(() => {
-    void refresh(taskRef);
+    if (taskRef) {
+      void refresh(taskRef);
+    }
   }, [taskRef]);
 
   return (
@@ -706,6 +1067,25 @@ function TasksPage() {
       <h2>Tasks, Effects, Evidence</h2>
       <p className="muted">
         Cancel is {unavailableLabel("task-cancel")}. Detach does not cancel a Task or stop an Agent.
+        Process/Provider/Pi/HTTP receipt is not Task completion.
+      </p>
+      <form onSubmit={(event) => void startTask(event)}>
+        <h3>Start a governed Task</h3>
+        <label>
+          Objective
+          <input
+            name="objective"
+            value={objective}
+            onChange={(event) => setObjective(event.target.value)}
+          />
+        </label>
+        <button type="submit">Record, interpret, and preview</button>
+        <button type="button" onClick={() => void admitTask()}>
+          Confirm admit
+        </button>
+      </form>
+      <p className="muted">
+        Preview digest: {previewDigest || "none"}. Interpretation: {interpretationId || "none"}.
       </p>
       <form
         onSubmit={(event) => {
@@ -716,9 +1096,27 @@ function TasksPage() {
       >
         <label>
           Task ref
-          <input name="task_ref" defaultValue={taskRef} />
+          <input name="task_ref" defaultValue={taskRef} key={taskRef} />
         </label>
         <button type="submit">Load projections</button>
+        <button
+          type="button"
+          onClick={() => {
+            void pollWatch();
+          }}
+        >
+          Watch poll
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            watch.reconnect();
+            setResumeFrom(undefined);
+            setWatchState(watch.state);
+          }}
+        >
+          Reconnect snapshot
+        </button>
         <button
           type="button"
           onClick={() => {
@@ -739,10 +1137,11 @@ function TasksPage() {
         </button>
       </form>
       <p className="live" role="status" aria-live="polite">
-        Watch {watchState}. Completion from observation remains unknown.
+        Watch {watchState}. Completion from observation remains unknown. {runMessage}
       </p>
       <StateNote state={effects} />
       <JsonPanel title="Effects" value={effects.body} />
+      <JsonPanel title="Evidence" value={evidence.body} />
       <JsonPanel
         title="Observation (escaped)"
         value={escapeUntrustedText(JSON.stringify(observation.body ?? {}, null, 2))}

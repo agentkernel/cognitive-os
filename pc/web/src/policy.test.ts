@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   acceptBindingMutation,
+  dispatchAllowed,
   assertNoBrowserAuthorityTarget,
   containsSecretMaterial,
   displayCost,
@@ -46,17 +47,10 @@ describe("unavailable typed operations", () => {
 });
 
 describe("binding mutation gates", () => {
-  it("rejects stale revision, revoked/degraded, fallback, and per-request override", () => {
+  it("rejects stale revision, fallback, and per-request override", () => {
     expect(
       acceptBindingMutation({ expectedRevision: 1, currentRevision: 2 }),
     ).toEqual({ ok: false, reason: "stale binding revision" });
-    expect(
-      acceptBindingMutation({
-        expectedRevision: 3,
-        currentRevision: 3,
-        accountStatus: "revoked",
-      }),
-    ).toEqual({ ok: false, reason: "unbound, revoked, or degraded target" });
     expect(
       acceptBindingMutation({
         expectedRevision: 3,
@@ -71,6 +65,15 @@ describe("binding mutation gates", () => {
         perRequestOverride: true,
       }),
     ).toMatchObject({ ok: false });
+  });
+
+  it("allows storing a binding on a revoked account but blocks dispatch", () => {
+    expect(acceptBindingMutation({ expectedRevision: 0, currentRevision: 0 })).toEqual({
+      ok: true,
+    });
+    expect(dispatchAllowed({ accountStatus: "revoked", bindingStatus: "active" })).toBe(false);
+    expect(dispatchAllowed({ accountStatus: "active", bindingStatus: "active" })).toBe(true);
+    expect(dispatchAllowed({ accountStatus: "active", bindingStatus: "unbound" })).toBe(false);
   });
 });
 
