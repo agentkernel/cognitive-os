@@ -13,7 +13,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/secret_input.rs
     symbols: ["read_api_key_material"]
   - path: apps/kernel-server/src/personal/provider_control_plane.rs
-    symbols: ["PI_AGENT", "DSH_AGENT"]
+    symbols: ["PI_AGENT", "DSH_AGENT", "set_binding"]
   - path: apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
   - path: crates/cognitive-secret/src/endpoint_trust.rs
@@ -25,17 +25,19 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:37d6dba8e202642025b6d88d64b68a4ced1ed7c49a292ddfba61fb51e6bac656"
+fingerprint: "sha256:1c548ac0e0160c982cc9eefa1069a780392c65547bb5175b08345c546940d6e6"
 non_claims:
-  - 本页只记录已交付的 daemon API 与 cognitive CLI。不声称存在 Web 或桌面控制面板、live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01 或 Agent-benefit。
+  - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
 
 # Provider Control Plane
 
 `partial`：下面的 daemon management API 与 `cognitive` CLI 调用方已经实现，并有聚焦
-测试覆盖。本阶段**没有 Web UI，也没有桌面控制面板**。操作员与正在运行的本机
-daemon 对话。live Secret Store 轮换/删除与 live Provider/Pi/dsh 资格化并未作为产品
-证明执行；当 store 或上游不可用时，命令仍然失败闭合。
+测试覆盖。localhost-only Web UI（外部 clients checkout，由 `GET /ui/` 同源提供）
+是同一套 management 路由的 daemon 客户端：命名账户、SecretStore 密钥交接、有界
+探测、以及固定 Agent binding。**没有桌面控制面板**。当 store 或上游不可用时，
+live Secret Store 轮换/删除与 live Provider/Pi/dsh 资格化仍然失败闭合；它们不是
+Gate 证明。
 
 精确动词文本也出现在生成的 [CLI 参考](../reference/cli-cognitive.md)。`cognitive
 init` 已经使用的 Secret Store 机制见
@@ -48,17 +50,19 @@ key 只存进批准的 OS Secret Store、维护模型目录、把 Pi agent 与 D
 （`dsh`）各自绑定到一组固定的 account+provider+model，并查询用量、仅观察的预算、
 告警与脱敏审计日志。
 
-daemon 是唯一 writer。CLI 是非权威客户端：它从不打开 SQLite 或 Secret Store。它向
-daemon 发送 management 通道 HTTP 并打印 JSON。这些路由的 task 通道副本返回 HTTP
-403 `PROVIDER_CONTROL_CHANNEL_FORBIDDEN`。
+daemon 是唯一 writer。CLI 与 localhost Web UI 都是非权威客户端：它们从不打开
+SQLite 或 Secret Store。它们向 daemon 发送 management 通道 HTTP。浏览器不得在
+提交后把 API key 留在 DOM、URL 或 Web storage；SecretRef 只显示 present/absent。
+这些路由的 task 通道副本返回 HTTP 403 `PROVIDER_CONTROL_CHANNEL_FORBIDDEN`。
 
 该平面**不**取代 `cognitive init`。首次对话设置仍写入 `provider.json` /
 `selected-model.json`。未绑定的 agent 仍使用那一对文件。一旦你为 `pi` 或 `dsh`
 设置了 control-plane binding，该 binding 就是该 agent 唯一允许的 account+model——
 `provider.json` 不是回退。
 
-范围外（被拒绝或根本未交付）：OAuth、浏览器登录、自动路由或负载均衡、硬预算阻断、
-第三方 Anthropic 兼容端点、后台模型刷新，以及除本 CLI/API 以外的任何控制面板。
+范围外（被拒绝或根本未交付）：OAuth、浏览器登录 Provider、自动路由或负载均衡、硬
+预算阻断、第三方 Anthropic 兼容端点、后台模型刷新，以及任何桌面控制面板。Web UI
+不发明 Task cancel 或 Agent pause/resume/stop/restart/quarantine HTTP。
 
 ## 前置条件
 
@@ -203,8 +207,11 @@ cognitive agent binding remove --agent pi
 ```
 
 除非该模型已在账户目录中（发现它或 `models add`），`set` 会以
-`PROVIDER_MODEL_NOT_FOUND` 失败。`show` 在解析时要求 `--agent`，但当前调用与 `list`
-相同的列表端点（不过滤）。用 `list` 查看两个 binding。
+`PROVIDER_MODEL_NOT_FOUND` 失败。HTTP `POST /management/agent-bindings` 接受可选
+整数 `expected_revision`（当前 binding revision，未绑定时为 `0`）。不匹配时 HTTP
+409 `PROVIDER_BINDING_REVISION_STALE`；省略该字段以保持 CLI 兼容。`show` 在解析时
+要求 `--agent`，但当前调用与 `list` 相同的列表端点（不过滤）。用 `list` 查看两个
+binding。
 
 Pi 流量使用 `POST /provider/v1/chat/completions`。DeepSeek harness 流量使用独立的
 `POST /provider/v1/dsh/chat/completions` 路由。已绑定的 Pi 私有 candidate 调用也使用
@@ -281,6 +288,7 @@ cognitive alerts acknowledge --alert-id YOUR-ALERT-ID
 | `PROVIDER_KEY_MISSING` | 在 refresh 或绑定调用前 set key。 |
 | `PROVIDER_MODEL_NOT_FOUND` | 在 `agent binding set` 之前 `models refresh` 或 `models add`。 |
 | `PERSONAL_PROVIDER_BINDING_MISMATCH` | 请求模型不是绑定模型。更改 binding 或发送已绑定 id。没有回退。 |
+| HTTP 409 `PROVIDER_BINDING_REVISION_STALE` | 重新读取 binding revision，再用确认过的 `expected_revision` 重试。 |
 | 删除时的 `PROVIDER_CONTROL_CONFLICT` | 先 `agent binding remove`。 |
 | `PROVIDER_ENDPOINT_RECONFIRM_REQUIRED` | 若你确实要新的主机、协议或范围，带 `--reconfirm` 重跑 `account update`。 |
 | `PROVIDER_ENDPOINT_HTTP_REQUIRES_GRANT` / `PROVIDER_ENDPOINT_PRIVATE_REQUIRES_GRANT` | 在 create 或 update 时传入匹配的 `--allow-*` 标志（需要时带 `--reconfirm`）。 |

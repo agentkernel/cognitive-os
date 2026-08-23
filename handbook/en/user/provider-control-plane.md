@@ -13,7 +13,7 @@ sources:
   - path: apps/admin-cli/src/personal_cli/secret_input.rs
     symbols: ["read_api_key_material"]
   - path: apps/kernel-server/src/personal/provider_control_plane.rs
-    symbols: ["PI_AGENT", "DSH_AGENT"]
+    symbols: ["PI_AGENT", "DSH_AGENT", "set_binding"]
   - path: apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
   - path: crates/cognitive-secret/src/endpoint_trust.rs
@@ -25,19 +25,21 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:37d6dba8e202642025b6d88d64b68a4ced1ed7c49a292ddfba61fb51e6bac656"
+fingerprint: "sha256:1c548ac0e0160c982cc9eefa1069a780392c65547bb5175b08345c546940d6e6"
 non_claims:
-  - This page documents the shipped daemon API and cognitive CLI only. It does not claim a Web or desktop control panel, live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, or Agent-benefit.
+  - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
 
 # Provider Control Plane
 
 `partial`: the daemon management API and the `cognitive` CLI callers below are
-implemented and covered by focused tests. There is **no Web UI and no desktop
-control panel** in this phase. Operators talk to a running local daemon. Live
-Secret Store rotate/remove and live Provider/Pi/dsh qualification were not
-executed as product proof; the commands still fail closed when the store or
-upstream is unavailable.
+implemented and covered by focused tests. A localhost-only Web UI (external
+clients checkout, served same-origin from `GET /ui/`) is a daemon client for
+the same management routes: named accounts, SecretStore key handoff, bounded
+probe, and fixed Agent bindings. There is **no desktop control panel**. Live
+Secret Store rotate/remove and live Provider/Pi/dsh qualification remain
+fail-closed when the store or upstream is unavailable; they are not Gate
+proof.
 
 Exact verb text also appears in the generated
 [CLI reference](../reference/cli-cognitive.md). Secret-store mechanics that
@@ -52,9 +54,11 @@ catalog, bind the Pi agent and the DeepSeek harness (`dsh`) to one fixed
 account+provider+model each, and query usage, observe-only budgets, alerts, and
 a redacted audit log.
 
-The daemon is the only writer. The CLI is a non-authority client: it never
-opens SQLite or the Secret Store. It sends management-channel HTTP to the
-daemon and prints JSON. Task-channel copies of these routes return HTTP 403
+The daemon is the only writer. The CLI and the localhost Web UI are
+non-authority clients: they never open SQLite or the Secret Store. They send
+management-channel HTTP to the daemon. The browser must not keep the API key
+in the DOM after submit, URL, or Web storage; SecretRef is shown only as
+present/absent. Task-channel copies of these routes return HTTP 403
 `PROVIDER_CONTROL_CHANNEL_FORBIDDEN`.
 
 This plane does **not** replace `cognitive init`. First-conversation setup
@@ -63,10 +67,11 @@ that pair. Once you set a control-plane binding for `pi` or `dsh`, that
 binding is the only allowed account+model for that agent — `provider.json` is
 not a fallback.
 
-Out of scope (refused or simply not shipped): OAuth, browser login, automatic
-routing or load balancing, hard budget blocking, third-party
-Anthropic-compatible endpoints, background model refresh, and any control
-panel other than this CLI/API.
+Out of scope (refused or simply not shipped): OAuth, browser login to a
+Provider, automatic routing or load balancing, hard budget blocking,
+third-party Anthropic-compatible endpoints, background model refresh, and any
+desktop control panel. The Web UI does not invent Task cancel or Agent
+pause/resume/stop/restart/quarantine HTTP.
 
 ## Prerequisites
 
@@ -223,9 +228,12 @@ cognitive agent binding remove --agent pi
 ```
 
 `set` fails with `PROVIDER_MODEL_NOT_FOUND` unless that model is already in
-the account catalog (discover it or `models add` it). `show` requires
-`--agent` at parse time but currently calls the same list endpoint as `list`
-(it does not filter). Use `list` to inspect both bindings.
+the account catalog (discover it or `models add` it). HTTP `POST
+/management/agent-bindings` accepts optional integer `expected_revision`
+(current binding revision, or `0` when unbound). A mismatch is HTTP 409
+`PROVIDER_BINDING_REVISION_STALE`; omit the field to keep CLI compatibility.
+`show` requires `--agent` at parse time but currently calls the same list
+endpoint as `list` (it does not filter). Use `list` to inspect both bindings.
 
 Pi traffic uses `POST /provider/v1/chat/completions`. DeepSeek harness traffic
 uses the independent `POST /provider/v1/dsh/chat/completions` route. A bound
@@ -310,6 +318,7 @@ thresholds as it reads. Acknowledge takes `--alert-id`.
 | `PROVIDER_KEY_MISSING` | Set a key before refresh or bound calls. |
 | `PROVIDER_MODEL_NOT_FOUND` | `models refresh` or `models add` before `agent binding set`. |
 | `PERSONAL_PROVIDER_BINDING_MISMATCH` | The request model is not the bound model. Change the binding or send the bound id. No fallback. |
+| HTTP 409 `PROVIDER_BINDING_REVISION_STALE` | Re-read the binding revision and retry the confirmed `expected_revision`. |
 | `PROVIDER_CONTROL_CONFLICT` on delete | `agent binding remove` first. |
 | `PROVIDER_ENDPOINT_RECONFIRM_REQUIRED` | Re-run `account update` with `--reconfirm` if you really want the new host, scheme, or scope. |
 | `PROVIDER_ENDPOINT_HTTP_REQUIRES_GRANT` / `PROVIDER_ENDPOINT_PRIVATE_REQUIRES_GRANT` | Pass the matching `--allow-*` flag at create or update (with `--reconfirm` when required). |

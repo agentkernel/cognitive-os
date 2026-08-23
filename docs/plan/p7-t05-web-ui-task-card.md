@@ -3,10 +3,10 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `done`
+- Status: `in-progress` (D08 control-panel follow-on; D01–D07 shell retained)
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
   `agentkernel/cognitiveos-clients`)
-- Lease: `lease/personal/P7-T05/web-ui`
+- Lease: `lease/personal/P7-T05/web-ui-control-panel`
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
 - Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
 - Priority: non-blocking for Linux 1.0 / `GMVP-LINUX`
@@ -16,7 +16,7 @@
 
 This card decomposes the existing formal task without changing its status,
 dependencies or release scope. Delivery remains one formal task, one branch,
-one Draft PR and one lease; D01-D07 are task-internal slices, not independent
+one Draft PR and one lease; D01-D09 are task-internal slices, not independent
 tasks or PRs.
 
 ## 1. Objective
@@ -114,6 +114,8 @@ recreate `clients/**` in this repository and do not implement the SPA in
 | D05 | Task/Run/Process/Effect/Evidence/Events views and lifecycle controls | watch reconnect/gap behavior, typed mutation preview, completion non-claim |
 | D06 | Accessibility, responsive layout, security hardening and performance instrumentation | keyboard/accessibility checks, CSP, bounded latency measurements, dependency review |
 | D07 | Integration, supported validation, docs sync and final acceptance assessment | exact revision validation, focused negatives, task docs and closure record |
+| D08 | Live control-panel completion: Provider key SecretStore handoff, binding CAS, Task preview/admit/watch | focused negatives; SPA unit/DOM; no invented lifecycle HTTP |
+| D09 | Exact-revision Linux UI driver through key entry, bind, and Agent Task run | live SecretStore/UI driver; redaction; cleanup; hypothesis only |
 
 The first implementation slice changes the task status to `in-progress` under the
 normal task lease. Design-only work before that point does not claim execution.
@@ -170,7 +172,7 @@ authority records and audit facts remain daemon-owned.
 - [x] D01 inventory maps UI capabilities to approved daemon channels; missing ops are `unavailable`/`not-run`.
 - [x] Missing daemon operations recorded as unavailable/not-run; no generic browser transition invented.
 - [x] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory + SPA unit/DOM redaction).
-- [x] Supported browser/client validation passes on the exact task revision (Linux daemon-served `/ui/`; live Provider **not-run**).
-- [x] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
-- [x] Formal plan, task status, docs impact and final report are synchronized.
-- [x] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.
+- [ ] Supported browser/client validation passes on the exact task revision (Linux daemon-served `/ui/`; live Provider key entry required for D09).
+- [ ] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
+- [ ] Formal plan, task status, docs impact and final report are synchronized.
+- [ ] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.

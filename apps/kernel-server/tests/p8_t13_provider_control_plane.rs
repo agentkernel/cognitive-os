@@ -421,3 +421,73 @@ fn pi_and_dsh_bindings_are_isolated_before_secret_store() {
 
     let _ = std::fs::remove_dir_all(runtime_root);
 }
+
+#[test]
+fn binding_expected_revision_rejects_stale_cas() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-cas-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let created = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "openai-cas",
+            "provider_kind": "openai_official"
+        }),
+    );
+    let account_id = created["account"]["id"].as_str().unwrap().to_owned();
+    add_manual_model(port, &management_token, &account_id, "gpt-4o-mini");
+
+    let first = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings",
+        &management_token,
+        &json!({
+            "agent": "pi",
+            "account_id": account_id,
+            "model_id": "gpt-4o-mini",
+            "expected_revision": 0
+        }),
+    );
+    assert!(first.contains("200 OK"), "{first}");
+
+    let stale = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings",
+        &management_token,
+        &json!({
+            "agent": "pi",
+            "account_id": account_id,
+            "model_id": "gpt-4o-mini",
+            "expected_revision": 0
+        }),
+    );
+    assert!(stale.contains("409 Conflict"), "{stale}");
+    assert!(stale.contains("PROVIDER_BINDING_REVISION_STALE"), "{stale}");
+
+    let current = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings",
+        &management_token,
+        &json!({
+            "agent": "pi",
+            "account_id": account_id,
+            "model_id": "gpt-4o-mini",
+            "expected_revision": 1
+        }),
+    );
+    assert!(current.contains("200 OK"), "{current}");
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}

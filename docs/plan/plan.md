@@ -1135,7 +1135,7 @@ Pi 不可以：
 - 只渲染 system/provider/tasks/agents/processes/tokens/tools/memory/evidence projections。
 - 不直接打开数据库、不做授权/完成判定。
 - 不阻塞 RC CLI+Pi release。
-- 设计文档：[Web UI 产品设计](../product/personal/web-ui-design.md)、[Web UI 架构](../architecture/personal/web-ui-architecture.md)、[P7-T05 任务卡](./p7-t05-web-ui-task-card.md)、[route inventory](../architecture/personal/web-ui-route-inventory.json)。任务卡中的 D01-D07 是同一正式任务内的交付切片，不改变本任务的 post-1.0、non-blocking 边界。Approved checkout: `D:\cognitiveos-clients` (`pc/web/`)。
+- 设计文档：[Web UI 产品设计](../product/personal/web-ui-design.md)、[Web UI 架构](../architecture/personal/web-ui-architecture.md)、[P7-T05 任务卡](./p7-t05-web-ui-task-card.md)、[route inventory](../architecture/personal/web-ui-route-inventory.json)。任务卡中的 D01-D09 是同一正式任务内的交付切片，不改变本任务的 post-1.0、non-blocking 边界。Owner 2026-08-23 将已关闭的 D01–D07 shell 重开为控制面板跟进（密钥进入 SecretStore、Agent binding、Task preview/admit/watch）。Approved checkout: `D:\cognitiveos-clients` (`pc/web/`)。
 
 ### P7-T06 — RC、文档、支持矩阵和B01-B12
 

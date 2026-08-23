@@ -98,11 +98,16 @@ P7-T05/D01 Web UI route inventory is
 `tools/test/p7_t05_web_ui_inventory.test.mjs` against
 `docs/architecture/personal/web-ui-route-inventory.json` (invented lifecycle,
 missing daemon route, Task-channel secrets, Web storage, and browser-direct
-targets fail closed). It is not a SPA implementation, browser journey, Gate,
-or release result. Daemon Origin/Referer and `GET /ui` serving tests live in
+targets fail closed). It is not a Gate or release result. Daemon Origin/Referer
+and `GET /ui` serving tests live in
 `apps/kernel-server/src/personal/server.rs` (foreign/null Origin,
 missing-bundle `not_available`, path traversal); they require supported
 Rust linking (CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 / DEV-LINUX-NATIVE-01).
+P7-T05/D08 binding CAS is `expected_revision` on
+`POST /management/agent-bindings` with 409 `PROVIDER_BINDING_REVISION_STALE`
+(`apps/kernel-server/tests/p8_t13_provider_control_plane.rs`; Linux/CI only).
+SPA unit tests live in the external clients checkout `pc/web` (`vitest run`);
+they are not kernel CI and not live SecretStore proof.
 
 ## What CI enforces on every PR
 

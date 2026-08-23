@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| *(none)* | — | — | — | — | — | — | — |
+| `lease/personal/P7-T05/web-ui-control-panel` | P7-T05/D08 Web UI control-panel live Provider/Agent completion | Lane-TSC + Lane-RUN | `personal/P7-T05-web-ui-control-panel` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/plan.md`; `docs/plan/p7-t05-web-ui-task-card.md`; `docs/architecture/personal/web-ui-route-inventory.json`; `docs/architecture/personal/web-ui-architecture.md`; `docs/product/personal/web-ui-design.md`; `docs/checkpoints/20260823-personal-p7-t05-web-ui-control-panel-report.md`; `apps/kernel-server/src/personal/provider_control_plane.rs`; `apps/kernel-server/tests/p8_t13_provider_control_plane.rs`; `tools/src/p7_t05_web_ui_inventory.mjs`; `tools/test/p7_t05_web_ui_inventory.test.mjs`; `handbook/en/user/provider-control-plane.md`; `handbook/zh-CN/user/provider-control-plane.md`; `handbook/en/developer/daemon-and-http.md`; `handbook/zh-CN/developer/daemon-and-http.md`; `handbook/en/reference/http-api.md`; `handbook/zh-CN/reference/http-api.md`; `handbook/en/user/operations-and-recovery.md`; `handbook/zh-CN/user/operations-and-recovery.md`; `handbook/en/user/provider-and-secrets.md`; `handbook/zh-CN/user/provider-and-secrets.md`; `handbook/en/ai/validation-commands.md`; `handbook/zh-CN/ai/validation-commands.md`; `handbook/_meta/annotations/http-routes.json` | owner-directed Cursor session | 2026-08-23 / 2026-08-23 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no

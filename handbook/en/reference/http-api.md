@@ -17,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:0af859d2001ec9e744527c113df2f52f3eb7179460cf555ac8a0184dfa54808e"
+fingerprint: "sha256:022159ee9e08c7f27c1420b2eb24eea485aa2b1a7b6416014d00846e38c8eaeb"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -53,7 +53,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/providers/models/add` | management | Manually add a model (`manually_configured`) with optional per-million prices. |
 | `POST` | `/management/providers/models/set-price` | management | Set a new price version for one model. Historical usage keeps its recorded pricing version. |
 | `GET` | `/management/agent-bindings` | management | List fixed agent account+provider+model bindings (pi and dsh only). |
-| `POST` | `/management/agent-bindings` | management | Set one fixed binding. No auto fallback, load balancing, or implicit model switch. |
+| `POST` | `/management/agent-bindings` | management | Set one fixed binding. Optional expected_revision CAS; mismatch is HTTP 409 PROVIDER_BINDING_REVISION_STALE. No auto fallback, load balancing, or implicit model switch. |
 | `POST` | `/management/agent-bindings/remove` | management | Remove one agent binding. |
 | `GET` | `/management/usage` | management | Query retained usage events. Unknown token/cost values are never coerced to zero. |
 | `GET` | `/management/budgets` | management | List observe-only token/amount budgets. |
