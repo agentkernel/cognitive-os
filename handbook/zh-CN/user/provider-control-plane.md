@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:1c548ac0e0160c982cc9eefa1069a780392c65547bb5175b08345c546940d6e6"
+fingerprint: "sha256:3932ecd913e1e6613a725ee5e53fef76aa5a9f26a0da882818f21d5a6ee4b33a"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -35,7 +35,9 @@ non_claims:
 `partial`：下面的 daemon management API 与 `cognitive` CLI 调用方已经实现，并有聚焦
 测试覆盖。localhost-only Web UI（外部 clients checkout，由 `GET /ui/` 同源提供）
 是同一套 management 路由的 daemon 客户端：命名账户、SecretStore 密钥交接、有界
-探测、以及固定 Agent binding。**没有桌面控制面板**。当 store 或上游不可用时，
+探测、以及固定 Agent binding。**没有桌面控制面板**。原生 dsh 控制面板
+（`cognitive dsh web`，默认 `http://127.0.0.1:3080`）是独立的 dsh 自带 UI，
+不是本 Provider Control Plane 面，也不是 Personal `/ui/`。当 store 或上游不可用时，
 live Secret Store 轮换/删除与 live Provider/Pi/dsh 资格化仍然失败闭合；它们不是
 Gate 证明。
 

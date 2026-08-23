@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:b4e7da60d5ba6824527135f5b2b564237b567b41976a59e70771e8e9afcb358e"
+fingerprint: "sha256:2f5825461c67e45c56e7297584b2173cac4c4f9c60771a38c8b015609a213f9e"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -79,10 +79,16 @@ non_claims:
   the pinned AKP plugin, and never treats a dsh response as Task completion.
   Direct Flash (`--path a`) is refused; use `packages/dsh-akp-adapter/scripts/paired-path.mjs`
   for same-host Path A vs Path B measurement only.
+- `cognitive dsh web` starts the native dsh control panel (`dsh --profile web --no-open`)
+  at `http://127.0.0.1:3080` by default. This is not Personal `/ui/`. Bind is
+  loopback only (`--host 0.0.0.0` is refused). The pinned dsh root must contain
+  `apps/web/dist` (`pnpm run build`). Path B still uses the daemon Provider
+  proxy and SecretStore; do not put API keys in dsh `.env`. A panel session is
+  never Task completion. On SSH guests pass `--no-open` (already the product default).
 - `cognitive dsh status` reads `GET /personal/dsh/runtime`: INACTIVE / ACTIVE /
   CRASHED from process-local sessions plus an optional bound pid. Linux liveness
   is `/proc/{pid}` existence only (never cmdline/environ). It is not an
-  authority writer.
+  authority writer. UI-up is not Task completion.
 
 ## Stop, restart, stale state — `implemented`
 

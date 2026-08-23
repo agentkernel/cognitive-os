@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:1c548ac0e0160c982cc9eefa1069a780392c65547bb5175b08345c546940d6e6"
+fingerprint: "sha256:3932ecd913e1e6613a725ee5e53fef76aa5a9f26a0da882818f21d5a6ee4b33a"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
@@ -36,7 +36,10 @@ non_claims:
 implemented and covered by focused tests. A localhost-only Web UI (external
 clients checkout, served same-origin from `GET /ui/`) is a daemon client for
 the same management routes: named accounts, SecretStore key handoff, bounded
-probe, and fixed Agent bindings. There is **no desktop control panel**. Live
+probe, and fixed Agent bindings. There is **no desktop control panel**. The
+native dsh control panel (`cognitive dsh web`, default `http://127.0.0.1:3080`)
+is a separate dsh-owned UI, not this Provider Control Plane surface and not
+Personal `/ui/`. Live
 Secret Store rotate/remove and live Provider/Pi/dsh qualification remain
 fail-closed when the store or upstream is unavailable; they are not Gate
 proof.

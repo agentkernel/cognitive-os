@@ -92,6 +92,7 @@ pub enum PiCommand {
 pub enum DshCommand {
     Configure(DshConfigureOptions),
     Launch(DshLaunchOptions),
+    Web(DshLaunchOptions),
     Status(DshStatusOptions),
 }
 
@@ -234,7 +235,7 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
         }
         "dsh" => {
             let Some((subcommand, dsh_rest)) = rest.split_first() else {
-                return Err("dsh requires subcommand configure|launch|status".to_owned());
+                return Err("dsh requires subcommand configure|launch|web|status".to_owned());
             };
             let flags = parse_flags(dsh_rest)?;
             match subcommand.as_str() {
@@ -244,11 +245,14 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
                 "launch" => Ok(CognitiveCommand::Dsh(DshCommand::Launch(
                     parse_dsh_launch_options(&flags)?,
                 ))),
+                "web" => Ok(CognitiveCommand::Dsh(DshCommand::Web(
+                    parse_dsh_web_options(&flags)?,
+                ))),
                 "status" => Ok(CognitiveCommand::Dsh(DshCommand::Status(
                     parse_dsh_status_options(&flags)?,
                 ))),
                 other => Err(format!(
-                    "unknown dsh subcommand `{other}` (expected configure|launch|status)"
+                    "unknown dsh subcommand `{other}` (expected configure|launch|web|status)"
                 )),
             }
         }
@@ -309,6 +313,13 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             Err(error) => print_operational_error(&error),
         },
         CognitiveCommand::Dsh(DshCommand::Launch(options)) => match dsh::launch(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
+        CognitiveCommand::Dsh(DshCommand::Web(options)) => match dsh::launch(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
                 EXIT_SUCCESS
@@ -863,6 +874,65 @@ fn parse_dsh_launch_options(flags: &BTreeMap<String, String>) -> Result<DshLaunc
         print_mode: flag_bool(flags, "print")?,
         provider_path,
         task: flags.get("task").cloned(),
+        web_mode: false,
+        listen_host: "127.0.0.1".to_owned(),
+        listen_port: 3080,
+    })
+}
+
+fn parse_dsh_web_options(flags: &BTreeMap<String, String>) -> Result<DshLaunchOptions, String> {
+    reject_unexpected_flags(
+        flags,
+        &["runtime-root", "path", "host", "port", "no-open"],
+    )?;
+    if flag_bool(flags, "print")? {
+        return Err("dsh web does not accept --print; use `cognitive dsh launch --print` for headless Path B".to_owned());
+    }
+    if flags.contains_key("task") {
+        return Err("dsh web does not accept --task; the native panel is a long-running process".to_owned());
+    }
+    if flag_bool(flags, "open")? {
+        return Err(
+            "dsh web refuses --open; native dsh web has no TLS/auth — bind loopback and open http://127.0.0.1:<port> yourself"
+                .to_owned(),
+        );
+    }
+    let provider_path = match flags.get("path").map(String::as_str) {
+        None | Some("b") => DshProviderPath::Adapter,
+        Some("a") => DshProviderPath::Direct,
+        Some(other) => return Err(format!("dsh web --path must be a or b, not `{other}`")),
+    };
+    let listen_host = flags
+        .get("host")
+        .cloned()
+        .unwrap_or_else(|| "127.0.0.1".to_owned());
+    let listen_port = match flags.get("port") {
+        None => 3080,
+        Some(value) => value
+            .parse::<u16>()
+            .map_err(|_| "dsh web --port must be an integer 1..=65535".to_owned())
+            .and_then(|port| {
+                if port == 0 {
+                    Err("dsh web --port must be an integer 1..=65535".to_owned())
+                } else {
+                    Ok(port)
+                }
+            })?,
+    };
+    if listen_host == "0.0.0.0" || listen_host == "::" || listen_host == "[::]" {
+        return Err(
+            "dsh web --host 0.0.0.0/:: is refused; native dsh web has no TLS/auth and must bind loopback only"
+                .to_owned(),
+        );
+    }
+    Ok(DshLaunchOptions {
+        layout_roots: LayoutRoots::from_flags(flags)?,
+        print_mode: false,
+        provider_path,
+        task: None,
+        web_mode: true,
+        listen_host,
+        listen_port,
     })
 }
 
@@ -947,6 +1017,24 @@ pub(crate) fn parse_flags(args: &[String]) -> Result<BTreeMap<String, String>, S
                 .is_some()
             {
                 return Err("flag --print given twice".to_owned());
+            }
+            continue;
+        }
+        if flag == "--no-open" {
+            if flags
+                .insert("no-open".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --no-open given twice".to_owned());
+            }
+            continue;
+        }
+        if flag == "--open" {
+            if flags
+                .insert("open".to_owned(), "true".to_owned())
+                .is_some()
+            {
+                return Err("flag --open given twice".to_owned());
             }
             continue;
         }
@@ -1036,6 +1124,8 @@ USAGE:
                           --adapter-root <absolute-path> --revision <git-object>
   cognitive dsh launch [--runtime-root <dir>] [--print] [--path a|b]
                        [--task <prompt>]
+  cognitive dsh web [--runtime-root <dir>] [--path b] [--host 127.0.0.1]
+                    [--port 3080] [--no-open]
   cognitive dsh status [--runtime-root <dir>]
   cognitive resource get|watch [--runtime-root <dir>] [--endpoint <host:port>]
                        --family <memory|skill|tool|context|task|runtime>
@@ -1078,8 +1168,13 @@ Hard rules:
   - dsh configuration writes only non-secret pin/paths and a candidate-only adapter digest
   - dsh launch requires daemon-owned ready state (Pi may stay not_configured), loads the
     pinned AKP plugin, and never treats a dsh response as Task completion
+  - dsh web starts the native dsh control panel (`dsh --profile web --no-open`) on
+    loopback only (default http://127.0.0.1:3080). This is not Personal `/ui/`.
+    Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy.
+    A panel session is never Task completion.
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
+    (web refuses --host 0.0.0.0 and --path a)
   - resource list/inspect/bind|unbind|enable|disable|revoke call the management Resource Manager; get/watch remain the private projection
   - provider/agent/usage/budget/alerts/audit call the management Provider Control Plane; keys use --api-key-file only
   - never advances Task/Effect/Verification authority state
@@ -1259,6 +1354,48 @@ mod tests {
         ])
         .expect_err("dsh status must reject Provider secret flags");
         assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn dsh_web_parses_loopback_and_rejects_wildcard_host() {
+        let command = parse_cognitive_args(&[
+            "dsh".to_owned(),
+            "web".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+            "--host".to_owned(),
+            "127.0.0.1".to_owned(),
+            "--port".to_owned(),
+            "3080".to_owned(),
+            "--no-open".to_owned(),
+        ])
+        .expect("parse dsh web");
+        match command {
+            CognitiveCommand::Dsh(DshCommand::Web(options)) => {
+                assert!(options.web_mode);
+                assert_eq!(options.listen_host, "127.0.0.1");
+                assert_eq!(options.listen_port, 3080);
+                assert!(!options.print_mode);
+                assert_eq!(options.provider_path, DshProviderPath::Adapter);
+            }
+            other => panic!("expected dsh web, got {other:?}"),
+        }
+
+        let wildcard = parse_cognitive_args(&[
+            "dsh".to_owned(),
+            "web".to_owned(),
+            "--host".to_owned(),
+            "0.0.0.0".to_owned(),
+        ])
+        .expect_err("wildcard host");
+        assert!(
+            wildcard.contains("0.0.0.0") || wildcard.contains("loopback"),
+            "{wildcard}"
+        );
+
+        let open = parse_cognitive_args(&["dsh".to_owned(), "web".to_owned(), "--open".to_owned()])
+            .expect_err("open refused");
+        assert!(open.contains("--open"), "{open}");
     }
 
     #[test]

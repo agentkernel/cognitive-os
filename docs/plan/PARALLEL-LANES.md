@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P8-T15/dsh-native-web-panel` | P8-T15/D01–D03 native dsh Web UI control panel | Lane-RUN | `personal/P8-T15-dsh-native-web-panel` | `apps/admin-cli/src/personal_cli/mod.rs`; `apps/admin-cli/src/personal_cli/dsh.rs`; `packages/dsh-akp-adapter/scripts/**`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/plan.md`; `docs/plan/personal-trace.yaml`; `docs/plan/PROGRESS.md`; `docs/plan/PARALLEL-LANES.md`; `docs/checkpoints/20260823-personal-p8-t15-dsh-native-web-panel-report.md`; `handbook/en/user/cli-basics.md`; `handbook/zh-CN/user/cli-basics.md`; `handbook/en/user/operations-and-recovery.md`; `handbook/zh-CN/user/operations-and-recovery.md`; `handbook/en/user/install-and-first-conversation.md`; `handbook/zh-CN/user/install-and-first-conversation.md`; `handbook/en/developer/agent-and-pi-lifecycle.md`; `handbook/zh-CN/developer/agent-and-pi-lifecycle.md`; `handbook/en/reference/cli-cognitive.md`; `handbook/zh-CN/reference/cli-cognitive.md`; `handbook/_meta/**` | cursor-session / P8-T15 | 2026-08-23 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no

@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:8e8fb02603561e6c92068c1baa9c7be03a3840c35ee87615aa8b4fc1510729b1"
+fingerprint: "sha256:fd788066e9a4049ebc8f78b040d1b52a007a22854f32a1d189d86787d27faaa9"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -138,7 +138,9 @@ timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-ak
 WorkspaceRead/Search/Write Task，再由真实 dsh 进程以 plugin `startupEvents`
 提交这些 candidate，并把 Flash 经 daemon Provider SSE 代理转发
 （`POST /provider/v1/dsh/chat/completions` 且 `stream:true`）。产品安装路径是 `cognitive dsh configure` 然后 `cognitive dsh launch`
-（Path B）。`cognitive dsh status` 读取 `GET /personal/dsh/runtime`。
+（Path B）。`cognitive dsh web` 在钉住 dsh 根执行 `pnpm run build` 产出 `apps/web/dist`
+后启动原生面板（`dsh --profile web --no-open`，默认 `http://127.0.0.1:3080`），不是
+Personal `/ui/`。`cognitive dsh status` 读取 `GET /personal/dsh/runtime`。
 `POST /personal/dsh/runtime` 的 `op: clear` 会清掉绑定 pid 与内存中的 session，投影回到 `INACTIVE`。
 直接 Flash（`--path a`）只经 `scripts/paired-path.mjs` 做测量。
 `dsh.json` 里的 adapter registration digest 不是 SQLite 持久的 daemon adapter 状态。

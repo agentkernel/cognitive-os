@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:c8549a2deb72b165c56d3f0b4e7b85889d210bad01822724a3cf95b1680a8634"
+fingerprint: "sha256:3c4df3bd81e55f99164b0f034bd80da11a18e444bb22bcf9b1a2331b24e08248"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -42,6 +42,8 @@ USAGE:
                           --adapter-root <absolute-path> --revision <git-object>
   cognitive dsh launch [--runtime-root <dir>] [--print] [--path a|b]
                        [--task <prompt>]
+  cognitive dsh web [--runtime-root <dir>] [--path b] [--host 127.0.0.1]
+                    [--port 3080] [--no-open]
   cognitive dsh status [--runtime-root <dir>]
   cognitive resource get|watch [--runtime-root <dir>] [--endpoint <host:port>]
                        --family <memory|skill|tool|context|task|runtime>
@@ -84,8 +86,13 @@ Hard rules:
   - dsh configuration writes only non-secret pin/paths and a candidate-only adapter digest
   - dsh launch requires daemon-owned ready state (Pi may stay not_configured), loads the
     pinned AKP plugin, and never treats a dsh response as Task completion
+  - dsh web starts the native dsh control panel (`dsh --profile web --no-open`) on
+    loopback only (default http://127.0.0.1:3080). This is not Personal `/ui/`.
+    Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy.
+    A panel session is never Task completion.
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
+    (web refuses --host 0.0.0.0 and --path a)
   - resource list/inspect/bind|unbind|enable|disable|revoke call the management Resource Manager; get/watch remain the private projection
   - provider/agent/usage/budget/alerts/audit call the management Provider Control Plane; keys use --api-key-file only
   - never advances Task/Effect/Verification authority state

@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:b4e7da60d5ba6824527135f5b2b564237b567b41976a59e70771e8e9afcb358e"
+fingerprint: "sha256:2f5825461c67e45c56e7297584b2173cac4c4f9c60771a38c8b015609a213f9e"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -72,9 +72,14 @@ non_claims:
   ready（Pi 可保持 `not_configured`），加载钉住的 AKP 插件，绝不把 dsh 响应当作
   Task 完成。直接 Flash（`--path a`）被拒绝；同机 Path A/B 测量只用
   `packages/dsh-akp-adapter/scripts/paired-path.mjs`。
+- `cognitive dsh web` 启动原生 dsh 控制面板（`dsh --profile web --no-open`），默认
+  `http://127.0.0.1:3080`。这不是 Personal `/ui/`。只绑定 loopback（拒绝
+  `--host 0.0.0.0`）。钉住的 dsh 根必须有 `apps/web/dist`（`pnpm run build`）。
+  Path B 仍走 daemon Provider 代理与 SecretStore；不要把 API key 写入 dsh `.env`。
+  面板会话绝不是 Task 完成。SSH guest 上保持 `--no-open`（产品默认）。
 - `cognitive dsh status` 读取 `GET /personal/dsh/runtime`：由进程内会话与可选绑定
   pid 得到 INACTIVE / ACTIVE / CRASHED。Linux 存活只看 `/proc/{pid}` 是否存在
-  （永不打开 cmdline/environ）。它不是 authority writer。
+  （永不打开 cmdline/environ）。它不是 authority writer。UI 起来也不是 Task 完成。
 
 ## 停止、重启、过期状态 —— `implemented`
 
