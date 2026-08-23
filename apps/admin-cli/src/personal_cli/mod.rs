@@ -93,6 +93,7 @@ pub enum DshCommand {
     Configure(DshConfigureOptions),
     Launch(DshLaunchOptions),
     Web(DshLaunchOptions),
+    Apply(DshStatusOptions),
     Status(DshStatusOptions),
 }
 
@@ -235,7 +236,7 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
         }
         "dsh" => {
             let Some((subcommand, dsh_rest)) = rest.split_first() else {
-                return Err("dsh requires subcommand configure|launch|web|status".to_owned());
+                return Err("dsh requires subcommand configure|launch|web|apply|status".to_owned());
             };
             let flags = parse_flags(dsh_rest)?;
             match subcommand.as_str() {
@@ -251,8 +252,11 @@ pub fn parse_cognitive_args(args: &[String]) -> Result<CognitiveCommand, String>
                 "status" => Ok(CognitiveCommand::Dsh(DshCommand::Status(
                     parse_dsh_status_options(&flags)?,
                 ))),
+                "apply" => Ok(CognitiveCommand::Dsh(DshCommand::Apply(
+                    parse_dsh_status_options(&flags)?,
+                ))),
                 other => Err(format!(
-                    "unknown dsh subcommand `{other}` (expected configure|launch|web|status)"
+                    "unknown dsh subcommand `{other}` (expected configure|launch|web|apply|status)"
                 )),
             }
         }
@@ -327,6 +331,13 @@ pub fn run_cognitive_command(command: CognitiveCommand) -> i32 {
             Err(error) => print_operational_error(&error),
         },
         CognitiveCommand::Dsh(DshCommand::Status(options)) => match dsh::status(&options) {
+            Ok(report) => {
+                println!("{}", pretty_json(&report));
+                EXIT_SUCCESS
+            }
+            Err(error) => print_operational_error(&error),
+        },
+        CognitiveCommand::Dsh(DshCommand::Apply(options)) => match dsh::apply(&options) {
             Ok(report) => {
                 println!("{}", pretty_json(&report));
                 EXIT_SUCCESS
@@ -1122,6 +1133,7 @@ USAGE:
                        [--task <prompt>]
   cognitive dsh web [--runtime-root <dir>] [--path b] [--host 127.0.0.1]
                     [--port 3080] [--no-open]
+  cognitive dsh apply [--runtime-root <dir>]
   cognitive dsh status [--runtime-root <dir>]
   cognitive resource get|watch [--runtime-root <dir>] [--endpoint <host:port>]
                        --family <memory|skill|tool|context|task|runtime>
@@ -1168,6 +1180,8 @@ Hard rules:
     loopback only (default http://127.0.0.1:3080). This is not Personal `/ui/`.
     Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy.
     A panel session is never Task completion.
+  - dsh apply POSTs /personal/dsh/runtime op=apply (Cos dsh binding → selected-model)
+    and restarts only the Cos-installed `cognitive dsh web` pair on loopback 3080
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
     (web refuses --host 0.0.0.0 and --path a)
@@ -1349,6 +1363,33 @@ mod tests {
             "/tmp/key".to_owned(),
         ])
         .expect_err("dsh status must reject Provider secret flags");
+        assert!(rejected.contains("not accepted"), "{rejected}");
+    }
+
+    #[test]
+    fn dsh_apply_parses_runtime_root_without_secret_flags() {
+        let command = parse_cognitive_args(&[
+            "dsh".to_owned(),
+            "apply".to_owned(),
+            "--runtime-root".to_owned(),
+            "/tmp/cognitiveos".to_owned(),
+        ])
+        .expect("parse dsh apply");
+        assert_eq!(
+            command,
+            CognitiveCommand::Dsh(DshCommand::Apply(DshStatusOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(PathBuf::from("/tmp/cognitiveos")),
+                },
+            }))
+        );
+        let rejected = parse_cognitive_args(&[
+            "dsh".to_owned(),
+            "apply".to_owned(),
+            "--api-key-file".to_owned(),
+            "/tmp/key".to_owned(),
+        ])
+        .expect_err("dsh apply must reject Provider secret flags");
         assert!(rejected.contains("not accepted"), "{rejected}");
     }
 

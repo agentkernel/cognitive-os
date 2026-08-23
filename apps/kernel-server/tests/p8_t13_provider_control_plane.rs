@@ -381,7 +381,7 @@ fn pi_and_dsh_bindings_are_isolated_before_secret_store() {
     assert!(pi_mismatch.contains("400 Bad Request"), "{pi_mismatch}");
     assert!(pi_mismatch.contains("PERSONAL_PROVIDER_BINDING_MISMATCH"));
 
-    let dsh_mismatch = send_json(
+    let dsh_rewritten = send_json(
         port,
         "POST",
         "/provider/v1/dsh/chat/completions",
@@ -391,8 +391,9 @@ fn pi_and_dsh_bindings_are_isolated_before_secret_store() {
             "messages": [{"role":"user","content":"hi"}]
         }),
     );
-    assert!(dsh_mismatch.contains("400 Bad Request"), "{dsh_mismatch}");
-    assert!(dsh_mismatch.contains("PERSONAL_PROVIDER_BINDING_MISMATCH"));
+    assert!(dsh_rewritten.contains("409 Conflict"), "{dsh_rewritten}");
+    assert!(dsh_rewritten.contains("PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE"));
+    assert!(!dsh_rewritten.contains("PERSONAL_PROVIDER_BINDING_MISMATCH"));
 
     let pi_bound = send_json(
         port,

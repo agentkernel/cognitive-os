@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:175675fbd22320d7759229e0f21d05641bdef33f7c63b17acee0fb4e91b81276"
+fingerprint: "sha256:25ea3a22ce6437e5616d2410fa2479345a381cf3b144f1bd392f82e19b24256c"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -78,6 +78,10 @@ non_claims:
   Path B 仍走 daemon Provider 代理与 SecretStore；Models 页不应再索要第二把
   DeepSeek 密钥。不要把 SecretStore 材料写入 dsh `.env`。
   面板会话绝不是 Task 完成。SSH guest 上保持 `--no-open`（产品默认）。
+- `cognitive dsh apply` 把 Cos dsh Agent binding 发布为 Path B selected-model
+  （`POST /personal/dsh/runtime` `op=apply`），并只重启 Cos 安装的原生 web 进程对。
+  对话使用 Cos 指定的模型；原生 Models 仍可能只列出 DeepSeek。web 为 INACTIVE
+  或模型不在该账户目录时失败闭合。
 - `cognitive dsh status` 读取 `GET /personal/dsh/runtime`：由进程内会话与可选绑定
   pid 得到 INACTIVE / ACTIVE / CRASHED。Linux 存活只看 `/proc/{pid}` 是否存在
   （永不打开 cmdline/environ）。它不是 authority writer。UI 起来也不是 Task 完成。

@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:f5276dd9b3a24e73941f757573132b63f59ba6e5d664fb495b5398567cde4a9c"
+fingerprint: "sha256:2653084e353b56f1fc6eed475e998222a28c78c96af5142879b3d9d6ffb9db37"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
@@ -241,8 +241,11 @@ endpoint as `list` (it does not filter). Use `list` to inspect both bindings.
 Pi traffic uses `POST /provider/v1/chat/completions`. DeepSeek harness traffic
 uses the independent `POST /provider/v1/dsh/chat/completions` route. A bound
 Pi private-candidate call also uses the binding rather than `provider.json`.
-If the request `model` does not match the binding, the proxy fails closed with
-HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH`. A revoked account or missing
+If a **Pi** request `model` does not match the Pi binding, the proxy fails closed with
+HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH`. The **dsh** Path B proxy rewrites
+the request model to the Cos `agent://personal/dsh` binding so native catalog
+ids still chat with the assigned model. Personal `/ui/` Bindings has **Apply to
+running dsh** (`POST /personal/dsh/runtime` `op=apply`). A revoked account or missing
 key is HTTP 409 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`. Official Anthropic
 bindings do not support public SSE (`stream:true`).
 

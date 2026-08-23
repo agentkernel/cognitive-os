@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:edfd4d764fcce8b59a26aed7d7680f80b748e067464a0923ad5012e37e35efb1"
+fingerprint: "sha256:0e273a10bc1c15a393c86866049e6811cf08a072d5a969a0aefe821e6f8b3dde"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---
@@ -97,6 +97,7 @@ UTF-8 文件转发给 Pi（相对路径、缺失或空文件失败闭合）。�
 cognitive dsh configure --dsh-root <dsh 检出绝对路径> --adapter-root <dsh-akp-adapter 绝对路径> --revision 528c682e061696f5a160f363f236ecbf53cbd006
 cognitive dsh launch --print --task "Reply with one sentence that summarizes this text and nothing else: CognitiveOS Personal is a local-first OS for governed agent work."
 cognitive dsh web --no-open --host 127.0.0.1 --port 3080
+cognitive dsh apply
 cognitive dsh status
 ```
 

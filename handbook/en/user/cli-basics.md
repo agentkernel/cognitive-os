@@ -19,7 +19,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:37d9c98c23bed74560fd8579070481cb4a474d4d8a583d0896a8134a0cc22d2f"
+fingerprint: "sha256:c0dc8499c00ce0cb2bd442bc974f8f1456bb3b70a9cc545b0b64f16a1ade0364"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -44,6 +44,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | write non-secret `dsh.json` (pinned dsh checkout, AKP adapter root, candidate-only adapter digest); revision must match the product pin |
 | `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | fail-closed dsh launch after daemon-owned ready state (Pi may stay `not_configured`); Path B loads the pinned AKP plugin and never treats a dsh response as Task completion; `--path a` is rejected here and is measurement-only via `paired-path.mjs` |
 | `cognitive dsh web [--host 127.0.0.1] [--port 3080] [--no-open]` | start the **native** dsh control panel (`dsh --profile web`), not Personal `/ui/`. Default `http://127.0.0.1:3080`. Loopback only; `--host 0.0.0.0` is refused. Requires `apps/web/dist` from `pnpm run build` in the pinned dsh root. Path B still uses the daemon Provider proxy / SecretStore and does not need a second key in dsh `.env`. A panel session is never Task completion |
+| `cognitive dsh apply` | publish the Cos dsh binding as Path B selected-model (`POST /personal/dsh/runtime` `op=apply`) and restart only the Cos-installed native web pair. Chat uses the Cos-assigned model; native Models may still list DeepSeek |
 | `cognitive dsh status` | authenticated observation of dsh sessions/fencing and optional bound pid liveness (`GET /personal/dsh/runtime`); not Task completion |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | common Resource Manager read envelope (management channel) |

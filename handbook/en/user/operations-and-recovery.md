@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:175675fbd22320d7759229e0f21d05641bdef33f7c63b17acee0fb4e91b81276"
+fingerprint: "sha256:25ea3a22ce6437e5616d2410fa2479345a381cf3b144f1bd392f82e19b24256c"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -86,6 +86,11 @@ non_claims:
   proxy and SecretStore; the Models page should not ask for a second DeepSeek
   key. Do not copy SecretStore material into dsh `.env`. A panel session is
   never Task completion. On SSH guests pass `--no-open` (already the product default).
+- `cognitive dsh apply` publishes the Cos dsh Agent binding as Path B
+  selected-model (`POST /personal/dsh/runtime` `op=apply`) and restarts only the
+  Cos-installed native web pair. Chat uses the Cos-assigned model; native Models
+  may still list DeepSeek. Apply fails closed when web is INACTIVE or the model
+  is not in that account catalog.
 - `cognitive dsh status` reads `GET /personal/dsh/runtime`: INACTIVE / ACTIVE /
   CRASHED from process-local sessions plus an optional bound pid. Linux liveness
   is `/proc/{pid}` existence only (never cmdline/environ). It is not an

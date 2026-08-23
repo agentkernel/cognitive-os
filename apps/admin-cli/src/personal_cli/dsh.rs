@@ -10,6 +10,7 @@ use std::fs;
 use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
+use std::time::Duration;
 
 use cognitive_runtime::{
     AuthorityChannel, DSH_ADAPTER_ID, DSH_PACKAGE_REVISION, activate_dsh_lifecycle,
@@ -282,6 +283,55 @@ pub fn status(options: &DshStatusOptions) -> Result<Value, String> {
         .and_then(|client| client.get_dsh_runtime())
         .map_err(|error| error.to_string())?;
     serde_json::from_str(&body).map_err(|_| "dsh runtime projection is not JSON".to_owned())
+}
+
+/// Publish the Cos dsh binding as the live Path B model, then restart web.
+pub fn apply(options: &DshStatusOptions) -> Result<Value, String> {
+    let layout = build_layout(&options.layout_roots).map_err(|error| error.to_string())?;
+    let endpoint_document = fs::read_to_string(layout.state_dir().join(DAEMON_ENDPOINT_FILE_NAME))
+        .map_err(|_| "daemon endpoint is absent; run `cognitive daemon start`".to_owned())?;
+    let endpoint = parse_loopback_endpoint(&endpoint_document)?;
+    let applied_body = PersonalDaemonClient::connect(&endpoint, &layout)
+        .and_then(|client| {
+            client.post_dsh_runtime(
+                &json!({
+                    "schema_version": 1,
+                    "surface": "personal-dsh-runtime",
+                    "op": "apply",
+                })
+                .to_string(),
+            )
+        })
+        .map_err(|error| error.to_string())?;
+    let mut report: Value = serde_json::from_str(&applied_body)
+        .map_err(|_| "dsh apply response is not JSON".to_owned())?;
+    if report.get("applied") != Some(&json!(true)) {
+        return Err("dsh apply was not accepted by the daemon".to_owned());
+    }
+    if let Some(process_id) = report.get("process_id").and_then(Value::as_u64) {
+        if process_id > 1 {
+            #[cfg(unix)]
+            {
+                let _ = Command::new("kill")
+                    .args(["-TERM", &process_id.to_string()])
+                    .status();
+                std::thread::sleep(Duration::from_millis(800));
+            }
+        }
+    }
+    let restarted = launch(&DshLaunchOptions {
+        layout_roots: options.layout_roots.clone(),
+        print_mode: false,
+        provider_path: DshProviderPath::Adapter,
+        task: None,
+        web_mode: true,
+        listen_host: DEFAULT_WEB_HOST.to_owned(),
+        listen_port: DEFAULT_WEB_PORT,
+    })?;
+    report["restart_performed"] = json!(true);
+    report["restart"] = restarted;
+    report["native_panel"] = json!(true);
+    Ok(report)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]

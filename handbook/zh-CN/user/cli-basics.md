@@ -19,7 +19,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:37d9c98c23bed74560fd8579070481cb4a474d4d8a583d0896a8134a0cc22d2f"
+fingerprint: "sha256:c0dc8499c00ce0cb2bd442bc974f8f1456bb3b70a9cc545b0b64f16a1ade0364"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -43,6 +43,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive dsh configure --dsh-root <absolute-path> --adapter-root <absolute-path> --revision <git-object>` | 写非 secret 的 `dsh.json`（钉住的 dsh 检出、AKP adapter 根、仅 candidate 的 adapter digest）；revision 必须等于产品 pin |
 | `cognitive dsh launch [--print] [--path b] [--task <prompt>]` | daemon-owned ready 后 fail-closed 启动 dsh（Pi 可保持 `not_configured`）；Path B 加载钉住的 AKP 插件，绝不把 dsh 响应当作 Task 完成；`--path a` 在此拒绝，仅能经 `paired-path.mjs` 做测量 |
 | `cognitive dsh web [--host 127.0.0.1] [--port 3080] [--no-open]` | 启动 **原生** dsh 控制面板（`dsh --profile web`），不是 Personal `/ui/`。默认 `http://127.0.0.1:3080`。仅 loopback；拒绝 `--host 0.0.0.0`。需要在钉住的 dsh 根执行 `pnpm run build` 得到 `apps/web/dist`。Path B 仍走 daemon Provider 代理 / SecretStore，不需要在 dsh `.env` 再放一把密钥。面板会话绝不是 Task 完成 |
+| `cognitive dsh apply` | 把 Cos dsh binding 发布为 Path B selected-model（`POST /personal/dsh/runtime` `op=apply`），并只重启 Cos 安装的原生 web 进程对。对话使用 Cos 指定的模型；原生 Models 仍可能只列出 DeepSeek |
 | `cognitive dsh status` | 认证后观察 dsh 会话/fencing 与可选绑定 pid 存活（`GET /personal/dsh/runtime`）；不是 Task 完成 |
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | 通用 Resource Manager 只读信封（management 通道） |

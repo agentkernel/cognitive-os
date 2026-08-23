@@ -126,21 +126,26 @@ export function pathBWebCredentialsYaml(managementToken) {
  * Persist llm-deepseek onto the settings document the Models page joins,
  * so dynamic config cannot fall back to api.deepseek.com + missing DEEPSEEK_API_KEY.
  */
-export function pathBWebSettingsYaml(providerBase, existingYaml) {
+export function pathBWebSettingsYaml(providerBase, existingYaml, selectedModel) {
   const base = assertPathBProviderBase(providerBase);
   let welcome = "2026-08-13.1";
   const match = String(existingYaml ?? "").match(/welcomeNoticeVersion:\s*(\S+)/);
   if (match) {
     welcome = match[1];
   }
-  return [
+  const model = String(selectedModel ?? "").trim();
+  const lines = [
     "ui-onboarding:",
     `  welcomeNoticeVersion: ${welcome}`,
     "llm-deepseek:",
     `  baseURL: ${base}`,
     `  apiKeyEnv: ${PATH_B_WEB_DAEMON_KEY_REF}`,
-    "",
-  ].join("\n");
+  ];
+  if (model && !/[\s#:]/.test(model)) {
+    lines.push(`  model: ${model}`);
+  }
+  lines.push("");
+  return lines.join("\n");
 }
 
 /** Non-secret child env: official-catalog fallback URL only. Never an API key. */

@@ -137,6 +137,19 @@ fn dsh_runtime_inspect_is_management_observation_only() {
     );
     assert!(refused.contains("HTTP/1.1 400"), "{refused}");
 
+    let apply_inactive = send_json(
+        port,
+        "/personal/dsh/runtime",
+        &management,
+        &json!({
+            "schema_version": 1,
+            "surface": "personal-dsh-runtime",
+            "op": "apply"
+        }),
+    );
+    assert!(apply_inactive.contains("HTTP/1.1 409"), "{apply_inactive}");
+    assert!(apply_inactive.contains("DSH_RUNTIME_INACTIVE"));
+
     let activate = response_json(&send_json(
         port,
         "/task/akp/dsh",

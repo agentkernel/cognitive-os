@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:18ce0deebace2e45e76a7436e3e7d309c66c1bd9d2abc26bd007502b671c4963"
+fingerprint: "sha256:720dd22cedca2f546bff853bb16ccfeaa42b1a97ec11048af5f09f9e570e80ab"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -170,7 +170,9 @@ is not Personal `/ui/`. Web Path B writes `$DSH_HOME/settings.yaml` so
 `llm-deepseek` stays on `POST /provider/v1/dsh/chat/completions` and aliases the
 official Models catalog ref to the daemon management bearer — not a SecretStore
 copy and not a dsh `.env` key. `cognitive dsh status`
-reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: clear`
+reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: apply`
+publishes the Cos `agent://personal/dsh` binding as Path B selected-model
+(native Models may still list DeepSeek). `op: clear`
 drops the bound pid and in-memory sessions so the projection is `INACTIVE`.
 Direct Flash
 (`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter

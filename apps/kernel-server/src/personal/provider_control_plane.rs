@@ -1429,9 +1429,16 @@ pub(crate) fn plan_bound_proxy(
         .and_then(Value::as_str)
         .filter(|model| !model.is_empty())
         .ok_or(BoundPlanError::InvalidRequest)?;
-    if requested_model != binding.model_id {
+    // Path B / native dsh catalog ids (deepseek-chat, …) must not block the
+    // Cos-assigned dsh binding. Pi keeps exact match so a dsh model cannot
+    // leak onto agent://personal/pi.
+    let outbound_model = if agent == DSH_AGENT {
+        binding.model_id.clone()
+    } else if requested_model != binding.model_id {
         return Err(BoundPlanError::BindingMismatch);
-    }
+    } else {
+        binding.model_id.clone()
+    };
     let account = plane
         .get_account(&binding.account_id)
         .map_err(|_| BoundPlanError::AccountUnavailable)?
@@ -1463,9 +1470,9 @@ pub(crate) fn plan_bound_proxy(
         .get(&reference)
         .map_err(|_| BoundPlanError::SecretUnavailable)?;
     let outbound_body = if kind == ProviderKind::AnthropicOfficial {
-        openai_chat_to_anthropic_messages(request_body, &binding.model_id)?
+        openai_chat_to_anthropic_messages(request_body, &outbound_model)?
     } else {
-        request_body.to_vec()
+        rewrite_openai_model(request_body, &outbound_model)?
     };
     let mut headers =
         discovery_headers(kind, material.expose_bytes()).map_err(|_| BoundPlanError::Trust)?;
@@ -1504,6 +1511,16 @@ pub(crate) fn selected_binding_model(store: &SqliteAuthorityStore, agent: &str) 
         .ok()
         .flatten()
         .map(|binding| binding.model_id)
+}
+
+fn rewrite_openai_model(request_body: &[u8], bound_model: &str) -> Result<Vec<u8>, BoundPlanError> {
+    let mut parsed: Value =
+        serde_json::from_slice(request_body).map_err(|_| BoundPlanError::InvalidRequest)?;
+    let Some(object) = parsed.as_object_mut() else {
+        return Err(BoundPlanError::InvalidRequest);
+    };
+    object.insert("model".to_owned(), Value::String(bound_model.to_owned()));
+    serde_json::to_vec(&parsed).map_err(|_| BoundPlanError::InvalidRequest)
 }
 
 fn openai_chat_to_anthropic_messages(
@@ -1576,4 +1593,22 @@ pub(crate) fn anthropic_messages_to_openai_chat(body: &[u8]) -> Result<Vec<u8>, 
         }
     });
     serde_json::to_vec(&openai).map_err(|_| BoundPlanError::InvalidRequest)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rewrite_openai_model_replaces_catalog_id_with_binding() {
+        let body = serde_json::to_vec(&json!({
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": "hi"}]
+        }))
+        .expect("body");
+        let rewritten = rewrite_openai_model(&body, "grok-4.6").expect("rewrite");
+        let parsed: Value = serde_json::from_slice(&rewritten).expect("json");
+        assert_eq!(parsed["model"], "grok-4.6");
+        assert_eq!(parsed["messages"][0]["content"], "hi");
+    }
 }

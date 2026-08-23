@@ -78,7 +78,7 @@ impl PersonalDaemonClient {
         self.get_authorized("/personal/dsh/runtime")
     }
 
-    /// `POST /personal/dsh/runtime` observation bind/heartbeat/clear.
+    /// `POST /personal/dsh/runtime` observation bind/heartbeat/clear/apply.
     pub fn post_dsh_runtime(&self, body: &str) -> Result<String, PersonalDaemonClientError> {
         self.post_authorized("/personal/dsh/runtime", body)
     }

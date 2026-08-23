@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:f5276dd9b3a24e73941f757573132b63f59ba6e5d664fb495b5398567cde4a9c"
+fingerprint: "sha256:2653084e353b56f1fc6eed475e998222a28c78c96af5142879b3d9d6ffb9db37"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -217,8 +217,11 @@ binding。
 
 Pi 流量使用 `POST /provider/v1/chat/completions`。DeepSeek harness 流量使用独立的
 `POST /provider/v1/dsh/chat/completions` 路由。已绑定的 Pi 私有 candidate 调用也使用
-binding 而不是 `provider.json`。若请求的 `model` 与 binding 不符，代理以 HTTP 400
-`PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合。已吊销账户或缺失 key 是 HTTP 409
+binding 而不是 `provider.json`。若 **Pi** 请求的 `model` 与 Pi binding 不符，代理以 HTTP 400
+`PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合。**dsh** Path B 代理会把请求模型改写为
+Cos `agent://personal/dsh` binding，因此原生目录 id 仍能用 Cos 指定的模型对话。
+Personal `/ui/` Bindings 有 **Apply to running dsh**（`POST /personal/dsh/runtime`
+`op=apply`）。已吊销账户或缺失 key 是 HTTP 409
 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`。官方 Anthropic binding 不支持公共 SSE
 （`stream:true`）。
 

@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:308e3e14eb24c141717446d8b7faa6ce1866917e943a700e2b856c9aa3fddc7d"
+fingerprint: "sha256:ef1d42398fa5a3e68a2e843f2692ffde05b239dd38085ffabfddc512ac325091"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -44,6 +44,7 @@ USAGE:
                        [--task <prompt>]
   cognitive dsh web [--runtime-root <dir>] [--path b] [--host 127.0.0.1]
                     [--port 3080] [--no-open]
+  cognitive dsh apply [--runtime-root <dir>]
   cognitive dsh status [--runtime-root <dir>]
   cognitive resource get|watch [--runtime-root <dir>] [--endpoint <host:port>]
                        --family <memory|skill|tool|context|task|runtime>
@@ -90,6 +91,8 @@ Hard rules:
     loopback only (default http://127.0.0.1:3080). This is not Personal `/ui/`.
     Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy.
     A panel session is never Task completion.
+  - dsh apply POSTs /personal/dsh/runtime op=apply (Cos dsh binding → selected-model)
+    and restarts only the Cos-installed `cognitive dsh web` pair on loopback 3080
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
     (web refuses --host 0.0.0.0 and --path a)

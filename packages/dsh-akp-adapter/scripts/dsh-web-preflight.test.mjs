@@ -59,10 +59,15 @@ test("Path B web settings and credentials stay on the daemon bearer", () => {
   assert.match(yaml, new RegExp(`${PATH_B_WEB_DAEMON_KEY_REF}: "mgmt-token-fixture"`));
   assert.match(yaml, new RegExp(`${PATH_B_WEB_OFFICIAL_KEY_REF}: "mgmt-token-fixture"`));
   assert.equal(yaml.includes("sk-"), false);
-  const settings = pathBWebSettingsYaml(base, "ui-onboarding:\n  welcomeNoticeVersion: keep-me\n");
+  const settings = pathBWebSettingsYaml(
+    base,
+    "ui-onboarding:\n  welcomeNoticeVersion: keep-me\n",
+    "grok-4.6",
+  );
   assert.match(settings, /welcomeNoticeVersion: keep-me/);
   assert.match(settings, /baseURL: http:\/\/127\.0\.0\.1:48681\/provider\/v1\/dsh/);
   assert.match(settings, new RegExp(`apiKeyEnv: ${PATH_B_WEB_DAEMON_KEY_REF}`));
+  assert.match(settings, /model: grok-4\.6/);
   assert.deepEqual(pathBWebChildExtras(base), { DEEPSEEK_BASE_URL: base });
   assert.equal(Object.keys(pathBWebChildExtras(base)).some((key) => /API_KEY|SECRET|TOKEN|BEARER/i.test(key)), false);
 });

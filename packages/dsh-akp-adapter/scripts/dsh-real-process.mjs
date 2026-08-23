@@ -204,9 +204,17 @@ async function runWebPathB() {
   const providerBase = `${origin}/provider/v1/dsh`;
   const settingsPath = join(dshHome, "settings.yaml");
   const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
-  writeFileSync(settingsPath, pathBWebSettingsYaml(providerBase, existingSettings), {
-    encoding: "utf8",
-  });
+  writeFileSync(
+    settingsPath,
+    pathBWebSettingsYaml(
+      providerBase,
+      existingSettings,
+      selected.json?.model ?? selected.json?.selected_model,
+    ),
+    {
+      encoding: "utf8",
+    },
+  );
   writeFileSync(join(dshHome, ".credentials.yaml"), pathBWebCredentialsYaml(managementToken), {
     encoding: "utf8",
     mode: 0o600,

@@ -15,13 +15,15 @@ use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRevocationFactRow,
     ProtocolStore,
 };
+use cognitive_runtime::DSH_PACKAGE_REVISION;
 use cognitive_runtime::loopback_transport::{self, LoopbackTransportStage};
 use cognitive_secret::{
-    ProviderConfigRepository, SelectedModelRepository, select_production_secret_store,
+    ProviderConfigRepository, SelectedModel, SelectedModelRepository,
+    select_production_secret_store,
 };
 use cognitive_store::{
-    PersonalDataLayout, SqliteAuthorityStore, prepare_personal_databases,
-    scheduler::SchedulerRepository,
+    PersonalDataLayout, ProviderControlPlaneStore, SqliteAuthorityStore,
+    prepare_personal_databases, scheduler::SchedulerRepository,
 };
 use serde_json::json;
 
@@ -708,7 +710,16 @@ fn dispatch_http_route(
     if method_path.starts_with("GET /personal/dsh/runtime ")
         || method_path.starts_with("POST /personal/dsh/runtime ")
     {
-        return handle_dsh_runtime_route(stream, &method_path, headers, body, authority, task_api);
+        return handle_dsh_runtime_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+            authority_store,
+            task_api,
+        );
     }
     if method_path.starts_with("POST /management/context-authorization/facts ") {
         return handle_context_authorization_fact_admission(
@@ -2140,7 +2151,9 @@ fn handle_dsh_runtime_route(
     method_path: &str,
     headers: &str,
     body: &[u8],
+    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
     task_api: &Arc<Mutex<TaskApi>>,
 ) -> Result<(), String> {
     let Some(token) = extract_bearer_token(headers) else {
@@ -2234,16 +2247,136 @@ fn handle_dsh_runtime_route(
             }
         },
         "clear" => task_api.dsh_clear_process(),
+        "apply" => {
+            return apply_dsh_binding_to_runtime(
+                stream,
+                &request_json,
+                layout,
+                authority_store,
+                &task_api,
+            );
+        }
         _ => {
             return write_error_response(
                 stream,
                 400,
                 "DSH_RUNTIME_INVALID_REQUEST",
-                "dsh runtime op must be bind, heartbeat, or clear",
+                "dsh runtime op must be bind, heartbeat, clear, or apply",
             );
         }
     };
     write_json_response(stream, 200, &snapshot.to_string())
+}
+
+fn apply_dsh_binding_to_runtime(
+    stream: &mut TcpStream,
+    request_json: &serde_json::Value,
+    layout: &PersonalDataLayout,
+    authority_store: &Arc<SqliteAuthorityStore>,
+    task_api: &TaskApi,
+) -> Result<(), String> {
+    let snapshot = task_api.dsh_runtime_snapshot();
+    let state = snapshot
+        .get("state")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+    if state != "ACTIVE" {
+        return write_error_response(
+            stream,
+            409,
+            "DSH_RUNTIME_INACTIVE",
+            "apply requires an ACTIVE Cos-installed dsh web process",
+        );
+    }
+    let config_path = layout.config_dir().join("dsh.json");
+    let config = match fs::read_to_string(&config_path)
+        .ok()
+        .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
+    {
+        Some(document) => document,
+        None => {
+            return write_error_response(
+                stream,
+                409,
+                "DSH_RUNTIME_INVALID_REQUEST",
+                "dsh.json is missing or unreadable",
+            );
+        }
+    };
+    let revision = config
+        .get("revision")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+    let dsh_root = config
+        .get("dsh_root")
+        .and_then(serde_json::Value::as_str)
+        .unwrap_or("");
+    if revision != DSH_PACKAGE_REVISION || dsh_root.is_empty() || !Path::new(dsh_root).is_dir() {
+        return write_error_response(
+            stream,
+            409,
+            "DSH_RUNTIME_INVALID_REQUEST",
+            "dsh.json pin or dsh_root is not the Cos-installed tree",
+        );
+    }
+    let plane = ProviderControlPlaneStore::from_authority_store(authority_store);
+    let Some(binding) = plane
+        .get_active_binding(provider_control_plane::DSH_AGENT)
+        .ok()
+        .flatten()
+    else {
+        return write_error_response(
+            stream,
+            404,
+            "PROVIDER_CONTROL_NOT_FOUND",
+            "no active dsh binding to apply",
+        );
+    };
+    if let Some(expected) = request_json
+        .get("expected_revision")
+        .and_then(serde_json::Value::as_i64)
+    {
+        if expected != binding.revision {
+            return write_error_response(
+                stream,
+                409,
+                "PROVIDER_BINDING_REVISION_STALE",
+                "expected_revision does not match the current dsh binding revision",
+            );
+        }
+    }
+    if plane
+        .get_model(&binding.account_id, &binding.model_id)
+        .ok()
+        .flatten()
+        .is_none()
+    {
+        return write_error_response(
+            stream,
+            404,
+            "PROVIDER_MODEL_NOT_FOUND",
+            "dsh binding model is not in that account catalog",
+        );
+    }
+    if let Ok(selected) = SelectedModel::new(binding.model_id.clone(), "binding", true) {
+        let _ = SelectedModelRepository::under_config_dir(layout.config_dir()).store(&selected);
+    }
+    let mut applied = snapshot;
+    applied["op"] = json!("apply");
+    applied["status"] = json!("ok");
+    applied["applied"] = json!(true);
+    applied["agent"] = json!(provider_control_plane::DSH_AGENT);
+    applied["applied_model"] = json!(binding.model_id);
+    applied["binding_revision"] = json!(binding.revision);
+    applied["selected_snapshot_digest"] = json!("binding");
+    applied["catalog_ok"] = json!(true);
+    applied["dsh_root_ok"] = json!(true);
+    applied["revision_pin_ok"] = json!(true);
+    applied["native_catalog_may_still_list_deepseek"] = json!(true);
+    applied["path_b_uses_cos_binding"] = json!(true);
+    applied["restart_required_for_native_models_chrome"] = json!(true);
+    applied["restart_performed"] = json!(false);
+    write_json_response(stream, 200, &applied.to_string())
 }
 
 fn handle_selected_model_route(

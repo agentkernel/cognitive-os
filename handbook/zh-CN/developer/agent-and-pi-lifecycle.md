@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:18ce0deebace2e45e76a7436e3e7d309c66c1bd9d2abc26bd007502b671c4963"
+fingerprint: "sha256:720dd22cedca2f546bff853bb16ccfeaa42b1a97ec11048af5f09f9e570e80ab"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -145,7 +145,9 @@ Personal `/ui/`。Web Path B 会写入 `$DSH_HOME/settings.yaml`，让 `llm-deep
 保持 `POST /provider/v1/dsh/chat/completions`，并把官方 Models 目录的密钥引用别名到
 daemon management bearer — 不把 SecretStore 材料复制进 dsh，也不写 `.env`。
 `cognitive dsh status` 读取 `GET /personal/dsh/runtime`。
-`POST /personal/dsh/runtime` 的 `op: clear` 会清掉绑定 pid 与内存中的 session，投影回到 `INACTIVE`。
+`POST /personal/dsh/runtime` 的 `op: apply` 把 Cos `agent://personal/dsh` binding
+发布为 Path B selected-model（原生 Models 仍可能只列出 DeepSeek）。
+`op: clear` 会清掉绑定 pid 与内存中的 session，投影回到 `INACTIVE`。
 直接 Flash（`--path a`）只经 `scripts/paired-path.mjs` 做测量。
 `dsh.json` 里的 adapter registration digest 不是 SQLite 持久的 daemon adapter 状态。
 两者都只是 implementation evidence。
