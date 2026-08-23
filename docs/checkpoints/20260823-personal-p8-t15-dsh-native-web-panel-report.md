@@ -15,7 +15,7 @@ Draft PR: https://github.com/agentkernel/cognitive-os/pull/265
 | Slice | Status | Evidence |
 |---|---|---|
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
-| D02 linux-002 listen + GET `/` HTML | in-progress | Listen + HTML **pass**. Post-panel Path B with P8-T15 adapter **pass** (`deepseek-v4-flash`, `assistant_ok`, Workspace* `COMPLETED`). Prior `--print` fail was the restored p8t10 helper reading the Pi binding. Kept `in-progress` so the active lease slice `P8-T15/D02` still matches Layer 2 until task close. |
+| D02 linux-002 listen + GET `/` HTML | in-progress | Listen + HTML **pass**. Cos-installed `:3080` **492396/492382** ACTIVE after same-pin lib fill. HTTP dsh remove/set + Path B **pass**. Kept `in-progress` so the active lease slice `P8-T15/D02` still matches Layer 2 until task close. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
 
 ## Validation log
@@ -236,6 +236,40 @@ HTTP session via `POST /local/session` from the runtime bootstrap **file** (not 
 
 Models subsection of native dsh was **not** DOM-proven (no headed screenshot; no secret-dumping UI driver). Providers heading/list is **API-proven**; Firefox paint of `#/providers` is **not** proven from sessionstore.
 
+### 2026-08-23 — dsh model set/remove + Cos-installed panel identity
+
+Did not mix P7-T05 kernel lease. SPA CAS lives in `cognitiveos-clients` PR [#4](https://github.com/agentkernel/cognitiveos-clients/pull/4) @ `afc5b04` (`bindingRevisionForCas` uses active rows only; remove treats 404/`PROVIDER_CONTROL_NOT_FOUND` as already cleared). Live Personal `/ui/` now serves `index--sTzcxFP.js` (old `index-BJVztyis.js` absent). No secret printed.
+
+**Root cause (set/remove).** After revoke, the SPA still used the revoked row's revision as `expected_revision`. Daemon CAS reads only the active binding (unbound = 0). Set with the stale revision → **409** `PROVIDER_BINDING_REVISION_STALE`. Remove on a revoked row → **404** `PROVIDER_CONTROL_NOT_FOUND`. That blocked both “set a large catalog model” and “remove previous settings.” Pi `grok-4.6` is a separate `agent://personal/pi` binding and was not changed.
+
+**HTTP proof on linux-002** (management session from bootstrap **file**; account `acct-01a02dee-…`):
+
+| Step | Result |
+|---|---|
+| Before | dsh Flash **active** rev **5**; `GET /provider/v1/dsh/selected-model` Flash / `binding` |
+| `POST /management/agent-bindings/remove` `{agent:dsh}` | **200** |
+| After remove | dsh Flash **revoked** rev 5; selected-model Flash / file digest `fnv1a64:2da8aee1…` (no `binding_agent`) |
+| Set Flash with `expected_revision=5` | **409** `PROVIDER_BINDING_REVISION_STALE` |
+| Set `deepseek-v4-pro` `expected_revision=0` | **200** dsh **active** rev **6**; selected-model **pro** / `binding` |
+| Remove again | **200** |
+| Set Flash `expected_revision=0` | **200** dsh **active** rev **7**; selected-model Flash / `binding` |
+| Pi | still `grok-4.6` **active** rev 1 |
+
+Path B `POST /provider/v1/dsh/chat/completions` Flash → **200**, `pong` nonempty. No second LLM key in dsh-web-home `.env` (file absent). `settings.yaml` Path B + `DAEMON_BEARER`; no `api.deepseek.com`.
+
+**Root cause (wrong panel).** Overlay `:3080` (**487821/487806**) was Path B against pin `528c682e` but `dsh_root` was `/home/hal9001/p8t15-2ba8103a/dsh`. Owner asked for the CognitiveOS install (`/home/hal9001/p8t10-a17edfad/dsh`). That P8-T10 tree is the same pin but was missing compiled web client/extension `lib/` (first crash: directory-picker module; second: `packages/extensions/*/lib/client.js`). Guest repair copied same-pin overlay compiled artifacts into the Cos tree (40 client `lib` trees + 271 extension/web files). Did not leave two `:3080` servers.
+
+**Identity now:**
+
+- `dsh.json`: `dsh_root=/home/hal9001/p8t10-a17edfad/dsh`, `adapter_root=/home/hal9001/p8t15-0376e942/adapter` (Path B helper), revision `528c682e061696f5a160f363f236ecbf53cbd006`
+- Helper **492382**: `cognitive dsh web` Path B `--dsh-root` Cos tree, `--mode web`, loopback `:3080`
+- Node **492396**: Cos `apps/cli/lib/bin.js --profile web --no-open --host 127.0.0.1 --port 3080`; cwd Cos dsh
+- `GET http://127.0.0.1:3080/` **200** title `DSH Local Build`; dist `…/p8t10-a17edfad/dsh/apps/web/dist/index.html`
+- `cognitive dsh status`: `ACTIVE`, `process_alive=true`, `process_id=492396`
+- Daemon **465376** `:48681` and Firefox **471883** left running. Hung P8-T10 helper **430838** not killed.
+
+Remaining honest gaps (not this lease): selected-model **file fallback after unbind** (kernel-server); `web-search-deepseek` still names official `DEEPSEEK_API_KEY`; `GET /ui/providers` **404** (hash route only); SPA session is memory-only and does not inherit the SSH HTTP session. No HTTP cancel/pause invented. Claim ceiling `hypothesis`.
+
 ## Unique next action
 
-On the linux-002 desktop: in a `:3080` tab open **Models** (Path B should show official DeepSeek configured). In the existing Personal tab (`/ui#/bindings` or `/ui/`) click **Providers** or set the hash to `#/providers`. The HTTP management session issued from SSH is memory-only in the SPA and does not transfer; if that tab shows the session gate, paste bootstrap there (not a Provider key). Keep **487821/487806/465376/471883**. Do not auto-claim P6 / P7-T06 / P7-T07. UI up is not Task completion.
+On the linux-002 desktop: in the Personal tab (`/ui#/bindings`) paste this daemon's bootstrap if the session gate is showing, then remove and set the dsh model in the new SPA (`index--sTzcxFP.js`). Native panel is Cos-installed at `http://127.0.0.1:3080` (keep **492396/492382/465376/471883**). Do not auto-claim P6 / P7-T06 / P7-T07. UI up is not Task completion.
