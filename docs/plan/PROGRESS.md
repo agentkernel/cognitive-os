@@ -162,8 +162,8 @@ blocked `P7-T07`, and owner-deferred P6 / P7-T06.
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
 | `P8-T15/D01` | `in-progress` | CLI `cognitive dsh web`, helper `--mode web`, loopback/dist fail-closed, Path B AKP without Workspace* admits | land parse/prepare/node preflight tests; do not stop P7-T05 daemon |
-| `P8-T15/D02` | `not-started` | linux-002 listen `127.0.0.1:3080` + `GET /` native SPA HTML | after D01 push exact revision; disposable DSH_HOME; build frontend dist |
-| `P8-T15/D03` | `not-started` | bilingual handbook native panel vs Personal `/ui/`; docs-sync | after D01 sources exist |
+| `P8-T15/D02` | `ready` | linux-002 listen `127.0.0.1:3080` + `GET /` native SPA HTML | after D01 push exact revision; disposable DSH_HOME; frontend dist already built on guest copy |
+| `P8-T15/D03` | `ready` | bilingual handbook native panel vs Personal `/ui/`; docs-sync | handbook pages already drafted; refresh fingerprints if needed after D02 |
 | `P7-T05/D01` | `done` | ADR-0053; Node inventory **8/8**. Linux `05a3afa1`: kernel-server Origin/`/ui` **6/6**, Clippy `-D warnings`, fmt. Required CI `32614594696` pass. | consumed |
 | `P7-T05/D02` | `done` | SPA shell, memory-only session, Home, Agent inventory/detail in `D:\\cognitiveos-clients\\pc\\web\\` | consumed |
 | `P7-T05/D03` | `done` | Provider create/rotate/probe forms; secret fields redacted to present/absent | consumed |

@@ -11,8 +11,8 @@ Native dsh panel is `cognitive dsh web` → `dsh --profile web --no-open`, defau
 | Slice | Status | Evidence |
 |---|---|---|
 | D01 CLI + helper + negatives | in-progress | `cognitive dsh web`; helper `--mode web`; loopback/dist fail-closed; Path B AKP without Workspace* admits |
-| D02 linux-002 listen + GET `/` HTML | not-started | requires pushed exact revision |
-| D03 handbook / docs-sync | in-progress | bilingual operator pages drafted; fingerprints/generator pending |
+| D02 linux-002 listen + GET `/` HTML | ready / running | guest copy `/home/hal9001/p8t15-2ba8103a/dsh` has `apps/web/dist/index.html` (title `DSH Local Build`); product CLI binary still pending jump-host fetch/build |
+| D03 handbook / docs-sync | in-progress | bilingual operator pages drafted in D01 commit; fingerprints present |
 
 ## Validation log
 
@@ -35,7 +35,13 @@ Recorded on exact-revision Linux/CI (`RUST-LINK-DEV-WIN-GNU-01`: local Windows G
 
 ### linux-002 usability
 
-not-run until D01 is committed and pushed.
+- 2026-08-23 frontend dist **pass** on disposable copy `/home/hal9001/p8t15-2ba8103a/dsh` (rsync of `p8t11-e48517cb/dsh`, then `npx vite build` in `apps/web`). `dist/index.html` 672 bytes, title `DSH Local Build`. Pin file `528c682e061696f5a160f363f236ecbf53cbd006`. Did not mutate `p8t10` / live `dsh.json`.
+- `GET /` through `cognitive dsh web` **not-run** until jump-host `cargo build -p admin-cli --bin cognitive` at the pushed revision (first `git fetch` failed HTTP/2 framing).
+- No `:3080` listener yet. P7-T05 daemon PID 465376 / `:48681` left running.
+
+### Required CI
+
+Run `32636212950` at `2ba8103a` **fail**: `tools test` 2 failures — Delivery Slice status `not-started` is not in `{ready,in-progress,blocked,done,cancelled}`; lease claimed/heartbeat must be `YYYY-MM-DD / YYYY-MM-DD`; lease must not list `docs/plan/PARALLEL-LANES.md` as a writable path. Follow-up commit repairs bookkeeping only.
 
 ## Non-claims
 
@@ -46,4 +52,4 @@ not-run until D01 is committed and pushed.
 
 ## Unique next action
 
-Finish D01 tests, docs-sync, checkpoint commit/push, Draft PR, then linux-002 D02.
+Push bookkeeping repair, rebuild `cognitive` on jump host at the new exact revision, then on linux-002 run `cognitive dsh web --no-open --host 127.0.0.1 --port 3080` against the disposable dsh copy with dist.
