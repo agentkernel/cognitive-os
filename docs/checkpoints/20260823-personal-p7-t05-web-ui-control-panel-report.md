@@ -1,12 +1,10 @@
 # P7-T05 Web UI control panel — running report
 
-- Task: `P7-T05` (reopened owner delivery 2026-08-23)
+- Task: `P7-T05` (owner delivery 2026-08-23; **done**)
 - Slice: `P7-T05/D08` done; `P7-T05/D09` done (Linux evidence below)
-- Lease: `lease/personal/P7-T05/web-ui-control-panel` (open until PR merge)
-- Kernel: `personal/P7-T05-web-ui-control-panel` @ `881ebe8260d52fa33581682f7f5736169daa9d25`
-  Draft PR [#262](https://github.com/agentkernel/cognitive-os/pull/262)
-- Clients: `personal/P7-T05-web-ui-control-panel` @ `c6b763b8d3f5a6053cf47cbe056e2e77ca92c993`
-  Draft PR [cognitiveos-clients#2](https://github.com/agentkernel/cognitiveos-clients/pull/2)
+- Lease: `lease/personal/P7-T05/web-ui-control-panel` (**closed**)
+- Kernel: merged PR [#262](https://github.com/agentkernel/cognitive-os/pull/262) at `main@962463fed10e30bcf9668d993d735732188b9048`; product HEAD `881ebe8260d52fa33581682f7f5736169daa9d25`; docs HEAD `f374abc9`
+- Clients: merged PR [cognitiveos-clients#2](https://github.com/agentkernel/cognitiveos-clients/pull/2) at `main@db563744f1bfe6b42fa977d59f4ee48a16cee3c2` (`c6b763b8d3f5a6053cf47cbe056e2e77ca92c993`)
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`)
 - Claim ceiling: `hypothesis`
 - Non-claims: no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion.
@@ -65,9 +63,20 @@ P8-T13 routes found:
    - Cleanup: control-plane keys removed, accounts deleted, temp key shredded,
      disposable runtime/Chrome/worktree removed. HTTP cancel remains `not-run`.
 
+## Git / closure
+
+- Kernel PR [#262](https://github.com/agentkernel/cognitive-os/pull/262) merged
+  at `main@962463fe`. Required CI `32622026657` at `f374abc9` passed Ubuntu,
+  Windows, and required-ci.
+- Clients PR [cognitiveos-clients#2](https://github.com/agentkernel/cognitiveos-clients/pull/2)
+  merged at `main@db56374`.
+- Lease `lease/personal/P7-T05/web-ui-control-panel` closed; Current snapshot
+  Active task lease is `none`.
+- Residual honest gaps: HTTP cancel / Agent pause/resume/stop/restart/quarantine
+  remain `not-run` (no typed HTTP). Dedicated UI watch-resume 409 click remains
+  `not-run` (unit-tested only). These do not retract the three owner capabilities.
+
 ## Unique next action
 
-Wait for required CI on kernel PR [#262](https://github.com/agentkernel/cognitive-os/pull/262)
-and clients PR [#2](https://github.com/agentkernel/cognitiveos-clients/pull/2); then
-ready/merge, close lease, delete task branches, fast-forward local `main`.
-Do not claim Gate/release/Profile/Agent-benefit.
+Lease closed. Wait for a fresh owner delivery instruction. Do not auto-claim
+P6 / P7-T06 / P7-T07.

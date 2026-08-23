@@ -3,10 +3,10 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `in-progress` (D08–D09 validated; awaiting CI/merge)
+- Status: `done` (D01–D09; merged kernel PR #262 / clients PR #2)
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
   `agentkernel/cognitiveos-clients`)
-- Lease: `lease/personal/P7-T05/web-ui-control-panel`
+- Lease: `lease/personal/P7-T05/web-ui-control-panel` (closed 2026-08-23)
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
 - Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
 - Priority: non-blocking for Linux 1.0 / `GMVP-LINUX`
@@ -173,6 +173,6 @@ authority records and audit facts remain daemon-owned.
 - [x] Missing daemon operations recorded as unavailable/not-run; no generic browser transition invented.
 - [x] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory + SPA unit/DOM redaction).
 - [x] Supported browser/client validation passes on the exact task revision (Linux daemon-served `/ui/`; live Provider key entry required for D09).
-- [ ] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
-- [ ] Formal plan, task status, docs impact and final report are synchronized.
-- [ ] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.
+- [x] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
+- [x] Formal plan, task status, docs impact and final report are synchronized.
+- [x] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.
