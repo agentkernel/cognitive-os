@@ -215,7 +215,10 @@ download is required.
 
 ## 10. Current-versus-target boundary
 
-ADR-0053 and the route inventory are accepted D01 inputs. This document still
-does not claim an implemented SPA, browser security review, accessibility
-conformance, Gate, release, Profile or Agent-benefit result. D02–D07 remain
-blocked on an approved `cognitiveos-clients` checkout.
+ADR-0053 and the route inventory are accepted D01 inputs. The SPA lives in
+`D:\cognitiveos-clients\pc\web\`. D01–D07 delivered the localhost shell, forms,
+and daemon-served `/ui/`. D08 closes the operator control-panel gap: Provider
+kinds/trust/key SecretStore handoff, binding CAS, and Task
+intent.record/interpret/preview/admit/watch. This document still does not claim
+a Gate, release, Profile, or Agent-benefit result. Live Provider/SecretStore
+and a real Agent run remain evidence for D09.

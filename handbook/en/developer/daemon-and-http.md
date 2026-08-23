@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:66eb32c1f537eca86e4621a49556e2a80e6972e385e3c219b4934bbfbe09063f"
+fingerprint: "sha256:bf01e82b32b99293bd146204dde86155afbe7a2ce7c189b28a73844d7b0a54d3"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -137,6 +137,9 @@ traffic uses `POST /provider/v1/chat/completions`; bound DeepSeek harness
 traffic uses `POST /provider/v1/dsh/chat/completions`. Unbound agents still
 use `provider.json`. Private-candidate completion uses the same Pi binding
 when present and fails closed on mismatch; Pi never reads the Secret Store.
+`POST /management/agent-bindings` accepts optional `expected_revision`; a
+mismatch is HTTP 409 `PROVIDER_BINDING_REVISION_STALE`. The localhost Web UI
+is a same-origin daemon client (`GET /ui/`) and is not a second writer.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.

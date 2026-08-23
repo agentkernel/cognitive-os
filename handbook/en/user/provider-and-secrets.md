@@ -24,7 +24,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:266356c80282656671b6d64bddd68874dc48286b076fc08ded8074c2af474b67"
+fingerprint: "sha256:6d050e5e87d7d40efc1250eb52a8280375896811312a45a3c1790167d20c54be"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -50,8 +50,8 @@ operation refuses; there is deliberately no plaintext fallback. Rotation:
 `cognitive provider key set|rotate|remove --api-key-file` instead of putting a
 key on argv. Full operator steps (accounts, trust flags, bindings, usage,
 observe-only budgets) are in
-[Provider Control Plane](./provider-control-plane.md). There is no Web or
-desktop panel in this phase.
+[Provider Control Plane](./provider-control-plane.md). The localhost Web UI is a
+daemon client for those same management routes; there is no desktop panel.
 
 ## How Provider traffic flows
 

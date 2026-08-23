@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:66eb32c1f537eca86e4621a49556e2a80e6972e385e3c219b4934bbfbe09063f"
+fingerprint: "sha256:bf01e82b32b99293bd146204dde86155afbe7a2ce7c189b28a73844d7b0a54d3"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -122,7 +122,10 @@ management Provider Control Plane 路由（`/management/providers/*`、
 Secret Store `secret_ref`。已绑定 Pi 流量走 `POST /provider/v1/chat/completions`；
 已绑定 DeepSeek harness 走 `POST /provider/v1/dsh/chat/completions`。未绑定 agent
 仍使用 `provider.json`。private-candidate 补全在存在 Pi binding 时使用同一 binding，
-模型不符失败闭合；Pi 从不读取 Secret Store。
+模型不符失败闭合；Pi 从不读取 Secret Store。`POST /management/agent-bindings`
+接受可选 `expected_revision`；不匹配时 HTTP 409
+`PROVIDER_BINDING_REVISION_STALE`。localhost Web UI 是同源 daemon 客户端
+（`GET /ui/`），不是第二个 writer。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

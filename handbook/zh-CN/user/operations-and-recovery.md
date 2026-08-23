@@ -136,11 +136,14 @@ Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixe
 ## Provider Control Plane —— `partial`
 
 `cognitive provider …`、`cognitive agent binding …`、`cognitive usage query`、
-`cognitive budget …`、`cognitive alerts …` 与 `cognitive audit query` 只调用
-daemon management 表面。没有 Web 或桌面控制面板。密钥经 `--api-key-file` 进入
-Secret Store；永不出现在 SQLite、argv 或 CLI 输出。预算告警只观察/查询，不阻断也
-不改路。自定义 HTTP 或私网端点需要持久的 `--allow-insecure-http` /
-`--allow-private-network` 授权。操作步骤、可执行命令与常见失败见
+`cognitive budget …`、`cognitive alerts …` 与 `cognitive audit query` 调用
+daemon management 表面。localhost Web UI 作为 daemon 客户端使用同一套路由
+（`GET /ui/`）；密钥只经 management key POST 或 `--api-key-file` 进入
+SecretStore，永不进入 SQLite、argv 或浏览器存储。没有桌面控制面板。预算告警只
+观察/查询，不阻断也不改路。自定义 HTTP 或私网端点需要持久的
+`--allow-insecure-http` / `--allow-private-network` 授权。binding 更新可发送可选
+`expected_revision`；不匹配时 HTTP 409 `PROVIDER_BINDING_REVISION_STALE`。操作
+步骤、可执行命令与常见失败见
 [Provider Control Plane](./provider-control-plane.md)。
 
 ## 备份与恢复 —— `partial`

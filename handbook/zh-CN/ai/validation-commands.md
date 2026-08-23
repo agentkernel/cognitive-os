@@ -95,10 +95,15 @@ P7-T05/D01 Web UI 路由清单是
 `tools/test/p7_t05_web_ui_inventory.test.mjs`，对照
 `docs/architecture/personal/web-ui-route-inventory.json`（伪造 lifecycle、缺失
 daemon 路由、Task 通道 secret、Web storage、浏览器直连目标 fail closed）。它不是
-SPA 实现、浏览器旅程、Gate 或 release 结果。daemon Origin/Referer 与 `GET /ui`
+Gate 或 release 结果。daemon Origin/Referer 与 `GET /ui`
 静态服务测试在 `apps/kernel-server/src/personal/server.rs`（外来/null Origin、
 缺失 bundle 的 `not_available`、路径穿越）；需要受支持的 Rust 链接
 （CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 / DEV-LINUX-NATIVE-01）。
+P7-T05/D08 binding CAS 是 `POST /management/agent-bindings` 上的
+`expected_revision`，不匹配时 409 `PROVIDER_BINDING_REVISION_STALE`
+（`apps/kernel-server/tests/p8_t13_provider_control_plane.rs`；仅 Linux/CI）。
+SPA 单元测试在外部 clients checkout `pc/web`（`vitest run`）；它们不是 kernel CI，
+也不是 live SecretStore 证明。
 
 ## CI 在每个 PR 上强制什么
 

@@ -824,6 +824,21 @@ fn set_binding(body: &[u8], plane: &ProviderControlPlaneStore) -> ResourceApiRes
             "binding requires model_id",
         );
     };
+    if let Some(expected) = document.get("expected_revision").and_then(Value::as_i64) {
+        let current = plane
+            .get_active_binding(&agent)
+            .ok()
+            .flatten()
+            .map(|binding| binding.revision)
+            .unwrap_or(0);
+        if expected != current {
+            return error(
+                409,
+                "PROVIDER_BINDING_REVISION_STALE",
+                "expected_revision does not match the current binding revision",
+            );
+        }
+    }
     if plane.get_account(account_id).ok().flatten().is_none() {
         return error(404, "PROVIDER_ACCOUNT_NOT_FOUND", "account not found");
     }

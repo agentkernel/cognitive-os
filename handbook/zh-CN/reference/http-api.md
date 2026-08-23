@@ -17,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:0af859d2001ec9e744527c113df2f52f3eb7179460cf555ac8a0184dfa54808e"
+fingerprint: "sha256:022159ee9e08c7f27c1420b2eb24eea485aa2b1a7b6416014d00846e38c8eaeb"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -53,7 +53,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/providers/models/add` | management | 手动添加模型（`manually_configured`），可选百万 token 单价。 |
 | `POST` | `/management/providers/models/set-price` | management | 为一个模型设置新的价格版本。历史用量保留其记录的定价版本。 |
 | `GET` | `/management/agent-bindings` | management | 列出固定的 agent 账户+provider+model binding（仅 pi 与 dsh）。 |
-| `POST` | `/management/agent-bindings` | management | 设置一个固定 binding。无自动回退、负载均衡或隐式模型切换。 |
+| `POST` | `/management/agent-bindings` | management | 设置一个固定 binding。可选 expected_revision CAS；不匹配时 HTTP 409 PROVIDER_BINDING_REVISION_STALE。无自动回退、负载均衡或隐式模型切换。 |
 | `POST` | `/management/agent-bindings/remove` | management | 移除一个 agent binding。 |
 | `GET` | `/management/usage` | management | 查询保留的用量事件。未知 token/成本值绝不会被当成 0。 |
 | `GET` | `/management/budgets` | management | 列出仅观察的 token/金额预算。 |

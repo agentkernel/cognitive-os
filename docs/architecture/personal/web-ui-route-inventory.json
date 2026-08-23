@@ -46,6 +46,13 @@
       "disposition": "available"
     },
     {
+      "id": "dsh-runtime",
+      "ui_capability": "dsh runtime observation",
+      "method_path": "GET /personal/dsh/runtime",
+      "channel": "management",
+      "disposition": "available"
+    },
+    {
       "id": "home-health",
       "ui_capability": "Daemon liveness",
       "method_path": "GET /personal/health",
@@ -197,6 +204,20 @@
       "id": "task-preview",
       "ui_capability": "Task preview",
       "method_path": "POST /task/preview",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-intent-record",
+      "ui_capability": "Record Task intent",
+      "method_path": "POST /task/intent.record",
+      "channel": "task",
+      "disposition": "available"
+    },
+    {
+      "id": "task-intent-interpret",
+      "ui_capability": "Interpret Task intent",
+      "method_path": "POST /task/intent.interpret",
       "channel": "task",
       "disposition": "available"
     },
@@ -358,9 +379,7 @@
     "path": "D:/cognitiveos-clients",
     "relative_package": "pc/web/",
     "remote": "https://github.com/agentkernel/cognitiveos-clients",
-    "branch": "personal/P7-T05-web-ui",
-    "head": "9ed33fd",
-    "draft_pr": "https://github.com/agentkernel/cognitiveos-clients/pull/1",
-    "note": "Official existing GitHub repo cloned as a sibling of D:/agent-kernel. Not clients/** inside agent-kernel and not apps/cognitiveos-console."
+    "branch": "personal/P7-T05-web-ui-control-panel",
+    "note": "Official existing GitHub repo cloned as a sibling of D:/agent-kernel. Not clients/** inside agent-kernel and not apps/cognitiveos-console. D08 continues the D01–D07 shell for live Provider key, binding, and Task run."
   }
 }
