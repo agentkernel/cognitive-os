@@ -3,7 +3,7 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `in-progress` (D07 integration)
+- Status: `done`
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
   `agentkernel/cognitiveos-clients`)
 - Lease: `lease/personal/P7-T05/web-ui`
@@ -170,7 +170,7 @@ authority records and audit facts remain daemon-owned.
 - [x] D01 inventory maps UI capabilities to approved daemon channels; missing ops are `unavailable`/`not-run`.
 - [x] Missing daemon operations recorded as unavailable/not-run; no generic browser transition invented.
 - [x] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory + SPA unit/DOM redaction).
-- [ ] Supported browser/client validation passes on the exact task revision.
+- [x] Supported browser/client validation passes on the exact task revision (Linux daemon-served `/ui/`; live Provider **not-run**).
 - [x] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
-- [ ] Formal plan, task status, docs impact and final handoff are synchronized.
+- [x] Formal plan, task status, docs impact and final report are synchronized.
 - [x] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.
