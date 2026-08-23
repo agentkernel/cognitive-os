@@ -44,7 +44,9 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
 后端选择基于探测且 fail-closed：在其他平台（今天的 macOS），或密钥环/凭据库锁定、不
 可用时，一切 secret 操作拒绝执行；有意不提供明文回退。轮换：
 `cognitive init --rotate-key`。命名控制面账户改用
-`cognitive provider key set|rotate|remove --api-key-file`，不要把 key 放进 argv。
+`cognitive provider key set|rotate|remove --api-key-file`，不要把 key 放进 argv。完整
+操作步骤（账户、信任标志、binding、用量、仅观察预算）见
+[Provider Control Plane](./provider-control-plane.md)。本阶段没有 Web 或桌面面板。
 
 ## Provider 流量如何流动
 

@@ -1274,6 +1274,15 @@ Pi 不可以：
 - 本阶段无 Web/Desktop 控制面。Cockpit/CC Switch 只作交互参考。
 - 真机实测走 `DEV-LINUX-NATIVE-01`，不是 B01 guest。
 
+### P8-T14 — Provider Control Plane 操作员使用说明
+
+- 文档-only 跟进；不重开 `P8-T13`。双语 handbook 操作员用法对齐已交付 daemon API 与
+  `cognitive` CLI（账户、密钥、trust flags、模型、binding、用量/审计投影、仅观察预算/
+  告警、常见失败）。
+- 本阶段仍无 Web/Desktop 控制面板。不发明未交付 flags。usage/audit query 无过滤器。
+- 不修改产品代码、合同或测试来“补齐”文档。不声称 live Secret Store / Provider / Pi /
+  dsh、Gate、Profile、B01 或 Web UI。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

@@ -32,6 +32,7 @@ non_claims:
 | `cognitive init`（布局、secret、发现、选型） | implemented | — |
 | daemon loopback HTTP + 通道认证 + 界限 | implemented | bearer 随机源非密码学 |
 | Provider 代理（一元对话 + 公开 SSE） | implemented | Pi/private-candidate 保持一元；无 disconnect-to-cancel |
+| Provider Control Plane（命名账户、binding、用量 CLI） | partial | 仅 daemon API + `cognitive` CLI；无 Web/桌面面板；usage/audit 查询无过滤器 |
 | SecretStore | implemented（Linux Secret Service；Windows Credential Manager） | headless vault 为 designed；macOS 不可用 |
 | dsh runtime inspect | implemented | `/proc` 存活仅 Linux；Windows 报告 unknown 而非 CRASHED |
 | 经 daemon 的 Pi 对话 | implemented | 单发、仅文本 |

@@ -72,7 +72,10 @@ Authority databases are 0600 WAL SQLite files owned by the daemon; secrets live
 exclusively in the Secret Service (see
 [Provider and secrets](./provider-and-secrets.md)). Named Provider Control Plane
 accounts persist only an opaque `secret_ref` in SQLite; API keys never appear in
-authority rows, CLI output, audit payloads, or agent-readable files. Backups
+authority rows, CLI output, audit payloads, or agent-readable files. Operator
+usage of the CLI (including `--allow-private-network` / `--allow-insecure-http`
+and `--reconfirm`) is in
+[Provider Control Plane](./provider-control-plane.md). Backups
 exclude secret material
 by construction. The append-only audit/event history cannot be rewritten through
 any daemon surface — updates and deletes are rejected by database triggers.

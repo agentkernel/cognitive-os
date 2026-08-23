@@ -133,9 +133,11 @@ Artifact CAS；随后 SQLite 在 candidate/acceptance 各自事务内重查 fixe
 
 `cognitive provider …`、`cognitive agent binding …`、`cognitive usage query`、
 `cognitive budget …`、`cognitive alerts …` 与 `cognitive audit query` 只调用
-daemon management 表面。密钥经 `--api-key-file` 进入 Secret Store；永不出现在
-SQLite、argv 或 CLI 输出。预算告警只观察/查询，不阻断也不改路。自定义 HTTP 或
-私网端点需要持久的 `--allow-insecure-http` / `--allow-private-network` 授权。
+daemon management 表面。没有 Web 或桌面控制面板。密钥经 `--api-key-file` 进入
+Secret Store；永不出现在 SQLite、argv 或 CLI 输出。预算告警只观察/查询，不阻断也
+不改路。自定义 HTTP 或私网端点需要持久的 `--allow-insecure-http` /
+`--allow-private-network` 授权。操作步骤、可执行命令与常见失败见
+[Provider Control Plane](./provider-control-plane.md)。
 
 ## 备份与恢复 —— `partial`
 

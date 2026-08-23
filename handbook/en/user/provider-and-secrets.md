@@ -48,7 +48,10 @@ today), or when the keyring/credential store is locked or unusable, every secret
 operation refuses; there is deliberately no plaintext fallback. Rotation:
 `cognitive init --rotate-key`. Named control-plane accounts use
 `cognitive provider key set|rotate|remove --api-key-file` instead of putting a
-key on argv.
+key on argv. Full operator steps (accounts, trust flags, bindings, usage,
+observe-only budgets) are in
+[Provider Control Plane](./provider-control-plane.md). There is no Web or
+desktop panel in this phase.
 
 ## How Provider traffic flows
 

@@ -12,6 +12,7 @@
     { "doc_id": "user.install-first-conversation", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/install-and-first-conversation.md" },
     { "doc_id": "user.cli-basics", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/cli-basics.md" },
     { "doc_id": "user.provider-and-secrets", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/provider-and-secrets.md" },
+    { "doc_id": "user.provider-control-plane", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/provider-control-plane.md" },
     { "doc_id": "user.pi-shell", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/pi-shell.md" },
     { "doc_id": "user.resources-model", "kind": "concept", "audience": ["user"], "generated": false, "rel_path": "user/six-resources.md" },
     { "doc_id": "user.tasks-and-execution", "kind": "concept", "audience": ["user"], "generated": false, "rel_path": "user/tasks-and-execution.md" },

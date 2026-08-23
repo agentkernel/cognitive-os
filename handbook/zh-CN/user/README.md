@@ -20,18 +20,19 @@ CognitiveOS Personal 是本地单用户的**认知资源操作系统**：一个 
 2. [安装并到达首次对话](./install-and-first-conversation.md)
 3. [CLI 基础](./cli-basics.md) —— `cognitive init | status | doctor | daemon | pi | resource | task`
 4. [Provider 与 secret](./provider-and-secrets.md)
-5. [Pi 对话壳](./pi-shell.md)
+5. [Provider Control Plane](./provider-control-plane.md) —— 命名账户、密钥、binding、用量（仅 CLI/daemon；无 Web 面板）
+6. [Pi 对话壳](./pi-shell.md)
 
 理解模型：
 
-6. [六类资源](./six-resources.md)
-7. [Task 与执行](./tasks-and-execution.md)
+7. [六类资源](./six-resources.md)
+8. [Task 与执行](./tasks-and-execution.md)
 
 运维：
 
-8. [运维与恢复](./operations-and-recovery.md)
-9. [安全边界](./security-boundaries.md)
-10. [已知限制](./known-limitations.md)
+9. [运维与恢复](./operations-and-recovery.md)
+10. [安全边界](./security-boundaries.md)
+11. [已知限制](./known-limitations.md)
 
 精确的命令、路由、错误与文件参考见[参考手册](../reference/README.md)。项目当前状态由
 [`docs/plan/PROGRESS.md`](../../../docs/plan/PROGRESS.md) 拥有，本指南有意不复制。

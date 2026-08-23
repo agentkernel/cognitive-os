@@ -40,10 +40,13 @@ current fact of the code.
   wired on this path.
 - **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
   Pi shell has no resource/task browsing UX yet. Provider Control Plane in this
-  phase is daemon API + CLI only.
+  phase is daemon API + CLI only — see
+  [Provider Control Plane](./provider-control-plane.md).
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
-  URLs are refused.
+  URLs are refused. `cognitive usage query` and `cognitive audit query` take no
+  filters; the usage JSON is `event_id` / `account_id` / `cost_micros` /
+  `cost_status` only.
 - Pi conversations are one-shot per exchange (no streaming, text only, fixed
   8192/1024 window constants at the client).
 - `TaskApplicationService` implements `control`/`query_intent`, but no HTTP route

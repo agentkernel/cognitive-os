@@ -159,11 +159,13 @@ cannot enable, disable, quarantine, or revoke Tools.
 
 `cognitive provider …`, `cognitive agent binding …`, `cognitive usage query`,
 `cognitive budget …`, `cognitive alerts …`, and `cognitive audit query` call the
-daemon management surface only. Keys enter the Secret Store through
-`--api-key-file`; they never appear in SQLite, argv, or CLI output. Budget
-alerts are observe-only and do not block or reroute calls. Custom HTTP or
-private-network endpoints require durable `--allow-insecure-http` /
-`--allow-private-network` grants.
+daemon management surface only. There is no Web or desktop control panel.
+Keys enter the Secret Store through `--api-key-file`; they never appear in
+SQLite, argv, or CLI output. Budget alerts are observe-only and do not block or
+reroute calls. Custom HTTP or private-network endpoints require durable
+`--allow-insecure-http` / `--allow-private-network` grants. Operator steps,
+worked commands, and common failures:
+[Provider Control Plane](./provider-control-plane.md).
 
 ## Backup and restore — `partial`
 

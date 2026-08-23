@@ -47,11 +47,11 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | common Resource Manager read envelope (management channel) |
 | `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | common Resource Manager mutation onto existing Skill/Tool sinks; not generic create/execute/complete |
-| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane accounts; `--api-key-file` only; custom HTTP/private endpoints need `--allow-insecure-http` / `--allow-private-network` |
+| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane accounts; `--api-key-file` only; custom HTTP/private endpoints need `--allow-insecure-http` / `--allow-private-network`. Details: [Provider Control Plane](./provider-control-plane.md) |
 | `cognitive provider key set\|rotate\|remove` | Secret Store key ops via the daemon; never SQLite |
 | `cognitive provider models refresh\|list\|add\|set-price` | foreground discovery, manual models, prices |
 | `cognitive agent binding set\|show\|list\|remove` | fixed pi/dsh account+provider+model binding; no fallback |
-| `cognitive usage query` / `cognitive budget set\|list\|remove` / `cognitive alerts list\|acknowledge` / `cognitive audit query` | usage/cost/audit and observe-only budgets |
+| `cognitive usage query` / `cognitive budget set\|list\|remove` / `cognitive alerts list\|acknowledge` / `cognitive audit query` | usage/cost/audit and observe-only budgets; `usage`/`audit` take no filters in this phase |
 | `cognitive task watch [--resume-from N]` | follow the bounded Task watch stream (task channel) |
 | `cognitive task evidence --task-ref <URI>` | read bounded redacted terminal evidence reconstructed from durable authority and Artifact CAS (task channel) |
 | `cognitive backup [--output <dir>]` | write a secret-excluding digest-bound archive (no authority SQLite / provider-config / bearer) |

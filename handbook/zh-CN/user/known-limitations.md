@@ -33,9 +33,12 @@ non_claims:
   management HTTP 路由写入 digest 绑定归档，并在预检后覆盖 live 文件。Provider
   key 留在 Secret Store，换机后需重新录入。managed Pi recover 尚未接在这条路径上。
 - **无 Web UI、无 Windows/macOS 安装、无多 agent 编排**；Pi shell 尚无资源/任务浏览
-  UX。本阶段 Provider Control Plane 只有 daemon API 与 CLI。
+  UX。本阶段 Provider Control Plane 只有 daemon API 与 CLI——见
+  [Provider Control Plane](./provider-control-plane.md)。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
-- 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。
+- 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
+  query` 与 `cognitive audit query` 无过滤器；用量 JSON 只有 `event_id` /
+  `account_id` / `cost_micros` / `cost_status`。
 - Pi 对话按次单发（无流式、仅文本、客户端固定 8192/1024 窗口常量）。
 - `TaskApplicationService` 已实现 `control`/`query_intent`，但尚无 HTTP 路由暴露。
 

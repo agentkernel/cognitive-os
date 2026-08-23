@@ -344,7 +344,7 @@ personal_requirements:
     classification: product-only
     statement: Owner-local LLM Provider Control Plane accounts, Secret Store opaque refs, endpoint trust, fixed agent bindings, usage/cost/audit, and observe-only budgets do not introduce fallback routing, third-party Anthropic-compatible endpoints, Web/Desktop control surfaces, or keys outside the approved Secret Store.
     direct_registry_requirements: []
-    tasks: [P8-T13]
+    tasks: [P8-T13, P8-T14]
     gates: []
     evidence_status: not-run
 

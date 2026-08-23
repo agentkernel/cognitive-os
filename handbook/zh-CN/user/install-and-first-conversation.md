@@ -57,6 +57,11 @@ secret 文件：`provider.json`（含不透明 `SecretRef`）与 `selected-model
 `--provider` 与 `--base-url`，不再采集密钥。若无可用的生产 secret 后端，命令
 fail-closed——没有明文回退。
 
+命名账户、密钥轮换、固定 agent binding 与用量查询是 daemon 运行之后的独立操作员面：
+[Provider Control Plane](./provider-control-plane.md)。该面是 CLI 与 daemon 对话；本阶
+段没有 Web 或桌面控制面板。在设置 control-plane binding 之前，`cognitive init` 仍是
+首次对话路径（`provider.json` / `selected-model.json`）。
+
 ## 3. 启动并检查 daemon
 
 ```text

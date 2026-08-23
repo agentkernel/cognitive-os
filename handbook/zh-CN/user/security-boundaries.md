@@ -63,5 +63,7 @@ fail-closed 并返回注册错误码。
 权威数据库是 daemon 拥有的 0600 WAL SQLite 文件；secret 只存在于 Secret Service
 （见 [Provider 与 secret](./provider-and-secrets.md)）。命名 Provider Control Plane
 账户在 SQLite 中只持久化不透明 `secret_ref`；API key 永不出现在权威行、CLI 输出、
-审计载荷或 agent 可读文件中。备份按构造排除 secret 材料。
+审计载荷或 agent 可读文件中。CLI 操作（含 `--allow-private-network` /
+`--allow-insecure-http` 与 `--reconfirm`）见
+[Provider Control Plane](./provider-control-plane.md)。备份按构造排除 secret 材料。
 追加式审计/事件历史无法经任何 daemon 面被改写——数据库触发器直接拒绝 update/delete。
