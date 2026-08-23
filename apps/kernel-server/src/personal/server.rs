@@ -5,7 +5,7 @@ use std::fs::File;
 use std::fs::{self, OpenOptions};
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
@@ -52,6 +52,17 @@ use super::verification_executor::open_daemon_artifact_store;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
 const SCHEDULER_TICK_INTERVAL: Duration = Duration::from_millis(250);
+const WEB_UI_CSP: &str =
+    "default-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'";
+const WEB_UI_MAX_ASSET_BYTES: u64 = 1024 * 1024;
+const WEB_UI_UNAVAILABLE_HTML: &str = concat!(
+    "<!doctype html><html lang=\"en\"><head><meta charset=\"utf-8\">",
+    "<title>CognitiveOS Personal UI</title></head><body>",
+    "<p>Web UI bundle is not_available (LOCAL_UI_BUNDLE_UNAVAILABLE). ",
+    "This origin serves GET /ui only after a pinned cognitiveos-clients/pc/web ",
+    "build is installed. This is not a Gate, release, Profile, or readiness claim.</p>",
+    "</body></html>",
+);
 static ENDPOINT_TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 
 /// Configuration for the Personal loopback daemon surface.
@@ -586,6 +597,11 @@ fn process_http_request(
             write_error_response(stream, 400, "LOCAL_HOST_HEADER_REJECTED", host_error)
         });
     }
+    if let Some(origin_error) = validate_browser_origin_headers(&headers) {
+        return timed_route_dispatch(|| {
+            write_error_response(stream, 403, "LOCAL_ORIGIN_HEADER_REJECTED", origin_error)
+        });
+    }
 
     timed_route_dispatch(|| {
         dispatch_http_route(
@@ -908,6 +924,9 @@ fn dispatch_http_route(
         })
         .to_string();
         return write_json_response(stream, 200, &body);
+    }
+    if method_path.starts_with("GET /ui ") || method_path.starts_with("GET /ui/") {
+        return handle_web_ui_route(stream, layout, &method_path);
     }
 
     write_error_response(
@@ -2476,6 +2495,211 @@ fn validate_host_header(headers: &str) -> Option<&'static str> {
     }
 }
 
+fn header_values<'a>(headers: &'a str, name: &str) -> Vec<&'a str> {
+    headers
+        .lines()
+        .filter_map(|line| {
+            let (raw_name, value) = line.split_once(':')?;
+            if raw_name.eq_ignore_ascii_case(name) {
+                let trimmed = value.trim();
+                (!trimmed.is_empty()).then_some(trimmed)
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
+fn parse_authority(authority: &str) -> Option<(String, u16)> {
+    let authority = authority.trim();
+    if authority.is_empty() {
+        return None;
+    }
+    if let Some(rest) = authority.strip_prefix('[') {
+        let (host, after) = rest.split_once(']')?;
+        let port = if after.is_empty() {
+            80
+        } else {
+            after.strip_prefix(':')?.parse().ok()?
+        };
+        return Some((host.to_ascii_lowercase(), port));
+    }
+    match authority.rsplit_once(':') {
+        Some((host, port)) if !host.is_empty() && !host.contains(':') => {
+            Some((host.to_ascii_lowercase(), port.parse().ok()?))
+        }
+        _ => Some((authority.to_ascii_lowercase(), 80)),
+    }
+}
+
+fn loopback_http_host(host: &str) -> bool {
+    matches!(host, "127.0.0.1" | "localhost" | "localhost." | "::1")
+}
+
+fn parse_http_origin_url(value: &str) -> Option<(String, u16)> {
+    let rest = value.trim().strip_prefix("http://")?;
+    let authority = rest.split(['/', '?', '#']).next().unwrap_or(rest);
+    parse_authority(authority)
+}
+
+/// ADR-0053: a present Origin or Referer must be this daemon's loopback HTTP
+/// origin. Missing headers remain allowed for CLI/curl. Cookies stay forbidden.
+fn validate_browser_origin_headers(headers: &str) -> Option<&'static str> {
+    let origins = header_values(headers, "origin");
+    let referers = header_values(headers, "referer");
+    if origins.is_empty() && referers.is_empty() {
+        return None;
+    }
+    if origins.len() > 1 || referers.len() > 1 {
+        return Some("origin header must be a single loopback product origin");
+    }
+
+    let hosts = header_values(headers, "host");
+    if hosts.len() != 1 {
+        return Some("origin header must be a single loopback product origin");
+    }
+    let Some((_, host_port)) = parse_authority(hosts[0]) else {
+        return Some("origin header must be a single loopback product origin");
+    };
+
+    let mut candidates = Vec::new();
+    if let Some(origin) = origins.first().copied() {
+        candidates.push(origin);
+    }
+    if let Some(referer) = referers.first().copied() {
+        candidates.push(referer);
+    }
+    if candidates.is_empty() {
+        return None;
+    }
+
+    for candidate in candidates {
+        if candidate.eq_ignore_ascii_case("null") {
+            return Some("origin header must be a single loopback product origin");
+        }
+        let Some((name, port)) = parse_http_origin_url(candidate) else {
+            return Some("origin header must be a single loopback product origin");
+        };
+        if !loopback_http_host(&name) || port != host_port {
+            return Some("origin header must be a single loopback product origin");
+        }
+    }
+    None
+}
+
+fn web_ui_relative_asset(request_path: &str) -> Result<String, &'static str> {
+    let without_prefix = if request_path == "/ui" || request_path == "/ui/" {
+        "index.html"
+    } else {
+        request_path
+            .strip_prefix("/ui/")
+            .ok_or("web UI path rejected")?
+    };
+    if without_prefix.is_empty() {
+        return Ok("index.html".to_owned());
+    }
+    if without_prefix.contains('\\') || without_prefix.contains('\0') {
+        return Err("web UI path rejected");
+    }
+    for segment in without_prefix.split('/') {
+        if segment.is_empty()
+            || segment == "."
+            || segment == ".."
+            || !segment.chars().all(|character| {
+                character.is_ascii_alphanumeric() || matches!(character, '.' | '-' | '_')
+            })
+        {
+            return Err("web UI path rejected");
+        }
+    }
+    Ok(without_prefix.to_owned())
+}
+
+fn web_ui_content_type(relative: &str) -> &'static str {
+    match Path::new(relative)
+        .extension()
+        .and_then(|extension| extension.to_str())
+        .unwrap_or("")
+    {
+        "html" | "htm" => "text/html; charset=utf-8",
+        "js" | "mjs" => "text/javascript; charset=utf-8",
+        "css" => "text/css; charset=utf-8",
+        "json" => "application/json",
+        "svg" => "image/svg+xml",
+        "png" => "image/png",
+        "jpg" | "jpeg" => "image/jpeg",
+        "woff2" => "font/woff2",
+        "txt" | "map" => "text/plain; charset=utf-8",
+        _ => "application/octet-stream",
+    }
+}
+
+fn handle_web_ui_route(
+    stream: &mut TcpStream,
+    layout: &PersonalDataLayout,
+    method_path: &str,
+) -> Result<(), String> {
+    let request_path = method_path
+        .strip_prefix("GET ")
+        .map(str::trim)
+        .unwrap_or("");
+    let relative = match web_ui_relative_asset(request_path) {
+        Ok(relative) => relative,
+        Err(message) => {
+            return write_error_response(stream, 400, "LOCAL_UI_PATH_REJECTED", message);
+        }
+    };
+    let bundle_root = layout.data_dir().join("ui");
+    let asset = bundle_root.join(&relative);
+    if relative == "index.html" && !asset.is_file() {
+        return write_web_ui_response(
+            stream,
+            503,
+            "text/html; charset=utf-8",
+            WEB_UI_UNAVAILABLE_HTML.as_bytes(),
+        );
+    }
+    let metadata = match fs::metadata(&asset) {
+        Ok(metadata) if metadata.is_file() => metadata,
+        _ => {
+            return write_error_response(
+                stream,
+                404,
+                "LOCAL_UI_ASSET_NOT_FOUND",
+                "web UI asset not found",
+            );
+        }
+    };
+    if metadata.len() > WEB_UI_MAX_ASSET_BYTES {
+        return write_error_response(
+            stream,
+            400,
+            "LOCAL_UI_ASSET_TOO_LARGE",
+            "web UI asset exceeds one mebibyte",
+        );
+    }
+    let body = fs::read(&asset).map_err(|error| error.to_string())?;
+    write_web_ui_response(stream, 200, web_ui_content_type(&relative), &body)
+}
+
+fn write_web_ui_response(
+    stream: &mut TcpStream,
+    status: u16,
+    content_type: &str,
+    body: &[u8],
+) -> Result<(), String> {
+    let reason = match status {
+        200 => "OK",
+        503 => "Service Unavailable",
+        _ => "Error",
+    };
+    let header = format!(
+        "HTTP/1.1 {status} {reason}\r\nContent-Type: {content_type}\r\nContent-Length: {}\r\nContent-Security-Policy: {WEB_UI_CSP}\r\nX-Content-Type-Options: nosniff\r\nCache-Control: no-store\r\nConnection: close\r\n\r\n",
+        body.len()
+    );
+    write_timed(stream, &header, body)
+}
+
 fn extract_bearer_token(headers: &str) -> Option<String> {
     for line in headers.lines() {
         let Some((_, value)) = line.split_once(':') else {
@@ -2653,7 +2877,8 @@ mod tests {
     use super::{
         LocalSessionAuthority, LoopbackTransportStage, PeriodicSchedulerWorker,
         PersonalResourceBounds, SchedulerTickRun, ensure_loopback_bind, handle_connection,
-        loopback_transport, run_scheduler_tick_non_reentrant,
+        loopback_transport, run_scheduler_tick_non_reentrant, validate_browser_origin_headers,
+        web_ui_relative_asset,
     };
     use cognitive_runtime::loopback_transport::validate_loopback_transport_observation;
 
@@ -2713,6 +2938,195 @@ mod tests {
     fn non_loopback_bind_is_rejected() {
         assert!(ensure_loopback_bind("0.0.0.0:8080").is_err());
         assert!(ensure_loopback_bind("127.0.0.1:0").is_ok());
+    }
+
+    #[test]
+    fn browser_origin_allowlist_rejects_foreign_and_null() {
+        assert!(validate_browser_origin_headers("Host: 127.0.0.1:48181\r\n").is_none());
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nOrigin: http://127.0.0.1:48181\r\n",
+            )
+            .is_none()
+        );
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nOrigin: http://localhost:48181\r\n",
+            )
+            .is_none()
+        );
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nReferer: http://127.0.0.1:48181/ui/\r\n",
+            )
+            .is_none()
+        );
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nOrigin: http://evil.example\r\n",
+            )
+            .is_some()
+        );
+        assert!(
+            validate_browser_origin_headers("Host: 127.0.0.1:48181\r\nOrigin: null\r\n").is_some()
+        );
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nOrigin: https://127.0.0.1:48181\r\n",
+            )
+            .is_some()
+        );
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nOrigin: http://127.0.0.1:80\r\n",
+            )
+            .is_some()
+        );
+        assert!(
+            validate_browser_origin_headers(
+                "Host: 127.0.0.1:48181\r\nReferer: http://evil.example/ui/\r\n",
+            )
+            .is_some()
+        );
+    }
+
+    #[test]
+    fn web_ui_paths_reject_traversal_and_percent_encoding() {
+        assert_eq!(web_ui_relative_asset("/ui").unwrap(), "index.html");
+        assert_eq!(web_ui_relative_asset("/ui/").unwrap(), "index.html");
+        assert_eq!(
+            web_ui_relative_asset("/ui/assets/app.js").unwrap(),
+            "assets/app.js"
+        );
+        assert!(web_ui_relative_asset("/ui/../authority.sqlite").is_err());
+        assert!(web_ui_relative_asset("/ui/%2e%2e/secret").is_err());
+        assert!(web_ui_relative_asset("/ui/foo/../../etc/passwd").is_err());
+        assert!(web_ui_relative_asset("/ui/foo\\bar").is_err());
+    }
+
+    fn front_door_exchange(
+        test_name: &str,
+        prepare: impl FnOnce(&PersonalDataLayout),
+        request: impl FnOnce(u16) -> String,
+    ) -> String {
+        let listener = TcpListener::bind("127.0.0.1:0").expect("test listener");
+        let port = listener.local_addr().expect("listener address").port();
+        let bounds = PersonalResourceBounds::personal_v1_baseline();
+        let (layout, authority, authority_store) = test_fixture(test_name);
+        prepare(&layout);
+        let active_connections = Arc::new(AtomicUsize::new(0));
+        let in_flight = Arc::new(AtomicUsize::new(0));
+        let server = std::thread::spawn({
+            let authority = Arc::clone(&authority);
+            let authority_store = Arc::clone(&authority_store);
+            let active_connections = Arc::clone(&active_connections);
+            let in_flight = Arc::clone(&in_flight);
+            move || {
+                handle_connection(
+                    accept_connection(&listener),
+                    &bounds,
+                    &layout,
+                    &authority,
+                    &authority_store,
+                    &active_connections,
+                    &in_flight,
+                );
+            }
+        });
+        let mut client = TcpStream::connect(("127.0.0.1", port)).expect("client connection");
+        client
+            .set_read_timeout(Some(Duration::from_secs(5)))
+            .expect("client timeout");
+        client.write_all(request(port).as_bytes()).expect("request");
+        let mut response = String::new();
+        client.read_to_string(&mut response).expect("response");
+        server.join().expect("server thread");
+        response
+    }
+
+    #[test]
+    fn foreign_origin_is_rejected_on_the_front_door() {
+        let response = front_door_exchange(
+            "origin-foreign",
+            |_| {},
+            |port| {
+                format!(
+                    "GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nOrigin: http://evil.example\r\nConnection: close\r\n\r\n"
+                )
+            },
+        );
+        assert!(response.contains("HTTP/1.1 403"), "{response}");
+        assert!(
+            response.contains("LOCAL_ORIGIN_HEADER_REJECTED"),
+            "{response}"
+        );
+        assert!(!response.contains("personal-health"), "{response}");
+    }
+
+    #[test]
+    fn matching_loopback_origin_is_accepted_on_health() {
+        let response = front_door_exchange(
+            "origin-loopback",
+            |_| {},
+            |port| {
+                format!(
+                    "GET /personal/health HTTP/1.1\r\nHost: 127.0.0.1:{port}\r\nOrigin: http://127.0.0.1:{port}\r\nConnection: close\r\n\r\n"
+                )
+            },
+        );
+        assert!(response.contains("HTTP/1.1 200"), "{response}");
+        assert!(response.contains("personal-health"), "{response}");
+    }
+
+    #[test]
+    fn missing_ui_bundle_is_not_available_not_a_fake_spa() {
+        let response = front_door_exchange(
+            "ui-missing",
+            |_| {},
+            |_| "GET /ui HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n".to_owned(),
+        );
+        assert!(response.contains("HTTP/1.1 503"), "{response}");
+        assert!(
+            response.contains("LOCAL_UI_BUNDLE_UNAVAILABLE"),
+            "{response}"
+        );
+        assert!(response.contains("not_available"), "{response}");
+        assert!(
+            response.contains("Content-Security-Policy: default-src 'self'"),
+            "{response}"
+        );
+        assert!(!response.contains("<script"), "{response}");
+    }
+
+    #[test]
+    fn web_ui_serves_index_with_csp_and_rejects_traversal() {
+        let served = front_door_exchange(
+            "ui-index",
+            |layout| {
+                let ui = layout.data_dir().join("ui");
+                std::fs::create_dir_all(&ui).expect("ui dir");
+                std::fs::write(ui.join("index.html"), "<!doctype html><p>ok</p>").expect("index");
+            },
+            |_| "GET /ui/ HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n".to_owned(),
+        );
+        assert!(served.contains("HTTP/1.1 200"), "{served}");
+        assert!(served.contains("<p>ok</p>"), "{served}");
+        assert!(
+            served.contains("Content-Security-Policy: default-src 'self'"),
+            "{served}"
+        );
+
+        let traversal = front_door_exchange(
+            "ui-traversal",
+            |_| {},
+            |_| {
+                "GET /ui/../authority.sqlite HTTP/1.1\r\nHost: 127.0.0.1\r\nConnection: close\r\n\r\n"
+                .to_owned()
+            },
+        );
+        assert!(traversal.contains("HTTP/1.1 400"), "{traversal}");
+        assert!(traversal.contains("LOCAL_UI_PATH_REJECTED"), "{traversal}");
+        assert!(!traversal.contains("SQLite"), "{traversal}");
     }
 
     #[test]

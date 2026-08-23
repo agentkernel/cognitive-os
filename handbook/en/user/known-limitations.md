@@ -10,10 +10,11 @@ sources:
   - path: apps/kernel-server/src/personal/auth.rs
   - path: crates/cognitive-store/src/personal_backup.rs
   - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: docs/adr/0053-personal-web-ui-stack.md
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:79dbb3dc50673b5fffdb8f8087e1f6a8fdbf4a2ae4f1574dec3f5fd6b64d61df"
+fingerprint: "sha256:1c7077b096262bac11bcaf447b309696b439776844bd36bcc37f702766572743"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -38,9 +39,16 @@ current fact of the code.
   overlay live files after preflight. Provider keys stay in the Secret Store
   and must be re-entered after a machine move. Managed Pi recover is not yet
   wired on this path.
-- **No Web UI, no Windows/macOS installation, no multi-agent orchestration**; the
-  Pi shell has no resource/task browsing UX yet. Provider Control Plane in this
-  phase is daemon API + CLI only — see
+- **No Web UI SPA in this repository**: [ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md)
+  accepted React + TypeScript + Vite and same-origin daemon `GET /ui` serving.
+  The daemon now enforces the loopback Origin/Referer allowlist and returns
+  `503` `not_available` when `data_dir()/ui/index.html` is absent. The SPA
+  lives in the official `cognitiveos-clients` checkout at
+  `D:\cognitiveos-clients\pc\web\` and is copied into `data_dir()/ui` for
+  product serving. This kernel tree still must not contain `clients/**`.
+  There is no Windows/macOS installation product and no multi-agent
+  orchestration. The Pi shell has no resource/task browsing UX yet. Provider
+  Control Plane in this phase is daemon API + CLI only — see
   [Provider Control Plane](./provider-control-plane.md).
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible

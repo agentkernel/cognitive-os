@@ -17,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:960358cd14d4ed2d66c14508831ca72d09b1f390a10a571417ff5a47e8579bdd"
+fingerprint: "sha256:0af859d2001ec9e744527c113df2f52f3eb7179460cf555ac8a0184dfa54808e"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -32,6 +32,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 |---|---|---|---|
 | `POST` | `/local/session` | none | Mint a channel-bound local bearer (management or task) from the bootstrap secret proof. |
 | `GET` | `/personal/health` | none | Unauthenticated bounded liveness probe; deliberately not a readiness claim. |
+| `GET` | `/ui` | none | Unauthenticated same-origin static Web UI under data_dir()/ui. Missing bundle returns 503 not_available (LOCAL_UI_BUNDLE_UNAVAILABLE) with CSP. A present Origin/Referer must be this daemon's loopback HTTP origin. Not a readiness, Gate, or Profile claim. |
 | `GET` | `/personal/status` | management | Component status projection (system, database, secret, provider, daemon, pi); Provider facts and SecretStore resolution use one loaded config snapshot. |
 | `GET` | `/personal/readiness` | management | Alias of the snapshot-consistent status projection. |
 | `GET` | `/personal/doctor` | management | Redacted snapshot-consistent diagnostic projection including six-resource, headless-vault, and operability sections. |

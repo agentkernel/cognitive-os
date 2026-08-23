@@ -66,6 +66,7 @@ The stable top-level spaces are:
 | [Cognitive resource model](./cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
 | [Resource Manager](./resource-manager-design.md) | common list/inspect/watch/bind/unbind/enable/disable/revoke envelope; no generic create/install/execute/complete |
 | [Provider Control Plane](./provider-control-plane.md) | owner-local provider accounts, model discovery, fixed agent bindings, usage, cost, and soft alerts |
+| [Web UI product design](./web-ui-design.md) | post-1.0 localhost operator experience for Agents, Providers, bindings and Activity |
 | [Linux 1.0 scope](./linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
 | [Personal 2.0 scope](./personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
 | [User journeys](./user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |

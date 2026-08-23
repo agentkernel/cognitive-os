@@ -14,12 +14,15 @@ sources:
   - path: tests/golden/README.md
   - path: tools/src/p2_t28_uj_matrix.mjs
     symbols: ["validateUjCapabilityTruthMatrix"]
+  - path: tools/src/p7_t05_web_ui_inventory.mjs
+    symbols: ["validateWebUiRouteInventory"]
 tests:
   - tools/test/check.test.mjs
   - tools/test/p2_t28_capability_truth.test.mjs
   - tools/test/c1_c2_paired_p_arm.test.mjs
+  - tools/test/p7_t05_web_ui_inventory.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:b03829354db5a8cd792e2e2d55de6e99ab33196305bd3d3e12a1ba8c1b30e504"
+fingerprint: "sha256:201986fa2135ebaa3734642f602dc5a7bd3dd1dd611bd705bcac804329088251"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -81,6 +84,14 @@ Multi-Agent 保持显式 `excluded`，不得标为 required。daemon 侧登记�
 release 或 Profile 结果。D02 密闭公开调用方冒烟是
 `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`。命名 UJ oracle 在精确
 revision 的 `DEV-LINUX-NATIVE-01` 上执行；Windows GNU 对该 Rust 矩阵记 `not-run`。
+
+## P7-T05 Web UI 路由清单
+
+`tools/src/p7_t05_web_ui_inventory.mjs` 冻结 UI 能力到既有 daemon 路由的映射。
+声称不存在的路由、通用 lifecycle 转换、Task 通道上的 secret-bearing 写、以及
+浏览器直连 SQLite/SecretStore/文件系统/Provider 都会 fail closed。缺失的 typed
+HTTP（Task cancel、Agent pause/resume/stop/restart/quarantine）必须记
+`unavailable`/`not-run`。该清单不是 SPA 实现、浏览器旅程、Gate 或 release 结果。
 
 ## CI 矩阵
 

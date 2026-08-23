@@ -14,12 +14,15 @@ sources:
   - path: tests/golden/README.md
   - path: tools/src/p2_t28_uj_matrix.mjs
     symbols: ["validateUjCapabilityTruthMatrix"]
+  - path: tools/src/p7_t05_web_ui_inventory.mjs
+    symbols: ["validateWebUiRouteInventory"]
 tests:
   - tools/test/check.test.mjs
   - tools/test/p2_t28_capability_truth.test.mjs
   - tools/test/c1_c2_paired_p_arm.test.mjs
+  - tools/test/p7_t05_web_ui_inventory.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:b03829354db5a8cd792e2e2d55de6e99ab33196305bd3d3e12a1ba8c1b30e504"
+fingerprint: "sha256:201986fa2135ebaa3734642f602dc5a7bd3dd1dd611bd705bcac804329088251"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -89,6 +92,15 @@ EVAL-004, Gate, release, or Profile result. The D02 hermetic public-caller
 smoke is `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`. Named UJ
 oracles run on exact-revision `DEV-LINUX-NATIVE-01`; Windows GNU is `not-run`
 for that Rust matrix.
+
+## P7-T05 Web UI route inventory
+
+`tools/src/p7_t05_web_ui_inventory.mjs` freezes UI capabilities onto existing
+daemon routes. Invented routes, generic lifecycle transitions, Task-channel
+secret-bearing writes, and browser-direct SQLite/SecretStore/filesystem/Provider
+access fail closed. Missing typed HTTP (Task cancel; Agent
+pause/resume/stop/restart/quarantine) must stay `unavailable`/`not-run`. The
+inventory is not a SPA implementation, browser journey, Gate, or release result.
 
 ## CI matrix
 
