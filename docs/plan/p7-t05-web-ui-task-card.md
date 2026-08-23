@@ -3,10 +3,10 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `done` (D01–D09; merged kernel PR #262 / clients PR #2)
+- Status: `in-progress` (D10 live-proven on linux-002; D01–D09 delivered; Draft until acceptance)
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
   `agentkernel/cognitiveos-clients`)
-- Lease: `lease/personal/P7-T05/web-ui-control-panel` (closed 2026-08-23)
+- Lease: `lease/personal/P7-T05/web-ui-sidebar-fix` (active; prior control-panel lease closed 2026-08-23)
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
 - Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
 - Priority: non-blocking for Linux 1.0 / `GMVP-LINUX`
@@ -116,6 +116,7 @@ recreate `clients/**` in this repository and do not implement the SPA in
 | D07 | Integration, supported validation, docs sync and final acceptance assessment | exact revision validation, focused negatives, task docs and closure record |
 | D08 | Live control-panel completion: Provider key SecretStore handoff, binding CAS, Task preview/admit/watch | focused negatives; SPA unit/DOM; no invented lifecycle HTTP |
 | D09 | Exact-revision Linux UI driver through key entry, bind, and Agent Task run | live SecretStore/UI driver; redaction; cleanup; hypothesis only |
+| D10 | Owner-reported sidebar no-op plus Provider key / Agent binding verification | failure-first hash-nav tests; in-place session gate; linux-002 click-through; key/bind take-effect evidence |
 
 The first implementation slice changes the task status to `in-progress` under the
 normal task lease. Design-only work before that point does not claim execution.

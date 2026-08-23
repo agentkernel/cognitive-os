@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P7-T05/web-ui-sidebar-fix` | P7-T05/D10 sidebar navigation + Provider/binding verification | Lane-TSC | `personal/P7-T05-web-ui-sidebar-fix` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/plan.md`; `docs/plan/p7-t05-web-ui-task-card.md`; `docs/checkpoints/20260823-personal-p7-t05-web-ui-sidebar-fix-report.md` | cursor/P7-T05-sidebar-fix | 2026-08-23 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no
