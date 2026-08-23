@@ -209,6 +209,33 @@ grok-4.6 remains the independent Pi binding; dsh Path B stayed Flash. No SQLite 
 - Headless Path B after the panel with the **P8-T15** helper is **pass** on Flash. The earlier fail was the restored p8t10 helper reading the Pi `grok-4.6` binding.
 - Do not stop P7-T05 daemon PID 465376 / port 48681 unless this task started a replacement.
 
+### 2026-08-23 — operational follow-up: open both panels, HTTP session
+
+Did **not** restart dsh web (`:3080` still up). Did not mix P7-T05. No secret printed.
+
+Listeners unchanged: node **487821** `:3080`, kernel-server **465376** `:48681`, helper **487806**, Firefox **471883**.
+
+| GET | status | document |
+|---|---|---|
+| `http://127.0.0.1:3080/` | **200** | title `DSH Local Build` |
+| `http://127.0.0.1:48681/ui/` | **200** | title `CognitiveOS Personal`, `/ui/assets/` |
+| `http://127.0.0.1:48681/ui/#/providers` | **200** | same Personal SPA `index.html` (hash not on the wire) |
+| `http://127.0.0.1:48681/ui/providers` | **404** | `LOCAL_UI_ASSET_NOT_FOUND` JSON — not the SPA |
+
+Live bundle still has `path:"/providers"`, nav `Providers`, `session-gate`, hash-history helper.
+
+Snap Firefox DBus `OpenURL` **ok** for `http://127.0.0.1:3080/` and `http://127.0.0.1:48681/ui/#/providers` (and `/ui#/providers`). Sessionstore loopback tabs (recovery.jsonlz4):
+
+- `http://127.0.0.1:3080/` ×3 (one selected in two windows)
+- `http://127.0.0.1:48681/ui#/bindings`
+- `http://127.0.0.1:48681/ui/` (selected in one window)
+
+`#/providers` did **not** appear in sessionstore after OpenURL (hash-only navigation may reuse the existing Personal tab). 12 ESTABLISHED firefox sockets to `:3080`; 0 long-lived to `:48681` (SPA session-gate / static pages do not keep a websocket).
+
+HTTP session via `POST /local/session` from the runtime bootstrap **file** (not argv): **200**, channel `management`, session id present. Token written `0600` under the runtime dir (not logged). `GET /management/providers/accounts` **401** unauthenticated, **200** with that session; list count **1**, kind `openai_compatible`; secret-shaped field names only (`secret_ref`), no values printed.
+
+Models subsection of native dsh was **not** DOM-proven (no headed screenshot; no secret-dumping UI driver). Providers heading/list is **API-proven**; Firefox paint of `#/providers` is **not** proven from sessionstore.
+
 ## Unique next action
 
-On linux-002 desktop Firefox, refresh `http://127.0.0.1:3080` Models — official DeepSeek should show configured (Path B bearer), not 密钥缺失. Open Personal Providers only as `http://127.0.0.1:48681/ui/#/providers` and paste the daemon bootstrap (not a Provider key) if the session gate appears. Keep web **487821/487806** and daemon **465376** running. Do not auto-claim P6 / P7-T06 / P7-T07. UI up is not Task completion.
+On the linux-002 desktop: in a `:3080` tab open **Models** (Path B should show official DeepSeek configured). In the existing Personal tab (`/ui#/bindings` or `/ui/`) click **Providers** or set the hash to `#/providers`. The HTTP management session issued from SSH is memory-only in the SPA and does not transfer; if that tab shows the session gate, paste bootstrap there (not a Provider key). Keep **487821/487806/465376/471883**. Do not auto-claim P6 / P7-T06 / P7-T07. UI up is not Task completion.
