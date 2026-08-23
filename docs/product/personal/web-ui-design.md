@@ -11,7 +11,8 @@ claim that a Web UI, its API surface, a Gate, a release or a Profile is
 implemented. Current facts remain in [PROGRESS.md](../../plan/PROGRESS.md).
 [ADR-0053](../../adr/0053-personal-web-ui-stack.md) accepts React + TypeScript +
 Vite in `cognitiveos-clients/pc/web/`, same-origin daemon serving, and
-memory-only sessions. The SPA is not implemented in this repository.
+memory-only sessions. The SPA is implemented in the approved checkout
+`D:\cognitiveos-clients\pc\web\`, not in this repository.
 
 ## 1. Product outcome
 

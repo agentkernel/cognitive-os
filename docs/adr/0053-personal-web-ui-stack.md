@@ -1,7 +1,8 @@
 # ADR-0053: Personal Web UI Stack, Serving, Session, and Threat Binding (P7-T05)
 
-- Status: Accepted for P7-T05/D01 readiness. SPA implementation remains blocked
-  on an approved `cognitiveos-clients` checkout under `pc/web/`.
+- Status: Accepted. Approved checkout is `D:\cognitiveos-clients` (`pc/web/`).
+  SPA implementation continues on `cognitiveos-clients` branch
+  `personal/P7-T05-web-ui`.
 - Date: 2026-08-23
 - Decision owners: CognitiveOS Personal maintainers
 - Classification: Personal product local-UI decision. This ADR is not a

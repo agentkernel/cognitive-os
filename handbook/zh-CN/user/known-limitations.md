@@ -14,7 +14,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:3d06495a4c47d6ce0731ef108f7931e3ca0152c0a0cf6340245590fbc9bf1464"
+fingerprint: "sha256:1c7077b096262bac11bcaf447b309696b439776844bd36bcc37f702766572743"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -36,8 +36,9 @@ non_claims:
 - **本仓库无 Web UI SPA**：[ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md)
   已接受 React + TypeScript + Vite 与 daemon 同源 `GET /ui` 静态服务。daemon
   现已执行 loopback Origin/Referer 允许列表；当 `data_dir()/ui/index.html`
-  不存在时返回 `503` `not_available`。SPA 本身落在 `cognitiveos-clients/pc/web/`，
-  此处没有 approved checkout。无 Windows/macOS
+  不存在时返回 `503` `not_available`。SPA 位于官方 checkout
+  `D:\cognitiveos-clients\pc\web\`，产品路径是复制到 `data_dir()/ui`。本仓库仍不得
+  出现 `clients/**`。无 Windows/macOS
   安装产品，也无多 agent 编排。Pi shell 尚无资源/任务浏览 UX。本阶段 Provider
   Control Plane 只有 daemon API 与 CLI——见
   [Provider Control Plane](./provider-control-plane.md)。

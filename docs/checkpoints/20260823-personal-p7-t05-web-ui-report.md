@@ -2,12 +2,15 @@
 
 - Task: `P7-T05`
 - Lease: `lease/personal/P7-T05/web-ui`
-- Branch: `personal/P7-T05-web-ui`
-- Change class: `product-semantic + structural` (ADR/inventory/docs) plus
-  `implementation-only` (Node inventory validator)
+- Kernel branch: `personal/P7-T05-web-ui`
+- Clients branch: `personal/P7-T05-web-ui` @ `987eca0`
+- Clients Draft PR: https://github.com/agentkernel/cognitiveos-clients/pull/1
+- Approved checkout: `D:\cognitiveos-clients` (`pc/web/`)
+- Change class: `product-semantic + structural` (docs) plus
+  `implementation-only` (SPA in the official clients repo; daemon front door
+  already delivered in D01)
 - Claim ceiling: `hypothesis`
-- Non-claims: no Gate, release, Profile, B01, EVAL, Agent-benefit, or
-  “Web UI implemented” promotion
+- Non-claims: no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion
 
 ## Validation log (`TEST-REPORT-INCREMENTAL-01`)
 
@@ -39,50 +42,40 @@
    - `cargo fmt --all -- --check` **pass**
    Not B01. Worktree cleaned.
 5. Required CI `32614594696` at `05a3afa1` **pass** (Ubuntu, Windows, required-ci).
-6. Browser/SPA journeys **not-run** / **not_available**: no approved
-   `cognitiveos-clients` checkout.
-7. Linux/native live UI (browser against daemon-served SPA) **not-run**: blocked
-   on the same checkout.
-8. Secret-redaction SPA negatives **not-run**: no SPA to instrument.
-   Inventory proves the key route is management-only and forbids DOM/storage
-   persistence in the client policy; that is not live redaction evidence.
+6. Owner approved clone of official `agentkernel/cognitiveos-clients` to
+   `D:\cognitiveos-clients`. Checkout **registered**.
+7. Local SPA unit/negatives on `DEV-WIN-GNU-01` in
+   `D:\cognitiveos-clients\pc\web\`: `pnpm test` **17/17 pass**
+   (secret redaction, forbidden browser targets, unavailable ops, binding
+   gates, completion non-claim, escaped markup, memory-only session, channel
+   isolation, watch gap/detach, header-injection reject, identity separation,
+   DOM redaction). `pnpm build` **pass** (Vite `base: '/ui/'`).
+8. Linux/native live UI (browser against daemon-served SPA) **pending** D07:
+   requires pushed exact kernel + clients revisions.
 
 ## D01
 
-Accepted [ADR-0053](../adr/0053-personal-web-ui-stack.md):
-
-- React + TypeScript + Vite in `cognitiveos-clients/pc/web/`
-- daemon same-origin `/ui/` serving; Vite preview is not the product origin
-- memory-only sessions; cookies forbidden
-- Origin/Referer loopback allowlist **enforced** (`LOCAL_ORIGIN_HEADER_REJECTED`)
-- `GET /ui` without a bundle is `503` `not_available` (`LOCAL_UI_BUNDLE_UNAVAILABLE`) with CSP
-- MIT/Apache/BSD runtime deps only
-
-Frozen inventory:
+Accepted [ADR-0053](../adr/0053-personal-web-ui-stack.md). Frozen inventory:
 [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json).
 
-Honest missing typed HTTP (UI must render unavailable/not-run):
+Honest missing typed HTTP (UI renders unavailable/not-run):
 
 - Task cancel
 - Agent pause / resume / stop / restart / quarantine
 
-## Blocker
+## D02–D06
 
-- `blocked_paths`: `cognitiveos-clients/pc/web/`
-- `blocked_task_ids`: `P7-T05` (D02–D07)
-- owner: repository owner
-- reason: no approved local checkout of
-  [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)
-  (GitHub remote exists and is public; sibling and documented paths were
-  absent). This session must not create a parallel repository, must not
-  recreate `clients/**` in `agent-kernel`, and must not implement the SPA in
-  `apps/cognitiveos-console`.
-- unique recovery action: clone or register an approved
-  `cognitiveos-clients` checkout, then continue D02 on `pc/web/` against the
-  exact pushed revision of this task branch.
+Implemented in `D:\cognitiveos-clients\pc\web\`:
+
+- HashRouter shell, memory-only `POST /local/session` (management + Task)
+- Home status/readiness/doctor; Agent inventory/detail with distinct identities
+- Provider create + SecretStore key rotate + model probe
+- Fixed Agent binding with client-side CAS / no-fallback / no per-request override
+- Task/Effect/Evidence/Observation; watch stale/disconnect; detach client-only
+- Skip link, focus-visible, semantic tables, CSP, responsive layout, latency display
 
 ## Unique next action
 
-Owner provides the approved client checkout. Keep Draft PR
-[#261](https://github.com/agentkernel/cognitive-os/pull/261); do not
-merge as `done`; do not auto-claim P6 / P7-T06 / P7-T07.
+Push clients `personal/P7-T05-web-ui` and kernel docs. Run Linux/native
+daemon-served SPA on exact immutable revisions. Then complete D07 acceptance,
+ready/merge, lease close, branch delete, local `main` fast-forward.

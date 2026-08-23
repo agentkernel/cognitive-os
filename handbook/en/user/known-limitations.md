@@ -14,7 +14,7 @@ sources:
 tests:
   - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:3d06495a4c47d6ce0731ef108f7931e3ca0152c0a0cf6340245590fbc9bf1464"
+fingerprint: "sha256:1c7077b096262bac11bcaf447b309696b439776844bd36bcc37f702766572743"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -43,7 +43,9 @@ current fact of the code.
   accepted React + TypeScript + Vite and same-origin daemon `GET /ui` serving.
   The daemon now enforces the loopback Origin/Referer allowlist and returns
   `503` `not_available` when `data_dir()/ui/index.html` is absent. The SPA
-  itself lives in `cognitiveos-clients/pc/web/` and is not checked out here.
+  lives in the official `cognitiveos-clients` checkout at
+  `D:\cognitiveos-clients\pc\web\` and is copied into `data_dir()/ui` for
+  product serving. This kernel tree still must not contain `clients/**`.
   There is no Windows/macOS installation product and no multi-agent
   orchestration. The Pi shell has no resource/task browsing UX yet. Provider
   Control Plane in this phase is daemon API + CLI only — see

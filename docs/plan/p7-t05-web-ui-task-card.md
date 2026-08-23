@@ -3,7 +3,9 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `in-progress` (D01); D02–D07 blocked on missing `cognitiveos-clients` checkout
+- Status: `in-progress` (D07 integration)
+- Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
+  `agentkernel/cognitiveos-clients`)
 - Lease: `lease/personal/P7-T05/web-ui`
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
 - Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
@@ -43,12 +45,9 @@ the Personal plan. Before implementation starts, the task also requires:
 
 D01 accepted [ADR-0053](../adr/0053-personal-web-ui-stack.md), froze the
 [route inventory](../architecture/personal/web-ui-route-inventory.json), and
-declared the validation route. The GitHub repository
-[cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)
-exists; no approved local checkout was present. `blocked_paths`:
-`cognitiveos-clients/pc/web/`. Owner: repository owner. Unique recovery:
-clone or register that checkout and re-authorize D02–D07. Do not recreate
-`clients/**` in this repository and do not implement the SPA in
+declared the validation route. Owner approved cloning the official existing
+repository. Approved checkout: `D:\cognitiveos-clients` (`pc/web/`). Do not
+recreate `clients/**` in this repository and do not implement the SPA in
 `apps/cognitiveos-console`.
 
 ## 3. In-scope acceptance
@@ -108,7 +107,7 @@ clone or register that checkout and re-authorize D02–D07. Do not recreate
 
 | Slice | Focus | Required exit evidence |
 |---|---|---|
-| D01 | Readiness, technical ADR, route/contract inventory, session/serving decision and threat model | **in-progress (in-repo complete except SPA):** ADR-0053 accepted; inventory + Node negatives; Origin/Referer allowlist and `GET /ui` missing-bundle `not_available` on the daemon front door. SPA not implemented. |
+| D01 | Readiness, technical ADR, route/contract inventory, session/serving decision and threat model | **done:** ADR-0053 accepted; inventory + Node negatives; Origin/Referer allowlist and `GET /ui` missing-bundle `not_available` on the daemon front door. |
 | D02 | SPA shell, local auth/session bootstrap, Home and Agent inventory/detail | management/task channel isolation, redacted readiness, Agent identity separation |
 | D03 | Provider account forms, SecretStore handoff and connectivity/model probes | secret-leak negatives, endpoint policy errors, probe result semantics |
 | D04 | Agent Provider binding and revision-aware confirmation | fixed binding, CAS/idempotency, no-fallback negatives |
@@ -170,8 +169,8 @@ authority records and audit facts remain daemon-owned.
 - [x] Technical stack ADR and client readiness decision accepted (ADR-0053; checkout missing ⇒ D02+ blocked).
 - [x] D01 inventory maps UI capabilities to approved daemon channels; missing ops are `unavailable`/`not-run`.
 - [x] Missing daemon operations recorded as unavailable/not-run; no generic browser transition invented.
-- [ ] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory negatives pass; SPA negatives blocked on checkout).
+- [x] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory + SPA unit/DOM redaction).
 - [ ] Supported browser/client validation passes on the exact task revision.
-- [ ] Accessibility, CSP, dependency and bounded performance checks pass.
+- [x] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
 - [ ] Formal plan, task status, docs impact and final handoff are synchronized.
 - [x] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.

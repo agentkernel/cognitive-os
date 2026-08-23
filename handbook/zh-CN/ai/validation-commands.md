@@ -38,7 +38,9 @@ node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--pus
 pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
-node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 D01 路由清单；不是 SPA 或 Gate 结果
+node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 路由清单；不是 Gate 结果
+# SPA（approved checkout D:\cognitiveos-clients\pc\web）：pnpm test；pnpm build
+# 产品源是 daemon GET /ui（将 dist/ 复制到 data_dir()/ui）。Vite preview 不是产品源。
 ```
 
 ## 必须走受支持 CI（Ubuntu / Windows MSVC）或 exact-revision native Linux

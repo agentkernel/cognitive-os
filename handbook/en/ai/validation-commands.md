@@ -38,7 +38,9 @@ node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
-node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 D01 route inventory; not a SPA or Gate result
+node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 route inventory; not a Gate result
+# SPA (approved checkout D:\cognitiveos-clients\pc\web): pnpm test && pnpm build
+# Product origin is daemon GET /ui after copying dist/ into data_dir()/ui. Vite preview is not the product origin.
 ```
 
 ## Requires supported CI (Ubuntu / Windows MSVC) or exact-revision native Linux

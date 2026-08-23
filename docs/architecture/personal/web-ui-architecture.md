@@ -13,9 +13,9 @@ alternate authority. [ADR-0053](../../adr/0053-personal-web-ui-stack.md) accepts
 that stack, same-origin daemon serving under `/ui/`, memory-only sessions, and
 the browser Origin/Referer allowlist. The route inventory is
 [web-ui-route-inventory.json](./web-ui-route-inventory.json). SPA
-implementation remains blocked until an approved `cognitiveos-clients` checkout
-exists; this repository must not recreate `clients/**` or implement the UI in
-`apps/cognitiveos-console`.
+implementation lives in the approved checkout `D:\cognitiveos-clients\pc\web\`
+(official `agentkernel/cognitiveos-clients`). This repository must not recreate
+`clients/**` or implement the UI in `apps/cognitiveos-console`.
 
 ## 1. Topology and trust boundaries
 
