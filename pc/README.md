@@ -11,6 +11,6 @@
 - **PoC 执行骨架**（全部 not-run）：[windows](docs/platforms/windows/windows-poc-runbook.md) / [macos](docs/platforms/macos/macos-poc-runbook.md) / [linux](docs/platforms/linux/linux-poc-runbook.md)；共享模板 [poc-execution-record](../shared/docs/poc-execution-record.md)。
 - **技术栈候选比较（非 ADR）**：[tech-stack-comparison](docs/architecture/tech-stack-comparison.md)。
 - **gate**：[Console 实现 gate](../governance/readiness-gates.md#console-实现-gate)（依赖组 1/2/7 + M5 + 目标平台真实 PoC + 技术栈 ADR）。
-- **子目录**：[app/](app/README.md)（保留实现根，无任何实现）；`docs/`（product/ux/security/platforms/accessibility/quality/release/architecture）；[plan/](plan/README.md)。
+- **子目录**：[app/](app/README.md)（Console 保留实现根，无任何实现；P7-T05 不得写入）；[web/](web/README.md)（CognitiveOS Personal Web UI，P7-T05，与 Console 无关）；`docs/`（product/ux/security/platforms/accessibility/quality/release/architecture）；[plan/](plan/README.md)。
 
 目录与 README 的存在不表示实现已提供、测试已执行或 Profile 已符合。
