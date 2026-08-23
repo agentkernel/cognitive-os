@@ -6,17 +6,19 @@ Native panel ≠ Personal SPA. Personal UI is `http://127.0.0.1:<daemon>/ui/` (P
 Native dsh panel is `cognitive dsh web` → `dsh --profile web --no-open`, default
 `http://127.0.0.1:3080`.
 
-Exact product revision on jump/guest binary: `0376e94238d8871ccaa9e8fd3dcab5e49c9cb4c9`.
+Exact product revision on jump/guest binary: `da37ac1d33271eb0430300a60bc2fecf55934a54`.
 dsh pin unchanged: `528c682e061696f5a160f363f236ecbf53cbd006`.
 Draft PR: https://github.com/agentkernel/cognitive-os/pull/265
+Clients Apply button: https://github.com/agentkernel/cognitiveos-clients/pull/4 @ `a191e79`
 
 ## Slices
 
 | Slice | Status | Evidence |
 |---|---|---|
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
-| D02 linux-002 listen + GET `/` HTML | in-progress | Listen + HTML **pass**. Cos-installed `:3080` **492396/492382** ACTIVE after same-pin lib fill. HTTP dsh remove/set + Path B **pass**. Kept `in-progress` so the active lease slice `P8-T15/D02` still matches Layer 2 until task close. |
+| D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
+| D04 Apply Cos binding to running web | in-progress | Path B remaps native catalog ids to the dsh binding. HTTP `op=apply` **pass**. SPA Apply button shipped. CLI apply **fail** after dirty daemon replace (`doctor.provider=blocked`). |
 
 ## Validation log
 
@@ -270,6 +272,35 @@ Path B `POST /provider/v1/dsh/chat/completions` Flash → **200**, `pong` nonemp
 
 Remaining honest gaps (not this lease): selected-model **file fallback after unbind** (kernel-server); `web-search-deepseek` still names official `DEEPSEEK_API_KEY`; `GET /ui/providers` **404** (hash route only); SPA session is memory-only and does not inherit the SSH HTTP session. No HTTP cancel/pause invented. Claim ceiling `hypothesis`.
 
+### 2026-08-23 — Apply Cos dsh model so native Path B/chat uses it (D04)
+
+Owner selected grok on **dsh** in Cos; native Models still listed only DeepSeek. Live bindings already had `agent://personal/dsh` **grok-4.6** active rev 8 / selected-model digest `binding`. SPA persist was **not** the gap. Native Models chrome is the DeepSeek Harness catalog (expected). Chat/Path B used to require `requested_model == binding.model_id`, so a native `deepseek-chat` body failed closed while Cos already showed grok.
+
+**Shipped**
+
+- Kernel `da37ac1d` Draft PR [#265](https://github.com/agentkernel/cognitive-os/pull/265): Path B remaps only `agent://personal/dsh` request `model` to the Cos dsh binding; Pi still exact-match. `POST /personal/dsh/runtime` `op=apply` publishes selected-model digest `binding` when web inspect is ACTIVE, pin `528c682e…`, and the model is in that account catalog. `cognitive dsh apply` POSTs apply then TERMs only the bound web pid. Dirty-restart recovery no longer aborts daemon start on already-terminal scheduler rows (still refuses to steal a live successor lease).
+- Clients `a191e79` PR [#4](https://github.com/agentkernel/cognitiveos-clients/pull/4): Bindings **Apply to running dsh** (disabled unless active dsh catalog model and runtime ACTIVE). Copy: native Models may still list DeepSeek; Cos shows selected-model + digest.
+
+**linux-002** (replaced owner-ops daemon **465376** only; EVAL / **430838** / Firefox left):
+
+| Check | Result |
+|---|---|
+| Jump `da37ac1d` | admin-cli `dsh` **10/10**; `p8_t11` **1/1**; `p8_t13` **4/4**; recovered-terminal-lease **1/1**; Clippy `-D warnings`; fmt |
+| New daemon | **494681** `127.0.0.1:48681` same `--runtime-root /home/hal9001/p8t13-owner-ops/runtime` |
+| Live `/ui/` | `assets/index-B5jhUhi8.js` contains Apply copy |
+| Bind existing Cos web **492396** | inspect ACTIVE |
+| `POST op=apply` grok rev 10 | **200** `applied_model=grok-4.6` `digest=binding` `restart_performed=false` |
+| Path B `model=deepseek-chat` while grok bound | **400** `invalid_request_error` (same as `model=grok-4.6`) — not `PERSONAL_PROVIDER_BINDING_MISMATCH`. Honest 4xx: catalog lists grok-4.6; this openai_compatible account does not serve it |
+| Flash set+apply + `deepseek-chat` | **200** `response_model=deepseek-v4-flash` `pong` — remap proof |
+| Restore grok | dsh **active rev 12**; Pi still grok-4.6 rev 1 |
+| `:3080` | still Cos `p8t10-a17edfad/dsh`, one listener, title `DSH Local Build` |
+
+`cognitive dsh apply` then **failed**: it TERMed **492396/492382**, then `cognitive dsh web` refused (`daemon is not ready for a dsh agent launch`) because doctor `overall=blocked` / `provider=blocked` / `first_conversation_ready=false` on the replacement daemon (secret/system/database/daemon were ready). Helper restored with bootstrap **file**: helper **495509**, node **495523**, rebound ACTIVE. Path B Flash still worked on the same account, so this is a doctor projection gap after dirty replace, not a missing SecretStore entry.
+
+Restart is **not** required for Cos Path B/chat once the new daemon is up: remap + apply is enough. Restart is required only to refresh the native helper’s `DAEMON_BEARER` after a daemon replace. Native Models list stays DeepSeek chrome.
+
+Claim ceiling `hypothesis`. UI up is not Task completion.
+
 ## Unique next action
 
-On the linux-002 desktop: in the Personal tab (`/ui#/bindings`) paste this daemon's bootstrap if the session gate is showing, then remove and set the dsh model in the new SPA (`index--sTzcxFP.js`). Native panel is Cos-installed at `http://127.0.0.1:3080` (keep **492396/492382/465376/471883**). Do not auto-claim P6 / P7-T06 / P7-T07. UI up is not Task completion.
+On the linux-002 desktop: Personal `/ui/#/bindings` (new session — paste this daemon's bootstrap, not a Provider key) → **Apply to running dsh**. Native panel `http://127.0.0.1:3080` (keep **495523/495509/494681/471883/430838**). Do not auto-claim P6 / P7-T06 / P7-T07. D04 stays `in-progress` until CLI apply/web works when doctor provider is blocked, or doctor is honest-ready again.
