@@ -90,8 +90,6 @@ export function inferCompletionFromObservation(input: {
 export function acceptBindingMutation(input: {
   expectedRevision: number | undefined;
   currentRevision: number | undefined;
-  accountStatus?: string;
-  agentStatus?: string;
   fallback?: boolean;
   perRequestOverride?: boolean;
 }): { ok: true } | { ok: false; reason: string } {
@@ -105,16 +103,26 @@ export function acceptBindingMutation(input: {
   ) {
     return { ok: false, reason: "stale binding revision" };
   }
+  return { ok: true };
+}
+
+export function dispatchAllowed(input: {
+  accountStatus?: string;
+  bindingStatus?: string;
+}): boolean {
+  if (!input.bindingStatus || input.bindingStatus === "unbound") {
+    return false;
+  }
   if (
     input.accountStatus === "revoked" ||
     input.accountStatus === "degraded" ||
-    input.agentStatus === "unbound" ||
-    input.agentStatus === "revoked" ||
-    input.agentStatus === "degraded"
+    input.accountStatus === "unknown" ||
+    input.bindingStatus === "revoked" ||
+    input.bindingStatus === "degraded"
   ) {
-    return { ok: false, reason: "unbound, revoked, or degraded target" };
+    return false;
   }
-  return { ok: true };
+  return input.accountStatus === "active" || input.accountStatus === "usable";
 }
 
 export function escapeUntrustedText(text: string, maxChars = 4096): string {
