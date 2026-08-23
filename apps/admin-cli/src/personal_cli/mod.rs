@@ -875,8 +875,8 @@ fn parse_dsh_launch_options(flags: &BTreeMap<String, String>) -> Result<DshLaunc
         provider_path,
         task: flags.get("task").cloned(),
         web_mode: false,
-        listen_host: "127.0.0.1".to_owned(),
-        listen_port: 3080,
+        listen_host: dsh::DEFAULT_WEB_HOST.to_owned(),
+        listen_port: dsh::DEFAULT_WEB_PORT,
     })
 }
 
@@ -904,9 +904,9 @@ fn parse_dsh_web_options(flags: &BTreeMap<String, String>) -> Result<DshLaunchOp
     let listen_host = flags
         .get("host")
         .cloned()
-        .unwrap_or_else(|| "127.0.0.1".to_owned());
+        .unwrap_or_else(|| dsh::DEFAULT_WEB_HOST.to_owned());
     let listen_port = match flags.get("port") {
-        None => 3080,
+        None => dsh::DEFAULT_WEB_PORT,
         Some(value) => value
             .parse::<u16>()
             .map_err(|_| "dsh web --port must be an integer 1..=65535".to_owned())

@@ -45,7 +45,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:0e0a67a4648cdc8a217447dcb353833115360db35efafd7ea687e26fcefe7cc4"
+fingerprint: "sha256:a0750558618efd89c751635a755a2e33a58b0e39fb9808c6d8dc74155efde574"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---

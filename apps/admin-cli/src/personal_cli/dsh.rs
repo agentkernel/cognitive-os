@@ -31,8 +31,8 @@ const DSH_REVISION_FILE_NAME: &str = ".cognitiveos-dsh-revision";
 const PERSONAL_DOCTOR_SCHEMA_VERSION: u64 = 1;
 const PERSONAL_DOCTOR_SURFACE: &str = "personal-doctor";
 const REQUIRED_DSH_COMPONENTS: [&str; 5] = ["system", "database", "secret", "provider", "daemon"];
-const DEFAULT_WEB_HOST: &str = "127.0.0.1";
-const DEFAULT_WEB_PORT: u16 = 3080;
+pub(crate) const DEFAULT_WEB_HOST: &str = "127.0.0.1";
+pub(crate) const DEFAULT_WEB_PORT: u16 = 3080;
 
 /// Inputs accepted by `cognitive dsh configure`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -876,8 +876,8 @@ mod tests {
                 provider_path: DshProviderPath::Adapter,
                 task: None,
                 web_mode: true,
-                listen_host: "127.0.0.1".to_owned(),
-                listen_port: 3080,
+                listen_host: DEFAULT_WEB_HOST.to_owned(),
+                listen_port: DEFAULT_WEB_PORT,
             },
             &endpoint_document(),
             &ready_doctor_without_pi(),
@@ -895,8 +895,8 @@ mod tests {
                 provider_path: DshProviderPath::Adapter,
                 task: None,
                 web_mode: true,
-                listen_host: "127.0.0.1".to_owned(),
-                listen_port: 3080,
+                listen_host: DEFAULT_WEB_HOST.to_owned(),
+                listen_port: DEFAULT_WEB_PORT,
             },
             &endpoint_document(),
             &ready_doctor_without_pi(),

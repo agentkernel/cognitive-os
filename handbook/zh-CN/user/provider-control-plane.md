@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:343edf625d1ea646403413312634781d970402c75ed4167ca0015777a0d9f616"
+fingerprint: "sha256:f5276dd9b3a24e73941f757573132b63f59ba6e5d664fb495b5398567cde4a9c"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
