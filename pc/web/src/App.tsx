@@ -616,6 +616,26 @@ function ProviderDetailPage() {
     await refresh();
   }
 
+  async function addModel(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const form = new FormData(event.currentTarget);
+    const result = await readJson("/management/providers/models/add", "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        account_id: id,
+        model_id: String(form.get("model_id") ?? ""),
+      }),
+    });
+    setMessage(
+      result.ok
+        ? "Manual model stored. Last catalog remains on failed refresh."
+        : `HTTP ${result.status} ${String(asRecord(result.body).code ?? "")}`,
+    );
+    event.currentTarget.reset();
+    await refresh();
+  }
+
   async function deleteAccount() {
     const result = await readJson("/management/providers/accounts/delete", "management", {
       method: "POST",
@@ -671,6 +691,18 @@ function ProviderDetailPage() {
       <button type="button" onClick={() => void probe()}>
         Bounded model/capability probe
       </button>
+      <form onSubmit={(event) => void addModel(event)}>
+        <h3>Add model manually</h3>
+        <p className="muted">
+          Use this when discovery is degraded. Failed refresh must keep the last catalog. Do not
+          display unknown or cost_unavailable as zero or ready.
+        </p>
+        <label>
+          Model id
+          <input name="model_id" required placeholder="deepseek-chat" />
+        </label>
+        <button type="submit">Add model</button>
+      </form>
       <button type="button" onClick={() => void deleteAccount()}>
         Delete account
       </button>
