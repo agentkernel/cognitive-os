@@ -85,6 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P7-T05/provider-webui-apple-theme` | P7-T05/D10 Provider WebUI Apple-theme refinement | Lane-CON | `cursor/provider-webui-apple-theme-8d2f` | `agentkernel/cognitiveos-clients/pc/web/src/App.tsx`<br>`agentkernel/cognitiveos-clients/pc/web/src/App.test.tsx`<br>`agentkernel/cognitiveos-clients/pc/web/src/styles.css`<br>`docs/product/personal/web-ui-design.md`<br>`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`<br>`docs/plan/PROGRESS.md`<br>`docs/plan/p7-t05-web-ui-task-card.md`<br>`docs/plan/plan.md`<br>`docs/checkpoints/20260824-personal-p7-t05-provider-webui-apple-theme-report.md`<br>`docs/checkpoints/20260824-personal-p7-t05-provider-webui-apple-theme-closure.md` | cursor-cloud-8d2f | 2026-08-24 / 2026-08-24 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no
