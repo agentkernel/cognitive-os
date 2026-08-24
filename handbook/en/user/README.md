@@ -18,22 +18,24 @@ and tests together; capability labels (`implemented`, `partial`, `designed`,
 Start here:
 
 1. [What Personal is (and is not)](./what-is-personal.md)
-2. [Install and reach the first conversation](./install-and-first-conversation.md)
-3. [CLI basics](./cli-basics.md) — `cognitive init | status | doctor | daemon | pi | resource | task`
-4. [Provider and secrets](./provider-and-secrets.md)
-5. [Provider Control Plane](./provider-control-plane.md) — named accounts, keys, bindings, usage (CLI/daemon only; no Web panel)
-6. [The Pi shell](./pi-shell.md)
+2. [Getting started](./getting-started.md) — shortest supported Linux path
+3. [Install and reach the first conversation](./install-and-first-conversation.md)
+4. [CLI basics](./cli-basics.md) — `cognitive init | status | doctor | daemon | pi | resource | task`
+5. [Provider and secrets](./provider-and-secrets.md)
+6. [Provider Control Plane](./provider-control-plane.md) — named accounts, keys, bindings, usage (CLI/daemon only; no Web panel)
+7. [The Pi shell](./pi-shell.md)
 
 Understand the model:
 
-7. [The six resource families](./six-resources.md)
-8. [Tasks and execution](./tasks-and-execution.md)
+8. [System overview](./system-overview.md)
+9. [The six resource families](./six-resources.md)
+10. [Tasks and execution](./tasks-and-execution.md)
 
 Operate it:
 
-9. [Operations and recovery](./operations-and-recovery.md)
-10. [Security boundaries](./security-boundaries.md)
-11. [Known limitations](./known-limitations.md)
+11. [Operations and recovery](./operations-and-recovery.md)
+12. [Security boundaries](./security-boundaries.md)
+13. [Known limitations](./known-limitations.md)
 
 Exact command, route, error, and file references live in the
 [reference section](../reference/README.md). Current project status is owned by

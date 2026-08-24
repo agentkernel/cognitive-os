@@ -5,7 +5,7 @@
     {
       "id": "cli-product",
       "sources": ["apps/admin-cli/src/personal_cli/**", "apps/admin-cli/src/cognitive_main.rs"],
-      "docs": ["ref.cli-cognitive", "user.cli-basics", "user.install-first-conversation", "user.operations-recovery", "user.provider-control-plane"],
+      "docs": ["ref.cli-cognitive", "user.cli-basics", "user.getting-started", "user.install-first-conversation", "user.operations-recovery", "user.provider-control-plane"],
       "note": "cognitive verb set, flags, usage text, exit codes"
     },
     {
@@ -17,7 +17,7 @@
     {
       "id": "daemon-http",
       "sources": ["apps/kernel-server/src/personal/server.rs", "apps/kernel-server/src/personal/auth.rs", "apps/kernel-server/src/personal/bounds.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/src/personal/resource_api.rs", "apps/kernel-server/src/personal/resource_manager.rs", "apps/kernel-server/src/personal/provider_control_plane.rs", "apps/kernel-server/src/personal/readiness.rs", "apps/kernel-server/src/personal/provider_proxy.rs", "apps/kernel-server/src/personal/tool_lifecycle.rs", "apps/kernel-server/src/personal/pinned_https.rs", "apps/kernel-server/src/personal/observation.rs", "apps/kernel-server/src/personal/user_backup.rs", "apps/kernel-server/src/personal/*doctor*.rs"],
-      "docs": ["ref.http-api", "dev.daemon-http-surface", "user.operations-recovery", "ai.validation-commands", "user.provider-control-plane"],
+      "docs": ["ref.http-api", "dev.daemon-http-surface", "user.operations-recovery", "ai.validation-commands", "user.provider-control-plane", "user.system-overview"],
       "note": "routes, channels, auth, limits, readiness/doctor projections"
     },
     {
@@ -65,7 +65,7 @@
     {
       "id": "agent-lifecycle-installer",
       "sources": ["crates/cognitive-runtime/src/installer.rs", "crates/cognitive-runtime/src/agent_registration.rs", "crates/cognitive-runtime/src/linux_bundle*.rs", "crates/cognitive-runtime/src/bin/linux_bundle*.rs", "deploy/**"],
-      "docs": ["user.install-first-conversation", "dev.installer-service", "dev.agent-pi-lifecycle"],
+      "docs": ["user.install-first-conversation", "user.getting-started", "dev.installer-service", "dev.agent-pi-lifecycle"],
       "note": "bundle verify/stage/activate, single-service transaction, Pi acquisition/registration"
     },
     {

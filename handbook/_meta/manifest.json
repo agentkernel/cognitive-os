@@ -9,6 +9,8 @@
     { "doc_id": "index", "kind": "navigation", "audience": ["user", "developer", "ai"], "generated": false, "rel_path": "README.md" },
     { "doc_id": "user.index", "kind": "navigation", "audience": ["user"], "generated": false, "rel_path": "user/README.md" },
     { "doc_id": "user.what-is-personal", "kind": "overview", "audience": ["user"], "generated": false, "rel_path": "user/what-is-personal.md" },
+    { "doc_id": "user.system-overview", "kind": "overview", "audience": ["user"], "generated": false, "rel_path": "user/system-overview.md" },
+    { "doc_id": "user.getting-started", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/getting-started.md" },
     { "doc_id": "user.install-first-conversation", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/install-and-first-conversation.md" },
     { "doc_id": "user.cli-basics", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/cli-basics.md" },
     { "doc_id": "user.provider-and-secrets", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/provider-and-secrets.md" },

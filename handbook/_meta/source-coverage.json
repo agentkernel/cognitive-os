@@ -25,7 +25,7 @@
 
     { "glob": "crates/cognitive-kernel/**", "category": "first-party-source", "docs": ["dev.authority-kernel", "dev.task-pipeline", "dev.context-artifact"] },
     { "glob": "crates/cognitive-store/**", "category": "first-party-source", "docs": ["dev.store-migrations", "dev.memory-skill", "dev.execution-chain-status", "user.provider-control-plane"] },
-    { "glob": "crates/cognitive-runtime/**", "category": "first-party-source", "docs": ["dev.installer-service", "dev.agent-pi-lifecycle", "dev.performance-perf", "dev.execution-chain-status"] },
+    { "glob": "crates/cognitive-runtime/**", "category": "first-party-source", "docs": ["dev.installer-service", "dev.agent-pi-lifecycle", "dev.performance-perf", "dev.execution-chain-status", "user.getting-started"] },
     { "glob": "crates/cognitive-domain/**", "category": "first-party-source", "docs": ["dev.authority-kernel", "ref.transitions"] },
     { "glob": "crates/cognitive-akp/**", "category": "first-party-source", "docs": ["dev.clients-ts", "ref.http-api"] },
     { "glob": "crates/cognitive-management/**", "category": "first-party-source", "docs": ["dev.management-plane", "ref.cli-admin"] },
@@ -34,8 +34,8 @@
     { "glob": "crates/cognitive-conformance/**", "category": "first-party-source", "docs": ["dev.conformance-testing"] },
     { "glob": "crates/cognitive-contracts/**", "category": "first-party-source", "docs": ["dev.contracts-codegen"] },
 
-    { "glob": "apps/kernel-server/**", "category": "first-party-source", "docs": ["dev.daemon-http-surface", "dev.task-pipeline", "ref.http-api", "user.provider-control-plane"] },
-    { "glob": "apps/admin-cli/**", "category": "first-party-source", "docs": ["user.cli-basics", "user.provider-control-plane", "ref.cli-cognitive", "ref.cli-admin"] },
+    { "glob": "apps/kernel-server/**", "category": "first-party-source", "docs": ["dev.daemon-http-surface", "dev.task-pipeline", "ref.http-api", "user.provider-control-plane", "user.system-overview"] },
+    { "glob": "apps/admin-cli/**", "category": "first-party-source", "docs": ["user.cli-basics", "user.provider-control-plane", "user.getting-started", "ref.cli-cognitive", "ref.cli-admin"] },
     { "glob": "apps/pi-agent-adapter/**", "category": "first-party-source", "docs": ["dev.agent-pi-lifecycle", "user.pi-shell"] },
     { "glob": "apps/agent-shell/**", "category": "first-party-source", "docs": ["dev.clients-ts"] },
     { "glob": "apps/cognitiveos-console/**", "category": "legacy-docs", "reason": "deprecated compatibility stubs pointing at the external cognitiveos-clients repository (CLIENTS-DEC-001)" },
@@ -53,7 +53,7 @@
     { "glob": "conformance/**", "category": "first-party-source", "docs": ["dev.conformance-testing"] },
     { "glob": "tests/**", "category": "first-party-source", "docs": ["dev.dev-environments", "dev.conformance-testing"] },
     { "glob": "tools/**", "category": "first-party-source", "docs": ["dev.conformance-testing", "meta.sync-policy"] },
-    { "glob": "deploy/**", "category": "first-party-source", "docs": ["user.install-first-conversation", "dev.installer-service"] },
+    { "glob": "deploy/**", "category": "first-party-source", "docs": ["user.install-first-conversation", "user.getting-started", "dev.installer-service"] },
     { "glob": "scripts/**", "category": "first-party-source", "docs": ["dev.dev-environments"] },
     { "glob": ".github/**", "category": "first-party-source", "docs": ["dev.contributing-workflow", "dev.dev-environments"] },
     { "glob": ".cursor/rules/**", "category": "legacy-docs", "reason": "editor adapter rules owned by repository governance; the handbook sync rule is registered separately" },
