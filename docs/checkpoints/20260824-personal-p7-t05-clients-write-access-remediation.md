@@ -164,6 +164,33 @@ from an agent whose run/environment covers `agentkernel/cognitiveos-clients`
 manually. The §2 recovery command remains valid and still has not been
 executed, or has not reached this environment's tokens.
 
+## 6. 2026-08-24 independent re-verification from a second run (append-only)
+
+A separate Cloud Agent run (`bc-0c6f2f39-7484-5007-ad1f-f96a2cfd18be`,
+environment `9a1980df-9f6c-11f1-a7d1-d6b4613131ce`) re-probed the boundary
+while fixing the kernel development environment. Full record:
+[Cloud Agent development environment and push/merge diagnosis](./20260824-cloud-agent-dev-environment-and-push-diagnosis.md).
+
+| Fact | Verified result (2026-08-24, ~06:20–06:30 UTC) |
+|---|---|
+| `GET /installation/repositories` | still `total_count: 1` → only `agentkernel/cognitive-os` |
+| Clients read (`git ls-remote`) | **pass** — `db563744`, unchanged; public read needs no grant |
+| Clients write (`git push --dry-run`, new branch) | **fail** — HTTP 403 `Permission to agentkernel/cognitiveos-clients.git denied to cursor[bot]` |
+| Kernel control probe (branch push + delete) | **pass** — denial remains clients-specific |
+| This run's `environment.repos` | `["github.com/agentkernel/cognitive-os"]` |
+| Recovery bundle `02a0216f…641e` in this run's agent store | **absent** — `/cursor/stores/self/artifacts/` is empty; stores are per-run |
+
+Refinement to §2: the installation grant is necessary but **not sufficient by
+itself**. A run receives a token only for the repositories in its own
+`environment.repos`, so publication additionally requires a run started from
+an environment that lists `agentkernel/cognitiveos-clients` (an agent launched
+on that repository, or this environment extended with it as a second repo).
+The owner-side bundle import remains the alternative that needs neither.
+
+Because the bundle does not survive across agent stores, whichever run
+eventually publishes must rebuild the D10 client work again from the recorded
+design source before pushing, and re-run the client test/build validation.
+
 Recovery re-executed measurement-free of the block: the D10 diffs were
 re-extracted from the original session's retained transcript, rebuilt as
 clients `ba331b8` + `f257819` on `db563744`, revalidated (29/29 tests,
