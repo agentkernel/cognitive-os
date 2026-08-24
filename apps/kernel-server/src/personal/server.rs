@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicBool, AtomicU64, AtomicUsize, Ordering};
 use std::sync::{Arc, Mutex};
 use std::thread::JoinHandle;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 
 use cognitive_kernel::ports::{
     ContextAuthorizationFactStore, ContextAuthorizationFactsRow, ContextRevocationFactRow,
@@ -703,6 +703,7 @@ fn dispatch_http_route(
             &method_path,
             headers,
             body,
+            layout,
             authority,
             authority_store,
         );
@@ -1606,6 +1607,7 @@ fn handle_provider_control_plane_route(
     method_path: &str,
     headers: &str,
     body: &[u8],
+    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
     authority_store: &Arc<SqliteAuthorityStore>,
 ) -> Result<(), String> {
@@ -1642,6 +1644,9 @@ fn handle_provider_control_plane_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let response = provider_control_plane::handle(method_path, body, authority_store.as_ref());
+    if response.status < 300 && dsh_web_overlay_should_sync(method_path) {
+        let _ = sync_dsh_web_control_plane_overlay(layout, authority_store.as_ref(), false);
+    }
     write_response(
         stream,
         response.status,
@@ -2269,6 +2274,132 @@ fn handle_dsh_runtime_route(
     write_json_response(stream, 200, &snapshot.to_string())
 }
 
+const DSH_WEB_HOME_DIR: &str = "dsh-web-home";
+const DSH_WEB_OVERLAY_FILE: &str = "control-plane-overlay.json";
+const DSH_WEB_OVERLAY_APPLIED_FILE: &str = "control-plane-overlay.applied.json";
+const DSH_WEB_OVERLAY_SURFACE: &str = "personal-dsh-web-overlay";
+
+fn dsh_web_home(layout: &PersonalDataLayout) -> PathBuf {
+    layout.runtime_dir().join(DSH_WEB_HOME_DIR)
+}
+
+fn yaml_safe_catalog_id(value: &str) -> Option<&str> {
+    let id = value.trim();
+    if id.is_empty()
+        || id
+            .bytes()
+            .any(|byte| byte.is_ascii_whitespace() || byte == b'#' || byte == b':')
+    {
+        None
+    } else {
+        Some(id)
+    }
+}
+
+fn dsh_web_overlay_should_sync(method_path: &str) -> bool {
+    method_path.starts_with("POST /management/agent-bindings")
+        || method_path.starts_with("POST /management/providers/models/refresh")
+        || method_path.starts_with("POST /management/providers/models/add")
+        || method_path.starts_with("POST /management/providers/accounts/delete")
+        || method_path.starts_with("POST /management/providers/accounts/update")
+}
+
+fn unix_now_ms() -> i64 {
+    SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .ok()
+        .and_then(|elapsed| i64::try_from(elapsed.as_millis()).ok())
+        .unwrap_or(0)
+}
+
+fn build_dsh_web_control_plane_overlay(
+    authority_store: &SqliteAuthorityStore,
+) -> serde_json::Value {
+    let plane = ProviderControlPlaneStore::from_authority_store(authority_store);
+    match plane
+        .get_active_binding(provider_control_plane::DSH_AGENT)
+        .ok()
+        .flatten()
+    {
+        Some(binding) => {
+            let catalog = plane
+                .list_models(&binding.account_id)
+                .unwrap_or_default()
+                .into_iter()
+                .filter_map(|model| {
+                    yaml_safe_catalog_id(&model.model_id).map(|id| json!({ "id": id, "name": id }))
+                })
+                .collect::<Vec<_>>();
+            json!({
+                "schema_version": 1,
+                "surface": DSH_WEB_OVERLAY_SURFACE,
+                "bound": true,
+                "account_id": binding.account_id,
+                "model": yaml_safe_catalog_id(&binding.model_id).unwrap_or(""),
+                "catalog": catalog,
+                "binding_revision": binding.revision,
+            })
+        }
+        None => json!({
+            "schema_version": 1,
+            "surface": DSH_WEB_OVERLAY_SURFACE,
+            "bound": false,
+            "account_id": serde_json::Value::Null,
+            "model": "",
+            "catalog": [],
+            "binding_revision": 0,
+        }),
+    }
+}
+
+fn overlay_projection_matches(existing: &serde_json::Value, next: &serde_json::Value) -> bool {
+    existing.get("bound") == next.get("bound")
+        && existing.get("account_id") == next.get("account_id")
+        && existing.get("model") == next.get("model")
+        && existing.get("catalog") == next.get("catalog")
+        && existing.get("binding_revision") == next.get("binding_revision")
+}
+
+fn sync_dsh_web_control_plane_overlay(
+    layout: &PersonalDataLayout,
+    authority_store: &SqliteAuthorityStore,
+    force: bool,
+) -> Result<serde_json::Value, String> {
+    let mut document = build_dsh_web_control_plane_overlay(authority_store);
+    let home = dsh_web_home(layout);
+    fs::create_dir_all(&home).map_err(|error| error.to_string())?;
+    let path = home.join(DSH_WEB_OVERLAY_FILE);
+    if !force
+        && let Ok(text) = fs::read_to_string(&path)
+        && let Ok(existing) = serde_json::from_str::<serde_json::Value>(&text)
+        && overlay_projection_matches(&existing, &document)
+    {
+        return Ok(existing);
+    }
+    document["written_at_ms"] = json!(unix_now_ms());
+    let encoded = serde_json::to_vec_pretty(&document).map_err(|error| error.to_string())?;
+    fs::write(&path, encoded).map_err(|error| error.to_string())?;
+    Ok(document)
+}
+
+fn wait_dsh_web_overlay_applied(layout: &PersonalDataLayout, written_at_ms: i64) -> bool {
+    let path = dsh_web_home(layout).join(DSH_WEB_OVERLAY_APPLIED_FILE);
+    let deadline = Instant::now() + Duration::from_secs(4);
+    while Instant::now() < deadline {
+        if let Ok(text) = fs::read_to_string(&path)
+            && let Ok(value) = serde_json::from_str::<serde_json::Value>(&text)
+            && value
+                .get("written_at_ms")
+                .and_then(serde_json::Value::as_i64)
+                == Some(written_at_ms)
+        {
+            return true;
+        }
+        std::thread::sleep(Duration::from_millis(50));
+    }
+    false
+}
+
 fn apply_dsh_binding_to_runtime(
     stream: &mut TcpStream,
     request_json: &serde_json::Value,
@@ -2365,7 +2496,17 @@ fn apply_dsh_binding_to_runtime(
     if let Ok(selected) = SelectedModel::new(binding.model_id.clone(), "binding", true) {
         let _ = SelectedModelRepository::under_config_dir(layout.config_dir()).store(&selected);
     }
-    let mut applied = snapshot;
+    let overlay = sync_dsh_web_control_plane_overlay(layout, authority_store.as_ref(), true);
+    let restart_performed = overlay
+        .as_ref()
+        .ok()
+        .and_then(|document| {
+            document
+                .get("written_at_ms")
+                .and_then(serde_json::Value::as_i64)
+        })
+        .is_some_and(|written_at_ms| wait_dsh_web_overlay_applied(layout, written_at_ms));
+    let mut applied = task_api.dsh_runtime_snapshot();
     applied["op"] = json!("apply");
     applied["status"] = json!("ok");
     applied["applied"] = json!(true);
@@ -2377,11 +2518,17 @@ fn apply_dsh_binding_to_runtime(
     applied["dsh_root_ok"] = json!(true);
     applied["revision_pin_ok"] = json!(true);
     applied["native_catalog_overlays_cos_binding"] = json!(true);
+    applied["overlay_written"] = json!(overlay.is_ok());
+    if let Ok(document) = &overlay {
+        applied["overlay_bound"] = document["bound"].clone();
+        applied["overlay_catalog"] = document["catalog"].clone();
+        applied["overlay_written_at_ms"] = document["written_at_ms"].clone();
+    }
     applied["path_b_uses_bound_account"] = json!(true);
     applied["model_endpoint_compatible"] = json!(model_endpoint_compatible);
     applied["path_b_will_fail_closed"] = json!(!model_endpoint_compatible);
-    applied["restart_required_for_native_models_chrome"] = json!(true);
-    applied["restart_performed"] = json!(false);
+    applied["restart_performed"] = json!(restart_performed);
+    applied["restart_required_for_native_models_chrome"] = json!(!restart_performed);
     write_json_response(stream, 200, &applied.to_string())
 }
 

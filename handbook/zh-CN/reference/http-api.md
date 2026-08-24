@@ -17,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:4f185bcc463e029ac5db867b15d584af475e11051f71f7758d0b72abd33dc7e6"
+fingerprint: "sha256:2d4bc8cd45b7298cb483546f15fa3f5eb8bd7972afe704c507426cf7935e3535"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -37,7 +37,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/personal/readiness` | management | 快照一致 status 投影的别名。 |
 | `GET` | `/personal/doctor` | management | 快照一致的脱敏诊断投影，含六资源、headless vault 与可运维性小节。 |
 | `GET` | `/personal/dsh/runtime` | management | 仅观测的 dsh runtime 投影：进程内会话、fencing epoch、可选绑定 pid 存活（仅 `/proc/{pid}` 是否存在，永不打开 cmdline/environ）。状态为 INACTIVE、ACTIVE 或 CRASHED。dsh 响应绝不完成 Task。 |
-| `POST` | `/personal/dsh/runtime` | management | 仅观测地 bind/heartbeat/clear 一个 dsh 进程 pid，或 op=apply 把 Cos dsh binding 发布为 Path B selected-model。不是 authority writer。非法 schema/op/pid 以及 INACTIVE apply 失败闭合。 |
+| `POST` | `/personal/dsh/runtime` | management | 仅观测地 bind/heartbeat/clear 一个 dsh 进程 pid，或 op=apply 把 Cos dsh binding 发布为 Path B selected-model，并按该绑定账户目录重载原生 Models。不是 authority writer。非法 schema/op/pid 以及 INACTIVE apply 失败闭合。 |
 | `POST` | `/provider/v1/chat/completions` | management | daemon 持有的 Pi 路径 Provider 代理（`agent://personal/pi`）。存在控制面 binding 时，请求 model 必须匹配该 binding，且无回退。未绑定 agent 仍使用 `provider.json` / `selected-model.json`。secret 仅在服务端解析。一元 `stream:false` 成功响应携带 `X-CognitiveOS-Provider-Network-Nanos`。公开 `stream:true` 按 SSE（`text/event-stream`）转发，并在不等待一元 JSON body 的情况下刷新上游字节；流式成功省略 network-nanos 头，因为刷新响应头时总时长未知。Pi 对话与 private-candidate 保持一元。当 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明 `campaign-<32 位小写 hex>` correlation id 时，daemon 还会回显该 id 并报告 `X-CognitiveOS-Daemon-Preflight-Nanos`（配置/selected-model/SecretStore，与网络交换互不重叠）。畸形或重复的 correlation 头被忽略；产品 body 不变，且绝不持久化。 |
 | `GET` | `/provider/v1/selected-model` | management | Pi 路径的非 secret selected-model 投影。存在控制面 binding 时，该 binding 的 model 即为 selected model（`selected_snapshot_digest: binding`）。 |
 | `POST` | `/provider/v1/dsh/chat/completions` | management | daemon 持有的 DeepSeek harness 路径 Provider 代理（`agent://personal/dsh`）。与 Pi 路由独立：向 `/provider/v1/chat/completions` POST 不能满足 dsh binding。binding 不符失败闭合且无回退。未绑定 dsh 仍使用 `provider.json` / `selected-model.json`。 |

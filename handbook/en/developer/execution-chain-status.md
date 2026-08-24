@@ -42,7 +42,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/src/personal/fault_profile.rs
   - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:b495c6d0f31d33cf02a19c2f24553a902bd91119e61a351e5d1a2cbc0fc25106"
+fingerprint: "sha256:b70dde48d9ac0e1c3e591be565773227e69fb7f119518b3f8ef00a6f394f54bf"
 non_claims:
   - This page records gaps as facts at the recorded baseline; it neither predicts schedules nor downgrades the tested components.
   - A7 campaign fixture and local/CI observation evidence never promote Gate, release, Profile, B01, or EVAL-003 results.

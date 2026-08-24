@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:dc6224fa3e1dcbba63d73464ceb7f34a0605dc6e14e4a25f00b0eddd06a724c0"
+fingerprint: "sha256:ce14f981e53c68bbc4f8270424ac3779714031b8e2adc4551b4ad9c0219dcdee"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
@@ -260,9 +260,13 @@ the request model to the Cos `agent://personal/dsh` binding so native catalog
 ids still chat with the assigned model on the **bound account**. If that
 account cannot serve the bound model (grok on `api.deepseek.com`), Path B
 fail-closes with HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` and does not
-POST to DeepSeek. Personal `/ui/` Bindings has **Apply to
-running dsh** (`POST /personal/dsh/runtime` `op=apply`). A revoked account or missing
-key is HTTP 409 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`. Official Anthropic
+POST to DeepSeek. Setting, removing, or catalog-changing the dsh binding writes
+the native Models overlay from the current dsh-bound account only. Personal
+`/ui/` Bindings **Apply to running dsh** (`POST /personal/dsh/runtime`
+`op=apply`) republishes selected-model and reloads Cos-installed web so that
+list matches; unbinding dsh drops grok (and every other id from that account)
+from native Models. A revoked account or missing key is HTTP 409
+`PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`. Official Anthropic
 bindings do not support public SSE (`stream:true`).
 
 Pi and `dsh` bindings are isolated: setting one never copies the other.

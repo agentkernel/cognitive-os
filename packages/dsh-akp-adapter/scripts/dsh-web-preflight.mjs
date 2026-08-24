@@ -7,7 +7,7 @@
  * empty 404. The webserver has no TLS/auth, so the product bind is loopback
  * only.
  */
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { isIP } from "node:net";
 import { join } from "node:path";
 
@@ -79,6 +79,11 @@ export function listenUrl(host, port) {
 
 /** Runtime Path B credential ref used by the `--patch` llm-deepseek overlay. */
 export const PATH_B_WEB_DAEMON_KEY_REF = "DAEMON_BEARER";
+/** Daemon-written Cos Models overlay; native web reloads when this file changes. */
+export const DSH_WEB_OVERLAY_FILE = "control-plane-overlay.json";
+export const DSH_WEB_OVERLAY_APPLIED_FILE = "control-plane-overlay.applied.json";
+export const DSH_WEB_OVERLAY_SURFACE = "personal-dsh-web-overlay";
+export const DSH_WEB_OVERLAY_APPLIED_SURFACE = "personal-dsh-web-overlay-applied";
 /**
  * Official DeepSeek catalog ref the Models page still describes by default.
  * Path B aliases this to the daemon management bearer — never a SecretStore key.
@@ -131,7 +136,9 @@ function safeCatalogId(value) {
 }
 
 /**
- * Cos-assigned model first, then Cos-listed models for that account.
+ * Bound-account catalog only. Do not inject a selected id that is not in the
+ * control-plane list (that leftover grok stays on Cos Models after unbind).
+ * If discovery returned nothing, keep the bound selected id so chat still has a name.
  * Ids must be YAML-safe; never include secrets.
  */
 export function pathBWebCatalogModels(rawModels, selectedModel) {
@@ -146,7 +153,6 @@ export function pathBWebCatalogModels(rawModels, selectedModel) {
     const label = safeCatalogId(name) || modelId;
     out.push({ id: modelId, name: label });
   };
-  push(selectedModel, selectedModel);
   for (const row of Array.isArray(rawModels) ? rawModels : []) {
     if (typeof row === "string") {
       push(row, row);
@@ -154,7 +160,55 @@ export function pathBWebCatalogModels(rawModels, selectedModel) {
       push(row.id ?? row.model_id, row.name ?? row.id ?? row.model_id);
     }
   }
+  if (out.length === 0) {
+    push(selectedModel, selectedModel);
+  }
   return out;
+}
+
+export function readDshWebControlPlaneOverlay(dshHome) {
+  const path = join(dshHome, DSH_WEB_OVERLAY_FILE);
+  if (!existsSync(path)) {
+    return null;
+  }
+  try {
+    const doc = JSON.parse(readFileSync(path, "utf8"));
+    if (doc?.schema_version !== 1 || doc?.surface !== DSH_WEB_OVERLAY_SURFACE) {
+      return null;
+    }
+    const bound = doc.bound === true;
+    const model = bound ? safeCatalogId(doc.model) : "";
+    const catalog = bound ? pathBWebCatalogModels(doc.catalog, model) : [];
+    return {
+      bound,
+      model,
+      catalog,
+      written_at_ms: Number(doc.written_at_ms) || 0,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export function overlayStamp(overlay) {
+  if (!overlay) {
+    return "";
+  }
+  return `${overlay.written_at_ms}:${overlay.bound ? "1" : "0"}:${overlay.model}:${overlay.catalog.map((item) => item.id).join(",")}`;
+}
+
+export function writeDshWebControlPlaneOverlayApplied(dshHome, writtenAtMs, processId) {
+  const payload = {
+    schema_version: 1,
+    surface: DSH_WEB_OVERLAY_APPLIED_SURFACE,
+    written_at_ms: Number(writtenAtMs) || 0,
+    process_id: Number(processId) || 0,
+    applied_at_ms: Date.now(),
+  };
+  writeFileSync(join(dshHome, DSH_WEB_OVERLAY_APPLIED_FILE), `${JSON.stringify(payload)}\n`, {
+    encoding: "utf8",
+    mode: 0o600,
+  });
 }
 
 /**
@@ -180,7 +234,9 @@ export function pathBWebSettingsYaml(providerBase, existingYaml, selectedModel, 
     lines.push(`  model: ${model}`);
   }
   const models = pathBWebCatalogModels(catalogModels, model);
-  if (models.length) {
+  if (!models.length) {
+    lines.push("  models: []");
+  } else {
     lines.push("  models:");
     for (const item of models) {
       lines.push(`    - id: ${item.id}`);

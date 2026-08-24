@@ -26,10 +26,13 @@ import {
   assertLoopbackHost,
   assertWebPort,
   listenUrl,
+  overlayStamp,
   pathBWebChildExtras,
   pathBWebCredentialsYaml,
   pathBWebCatalogModels,
   pathBWebSettingsYaml,
+  readDshWebControlPlaneOverlay,
+  writeDshWebControlPlaneOverlayApplied,
 } from "./dsh-web-preflight.mjs";
 
 function arg(name, fallback) {
@@ -164,7 +167,9 @@ function llmDeepseekPatch(baseURL, apiKeyEnv, selectedModel, catalogModels) {
     lines.push(`    model: ${model}`);
   }
   const models = pathBWebCatalogModels(catalogModels, model);
-  if (models.length) {
+  if (!models.length) {
+    lines.push("    models: []");
+  } else {
     lines.push("    models:");
     for (const item of models) {
       lines.push(`      - id: ${item.id}`);
@@ -175,29 +180,64 @@ function llmDeepseekPatch(baseURL, apiKeyEnv, selectedModel, catalogModels) {
   return lines.join("\n");
 }
 
-async function loadCosDshOverlay(origin, managementToken, selectedFallback) {
-  const fallback = String(selectedFallback ?? "").trim();
+async function loadCosDshOverlay(origin, managementToken) {
+  const fromFile = readDshWebControlPlaneOverlay(dshHome);
+  if (fromFile) {
+    return fromFile;
+  }
   try {
     const bindings = await httpJson(origin, "GET", "/management/agent-bindings", managementToken);
     const rows = Array.isArray(bindings.json?.bindings) ? bindings.json.bindings : [];
     const dsh = rows.find(
       (row) => row && row.agent === "agent://personal/dsh" && row.status === "active",
     );
-    const model = String(dsh?.model_id ?? fallback).trim();
-    let catalog = [];
-    if (dsh?.account_id) {
-      const listed = await httpJson(
-        origin,
-        "GET",
-        `/management/providers/models?account_id=${encodeURIComponent(dsh.account_id)}`,
-        managementToken,
-      );
-      catalog = Array.isArray(listed.json?.models) ? listed.json.models : [];
+    if (!dsh?.account_id) {
+      return { bound: false, model: "", catalog: [], written_at_ms: 0 };
     }
-    return { model, catalog: pathBWebCatalogModels(catalog, model) };
+    const listed = await httpJson(
+      origin,
+      "GET",
+      `/management/providers/models?account_id=${encodeURIComponent(dsh.account_id)}`,
+      managementToken,
+    );
+    const catalog = Array.isArray(listed.json?.models) ? listed.json.models : [];
+    const model = String(dsh.model_id ?? "").trim();
+    return {
+      bound: true,
+      model,
+      catalog: pathBWebCatalogModels(catalog, model),
+      written_at_ms: 0,
+    };
   } catch {
-    return { model: fallback, catalog: pathBWebCatalogModels([], fallback) };
+    return { bound: false, model: "", catalog: [], written_at_ms: 0 };
   }
+}
+
+function waitForChildOrOverlayChange(child, stamp) {
+  return new Promise((resolve, reject) => {
+    const onError = (error) => {
+      cleanup();
+      reject(error);
+    };
+    const onClose = (code) => {
+      cleanup();
+      resolve({ reason: "exit", code });
+    };
+    child.once("error", onError);
+    child.once("close", onClose);
+    const timer = setInterval(() => {
+      const next = overlayStamp(readDshWebControlPlaneOverlay(dshHome));
+      if (next && next !== stamp) {
+        cleanup();
+        resolve({ reason: "overlay", code: null });
+      }
+    }, 400);
+    function cleanup() {
+      clearInterval(timer);
+      child.removeListener("error", onError);
+      child.removeListener("close", onClose);
+    }
+  });
 }
 
 function assistantLooksComplete(text) {
@@ -234,73 +274,81 @@ async function runWebPathB() {
   const managementToken = await issueToken(origin, bootstrap, "management");
   writeFileSync(bearerFile, `${taskToken}\n`, { encoding: "utf8", mode: 0o600 });
   chmodSync(bearerFile, 0o600);
-  const selected = await httpJson(
-    origin,
-    "GET",
-    "/provider/v1/dsh/selected-model",
-    managementToken,
-  );
-  const overlay = await loadCosDshOverlay(
-    origin,
-    managementToken,
-    selected.json?.model ?? selected.json?.selected_model,
-  );
-  const providerBase = `${origin}/provider/v1/dsh`;
-  const settingsPath = join(dshHome, "settings.yaml");
-  const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
-  writeFileSync(
-    settingsPath,
-    pathBWebSettingsYaml(providerBase, existingSettings, overlay.model, overlay.catalog),
-    {
-      encoding: "utf8",
-    },
-  );
   writeFileSync(join(dshHome, ".credentials.yaml"), pathBWebCredentialsYaml(managementToken), {
     encoding: "utf8",
     mode: 0o600,
   });
   chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
-  const patchBody = [
-    "- insert:",
-    ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
-      { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true, mode: "web" } },
-    ]),
-    llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
-  ].join("\n");
-  writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
-  const child = spawn(
-    process.execPath,
-    [
-      ...cli.args,
-      "--profile",
-      "web",
-      "--patch",
-      patchFile,
-      "--no-open",
-      "--host",
-      boundHost,
-      "--port",
-      String(boundPort),
-    ],
-    {
-      cwd: dshRoot,
-      env: childEnvironment(pathBWebChildExtras(providerBase)),
-      stdio: ["ignore", "inherit", "inherit"],
-    },
-  );
-  if (!child.pid) {
-    throw new Error("dsh web spawn produced no pid");
+  const providerBase = `${origin}/provider/v1/dsh`;
+  let exitCode = 0;
+  try {
+    while (true) {
+      const overlay = await loadCosDshOverlay(origin, managementToken);
+      const stamp = overlayStamp(overlay) || overlayStamp(readDshWebControlPlaneOverlay(dshHome));
+      const settingsPath = join(dshHome, "settings.yaml");
+      const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
+      writeFileSync(
+        settingsPath,
+        pathBWebSettingsYaml(providerBase, existingSettings, overlay.model, overlay.catalog),
+        {
+          encoding: "utf8",
+        },
+      );
+      const patchBody = [
+        "- insert:",
+        ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
+          { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true, mode: "web" } },
+        ]),
+        llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
+      ].join("\n");
+      writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
+      const child = spawn(
+        process.execPath,
+        [
+          ...cli.args,
+          "--profile",
+          "web",
+          "--patch",
+          patchFile,
+          "--no-open",
+          "--host",
+          boundHost,
+          "--port",
+          String(boundPort),
+        ],
+        {
+          cwd: dshRoot,
+          env: childEnvironment(pathBWebChildExtras(providerBase)),
+          stdio: ["ignore", "inherit", "inherit"],
+        },
+      );
+      if (!child.pid) {
+        throw new Error("dsh web spawn produced no pid");
+      }
+      await bindRuntime(origin, managementToken, child.pid);
+      writeDshWebControlPlaneOverlayApplied(dshHome, overlay.written_at_ms, child.pid);
+      process.stderr.write(
+        `cognitive dsh web listening at ${listenUrl(boundHost, boundPort)} dist=${distIndex} selected_model=${overlay.model || "unset"}\n`,
+      );
+      const waited = await waitForChildOrOverlayChange(child, stamp);
+      if (waited.reason === "overlay") {
+        await new Promise((resolve) => {
+          if (child.exitCode !== null || child.signalCode !== null) {
+            resolve();
+            return;
+          }
+          child.once("close", resolve);
+          child.kill("SIGTERM");
+        });
+        continue;
+      }
+      exitCode = waited.code;
+      break;
+    }
+  } finally {
+    await clearRuntime(origin, managementToken);
+    rmSync(work, { recursive: true, force: true });
   }
-  await bindRuntime(origin, managementToken, child.pid);
-  process.stderr.write(
-    `cognitive dsh web listening at ${listenUrl(boundHost, boundPort)} dist=${distIndex} selected_model=${selected.json?.model ?? selected.json?.selected_model ?? "unset"}\n`,
-  );
-  const exitCode = await new Promise((resolve, reject) => {
-    child.once("error", reject);
-    child.once("close", resolve);
-  });
-  await clearRuntime(origin, managementToken);
-  rmSync(work, { recursive: true, force: true });
   if (exitCode !== 0) {
     throw new Error(`dsh web exited ${exitCode}`);
   }
@@ -495,11 +543,7 @@ function pluginInsert(id, sessionId, pluginId, taskRef, events) {
 }
 
 const selected = await httpJson(origin, "GET", "/provider/v1/dsh/selected-model", managementToken);
-const overlay = await loadCosDshOverlay(
-  origin,
-  managementToken,
-  selected.json?.model ?? selected.json?.selected_model,
-);
+const overlay = await loadCosDshOverlay(origin, managementToken);
 const providerBase = `${origin}/provider/v1/dsh`;
 const outcome = await runDsh(
   [

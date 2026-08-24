@@ -34,7 +34,7 @@ tests:
   - apps/admin-cli/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:fa889fbcca03dfa4b663dc4696dd3298e44df93c37c5a0147f9bcae0c802077d"
+fingerprint: "sha256:ff6528b108538e8df4c0615d53ad1e8c2dbbd49cb1ab32a5e58c69815e85b9f9"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -88,12 +88,13 @@ non_claims:
   key. Do not copy SecretStore material into dsh `.env`. A panel session is
   never Task completion. On SSH guests pass `--no-open` (already the product default).
 - `cognitive dsh apply` publishes the Cos dsh Agent binding as Path B
-  selected-model (`POST /personal/dsh/runtime` `op=apply`) and restarts only the
-  Cos-installed native web pair so conversation and Models show the Cos-assigned
-  model and that account catalog. Chat uses the bound account (never DeepSeek
-  when Cos assigned grok). Apply fails closed when web is INACTIVE or the model
-  is not in that account catalog. A leftover grok-on-DeepSeek binding fail-closes
-  Path B with `PERSONAL_PROVIDER_BINDING_MISMATCH` instead of posting to DeepSeek.
+  selected-model (`POST /personal/dsh/runtime` `op=apply`) and writes the native
+  Models overlay from that bound account catalog. Cos-installed web reloads so
+  conversation and Models match the control plane; unbinding dsh drops those
+  models (including grok). Chat uses the bound account (never DeepSeek when Cos
+  assigned grok). Apply fails closed when web is INACTIVE or the model is not in
+  that account catalog. A leftover grok-on-DeepSeek binding fail-closes Path B
+  with `PERSONAL_PROVIDER_BINDING_MISMATCH` instead of posting to DeepSeek.
 - `cognitive dsh status` reads `GET /personal/dsh/runtime`: INACTIVE / ACTIVE /
   CRASHED from process-local sessions plus an optional bound pid. Linux liveness
   is `/proc/{pid}` existence only (never cmdline/environ). It is not an

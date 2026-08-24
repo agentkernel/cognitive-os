@@ -308,6 +308,10 @@ pub fn apply(options: &DshStatusOptions) -> Result<Value, String> {
     if report.get("applied") != Some(&json!(true)) {
         return Err("dsh apply was not accepted by the daemon".to_owned());
     }
+    if report.get("restart_performed") == Some(&json!(true)) {
+        report["native_panel"] = json!(true);
+        return Ok(report);
+    }
     if let Some(process_id) = report.get("process_id").and_then(Value::as_u64)
         && process_id > 1
     {

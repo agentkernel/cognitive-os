@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:32b5f585b9b7854459fe3b4c73dfe809632e04ed9995bcb79d66f0aa90ef5f2e"
+fingerprint: "sha256:a309ff080061039cb1128ea1a74cd512e7ab6efa503617afb098937e66e4aacf"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---
@@ -103,7 +103,10 @@ cognitive dsh status
 
 这是仅 candidate 的 agent 路径，不是第二个 authority writer。configure 只写 pin、
 adapter 根和仅 candidate 的 adapter digest。launch 要求 daemon-owned ready
-（system/database/secret/provider/daemon）；Pi 可保持 `not_configured`。Workspace*
+（system/database/secret/provider/daemon）；Pi 可保持 `not_configured`。原生面板：
+钉住 dsh 根执行 `pnpm run build` 后，`cognitive dsh web --no-open` 提供
+`http://127.0.0.1:3080`（不是 Personal `/ui/`）。原生 Models 跟随当前 dsh 绑定账户
+目录；`cognitive dsh apply`（或 binding set/remove）会重载该列表。Workspace*
 candidate 仍只在 daemon Intent/Effect/verification/acceptance 路径上完成。dsh 响应
 绝不是 Task 完成。直接 Flash（`--path a`）只用于测量，`cognitive dsh launch` 会拒绝。
 

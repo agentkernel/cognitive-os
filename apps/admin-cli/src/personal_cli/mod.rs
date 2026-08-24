@@ -1184,8 +1184,9 @@ Hard rules:
     and overlays the Cos-assigned dsh model plus that account catalog.
     A panel session is never Task completion.
   - dsh apply POSTs /personal/dsh/runtime op=apply (Cos dsh binding → selected-model)
-    and restarts only the Cos-installed `cognitive dsh web` pair on loopback 3080
-    so conversation and Models show the Cos-assigned model
+    and writes the native Models overlay from that bound account catalog. Cos-installed
+    web reloads the overlay; if it does not, apply restarts only that web pair on loopback 3080.
+    Removing the dsh binding drops those models (including grok) from the native list.
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
     (web refuses --host 0.0.0.0 and --path a)

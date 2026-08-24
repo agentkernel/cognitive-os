@@ -23,7 +23,7 @@ sources:
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:573dd36f017d1c65bbf16eaeb6ac4b84035e462577870ced60d04782a79afc5a"
+fingerprint: "sha256:96a7b985855fa031ce87113888ee168f5755a57ece478b1c75748f259eb9f76a"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---
@@ -73,8 +73,8 @@ Gate/release/Profile/B01/Agent-benefit 结论。linux-002 harness
 `COMPLETED`；`scripts/dsh-real-process.mjs` 记录真实 dsh 进程墙钟时间与首次
 stdout（TTFT hook）：Path B 经 daemon Provider SSE 代理
 `POST /provider/v1/dsh/chat/completions`，Path A 直连 Flash。原生 web Path B
-还会写入 settings 覆盖层，并把官方目录的密钥引用别名到 daemon bearer，避免
-Models 页再要一把 dsh 本地密钥。
+还会按当前 dsh 绑定账户目录写入 settings 覆盖层，并把官方目录的密钥引用别名到
+daemon bearer，避免 Models 页再要一把 dsh 本地密钥。binding 变更会重载该覆盖层。
 helper 在存在 `build:lib` 产物时优先用编译后的 `apps/cli/lib/bin.js`；在 2 vCPU
 guest 上从 tsx 源码启动此前大约要 10 s 的 harness 引导。
 `scripts/provider-raw-probe.mjs` 在同一主机上不经 dsh 测量；`scripts/paired-path.mjs`

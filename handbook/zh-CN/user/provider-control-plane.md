@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:dc6224fa3e1dcbba63d73464ceb7f34a0605dc6e14e4a25f00b0eddd06a724c0"
+fingerprint: "sha256:ce14f981e53c68bbc4f8270424ac3779714031b8e2adc4551b4ad9c0219dcdee"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -233,8 +233,11 @@ binding 而不是 `provider.json`。若 **Pi** 请求的 `model` 与 Pi binding 
 Cos `agent://personal/dsh` binding，因此原生目录 id 仍能用 Cos 指定的模型、走
 **绑定账户** 对话。若该账户不能服务绑定模型（grok 绑在 `api.deepseek.com`），
 Path B 以 HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合，不会向 DeepSeek
-发请求。Personal `/ui/` Bindings 有 **Apply to running dsh**（`POST /personal/dsh/runtime`
-`op=apply`）。已吊销账户或缺失 key 是 HTTP 409
+发请求。设置、移除或改 dsh 绑定账户目录会按**当前 dsh 绑定账户**写入原生 Models
+覆盖层。Personal `/ui/` Bindings 的 **Apply to running dsh**（`POST
+/personal/dsh/runtime` `op=apply`）会重发 selected-model 并重载 Cos 安装的 web，
+使该列表与控制面一致；解绑 dsh 会从原生 Models 去掉 grok（以及该账户的其他 id）。
+已吊销账户或缺失 key 是 HTTP 409
 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`。官方 Anthropic binding 不支持公共 SSE
 （`stream:true`）。
 

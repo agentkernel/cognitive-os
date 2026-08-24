@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:32b5f585b9b7854459fe3b4c73dfe809632e04ed9995bcb79d66f0aa90ef5f2e"
+fingerprint: "sha256:a309ff080061039cb1128ea1a74cd512e7ab6efa503617afb098937e66e4aacf"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---
@@ -119,7 +119,8 @@ writes only the pin, adapter root, and a candidate-only adapter digest.
 Launch requires daemon-owned ready state (system/database/secret/provider/daemon);
 Pi may stay `not_configured`. Native panel: after `pnpm run build` in the pinned
 dsh root, `cognitive dsh web --no-open` serves `http://127.0.0.1:3080` (not
-Personal `/ui/`). Workspace* candidates still complete only on the
+Personal `/ui/`). Native Models follows the current dsh-bound account catalog;
+`cognitive dsh apply` (or binding set/remove) reloads that list. Workspace* candidates still complete only on the
 daemon Intent/Effect/verification/acceptance path. A dsh response is never Task
 completion. Direct Flash (`--path a`) is measurement-only and is refused by
 `cognitive dsh launch`.

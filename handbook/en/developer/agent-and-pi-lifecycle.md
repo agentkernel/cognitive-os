@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:072ce323121dfbcc0114064b9a044e4d5a53b919b76fa2976d03223fd9e771b3"
+fingerprint: "sha256:9e0e9a7325965aa960e36bb315712916fec33b42cd82c22047b6a45a7b3b46ca"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -169,10 +169,12 @@ starts the native panel (`dsh --profile web --no-open`, default
 is not Personal `/ui/`. Web Path B writes `$DSH_HOME/settings.yaml` so
 `llm-deepseek` stays on `POST /provider/v1/dsh/chat/completions` and aliases the
 official Models catalog ref to the daemon management bearer — not a SecretStore
-copy and not a dsh `.env` key. `cognitive dsh status`
+copy and not a dsh `.env` key. Native Models is the current dsh-bound account
+catalog (not leftover Cos/DeepSeek ids). Binding set/remove and `op: apply`
+rewrite that overlay; Cos-installed web reloads it. `cognitive dsh status`
 reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: apply`
-publishes the Cos `agent://personal/dsh` binding as Path B selected-model
-(native Models may still list DeepSeek). `op: clear`
+publishes the Cos `agent://personal/dsh` binding as Path B selected-model and
+reloads native Models from that catalog. `op: clear`
 drops the bound pid and in-memory sessions so the projection is `INACTIVE`.
 Direct Flash
 (`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter

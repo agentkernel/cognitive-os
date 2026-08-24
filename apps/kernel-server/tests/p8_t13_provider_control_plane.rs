@@ -658,3 +658,76 @@ fn deepseek_account_refuses_grok_catalog_and_binding() {
 
     let _ = std::fs::remove_dir_all(runtime_root);
 }
+
+#[test]
+fn dsh_web_overlay_follows_bound_catalog_and_drops_removed_grok() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-overlay-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let xai = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "xai-overlay",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.x.ai/v1"
+        }),
+    );
+    let xai_id = xai["account"]["id"].as_str().unwrap().to_owned();
+    add_manual_model(port, &management_token, &xai_id, "grok-4.6");
+    set_binding(port, &management_token, "dsh", &xai_id, "grok-4.6");
+
+    let overlay_path = runtime_root
+        .join("cognitiveos")
+        .join("dsh-web-home")
+        .join("control-plane-overlay.json");
+    let bound: Value =
+        serde_json::from_str(&std::fs::read_to_string(&overlay_path).unwrap()).unwrap();
+    assert_eq!(bound["surface"], "personal-dsh-web-overlay");
+    assert_eq!(bound["bound"], true);
+    assert_eq!(bound["model"], "grok-4.6");
+    let ids: Vec<&str> = bound["catalog"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, vec!["grok-4.6"]);
+    assert!(!ids.iter().any(|id| *id == "deepseek-v4-flash"));
+
+    add_manual_model(port, &management_token, &xai_id, "grok-4");
+    let expanded: Value =
+        serde_json::from_str(&std::fs::read_to_string(&overlay_path).unwrap()).unwrap();
+    let expanded_ids: Vec<&str> = expanded["catalog"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["id"].as_str().unwrap())
+        .collect();
+    assert!(expanded_ids.contains(&"grok-4.6"), "{expanded_ids:?}");
+    assert!(expanded_ids.contains(&"grok-4"), "{expanded_ids:?}");
+
+    let removed = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings/remove",
+        &management_token,
+        &json!({ "agent": "dsh" }),
+    );
+    assert!(removed.contains("200 OK"), "{removed}");
+    let unbound: Value =
+        serde_json::from_str(&std::fs::read_to_string(&overlay_path).unwrap()).unwrap();
+    assert_eq!(unbound["bound"], false);
+    assert_eq!(unbound["model"], "");
+    assert_eq!(unbound["catalog"], json!([]));
+    assert!(!unbound.to_string().contains("grok-4.6"));
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}

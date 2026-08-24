@@ -18,7 +18,7 @@ Clients Apply copy: https://github.com/agentkernel/cognitiveos-clients/pull/4
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
 | D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
-| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` on chat-completions pastes **fixed** at `8b9d09cb` (Linux 8/8 + 2/2 + 6/6). Guest daemon **515695**. |
+| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` on chat-completions pastes **fixed** at `8b9d09cb`. Native Models catalog sync **coded** (bind/remove/apply overlay; helper reload). Linux overlay test **not-run**. Guest daemon **515695**. |
 
 ## Validation log
 
@@ -353,6 +353,26 @@ Fix (this change set, pre-Linux): strip one well-known RPC leaf (`/chat/completi
 
 Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
 
+### 2026-08-24 — native Models not following control plane (coded; Linux not-run)
+
+Owner: bind a new provider LLM, click **Apply to running dsh**, refresh dsh → new model absent. Remove grok from the dsh assignment in the control plane → grok still listed on dsh Models.
+
+Root cause: HTTP `POST /personal/dsh/runtime` `op=apply` stored `selected-model.json` and returned `native_catalog_overlays_cos_binding: true` / `restart_performed: false` without writing Cos `settings.yaml` or restarting Cos. Native chrome only changes when the Path B helper rewrites `$DSH_HOME/settings.yaml` + `--patch` at spawn. Binding remove left `selected-model.json` grok in the overlay because `pathBWebCatalogModels` always injected the selected id.
+
+Fix (this change set, pre-Linux):
+
+- Daemon writes `runtime/cognitiveos/dsh-web-home/control-plane-overlay.json` from the **current dsh-bound account catalog only** after dsh binding set/remove, catalog add/refresh, account delete/update, and `op=apply`. Unbound overlay is `bound: false` / `catalog: []` (no grok).
+- Native helper prefers that file, does not inject leftover selected-model ids, writes `models: []` when unbound, and respawns Cos web when the overlay stamp changes. Apply waits up to 4 s for `control-plane-overlay.applied.json`.
+- CLI `cognitive dsh apply` skips a second kill+launch when the helper already reloaded (`restart_performed: true`).
+
+| Check | Environment | Result |
+|---|---|---|
+| `dsh-web-preflight.test.mjs` | local Windows Node | **pass** 5/5 including unbound overlay drops grok |
+| `p8_t13` overlay test `dsh_web_overlay_follows_bound_catalog_and_drops_removed_grok` | `DEV-LINUX-NATIVE-01` | **not-run** |
+| Guest daemon/helper replace | linux-002 | **not-run** (still **515695** / Cos **500474**) |
+
+Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
+
 ## Unique next action
 
-Owner: add a grok-capable Cos account on the Provider panel (non-DeepSeek `openai_compatible`, e.g. `https://api.x.ai/v1` or paste `https://api.x.ai/v1/chat/completions`; SecretStore key) then bind dsh to that account + grok and Apply. Until then dsh stays on Flash (working Path B). Keep **515695** / `:3080` / **430838** / Firefox. Do not auto-claim P6 / P7-T06 / P7-T07.
+Linux: focused `p8_t13_provider_control_plane` (expect 7 tests) + Clippy `-D warnings` kernel-server. Then replace linux-002 daemon **515695** and the Cos Path B helper so bind/unbind/Apply reload Models. Do not auto-claim P6 / P7-T06 / P7-T07.
