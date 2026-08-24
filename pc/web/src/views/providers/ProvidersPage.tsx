@@ -91,13 +91,14 @@ export function ProvidersPage() {
       />
       <AccountCreateFlow onCreated={() => void refresh()} />
       <ProjectionState projection={projection} what="Provider accounts" />
-      {projection.status === "empty" ? (
+      {projection.status === "empty" ||
+      (projection.status === "stale" && rows.length === 0) ? (
         <EmptyState title="No provider accounts yet">
           Create one above — this is not a loading placeholder. Accounts appear here once the
           daemon persists them.
         </EmptyState>
       ) : null}
-      {projection.status === "ready" || projection.status === "stale" ? (
+      {(projection.status === "ready" || projection.status === "stale") && rows.length > 0 ? (
         <div className="cp-mi">
           <div className="cp-master">
             <MasterList

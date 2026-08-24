@@ -35,6 +35,7 @@ import { AuditSection } from "./AuditSection";
 import { BINDINGS_KEY, BindingsSection } from "./BindingsSection";
 import { KeyHandoffForm } from "./KeyHandoffForm";
 import { ModelsSection } from "./ModelsSection";
+import { asOfLabel } from "./ProjectionState";
 import { UsageSection } from "./UsageSection";
 
 const SECTIONS = [
@@ -231,6 +232,13 @@ export function ProviderDetailPage() {
             {account.updatedAt
               ? ` · updated ${new Date(account.updatedAt).toLocaleTimeString()}`
               : ""}
+            {account.status === "stale" ? (
+              <>
+                {" · "}
+                <StateChip reading={readDomainState("load", "stale")} /> last good as of{" "}
+                {asOfLabel(account.updatedAt)}; a refresh is in flight
+              </>
+            ) : null}
           </p>
           <nav aria-label="Account sections" className="cp-subnav">
             {SECTIONS.map(([sectionId, label]) => (

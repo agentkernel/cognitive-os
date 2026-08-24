@@ -838,6 +838,145 @@ describe("Usage, alerts, audit", () => {
   });
 });
 
+/* ---------- action feedback survives its own refresh ---------- */
+
+describe("class-B action feedback survives the refresh the action triggers", () => {
+  const BUDGETS: RouteResponse = {
+    status: 200,
+    body: {
+      status: "ok",
+      budgets: [
+        { budget_id: "b1", scope_kind: "account", scope_id: "acct-1", token_limit: 1000, amount_micros_limit: 10000000 },
+      ],
+    },
+  };
+  const ALERTS: RouteResponse = {
+    status: 200,
+    body: {
+      status: "ok",
+      alerts: [
+        { alert_id: "al-1", budget_id: "b1", threshold_kind: "warning_80", issued_at_ms: 1, acknowledged_at_ms: null },
+      ],
+    },
+  };
+
+  /**
+   * Fetch stub whose GET responses can be held open, so the refresh an action
+   * triggers is genuinely in flight while the receipt/error is asserted. The
+   * default harness resolves in the same microtask batch as the render, which
+   * hides the defect a real browser shows.
+   */
+  function installHeldGetFetch(routes: Record<string, RouteHandler>) {
+    const merged = detailRoutes(routes);
+    const waiting: (() => void)[] = [];
+    let holding = false;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: unknown, init?: RequestInit) => {
+        const url = new URL(String(input), "http://localhost");
+        const method = (init?.method ?? "GET").toUpperCase();
+        let body: unknown;
+        if (typeof init?.body === "string") {
+          try {
+            body = JSON.parse(init.body);
+          } catch {
+            body = init.body;
+          }
+        }
+        const handler = merged[`${method} ${url.pathname}`];
+        const resolved =
+          typeof handler === "function"
+            ? handler({ body, url })
+            : (handler ?? defaultRoute(url.pathname));
+        if (holding && method === "GET") {
+          await new Promise<void>((resolve) => waiting.push(resolve));
+        }
+        return new Response(JSON.stringify(resolved.body), {
+          status: resolved.status,
+          headers: { "content-type": "application/json" },
+        });
+      }),
+    );
+    return {
+      holdGets: () => {
+        holding = true;
+      },
+      inFlightGets: () => waiting.length,
+      releaseGets: async () => {
+        holding = false;
+        for (const resolve of waiting.splice(0, waiting.length)) {
+          resolve();
+        }
+        await flush();
+      },
+    };
+  }
+
+  it("keeps the acknowledge receipt on screen while and after its own refresh", async () => {
+    rememberBearer("management", "test-bearer");
+    const gate = installHeldGetFetch({
+      "GET /management/budgets": BUDGETS,
+      "GET /management/alerts": ALERTS,
+      "POST /management/alerts/acknowledge": { status: 200, body: { status: "ok" } },
+    });
+    const { host, root } = renderAppAt("#/providers/acct-1");
+    await flush();
+    expect(host.textContent).toContain("al-1");
+
+    gate.holdGets();
+    act(() => {
+      findButton(host, "Acknowledge").click();
+    });
+    await flush();
+
+    // The refresh is still in flight …
+    expect(gate.inFlightGets()).toBeGreaterThan(0);
+    // … the account subtree was not blanked …
+    expect(host.querySelector("#provider-usage")).not.toBeNull();
+    expect(host.textContent).not.toContain("Fetching the account projection");
+    // … the last-good content is labelled, not claimed as current …
+    expect(host.textContent).toContain("last good");
+    // … and the receipt is still there.
+    expect(host.textContent).toContain("Alert al-1 acknowledged");
+
+    await gate.releaseGets();
+    expect(host.textContent).toContain("Alert al-1 acknowledged");
+    expect(host.querySelector(".cp-receipt")).not.toBeNull();
+    unmount(host, root);
+  });
+
+  it("keeps the acknowledge error on screen while and after its own refresh", async () => {
+    rememberBearer("management", "test-bearer");
+    const gate = installHeldGetFetch({
+      "GET /management/budgets": BUDGETS,
+      "GET /management/alerts": ALERTS,
+      "POST /management/alerts/acknowledge": {
+        status: 503,
+        body: { status: "error", code: "PROVIDER_STORE_LOCKED", message: "locked" },
+      },
+    });
+    const { host, root } = renderAppAt("#/providers/acct-1");
+    await flush();
+
+    gate.holdGets();
+    act(() => {
+      findButton(host, "Acknowledge").click();
+    });
+    await flush();
+
+    // A failed class-B action must never fail silently behind its own refresh.
+    expect(gate.inFlightGets()).toBeGreaterThan(0);
+    expect(host.textContent).toContain("HTTP 503");
+    expect(host.textContent).toContain("PROVIDER_STORE_LOCKED");
+    expect(host.querySelector('[role="alert"]')).not.toBeNull();
+
+    await gate.releaseGets();
+    expect(host.textContent).toContain("HTTP 503");
+    expect(host.textContent).toContain("PROVIDER_STORE_LOCKED");
+    unmount(host, root);
+  });
+});
+
 /* ---------- routing + structure ---------- */
 
 describe("routing and structure", () => {

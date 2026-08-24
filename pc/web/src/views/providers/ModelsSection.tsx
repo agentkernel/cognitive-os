@@ -198,10 +198,14 @@ export function ModelsSection({
               Set price
             </button>
           </form>
-          <p role="status">{message}</p>
-          {receipt ? <ReceiptLine>{receipt}</ReceiptLine> : null}
         </>
       ) : null}
+      {/*
+       * Probe / add / set-price each refresh this projection; their outcome
+       * must outlive that refresh, so it renders outside the projection guard.
+       */}
+      <p role="status">{message}</p>
+      {receipt ? <ReceiptLine>{receipt}</ReceiptLine> : null}
     </>
   );
 }

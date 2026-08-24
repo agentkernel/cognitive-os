@@ -1,12 +1,21 @@
 import { Link } from "react-router-dom";
 import { ErrorState, LoadingState, UnavailableState } from "../../components/states";
 import type { Projection } from "../../data/store";
+import { StateChip } from "../../state/StateChip";
+import { readDomainState } from "../../state/stateMap";
+
+/** "as of <time>" for last-good content; never a guessed freshness. */
+export function asOfLabel(updatedAt: number | undefined): string {
+  return updatedAt ? new Date(updatedAt).toLocaleTimeString() : "unknown";
+}
 
 /**
  * ProjectionState — the honest non-content states shared by every provider
- * surface. ready/empty/stale render content (null here); every failure class
- * gets its own designed state with the normalized error code. The daemon's
- * 200-stub (R-1) renders as unavailable, never as success.
+ * surface. ready/empty render content (null here); stale renders content too,
+ * with a last-good marker naming its age and source (docs/design/22) so a
+ * refresh never blanks the surface and never claims to be current. Every
+ * failure class gets its own designed state with the normalized error code.
+ * The daemon's 200-stub (R-1) renders as unavailable, never as success.
  */
 export function ProjectionState({
   projection,
@@ -18,6 +27,15 @@ export function ProjectionState({
   switch (projection.status) {
     case "loading":
       return <LoadingState label={`Fetching ${what} from the daemon.`} />;
+    case "stale":
+      return (
+        <p className="cp-quiet">
+          <StateChip reading={readDomainState("load", "stale")} /> {what} below is the last
+          good read, as of {asOfLabel(projection.updatedAt)} · Source:{" "}
+          <code className="cp-mono">{projection.source ?? "unknown"}</code>. A refresh is in
+          flight.
+        </p>
+      );
     case "denied":
       return (
         <ErrorState

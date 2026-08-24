@@ -100,13 +100,18 @@ export function AlertsBlock({
               </tbody>
             </table>
           )}
-          {receipt ? <ReceiptLine>{receipt}</ReceiptLine> : null}
-          {message ? (
-            <p role="alert" className="cp-reason">
-              {message}
-            </p>
-          ) : null}
         </>
+      ) : null}
+      {/*
+       * Acknowledge triggers its own refresh; the receipt and the error must
+       * outlive that refresh, so they render outside the projection guard.
+       * A receipt is a record of an authority act, not ephemera.
+       */}
+      {receipt ? <ReceiptLine>{receipt}</ReceiptLine> : null}
+      {message ? (
+        <p role="alert" className="cp-reason">
+          {message}
+        </p>
       ) : null}
     </div>
   );

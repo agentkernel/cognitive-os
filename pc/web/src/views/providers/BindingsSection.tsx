@@ -282,10 +282,14 @@ export function BindingsSection({
             models={models}
             onChanged={onChanged}
           />
-          <p role="status">{message}</p>
-          {receipt ? <ReceiptLine>{receipt}</ReceiptLine> : null}
         </>
       ) : null}
+      {/*
+       * Set / remove each refresh this projection; the receipt and the reason
+       * must outlive that refresh, so they render outside the projection guard.
+       */}
+      <p role="status">{message}</p>
+      {receipt ? <ReceiptLine>{receipt}</ReceiptLine> : null}
     </>
   );
 }
