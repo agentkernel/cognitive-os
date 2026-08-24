@@ -57,6 +57,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `DEV-WIN-GNU-01` | local Windows GNU/MinGW host | local development | TypeScript and non-linking checks only |
 | `CI-UBUNTU-01` | GitHub `ubuntu-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
 | `CI-WINDOWS-MSVC-01` | GitHub `windows-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
+| `CLOUD-AGENT-LINUX-01` | Cursor Cloud Agent Linux pod | ephemeral remote container | strong local/container implementation evidence |
 | `DEV-WSL2-01` | Windows WSL2 Linux guest | local Linux guest | strong local/fixture implementation evidence |
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
 | `BUILD-LINUX-EXPERIMENTAL-01` | protected experimental campaign builder | reviewed CI build/sign | experimental artifact evidence |
@@ -295,7 +296,36 @@ ordinary development target.
 - **Cannot claim:** a Personal product Gate, Agent benefit, release or Profile
   without the separately required applicable-MUST evidence.
 
-## 15. Formal campaign qualification template
+## 15. `CLOUD-AGENT-LINUX-01` — Cursor Cloud Agent Linux pod
+
+- **Kind:** ephemeral `x86_64` Linux container that checks out one pushed
+  revision of `agentkernel/cognitive-os` and is discarded with the run.
+- **Bootstrap:** [`.cursor/environment.json`](../../.cursor/environment.json)
+  runs [`scripts/setup-dev-env.sh`](../../scripts/setup-dev-env.sh), which
+  installs the pnpm workspace, materializes the pinned Rust toolchain, and
+  registers the docs-sync hooks. Without that bootstrap a pod starts with no
+  `node_modules` and no hook registration.
+- **Command routing:** `COMMAND-SHELL-PS51` does **not** apply — the shell is
+  bash, so `&&`/`||` are valid. `RUST-LINK-DEV-WIN-GNU-01` does **not** apply
+  either: this is a native GNU/Linux link host, so `cargo build/test/clippy`
+  run here instead of being routed away.
+- **Recorded capability (2026-08-24, `main@46397764`):** `pnpm -r build` and
+  `pnpm -r test` pass; `cargo fmt --all -- --check` clean; `cargo build
+  --workspace` 48.9 s; `cargo clippy --workspace --all-targets` 19.6 s clean;
+  `cargo test --workspace` 1210 passed / 0 failed; `conformance-runner`
+  completes. Every figure is wall-clock on shared cloud hardware.
+- **Git identity:** commits are authored by the Cursor GitHub App
+  (`cursor[bot]`). Its installation token is scoped to the repositories in the
+  run's environment, so pushes to any repository outside that list fail with
+  HTTP 403 regardless of that repository's visibility.
+- **Maximum evidence:** container-class implementation evidence, equivalent in
+  standing to `DEV-WSL2-01` — useful for fast iteration and pre-CI triage.
+- **Cannot claim:** native user-systemd, Secret Service, Pi-qualified
+  execution, timing baselines, B01/B09, `GMVP-LINUX`, containment, release or
+  Profile. Required CI on the pushed revision remains the merge gate, and
+  `DEV-LINUX-NATIVE-01` remains the native-Linux evidence route.
+
+## 16. Formal campaign qualification template
 
 Before an environment contributes to B01, P2/P3/P4 Gates, B09 or `GMVP-LINUX`, its
 preregistration must bind:
