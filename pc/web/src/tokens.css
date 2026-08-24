@@ -1,0 +1,136 @@
+/*
+ * CognitiveOS Control Plane design tokens — docs/design/11-control-plane-design-system.md
+ * Namespace: --cp-* (legacy styles.css owns its own unprefixed vars until W2 retires it).
+ * Themes: system-following light/dark. Contrast and reduced-motion variants included.
+ */
+
+:root {
+  color-scheme: light;
+
+  /* Typography */
+  --cp-font-text:
+    -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif;
+  --cp-font-mono: "SF Mono", "Cascadia Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  --cp-size-title1: 1.375rem; /* 22px — space titles only */
+  --cp-size-title2: 1.0625rem; /* 17px — detail object name */
+  --cp-size-headline: 0.8125rem; /* 13px — section titles */
+  --cp-size-body: 0.8125rem; /* 13px */
+  --cp-size-row: 0.78125rem; /* 12.5px — dense rows */
+  --cp-size-label: 0.6875rem; /* 11px — labels, state words */
+
+  --cp-leading-title: 1.15;
+  --cp-leading-headline: 1.3;
+  --cp-leading-body: 1.45;
+  --cp-leading-row: 1.3;
+  --cp-leading-mono: 1.35;
+
+  --cp-track-tight: -0.015em;
+  --cp-track-title: -0.02em;
+  --cp-track-label: 0.01em;
+
+  /* Spacing — 4pt grid */
+  --cp-space-1: 4px;
+  --cp-space-2: 8px;
+  --cp-space-3: 12px;
+  --cp-space-4: 16px;
+  --cp-space-5: 20px;
+  --cp-space-6: 24px;
+  --cp-space-8: 32px;
+  --cp-space-10: 40px;
+
+  /* Radius — 4/6/8 ceiling */
+  --cp-radius-sm: 4px;
+  --cp-radius-md: 6px;
+  --cp-radius-lg: 8px;
+
+  /* Elevation — floating layers only */
+  --cp-elevation-1: 0 1px 2px rgba(16, 19, 24, 0.18);
+
+  /* Motion */
+  --cp-motion-instant: 80ms ease-out;
+  --cp-motion-fast: 140ms ease-out;
+  --cp-motion-enter: 200ms ease-out;
+
+  /* Neutrals + accent (light) */
+  --cp-canvas: #f5f6f8;
+  --cp-surface: #ffffff;
+  --cp-raised: #ffffff;
+  --cp-ink: #111827;
+  --cp-quiet: #6b7280;
+  --cp-accent: #0a6cff;
+  --cp-accent-soft: rgba(10, 108, 255, 0.1);
+  --cp-focus: #0a6cff;
+  --cp-line: rgba(17, 24, 39, 0.1);
+  --cp-line-strong: rgba(17, 24, 39, 0.18);
+
+  /* State hues (light) — color is spent on state only */
+  --cp-ready: #1f9d55;
+  --cp-waiting: #b7791f;
+  --cp-attention: #c05621;
+  --cp-blocked: #c53030;
+  --cp-completed: #4a5568;
+  --cp-unknown: #718096;
+
+  /* State text variants (light) — measured ≥4.5:1 on --cp-surface */
+  --cp-waiting-text: #8a5f0d;
+  --cp-attention-text: #c05621;
+  --cp-blocked-text: #c53030;
+  --cp-unknown-text: #5b6472;
+
+  /* State tint backgrounds (light) */
+  --cp-ready-tint: rgba(31, 157, 85, 0.08);
+  --cp-waiting-tint: rgba(183, 121, 31, 0.08);
+  --cp-attention-tint: rgba(192, 86, 33, 0.08);
+  --cp-blocked-tint: rgba(197, 48, 48, 0.08);
+  --cp-unknown-tint: rgba(113, 128, 150, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    color-scheme: dark;
+
+    --cp-canvas: #101318;
+    --cp-surface: #171b22;
+    --cp-raised: #1e242e;
+    --cp-ink: #e8edf5;
+    --cp-quiet: #9aa6b8;
+    --cp-accent: #7eb6ff;
+    --cp-accent-soft: rgba(126, 182, 255, 0.14);
+    --cp-focus: #7eb6ff;
+    --cp-line: rgba(232, 237, 245, 0.1);
+    --cp-line-strong: rgba(232, 237, 245, 0.2);
+
+    --cp-ready: #4cc38a;
+    --cp-waiting: #e5b567;
+    --cp-attention: #f0a35e;
+    --cp-blocked: #f26d6d;
+    --cp-completed: #a0aec0;
+    --cp-unknown: #8b94a3;
+
+    /* State text variants (dark) — measured ≥4.5:1 on --cp-surface */
+    --cp-waiting-text: #e5b567;
+    --cp-attention-text: #f0a35e;
+    --cp-blocked-text: #f26d6d;
+    --cp-unknown-text: #8b94a3;
+
+    --cp-ready-tint: rgba(76, 195, 138, 0.12);
+    --cp-waiting-tint: rgba(229, 181, 103, 0.12);
+    --cp-attention-tint: rgba(240, 163, 94, 0.12);
+    --cp-blocked-tint: rgba(242, 109, 109, 0.12);
+    --cp-unknown-tint: rgba(139, 148, 163, 0.14);
+
+    --cp-elevation-1: 0 1px 2px rgba(0, 0, 0, 0.5);
+  }
+}
+
+@media (prefers-contrast: more) {
+  :root {
+    --cp-line: var(--cp-line-strong);
+    --cp-ready-tint: transparent;
+    --cp-waiting-tint: transparent;
+    --cp-attention-tint: transparent;
+    --cp-blocked-tint: transparent;
+    --cp-unknown-tint: transparent;
+  }
+}
