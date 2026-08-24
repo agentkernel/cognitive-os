@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:ab5e6566c829211c0e71addbbe08d71c1d92e640f2587096892dd6e2994cc8ea"
+fingerprint: "sha256:67012b086707e531d309e3f8ad39bdb0c82681152c84403c4204ab0ff16cfa56"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -138,7 +138,13 @@ timing 字段只是测量入口，不能推出零开销保证。`packages/dsh-ak
 `require()` ESM `plugin.js`），会先 admit 可丢弃的
 WorkspaceRead/Search/Write Task，再由真实 dsh 进程以 plugin `startupEvents`
 提交这些 candidate，并把 Flash 经 daemon Provider SSE 代理转发
-（`POST /provider/v1/dsh/chat/completions` 且 `stream:true`）。产品安装路径是 `cognitive dsh configure` 然后 `cognitive dsh launch`
+（`POST /provider/v1/dsh/chat/completions` 且 `stream:true`）。交互式原生面板不会钉死
+`llm-deepseek.maxTokens`：支持推理的绑定模型可能先消耗很小的 completion 预算才输出
+assistant content，否则 dsh 会将其视为 `EMPTY_RESPONSE`。有界 one-shot probe 使用独立的
+4,096 token 预算。daemon 仅在流式 OpenAI-compatible `tool_calls` continuation frame
+中规范化值为 `null` 的 `id`、`type`、`function.name` 与
+`function.arguments`：保留起始 frame 的 identity，避免上游 `null` 覆盖已经累积的
+工具名；它不会虚构或授权工具调用。产品安装路径是 `cognitive dsh configure` 然后 `cognitive dsh launch`
 （Path B）。`cognitive dsh web` 在钉住 dsh 根执行 `pnpm run build` 产出 `apps/web/dist`
 后启动原生面板（`dsh --profile web --no-open`，默认 `http://127.0.0.1:3080`），不是
 Personal `/ui/`。Web Path B 会写入 `$DSH_HOME/settings.yaml`，让 `llm-deepseek`

@@ -104,6 +104,114 @@ struct ValidatedChatRequest {
     stream: bool,
 }
 
+/// Line-buffered SSE rewriter for streaming `tool_calls` deltas.
+///
+/// OpenAI-compatible upstreams disagree on continuation frames: some omit
+/// `id` and `function.name` after the opening frame, others send an explicit
+/// `null`. A client that assigns each field unconditionally keeps the null and
+/// ends the turn with an empty tool name, so the call is refused as an unknown
+/// tool even though the arguments arrived intact. Dropping null-valued keys
+/// makes both upstream dialects behave like the omitting one.
+///
+/// Frames without such a key are forwarded as the original bytes, and a frame
+/// split across chunk boundaries is held until its newline arrives.
+#[derive(Default)]
+struct SseToolCallNormalizer {
+    pending: Vec<u8>,
+    passthrough: bool,
+}
+
+impl SseToolCallNormalizer {
+    fn new() -> Self {
+        Self::default()
+    }
+
+    /// Non-SSE bodies (upstream errors) must reach the caller unchanged.
+    fn set_passthrough(&mut self, passthrough: bool) {
+        self.passthrough = passthrough;
+    }
+
+    fn push(&mut self, chunk: &[u8]) -> Vec<u8> {
+        if self.passthrough {
+            return chunk.to_vec();
+        }
+        self.pending.extend_from_slice(chunk);
+        let mut out = Vec::with_capacity(self.pending.len());
+        while let Some(newline) = self.pending.iter().position(|byte| *byte == b'\n') {
+            let line: Vec<u8> = self.pending.drain(..=newline).collect();
+            out.extend_from_slice(&normalize_sse_line(&line));
+        }
+        out
+    }
+
+    /// Bytes still held when the upstream stream ends without a final newline.
+    fn flush(&mut self) -> Vec<u8> {
+        std::mem::take(&mut self.pending)
+    }
+}
+
+fn normalize_sse_line(line: &[u8]) -> Vec<u8> {
+    let Ok(text) = std::str::from_utf8(line) else {
+        return line.to_vec();
+    };
+    let trimmed_end = text.trim_end_matches(['\r', '\n']);
+    let Some(payload) = trimmed_end.strip_prefix("data:") else {
+        return line.to_vec();
+    };
+    let payload = payload.trim_start();
+    if payload.is_empty() || payload == "[DONE]" {
+        return line.to_vec();
+    }
+    let Ok(mut frame) = serde_json::from_str::<serde_json::Value>(payload) else {
+        return line.to_vec();
+    };
+    if !drop_null_tool_call_fields(&mut frame) {
+        return line.to_vec();
+    }
+    let Ok(rendered) = serde_json::to_string(&frame) else {
+        return line.to_vec();
+    };
+    let terminator = &text[trimmed_end.len()..];
+    format!("data: {rendered}{terminator}").into_bytes()
+}
+
+/// Returns whether any null-valued tool-call field was removed.
+fn drop_null_tool_call_fields(frame: &mut serde_json::Value) -> bool {
+    let mut changed = false;
+    let Some(choices) = frame.get_mut("choices").and_then(|c| c.as_array_mut()) else {
+        return false;
+    };
+    for choice in choices {
+        let Some(tool_calls) = choice
+            .get_mut("delta")
+            .and_then(|delta| delta.get_mut("tool_calls"))
+            .and_then(|calls| calls.as_array_mut())
+        else {
+            continue;
+        };
+        for call in tool_calls {
+            if let Some(entry) = call.as_object_mut() {
+                for key in ["id", "type"] {
+                    if entry.get(key).is_some_and(serde_json::Value::is_null) {
+                        entry.remove(key);
+                        changed = true;
+                    }
+                }
+            }
+            let Some(function) = call.get_mut("function").and_then(|f| f.as_object_mut()) else {
+                continue;
+            };
+            for key in ["name", "arguments"] {
+                if function.get(key).is_some_and(serde_json::Value::is_null) {
+                    function.remove(key);
+                    changed = true;
+                }
+            }
+        }
+    }
+    changed
+}
+
 impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport, T> {
     /// Build a proxy around the daemon-owned secret backend and transport.
     pub fn new(
@@ -161,14 +269,28 @@ impl<'transport, T: ProviderTransport + ?Sized> ProviderProxyService<'transport,
         let (request, preflight_elapsed_nanos) =
             self.prepare_selected_request(validated.model, request_body, true)?;
         on_preflight(preflight_elapsed_nanos)?;
+        let normalizer = std::cell::RefCell::new(SseToolCallNormalizer::new());
         let streamed = self
             .transport
             .exchange_stream(
                 &request,
-                &mut |status| on_status(status).map_err(proxy_callback_to_transport),
-                &mut |chunk| on_chunk(chunk).map_err(proxy_callback_to_transport),
+                &mut |status| {
+                    normalizer.borrow_mut().set_passthrough(status != 200);
+                    on_status(status).map_err(proxy_callback_to_transport)
+                },
+                &mut |chunk| {
+                    let forwarded = normalizer.borrow_mut().push(chunk);
+                    if forwarded.is_empty() {
+                        return Ok(());
+                    }
+                    on_chunk(&forwarded).map_err(proxy_callback_to_transport)
+                },
             )
             .map_err(map_transport_error)?;
+        let tail = normalizer.borrow_mut().flush();
+        if !tail.is_empty() {
+            on_chunk(&tail)?;
+        }
         Ok(TimedStreamedProviderResponse {
             status: streamed.status,
             preflight_elapsed_nanos,
@@ -436,7 +558,8 @@ mod tests {
     use std::time::{SystemTime, UNIX_EPOCH};
 
     use super::{
-        ProviderProxyError, ProviderProxyService, ValidatedChatRequest, validate_chat_request,
+        ProviderProxyError, ProviderProxyService, SseToolCallNormalizer, ValidatedChatRequest,
+        validate_chat_request,
     };
     #[cfg(unix)]
     use super::{sanitize_private_candidate_request, validate_private_candidate_response};
@@ -528,6 +651,72 @@ mod tests {
         ));
         std::fs::create_dir_all(&directory).expect("temporary config directory");
         directory.join("provider.json")
+    }
+
+    #[test]
+    fn streaming_tool_call_deltas_drop_null_ids_and_names() {
+        let mut normalizer = SseToolCallNormalizer::new();
+        let opening = br#"data: {"choices":[{"delta":{"tool_calls":[{"id":"call_1","index":0,"type":"function","function":{"name":"web_search","arguments":""}}]}}]}
+"#;
+        let opening_out = normalizer.push(opening);
+        assert_eq!(
+            opening_out,
+            opening.to_vec(),
+            "a frame with no null field must stay byte-identical"
+        );
+
+        let continuation = br#"data: {"choices":[{"delta":{"tool_calls":[{"id":null,"index":0,"type":"function","function":{"name":null,"arguments":"{\"q\": 1}"}}]}}]}
+"#;
+        let rewritten = String::from_utf8(normalizer.push(continuation)).expect("utf8");
+        assert!(
+            !rewritten.contains("null"),
+            "null id/name must be removed: {rewritten}"
+        );
+        assert!(
+            rewritten.contains(r#""arguments":"{\"q\": 1}""#),
+            "arguments must survive: {rewritten}"
+        );
+        assert!(rewritten.ends_with('\n'), "line terminator must survive");
+        assert!(
+            !rewritten.contains(r#""name""#),
+            "an absent name cannot overwrite the accumulated one: {rewritten}"
+        );
+    }
+
+    #[test]
+    fn streaming_frames_split_across_chunks_are_reassembled() {
+        let mut normalizer = SseToolCallNormalizer::new();
+        let first = normalizer.push(br#"data: {"choices":[{"delta":{"tool_calls":[{"id":nu"#);
+        assert!(
+            first.is_empty(),
+            "a partial line must be held until its newline"
+        );
+        let rest = normalizer.push(b"ll,\"index\":0,\"function\":{\"name\":null}}]}}]}\n");
+        let rendered = String::from_utf8(rest).expect("utf8");
+        assert!(!rendered.contains("null"), "reassembled: {rendered}");
+        assert!(
+            normalizer.flush().is_empty(),
+            "no residue after a full line"
+        );
+    }
+
+    #[test]
+    fn streaming_control_frames_and_error_bodies_pass_through() {
+        let mut normalizer = SseToolCallNormalizer::new();
+        assert_eq!(normalizer.push(b"\n"), b"\n".to_vec());
+        assert_eq!(
+            normalizer.push(b"data: [DONE]\n"),
+            b"data: [DONE]\n".to_vec()
+        );
+        let usage = br#"data: {"choices":[],"usage":{"total_tokens":7}}
+"#;
+        assert_eq!(normalizer.push(usage), usage.to_vec());
+
+        let mut error_stream = SseToolCallNormalizer::new();
+        error_stream.set_passthrough(true);
+        let body = br#"{"error":{"code":"invalid_request_error"}}"#;
+        assert_eq!(error_stream.push(body), body.to_vec());
+        assert!(error_stream.flush().is_empty());
     }
 
     #[test]

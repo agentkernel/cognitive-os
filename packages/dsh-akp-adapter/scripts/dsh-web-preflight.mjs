@@ -251,3 +251,60 @@ export function pathBWebSettingsYaml(providerBase, existingYaml, selectedModel, 
 export function pathBWebChildExtras(providerBase) {
   return { DEEPSEEK_BASE_URL: assertPathBProviderBase(providerBase) };
 }
+
+/**
+ * Completion budget for bounded one-shot probes.
+ *
+ * A reasoning model spends this budget on `reasoning_content` before it emits
+ * any `content`, so the budget must leave room for both. The former 256-token
+ * pin returned a completed response with an empty `content`, which the harness
+ * classifies as `EMPTY_RESPONSE` and retries until the turn fails.
+ */
+export const PROBE_COMPLETION_BUDGET_TOKENS = 4096;
+
+/**
+ * `--patch` overlay lines for the pinned `llm-deepseek` provider.
+ *
+ * `maxTokens` is omitted unless a caller asks for a bounded probe, so the
+ * interactive panel inherits the provider's own default instead of a pin that
+ * starves reasoning models.
+ */
+export function llmDeepseekPatchLines(
+  baseURL,
+  apiKeyEnv,
+  selectedModel,
+  catalogModels,
+  maxTokens,
+) {
+  const lines = [
+    "- id: llm-deepseek",
+    "  config:",
+    `    baseURL: ${baseURL}`,
+    `    apiKeyEnv: ${apiKeyEnv}`,
+    "    thinking: disabled",
+    "    reasoningEffort: off",
+  ];
+  if (maxTokens !== undefined) {
+    const budget = Number(maxTokens);
+    if (!Number.isSafeInteger(budget) || budget <= 0) {
+      throw new Error("llm-deepseek maxTokens must be a positive safe integer when pinned");
+    }
+    lines.push(`    maxTokens: ${budget}`);
+  }
+  const model = safeCatalogId(selectedModel);
+  if (model) {
+    lines.push(`    model: ${model}`);
+  }
+  const models = pathBWebCatalogModels(catalogModels, model);
+  if (!models.length) {
+    lines.push("    models: []");
+  } else {
+    lines.push("    models:");
+    for (const item of models) {
+      lines.push(`      - id: ${item.id}`);
+      lines.push(`        name: ${item.name}`);
+    }
+  }
+  lines.push("");
+  return lines.join("\n");
+}

@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:3aad078cb4c3538ce6c1a784aef0df1731399ab57762fcb03056d0035dd3e1e0"
+fingerprint: "sha256:0355edca5a1147a2aed85496bd1b6802aca7cb61fc87122b34c7e73d0d51c9b4"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -208,7 +208,11 @@ proxy validates config + selected model, resolves the secret in memory, and
 forwards via the bounded Rustls transport. Unary proxy success responses carry
 `X-CognitiveOS-Provider-Network-Nanos`. Public management `stream:true` is
 forwarded as HTTP/1.1 SSE without waiting for the last event; streaming
-success omits that network-nanos header because SSE headers flush first. Nested preflight timing and the
+success omits that network-nanos header because SSE headers flush first. For
+the dsh route only, null-valued continuation fields in an OpenAI-compatible
+`tool_calls` delta are removed before forwarding; an upstream continuation
+cannot erase the opening call's id or name. All other SSE payloads, including
+errors and usage frames, remain byte-for-byte pass-through. Nested preflight timing and the
 correlation echo are denied unless `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled`
 and the request carries one well-formed opaque correlation id; malformed or
 duplicate ids are ignored, the product body is unchanged, and the observer

@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - apps/kernel-server/tests/p8_t12_resource_manager.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:3aad078cb4c3538ce6c1a784aef0df1731399ab57762fcb03056d0035dd3e1e0"
+fingerprint: "sha256:0355edca5a1147a2aed85496bd1b6802aca7cb61fc87122b34c7e73d0d51c9b4"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -178,7 +178,10 @@ readiness 从文件系统/配置事实评估六组件（`blocked | degraded | re
 （没有 stale-ready TTL）。doctor 追加脱敏的六资源/vault/可运维小节。Provider 代理校验配置 + selected model、内存中解析 secret、经有界
 Rustls 传输转发。一元代理成功响应携带 `X-CognitiveOS-Provider-Network-Nanos`。
 公开 management `stream:true` 按 HTTP/1.1 SSE 转发，不等待最后一个事件；流式成功
-省略该网络耗时头，因为 SSE 响应头会先刷新。嵌套 preflight 计时与 correlation 回显默认拒绝，仅当
+省略该网络耗时头，因为 SSE 响应头会先刷新。仅 dsh 路由会在
+OpenAI-compatible `tool_calls` delta 中移除值为 `null` 的 continuation 字段，避免上游
+continuation 覆盖起始调用的 id 或 name；所有其他 SSE payload（包括错误和 usage frame）
+保持逐字节透传。嵌套 preflight 计时与 correlation 回显默认拒绝，仅当
 `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` 且请求携带一条形态正确的不透明
 correlation id 时才发出；畸形或重复的 id 被忽略，产品 body 不变，观测器不写任何
 东西。一次性私有 Unix socket（`POST /chat/completions`）只服务 daemon 启
