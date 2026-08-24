@@ -116,22 +116,22 @@ struct ValidatedChatRequest {
 /// Frames without such a key are forwarded as the original bytes, and a frame
 /// split across chunk boundaries is held until its newline arrives.
 #[derive(Default)]
-struct SseToolCallNormalizer {
+pub(crate) struct SseToolCallNormalizer {
     pending: Vec<u8>,
     passthrough: bool,
 }
 
 impl SseToolCallNormalizer {
-    fn new() -> Self {
+    pub(crate) fn new() -> Self {
         Self::default()
     }
 
     /// Non-SSE bodies (upstream errors) must reach the caller unchanged.
-    fn set_passthrough(&mut self, passthrough: bool) {
+    pub(crate) fn set_passthrough(&mut self, passthrough: bool) {
         self.passthrough = passthrough;
     }
 
-    fn push(&mut self, chunk: &[u8]) -> Vec<u8> {
+    pub(crate) fn push(&mut self, chunk: &[u8]) -> Vec<u8> {
         if self.passthrough {
             return chunk.to_vec();
         }
@@ -145,7 +145,7 @@ impl SseToolCallNormalizer {
     }
 
     /// Bytes still held when the upstream stream ends without a final newline.
-    fn flush(&mut self) -> Vec<u8> {
+    pub(crate) fn flush(&mut self) -> Vec<u8> {
         std::mem::take(&mut self.pending)
     }
 }
