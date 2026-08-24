@@ -2,13 +2,13 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { NotFound } from "./shell/NotFound";
 import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
+import { HomePage } from "./views/home/HomePage";
 import { TasksPage } from "./views/legacy/legacyPages";
 import { ProviderDetailPage } from "./views/providers/ProviderDetailPage";
 import { ProvidersPage } from "./views/providers/ProvidersPage";
 import {
   ActivityPage,
   AgentsPage,
-  HomePage,
   ResourcesPage,
   SystemPage,
   WorkPage,
@@ -16,10 +16,10 @@ import {
 
 /**
  * Route map — docs/design/06. Seven frozen spaces + session (utility) +
- * designed 404. Providers is the W2 redesign (accounts master + five-section
- * detail); Bindings folded into Providers (DD-04) and redirects there.
- * The legacy governed-task page stays reachable at /tasks until W4/W5 —
- * real capability, behavior verbatim.
+ * designed 404. Home is the W3 attention surface; Providers is the W2
+ * redesign (accounts master + five-section detail); Bindings folded into
+ * Providers (DD-04) and redirects there. The legacy governed-task page stays
+ * reachable at /tasks until W4/W5 — real capability, behavior verbatim.
  */
 export function AppRoutes() {
   return (

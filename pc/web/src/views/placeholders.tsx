@@ -31,23 +31,6 @@ function Placeholder({
   );
 }
 
-export function HomePage() {
-  return (
-    <>
-      <Placeholder
-        title="Home"
-        wave="Wave 3"
-        willBe="The attention surface: readiness, the needs-attention queue, current work, and recent evidence — every row a navigable authority fact, no metric theater."
-        now={<Link to="/system">Open System readiness</Link>}
-      />
-      <HonestyNote>
-        Today: the status strip above shows live daemon health and readiness. Deep inspection
-        remains on <code>cognitive status</code> / <code>cognitive doctor</code>.
-      </HonestyNote>
-    </>
-  );
-}
-
 export function WorkPage() {
   return (
     <>
