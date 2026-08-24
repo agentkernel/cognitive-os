@@ -1,13 +1,10 @@
-import { Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes } from "react-router-dom";
 import { NotFound } from "./shell/NotFound";
 import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
-import {
-  BindingsPage,
-  ProvidersPage,
-  ProviderDetailPage,
-  TasksPage,
-} from "./views/legacy/legacyPages";
+import { TasksPage } from "./views/legacy/legacyPages";
+import { ProviderDetailPage } from "./views/providers/ProviderDetailPage";
+import { ProvidersPage } from "./views/providers/ProvidersPage";
 import {
   ActivityPage,
   AgentsPage,
@@ -19,10 +16,10 @@ import {
 
 /**
  * Route map — docs/design/06. Seven frozen spaces + session (utility) +
- * designed 404. Legacy mutation-bearing pages stay reachable at their
- * current routes until their redesign wave (Bindings/Tasks — unlisted,
- * behavior verbatim). Read-only legacy pages are replaced by honest
- * placeholders now.
+ * designed 404. Providers is the W2 redesign (accounts master + five-section
+ * detail); Bindings folded into Providers (DD-04) and redirects there.
+ * The legacy governed-task page stays reachable at /tasks until W4/W5 —
+ * real capability, behavior verbatim.
  */
 export function AppRoutes() {
   return (
@@ -76,14 +73,7 @@ export function AppRoutes() {
           </SessionGate>
         }
       />
-      <Route
-        path="/bindings"
-        element={
-          <SessionGate channel="management" title="Agent Provider bindings">
-            <BindingsPage />
-          </SessionGate>
-        }
-      />
+      <Route path="/bindings" element={<Navigate to="/providers" replace />} />
       <Route
         path="/tasks"
         element={

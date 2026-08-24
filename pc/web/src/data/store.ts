@@ -30,6 +30,8 @@ export interface Projection<T> {
 export interface ProjectionStore {
   get<T>(key: string): Projection<T> | undefined;
   set<T>(key: string, value: Projection<T>): void;
+  /** Drop every projection (test isolation / full reset). Subscribers are notified. */
+  clear(): void;
   subscribe(listener: () => void): () => void;
 }
 
@@ -42,6 +44,12 @@ export function createProjectionStore(): ProjectionStore {
     },
     set<T>(key: string, value: Projection<T>): void {
       entries.set(key, value as Projection<unknown>);
+      for (const listener of listeners) {
+        listener();
+      }
+    },
+    clear(): void {
+      entries.clear();
       for (const listener of listeners) {
         listener();
       }

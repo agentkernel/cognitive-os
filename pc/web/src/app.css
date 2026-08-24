@@ -570,6 +570,57 @@ body {
   border-color: var(--cp-blocked);
 }
 
+/* W2 providers — master+inspector layout, secondary nav, sections, raw details */
+
+.cp-mi {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-4);
+}
+
+.cp-master {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cp-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-section {
+  margin-top: var(--cp-space-6);
+  max-width: 960px;
+}
+
+.cp-subblock {
+  margin-top: var(--cp-space-4);
+}
+
+.cp-details {
+  margin: var(--cp-space-3) 0;
+  max-width: 72ch;
+}
+
+.cp-details summary {
+  cursor: pointer;
+  color: var(--cp-quiet);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+}
+
+.cp-details pre {
+  overflow-x: auto;
+  padding: var(--cp-space-2) var(--cp-space-3);
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  font-size: var(--cp-size-label);
+  line-height: var(--cp-leading-mono);
+}
+
 /* placeholders (W1) */
 
 .cp-placeholder {
