@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:67012b086707e531d309e3f8ad39bdb0c82681152c84403c4204ab0ff16cfa56"
+fingerprint: "sha256:2c9a382601fa981b34732474c606f5e1327cb48595e6fdde7074d8e0265a7f19"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -162,11 +162,11 @@ outputs exist, otherwise `node --import tsx/esm apps/cli/src/bin.ts` (not
 the ESM `plugin.js`, admits disposable WorkspaceRead/Search/Write Tasks, submits those candidates
 as plugin `startupEvents` from the real dsh process, and routes Flash through
 the daemon Provider SSE proxy (`POST /provider/v1/dsh/chat/completions` with
-`stream:true`). The interactive native panel deliberately does not pin
-`llm-deepseek.maxTokens`: a reasoning-capable bound model can spend a small
-completion budget before emitting assistant content, which would otherwise look
-like an `EMPTY_RESPONSE` to dsh. Bounded one-shot probes use a separate
-4,096-token budget. The daemon normalizes only null-valued continuation fields
+`stream:true`). The interactive native panel pins
+`llm-deepseek.maxTokens` to the bound LongCat route's 131,072-token maximum:
+a smaller 256-token budget can be consumed before a reasoning-capable model
+emits assistant content, while dsh's 256,000-token default is rejected
+upstream. Bounded one-shot probes use a separate 4,096-token budget. The daemon normalizes only null-valued continuation fields
 (`id`, `type`, `function.name`, and `function.arguments`) in streaming
 OpenAI-compatible `tool_calls` frames before they reach dsh; this preserves the
 opening frame's identity instead of allowing an upstream `null` to overwrite

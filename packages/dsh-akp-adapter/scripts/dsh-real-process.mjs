@@ -22,6 +22,7 @@ import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { admitTask, httpJson, issueToken, waitLifecycle } from "./daemon-task.mjs";
 import {
+  INTERACTIVE_COMPLETION_BUDGET_TOKENS,
   PROBE_COMPLETION_BUDGET_TOKENS,
   assertFrontendDist,
   assertLoopbackHost,
@@ -273,7 +274,13 @@ async function runWebPathB() {
         ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
           { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true, mode: "web" } },
         ]),
-        llmDeepseekPatchLines(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
+        llmDeepseekPatchLines(
+          providerBase,
+          "DAEMON_BEARER",
+          overlay.model,
+          overlay.catalog,
+          INTERACTIVE_COMPLETION_BUDGET_TOKENS,
+        ),
       ].join("\n");
       writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
       const child = spawn(

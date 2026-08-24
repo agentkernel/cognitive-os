@@ -261,6 +261,8 @@ export function pathBWebChildExtras(providerBase) {
  * classifies as `EMPTY_RESPONSE` and retries until the turn fails.
  */
 export const PROBE_COMPLETION_BUDGET_TOKENS = 4096;
+/** LongCat-2.0's accepted maximum completion budget on the bound Path B route. */
+export const INTERACTIVE_COMPLETION_BUDGET_TOKENS = 131072;
 
 /**
  * `--patch` overlay lines for the pinned `llm-deepseek` provider.
