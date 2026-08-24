@@ -87,6 +87,22 @@ export function inferCompletionFromObservation(input: {
   return "unknown";
 }
 
+/** CAS revision the daemon uses: active binding only. Revoked/missing → 0. */
+export function bindingRevisionForCas(
+  row:
+    | {
+        status?: unknown;
+        revision?: unknown;
+      }
+    | undefined,
+): number {
+  if (!row || String(row.status ?? "") !== "active") {
+    return 0;
+  }
+  const revision = Number(row.revision ?? 0);
+  return Number.isFinite(revision) ? revision : 0;
+}
+
 export function acceptBindingMutation(input: {
   expectedRevision: number | undefined;
   currentRevision: number | undefined;
@@ -102,6 +118,36 @@ export function acceptBindingMutation(input: {
     input.expectedRevision !== input.currentRevision
   ) {
     return { ok: false, reason: "stale binding revision" };
+  }
+  return { ok: true };
+}
+
+/** Cos Bindings "Apply to running dsh" — fail-closed when web is down or model missing. */
+export function acceptDshApply(input: {
+  agent?: string;
+  bindingStatus?: string;
+  modelId?: string;
+  catalogModelIds?: string[];
+  runtimeState?: string;
+  processAlive?: boolean;
+}): { ok: true } | { ok: false; reason: string } {
+  const agent = String(input.agent ?? "");
+  if (agent !== "dsh" && agent !== "agent://personal/dsh") {
+    return { ok: false, reason: "Apply is only for the dsh agent. Pi has its own binding." };
+  }
+  if (input.bindingStatus !== "active") {
+    return { ok: false, reason: "No active dsh binding to apply." };
+  }
+  const modelId = String(input.modelId ?? "").trim();
+  if (!modelId) {
+    return { ok: false, reason: "dsh binding has no model id." };
+  }
+  const catalog = input.catalogModelIds ?? [];
+  if (catalog.length > 0 && !catalog.includes(modelId)) {
+    return { ok: false, reason: "Bound model is not in this account catalog." };
+  }
+  if (input.runtimeState !== "ACTIVE" || input.processAlive === false) {
+    return { ok: false, reason: "Native dsh web is not ACTIVE. Start cognitive dsh web first." };
   }
   return { ok: true };
 }
