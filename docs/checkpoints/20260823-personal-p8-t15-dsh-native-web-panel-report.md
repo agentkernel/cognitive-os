@@ -18,7 +18,7 @@ Clients Apply copy: https://github.com/agentkernel/cognitiveos-clients/pull/4
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
 | D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
-| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` on chat-completions pastes coded (normalize to API root). Flash Path B pong still works. No grok-capable Cos account on this runtime. |
+| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` on chat-completions pastes **fixed** at `8b9d09cb` (Linux 8/8 + 2/2 + 6/6). Guest daemon **515695**. |
 
 ## Validation log
 
@@ -342,14 +342,17 @@ Root cause (code path, not assumed live request body): `TrustedEndpoint` stored 
 
 Fix (this change set, pre-Linux): strip one well-known RPC leaf (`/chat/completions`, `/completions`, `/models`) then accept roots `/v1`, `/api/v1`, `/openai/v1`, `/compatible-mode/v1`. Traversal and other paths stay fail-closed.
 
-| Check | Environment | Result |
-|---|---|---|
-| `endpoint_trust` unit + public `p8_t13_endpoint_trust` | local Windows GNU | **not-run** (`RUST-LINK-DEV-WIN-GNU-01`) |
-| kernel-server `create_account_strips_chat_completions_and_accepts_prefixed_openai_roots` | local Windows GNU | **not-run** |
-| Same tests | `DEV-LINUX-NATIVE-01` | **not-run** until this revision is pushed |
+| Check | Environment | Revision | Result |
+|---|---|---|---|
+| `endpoint_trust` lib tests | `DEV-LINUX-NATIVE-01` | `8b9d09cbc1d85af18fadb536156d9f58a3b39d78` | **pass** 8/8 including `openai_compatible_rpc_suffix_and_prefixed_roots_normalize`. Worktree `/home/wuz/agent-kernel-worktrees/p8-t15-8b9d09cb` (removed after). rustc 1.97.1. |
+| `p8_t13_endpoint_trust` | `DEV-LINUX-NATIVE-01` | `8b9d09cb` | **pass** 2/2 |
+| `p8_t13_provider_control_plane` | `DEV-LINUX-NATIVE-01` | `8b9d09cb` | **pass** 6/6 including `create_account_strips_chat_completions_and_accepts_prefixed_openai_roots` |
+| Clippy `-D warnings` `cognitive-secret`+`kernel-server` | `DEV-LINUX-NATIVE-01` | `8b9d09cb` | **pass** |
+| `cargo fmt --all -- --check` | `DEV-LINUX-NATIVE-01` | `8b9d09cb` | **pass** |
+| Guest daemon replace | linux-002 | `8b9d09cb` binary | **pass** pid **515695** `:48681` same runtime; `GET /personal/health` **200**; Cos `:3080` pid **500474** still listening. Replaced stale **499615**. Other daemons untouched. |
 
 Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
 
 ## Unique next action
 
-Push this revision; run Linux `p8_t13_endpoint_trust` and focused kernel-server create-account. Then owner: add a grok-capable Cos account (non-DeepSeek `openai_compatible`, e.g. `https://api.x.ai/v1` or the chat-completions URL) + SecretStore key, bind dsh, Apply. Until then dsh stays on Flash (working Path B). Keep **499615** / `:3080` / **430838** / Firefox. Do not auto-claim P6 / P7-T06 / P7-T07.
+Owner: add a grok-capable Cos account on the Provider panel (non-DeepSeek `openai_compatible`, e.g. `https://api.x.ai/v1` or paste `https://api.x.ai/v1/chat/completions`; SecretStore key) then bind dsh to that account + grok and Apply. Until then dsh stays on Flash (working Path B). Keep **515695** / `:3080` / **430838** / Firefox. Do not auto-claim P6 / P7-T06 / P7-T07.
