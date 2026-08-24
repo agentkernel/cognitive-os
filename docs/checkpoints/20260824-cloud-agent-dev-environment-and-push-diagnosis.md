@@ -228,3 +228,58 @@ CI or for exact-revision native Linux evidence.
   the §4.1 `sdk-ts` live watch failure — either fix the `watch.open` task
   channel path it exercises, or make CI run `pnpm -r test` after the Rust build
   so the condition stops being invisible. Either choice is a formal task.
+
+## 7. Required CI on this branch (appended after the run finished)
+
+Required CI run
+[`32698197416`](https://github.com/agentkernel/cognitive-os/actions/runs/32698197416)
+at `62b2de7c255286b18f328795efecea7d419216f9`:
+
+| Job | Result |
+|---|---|
+| `resolve validation route` | **pass** |
+| `verify (ubuntu-latest)` | **pass** |
+| `verify (windows-latest)` | **fail** |
+| `required-ci` | **fail** (gated on the Windows job) |
+
+The Windows job failed one assertion in
+`apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs:331`
+(`post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance`
+observed `Indeterminate` where `ReconciledExecuted` is asserted); 349 of 350
+binary tests passed and Ubuntu ran the identical suite green.
+
+Attribution, stated as evidence rather than convenience: this branch changes no
+file under `apps/`, `crates/`, `packages/`, `specs/`, `conformance/`, or
+`tests/`, and its merge base is exactly `main@46397764`, whose own required run
+[`32696407284`](https://github.com/agentkernel/cognitive-os/actions/runs/32696407284)
+passed Ubuntu **and** Windows. The same test file failed once before on an
+unrelated branch — run
+[`32691510523`](https://github.com/agentkernel/cognitive-os/actions/runs/32691510523)
+at `830ca0b2`, Windows only, line 96 — and the next run on that branch passed
+without any change to that code. The signature is an intermittent
+Windows-only failure in this restart-reconciliation suite, not a regression
+introduced here. Diagnosing it belongs to a formal task with its own
+acceptance; this record does not claim a root cause.
+
+`gh run rerun` is not available to an installation token
+(`Resource not accessible by integration`), so re-running the job required
+pushing this appended record to retrigger the workflow.
+
+## 8. Independent re-verification from a second Cloud Agent run
+
+Run `bc-8d704ebc-13be-5dc9-b13f-8b6c082216c9`, same environment
+`9a1980df-9f6c-11f1-a7d1-d6b4613131ce`, re-executed the load-bearing probes
+rather than trusting §2–§4:
+
+| Probe | Result |
+|---|---|
+| `GET /installation/repositories` | `total_count: 1` → only `agentkernel/cognitive-os`; the clients grant is still missing |
+| `git ls-remote` on `agentkernel/cognitiveos-clients` | **pass** — `main` at `db563744`, plus `personal/P7-T05-dsh-binding-cas` and `personal/P7-T05-web-ui-sidebar-fix` |
+| `git push --dry-run` to `agentkernel/cognitiveos-clients` | **fail** — `Permission to agentkernel/cognitiveos-clients.git denied to cursor[bot]`, HTTP 403 |
+| `environment.repos` for this run | `["github.com/agentkernel/cognitive-os"]` — confirms a run token cannot reach a repository its environment does not list |
+| Environment builds | draft `bld-20260824-06aed49d…` **SUCCEEDED** (~71 s); the three preceding recurring system builds are `TERMINAL_FAILURE` — the fault this change repairs |
+| `bash scripts/setup-dev-env.sh` in a pod whose `core.hooksPath` is agent-managed | **pass** — took the forwarder branch, wrote `pre-commit`/`pre-push` into `<git-dir>/hooks`, and left the managed directory untouched |
+| `check-consistency` / `check-handbook` / `generate-handbook --check` / `docs-sync-gate --staged` | **pass** (275 requirements; 55 docs × 2 locales; 18 generated pages byte-identical; no changes in scope) |
+
+This run claimed no formal task and opened no lease; the active lease table is
+still empty.
