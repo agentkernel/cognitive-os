@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   acceptBindingMutation,
+  acceptDshApply,
+  bindingRevisionForCas,
   dispatchAllowed,
   assertNoBrowserAuthorityTarget,
   containsSecretMaterial,
@@ -10,6 +12,64 @@ import {
   redactSecrets,
   unavailableLabel,
 } from "./policy";
+
+describe("binding CAS and dsh apply gates", () => {
+  it("uses only an active binding revision for CAS", () => {
+    expect(bindingRevisionForCas(undefined)).toBe(0);
+    expect(bindingRevisionForCas({ status: "revoked", revision: 2 })).toBe(0);
+    expect(bindingRevisionForCas({ status: "active", revision: 3 })).toBe(3);
+  });
+
+  it("applies only an active dsh catalog model while web is ACTIVE", () => {
+    expect(
+      acceptDshApply({
+        agent: "dsh",
+        bindingStatus: "active",
+        modelId: "grok-4.6",
+        catalogModelIds: ["deepseek-v4-flash", "grok-4.6"],
+        runtimeState: "ACTIVE",
+        processAlive: true,
+      }),
+    ).toEqual({ ok: true });
+    expect(
+      acceptDshApply({
+        agent: "pi",
+        bindingStatus: "active",
+        modelId: "grok-4.6",
+        runtimeState: "ACTIVE",
+        processAlive: true,
+      }),
+    ).toMatchObject({ ok: false });
+    expect(
+      acceptDshApply({
+        agent: "dsh",
+        bindingStatus: "revoked",
+        modelId: "grok-4.6",
+        runtimeState: "ACTIVE",
+        processAlive: true,
+      }),
+    ).toMatchObject({ ok: false });
+    expect(
+      acceptDshApply({
+        agent: "dsh",
+        bindingStatus: "active",
+        modelId: "grok-4.6",
+        catalogModelIds: ["deepseek-v4-flash"],
+        runtimeState: "ACTIVE",
+        processAlive: true,
+      }),
+    ).toMatchObject({ ok: false });
+    expect(
+      acceptDshApply({
+        agent: "dsh",
+        bindingStatus: "active",
+        modelId: "grok-4.6",
+        runtimeState: "INACTIVE",
+        processAlive: false,
+      }),
+    ).toMatchObject({ ok: false });
+  });
+});
 
 describe("secret redaction", () => {
   it("never leaves api_key or secret_ref values in the projection", () => {

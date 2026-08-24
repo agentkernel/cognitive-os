@@ -70,10 +70,27 @@ describe("Shell identity and navigation", () => {
     host.remove();
   });
 
-  it("redirects an unauthenticated session to the bootstrap page instead of the dashboard", () => {
+  it("shows an in-place session gate for the dashboard when unauthenticated", () => {
     const { host, root } = renderApp("#/");
-    expect(host.querySelector("h2")?.textContent).toBe("Session bootstrap");
-    expect(host.querySelector(".page-head .lede")).not.toBeNull();
+    expect(host.querySelector("[data-page='session-gate']")).not.toBeNull();
+    expect(host.querySelector("main h2")?.textContent).toBe("Home");
+    expect(host.textContent).toMatch(/not a Provider LLM API key/i);
+    expect(host.textContent).toMatch(/local-bootstrap\.secret/);
+    act(() => {
+      root.unmount();
+    });
+    host.remove();
+  });
+
+  it("emits hash hrefs, not pathname routes that the daemon 404s", () => {
+    const { host, root } = renderApp("#/session");
+    const links = [...host.querySelectorAll("nav a")];
+    expect(links.length).toBeGreaterThanOrEqual(8);
+    for (const link of links) {
+      const href = link.getAttribute("href") ?? "";
+      expect(href.startsWith("#"), `href ${href}`).toBe(true);
+      expect(href).not.toMatch(/^\/ui\//);
+    }
     act(() => {
       root.unmount();
     });

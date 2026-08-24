@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { HashRouter, NavLink, Navigate, Route, Routes, useParams } from "react-router-dom";
+import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { HashRouter, NavLink, Route, Routes, useParams } from "react-router-dom";
 import { issueChannelSession, readJson, rejectCallerHeaderInjection } from "./api";
 import { AGENT_IDENTITY_KEYS, mergeIdentities, type AgentIdentities } from "./identities";
 import {
   acceptBindingMutation,
+  acceptDshApply,
+  bindingRevisionForCas,
   displayCost,
   dispatchAllowed,
   escapeUntrustedText,
@@ -77,10 +79,21 @@ async function load(path: string, channel: "management" | "task"): Promise<LoadS
   }
 }
 
+const STATE_LABELS: Record<LoadState["status"], string> = {
+  loading: "Loading…",
+  ready: "Ready",
+  empty: "Empty (authoritative)",
+  denied: "Denied — issue a session below or on the Session page",
+  disconnected: "Daemon unreachable",
+  unknown: "Unexpected response",
+  "not-run": "Not run",
+};
+
 function StateNote({ state }: { state: LoadState }) {
   return (
-    <p className="muted" role="status">
-      {state.status}
+    <p className={`state-note state-${state.status}`} role="status">
+      <span className="state-dot" aria-hidden="true" />
+      {STATE_LABELS[state.status]}
       {state.ms != null ? ` · ${state.ms} ms` : ""}
       {state.message ? ` · ${state.message}` : ""}
     </p>
@@ -120,10 +133,25 @@ function EmptyState({ children }: { children: React.ReactNode }) {
   );
 }
 
+const SessionTick = createContext({ tick: 0, bump: () => {} });
+
+function SessionScope({ children }: { children: React.ReactNode }) {
+  const [tick, setTick] = useState(0);
+  const bump = useCallback(() => setTick((value) => value + 1), []);
+  return <SessionTick.Provider value={{ tick, bump }}>{children}</SessionTick.Provider>;
+}
+
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="shell">
-      <a className="skip" href="#main">
+      <a
+        className="skip"
+        href="#main"
+        onClick={(event) => {
+          event.preventDefault();
+          document.getElementById("main")?.focus();
+        }}
+      >
         Skip to content
       </a>
       <nav className="side" aria-label="Primary">
@@ -149,25 +177,15 @@ function Shell({ children }: { children: React.ReactNode }) {
           </li>
         </ul>
       </nav>
-      <main id="main">{children}</main>
+      <main id="main" tabIndex={-1}>
+        {children}
+      </main>
     </div>
   );
 }
 
-function RequireSession({
-  channel,
-  children,
-}: {
-  channel: "management" | "task";
-  children: React.ReactNode;
-}) {
-  if (!sessionHasChannel(channel)) {
-    return <Navigate to="/session" replace />;
-  }
-  return <>{children}</>;
-}
-
-function SessionPage() {
+function SessionForm() {
+  const { bump } = useContext(SessionTick);
   const [secret, setSecret] = useState("");
   const [principal, setPrincipal] = useState("principal://local/owner");
   const [message, setMessage] = useState("Session tokens stay in memory only.");
@@ -190,34 +208,80 @@ function SessionPage() {
         task.ok ? "ready" : `HTTP ${task.status}`
       }. Bootstrap discarded.`,
     );
+    bump();
   }
 
+  return (
+    <form onSubmit={(event) => void issue(event)}>
+      <label>
+        Principal
+        <input value={principal} onChange={(event) => setPrincipal(event.target.value)} />
+      </label>
+      <label>
+        Daemon bootstrap secret
+        <input
+          type="password"
+          autoComplete="off"
+          value={secret}
+          onChange={(event) => setSecret(event.target.value)}
+        />
+      </label>
+      <p className="muted">
+        File <code>local-bootstrap.secret</code> on this daemon. Not a Provider LLM API key and
+        not a SecretRef. The browser cannot read the file. Sessions stay in memory only.
+      </p>
+      <button type="submit">Issue management and Task sessions</button>
+      <button
+        type="button"
+        onClick={() => {
+          clearSession();
+          setMessage("Session cleared.");
+          bump();
+        }}
+      >
+        Clear memory session
+      </button>
+      <p role="status">{message}</p>
+    </form>
+  );
+}
+
+function RequireSession({
+  channel,
+  title,
+  children,
+}: {
+  channel: "management" | "task";
+  title: string;
+  children: React.ReactNode;
+}) {
+  const { tick } = useContext(SessionTick);
+  void tick;
+  if (!sessionHasChannel(channel)) {
+    return (
+      <section data-page="session-gate">
+        <PageHeader
+          title={title}
+          description={`This page needs a ${channel} session. Sidebar navigation still changes the view.`}
+        />
+        <p className="warn" role="status">
+          Paste this daemon&apos;s bootstrap secret — not a Provider LLM API key.
+        </p>
+        <SessionForm />
+      </section>
+    );
+  }
+  return <>{children}</>;
+}
+
+function SessionPage() {
   return (
     <>
       <PageHeader
         title="Session bootstrap"
-        description="Paste the daemon bootstrap secret once. It is never written to localStorage, sessionStorage, IndexedDB, the URL, or exported state."
+        description="Paste this daemon's local-bootstrap.secret once. It is not a Provider LLM API key. It is never written to localStorage, sessionStorage, IndexedDB, the URL, or exported state."
       />
-      <form onSubmit={issue}>
-        <label>
-          Principal
-          <input value={principal} onChange={(event) => setPrincipal(event.target.value)} />
-        </label>
-        <label>
-          Bootstrap secret
-          <input
-            type="password"
-            autoComplete="off"
-            value={secret}
-            onChange={(event) => setSecret(event.target.value)}
-          />
-        </label>
-        <button type="submit">Issue management and Task sessions</button>
-        <button type="button" onClick={() => { clearSession(); setMessage("Session cleared."); }}>
-          Clear memory session
-        </button>
-      </form>
-      <p role="status">{message}</p>
+      <SessionForm />
     </>
   );
 }
@@ -766,13 +830,18 @@ function BindingsPage() {
   const [bindings, setBindings] = useState<LoadState>({ status: "loading" });
   const [accounts, setAccounts] = useState<LoadState>({ status: "loading" });
   const [models, setModels] = useState<LoadState>({ status: "empty" });
+  const [runtime, setRuntime] = useState<LoadState>({ status: "empty" });
+  const [selected, setSelected] = useState<LoadState>({ status: "empty" });
   const [agent, setAgent] = useState("pi");
   const [accountId, setAccountId] = useState("");
   const [message, setMessage] = useState("At most one active fixed account+model per Agent.");
+  const [applying, setApplying] = useState(false);
 
   async function refresh() {
     setBindings(await load("/management/agent-bindings", "management"));
     setAccounts(await load("/management/providers/accounts", "management"));
+    setRuntime(await load("/personal/dsh/runtime", "management"));
+    setSelected(await load("/provider/v1/dsh/selected-model", "management"));
   }
 
   useEffect(() => {
@@ -801,11 +870,15 @@ function BindingsPage() {
     const expectedRevision = Number(form.get("expected_revision"));
     const current = asList(bindings.body, ["bindings", "items"])
       .map(asRecord)
-      .find((row) => String(row.agent).endsWith(agent) || String(row.agent) === agent);
+      .find(
+        (row) =>
+          String(row.status) === "active" &&
+          (String(row.agent).endsWith(agent) || String(row.agent) === agent),
+      );
     const account = asList(accounts.body, ["accounts", "items"])
       .map(asRecord)
       .find((row) => row.id === accountId);
-    const currentRevision = current ? Number(current.revision ?? 0) : 0;
+    const currentRevision = bindingRevisionForCas(current);
     const gate = acceptBindingMutation({
       expectedRevision: Number.isFinite(expectedRevision) ? expectedRevision : undefined,
       currentRevision,
@@ -851,15 +924,90 @@ function BindingsPage() {
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ agent: target }),
     });
-    setMessage(result.ok ? "Binding removed." : `HTTP ${result.status}`);
+    const code = String(asRecord(result.body).code ?? "");
+    setMessage(
+      result.ok
+        ? target === "dsh" || String(target).endsWith("/dsh")
+          ? "dsh binding removed. Native Models drops that account catalog. Refresh dsh if the chrome is catching up."
+          : "Binding removed. The next set uses expected revision 0."
+        : result.status === 404 || code === "PROVIDER_CONTROL_NOT_FOUND"
+          ? "No active binding to remove. Set a new model with expected revision 0."
+          : `HTTP ${result.status} ${code}`,
+    );
+    await refresh();
+  }
+
+  async function applyDsh() {
+    const dshApplyRow = activeRows.find(
+      (row) => String(row.agent).endsWith("dsh") || String(row.agent) === "dsh",
+    );
+    const runtimeBody = asRecord(runtime.body);
+    const catalogIds = modelRows.map((model) => String(model.model_id));
+    const sameAccountCatalog =
+      dshApplyRow && accountId && String(dshApplyRow.account_id) === accountId && catalogIds.length > 0;
+    const gate = acceptDshApply({
+      agent: "dsh",
+      bindingStatus: dshApplyRow ? String(dshApplyRow.status) : undefined,
+      modelId: dshApplyRow ? String(dshApplyRow.model_id) : undefined,
+      catalogModelIds: sameAccountCatalog ? catalogIds : undefined,
+      runtimeState: runtimeBody.state ? String(runtimeBody.state) : undefined,
+      processAlive:
+        runtimeBody.process_alive === undefined ? undefined : Boolean(runtimeBody.process_alive),
+    });
+    if (!gate.ok) {
+      setMessage(gate.reason);
+      return;
+    }
+    setApplying(true);
+    const result = await readJson("/personal/dsh/runtime", "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        schema_version: 1,
+        surface: "personal-dsh-runtime",
+        op: "apply",
+        expected_revision: bindingRevisionForCas(dshApplyRow),
+      }),
+    });
+    setApplying(false);
+    const applied = asRecord(result.body);
+    const modelId = String(applied.applied_model ?? dshApplyRow?.model_id);
+    const reloaded = applied.restart_performed === true;
+    setMessage(
+      result.ok
+        ? reloaded
+          ? `Applied ${modelId}. Native Models now lists this bound account catalog.`
+          : `Applied ${modelId}. Overlay written; refresh dsh after Cos web reloads.`
+        : `HTTP ${result.status} ${String(applied.code ?? "")}`,
+    );
     await refresh();
   }
 
   const rows = asList(bindings.body, ["bindings", "items"]).map(asRecord);
+  const activeRows = rows.filter((row) => String(row.status) === "active");
   const accountRows = asList(accounts.body, ["accounts", "items"]).map(asRecord);
   const modelRows = asList(models.body, ["models", "items"]).map(asRecord);
-  const current = rows.find((row) => String(row.agent).endsWith(agent) || String(row.agent) === agent);
-  const expectedDefault = current ? Number(current.revision ?? 0) : 0;
+  const current = activeRows.find(
+    (row) => String(row.agent).endsWith(agent) || String(row.agent) === agent,
+  );
+  const expectedDefault = bindingRevisionForCas(current);
+  const dshRow = activeRows.find(
+    (row) => String(row.agent).endsWith("dsh") || String(row.agent) === "dsh",
+  );
+  const applyGate = acceptDshApply({
+    agent: "dsh",
+    bindingStatus: dshRow ? String(dshRow.status) : undefined,
+    modelId: dshRow ? String(dshRow.model_id) : undefined,
+    catalogModelIds:
+      dshRow && accountId && String(dshRow.account_id) === accountId && modelRows.length > 0
+        ? modelRows.map((model) => String(model.model_id))
+        : undefined,
+    runtimeState: asRecord(runtime.body).state ? String(asRecord(runtime.body).state) : undefined,
+    processAlive:
+      asRecord(runtime.body).process_alive === undefined
+        ? undefined
+        : Boolean(asRecord(runtime.body).process_alive),
+  });
 
   return (
     <>
@@ -870,8 +1018,10 @@ function BindingsPage() {
       <StateNote state={bindings} />
       <form onSubmit={submit}>
         <p className="muted">
-          One active <code>account + provider + model</code> per Agent. Stale expected_revision is
-          rejected by the daemon. Unbound, revoked, or degraded accounts cannot dispatch.
+          One active <code>account + provider + model</code> per Agent. Only an{" "}
+          <code>active</code> binding occupies <code>expected_revision</code>; a revoked row is 0
+          so a new catalog model can be set. Stale expected_revision is rejected by the daemon.
+          Unbound, revoked, or degraded accounts cannot dispatch.
         </p>
         <label>
           Agent
@@ -922,12 +1072,24 @@ function BindingsPage() {
         </label>
         <button type="submit">Confirm fixed binding</button>
       </form>
+      <section className="panel">
+        <h3>Apply Cos model to running dsh</h3>
+        <p className="muted">
+          Apply publishes the Cos dsh binding so the native dsh panel shows{" "}
+          <code>{String(asRecord(selected.body).selected_model ?? "unset")}</code>. Chat uses that
+          bound account. Runtime <code>{String(asRecord(runtime.body).state ?? "unknown")}</code>.
+        </p>
+        <button type="button" disabled={applying || !applyGate.ok} onClick={() => void applyDsh()}>
+          Apply to running dsh
+        </button>
+        {!applyGate.ok ? <p className="muted">{applyGate.reason}</p> : null}
+      </section>
       <p role="status">{message}</p>
-      {rows.length === 0 && bindings.status !== "loading" ? (
+      {activeRows.length === 0 && bindings.status !== "loading" ? (
         <EmptyState>No active bindings. Both Agents are unbound until confirmed above.</EmptyState>
       ) : (
         <table>
-          <caption>Active fixed bindings</caption>
+          <caption>Active fixed bindings (revoked rows are omitted so Remove/set can proceed)</caption>
           <thead>
             <tr>
               <th>Agent</th>
@@ -940,7 +1102,7 @@ function BindingsPage() {
             </tr>
           </thead>
           <tbody>
-            {rows.map((row) => {
+            {activeRows.map((row) => {
               const account = accountRows.find((item) => item.id === row.account_id);
               const callable = dispatchAllowed({
                 accountStatus: account ? String(account.status) : "unknown",
@@ -990,7 +1152,7 @@ function TasksPage() {
     }
     const encoded = encodeURIComponent(ref);
     setEffects(await load(`/task/effects?task_ref=${encoded}`, "task"));
-    setObservation(await load(`/task/observation?task_ref=${encoded}`, "task"));
+    setObservation(await load(`/task/observation?family=o13&task_ref=${encoded}`, "task"));
     const nextEvidence = await load(`/task/evidence?task_ref=${encoded}`, "task");
     setEvidence(nextEvidence);
     const inferred = inferCompletionFromObservation({
@@ -1279,83 +1441,85 @@ function ResourcesPage() {
 export function App() {
   return (
     <HashRouter>
-      <Shell>
-        <Routes>
-          <Route path="/session" element={<SessionPage />} />
-          <Route
-            path="/"
-            element={
-              <RequireSession channel="management">
-                <HomePage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/agents"
-            element={
-              <RequireSession channel="management">
-                <AgentsPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/agents/:id"
-            element={
-              <RequireSession channel="management">
-                <AgentDetailPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/providers"
-            element={
-              <RequireSession channel="management">
-                <ProvidersPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/providers/:id"
-            element={
-              <RequireSession channel="management">
-                <ProviderDetailPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/bindings"
-            element={
-              <RequireSession channel="management">
-                <BindingsPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/tasks"
-            element={
-              <RequireSession channel="task">
-                <TasksPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/activity"
-            element={
-              <RequireSession channel="management">
-                <ActivityPage />
-              </RequireSession>
-            }
-          />
-          <Route
-            path="/resources"
-            element={
-              <RequireSession channel="management">
-                <ResourcesPage />
-              </RequireSession>
-            }
-          />
-        </Routes>
-      </Shell>
+      <SessionScope>
+        <Shell>
+          <Routes>
+            <Route path="/session" element={<SessionPage />} />
+            <Route
+              path="/"
+              element={
+                <RequireSession channel="management" title="Home">
+                  <HomePage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/agents"
+              element={
+                <RequireSession channel="management" title="Agents">
+                  <AgentsPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/agents/:id"
+              element={
+                <RequireSession channel="management" title="Agent detail">
+                  <AgentDetailPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/providers"
+              element={
+                <RequireSession channel="management" title="Providers">
+                  <ProvidersPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/providers/:id"
+              element={
+                <RequireSession channel="management" title="Provider account">
+                  <ProviderDetailPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/bindings"
+              element={
+                <RequireSession channel="management" title="Agent Provider bindings">
+                  <BindingsPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/tasks"
+              element={
+                <RequireSession channel="task" title="Tasks">
+                  <TasksPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/activity"
+              element={
+                <RequireSession channel="management" title="Activity">
+                  <ActivityPage />
+                </RequireSession>
+              }
+            />
+            <Route
+              path="/resources"
+              element={
+                <RequireSession channel="management" title="Resources">
+                  <ResourcesPage />
+                </RequireSession>
+              }
+            />
+          </Routes>
+        </Shell>
+      </SessionScope>
     </HashRouter>
   );
 }
