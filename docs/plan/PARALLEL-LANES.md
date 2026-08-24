@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T05/control-plane-foundation` | P7-T05/D11 Control Plane Foundation + Providers (owner-directed redesign W1+W2; docs/design/01–41) | Lane-TSC | `personal/P7-T05-control-plane-foundation` (cognitiveos-clients) | `docs/plan/PROGRESS.md`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `tools/test/check.test.mjs` | cursor-local/owner-directed | 2026-08-24 / 2026-08-24 | active |
+| `lease/personal/P7-T05/control-plane-foundation` | P7-T05/D12 Control Plane W3 Home attention surface (owner-directed redesign W3; docs/design/13 + 39; continues the same lease after P7-T05/D11 W1+W2 closed) | Lane-TSC | `personal/P7-T05-control-plane-foundation` (cognitiveos-clients) | `docs/plan/PROGRESS.md`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, `tools/test/check.test.mjs` | cursor-local/owner-directed | 2026-08-24 / 2026-08-25 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no
