@@ -14,7 +14,7 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:e4a3ad6e686278ee1e87f5a8ee9bd9a4f7eed8328b69aef62a9b7100b857d8e3"
+fingerprint: "sha256:057d95d6155d995d5dd98062699de732de168633426dbc417517645cc08e6d74"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---

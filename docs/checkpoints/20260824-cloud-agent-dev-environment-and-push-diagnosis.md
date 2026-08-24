@@ -143,7 +143,7 @@ with its claim ceiling. Executed on `main@46397764` in this pod:
 |---|---|
 | `pnpm install --frozen-lockfile` | **pass** |
 | `pnpm -r build` | **pass** (4 projects) |
-| `pnpm -r test` | **pass** |
+| `pnpm -r test` | **pass** before a Rust debug build exists; see §4.1 |
 | `pnpm run check:consistency` | **pass** |
 | `pnpm run check:handbook` | **pass** |
 | `node tools/src/generate-handbook.mjs --check` | **pass** (18 pages byte-identical) |
@@ -152,6 +152,32 @@ with its claim ceiling. Executed on `main@46397764` in this pod:
 | `cargo clippy --workspace --all-targets` | **pass**, 19.6 s |
 | `cargo test --workspace` | **pass**, 1210 passed / 0 failed |
 | `cargo run -p cognitive-conformance --bin conformance-runner` | **pass** (completes; writes to ignored `artifacts/`) |
+
+### 4.1 Pre-existing condition surfaced by running both halves in one place
+
+`packages/sdk-ts/src/http_live.test.ts` activates only when
+`target/debug/kernel-server` exists (`skip: !LIVE`). On a host that runs both
+the TypeScript and the Rust halves, the second `pnpm -r test` after
+`cargo build --workspace` therefore behaves differently from the first:
+
+- before any Rust build: sdk-ts 74 tests, 74 pass (the live tests are skipped);
+- after `cargo build --workspace`: sdk-ts 73 pass / **1 fail**, reproducible
+  3/3 — `live: task watch stream yields snapshot then delta frames` collects
+  zero frames, so `assert.ok(frames.some(f => f.includes('"kind":"snapshot"')))`
+  fails. Its sibling `live: shell.detach` against the same `--once` server
+  passes, so the spawned binary does serve requests and the failure is specific
+  to `watch.open` on the task channel.
+
+This is **not** caused by anything in this change — no file under `packages/`,
+`crates/`, or `apps/` was touched. CI never observes it because
+[`ci.yml`](../../.github/workflows/ci.yml) runs `pnpm -r test` before the Rust
+steps, so `target/debug/kernel-server` does not yet exist at that point.
+
+Deliberately not fixed here: repairing it means changing product or test
+semantics in `packages/sdk-ts` or the daemon watch path, which belongs to a
+formal task with its own acceptance, not to environment setup. Recorded so the
+next developer on a full-capability host is not surprised, and so the choice
+between fixing the live test and making CI exercise it is made explicitly.
 
 This matters beyond convenience. `RUST-LINK-DEV-WIN-GNU-01` records that the
 owner's local Windows GNU host cannot link Rust at all, which is why Rust
@@ -198,3 +224,7 @@ CI or for exact-revision native Linux evidence.
   ([`9a1980df-9f6c-11f1-a7d1-d6b4613131ce`](https://cursor.com/dashboard/cloud-agents/environments/e/9a1980df-9f6c-11f1-a7d1-d6b4613131ce)).
   That is a dashboard action; it cannot be done from inside a pod.
 - **Repository:** merge this branch so new pods bootstrap automatically.
+- **Follow-up candidate (not claimed as a task):** decide the disposition of
+  the §4.1 `sdk-ts` live watch failure — either fix the `watch.open` task
+  channel path it exercises, or make CI run `pnpm -r test` after the Rust build
+  so the condition stops being invisible. Either choice is a formal task.

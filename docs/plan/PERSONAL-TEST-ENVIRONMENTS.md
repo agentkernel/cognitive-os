@@ -314,6 +314,13 @@ ordinary development target.
   --workspace` 48.9 s; `cargo clippy --workspace --all-targets` 19.6 s clean;
   `cargo test --workspace` 1210 passed / 0 failed; `conformance-runner`
   completes. Every figure is wall-clock on shared cloud hardware.
+- **Known interaction:** once `target/debug/kernel-server` exists, the
+  optional `packages/sdk-ts` live tests stop being skipped and
+  `live: task watch stream…` fails reproducibly. This is a pre-existing
+  condition that ordinary CI never reaches, because it runs `pnpm -r test`
+  before the Rust steps. See the
+  [environment diagnosis](../checkpoints/20260824-cloud-agent-dev-environment-and-push-diagnosis.md)
+  §4.1.
 - **Git identity:** commits are authored by the Cursor GitHub App
   (`cursor[bot]`). Its installation token is scoped to the repositories in the
   run's environment, so pushes to any repository outside that list fail with
