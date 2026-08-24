@@ -3,10 +3,12 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `in-progress` (D01–D09 accepted; owner visual follow-up D10 active)
+- Status: `blocked` (D01–D09 accepted; D10 locally validated but official
+  client publication is denied)
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
   `agentkernel/cognitiveos-clients`)
-- Lease: `lease/personal/P7-T05/web-ui-control-panel` (closed 2026-08-23)
+- Lease: `lease/personal/P7-T05/provider-webui-apple-theme` (closed blocked
+  2026-08-24; earlier `web-ui-control-panel` lease closed 2026-08-23)
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
 - Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
 - Priority: non-blocking for Linux 1.0 / `GMVP-LINUX`
@@ -175,6 +177,11 @@ authority records and audit facts remain daemon-owned.
 - [x] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory + SPA unit/DOM redaction).
 - [x] Supported browser/client validation passes on the exact task revision (Linux daemon-served `/ui/`; live Provider key entry required for D09).
 - [x] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
-- [ ] D10 Apple-inspired Provider composition is responsive, keyboard-usable, and validated without changing Provider/Task behavior.
-- [ ] Formal plan, task status, docs impact and D10 final report are synchronized.
+- [ ] D10 Apple-inspired Provider composition is published to the official
+  client repository and validated on the remote exact revision. The clean local
+  implementation at `07f7513e` passes the focused DOM suite/build/viewport
+  review, but `cursor[bot]` receives HTTP 403 from
+  `agentkernel/cognitiveos-clients`; see the
+  [blocked closure](../checkpoints/20260824-personal-p7-t05-provider-webui-apple-theme-closure.md).
+- [x] Formal plan, blocked task status, docs impact and D10 final report are synchronized.
 - [x] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.
