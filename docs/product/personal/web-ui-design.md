@@ -157,6 +157,24 @@ or reconciliation expectation before confirmation.
 
 ## 5. Interaction and visual rules
 
+- The P7-T05/D10 operator surface uses an Apple-inspired, system-like visual
+  direction within the existing Personal design language: generous whitespace,
+  deliberate brand typography, quiet cool neutrals, translucent local depth,
+  restrained separators and one clear visual hierarchy. It does not use purple
+  "AI" gradients, cream/editorial styling, card walls, icon walls or ornamental
+  dashboard strips.
+- The first viewport is one composed product statement plus the most useful
+  authority summary, not a grid of interchangeable metrics. Hero content is
+  never placed in a card. Functional forms, tables and projections follow as
+  flat sections with one title, one short explanation and a clear primary
+  action.
+- Lists use stable rows and details use a bounded fact hierarchy. Loading,
+  authoritative-empty, denied, disconnected, unknown and not-run states retain
+  explicit text and cannot be represented by color alone.
+- Motion is limited to short page/context entry, control feedback and one
+  ambient depth cue; `prefers-reduced-motion` removes non-essential motion.
+  Narrow desktop/mobile-width layouts keep navigation, forms, tables and
+  actions operable without claiming a separate mobile product.
 - Read views are dense, sortable and filterable; stable IDs and timestamps are
   copyable without exposing credentials or session bearers.
 - Every long-running view has loading, empty, stale, disconnected and

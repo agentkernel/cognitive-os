@@ -3,10 +3,12 @@
 - Task: `P7-T05`
 - Title: Non-blocking Personal Web UI
 - Phase: 7 Productization, post-1.0
-- Status: `done` (D01–D09; merged kernel PR #262 / clients PR #2)
+- Status: `blocked` (D01–D09 accepted; D10 locally validated but official
+  client publication is denied)
 - Approved checkout: `D:\cognitiveos-clients` (`pc/web/`, official
   `agentkernel/cognitiveos-clients`)
-- Lease: `lease/personal/P7-T05/web-ui-control-panel` (closed 2026-08-23)
+- Lease: `lease/personal/P7-T05/provider-webui-apple-theme` (closed blocked
+  2026-08-24; earlier `web-ui-control-panel` lease closed 2026-08-23)
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
 - Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
 - Priority: non-blocking for Linux 1.0 / `GMVP-LINUX`
@@ -116,6 +118,7 @@ recreate `clients/**` in this repository and do not implement the SPA in
 | D07 | Integration, supported validation, docs sync and final acceptance assessment | exact revision validation, focused negatives, task docs and closure record |
 | D08 | Live control-panel completion: Provider key SecretStore handoff, binding CAS, Task preview/admit/watch | focused negatives; SPA unit/DOM; no invented lifecycle HTTP |
 | D09 | Exact-revision Linux UI driver through key entry, bind, and Agent Task run | live SecretStore/UI driver; redaction; cleanup; hypothesis only |
+| D10 | Apple-inspired refinement of the shipped Provider operator composition without changing behavior or daemon routes | purposeful CognitiveOS identity and navigation; restrained neutral depth; Provider list/detail/status/action hierarchy; explicit loading/empty/error rendering; focused DOM/a11y regression; SPA tests and production build on the exact clients revision |
 
 The first implementation slice changes the task status to `in-progress` under the
 normal task lease. Design-only work before that point does not claim execution.
@@ -174,5 +177,11 @@ authority records and audit facts remain daemon-owned.
 - [x] Focused security, channel-isolation, stale-version and completion negatives pass (D01 inventory + SPA unit/DOM redaction).
 - [x] Supported browser/client validation passes on the exact task revision (Linux daemon-served `/ui/`; live Provider key entry required for D09).
 - [x] Accessibility, CSP, dependency and bounded performance checks authored in `pc/web/` (keyboard/focus, CSP meta, pinned MIT deps, fetch latency display).
-- [x] Formal plan, task status, docs impact and final report are synchronized.
+- [ ] D10 Apple-inspired Provider composition is published to the official
+  client repository and validated on the remote exact revision. The clean local
+  implementation at `07f7513e` passes the focused DOM suite/build/viewport
+  review, but `cursor[bot]` receives HTTP 403 from
+  `agentkernel/cognitiveos-clients`; see the
+  [blocked closure](../checkpoints/20260824-personal-p7-t05-provider-webui-apple-theme-closure.md).
+- [x] Formal plan, blocked task status, docs impact and D10 final report are synchronized.
 - [x] P7-T05 remains explicitly non-blocking for Linux 1.0 and no Gate/release claim is added.
