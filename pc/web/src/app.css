@@ -492,6 +492,13 @@ body {
   background: var(--cp-ready-tint);
 }
 
+/* Accent blue measures 4.29:1 on --cp-ready-tint — under AA at row size.
+   Inside a receipt the link carries ink plus an underline instead. */
+.cp-receipt a {
+  color: inherit;
+  text-decoration: underline;
+}
+
 .cp-confirm {
   border: 1px solid var(--cp-line-strong);
   border-radius: var(--cp-radius-lg);
@@ -557,7 +564,7 @@ body {
 .cp-button--primary {
   background: var(--cp-accent);
   border-color: var(--cp-accent);
-  color: #fff;
+  color: var(--cp-accent-ink);
 }
 
 .cp-button--primary:hover {
@@ -720,4 +727,68 @@ body {
   .cp-receipt {
     background: var(--cp-surface);
   }
+}
+
+/* ---------- legacy styles.css bridge ----------
+ * styles.css still owns the legacy Tasks page, so it stays imported and its
+ * unprefixed vars plus bare element selectors keep reaching this markup. Until
+ * TasksPage stops depending on it, this side corrects a dark set for the legacy
+ * vars (styles.css declares light values only, so html/#root, legacy panels and
+ * h1-h3 otherwise stay light under a dark system theme) and contains the legacy
+ * element chrome inside .cp-app.
+ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101318;
+    --bg-sidebar: rgba(23, 27, 34, 0.85);
+    --panel: #171b22;
+    --panel-tint: #1e242e;
+    --ink: #e8edf5;
+    --ink-secondary: #c3cddc;
+    --muted: #9aa6b8;
+    --line: rgba(232, 237, 245, 0.1);
+    --line-strong: rgba(232, 237, 245, 0.2);
+    --accent: #7eb6ff;
+    --accent-hover: #9cc7ff;
+    --accent-soft: rgba(126, 182, 255, 0.14);
+    --focus-ring: rgba(126, 182, 255, 0.6);
+    --ok: #4cc38a;
+    --warn: #f0a35e;
+    --bad: #f26d6d;
+  }
+}
+
+/* Legacy card chrome (fill, 18px radius, drop shadow) must not double up on
+   the panels this system already draws; radius ceiling stays 4/6/8. */
+.cp-app form,
+.cp-app table {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.cp-app form {
+  padding: 0;
+  margin: 0 0 var(--cp-space-3);
+}
+
+.cp-app code {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Legacy 980px pill buttons and 10px inputs exceed the 4/6/8 ceiling. */
+.cp-app button,
+.cp-app input,
+.cp-app select {
+  border-radius: var(--cp-radius-md);
+}
+
+.cp-app button[type="submit"] {
+  background: var(--cp-accent);
+  border-color: var(--cp-accent);
+  color: var(--cp-accent-ink);
 }

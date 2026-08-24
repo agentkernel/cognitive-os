@@ -57,8 +57,9 @@
   --cp-surface: #ffffff;
   --cp-raised: #ffffff;
   --cp-ink: #111827;
-  --cp-quiet: #6b7280;
+  --cp-quiet: #5b6472; /* measured ≥4.5:1 on --cp-canvas and on tinted surfaces */
   --cp-accent: #0a6cff;
+  --cp-accent-ink: #ffffff; /* text on an --cp-accent fill */
   --cp-accent-soft: rgba(10, 108, 255, 0.1);
   --cp-focus: #0a6cff;
   --cp-line: rgba(17, 24, 39, 0.1);
@@ -72,9 +73,9 @@
   --cp-completed: #4a5568;
   --cp-unknown: #718096;
 
-  /* State text variants (light) — measured ≥4.5:1 on --cp-surface */
+  /* State text variants (light) — measured ≥4.5:1 on --cp-surface and --cp-canvas */
   --cp-waiting-text: #8a5f0d;
-  --cp-attention-text: #c05621;
+  --cp-attention-text: #b34e1e;
   --cp-blocked-text: #c53030;
   --cp-unknown-text: #5b6472;
 
@@ -96,6 +97,7 @@
     --cp-ink: #e8edf5;
     --cp-quiet: #9aa6b8;
     --cp-accent: #7eb6ff;
+    --cp-accent-ink: #0b1220;
     --cp-accent-soft: rgba(126, 182, 255, 0.14);
     --cp-focus: #7eb6ff;
     --cp-line: rgba(232, 237, 245, 0.1);
