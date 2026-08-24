@@ -14,7 +14,7 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:5c275c2aafef23f2c6fdcf904c97b60b23d1a3bd0c23d27707ed38e94de7eaee"
+fingerprint: "sha256:057d95d6155d995d5dd98062699de732de168633426dbc417517645cc08e6d74"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -36,6 +36,8 @@ node tools/src/check-handbook.mjs   # handbook drift gate
 node tools/src/generate-handbook.mjs --check
 node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push / --range)
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
+# bash hosts (Cloud Agent / Linux) bootstrap everything at once:
+#   bash scripts/setup-dev-env.sh   # deps + pinned toolchain + docs-sync hooks
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
 node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 route inventory; not a Gate result
@@ -61,7 +63,10 @@ cargo run -p cognitive-contracts --bin contracts-codegen   # then git diff gener
 ```
 
 Never run these on the local Windows GNU host: the linker failure (exit 121) is a
-registered environment boundary, not a signal to reproduce. Remote/native validation
+registered environment boundary, not a signal to reproduce. `CLOUD-AGENT-LINUX-01`
+can run the whole block — it is a native GNU/Linux link host — but its results are
+container-class pre-CI triage, never a substitute for required CI or for
+exact-revision native evidence. Remote/native validation
 consumes only pushed, immutable revisions — never a copied working tree.
 P2-T25 focused HTTP coverage is `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 (lifecycle, selection, and pinned HTTPS origin registry).

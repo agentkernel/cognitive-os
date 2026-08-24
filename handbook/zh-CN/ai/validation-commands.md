@@ -14,7 +14,7 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:5c275c2aafef23f2c6fdcf904c97b60b23d1a3bd0c23d27707ed38e94de7eaee"
+fingerprint: "sha256:057d95d6155d995d5dd98062699de732de168633426dbc417517645cc08e6d74"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -36,6 +36,8 @@ node tools/src/check-handbook.mjs   # 手册防漂移门
 node tools/src/generate-handbook.mjs --check
 node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--push / --range）
 pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
+# bash 主机（Cloud Agent / Linux）可一次性引导：
+#   bash scripts/setup-dev-env.sh   # 依赖 + 钉住的工具链 + docs-sync hooks
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
 node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 路由清单；不是 Gate 结果
@@ -61,7 +63,9 @@ cargo run -p cognitive-contracts --bin contracts-codegen   # 之后 diff 生成�
 ```
 
 绝不在本地 Windows GNU 主机运行上述命令：linker 失败（exit 121）是已登记的环境边界，
-不是需要复现的信号。远程/native 验证只消费已推送的不可变 revision——绝不复制工作树。
+不是需要复现的信号。`CLOUD-AGENT-LINUX-01` 可以运行整段命令——它是 native GNU/Linux
+link 主机——但其结果只是 container 级的 pre-CI 排查，绝不替代 required CI 或
+exact-revision native 证据。远程/native 验证只消费已推送的不可变 revision——绝不复制工作树。
 P2-T25 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 （lifecycle、selection 与钉住 HTTPS origin 登记表）。
 P2-T26 的聚焦 HTTP 覆盖在 `apps/kernel-server/tests/p2_t26_observation_plane.rs`
