@@ -35,7 +35,9 @@ use super::fault_profile;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::pinned_https;
 use super::provider_control_plane;
-use super::provider_proxy::{ProviderProxyError, ProviderProxyService, RustlsProviderTransport};
+use super::provider_proxy::{
+    ProviderProxyError, ProviderProxyService, RustlsProviderTransport, SseToolCallNormalizer,
+};
 use super::readiness::{
     ReadinessEvaluationContext, doctor_projection_json, evaluate_personal_readiness,
     status_projection_json,
@@ -1941,12 +1943,14 @@ fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Siz
     let stream_cell = std::cell::RefCell::new(stream);
     let sse_started = std::cell::Cell::new(false);
     let error_body = std::cell::RefCell::new(Vec::new());
+    let normalizer = std::cell::RefCell::new(SseToolCallNormalizer::new());
     let observation_headers = route_observation::observation_streaming_response_headers(
         observation_authorized,
         correlation_id,
     );
     let outcome = {
         let on_status = |status: u16| -> Result<(), ProviderProxyError> {
+            normalizer.borrow_mut().set_passthrough(status != 200);
             if status == 200 {
                 write_provider_sse_headers(&mut *stream_cell.borrow_mut(), 1, &observation_headers)
                     .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
@@ -1955,21 +1959,25 @@ fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Siz
             Ok(())
         };
         let on_chunk = |chunk: &[u8]| -> Result<(), ProviderProxyError> {
+            let forwarded = normalizer.borrow_mut().push(chunk);
+            if forwarded.is_empty() {
+                return Ok(());
+            }
             if sse_started.get() {
                 let write_started = Instant::now();
                 {
                     let mut stream = stream_cell.borrow_mut();
                     stream
-                        .write_all(chunk)
+                        .write_all(&forwarded)
                         .and_then(|()| stream.flush())
                         .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
                 }
                 loopback_transport::add_response_write(
                     write_started.elapsed().as_nanos(),
-                    u64::try_from(chunk.len()).unwrap_or(u64::MAX),
+                    u64::try_from(forwarded.len()).unwrap_or(u64::MAX),
                 );
             } else {
-                error_body.borrow_mut().extend_from_slice(chunk);
+                error_body.borrow_mut().extend_from_slice(&forwarded);
             }
             Ok(())
         };
@@ -1987,6 +1995,18 @@ fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Siz
             },
         )
     };
+    let tail = normalizer.borrow_mut().flush();
+    if !tail.is_empty() {
+        if sse_started.get() {
+            let mut stream = stream_cell.borrow_mut();
+            stream
+                .write_all(&tail)
+                .and_then(|()| stream.flush())
+                .map_err(|_| "provider streaming tail write failed".to_owned())?;
+        } else {
+            error_body.borrow_mut().extend_from_slice(&tail);
+        }
+    }
     provider_control_plane::record_proxy_usage(
         authority_store,
         &plan.account,

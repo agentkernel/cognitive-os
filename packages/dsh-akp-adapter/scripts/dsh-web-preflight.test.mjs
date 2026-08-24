@@ -8,6 +8,8 @@ import {
   DEFAULT_WEB_PORT,
   PATH_B_WEB_DAEMON_KEY_REF,
   PATH_B_WEB_OFFICIAL_KEY_REF,
+  INTERACTIVE_COMPLETION_BUDGET_TOKENS,
+  PROBE_COMPLETION_BUDGET_TOKENS,
   DSH_WEB_OVERLAY_FILE,
   assertFrontendDist,
   assertLoopbackHost,
@@ -15,6 +17,7 @@ import {
   assertWebPort,
   frontendDistIndex,
   listenUrl,
+  llmDeepseekPatchLines,
   overlayStamp,
   pathBWebChildExtras,
   pathBWebCatalogModels,
@@ -86,6 +89,36 @@ test("Path B web settings and credentials stay on the daemon bearer", () => {
   assert.deepEqual(pathBWebCatalogModels([], ""), []);
   assert.deepEqual(pathBWebChildExtras(base), { DEEPSEEK_BASE_URL: base });
   assert.equal(Object.keys(pathBWebChildExtras(base)).some((key) => /API_KEY|SECRET|TOKEN|BEARER/i.test(key)), false);
+});
+
+test("the interactive patch caps a reasoning model below its provider maximum", () => {
+  const base = "http://127.0.0.1:48681/provider/v1/dsh";
+  const web = llmDeepseekPatchLines(base, PATH_B_WEB_DAEMON_KEY_REF, "LongCat-2.0", [
+    { model_id: "LongCat-2.0" },
+  ], INTERACTIVE_COMPLETION_BUDGET_TOKENS);
+  assert.match(web, new RegExp(`maxTokens: ${INTERACTIVE_COMPLETION_BUDGET_TOKENS}`));
+  assert.ok(
+    INTERACTIVE_COMPLETION_BUDGET_TOKENS >= 4096 &&
+      INTERACTIVE_COMPLETION_BUDGET_TOKENS <= 131072,
+    "the interactive budget must leave reasoning room and stay provider-valid",
+  );
+  assert.match(web, /baseURL: http:\/\/127\.0\.0\.1:48681\/provider\/v1\/dsh/);
+  assert.match(web, /model: LongCat-2\.0/);
+  assert.match(web, /models:\n      - id: LongCat-2\.0\n        name: LongCat-2\.0/);
+
+  const probe = llmDeepseekPatchLines(
+    base,
+    PATH_B_WEB_DAEMON_KEY_REF,
+    "LongCat-2.0",
+    [],
+    PROBE_COMPLETION_BUDGET_TOKENS,
+  );
+  assert.match(probe, new RegExp(`maxTokens: ${PROBE_COMPLETION_BUDGET_TOKENS}`));
+  assert.ok(PROBE_COMPLETION_BUDGET_TOKENS >= 1024, "reasoning needs room before content");
+  assert.throws(
+    () => llmDeepseekPatchLines(base, PATH_B_WEB_DAEMON_KEY_REF, "", [], 0),
+    /positive safe integer/,
+  );
 });
 
 test("control-plane overlay drops grok when dsh is unbound", () => {

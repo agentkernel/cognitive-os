@@ -22,10 +22,13 @@ import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { admitTask, httpJson, issueToken, waitLifecycle } from "./daemon-task.mjs";
 import {
+  INTERACTIVE_COMPLETION_BUDGET_TOKENS,
+  PROBE_COMPLETION_BUDGET_TOKENS,
   assertFrontendDist,
   assertLoopbackHost,
   assertWebPort,
   listenUrl,
+  llmDeepseekPatchLines,
   overlayStamp,
   pathBWebChildExtras,
   pathBWebCredentialsYaml,
@@ -152,34 +155,6 @@ function dshCliInvocation(root) {
   };
 }
 
-function llmDeepseekPatch(baseURL, apiKeyEnv, selectedModel, catalogModels) {
-  const lines = [
-    "- id: llm-deepseek",
-    "  config:",
-    `    baseURL: ${baseURL}`,
-    `    apiKeyEnv: ${apiKeyEnv}`,
-    "    thinking: disabled",
-    "    reasoningEffort: off",
-    "    maxTokens: 256",
-  ];
-  const model = String(selectedModel ?? "").trim();
-  if (model && !/[\s#:]/.test(model)) {
-    lines.push(`    model: ${model}`);
-  }
-  const models = pathBWebCatalogModels(catalogModels, model);
-  if (!models.length) {
-    lines.push("    models: []");
-  } else {
-    lines.push("    models:");
-    for (const item of models) {
-      lines.push(`      - id: ${item.id}`);
-      lines.push(`        name: ${item.name}`);
-    }
-  }
-  lines.push("");
-  return lines.join("\n");
-}
-
 async function loadCosDshOverlay(origin, managementToken) {
   const fromFile = readDshWebControlPlaneOverlay(dshHome);
   if (fromFile) {
@@ -299,7 +274,13 @@ async function runWebPathB() {
         ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
           { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true, mode: "web" } },
         ]),
-        llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
+        llmDeepseekPatchLines(
+          providerBase,
+          "DAEMON_BEARER",
+          overlay.model,
+          overlay.catalog,
+          INTERACTIVE_COMPLETION_BUDGET_TOKENS,
+        ),
       ].join("\n");
       writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
       const child = spawn(
@@ -428,7 +409,15 @@ if (providerPath === "a") {
     { encoding: "utf8", mode: 0o600 },
   );
   chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
-  const outcome = await runDsh(llmDeepseekPatch(directBaseUrl, "DEEPSEEK_KEY"));
+  const outcome = await runDsh(
+    llmDeepseekPatchLines(
+      directBaseUrl,
+      "DEEPSEEK_KEY",
+      undefined,
+      undefined,
+      PROBE_COMPLETION_BUDGET_TOKENS,
+    ),
+  );
   rmSync(work, { recursive: true, force: true });
   const summary = {
     revision_pin: revisionPin ?? null,
@@ -568,7 +557,13 @@ const outcome = await runDsh(
         },
       },
     ]),
-    llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
+    llmDeepseekPatchLines(
+      providerBase,
+      "DAEMON_BEARER",
+      overlay.model,
+      overlay.catalog,
+      PROBE_COMPLETION_BUDGET_TOKENS,
+    ),
   ].join("\n"),
   { origin, token: managementToken },
 );
