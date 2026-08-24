@@ -103,6 +103,23 @@ function secretPresence(value: unknown): string {
   return "present";
 }
 
+function PageHeader({ title, description }: { title: string; description?: string }) {
+  return (
+    <header className="page-head">
+      <h2>{title}</h2>
+      {description ? <p className="lede">{description}</p> : null}
+    </header>
+  );
+}
+
+function EmptyState({ children }: { children: React.ReactNode }) {
+  return (
+    <p className="empty-state" role="note">
+      {children}
+    </p>
+  );
+}
+
 function Shell({ children }: { children: React.ReactNode }) {
   return (
     <div className="shell">
@@ -110,8 +127,13 @@ function Shell({ children }: { children: React.ReactNode }) {
         Skip to content
       </a>
       <nav className="side" aria-label="Primary">
-        <h1>CognitiveOS Personal</h1>
-        <p className="muted">Daemon client only. Not an authority writer.</p>
+        <div className="brand">
+          <span className="brand-mark" aria-hidden="true" />
+          <div>
+            <h1>CognitiveOS Personal</h1>
+            <p className="muted">Daemon client only. Not an authority writer.</p>
+          </div>
+        </div>
         <ul>
           {NAV.map(([to, label]) => (
             <li key={to}>
@@ -120,6 +142,8 @@ function Shell({ children }: { children: React.ReactNode }) {
               </NavLink>
             </li>
           ))}
+        </ul>
+        <ul className="nav-secondary">
           <li>
             <NavLink to="/session">Session</NavLink>
           </li>
@@ -170,11 +194,10 @@ function SessionPage() {
 
   return (
     <>
-      <h2>Session bootstrap</h2>
-      <p className="muted">
-        Paste the daemon bootstrap secret once. It is never written to localStorage,
-        sessionStorage, IndexedDB, the URL, or exported state.
-      </p>
+      <PageHeader
+        title="Session bootstrap"
+        description="Paste the daemon bootstrap secret once. It is never written to localStorage, sessionStorage, IndexedDB, the URL, or exported state."
+      />
       <form onSubmit={issue}>
         <label>
           Principal
@@ -226,7 +249,7 @@ function HomePage() {
 
   return (
     <>
-      <h2>Home</h2>
+      <PageHeader title="Home" description="One-glance daemon health, status, readiness, and doctor projections." />
       <div className="status-grid">
         <section className="panel">
           <h3>Health</h3>
@@ -282,7 +305,7 @@ function AgentsPage() {
 
   return (
     <>
-      <h2>Agents</h2>
+      <PageHeader title="Agents" />
       <StateNote state={runtime} />
       <p className="muted">
         Pause, resume, stop, restart, and quarantine are {unavailableLabel("agent-pause")},{" "}
@@ -291,7 +314,7 @@ function AgentsPage() {
         lifecycle route is offered.
       </p>
       {items.length === 0 ? (
-        <p className="warn">No runtime family items. Binding identities still stay distinct.</p>
+        <EmptyState>No runtime family items. This is an authoritative empty state, not a loading placeholder — binding identities still stay distinct.</EmptyState>
       ) : (
         <table>
           <caption>Runtime family inventory</caption>
@@ -351,7 +374,7 @@ function AgentDetailPage() {
 
   return (
     <>
-      <h2>Agent detail</h2>
+      <PageHeader title="Agent detail" />
       <StateNote state={inspect} />
       <div className="identity-grid">
         {AGENT_IDENTITY_KEYS.map((key) => (
@@ -438,7 +461,10 @@ function ProvidersPage() {
 
   return (
     <>
-      <h2>Providers</h2>
+      <PageHeader
+        title="Providers"
+        description="Create and manage named Provider accounts. Keys never render back to this browser."
+      />
       <StateNote state={accounts} />
       <form onSubmit={create}>
         <h3>Create named account</h3>
@@ -502,33 +528,37 @@ function ProvidersPage() {
         <button type="submit">Create account</button>
       </form>
       <p role="status">{message}</p>
-      <table>
-        <caption>Provider accounts (SecretRef shown only as present/absent)</caption>
-        <thead>
-          <tr>
-            <th>Id</th>
-            <th>Name</th>
-            <th>Kind</th>
-            <th>Status</th>
-            <th>Secret</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => (
-            <tr key={String(row.id)}>
-              <td>{String(row.id)}</td>
-              <td>{String(row.display_name ?? "")}</td>
-              <td>{String(row.provider_kind ?? "")}</td>
-              <td>{String(row.status ?? "unknown")}</td>
-              <td>{secretPresence(row.secret_ref)}</td>
-              <td>
-                <NavLink to={`/providers/${encodeURIComponent(String(row.id))}`}>Open</NavLink>
-              </td>
+      {rows.length === 0 && accounts.status !== "loading" ? (
+        <EmptyState>No provider accounts yet. Create one above — this is not a loading placeholder.</EmptyState>
+      ) : (
+        <table>
+          <caption>Provider accounts (SecretRef shown only as present/absent)</caption>
+          <thead>
+            <tr>
+              <th>Id</th>
+              <th>Name</th>
+              <th>Kind</th>
+              <th>Status</th>
+              <th>Secret</th>
+              <th />
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {rows.map((row) => (
+              <tr key={String(row.id)}>
+                <td>{String(row.id)}</td>
+                <td>{String(row.display_name ?? "")}</td>
+                <td>{String(row.provider_kind ?? "")}</td>
+                <td>{String(row.status ?? "unknown")}</td>
+                <td>{secretPresence(row.secret_ref)}</td>
+                <td>
+                  <NavLink to={`/providers/${encodeURIComponent(String(row.id))}`}>Open</NavLink>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </>
   );
 }
@@ -655,7 +685,7 @@ function ProviderDetailPage() {
 
   return (
     <>
-      <h2>Provider account</h2>
+      <PageHeader title="Provider account" />
       <StateNote state={account} />
       <section className="panel">
         <p>Status: {String(record.status ?? "unknown")}</p>
@@ -833,7 +863,10 @@ function BindingsPage() {
 
   return (
     <>
-      <h2>Agent Provider bindings</h2>
+      <PageHeader
+        title="Agent Provider bindings"
+        description="One active account + provider + model per Agent. No fallback, no per-request override."
+      />
       <StateNote state={bindings} />
       <form onSubmit={submit}>
         <p className="muted">
@@ -890,44 +923,48 @@ function BindingsPage() {
         <button type="submit">Confirm fixed binding</button>
       </form>
       <p role="status">{message}</p>
-      <table>
-        <caption>Active fixed bindings</caption>
-        <thead>
-          <tr>
-            <th>Agent</th>
-            <th>Account</th>
-            <th>Model</th>
-            <th>Revision</th>
-            <th>Status</th>
-            <th>Dispatch</th>
-            <th />
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((row) => {
-            const account = accountRows.find((item) => item.id === row.account_id);
-            const callable = dispatchAllowed({
-              accountStatus: account ? String(account.status) : "unknown",
-              bindingStatus: String(row.status),
-            });
-            return (
-              <tr key={String(row.agent)}>
-                <td>{String(row.agent)}</td>
-                <td>{String(row.account_id)}</td>
-                <td>{String(row.model_id)}</td>
-                <td>{String(row.revision)}</td>
-                <td>{String(row.status)}</td>
-                <td>{callable ? "callable" : "blocked"}</td>
-                <td>
-                  <button type="button" onClick={() => void remove(String(row.agent))}>
-                    Remove
-                  </button>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
+      {rows.length === 0 && bindings.status !== "loading" ? (
+        <EmptyState>No active bindings. Both Agents are unbound until confirmed above.</EmptyState>
+      ) : (
+        <table>
+          <caption>Active fixed bindings</caption>
+          <thead>
+            <tr>
+              <th>Agent</th>
+              <th>Account</th>
+              <th>Model</th>
+              <th>Revision</th>
+              <th>Status</th>
+              <th>Dispatch</th>
+              <th />
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row) => {
+              const account = accountRows.find((item) => item.id === row.account_id);
+              const callable = dispatchAllowed({
+                accountStatus: account ? String(account.status) : "unknown",
+                bindingStatus: String(row.status),
+              });
+              return (
+                <tr key={String(row.agent)}>
+                  <td>{String(row.agent)}</td>
+                  <td>{String(row.account_id)}</td>
+                  <td>{String(row.model_id)}</td>
+                  <td>{String(row.revision)}</td>
+                  <td>{String(row.status)}</td>
+                  <td>{callable ? "callable" : "blocked"}</td>
+                  <td>
+                    <button type="button" onClick={() => void remove(String(row.agent))}>
+                      Remove
+                    </button>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
+      )}
     </>
   );
 }
@@ -1096,7 +1133,7 @@ function TasksPage() {
 
   return (
     <>
-      <h2>Tasks, Effects, Evidence</h2>
+      <PageHeader title="Tasks, Effects, Evidence" />
       <p className="muted">
         Cancel is {unavailableLabel("task-cancel")}. Detach does not cancel a Task or stop an Agent.
         Process/Provider/Pi/HTTP receipt is not Task completion.
@@ -1199,7 +1236,7 @@ function ActivityPage() {
 
   return (
     <>
-      <h2>Activity</h2>
+      <PageHeader title="Activity" description="Usage, budgets, alerts, and audit projections." />
       <StateNote state={usage} />
       <JsonPanel title="Usage" value={usage.body} />
       <JsonPanel title="Budgets" value={budgets.body} />
@@ -1222,7 +1259,7 @@ function ResourcesPage() {
 
   return (
     <>
-      <h2>Six-family resources</h2>
+      <PageHeader title="Six-family resources" />
       <label>
         Family
         <select value={family} onChange={(event) => setFamily(event.target.value as typeof family)}>
