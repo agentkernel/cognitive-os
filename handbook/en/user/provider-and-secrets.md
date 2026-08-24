@@ -24,7 +24,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:f9b8d69d454d61c58b2ef80a2e41241e761f711693b2d3a9f003ba4a832f2009"
+fingerprint: "sha256:118379e2188ace43ab4f1470f8ebb1bece8d143b93159f3c4a99e016fdbfe165"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -99,3 +99,6 @@ selected model must match that snapshot.
   keyring surfaces as unavailable at first real use.
 - Rotation clears the old item before storing the new one; a crash between the two
   requires re-entering the key.
+- Named control-plane accounts store an OpenAI-compatible API root, not a chat
+  RPC path. Pasting `…/v1/chat/completions` is stripped to `…/v1`; other paths
+  fail closed as `PROVIDER_ENDPOINT_PATH_FORBIDDEN`.

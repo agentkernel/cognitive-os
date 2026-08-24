@@ -24,7 +24,7 @@ tests:
   - apps/kernel-server/tests/p9_t07_route_observation.rs
   - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:f9b8d69d454d61c58b2ef80a2e41241e761f711693b2d3a9f003ba4a832f2009"
+fingerprint: "sha256:118379e2188ace43ab4f1470f8ebb1bece8d143b93159f3c4a99e016fdbfe165"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
 ---
@@ -85,3 +85,6 @@ management 路由的 daemon 客户端；没有桌面面板。
   的 key 当前有效。
 - `secret-tool` 探测无法区分集合是否解锁；锁定的密钥环会在首次真实使用时表现为不可用。
 - 轮换先清除旧条目再存新条目；两步之间崩溃需要重新录入 key。
+- 控制面命名账户只持久化 OpenAI 兼容 API 根，而不是 chat RPC 路径。粘贴
+  `…/v1/chat/completions` 会收成 `…/v1`；其它路径以
+  `PROVIDER_ENDPOINT_PATH_FORBIDDEN` 失败闭合。

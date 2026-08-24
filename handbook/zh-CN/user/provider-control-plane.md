@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:f0112a035be21665ec56f48b3c0ce24490a2800d48cfe5ffc0792336318f081e"
+fingerprint: "sha256:dc6224fa3e1dcbba63d73464ceb7f34a0605dc6e14e4a25f00b0eddd06a724c0"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -112,6 +112,8 @@ cognitive provider account create --name openai-work --provider-kind openai_offi
 
 cognitive provider account create --name lan-proxy --provider-kind openai_compatible --endpoint-url https://llm.internal.example/v1 --allow-private-network --api-key-file ./provider.key
 
+cognitive provider account create --name xai-grok --provider-kind openai_compatible --endpoint-url https://api.x.ai/v1 --api-key-file ./provider.key
+
 cognitive provider account list
 cognitive provider account show --id acct-YOUR-ID
 cognitive provider account update --id acct-YOUR-ID --endpoint-url http://127.0.0.1:8080/v1 --allow-insecure-http --reconfirm
@@ -156,6 +158,12 @@ remove 之后，发现与绑定调用会失败，直到你再次 set key。
 daemon 拒绝嵌入的 userinfo、fragment、query、重定向、调用方提供的 header 模板，以及
 隐式 URL 改写。请求时会再次检查 DNS（若名称现在指向比授权更私密的地址，则为
 `PROVIDER_ENDPOINT_DNS_REBINDING`）。
+
+自定义端点只持久化 OpenAI 兼容的 **API 根**：空/`/`、`/v1`、`/api/v1`、`/openai/v1`
+或 `/compatible-mode/v1`。控制面板若粘贴 chat 或 models 的 RPC URL（例如
+`https://api.x.ai/v1/chat/completions`），会存成根路径（`https://api.x.ai/v1`）。
+其它路径——包括本机 daemon 代理 `/provider/v1/...`——返回 HTTP 400
+`PROVIDER_ENDPOINT_PATH_FORBIDDEN`。
 
 当 authority、DNS/网络范围或 HTTPS→HTTP 将要变化时，`account update` 必须带
 `--reconfirm`。否则 daemon 返回 HTTP 409 `PROVIDER_ENDPOINT_RECONFIRM_REQUIRED`。

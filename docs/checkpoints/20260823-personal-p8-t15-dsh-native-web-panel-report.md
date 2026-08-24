@@ -18,7 +18,7 @@ Clients Apply copy: https://github.com/agentkernel/cognitiveos-clients/pull/4
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
 | D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
-| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay coded at `14aadf27`. leftover grok-on-DeepSeek Path B is Cos 400 (not DeepSeek allowlist). Native settings/Models overlay Cos catalog. Flash Path B pong still works. No grok-capable Cos account on this runtime. |
+| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` on chat-completions pastes coded (normalize to API root). Flash Path B pong still works. No grok-capable Cos account on this runtime. |
 
 ## Validation log
 
@@ -334,8 +334,22 @@ This runtime has **one** Cos account (`openai_compatible` / `api.deepseek.com`).
 
 Cannot re-bind grok after Flash: control plane now refuses grok on this DeepSeek-only account. That is the honest fail-closed. Do not invent an xAI account or copy keys.
 
-Claim ceiling `hypothesis`. UI up is not Task completion.
+### 2026-08-24 — control-panel create HTTP 400 PATH_FORBIDDEN (coded; Linux not-run)
+
+Owner report: Provider Control Plane create account → HTTP 400 “provider endpoint 禁止”.
+
+Root cause (code path, not assumed live request body): `TrustedEndpoint` stored only `/`, `/v1`, `/v1/` as OpenAI-compatible roots. Pasting a provider chat URL such as `https://api.x.ai/v1/chat/completions` (xAI docs) or an OpenRouter/Groq root (`/api/v1`, `/openai/v1`) returned HTTP 400 `PROVIDER_ENDPOINT_PATH_FORBIDDEN`. The local daemon proxy `/provider/v1/dsh` remains forbidden.
+
+Fix (this change set, pre-Linux): strip one well-known RPC leaf (`/chat/completions`, `/completions`, `/models`) then accept roots `/v1`, `/api/v1`, `/openai/v1`, `/compatible-mode/v1`. Traversal and other paths stay fail-closed.
+
+| Check | Environment | Result |
+|---|---|---|
+| `endpoint_trust` unit + public `p8_t13_endpoint_trust` | local Windows GNU | **not-run** (`RUST-LINK-DEV-WIN-GNU-01`) |
+| kernel-server `create_account_strips_chat_completions_and_accepts_prefixed_openai_roots` | local Windows GNU | **not-run** |
+| Same tests | `DEV-LINUX-NATIVE-01` | **not-run** until this revision is pushed |
+
+Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
 
 ## Unique next action
 
-Owner: add a grok-capable Cos account (non-DeepSeek `openai_compatible`, SecretStore key) then bind dsh to that account + grok and Apply. Until then dsh stays on Flash (working Path B). Keep **499615** / `:3080` / **430838** / Firefox. Do not auto-claim P6 / P7-T06 / P7-T07. D04 stays `in-progress` until headed conversation+Models chrome is scraped or the owner accepts settings/patch overlay as the native catalog proof.
+Push this revision; run Linux `p8_t13_endpoint_trust` and focused kernel-server create-account. Then owner: add a grok-capable Cos account (non-DeepSeek `openai_compatible`, e.g. `https://api.x.ai/v1` or the chat-completions URL) + SecretStore key, bind dsh, Apply. Until then dsh stays on Flash (working Path B). Keep **499615** / `:3080` / **430838** / Firefox. Do not auto-claim P6 / P7-T06 / P7-T07.

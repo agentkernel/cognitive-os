@@ -1307,7 +1307,13 @@ fn binding_json(binding: &AgentProviderBindingRecord) -> Value {
 }
 
 fn trust_error(err: EndpointTrustError) -> ResourceApiResponse {
-    error(400, err.code(), err.code())
+    let detail = match err {
+        EndpointTrustError::ArbitraryPath => {
+            "OpenAI-compatible endpoint must be an API root (/v1, /api/v1, /openai/v1, or /compatible-mode/v1); /chat/completions is stripped"
+        }
+        _ => err.code(),
+    };
+    error(400, err.code(), detail)
 }
 
 fn store_error(err: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {

@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:f0112a035be21665ec56f48b3c0ce24490a2800d48cfe5ffc0792336318f081e"
+fingerprint: "sha256:dc6224fa3e1dcbba63d73464ceb7f34a0605dc6e14e4a25f00b0eddd06a724c0"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
@@ -126,6 +126,8 @@ cognitive provider account create --name openai-work --provider-kind openai_offi
 
 cognitive provider account create --name lan-proxy --provider-kind openai_compatible --endpoint-url https://llm.internal.example/v1 --allow-private-network --api-key-file ./provider.key
 
+cognitive provider account create --name xai-grok --provider-kind openai_compatible --endpoint-url https://api.x.ai/v1 --api-key-file ./provider.key
+
 cognitive provider account list
 cognitive provider account show --id acct-YOUR-ID
 cognitive provider account update --id acct-YOUR-ID --endpoint-url http://127.0.0.1:8080/v1 --allow-insecure-http --reconfirm
@@ -174,6 +176,13 @@ The daemon rejects embedded userinfo, fragments, query strings, redirects,
 caller-supplied header templates, and implicit URL rewriting. DNS is checked
 again at request time (`PROVIDER_ENDPOINT_DNS_REBINDING` if a name now points
 somewhere more private than the grant).
+
+Stored custom endpoints are OpenAI-compatible **API roots** only: empty/`/`,
+`/v1`, `/api/v1`, `/openai/v1`, or `/compatible-mode/v1`. The control plane
+accepts a pasted chat or models RPC URL (for example
+`https://api.x.ai/v1/chat/completions`) and persists the root
+(`https://api.x.ai/v1`). Other paths — including the local daemon proxy
+`/provider/v1/...` — return HTTP 400 `PROVIDER_ENDPOINT_PATH_FORBIDDEN`.
 
 `--reconfirm` is required on `account update` when authority, DNS/network
 scope, or HTTPS→HTTP would change. Without it the daemon returns HTTP 409

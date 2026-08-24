@@ -254,6 +254,61 @@ fn control_plane_refuses_unauth_task_channel_and_untrusted_endpoints() {
     assert!(headers.contains("400 Bad Request"), "{headers}");
     assert!(headers.contains("PROVIDER_ENDPOINT_HEADER_INJECTION_FORBIDDEN"));
 
+    let proxy_path = send_json(
+        port,
+        "POST",
+        "/management/providers/accounts",
+        &management_token,
+        &json!({
+            "display_name": "local-proxy",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.example.test/provider/v1/dsh"
+        }),
+    );
+    assert!(proxy_path.contains("400 Bad Request"), "{proxy_path}");
+    assert!(proxy_path.contains("PROVIDER_ENDPOINT_PATH_FORBIDDEN"));
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
+
+#[test]
+fn create_account_strips_chat_completions_and_accepts_prefixed_openai_roots() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-endpoint-root-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let xai = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "xai-grok",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.x.ai/v1/chat/completions"
+        }),
+    );
+    assert_eq!(xai["account"]["endpoint"], "https://api.x.ai/v1");
+
+    let openrouter = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "openrouter-work",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://openrouter.ai/api/v1"
+        }),
+    );
+    assert_eq!(
+        openrouter["account"]["endpoint"],
+        "https://openrouter.ai/api/v1"
+    );
+
     let _ = std::fs::remove_dir_all(runtime_root);
 }
 
