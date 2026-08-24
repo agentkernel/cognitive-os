@@ -18,7 +18,7 @@ Clients Apply copy: https://github.com/agentkernel/cognitiveos-clients/pull/4
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
 | D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
-| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` on chat-completions pastes **fixed** at `8b9d09cb`. Native Models catalog sync **coded** (bind/remove/apply overlay; helper reload). Linux overlay test **not-run**. Guest daemon **515695**. |
+| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` **fixed** at `8b9d09cb`. Native Models catalog sync **pass** at `4bfaee66` (Linux 7/7 + guest Cos LongCat-only settings). Guest daemon **517492**. |
 
 ## Validation log
 
@@ -368,11 +368,16 @@ Fix (this change set, pre-Linux):
 | Check | Environment | Result |
 |---|---|---|
 | `dsh-web-preflight.test.mjs` | local Windows Node | **pass** 5/5 including unbound overlay drops grok |
-| `p8_t13` overlay test `dsh_web_overlay_follows_bound_catalog_and_drops_removed_grok` | `DEV-LINUX-NATIVE-01` | **not-run** |
-| Guest daemon/helper replace | linux-002 | **not-run** (still **515695** / Cos **500474**) |
+| `p8_t13` overlay test `dsh_web_overlay_follows_bound_catalog_and_drops_removed_grok` | `DEV-LINUX-NATIVE-01` | **pass** 7/7 at `4bfaee66` (worktree `/home/wuz/agent-kernel-worktrees/p8-t15-df002c27`, rustc 1.97.1). Shared `CARGO_TARGET_DIR=p8-t15-92e00b74-target`. |
+| `p8_t11_dsh_runtime` | `DEV-LINUX-NATIVE-01` | **pass** 1/1 |
+| Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | **pass** at `4bfaee66` |
+| `cargo fmt -p kernel-server -p admin-cli -- --check` | `DEV-LINUX-NATIVE-01` | **pass** |
+| Node preflight | jump-host Node | **pass** 5/5 |
+| Guest daemon replace | linux-002 | **pass** pid **517492** `:48681` binary `p8t15-4bfaee66`; `GET /personal/health` **200**. Replaced **515695**. Other daemons **166715/184841/451559/474375** and hung helper **430838** untouched. |
+| Guest Cos helper | linux-002 | **pass** helper **517768** / web **517786** `:3080` HTTP **200**. `settings.yaml` Path B `model: LongCat-2.0` and `models:` only that id (no leftover grok/DeepSeek). Old Cos **500474** had survived helper TERM (reparented to pid 1) and was stopped before the new listen. |
 
 Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
 
 ## Unique next action
 
-Linux: focused `p8_t13_provider_control_plane` (expect 7 tests) + Clippy `-D warnings` kernel-server. Then replace linux-002 daemon **515695** and the Cos Path B helper so bind/unbind/Apply reload Models. Do not auto-claim P6 / P7-T06 / P7-T07.
+Refresh dsh Models after bind/unbind/Apply on the live guest (`:3080` / daemon **517492**). Native list is the current dsh-bound account catalog. Do not auto-claim P6 / P7-T06 / P7-T07.
