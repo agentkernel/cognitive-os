@@ -28,6 +28,59 @@ const DISCOVERY_TIMEOUT_MS: u32 = 8_000;
 pub(crate) const PI_AGENT: &str = "agent://personal/pi";
 pub(crate) const DSH_AGENT: &str = "agent://personal/dsh";
 const PROXY_TIMEOUT_MS: u32 = 60_000;
+const MODEL_ENDPOINT_MISMATCH_CODE: &str = "PROVIDER_MODEL_ENDPOINT_MISMATCH";
+const MODEL_ENDPOINT_MISMATCH_DETAIL: &str = "model cannot be served by this account endpoint; bind grok only on a grok-capable non-DeepSeek openai_compatible account";
+
+fn endpoint_host(endpoint: &str) -> Option<String> {
+    let after_scheme = endpoint.split_once("://")?.1;
+    let hostport = after_scheme.split(['/', '?', '#']).next()?;
+    let host = hostport
+        .rsplit_once('@')
+        .map(|(_, host)| host)
+        .unwrap_or(hostport)
+        .trim();
+    if let Some(inside) = host.strip_prefix('[') {
+        return inside
+            .split_once(']')
+            .map(|(value, _)| value.to_ascii_lowercase());
+    }
+    Some(host.split(':').next()?.to_ascii_lowercase())
+}
+
+fn is_deepseek_host(host: &str) -> bool {
+    host == "api.deepseek.com"
+        || host == "api.deepseek.cn"
+        || host.ends_with(".deepseek.com")
+        || host.ends_with(".deepseek.cn")
+}
+
+/// Catalog membership is not enough: DeepSeek hosts only serve `deepseek-*`,
+/// and `grok-*` is only servable on a non-DeepSeek `openai_compatible` account.
+pub(crate) fn model_servable_on_account(account: &ProviderAccountRecord, model_id: &str) -> bool {
+    let model = model_id.trim();
+    if model.is_empty() {
+        return false;
+    }
+    let lowered = model.to_ascii_lowercase();
+    let deepseek_endpoint = endpoint_host(&account.endpoint)
+        .as_deref()
+        .is_some_and(is_deepseek_host);
+    if deepseek_endpoint {
+        return lowered.starts_with("deepseek-");
+    }
+    if lowered.starts_with("grok-") {
+        return account.provider_kind == "openai_compatible";
+    }
+    true
+}
+
+fn model_endpoint_mismatch() -> ResourceApiResponse {
+    error(
+        400,
+        MODEL_ENDPOINT_MISMATCH_CODE,
+        MODEL_ENDPOINT_MISMATCH_DETAIL,
+    )
+}
 
 /// Route literals scanned by the handbook HTTP generator. Keep these exact.
 const ROUTE_LITERALS: &[&str] = &[
@@ -714,6 +767,9 @@ fn add_manual_model(body: &[u8], plane: &ProviderControlPlaneStore) -> ResourceA
         Ok(None) => return error(404, "PROVIDER_ACCOUNT_NOT_FOUND", "account not found"),
         Err(error) => return store_error(error),
     };
+    if !model_servable_on_account(&account, model_id) {
+        return model_endpoint_mismatch();
+    }
     let mut model = ProviderModelRecord {
         account_id: account_id.to_owned(),
         model_id: model_id.to_owned(),
@@ -839,9 +895,9 @@ fn set_binding(body: &[u8], plane: &ProviderControlPlaneStore) -> ResourceApiRes
             );
         }
     }
-    if plane.get_account(account_id).ok().flatten().is_none() {
+    let Some(account) = plane.get_account(account_id).ok().flatten() else {
         return error(404, "PROVIDER_ACCOUNT_NOT_FOUND", "account not found");
-    }
+    };
     if plane
         .get_model(account_id, model_id)
         .ok()
@@ -853,6 +909,9 @@ fn set_binding(body: &[u8], plane: &ProviderControlPlaneStore) -> ResourceApiRes
             "PROVIDER_MODEL_NOT_FOUND",
             "model not in catalog; add it manually",
         );
+    }
+    if !model_servable_on_account(&account, model_id) {
+        return model_endpoint_mismatch();
     }
     match plane.set_binding(
         &AgentProviderBindingRecord {
@@ -1248,7 +1307,13 @@ fn binding_json(binding: &AgentProviderBindingRecord) -> Value {
 }
 
 fn trust_error(err: EndpointTrustError) -> ResourceApiResponse {
-    error(400, err.code(), err.code())
+    let detail = match err {
+        EndpointTrustError::ArbitraryPath => {
+            "OpenAI-compatible endpoint must be an API root (/v1, /api/v1, /openai/v1, or /compatible-mode/v1); /chat/completions is stripped"
+        }
+        _ => err.code(),
+    };
+    error(400, err.code(), detail)
 }
 
 fn store_error(err: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {
@@ -1429,13 +1494,23 @@ pub(crate) fn plan_bound_proxy(
         .and_then(Value::as_str)
         .filter(|model| !model.is_empty())
         .ok_or(BoundPlanError::InvalidRequest)?;
-    if requested_model != binding.model_id {
+    // Path B / native dsh catalog ids (deepseek-chat, …) must not block the
+    // Cos-assigned dsh binding. Pi keeps exact match so a dsh model cannot
+    // leak onto agent://personal/pi.
+    let outbound_model = if agent == DSH_AGENT {
+        binding.model_id.clone()
+    } else if requested_model != binding.model_id {
         return Err(BoundPlanError::BindingMismatch);
-    }
+    } else {
+        binding.model_id.clone()
+    };
     let account = plane
         .get_account(&binding.account_id)
         .map_err(|_| BoundPlanError::AccountUnavailable)?
         .ok_or(BoundPlanError::AccountUnavailable)?;
+    if !model_servable_on_account(&account, &outbound_model) {
+        return Err(BoundPlanError::BindingMismatch);
+    }
     if account.status == "revoked" || account.secret_ref.is_none() {
         return Err(BoundPlanError::AccountUnavailable);
     }
@@ -1463,9 +1538,9 @@ pub(crate) fn plan_bound_proxy(
         .get(&reference)
         .map_err(|_| BoundPlanError::SecretUnavailable)?;
     let outbound_body = if kind == ProviderKind::AnthropicOfficial {
-        openai_chat_to_anthropic_messages(request_body, &binding.model_id)?
+        openai_chat_to_anthropic_messages(request_body, &outbound_model)?
     } else {
-        request_body.to_vec()
+        rewrite_openai_model(request_body, &outbound_model)?
     };
     let mut headers =
         discovery_headers(kind, material.expose_bytes()).map_err(|_| BoundPlanError::Trust)?;
@@ -1504,6 +1579,16 @@ pub(crate) fn selected_binding_model(store: &SqliteAuthorityStore, agent: &str) 
         .ok()
         .flatten()
         .map(|binding| binding.model_id)
+}
+
+fn rewrite_openai_model(request_body: &[u8], bound_model: &str) -> Result<Vec<u8>, BoundPlanError> {
+    let mut parsed: Value =
+        serde_json::from_slice(request_body).map_err(|_| BoundPlanError::InvalidRequest)?;
+    let Some(object) = parsed.as_object_mut() else {
+        return Err(BoundPlanError::InvalidRequest);
+    };
+    object.insert("model".to_owned(), Value::String(bound_model.to_owned()));
+    serde_json::to_vec(&parsed).map_err(|_| BoundPlanError::InvalidRequest)
 }
 
 fn openai_chat_to_anthropic_messages(
@@ -1576,4 +1661,62 @@ pub(crate) fn anthropic_messages_to_openai_chat(body: &[u8]) -> Result<Vec<u8>, 
         }
     });
     serde_json::to_vec(&openai).map_err(|_| BoundPlanError::InvalidRequest)
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rewrite_openai_model_replaces_catalog_id_with_binding() {
+        let body = serde_json::to_vec(&json!({
+            "model": "deepseek-chat",
+            "messages": [{"role": "user", "content": "hi"}]
+        }))
+        .expect("body");
+        let rewritten = rewrite_openai_model(&body, "grok-4.6").expect("rewrite");
+        let parsed: Value = serde_json::from_slice(&rewritten).expect("json");
+        assert_eq!(parsed["model"], "grok-4.6");
+        assert_eq!(parsed["messages"][0]["content"], "hi");
+    }
+
+    fn fixture_account(kind: &str, endpoint: &str) -> ProviderAccountRecord {
+        ProviderAccountRecord {
+            account_id: "acct-fixture".to_owned(),
+            display_name: "fixture".to_owned(),
+            provider_kind: kind.to_owned(),
+            endpoint: endpoint.to_owned(),
+            secret_ref: None,
+            allow_private_network: false,
+            allow_insecure_http: false,
+            network_scope: "public".to_owned(),
+            status: "active".to_owned(),
+            catalog_revision: 1,
+            last_discovery_error: None,
+            created_at_ms: 0,
+            updated_at_ms: 0,
+        }
+    }
+
+    #[test]
+    fn model_servable_on_account_refuses_grok_on_deepseek_and_official() {
+        let deepseek = fixture_account("openai_compatible", "https://api.deepseek.com");
+        assert!(model_servable_on_account(&deepseek, "deepseek-v4-flash"));
+        assert!(model_servable_on_account(
+            &deepseek,
+            "deepseek-v4-flash-vision-exp"
+        ));
+        assert!(!model_servable_on_account(&deepseek, "grok-4.6"));
+        let official = fixture_account("openai_official", "https://api.openai.com/v1");
+        assert!(model_servable_on_account(&official, "gpt-4o-mini"));
+        assert!(model_servable_on_account(&official, "deepseek-chat"));
+        assert!(!model_servable_on_account(&official, "grok-4.6"));
+        let xai = fixture_account("openai_compatible", "https://api.x.ai/v1");
+        assert!(model_servable_on_account(&xai, "grok-4.6"));
+        assert!(model_servable_on_account(&xai, "deepseek-v4-flash"));
+        let loopback = fixture_account("openai_compatible", "http://127.0.0.1:9/v1");
+        assert!(model_servable_on_account(&loopback, "grok-4.6"));
+        assert!(model_servable_on_account(&loopback, "gpt-4o-mini"));
+    }
 }

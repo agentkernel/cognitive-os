@@ -19,10 +19,11 @@ sources:
   - path: packages/dsh-akp-adapter/src/plugin.ts
     symbols: ["applyDshAkpCordisPlugin"]
   - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
+  - path: packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
   - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:556ae34c02b21f5cedd9f29b4c217f2e2c8309c8adb1b516d650bd38ac5ddeef"
+fingerprint: "sha256:96a7b985855fa031ce87113888ee168f5755a57ece478b1c75748f259eb9f76a"
 non_claims:
   - Every surface here produces hypothesis-level, non-claim observations only; no benefit, Gate, release, or Profile result is created by this code, and campaign execution results are owned by the formal plan's evidence records.
 ---
@@ -80,7 +81,7 @@ Gate/release/Profile/B01/Agent-benefit result. The linux-002 harness
 `scripts/linux002-e2e.mjs` records those timings on live shim submits and waits
 for Task `COMPLETED`; `scripts/dsh-real-process.mjs` records real dsh process
 elapsed time and first stdout (TTFT hook) through the daemon Provider SSE
-proxy at `POST /provider/v1/dsh/chat/completions` (Path B) or direct Flash (Path A). The helper prefers compiled
+proxy at `POST /provider/v1/dsh/chat/completions` (Path B) or direct Flash (Path A). Native web Path B also persists a settings overlay from the current dsh-bound account catalog and aliases the official catalog key ref to the daemon bearer so the Models page does not require a second dsh-local key. Binding changes reload that overlay. The helper prefers compiled
 `apps/cli/lib/bin.js` when `build:lib` outputs exist; tsx-from-source on a
 2 vCPU guest was previously ~10 s of harness bootstrap.
 `scripts/provider-raw-probe.mjs` measures the same host without dsh;

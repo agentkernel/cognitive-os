@@ -6814,6 +6814,33 @@ fn recovered_closed_effect_cannot_release_a_successor_lease_epoch() {
 }
 
 #[test]
+fn recovered_closed_effect_skips_release_when_row_already_terminal() {
+    let database_path = temporary_scheduler_database_path();
+    let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();
+    let task_ref = "task://personal/recovered-already-terminal";
+    let mut row = scheduler_row(task_ref);
+    row.state = SchedulerState::Succeeded.as_str().to_owned();
+    row.lease_epoch = 1;
+    scheduler_repository.upsert(&row).unwrap();
+
+    release_closed_recovered_attempt(
+        &recovered_closed_attempt(task_ref, 1),
+        &mut scheduler_repository,
+        "2026-08-04T12:01:00Z",
+    )
+    .unwrap();
+
+    let loaded = scheduler_repository
+        .load(&scheduler_work_key(task_ref))
+        .unwrap()
+        .unwrap();
+    assert_eq!(loaded.state, SchedulerState::Succeeded.as_str());
+    assert_eq!(loaded.lease_owner, None);
+    drop(scheduler_repository);
+    std::fs::remove_file(database_path).unwrap();
+}
+
+#[test]
 fn malformed_release_time_preserves_the_closed_effects_fenced_lease() {
     let database_path = temporary_scheduler_database_path();
     let mut scheduler_repository = SchedulerRepository::open(&database_path).unwrap();

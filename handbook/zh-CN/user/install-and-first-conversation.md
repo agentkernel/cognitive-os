@@ -19,7 +19,7 @@ tests:
   - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:a841f24c10516eee74af3bf3140d86a0bc98fa34376388b2921f270807517783"
+fingerprint: "sha256:87be53055be8081e458b4b45e5b17d0b719efcec656e8f7ba28eca8654feab1b"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---
@@ -96,12 +96,17 @@ UTF-8 文件转发给 Pi（相对路径、缺失或空文件失败闭合）。�
 ```text
 cognitive dsh configure --dsh-root <dsh 检出绝对路径> --adapter-root <dsh-akp-adapter 绝对路径> --revision 528c682e061696f5a160f363f236ecbf53cbd006
 cognitive dsh launch --print --task "Reply with one sentence that summarizes this text and nothing else: CognitiveOS Personal is a local-first OS for governed agent work."
+cognitive dsh web --no-open --host 127.0.0.1 --port 3080
+cognitive dsh apply
 cognitive dsh status
 ```
 
 这是仅 candidate 的 agent 路径，不是第二个 authority writer。configure 只写 pin、
 adapter 根和仅 candidate 的 adapter digest。launch 要求 daemon-owned ready
-（system/database/secret/provider/daemon）；Pi 可保持 `not_configured`。Workspace*
+（system/database/secret/provider/daemon）；Pi 可保持 `not_configured`。原生面板：
+钉住 dsh 根执行 `pnpm run build` 后，`cognitive dsh web --no-open` 提供
+`http://127.0.0.1:3080`（不是 Personal `/ui/`）。原生 Models 跟随当前 dsh 绑定账户
+目录；`cognitive dsh apply`（或 binding set/remove）会重载该列表。Workspace*
 candidate 仍只在 daemon Intent/Effect/verification/acceptance 路径上完成。dsh 响应
 绝不是 Task 完成。直接 Flash（`--path a`）只用于测量，`cognitive dsh launch` 会拒绝。
 

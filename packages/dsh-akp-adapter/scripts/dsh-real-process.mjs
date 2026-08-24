@@ -11,7 +11,9 @@
  *
  * Argv only (no CognitiveOS env-var literals): --port --bootstrap-file
  * --revision --dsh-root --adapter-root --task --provider-path a|b
+ * --mode headless|web --web-host --web-port --dsh-home
  * Path A also requires --api-key-file (0600 or "-") and never logs the key.
+ * Web mode is `--profile web --no-open` (native panel, not Personal `/ui/`).
  */
 import { spawn } from "node:child_process";
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
@@ -19,6 +21,19 @@ import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { pathToFileURL } from "node:url";
 import { admitTask, httpJson, issueToken, waitLifecycle } from "./daemon-task.mjs";
+import {
+  assertFrontendDist,
+  assertLoopbackHost,
+  assertWebPort,
+  listenUrl,
+  overlayStamp,
+  pathBWebChildExtras,
+  pathBWebCredentialsYaml,
+  pathBWebCatalogModels,
+  pathBWebSettingsYaml,
+  readDshWebControlPlaneOverlay,
+  writeDshWebControlPlaneOverlayApplied,
+} from "./dsh-web-preflight.mjs";
 
 function arg(name, fallback) {
   const index = process.argv.indexOf(name);
@@ -38,8 +53,15 @@ const task = arg("--task", DEFAULT_LLM_TASK);
 const providerPath = arg("--provider-path", "b");
 const apiKeyFile = arg("--api-key-file");
 const directBaseUrl = arg("--direct-base-url", "https://api.deepseek.com");
+const mode = arg("--mode", "headless");
+const webHost = arg("--web-host", "127.0.0.1");
+const webPort = arg("--web-port", "3080");
+const dshHomeOverride = arg("--dsh-home");
 if (providerPath !== "a" && providerPath !== "b") {
   throw new Error("--provider-path must be a (direct Flash) or b (AKP/daemon)");
+}
+if (mode !== "headless" && mode !== "web") {
+  throw new Error("--mode must be headless or web");
 }
 if (!dshRoot || !adapterRoot) {
   throw new Error("--dsh-root and --adapter-root are required");
@@ -54,14 +76,14 @@ const work = join(tmpdir(), `p8t11-dsh-real-${process.pid}`);
 mkdirSync(work, { mode: 0o700, recursive: true });
 const bearerFile = join(work, "daemon.bearer");
 const patchFile = join(work, "headless-akp.yml");
-const dshHome = join(work, "dsh-home");
-mkdirSync(dshHome, { mode: 0o700 });
+const dshHome = dshHomeOverride || join(work, "dsh-home");
+mkdirSync(dshHome, { mode: 0o700, recursive: true });
 
 function redact(error) {
   return String(error).replace(/Bearer\s+\S+/gi, "Bearer [redacted]").replace(/sk-[A-Za-z0-9]+/g, "sk-[redacted]");
 }
 
-function childEnvironment() {
+function childEnvironment(extra = {}) {
   const allow = [
     "PATH",
     "HOME",
@@ -92,6 +114,12 @@ function childEnvironment() {
   const compileCache = join(dshRoot, ".cognitiveos-node-compile-cache");
   mkdirSync(compileCache, { mode: 0o700, recursive: true });
   env.NODE_COMPILE_CACHE = compileCache;
+  for (const [key, value] of Object.entries(extra)) {
+    if (/API_KEY|SECRET|TOKEN|PASSWORD|BEARER/i.test(key)) {
+      throw new Error(`child environment refuses secret-shaped key ${key}`);
+    }
+    env[key] = value;
+  }
   return env;
 }
 
@@ -124,8 +152,8 @@ function dshCliInvocation(root) {
   };
 }
 
-function llmDeepseekPatch(baseURL, apiKeyEnv) {
-  return [
+function llmDeepseekPatch(baseURL, apiKeyEnv, selectedModel, catalogModels) {
+  const lines = [
     "- id: llm-deepseek",
     "  config:",
     `    baseURL: ${baseURL}`,
@@ -133,8 +161,83 @@ function llmDeepseekPatch(baseURL, apiKeyEnv) {
     "    thinking: disabled",
     "    reasoningEffort: off",
     "    maxTokens: 256",
-    "",
-  ].join("\n");
+  ];
+  const model = String(selectedModel ?? "").trim();
+  if (model && !/[\s#:]/.test(model)) {
+    lines.push(`    model: ${model}`);
+  }
+  const models = pathBWebCatalogModels(catalogModels, model);
+  if (!models.length) {
+    lines.push("    models: []");
+  } else {
+    lines.push("    models:");
+    for (const item of models) {
+      lines.push(`      - id: ${item.id}`);
+      lines.push(`        name: ${item.name}`);
+    }
+  }
+  lines.push("");
+  return lines.join("\n");
+}
+
+async function loadCosDshOverlay(origin, managementToken) {
+  const fromFile = readDshWebControlPlaneOverlay(dshHome);
+  if (fromFile) {
+    return fromFile;
+  }
+  try {
+    const bindings = await httpJson(origin, "GET", "/management/agent-bindings", managementToken);
+    const rows = Array.isArray(bindings.json?.bindings) ? bindings.json.bindings : [];
+    const dsh = rows.find(
+      (row) => row && row.agent === "agent://personal/dsh" && row.status === "active",
+    );
+    if (!dsh?.account_id) {
+      return { bound: false, model: "", catalog: [], written_at_ms: 0 };
+    }
+    const listed = await httpJson(
+      origin,
+      "GET",
+      `/management/providers/models?account_id=${encodeURIComponent(dsh.account_id)}`,
+      managementToken,
+    );
+    const catalog = Array.isArray(listed.json?.models) ? listed.json.models : [];
+    const model = String(dsh.model_id ?? "").trim();
+    return {
+      bound: true,
+      model,
+      catalog: pathBWebCatalogModels(catalog, model),
+      written_at_ms: 0,
+    };
+  } catch {
+    return { bound: false, model: "", catalog: [], written_at_ms: 0 };
+  }
+}
+
+function waitForChildOrOverlayChange(child, stamp) {
+  return new Promise((resolve, reject) => {
+    const onError = (error) => {
+      cleanup();
+      reject(error);
+    };
+    const onClose = (code) => {
+      cleanup();
+      resolve({ reason: "exit", code });
+    };
+    child.once("error", onError);
+    child.once("close", onClose);
+    const timer = setInterval(() => {
+      const next = overlayStamp(readDshWebControlPlaneOverlay(dshHome));
+      if (next && next !== stamp) {
+        cleanup();
+        resolve({ reason: "overlay", code: null });
+      }
+    }, 400);
+    function cleanup() {
+      clearInterval(timer);
+      child.removeListener("error", onError);
+      child.removeListener("close", onClose);
+    }
+  });
 }
 
 function assistantLooksComplete(text) {
@@ -155,6 +258,100 @@ function runtimeFacts(payload) {
       ? json.sessions.map((session) => session.fencing_epoch)
       : [],
   };
+}
+
+async function runWebPathB() {
+  const boundHost = assertLoopbackHost(webHost);
+  const boundPort = assertWebPort(webPort);
+  const distIndex = assertFrontendDist(dshRoot);
+  const cli = dshCliInvocation(dshRoot);
+  const pluginPath = join(adapterRoot, "plugin.bundle.cjs");
+  if (!existsSync(pluginPath)) {
+    throw new Error(`plugin.bundle.cjs is missing at ${pluginPath}`);
+  }
+  const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
+  const taskToken = await issueToken(origin, bootstrap, "task");
+  const managementToken = await issueToken(origin, bootstrap, "management");
+  writeFileSync(bearerFile, `${taskToken}\n`, { encoding: "utf8", mode: 0o600 });
+  chmodSync(bearerFile, 0o600);
+  writeFileSync(join(dshHome, ".credentials.yaml"), pathBWebCredentialsYaml(managementToken), {
+    encoding: "utf8",
+    mode: 0o600,
+  });
+  chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
+  const providerBase = `${origin}/provider/v1/dsh`;
+  let exitCode = 0;
+  try {
+    while (true) {
+      const overlay = await loadCosDshOverlay(origin, managementToken);
+      const stamp = overlayStamp(overlay) || overlayStamp(readDshWebControlPlaneOverlay(dshHome));
+      const settingsPath = join(dshHome, "settings.yaml");
+      const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
+      writeFileSync(
+        settingsPath,
+        pathBWebSettingsYaml(providerBase, existingSettings, overlay.model, overlay.catalog),
+        {
+          encoding: "utf8",
+        },
+      );
+      const patchBody = [
+        "- insert:",
+        ...pluginInsert("cognitiveos-akp", "dsh-web-process", "deepseek.dsh.akp", undefined, [
+          { kind: "lifecycle", operation: "adapter.ready", payload: { ok: true, mode: "web" } },
+        ]),
+        llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
+      ].join("\n");
+      writeFileSync(patchFile, patchBody, { encoding: "utf8", mode: 0o600 });
+      const child = spawn(
+        process.execPath,
+        [
+          ...cli.args,
+          "--profile",
+          "web",
+          "--patch",
+          patchFile,
+          "--no-open",
+          "--host",
+          boundHost,
+          "--port",
+          String(boundPort),
+        ],
+        {
+          cwd: dshRoot,
+          env: childEnvironment(pathBWebChildExtras(providerBase)),
+          stdio: ["ignore", "inherit", "inherit"],
+        },
+      );
+      if (!child.pid) {
+        throw new Error("dsh web spawn produced no pid");
+      }
+      await bindRuntime(origin, managementToken, child.pid);
+      writeDshWebControlPlaneOverlayApplied(dshHome, overlay.written_at_ms, child.pid);
+      process.stderr.write(
+        `cognitive dsh web listening at ${listenUrl(boundHost, boundPort)} dist=${distIndex} selected_model=${overlay.model || "unset"}\n`,
+      );
+      const waited = await waitForChildOrOverlayChange(child, stamp);
+      if (waited.reason === "overlay") {
+        await new Promise((resolve) => {
+          if (child.exitCode !== null || child.signalCode !== null) {
+            resolve();
+            return;
+          }
+          child.once("close", resolve);
+          child.kill("SIGTERM");
+        });
+        continue;
+      }
+      exitCode = waited.code;
+      break;
+    }
+  } finally {
+    await clearRuntime(origin, managementToken);
+    rmSync(work, { recursive: true, force: true });
+  }
+  if (exitCode !== 0) {
+    throw new Error(`dsh web exited ${exitCode}`);
+  }
 }
 
 async function runDsh(patchBody, runtime) {
@@ -209,6 +406,17 @@ async function runDsh(patchBody, runtime) {
     runtimeAfterBind,
     cliMode: cli.mode,
   };
+}
+
+if (mode === "web" && providerPath === "a") {
+  throw new Error(
+    "cognitive dsh web Path A is measurement-only; use Path B (AKP/daemon Provider). Do not put API keys in dsh .env",
+  );
+}
+
+if (mode === "web") {
+  await runWebPathB();
+  process.exit(0);
 }
 
 if (providerPath === "a") {
@@ -335,6 +543,7 @@ function pluginInsert(id, sessionId, pluginId, taskRef, events) {
 }
 
 const selected = await httpJson(origin, "GET", "/provider/v1/dsh/selected-model", managementToken);
+const overlay = await loadCosDshOverlay(origin, managementToken);
 const providerBase = `${origin}/provider/v1/dsh`;
 const outcome = await runDsh(
   [
@@ -359,7 +568,7 @@ const outcome = await runDsh(
         },
       },
     ]),
-    llmDeepseekPatch(providerBase, "DAEMON_BEARER"),
+    llmDeepseekPatch(providerBase, "DAEMON_BEARER", overlay.model, overlay.catalog),
   ].join("\n"),
   { origin, token: managementToken },
 );
@@ -380,7 +589,7 @@ const summary = {
   adapter: "dsh --patch cognitiveos-akp Workspace* + llm-deepseek via daemon Provider SSE proxy",
   candidate_only: true,
   dsh_response_is_not_task_completion: true,
-  selected_model: selected.json?.model ?? selected.json?.selected_model ?? null,
+  selected_model: overlay.model || selected.json?.model || selected.json?.selected_model || null,
   dsh_exit: outcome.exitCode,
   elapsed_ms: outcome.elapsedMs,
   ttft_ms: outcome.ttftMs,

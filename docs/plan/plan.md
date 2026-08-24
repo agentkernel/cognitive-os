@@ -1284,6 +1284,20 @@ Pi 不可以：
 - 不修改产品代码、合同或测试来“补齐”文档。不声称 live Secret Store / Provider / Pi /
   dsh、Gate、Profile、B01 或 Web UI。
 
+### P8-T15 — Native dsh Web UI control panel
+
+- 产品命令 `cognitive dsh web` 启动原生 dsh 控制面板（`dsh --profile web --no-open`），
+  默认 loopback `http://127.0.0.1:3080`。这不是 Personal `/ui/`（P7-T05）。
+- 钉住 revision 不变，除非 web artifact 强制升 pin。安装 overlay 必须产出 `apps/web/dist`
+  （`pnpm run build`，不只 `build:lib`）；缺 dist fail-closed。
+- 只绑定 127.0.0.1；拒绝 `0.0.0.0`。无 TLS/auth。SSH guest 使用 `--no-open`。
+- Path B 保持 dsh → AKP → daemon → Flash + SecretStore；不要把 API key 写入 dsh `.env`。
+  不在 web 启动时 admit Workspace* one-shot tasks。
+- `cognitive dsh status` 观察 web 进程；UI up 不是 Task 完成。
+- 负例：缺 dist、非 loopback host、Path A 仍仅测量、headless `--print` 不回归。
+- 真机 linux-002：`ss` 显示 `127.0.0.1:3080`，`GET /` 返回原生 SPA HTML。
+- 声明上限 `hypothesis`；不提升 Gate/release/Profile/B01/EVAL/Agent-benefit。
+
 ---
 
 ## Phase 9 — 性能与结构演进（研究卡；正式状态见台账）

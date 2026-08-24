@@ -17,7 +17,7 @@ sources:
   - path: apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: handbook/_meta/annotations/http-routes.json
   - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:022159ee9e08c7f27c1420b2eb24eea485aa2b1a7b6416014d00846e38c8eaeb"
+fingerprint: "sha256:2d4bc8cd45b7298cb483546f15fa3f5eb8bd7972afe704c507426cf7935e3535"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -37,7 +37,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/personal/readiness` | management | Alias of the snapshot-consistent status projection. |
 | `GET` | `/personal/doctor` | management | Redacted snapshot-consistent diagnostic projection including six-resource, headless-vault, and operability sections. |
 | `GET` | `/personal/dsh/runtime` | management | Observation-only dsh runtime projection: process-local sessions, fencing epoch, optional bound pid liveness via `/proc/{pid}` existence (never cmdline/environ). States are INACTIVE, ACTIVE, or CRASHED. A dsh response is never Task completion. |
-| `POST` | `/personal/dsh/runtime` | management | Observation-only bind/heartbeat/clear of a dsh process id. Not an authority writer. Invalid schema/op/pid fail closed. |
+| `POST` | `/personal/dsh/runtime` | management | Observation-only bind/heartbeat/clear of a dsh process id, or op=apply to publish the Cos dsh binding as Path B selected-model and reload native Models from that bound account catalog. Not an authority writer. Invalid schema/op/pid and INACTIVE apply fail closed. |
 | `POST` | `/provider/v1/chat/completions` | management | Daemon-owned Provider proxy for the Pi agent path (`agent://personal/pi`). When a control-plane binding exists, the request model must match that binding and there is no fallback. Unbound agents still use `provider.json` / `selected-model.json`. Secrets resolve server-side only. Unary `stream:false` success responses carry `X-CognitiveOS-Provider-Network-Nanos`. Public `stream:true` is forwarded as SSE (`text/event-stream`) and flushes upstream bytes without waiting for a unary JSON body; streaming success omits the network-nanos header because it is unknown when headers flush. Pi conversations and private-candidate remain unary. When `COGNITIVEOS_PI_ROUTE_OBSERVATION=enabled` and the request carries one well-formed opaque `campaign-<32 lowercase hex>` correlation id, the daemon also echoes that id and reports `X-CognitiveOS-Daemon-Preflight-Nanos` (config/selected-model/SecretStore work, disjoint from the network exchange). Malformed or duplicate correlation headers are ignored; the product body is unchanged and nothing is persisted. |
 | `GET` | `/provider/v1/selected-model` | management | Non-secret selected-model projection for the Pi agent path. A control-plane binding, when present, is the selected model (`selected_snapshot_digest: binding`). |
 | `POST` | `/provider/v1/dsh/chat/completions` | management | Daemon-owned Provider proxy for the DeepSeek harness path (`agent://personal/dsh`). Independent of the Pi route: a dsh binding cannot be satisfied by posting to `/provider/v1/chat/completions`. Binding mismatch fails closed with no fallback. Unbound dsh still uses `provider.json` / `selected-model.json`. |

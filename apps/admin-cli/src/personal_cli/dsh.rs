@@ -7,6 +7,7 @@
 
 use std::collections::BTreeMap;
 use std::fs;
+use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 
@@ -29,7 +30,9 @@ const DSH_CONFIG_SURFACE: &str = "personal-dsh-config";
 const DSH_REVISION_FILE_NAME: &str = ".cognitiveos-dsh-revision";
 const PERSONAL_DOCTOR_SCHEMA_VERSION: u64 = 1;
 const PERSONAL_DOCTOR_SURFACE: &str = "personal-doctor";
-const REQUIRED_DSH_COMPONENTS: [&str; 5] = ["system", "database", "secret", "provider", "daemon"];
+const REQUIRED_DSH_COMPONENTS: [&str; 4] = ["system", "database", "secret", "daemon"];
+pub(crate) const DEFAULT_WEB_HOST: &str = "127.0.0.1";
+pub(crate) const DEFAULT_WEB_PORT: u16 = 3080;
 
 /// Inputs accepted by `cognitive dsh configure`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -47,6 +50,9 @@ pub struct DshLaunchOptions {
     pub print_mode: bool,
     pub provider_path: DshProviderPath,
     pub task: Option<String>,
+    pub web_mode: bool,
+    pub listen_host: String,
+    pub listen_port: u16,
 }
 
 /// Inputs accepted by `cognitive dsh status`.
@@ -68,6 +74,58 @@ impl DshProviderPath {
             Self::Direct => "a",
             Self::Adapter => "b",
         }
+    }
+}
+
+fn normalize_web_listen(host: &str, port: u16) -> Result<(String, u16), String> {
+    if port == 0 {
+        return Err("dsh web --port must be 1..=65535".to_owned());
+    }
+    let trimmed = host.trim();
+    if trimmed.is_empty() {
+        return Err("dsh web --host must be a loopback address".to_owned());
+    }
+    if trimmed == "0.0.0.0" || trimmed == "::" || trimmed == "[::]" {
+        return Err(
+            "dsh web --host 0.0.0.0/:: is refused; native dsh web has no TLS/auth and must bind loopback only"
+                .to_owned(),
+        );
+    }
+    if trimmed.eq_ignore_ascii_case("localhost") {
+        return Ok((DEFAULT_WEB_HOST.to_owned(), port));
+    }
+    let unwrapped = trimmed
+        .strip_prefix('[')
+        .and_then(|value| value.strip_suffix(']'))
+        .unwrap_or(trimmed);
+    let address: IpAddr = unwrapped.parse().map_err(|_| {
+        format!("dsh web --host must be a loopback address (got {trimmed}); 0.0.0.0 is refused")
+    })?;
+    if !address.is_loopback() {
+        return Err(format!(
+            "dsh web --host must be a loopback address (got {trimmed}); 0.0.0.0 is refused"
+        ));
+    }
+    Ok((unwrapped.to_owned(), port))
+}
+
+fn web_listen_url(host: &str, port: u16) -> String {
+    if host.contains(':') {
+        format!("http://[{host}]:{port}")
+    } else {
+        format!("http://{host}:{port}")
+    }
+}
+
+fn assert_web_frontend_dist(dsh_root: &Path) -> Result<PathBuf, String> {
+    let index = dsh_root.join("apps/web/dist/index.html");
+    if index.is_file() {
+        Ok(index)
+    } else {
+        Err(format!(
+            "dsh web frontend dist is missing at {}; run pnpm run build from the pinned dsh root, then retry. Headless `cognitive dsh launch --print` remains available.",
+            index.display()
+        ))
     }
 }
 
@@ -185,7 +243,7 @@ pub fn launch(options: &DshLaunchOptions) -> Result<Value, String> {
         "spawned"
     };
 
-    Ok(json!({
+    let mut report = json!({
         "status": "ok",
         "surface": "cognitive-dsh-launch",
         "action": action,
@@ -199,7 +257,19 @@ pub fn launch(options: &DshLaunchOptions) -> Result<Value, String> {
         "gate_claim": "not-claimed",
         "authority_side_effects": false,
         "conversation_claim": "not-claimed",
-    }))
+    });
+    if options.web_mode {
+        let (host, port) = normalize_web_listen(&options.listen_host, options.listen_port)?;
+        report["surface"] = json!("cognitive-dsh-web");
+        report["listen_host"] = json!(host);
+        report["listen_port"] = json!(port);
+        report["listen_url"] = json!(web_listen_url(&host, port));
+        report["open_browser"] = json!(false);
+        report["profile"] = json!("web");
+        report["native_panel"] = json!(true);
+        report["personal_ui_is_not_this_surface"] = json!(true);
+    }
+    Ok(report)
 }
 
 /// Read the daemon-owned dsh runtime projection. Observation-only.
@@ -212,6 +282,59 @@ pub fn status(options: &DshStatusOptions) -> Result<Value, String> {
         .and_then(|client| client.get_dsh_runtime())
         .map_err(|error| error.to_string())?;
     serde_json::from_str(&body).map_err(|_| "dsh runtime projection is not JSON".to_owned())
+}
+
+/// Publish the Cos dsh binding as the live Path B model, then restart web.
+pub fn apply(options: &DshStatusOptions) -> Result<Value, String> {
+    let layout = build_layout(&options.layout_roots).map_err(|error| error.to_string())?;
+    let endpoint_document = fs::read_to_string(layout.state_dir().join(DAEMON_ENDPOINT_FILE_NAME))
+        .map_err(|_| "daemon endpoint is absent; run `cognitive daemon start`".to_owned())?;
+    let endpoint = parse_loopback_endpoint(&endpoint_document)?;
+    let applied_body = PersonalDaemonClient::connect(&endpoint, &layout)
+        .and_then(|client| {
+            client.post_dsh_runtime(
+                &json!({
+                    "schema_version": 1,
+                    "surface": "personal-dsh-runtime",
+                    "op": "apply",
+                })
+                .to_string(),
+            )
+        })
+        .map_err(|error| error.to_string())?;
+    let mut report: Value = serde_json::from_str(&applied_body)
+        .map_err(|_| "dsh apply response is not JSON".to_owned())?;
+    if report.get("applied") != Some(&json!(true)) {
+        return Err("dsh apply was not accepted by the daemon".to_owned());
+    }
+    if report.get("restart_performed") == Some(&json!(true)) {
+        report["native_panel"] = json!(true);
+        return Ok(report);
+    }
+    if let Some(process_id) = report.get("process_id").and_then(Value::as_u64)
+        && process_id > 1
+    {
+        #[cfg(unix)]
+        {
+            let _ = Command::new("kill")
+                .args(["-TERM", &process_id.to_string()])
+                .status();
+            std::thread::sleep(std::time::Duration::from_millis(800));
+        }
+    }
+    let restarted = launch(&DshLaunchOptions {
+        layout_roots: options.layout_roots.clone(),
+        print_mode: false,
+        provider_path: DshProviderPath::Adapter,
+        task: None,
+        web_mode: true,
+        listen_host: DEFAULT_WEB_HOST.to_owned(),
+        listen_port: DEFAULT_WEB_PORT,
+    })?;
+    report["restart_performed"] = json!(true);
+    report["restart"] = restarted;
+    report["native_panel"] = json!(true);
+    Ok(report)
 }
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -268,7 +391,19 @@ fn prepare_launch_with_doctor_document(
         "--provider-path".to_owned(),
         options.provider_path.as_str().to_owned(),
     ];
-    if let Some(task) = &options.task {
+    if options.web_mode {
+        let (host, port) = normalize_web_listen(&options.listen_host, options.listen_port)?;
+        assert_web_frontend_dist(&dsh_root)?;
+        let web_home = layout.runtime_dir().join("dsh-web-home");
+        arguments.push("--mode".to_owned());
+        arguments.push("web".to_owned());
+        arguments.push("--web-host".to_owned());
+        arguments.push(host);
+        arguments.push("--web-port".to_owned());
+        arguments.push(port.to_string());
+        arguments.push("--dsh-home".to_owned());
+        arguments.push(path_to_argument(&web_home)?);
+    } else if let Some(task) = &options.task {
         arguments.push("--task".to_owned());
         arguments.push(task.clone());
     }
@@ -385,9 +520,6 @@ fn validate_doctor_readiness(document: &str) -> Result<(), String> {
         || doctor_object.get("surface").and_then(Value::as_str) != Some(PERSONAL_DOCTOR_SURFACE)
     {
         return Err("daemon doctor projection has an unsupported contract".to_owned());
-    }
-    if doctor_object.get("overall").and_then(Value::as_str) != Some("ready") {
-        return Err("daemon is not ready for a dsh agent launch".to_owned());
     }
     let components = doctor_object
         .get("components")
@@ -567,6 +699,33 @@ mod tests {
         fs::write(root.join("plugin.bundle.cjs"), "module.exports = {}\n").expect("plugin");
     }
 
+    fn write_web_dist(dsh_root: &Path) {
+        let dist = dsh_root.join("apps/web/dist");
+        fs::create_dir_all(&dist).expect("web dist");
+        fs::write(
+            dist.join("index.html"),
+            "<!doctype html><title>DeepSeek Harness</title>\n",
+        )
+        .expect("index");
+    }
+
+    fn headless_opts(
+        runtime_root: Option<PathBuf>,
+        print_mode: bool,
+        path: DshProviderPath,
+        task: Option<String>,
+    ) -> DshLaunchOptions {
+        DshLaunchOptions {
+            layout_roots: LayoutRoots { runtime_root },
+            print_mode,
+            provider_path: path,
+            task,
+            web_mode: false,
+            listen_host: DEFAULT_WEB_HOST.to_owned(),
+            listen_port: DEFAULT_WEB_PORT,
+        }
+    }
+
     #[test]
     fn configuration_rejects_relative_paths_and_wrong_revision() {
         let relative = configure(&DshConfigureOptions {
@@ -647,14 +806,12 @@ mod tests {
         )
         .expect("bootstrap");
         let plan = prepare_launch_with_doctor_document(
-            &DshLaunchOptions {
-                layout_roots: LayoutRoots {
-                    runtime_root: Some(temporary.path().to_path_buf()),
-                },
-                print_mode: true,
-                provider_path: DshProviderPath::Adapter,
-                task: Some("Reply with the single word pong and nothing else.".to_owned()),
-            },
+            &headless_opts(
+                Some(temporary.path().to_path_buf()),
+                true,
+                DshProviderPath::Adapter,
+                Some("Reply with the single word pong and nothing else.".to_owned()),
+            ),
             &endpoint_document(),
             &ready_doctor_without_pi(),
         )
@@ -668,14 +825,12 @@ mod tests {
     fn launch_preparation_rejects_missing_config_and_unready_secret() {
         let temporary = TempDir::new().expect("temp");
         let missing = prepare_launch_with_doctor_document(
-            &DshLaunchOptions {
-                layout_roots: LayoutRoots {
-                    runtime_root: Some(temporary.path().to_path_buf()),
-                },
-                print_mode: false,
-                provider_path: DshProviderPath::Adapter,
-                task: None,
-            },
+            &headless_opts(
+                Some(temporary.path().to_path_buf()),
+                false,
+                DshProviderPath::Adapter,
+                None,
+            ),
             &endpoint_document(),
             &ready_doctor_without_pi(),
         );
@@ -702,14 +857,12 @@ mod tests {
         let mut doctor: Value = serde_json::from_str(&ready_doctor_without_pi()).expect("doctor");
         doctor["components"][2]["status"] = json!("not_ready");
         let unready = prepare_launch_with_doctor_document(
-            &DshLaunchOptions {
-                layout_roots: LayoutRoots {
-                    runtime_root: Some(temporary.path().to_path_buf()),
-                },
-                print_mode: false,
-                provider_path: DshProviderPath::Direct,
-                task: None,
-            },
+            &headless_opts(
+                Some(temporary.path().to_path_buf()),
+                false,
+                DshProviderPath::Direct,
+                None,
+            ),
             &endpoint_document(),
             &doctor.to_string(),
         );
@@ -724,13 +877,111 @@ mod tests {
 
     #[test]
     fn launch_rejects_direct_flash_path() {
-        let error = launch(&DshLaunchOptions {
-            layout_roots: LayoutRoots { runtime_root: None },
-            print_mode: true,
-            provider_path: DshProviderPath::Direct,
-            task: None,
-        })
-        .expect_err("direct path must stay measurement-only");
+        let error = launch(&headless_opts(None, true, DshProviderPath::Direct, None))
+            .expect_err("direct path must stay measurement-only");
         assert!(error.contains("measurement-only"), "{error}");
+    }
+
+    #[test]
+    fn web_listen_refuses_non_loopback_and_missing_dist() {
+        let refused = normalize_web_listen("0.0.0.0", 3080).expect_err("wildcard");
+        assert!(
+            refused.contains("loopback") || refused.contains("refused"),
+            "{refused}"
+        );
+        assert!(normalize_web_listen("192.168.1.2", 3080).is_err());
+        assert_eq!(
+            normalize_web_listen("localhost", 3080).expect("localhost"),
+            ("127.0.0.1".to_owned(), 3080)
+        );
+        assert_eq!(
+            normalize_web_listen("127.0.0.1", 3080).expect("loopback"),
+            ("127.0.0.1".to_owned(), 3080)
+        );
+
+        let temporary = TempDir::new().expect("temp");
+        let dsh_root = temporary.path().join("dsh");
+        let adapter_root = temporary.path().join("adapter");
+        write_helper_tree(&adapter_root);
+        configure(&DshConfigureOptions {
+            layout_roots: LayoutRoots {
+                runtime_root: Some(temporary.path().to_path_buf()),
+            },
+            dsh_root: dsh_root.clone(),
+            adapter_root,
+            revision: DSH_PACKAGE_REVISION.to_owned(),
+        })
+        .expect("configure");
+        fs::write(
+            temporary.path().join("cognitiveos/local-bootstrap.secret"),
+            "test-bootstrap-secret\n",
+        )
+        .expect("bootstrap");
+        let missing = prepare_launch_with_doctor_document(
+            &DshLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(temporary.path().to_path_buf()),
+                },
+                print_mode: false,
+                provider_path: DshProviderPath::Adapter,
+                task: None,
+                web_mode: true,
+                listen_host: DEFAULT_WEB_HOST.to_owned(),
+                listen_port: DEFAULT_WEB_PORT,
+            },
+            &endpoint_document(),
+            &ready_doctor_without_pi(),
+        )
+        .expect_err("missing dist");
+        assert!(missing.contains("frontend dist is missing"), "{missing}");
+
+        write_web_dist(&dsh_root);
+        let plan = prepare_launch_with_doctor_document(
+            &DshLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(temporary.path().to_path_buf()),
+                },
+                print_mode: false,
+                provider_path: DshProviderPath::Adapter,
+                task: None,
+                web_mode: true,
+                listen_host: DEFAULT_WEB_HOST.to_owned(),
+                listen_port: DEFAULT_WEB_PORT,
+            },
+            &endpoint_document(),
+            &ready_doctor_without_pi(),
+        )
+        .expect("web prepare");
+        assert!(plan.arguments.contains(&"--mode".to_owned()));
+        assert!(plan.arguments.contains(&"web".to_owned()));
+        assert!(plan.arguments.contains(&"--web-host".to_owned()));
+        assert!(plan.arguments.contains(&"127.0.0.1".to_owned()));
+        assert!(plan.arguments.contains(&"--web-port".to_owned()));
+        assert!(plan.arguments.contains(&"3080".to_owned()));
+        assert!(plan.arguments.contains(&"--dsh-home".to_owned()));
+        assert!(!plan.arguments.contains(&"--task".to_owned()));
+
+        let mut provider_blocked: Value =
+            serde_json::from_str(&ready_doctor_without_pi()).expect("doctor");
+        provider_blocked["overall"] = json!("blocked");
+        provider_blocked["first_conversation_ready"] = json!(false);
+        provider_blocked["components"][3]["status"] = json!("blocked");
+        let blocked_provider = prepare_launch_with_doctor_document(
+            &DshLaunchOptions {
+                layout_roots: LayoutRoots {
+                    runtime_root: Some(temporary.path().to_path_buf()),
+                },
+                print_mode: false,
+                provider_path: DshProviderPath::Adapter,
+                task: None,
+                web_mode: true,
+                listen_host: DEFAULT_WEB_HOST.to_owned(),
+                listen_port: DEFAULT_WEB_PORT,
+            },
+            &endpoint_document(),
+            &provider_blocked.to_string(),
+        )
+        .expect("Path B web ignores Pi provider.json blocked");
+        assert!(blocked_provider.arguments.contains(&"web".to_owned()));
     }
 }

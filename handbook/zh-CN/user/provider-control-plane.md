@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:1c548ac0e0160c982cc9eefa1069a780392c65547bb5175b08345c546940d6e6"
+fingerprint: "sha256:ce14f981e53c68bbc4f8270424ac3779714031b8e2adc4551b4ad9c0219dcdee"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -35,7 +35,9 @@ non_claims:
 `partial`：下面的 daemon management API 与 `cognitive` CLI 调用方已经实现，并有聚焦
 测试覆盖。localhost-only Web UI（外部 clients checkout，由 `GET /ui/` 同源提供）
 是同一套 management 路由的 daemon 客户端：命名账户、SecretStore 密钥交接、有界
-探测、以及固定 Agent binding。**没有桌面控制面板**。当 store 或上游不可用时，
+探测、以及固定 Agent binding。**没有桌面控制面板**。原生 dsh 控制面板
+（`cognitive dsh web`，默认 `http://127.0.0.1:3080`）是独立的 dsh 自带 UI，
+不是本 Provider Control Plane 面，也不是 Personal `/ui/`。当 store 或上游不可用时，
 live Secret Store 轮换/删除与 live Provider/Pi/dsh 资格化仍然失败闭合；它们不是
 Gate 证明。
 
@@ -110,6 +112,8 @@ cognitive provider account create --name openai-work --provider-kind openai_offi
 
 cognitive provider account create --name lan-proxy --provider-kind openai_compatible --endpoint-url https://llm.internal.example/v1 --allow-private-network --api-key-file ./provider.key
 
+cognitive provider account create --name xai-grok --provider-kind openai_compatible --endpoint-url https://api.x.ai/v1 --api-key-file ./provider.key
+
 cognitive provider account list
 cognitive provider account show --id acct-YOUR-ID
 cognitive provider account update --id acct-YOUR-ID --endpoint-url http://127.0.0.1:8080/v1 --allow-insecure-http --reconfirm
@@ -154,6 +158,12 @@ remove 之后，发现与绑定调用会失败，直到你再次 set key。
 daemon 拒绝嵌入的 userinfo、fragment、query、重定向、调用方提供的 header 模板，以及
 隐式 URL 改写。请求时会再次检查 DNS（若名称现在指向比授权更私密的地址，则为
 `PROVIDER_ENDPOINT_DNS_REBINDING`）。
+
+自定义端点只持久化 OpenAI 兼容的 **API 根**：空/`/`、`/v1`、`/api/v1`、`/openai/v1`
+或 `/compatible-mode/v1`。控制面板若粘贴 chat 或 models 的 RPC URL（例如
+`https://api.x.ai/v1/chat/completions`），会存成根路径（`https://api.x.ai/v1`）。
+其它路径——包括本机 daemon 代理 `/provider/v1/...`——返回 HTTP 400
+`PROVIDER_ENDPOINT_PATH_FORBIDDEN`。
 
 当 authority、DNS/网络范围或 HTTPS→HTTP 将要变化时，`account update` 必须带
 `--reconfirm`。否则 daemon 返回 HTTP 409 `PROVIDER_ENDPOINT_RECONFIRM_REQUIRED`。
@@ -207,7 +217,10 @@ cognitive agent binding remove --agent pi
 ```
 
 除非该模型已在账户目录中（发现它或 `models add`），`set` 会以
-`PROVIDER_MODEL_NOT_FOUND` 失败。HTTP `POST /management/agent-bindings` 接受可选
+`PROVIDER_MODEL_NOT_FOUND` 失败。仅在目录中还不够：DeepSeek 主机只服务
+`deepseek-*`，`grok-*` 只能绑到非 DeepSeek 的 `openai_compatible` 账户（例如 xAI）。
+否则 `models add` 与 `binding set` 以 `PROVIDER_MODEL_ENDPOINT_MISMATCH` 失败闭合。
+HTTP `POST /management/agent-bindings` 接受可选
 整数 `expected_revision`（当前 binding revision，未绑定时为 `0`）。不匹配时 HTTP
 409 `PROVIDER_BINDING_REVISION_STALE`；省略该字段以保持 CLI 兼容。`show` 在解析时
 要求 `--agent`，但当前调用与 `list` 相同的列表端点（不过滤）。用 `list` 查看两个
@@ -215,8 +228,16 @@ binding。
 
 Pi 流量使用 `POST /provider/v1/chat/completions`。DeepSeek harness 流量使用独立的
 `POST /provider/v1/dsh/chat/completions` 路由。已绑定的 Pi 私有 candidate 调用也使用
-binding 而不是 `provider.json`。若请求的 `model` 与 binding 不符，代理以 HTTP 400
-`PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合。已吊销账户或缺失 key 是 HTTP 409
+binding 而不是 `provider.json`。若 **Pi** 请求的 `model` 与 Pi binding 不符，代理以 HTTP 400
+`PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合。**dsh** Path B 代理会把请求模型改写为
+Cos `agent://personal/dsh` binding，因此原生目录 id 仍能用 Cos 指定的模型、走
+**绑定账户** 对话。若该账户不能服务绑定模型（grok 绑在 `api.deepseek.com`），
+Path B 以 HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` 失败闭合，不会向 DeepSeek
+发请求。设置、移除或改 dsh 绑定账户目录会按**当前 dsh 绑定账户**写入原生 Models
+覆盖层。Personal `/ui/` Bindings 的 **Apply to running dsh**（`POST
+/personal/dsh/runtime` `op=apply`）会重发 selected-model 并重载 Cos 安装的 web，
+使该列表与控制面一致；解绑 dsh 会从原生 Models 去掉 grok（以及该账户的其他 id）。
+已吊销账户或缺失 key 是 HTTP 409
 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`。官方 Anthropic binding 不支持公共 SSE
 （`stream:true`）。
 
@@ -287,6 +308,7 @@ cognitive alerts acknowledge --alert-id YOUR-ALERT-ID
 | `PROVIDER_DISCOVERY_FAILED`（传输）或 `PROVIDER_DISCOVERY_MALFORMED` | 网络、TLS 或意外的 `/models` JSON。账户保持 `degraded`；binding 保留。 |
 | `PROVIDER_KEY_MISSING` | 在 refresh 或绑定调用前 set key。 |
 | `PROVIDER_MODEL_NOT_FOUND` | 在 `agent binding set` 之前 `models refresh` 或 `models add`。 |
+| `PROVIDER_MODEL_ENDPOINT_MISMATCH` | 只把 grok 绑到能服务 grok 的非 DeepSeek `openai_compatible` 账户。不要把 grok 加进 DeepSeek 目录。 |
 | `PERSONAL_PROVIDER_BINDING_MISMATCH` | 请求模型不是绑定模型。更改 binding 或发送已绑定 id。没有回退。 |
 | HTTP 409 `PROVIDER_BINDING_REVISION_STALE` | 重新读取 binding revision，再用确认过的 `expected_revision` 重试。 |
 | 删除时的 `PROVIDER_CONTROL_CONFLICT` | 先 `agent binding remove`。 |

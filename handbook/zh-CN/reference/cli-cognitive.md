@@ -7,7 +7,7 @@ status: implemented
 generated: true
 sources:
   - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:c8549a2deb72b165c56d3f0b4e7b85889d210bad01822724a3cf95b1680a8634"
+fingerprint: "sha256:3404e15f6df1545a32e7d86638bf865002ced02b0cacf64b670fa0e5ada969db"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -42,6 +42,9 @@ USAGE:
                           --adapter-root <absolute-path> --revision <git-object>
   cognitive dsh launch [--runtime-root <dir>] [--print] [--path a|b]
                        [--task <prompt>]
+  cognitive dsh web [--runtime-root <dir>] [--path b] [--host 127.0.0.1]
+                    [--port 3080] [--no-open]
+  cognitive dsh apply [--runtime-root <dir>]
   cognitive dsh status [--runtime-root <dir>]
   cognitive resource get|watch [--runtime-root <dir>] [--endpoint <host:port>]
                        --family <memory|skill|tool|context|task|runtime>
@@ -82,10 +85,22 @@ Hard rules:
   - --append-system-prompt forwards an existing absolute UTF-8 file to Pi; it is not a
     Provider credential and the file bytes are not printed
   - dsh configuration writes only non-secret pin/paths and a candidate-only adapter digest
-  - dsh launch requires daemon-owned ready state (Pi may stay not_configured), loads the
-    pinned AKP plugin, and never treats a dsh response as Task completion
+  - dsh launch requires daemon-owned system/database/secret/daemon ready (Pi and the
+    Pi provider.json component may stay blocked). Path B uses the Cos Provider
+    control plane + SecretStore, loads the pinned AKP plugin, and never treats a
+    dsh response as Task completion
+  - dsh web starts the native dsh control panel (`dsh --profile web --no-open`) on
+    loopback only (default http://127.0.0.1:3080). This is not Personal `/ui/`.
+    Missing apps/web/dist fails closed. Path B still uses the daemon Provider proxy
+    and overlays the Cos-assigned dsh model plus that account catalog.
+    A panel session is never Task completion.
+  - dsh apply POSTs /personal/dsh/runtime op=apply (Cos dsh binding → selected-model)
+    and writes the native Models overlay from that bound account catalog. Cos-installed
+    web reloads the overlay; if it does not, apply restarts only that web pair on loopback 3080.
+    Removing the dsh binding drops those models (including grok) from the native list.
   - dsh status reads GET /personal/dsh/runtime (sessions, fencing, optional pid liveness)
   - dsh --path a is dsh→Flash direct; --path b is dsh→AKP→daemon→Flash (default)
+    (web refuses --host 0.0.0.0 and --path a)
   - resource list/inspect/bind|unbind|enable|disable|revoke call the management Resource Manager; get/watch remain the private projection
   - provider/agent/usage/budget/alerts/audit call the management Provider Control Plane; keys use --api-key-file only
   - never advances Task/Effect/Verification authority state

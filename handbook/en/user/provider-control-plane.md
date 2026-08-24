@@ -25,7 +25,7 @@ tests:
   - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - crates/cognitive-store/tests/p8_t13_provider_store.rs
   - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:1c548ac0e0160c982cc9eefa1069a780392c65547bb5175b08345c546940d6e6"
+fingerprint: "sha256:ce14f981e53c68bbc4f8270424ac3779714031b8e2adc4551b4ad9c0219dcdee"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
 ---
@@ -36,7 +36,10 @@ non_claims:
 implemented and covered by focused tests. A localhost-only Web UI (external
 clients checkout, served same-origin from `GET /ui/`) is a daemon client for
 the same management routes: named accounts, SecretStore key handoff, bounded
-probe, and fixed Agent bindings. There is **no desktop control panel**. Live
+probe, and fixed Agent bindings. There is **no desktop control panel**. The
+native dsh control panel (`cognitive dsh web`, default `http://127.0.0.1:3080`)
+is a separate dsh-owned UI, not this Provider Control Plane surface and not
+Personal `/ui/`. Live
 Secret Store rotate/remove and live Provider/Pi/dsh qualification remain
 fail-closed when the store or upstream is unavailable; they are not Gate
 proof.
@@ -123,6 +126,8 @@ cognitive provider account create --name openai-work --provider-kind openai_offi
 
 cognitive provider account create --name lan-proxy --provider-kind openai_compatible --endpoint-url https://llm.internal.example/v1 --allow-private-network --api-key-file ./provider.key
 
+cognitive provider account create --name xai-grok --provider-kind openai_compatible --endpoint-url https://api.x.ai/v1 --api-key-file ./provider.key
+
 cognitive provider account list
 cognitive provider account show --id acct-YOUR-ID
 cognitive provider account update --id acct-YOUR-ID --endpoint-url http://127.0.0.1:8080/v1 --allow-insecure-http --reconfirm
@@ -171,6 +176,13 @@ The daemon rejects embedded userinfo, fragments, query strings, redirects,
 caller-supplied header templates, and implicit URL rewriting. DNS is checked
 again at request time (`PROVIDER_ENDPOINT_DNS_REBINDING` if a name now points
 somewhere more private than the grant).
+
+Stored custom endpoints are OpenAI-compatible **API roots** only: empty/`/`,
+`/v1`, `/api/v1`, `/openai/v1`, or `/compatible-mode/v1`. The control plane
+accepts a pasted chat or models RPC URL (for example
+`https://api.x.ai/v1/chat/completions`) and persists the root
+(`https://api.x.ai/v1`). Other paths — including the local daemon proxy
+`/provider/v1/...` — return HTTP 400 `PROVIDER_ENDPOINT_PATH_FORBIDDEN`.
 
 `--reconfirm` is required on `account update` when authority, DNS/network
 scope, or HTTPS→HTTP would change. Without it the daemon returns HTTP 409
@@ -228,7 +240,11 @@ cognitive agent binding remove --agent pi
 ```
 
 `set` fails with `PROVIDER_MODEL_NOT_FOUND` unless that model is already in
-the account catalog (discover it or `models add` it). HTTP `POST
+the account catalog (discover it or `models add` it). Catalog membership is
+not enough: a DeepSeek host only serves `deepseek-*`, and `grok-*` is only
+servable on a non-DeepSeek `openai_compatible` account (for example xAI).
+`models add` and `binding set` fail closed with
+`PROVIDER_MODEL_ENDPOINT_MISMATCH` otherwise. HTTP `POST
 /management/agent-bindings` accepts optional integer `expected_revision`
 (current binding revision, or `0` when unbound). A mismatch is HTTP 409
 `PROVIDER_BINDING_REVISION_STALE`; omit the field to keep CLI compatibility.
@@ -238,9 +254,19 @@ endpoint as `list` (it does not filter). Use `list` to inspect both bindings.
 Pi traffic uses `POST /provider/v1/chat/completions`. DeepSeek harness traffic
 uses the independent `POST /provider/v1/dsh/chat/completions` route. A bound
 Pi private-candidate call also uses the binding rather than `provider.json`.
-If the request `model` does not match the binding, the proxy fails closed with
-HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH`. A revoked account or missing
-key is HTTP 409 `PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`. Official Anthropic
+If a **Pi** request `model` does not match the Pi binding, the proxy fails closed with
+HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH`. The **dsh** Path B proxy rewrites
+the request model to the Cos `agent://personal/dsh` binding so native catalog
+ids still chat with the assigned model on the **bound account**. If that
+account cannot serve the bound model (grok on `api.deepseek.com`), Path B
+fail-closes with HTTP 400 `PERSONAL_PROVIDER_BINDING_MISMATCH` and does not
+POST to DeepSeek. Setting, removing, or catalog-changing the dsh binding writes
+the native Models overlay from the current dsh-bound account only. Personal
+`/ui/` Bindings **Apply to running dsh** (`POST /personal/dsh/runtime`
+`op=apply`) republishes selected-model and reloads Cos-installed web so that
+list matches; unbinding dsh drops grok (and every other id from that account)
+from native Models. A revoked account or missing key is HTTP 409
+`PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE`. Official Anthropic
 bindings do not support public SSE (`stream:true`).
 
 Pi and `dsh` bindings are isolated: setting one never copies the other.
@@ -317,6 +343,7 @@ thresholds as it reads. Acknowledge takes `--alert-id`.
 | `PROVIDER_DISCOVERY_FAILED` (transport) or `PROVIDER_DISCOVERY_MALFORMED` | Network, TLS, or unexpected `/models` JSON. Account stays `degraded`; bindings stay. |
 | `PROVIDER_KEY_MISSING` | Set a key before refresh or bound calls. |
 | `PROVIDER_MODEL_NOT_FOUND` | `models refresh` or `models add` before `agent binding set`. |
+| `PROVIDER_MODEL_ENDPOINT_MISMATCH` | Bind grok only on a grok-capable non-DeepSeek `openai_compatible` account. Do not add grok to a DeepSeek catalog. |
 | `PERSONAL_PROVIDER_BINDING_MISMATCH` | The request model is not the bound model. Change the binding or send the bound id. No fallback. |
 | HTTP 409 `PROVIDER_BINDING_REVISION_STALE` | Re-read the binding revision and retry the confirmed `expected_revision`. |
 | `PROVIDER_CONTROL_CONFLICT` on delete | `agent binding remove` first. |

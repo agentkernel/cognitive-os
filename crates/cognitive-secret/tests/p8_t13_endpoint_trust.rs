@@ -42,3 +42,14 @@ fn public_api_refuses_anthropic_compatible_http_private_and_header_injection() {
         Err(EndpointTrustError::ArbitraryHeaderForbidden)
     );
 }
+
+#[test]
+fn public_api_normalizes_chat_completions_paste_to_api_root() {
+    let endpoint = TrustedEndpoint::evaluate(
+        ProviderKind::OpenaiCompatible,
+        Some("https://api.x.ai/v1/chat/completions"),
+        public_grant(),
+    )
+    .expect("chat completions URL is an OpenAI-compatible root paste");
+    assert_eq!(endpoint.normalized(), "https://api.x.ai/v1");
+}

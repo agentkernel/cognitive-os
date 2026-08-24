@@ -1,6 +1,6 @@
 # PROGRESS — 单页进度仪表
 
-## Current snapshot (2026-08-23 P7-T05 control-panel closed)
+## Current snapshot (2026-08-24 P8-T15 dsh Models catalog sync)
 
 This section is the authoritative current view. Entries below `Historical
 evidence journal` preserve execution-time facts and cannot override it.
@@ -30,10 +30,11 @@ supported scope.
 
 | Area | Current status | Evidence boundary | Next actionable step |
 |---|---|---|---|
-| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | Wait for a fresh owner delivery instruction. Do not auto-claim P6 / P7-T06 / P7-T07 |
-| Owner-directed campaign | `PERSONAL-PERF-EVAL-015` **closed** (2026-08-21) on `evaluation/EVAL-015-freeze`. Evaluation routing OFF. Do not resume evaluation. Carries closed EVAL-014 C1/C2a B0/B1/B2 on pin `adc40499` (not re-run). C0 B0/B1/B2 **pass** (B2 270/270). MS-AUTH/T-GOV/T2/UJ2/UJ3/UJ4/B3/B4 recorded. C2b **partial**. C2c **pass**. B5 1 h **pass** (60/60; 12/12). B5 8 h **pass** (480/480; 48/48 pairs; `local_non_ok=0`; 7/7 hourly health 200; 4 retained instrument fails). B5 24 h **default deferred**. Cleanup **pass**. EVAL-002 and EVAL-004 through EVAL-014 remain **closed**. | Plan: [execution plan](../evaluation/personal-performance-benchmark-execution-plan.md). Preregistration: [EVAL-015](../evaluation/personal-perf-eval-015-preregistration.md). Report: [EVAL-015 assessment](../evaluation/personal-performance-assessment-20260821-eval-015.md). Claim ceiling `hypothesis`; `not_reviewed`. No Gate / release / Profile / B01 / Agent-benefit promotion. | none for this campaign — wait for a fresh owner delivery instruction |
+| Project focus | `cognitiveos-personal`: active and sole implementation project | CognitiveOS architecture assets remain reference/contract inputs; no second product backlog | Continue P8-T15 native dsh web panel. Do not auto-claim P6 / P7-T06 / P7-T07 |
+| Owner-directed campaign | `PERSONAL-PERF-EVAL-015` **closed** (2026-08-21) on `evaluation/EVAL-015-freeze`. Evaluation routing OFF. Do not resume evaluation. Carries closed EVAL-014 C1/C2a B0/B1/B2 on pin `adc40499` (not re-run). C0 B0/B1/B2 **pass** (B2 270/270). MS-AUTH/T-GOV/T2/UJ2/UJ3/UJ4/B3/B4 recorded. C2b **partial**. C2c **pass**. B5 1 h **pass** (60/60; 12/12). B5 8 h **pass** (480/480; 48/48 pairs; `local_non_ok=0`; 7/7 hourly health 200; 4 retained instrument fails). B5 24 h **default deferred**. Cleanup **pass**. EVAL-002 and EVAL-004 through EVAL-014 remain **closed**. | Plan: [execution plan](../evaluation/personal-performance-benchmark-execution-plan.md). Preregistration: [EVAL-015](../evaluation/personal-perf-eval-015-preregistration.md). Report: [EVAL-015 assessment](../evaluation/personal-performance-assessment-20260821-eval-015.md). Claim ceiling `hypothesis`; `not_reviewed`. No Gate / release / Profile / B01 / Agent-benefit promotion. | none for this campaign — do not resume evaluation |
 | Owner-directed C1/C2 campaign | EVAL-014 C1/C2a **carried** (B0 pass; B1 5/5; B2 30/30 on `adc40499`). EVAL-015 C2b **partial** split-score; C2c fault-profile **pass** split-score; C2d remains EVAL-014 split-score (not re-run). | Plan: [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](./PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md). Claim ceiling `hypothesis`; no Gate, release, Profile, B01, or Agent-benefit promotion. | retain; parent-plan campaign EVAL-015 is closed |
-| Active task lease | `none` | P7-T05 control-panel follow-on closed. Kernel PR [#262](https://github.com/agentkernel/cognitive-os/pull/262) merged at `main@962463fe`. Clients PR [cognitiveos-clients#2](https://github.com/agentkernel/cognitiveos-clients/pull/2). | wait for a fresh owner delivery instruction; do not auto-claim P6 / P7-T06 / P7-T07 |
+| Active task lease | `lease/personal/P8-T15/dsh-native-web-panel` on `personal/P8-T15-dsh-native-web-panel` @ `4bfaee66` | Writable: admin-cli dsh + client, dsh-akp-adapter scripts, kernel-server apply/remap + scheduler recovery, endpoint_trust, plan/PROGRESS, P8-T15 checkpoint, mapped handbook. Clients Apply is PR #4 (separate repo) @ `0320c1a`. | linux-002 daemon **517492** `:48681` (binary `p8t15-4bfaee66`); Cos helper **517768** / web **517786** `:3080` LongCat overlay. Do not auto-claim P6 / P7-T06 / P7-T07 |
+| P8-T15 Native dsh Web UI | **in-progress** | D04 native Models catalog sync **pass** at `4bfaee66`: bind/remove/apply write exclusive dsh-bound catalog; helper reloads Cos; unbound drops grok. Linux `p8_t13` **7/7**, `p8_t11` **1/1**, Clippy `-D warnings` kernel-server+admin-cli, fmt, Node preflight **5/5**. Guest daemon **517492** health **200**; Cos `:3080` **200** settings `model: LongCat-2.0` only (no leftover DeepSeek/grok ids). Report: [P8-T15 report](../checkpoints/20260823-personal-p8-t15-dsh-native-web-panel-report.md). Claim ceiling `hypothesis`. | Refresh dsh Models after bind/unbind/Apply. Keep **517492** / **517786**. Do not auto-claim P6 / P7-T06 / P7-T07 |
 | P7-T05 Non-blocking Web UI | **done** | Merged PR [#262](https://github.com/agentkernel/cognitive-os/pull/262) at `main@962463fe`. Clients PR [cognitiveos-clients#2](https://github.com/agentkernel/cognitiveos-clients/pull/2) @ `c6b763b` / `main@db56374`. Required CI `32622026657` at `f374abc9` passed Ubuntu, Windows, required-ci. Linux D09: live UI key→SecretStore, bind+stale CAS, Task admit, dsh Path B `assistant_ok` on `deepseek-v4-flash`. HTTP cancel **not-run**. Report: [control-panel report](../checkpoints/20260823-personal-p7-t05-web-ui-control-panel-report.md). Claim ceiling `hypothesis`. | retain closure; do not auto-claim P6 / P7-T06 / P7-T07 |
 | P8-T14 Provider Control Plane operator docs | **done** | Merged PR [#260](https://github.com/agentkernel/cognitive-os/pull/260) at `main@a2b8ddb3`. Required CI `32609687956` at `7694f747` passed Ubuntu, Windows, and required-ci. Authored bilingual `user.provider-control-plane` plus related user/reference pointers. No Web/desktop panel. Does not reopen P8-T13. Lease closed. Closure: [P8-T14 closure](../checkpoints/20260823-personal-p8-t14-provider-control-plane-docs-closure.md). Claim ceiling `hypothesis`. | retain closure; wait for a fresh owner delivery instruction |
 | P8-T13 Provider Control Plane | **done** | Merged PR [#259](https://github.com/agentkernel/cognitive-os/pull/259) at `main@0e8ccad9`. Product evidence `6256f723`. Linux `DEV-LINUX-NATIVE-01`: endpoint_trust 1/1, store 8/8, kernel-server 3/3, admin-cli parse 1/1, workspace Clippy `-D warnings`, fmt. Required CI `32582360429` at `6256f723` and docs-head `32584664798` at `ada00bd1` passed Ubuntu, Windows, and required-ci. Lease closed. Running report: [P8-T13 report](../checkpoints/20260822-personal-p8-t13-provider-control-plane-report.md). Claim ceiling `hypothesis`. | retain closure; P8-T14 docs follow-up is closed |
@@ -131,7 +132,7 @@ supported scope.
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 109 | 103 | 0 | 1 | 5 | 6 |
+| 110 | 103 | 1 | 1 | 5 | 7 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
@@ -149,16 +150,21 @@ pass-through, compiled-lib dsh launch, dsh OS runtime inspect, and real-task
 Path A/B. Owner delivery `P8-T12` (Resource Manager) is `done`. Owner delivery
 `P8-T13` (LLM Provider Control Plane) is `done`. Owner follow-on `P8-T14`
 (operator usage documentation) is `done` via PR
-[#260](https://github.com/agentkernel/cognitive-os/pull/260). `P7-T05` is `done`
+[#260](https://github.com/agentkernel/cognitive-os/pull/260). Owner delivery
+`P8-T15` (native dsh Web UI control panel) is **in-progress**. `P7-T05` is `done`
 via PR [#262](https://github.com/agentkernel/cognitive-os/pull/262) and clients
 PR [cognitiveos-clients#2](https://github.com/agentkernel/cognitiveos-clients/pull/2).
-Do not auto-claim P6 / P7-T06 / P7-T07. Remaining items are blocked `P7-T07` and
-owner-deferred P6 / P7-T06.
+Do not auto-claim P6 / P7-T06 / P7-T07. Remaining items are in-progress `P8-T15`,
+blocked `P7-T07`, and owner-deferred P6 / P7-T06.
 
 ### Layer 2 — Current Delivery Slice queue
 
 | Slice | Status | Actual evidence boundary | Executable next action |
 |---|---|---|---|
+| `P8-T15/D01` | `done` | Jump-host exact `0376e942`: admin-cli `dsh` tests **9/9**, `cargo fmt`, Clippy `-D warnings`. Node preflight 3/3. Required CI Ubuntu pass on `0376e942`; Windows pending on later run `32638483500` at `bbcbd118`. | consumed |
+| `P8-T15/D02` | `done` | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. Overlay pair stopped. | consumed |
+| `P8-T15/D04` | `in-progress` | Jump `14aadf27`: dsh **10/10**, p8_t11 **1/1**, p8_t13 **5/5**, recovered-terminal **1/1**, Clippy. linux-002 leftover grok Path B Cos **400** (not DeepSeek allowlist); settings/patch overlay grok then Flash; Flash Path B **200** pong. No grok-capable account. CLI apply **pass**. | Owner adds grok-capable Cos account (non-DeepSeek `openai_compatible`) then bind+Apply. Do not auto-claim P6 / P7-T06 / P7-T07 |
+| `P8-T15/D03` | `done` | Bilingual operator pages + generated `cli-cognitive` for `cognitive dsh web`; fingerprints refreshed with the CLI commits. | retain; reopen only if operator wording drifts |
 | `P7-T05/D01` | `done` | ADR-0053; Node inventory **8/8**. Linux `05a3afa1`: kernel-server Origin/`/ui` **6/6**, Clippy `-D warnings`, fmt. Required CI `32614594696` pass. | consumed |
 | `P7-T05/D02` | `done` | SPA shell, memory-only session, Home, Agent inventory/detail in `D:\\cognitiveos-clients\\pc\\web\\` | consumed |
 | `P7-T05/D03` | `done` | Provider create/rotate/probe forms; secret fields redacted to present/absent | consumed |

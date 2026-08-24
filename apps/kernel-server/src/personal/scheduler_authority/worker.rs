@@ -431,17 +431,30 @@ pub(crate) fn release_closed_recovered_attempt(
                 .to_owned(),
         ));
     }
-    scheduler_repository.release_lease(
-        &SchedulerWorkKey {
-            task_ref: scheduler_lease.task_ref.clone(),
-            contract_epoch: scheduler_lease.contract_epoch,
-        },
+    let work_key = SchedulerWorkKey {
+        task_ref: scheduler_lease.task_ref.clone(),
+        contract_epoch: scheduler_lease.contract_epoch,
+    };
+    match scheduler_repository.release_lease(
+        &work_key,
         &scheduler_lease.lease_owner,
         scheduler_lease.lease_epoch,
         SchedulerState::Succeeded,
         released_at,
-    )?;
-    Ok(())
+    ) {
+        Ok(_) => Ok(()),
+        Err(SchedulerRepositoryError::LeaseConflict(detail)) => {
+            match scheduler_repository.load(&work_key)? {
+                Some(row) if row.state == SchedulerState::Leased.as_str() => {
+                    Err(SchedulerAuthorityError::Repository(
+                        SchedulerRepositoryError::LeaseConflict(detail),
+                    ))
+                }
+                _ => Ok(()),
+            }
+        }
+        Err(error) => Err(error.into()),
+    }
 }
 
 pub(crate) fn load_current_worker_authorization<S>(

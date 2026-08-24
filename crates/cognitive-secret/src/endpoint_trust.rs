@@ -129,7 +129,8 @@ pub enum EndpointTrustError {
     QueryForbidden,
     /// Scheme is not `https` / granted `http`.
     UnsupportedScheme,
-    /// Custom path is not the OpenAI-compatible API root.
+    /// Custom path is not an OpenAI-compatible API root (after stripping
+    /// well-known RPC leaves such as `/chat/completions`).
     ArbitraryPath,
     /// HTTP used without `--allow-insecure-http`.
     InsecureHttpRequiresGrant,
@@ -421,17 +422,11 @@ fn parse_custom(
         return Err(EndpointTrustError::Invalid);
     }
     let (host, port) = split_host_port(authority, scheme)?;
-    validate_root_path(&path)?;
+    let normalized_path = normalize_compatible_root_path(&path)?;
     let scope = classify_host(&host);
     if scope < NetworkScope::Public && !grant.allow_private_network {
         return Err(EndpointTrustError::PrivateNetworkRequiresGrant);
     }
-
-    let normalized_path = match path.as_str() {
-        "/" | "" => String::new(),
-        "/v1/" => "/v1".to_owned(),
-        other => other.to_owned(),
-    };
     let host_rendered = render_host(&host);
     let default_port = default_port(scheme);
     let authority_rendered = if port == default_port {
@@ -505,9 +500,23 @@ fn default_port(scheme: EndpointScheme) -> u16 {
     }
 }
 
-fn validate_root_path(path: &str) -> Result<(), EndpointTrustError> {
-    match path {
-        "" | "/" | "/v1" | "/v1/" => Ok(()),
+/// Stored OpenAI-compatible roots. Control-panel pastes of chat/models RPC URLs
+/// are reduced to the API root. Traversal, the local daemon proxy prefix, and
+/// any other path stay `PROVIDER_ENDPOINT_PATH_FORBIDDEN`.
+fn normalize_compatible_root_path(path: &str) -> Result<String, EndpointTrustError> {
+    if path.contains("..") || path.contains('\\') {
+        return Err(EndpointTrustError::ArbitraryPath);
+    }
+    let mut trimmed = path.trim_end_matches('/').to_owned();
+    for suffix in ["/chat/completions", "/completions", "/models"] {
+        if let Some(stripped) = trimmed.strip_suffix(suffix) {
+            trimmed = stripped.to_owned();
+            break;
+        }
+    }
+    match trimmed.as_str() {
+        "" | "/" => Ok(String::new()),
+        "/v1" | "/api/v1" | "/openai/v1" | "/compatible-mode/v1" => Ok(trimmed),
         _ => Err(EndpointTrustError::ArbitraryPath),
     }
 }
@@ -623,8 +632,9 @@ mod tests {
             "https://user:pass@api.openai.com/v1",
             "https://api.example.test/v1#frag",
             "https://api.example.test/v1?foo=1",
-            "https://api.example.test/v1/chat/completions",
             "https://api.example.test/v1/../secret",
+            "https://api.example.test/provider/v1/dsh",
+            "https://api.example.test/admin",
         ] {
             assert!(
                 TrustedEndpoint::evaluate(
@@ -643,6 +653,68 @@ mod tests {
                 public_grant()
             ),
             Err(EndpointTrustError::EmbeddedCredentials)
+        );
+        assert_eq!(
+            TrustedEndpoint::evaluate(
+                ProviderKind::OpenaiCompatible,
+                Some("https://api.example.test/v1/chat/completions/../secret"),
+                public_grant()
+            ),
+            Err(EndpointTrustError::ArbitraryPath)
+        );
+    }
+
+    #[test]
+    fn openai_compatible_rpc_suffix_and_prefixed_roots_normalize() {
+        let chat = TrustedEndpoint::evaluate(
+            ProviderKind::OpenaiCompatible,
+            Some("https://api.x.ai/v1/chat/completions"),
+            public_grant(),
+        )
+        .unwrap();
+        assert_eq!(chat.normalized(), "https://api.x.ai/v1");
+        assert_eq!(
+            chat.join_api_path("/chat/completions").unwrap(),
+            "https://api.x.ai/v1/chat/completions"
+        );
+
+        let models = TrustedEndpoint::evaluate(
+            ProviderKind::OpenaiCompatible,
+            Some("https://api.example.test/v1/models"),
+            public_grant(),
+        )
+        .unwrap();
+        assert_eq!(models.normalized(), "https://api.example.test/v1");
+
+        let openrouter = TrustedEndpoint::evaluate(
+            ProviderKind::OpenaiCompatible,
+            Some("https://openrouter.ai/api/v1"),
+            public_grant(),
+        )
+        .unwrap();
+        assert_eq!(openrouter.normalized(), "https://openrouter.ai/api/v1");
+        assert_eq!(
+            openrouter.join_api_path("/chat/completions").unwrap(),
+            "https://openrouter.ai/api/v1/chat/completions"
+        );
+
+        let groq = TrustedEndpoint::evaluate(
+            ProviderKind::OpenaiCompatible,
+            Some("https://api.groq.com/openai/v1/"),
+            public_grant(),
+        )
+        .unwrap();
+        assert_eq!(groq.normalized(), "https://api.groq.com/openai/v1");
+
+        let dashscope = TrustedEndpoint::evaluate(
+            ProviderKind::OpenaiCompatible,
+            Some("https://dashscope.aliyuncs.com/compatible-mode/v1"),
+            public_grant(),
+        )
+        .unwrap();
+        assert_eq!(
+            dashscope.normalized(),
+            "https://dashscope.aliyuncs.com/compatible-mode/v1"
         );
     }
 

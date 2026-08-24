@@ -254,6 +254,61 @@ fn control_plane_refuses_unauth_task_channel_and_untrusted_endpoints() {
     assert!(headers.contains("400 Bad Request"), "{headers}");
     assert!(headers.contains("PROVIDER_ENDPOINT_HEADER_INJECTION_FORBIDDEN"));
 
+    let proxy_path = send_json(
+        port,
+        "POST",
+        "/management/providers/accounts",
+        &management_token,
+        &json!({
+            "display_name": "local-proxy",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.example.test/provider/v1/dsh"
+        }),
+    );
+    assert!(proxy_path.contains("400 Bad Request"), "{proxy_path}");
+    assert!(proxy_path.contains("PROVIDER_ENDPOINT_PATH_FORBIDDEN"));
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
+
+#[test]
+fn create_account_strips_chat_completions_and_accepts_prefixed_openai_roots() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-endpoint-root-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let xai = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "xai-grok",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.x.ai/v1/chat/completions"
+        }),
+    );
+    assert_eq!(xai["account"]["endpoint"], "https://api.x.ai/v1");
+
+    let openrouter = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "openrouter-work",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://openrouter.ai/api/v1"
+        }),
+    );
+    assert_eq!(
+        openrouter["account"]["endpoint"],
+        "https://openrouter.ai/api/v1"
+    );
+
     let _ = std::fs::remove_dir_all(runtime_root);
 }
 
@@ -381,7 +436,7 @@ fn pi_and_dsh_bindings_are_isolated_before_secret_store() {
     assert!(pi_mismatch.contains("400 Bad Request"), "{pi_mismatch}");
     assert!(pi_mismatch.contains("PERSONAL_PROVIDER_BINDING_MISMATCH"));
 
-    let dsh_mismatch = send_json(
+    let dsh_rewritten = send_json(
         port,
         "POST",
         "/provider/v1/dsh/chat/completions",
@@ -391,8 +446,9 @@ fn pi_and_dsh_bindings_are_isolated_before_secret_store() {
             "messages": [{"role":"user","content":"hi"}]
         }),
     );
-    assert!(dsh_mismatch.contains("400 Bad Request"), "{dsh_mismatch}");
-    assert!(dsh_mismatch.contains("PERSONAL_PROVIDER_BINDING_MISMATCH"));
+    assert!(dsh_rewritten.contains("409 Conflict"), "{dsh_rewritten}");
+    assert!(dsh_rewritten.contains("PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE"));
+    assert!(!dsh_rewritten.contains("PERSONAL_PROVIDER_BINDING_MISMATCH"));
 
     let pi_bound = send_json(
         port,
@@ -488,6 +544,190 @@ fn binding_expected_revision_rejects_stale_cas() {
         }),
     );
     assert!(current.contains("200 OK"), "{current}");
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
+
+#[test]
+fn deepseek_account_refuses_grok_catalog_and_binding() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-compat-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    std::fs::create_dir_all(&runtime_root).unwrap();
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let deepseek = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "deepseek-only",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.deepseek.com"
+        }),
+    );
+    let deepseek_id = deepseek["account"]["id"].as_str().unwrap().to_owned();
+    let grok_on_deepseek = send_json(
+        port,
+        "POST",
+        "/management/providers/models/add",
+        &management_token,
+        &json!({"account_id": deepseek_id, "model_id": "grok-4.6"}),
+    );
+    assert!(
+        grok_on_deepseek.contains("400 Bad Request"),
+        "{grok_on_deepseek}"
+    );
+    assert!(grok_on_deepseek.contains("PROVIDER_MODEL_ENDPOINT_MISMATCH"));
+
+    add_manual_model(port, &management_token, &deepseek_id, "deepseek-v4-flash");
+    let bind_grok = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings",
+        &management_token,
+        &json!({
+            "agent": "dsh",
+            "account_id": deepseek_id,
+            "model_id": "grok-4.6"
+        }),
+    );
+    assert!(
+        bind_grok.contains("404 Not Found") || bind_grok.contains("400 Bad Request"),
+        "{bind_grok}"
+    );
+    assert!(
+        bind_grok.contains("PROVIDER_MODEL_NOT_FOUND")
+            || bind_grok.contains("PROVIDER_MODEL_ENDPOINT_MISMATCH"),
+        "{bind_grok}"
+    );
+
+    let official = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "openai-official",
+            "provider_kind": "openai_official"
+        }),
+    );
+    let official_id = official["account"]["id"].as_str().unwrap().to_owned();
+    let grok_on_official = send_json(
+        port,
+        "POST",
+        "/management/providers/models/add",
+        &management_token,
+        &json!({"account_id": official_id, "model_id": "grok-4.6"}),
+    );
+    assert!(
+        grok_on_official.contains("400 Bad Request"),
+        "{grok_on_official}"
+    );
+    assert!(grok_on_official.contains("PROVIDER_MODEL_ENDPOINT_MISMATCH"));
+
+    let xai = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "xai-grok",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.x.ai/v1"
+        }),
+    );
+    let xai_id = xai["account"]["id"].as_str().unwrap().to_owned();
+    add_manual_model(port, &management_token, &xai_id, "grok-4.6");
+    set_binding(port, &management_token, "dsh", &xai_id, "grok-4.6");
+
+    let proxied = send_json(
+        port,
+        "POST",
+        "/provider/v1/dsh/chat/completions",
+        &management_token,
+        &json!({
+            "model": "deepseek-chat",
+            "messages": [{"role":"user","content":"hi"}]
+        }),
+    );
+    assert!(proxied.contains("409 Conflict"), "{proxied}");
+    assert!(proxied.contains("PERSONAL_PROVIDER_ACCOUNT_UNAVAILABLE"));
+    assert!(!proxied.contains("supported API model names"));
+    assert!(!proxied.contains("api.deepseek.com"));
+
+    let _ = std::fs::remove_dir_all(runtime_root);
+}
+
+#[test]
+fn dsh_web_overlay_follows_bound_catalog_and_drops_removed_grok() {
+    let runtime_root = std::env::temp_dir().join(format!(
+        "cos-p8t13-overlay-{}-{}",
+        std::process::id(),
+        free_port()
+    ));
+    let port = free_port();
+    let mut daemon = spawn_personal(port, &runtime_root);
+    let secret = common::wait_for_bootstrap_secret_from(&mut daemon, &runtime_root);
+    let management_token = issue_token(port, &secret, "management");
+
+    let xai = create_account(
+        port,
+        &management_token,
+        &json!({
+            "display_name": "xai-overlay",
+            "provider_kind": "openai_compatible",
+            "endpoint": "https://api.x.ai/v1"
+        }),
+    );
+    let xai_id = xai["account"]["id"].as_str().unwrap().to_owned();
+    add_manual_model(port, &management_token, &xai_id, "grok-4.6");
+    set_binding(port, &management_token, "dsh", &xai_id, "grok-4.6");
+
+    let overlay_path = runtime_root
+        .join("cognitiveos")
+        .join("dsh-web-home")
+        .join("control-plane-overlay.json");
+    let bound: Value =
+        serde_json::from_str(&std::fs::read_to_string(&overlay_path).unwrap()).unwrap();
+    assert_eq!(bound["surface"], "personal-dsh-web-overlay");
+    assert_eq!(bound["bound"], true);
+    assert_eq!(bound["model"], "grok-4.6");
+    let ids: Vec<&str> = bound["catalog"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["id"].as_str().unwrap())
+        .collect();
+    assert_eq!(ids, vec!["grok-4.6"]);
+    assert!(!ids.contains(&"deepseek-v4-flash"));
+
+    add_manual_model(port, &management_token, &xai_id, "grok-4");
+    let expanded: Value =
+        serde_json::from_str(&std::fs::read_to_string(&overlay_path).unwrap()).unwrap();
+    let expanded_ids: Vec<&str> = expanded["catalog"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|row| row["id"].as_str().unwrap())
+        .collect();
+    assert!(expanded_ids.contains(&"grok-4.6"), "{expanded_ids:?}");
+    assert!(expanded_ids.contains(&"grok-4"), "{expanded_ids:?}");
+
+    let removed = send_json(
+        port,
+        "POST",
+        "/management/agent-bindings/remove",
+        &management_token,
+        &json!({ "agent": "dsh" }),
+    );
+    assert!(removed.contains("200 OK"), "{removed}");
+    let unbound: Value =
+        serde_json::from_str(&std::fs::read_to_string(&overlay_path).unwrap()).unwrap();
+    assert_eq!(unbound["bound"], false);
+    assert_eq!(unbound["model"], "");
+    assert_eq!(unbound["catalog"], json!([]));
+    assert!(!unbound.to_string().contains("grok-4.6"));
 
     let _ = std::fs::remove_dir_all(runtime_root);
 }
