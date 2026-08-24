@@ -119,3 +119,23 @@ screenshots do not constitute remote integration.
 
 No Gate, release, Profile, B01, EVAL, Provider-quality or Agent-benefit claim.
 The screenshots and local test/build results are implementation evidence only.
+
+## 5. 2026-08-24 reconcile-session addendum (append-only)
+
+The owner-reported permission fix was verified by the follow-up reconcile
+session and is **insufficient**: the repository is now public, but
+`cursor[bot]` push probes still return HTTP 403 and this run's installation
+token lists only `agentkernel/cognitive-os`. The original bundle
+(SHA-256 `93d35c39…ed6741`) died with its session VM. The work was recovered
+by re-extracting the recorded transcript diffs and rebuilding the two commits
+as clients `ba331b8` + `f257819` on baseline `db563744`, revalidated
+(`pnpm test` 29/29, production build pass), and preserved as a new verified
+bundle: `/cursor/stores/self/artifacts/provider-webui-apple-theme-8d2f.bundle`
+(reconcile agent's store), SHA-256
+`02a0216fd4611b88d904a1c481dc96b1f9ec06f62b99979511c45258250b641e`, tip
+`f2578196`, base `db563744`. Kernel PR #267 (remediation + runbook) is merged;
+the running report's units 20–28 hold the complete incremental log. The
+`blocked` disposition, blocker owner and claim ceiling of this record are
+unchanged; the unique next action is refined to: complete remediation §2
+(App installation grant) **and** publish from a run whose token covers the
+clients repository, or import the new bundle with an authorized identity.

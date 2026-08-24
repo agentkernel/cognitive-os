@@ -134,3 +134,64 @@ non-inference remain unchanged.
 The D10 implementation is therefore `tested-local` but not remotely visible or
 integrated. It cannot honestly satisfy task closure, regardless of the passing
 local checks.
+
+## 2026-08-24 reconcile session (post-"permission fix" verification and rebuild)
+
+Executed by the follow-up reconcile session after the owner reported the
+repository permission as fixed. Facts below were verified live; none are
+inferred.
+
+20. Repository visibility recheck: `agentkernel/cognitiveos-clients` is now
+    **public** (anonymous API confirms `visibility: public`); its `main` is
+    still `db563744f1bfe6b42fa977d59f4ee48a16cee3c2` and the original client
+    commits are still absent, so the earlier bundle was never imported.
+21. Installation-token recheck: `GET /installation/repositories` for this
+    run's token still lists **only** `agentkernel/cognitive-os`.
+22. Write probes: pushing probe ref `cursor/write-probe-8d2f` to the clients
+    repository failed twice (~05:31 and ~05:33 UTC) with HTTP 403
+    `Permission to agentkernel/cognitiveos-clients.git denied to cursor[bot]`.
+    A control probe on the kernel repository (branch create + delete
+    `cursor/write-probe-2a16`) **passed**, so the denial is
+    clients-repository-specific, not token-wide.
+23. Recovery-payload recheck: the original bundle
+    (SHA-256 `93d35c39…ed6741`) is **not** recoverable — the original
+    subagent's store died with its session and this session's store started
+    empty.
+24. Recovery executed: the five recorded edit results for `pc/web/src/App.tsx`,
+    `pc/web/src/styles.css` and `pc/web/src/App.test.tsx` were extracted from
+    the original session's retained transcript and re-applied cleanly onto
+    clients baseline `db563744`, recreating the two commits with their
+    original messages as `ba331b8` (`feat(web): refine provider control with
+    Apple theme`) and `f257819` (`test(web): cover provider visual
+    hierarchy`); diff stat 3 files, +1274/−147. Commit SHAs differ from the
+    originals only because committer timestamps differ.
+25. Revalidation at rebuilt tip `f257819`: `pnpm install --frozen-lockfile`
+    **pass**; `pnpm test` **pass**, 10 files / 29 tests; `pnpm build` **pass**
+    (TypeScript no-emit plus Vite, 43 modules, CSS 14.01 kB / JS 208.05 kB —
+    identical sizes to units 3 and 5).
+26. Delivery push attempt of the real branch
+    `cursor/provider-webui-apple-theme-8d2f` at ~05:43 UTC: **blocked**, same
+    HTTP 403 authorization denial. No client remote branch or Draft PR exists.
+27. New recovery bundle preserved in the reconcile agent's persistent store:
+    `/cursor/stores/self/artifacts/provider-webui-apple-theme-8d2f.bundle`,
+    SHA-256
+    `02a0216fd4611b88d904a1c481dc96b1f9ec06f62b99979511c45258250b641e`,
+    10,471 bytes, verified tip `f2578196116dfe3d55fd360e95ef9b5beb960840`,
+    required base `db563744f1bfe6b42fa977d59f4ee48a16cee3c2`;
+    `git bundle verify` **pass**.
+28. Kernel reconciliation: PR
+    [#267](https://github.com/agentkernel/cognitive-os/pull/267) (write-access
+    remediation + linux-002 runbook + plan count corrective) merged into
+    `main` at `e81956a4` with all required CI green; `main` was merged back
+    into this branch and the `PERSONAL-DEVELOPMENT-PLAN.md` summary-count
+    overlap was resolved to Phase 7 = 5 done / 2 blocked, Phase 8 = 15 done,
+    total = 103 done / 2 blocked.
+
+Root-cause refinement: beyond the App-installation gap recorded in the
+remediation checkpoint §1, this Cloud Agent environment registers only
+`github.com/agentkernel/cognitive-os`, so run tokens are minted for that
+repository alone. Publication therefore requires both the remediation §2
+installation grant **and** a run whose token covers the clients repository
+(an agent launched on `agentkernel/cognitiveos-clients` or a multi-repo
+environment) — or a manual import of the verified bundle by an authorized
+identity. Making the repository public did not grant `cursor[bot]` push.

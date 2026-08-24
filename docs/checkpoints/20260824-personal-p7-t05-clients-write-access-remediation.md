@@ -141,3 +141,35 @@ Owner: execute §2 (add the clients repository to the Cursor app
 installation). Everything else — bundle import, client push, client Draft PR,
 and flipping the P7-T05/D10 record out of `blocked` on the PR #266 branch —
 follows from that single grant and needs no other owner decision.
+
+## 5. 2026-08-24 post-fix verification (append-only)
+
+The reconcile session re-verified every §1 fact after the owner reported the
+permission as fixed:
+
+| Fact | Verified result (2026-08-24, ~05:26–05:45 UTC) |
+|---|---|
+| Repository visibility | now **public** (`visibility: public`); previously private |
+| Clients `main` | still `db563744` — no import happened |
+| `GET /installation/repositories` (this run's token) | still **only** `agentkernel/cognitive-os` |
+| Push probe `cursor/write-probe-8d2f` (twice) and real-branch push | all **HTTP 403** `denied to cursor[bot]` |
+| Kernel-repo control probe (branch create+delete) | **pass** — denial is clients-repository-specific |
+| Original bundle `93d35c39…ed6741` | **lost** with the original session VM |
+
+Additional root-cause fact: this Cloud Agent environment registers only
+`github.com/agentkernel/cognitive-os`, so its run tokens are minted for that
+repository alone. Even after the §2 installation grant, publication must run
+from an agent whose run/environment covers `agentkernel/cognitiveos-clients`
+(e.g. an agent launched on that repository), or the owner imports the bundle
+manually. The §2 recovery command remains valid and still has not been
+executed, or has not reached this environment's tokens.
+
+Recovery re-executed measurement-free of the block: the D10 diffs were
+re-extracted from the original session's retained transcript, rebuilt as
+clients `ba331b8` + `f257819` on `db563744`, revalidated (29/29 tests,
+production build pass), and preserved as a new verified bundle in the
+reconcile agent's store, SHA-256
+`02a0216fd4611b88d904a1c481dc96b1f9ec06f62b99979511c45258250b641e`
+(10,471 bytes, tip `f2578196`, base `db563744`). The §2 import example's
+expected SHA-256 and checkout tip must be replaced by these values when the
+new bundle is used.
