@@ -151,12 +151,26 @@
   Read-only probes plus a printed action plan. No jump-host or guest mutation.
 
 .EXAMPLE
-  # Default full boot: sync origin/main, ensure daemon, dsh web panel, Pi ready
-  powershell -ExecutionPolicy Bypass -File scripts\linux002-boot-personal.ps1
+  # CANONICAL PASTE - works from ANY PowerShell prompt (C:\Windows\system32
+  # included). Step 1: cd into your local cognitive-os clone. Step 2: run the
+  # script via a path that exists under that clone. Optional switches such as
+  # -EnsureGuestRunning and -LaunchPi are real parameters and belong on the
+  # SAME command line, never on separate '#' comment lines.
+  cd C:\path\to\your\cognitive-os
+  powershell -ExecutionPolicy Bypass -File .\scripts\linux002-boot-personal.ps1 -EnsureGuestRunning -LaunchPi
 
 .EXAMPLE
-  # Start the guest first if it is shut off, then boot everything
-  .\scripts\linux002-boot-personal.ps1 -EnsureGuestRunning
+  # No cd needed: give -File the ABSOLUTE path to the script instead
+  powershell -ExecutionPolicy Bypass -File C:\path\to\your\cognitive-os\scripts\linux002-boot-personal.ps1 -EnsureGuestRunning
+
+.EXAMPLE
+  # From the clone root a same-name launcher forwards every parameter here
+  .\linux002-boot-personal.ps1 -EnsureGuestRunning -LaunchPi
+
+.EXAMPLE
+  # Default full boot (guest already running): sync origin/main, ensure
+  # daemon + dsh web panel, leave Pi ready with a printed launch command
+  .\scripts\linux002-boot-personal.ps1
 
 .EXAMPLE
   # Reuse whatever is installed (no build), restart daemon on it, headless dsh
@@ -167,6 +181,22 @@
   .\scripts\linux002-boot-personal.ps1 -Revision 562d2a5d0000000000000000000000000000dead -LaunchPi
 
 .NOTES
+  TROUBLESHOOTING - "The argument '...' to the -File parameter does not exist":
+    PowerShell resolved a RELATIVE path against your CURRENT directory (for
+    example C:\Windows\system32) and found nothing. One of two things is true:
+    (a) You are not inside a cognitive-os clone. Fix: `cd` into your clone
+        first, or pass the absolute path to -File (see the examples above).
+    (b) Your checkout does not contain this script yet. Until PR #268
+        (https://github.com/agentkernel/cognitive-os/pull/268) is merged, the
+        script ships only on its branch. Fetch it into your clone:
+          git fetch origin cursor/linux002-boot-personal-ops-script-ac2d
+          git checkout cursor/linux002-boot-personal-ops-script-ac2d
+        After PR #268 is merged to main, use instead:
+          git checkout main
+          git pull origin main
+    Also: lines starting with '#' are comments, not parameters. Put switches
+    such as -EnsureGuestRunning / -LaunchPi on the same command line as -File.
+
   Exit codes:
     0  success
     2  parameter / local prerequisite error (ssh missing, unsafe path chars)
@@ -240,6 +270,23 @@ param(
 
 Set-StrictMode -Version 2.0
 $ErrorActionPreference = 'Stop'
+
+# Fail closed, with a human-readable pointer, when this code was not started
+# as an on-disk .ps1 file (for example pasted or piped into powershell).
+# Relative-path guidance and script-root anchoring are meaningless in that
+# mode, so refuse early instead of failing later with a confusing error.
+if ([string]::IsNullOrEmpty($PSCommandPath)) {
+  Write-Host ''
+  Write-Host 'ERROR (2): linux002-boot-personal.ps1 was not started as a script file.' -ForegroundColor Red
+  Write-Host '  Run the on-disk .ps1 from your cognitive-os clone:'
+  Write-Host '    cd C:\path\to\your\cognitive-os'
+  Write-Host '    powershell -ExecutionPolicy Bypass -File .\scripts\linux002-boot-personal.ps1 -EnsureGuestRunning -LaunchPi'
+  Write-Host '  If -File reports the path does not exist, see TROUBLESHOOTING in the'
+  Write-Host '  help header of scripts/linux002-boot-personal.ps1: either your current'
+  Write-Host '  directory is not a clone containing the script, or your checkout'
+  Write-Host '  predates PR #268 (branch cursor/linux002-boot-personal-ops-script-ac2d).'
+  exit 2
+}
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -360,6 +407,7 @@ $summary['guest'] = "$GuestHost (domain $GuestDomain via $JumpHost)"
 
 Write-Host ''
 Write-Host 'linux002-boot-personal: CognitiveOS Personal owner-ops boot' -ForegroundColor Green
+Write-Info "script         $PSCommandPath"
 Write-Info "route          local -> $JumpHost -> $GuestHost"
 Write-Info "revision       $Revision (SyncMode=$SyncMode)"
 Write-Info "runtime root   $RuntimeRoot"
