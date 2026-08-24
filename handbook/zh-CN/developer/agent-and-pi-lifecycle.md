@@ -46,7 +46,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:9e0e9a7325965aa960e36bb315712916fec33b42cd82c22047b6a45a7b3b46ca"
+fingerprint: "sha256:ab5e6566c829211c0e71addbbe08d71c1d92e640f2587096892dd6e2994cc8ea"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---

@@ -10,7 +10,6 @@ use std::fs;
 use std::net::IpAddr;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
-use std::time::Duration;
 
 use cognitive_runtime::{
     AuthorityChannel, DSH_ADAPTER_ID, DSH_PACKAGE_REVISION, activate_dsh_lifecycle,
@@ -320,7 +319,7 @@ pub fn apply(options: &DshStatusOptions) -> Result<Value, String> {
             let _ = Command::new("kill")
                 .args(["-TERM", &process_id.to_string()])
                 .status();
-            std::thread::sleep(Duration::from_millis(800));
+            std::thread::sleep(std::time::Duration::from_millis(800));
         }
     }
     let restarted = launch(&DshLaunchOptions {

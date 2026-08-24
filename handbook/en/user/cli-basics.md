@@ -19,7 +19,7 @@ tests:
   - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - apps/kernel-server/tests/p2_t27_backup_restore.rs
   - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:1724d6e2e5c511ae3e62506a5268331971ec134ac76ca661456c34c51df69762"
+fingerprint: "sha256:fd58fd01d559fa84ce3da4601341836687ac628ff53d617089ce2a8f6ff97540"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
