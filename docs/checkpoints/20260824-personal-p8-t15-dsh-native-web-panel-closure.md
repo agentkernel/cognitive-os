@@ -33,7 +33,7 @@
 | `p8_t11_dsh_runtime` | `DEV-LINUX-NATIVE-01` | `4bfaee66` | **pass** 1/1 |
 | `dsh-web-preflight.test.mjs` | local Node | `4bfaee66` | **pass** 5/5 |
 | Clippy `-D warnings` kernel-server+admin-cli | `DEV-LINUX-NATIVE-01` | `4bfaee66` | **pass** |
-| Guest daemon + Cos web | linux-002 | `4bfaee66` → `f846540f` | **pass** pre-merge guest **517492** / **517786**; post-closure replace to merged `main` revision |
+| Guest daemon + Cos web | linux-002 | `f846540f` | **pass** post-closure replace: daemon **519845** `:48681`, helper **519852** / Cos **519871** `:3080`; health **200**, Cos **200**, `selected_model=LongCat-2.0` |
 | Clients Apply copy | cognitiveos-clients | PR #4 @ `0320c1a` | **not merged** (separate repo) |
 | Local Windows GNU Rust | `DEV-WIN-GNU-01` | — | **not-run** (`RUST-LINK-DEV-WIN-GNU-01`) |
 
