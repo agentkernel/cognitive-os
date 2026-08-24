@@ -18,7 +18,7 @@ Clients Apply copy: https://github.com/agentkernel/cognitiveos-clients/pull/4
 | D01 CLI + helper + negatives | done | Jump-host `cargo test -p admin-cli --locked dsh` **9/9**; fmt; Clippy `-D warnings`. Node preflight 3/3. |
 | D02 linux-002 listen + GET `/` HTML | done | Cos-installed `:3080` ACTIVE; HTTP remove/set + Path B **pass**. |
 | D03 handbook / docs-sync | done | Bilingual operator pages + generated `cli-cognitive`; fingerprints refreshed with CLI commits. |
-| D04 Apply Cos binding to running web | in-progress | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account `PROVIDER_ENDPOINT_PATH_FORBIDDEN` **fixed** at `8b9d09cb`. Native Models catalog sync **pass** at `4bfaee66` (Linux 7/7 + guest Cos LongCat-only settings). Guest daemon **517492**. |
+| D04 Apply Cos binding to running web | done | Routing fail-closed + Cos catalog overlay at `14aadf27`. Create-account fix at `8b9d09cb`. Catalog sync **pass** at `4bfaee66`. Merged PR [#265](https://github.com/agentkernel/cognitive-os/pull/265) at `main@562d2a5d`. |
 
 ## Validation log
 
@@ -380,4 +380,8 @@ Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
 
 ## Unique next action
 
-Refresh dsh Models after bind/unbind/Apply on the live guest (`:3080` / daemon **517492**). Native list is the current dsh-bound account catalog. Do not auto-claim P6 / P7-T06 / P7-T07.
+Task closed. Wait for a fresh owner delivery instruction. Do not auto-claim P6 / P7-T06 / P7-T07.
+
+### 2026-08-24 — task closure (pass)
+
+Merged PR [#265](https://github.com/agentkernel/cognitive-os/pull/265) at `main@562d2a5d` (content head `f846540f`). Required CI run `32687964519` passed Ubuntu, Windows, and required-ci. Lease `lease/personal/P8-T15/dsh-native-web-panel` closed. Closure: [P8-T15 closure](./20260824-personal-p8-t15-dsh-native-web-panel-closure.md). Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
