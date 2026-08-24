@@ -2002,7 +2002,7 @@ fn handle_bound_provider_streaming<T: cognitive_secret::ProviderTransport + ?Siz
             stream
                 .write_all(&tail)
                 .and_then(|()| stream.flush())
-                .map_err(|_| ProviderProxyError::UpstreamRequestFailed)?;
+                .map_err(|_| "provider streaming tail write failed".to_owned())?;
         } else {
             error_body.borrow_mut().extend_from_slice(&tail);
         }
