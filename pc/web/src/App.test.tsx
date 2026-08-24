@@ -1,8 +1,9 @@
 import { createRoot } from "react-dom/client";
 import { act } from "react";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { App } from "./App";
 import { redactSecrets } from "./policy";
-import { exportClientState } from "./session";
+import { clearSession, exportClientState, rememberBearer } from "./session";
 
 describe("DOM and export redaction", () => {
   it("never writes api_key or SecretRef values into the document", () => {
@@ -20,6 +21,96 @@ describe("DOM and export redaction", () => {
     expect(host.textContent).not.toMatch(/sk-live|ss:\/\//);
     expect(host.textContent).toMatch(/"api_key":"present"/);
     expect(exportClientState()).toEqual({});
+    act(() => {
+      root.unmount();
+    });
+    host.remove();
+  });
+});
+
+function renderApp(hash: string) {
+  window.location.hash = hash;
+  const host = document.createElement("div");
+  document.body.appendChild(host);
+  const root = createRoot(host);
+  act(() => {
+    root.render(<App />);
+  });
+  return { host, root };
+}
+
+describe("Shell identity and navigation", () => {
+  afterEach(() => {
+    clearSession();
+    window.location.hash = "";
+  });
+
+  it("renders one product identity heading and the primary navigation landmark with every route", () => {
+    const { host, root } = renderApp("#/session");
+    const headings = host.querySelectorAll("h1");
+    expect(headings.length).toBe(1);
+    expect(headings[0].textContent).toBe("CognitiveOS Personal");
+    const nav = host.querySelector('nav[aria-label="Primary"]');
+    expect(nav).not.toBeNull();
+    for (const label of [
+      "Home",
+      "Agents",
+      "Providers",
+      "Bindings",
+      "Tasks",
+      "Activity",
+      "Resources",
+      "Session",
+    ]) {
+      expect(nav?.textContent).toContain(label);
+    }
+    act(() => {
+      root.unmount();
+    });
+    host.remove();
+  });
+
+  it("redirects an unauthenticated session to the bootstrap page instead of the dashboard", () => {
+    const { host, root } = renderApp("#/");
+    expect(host.querySelector("h2")?.textContent).toBe("Session bootstrap");
+    expect(host.querySelector(".page-head .lede")).not.toBeNull();
+    act(() => {
+      root.unmount();
+    });
+    host.remove();
+  });
+});
+
+describe("Provider hierarchy and authoritative-empty state", () => {
+  afterEach(() => {
+    clearSession();
+    window.location.hash = "";
+    vi.unstubAllGlobals();
+  });
+
+  it("shows the create/list hierarchy with an authoritative-empty table and never renders the bearer", async () => {
+    const bearerValue = "mgmt-bearer-must-not-render-in-dom";
+    rememberBearer("management", bearerValue);
+    const fetchMock = vi.fn(async () =>
+      new Response(JSON.stringify({ accounts: [] }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    const { host, root } = renderApp("#/providers");
+    await act(async () => {
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+
+    expect(host.querySelector("h2")?.textContent).toBe("Providers");
+    expect(host.querySelector('h3')?.textContent).toBe("Create named account");
+    expect(host.textContent).toContain("No provider accounts yet");
+    expect(host.textContent).not.toContain(bearerValue);
+    expect(host.innerHTML).not.toContain(bearerValue);
+
     act(() => {
       root.unmount();
     });
