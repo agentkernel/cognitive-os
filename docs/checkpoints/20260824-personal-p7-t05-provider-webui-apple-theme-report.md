@@ -94,6 +94,24 @@ non-inference remain unchanged.
     `db563744f1bfe6b42fa977d59f4ee48a16cee3c2`, SHA-256
     `93d35c3986da919668e60bf5d586da238c7ae9039030668c06408bbee6ed6741`.
     This recovery payload is outside Git and contains no secret.
+15. Blocked-accounting checkpoint `4e06b0555e6f4462b1a81581cc0bd2a2ab872a53`
+    was committed and pushed to the kernel branch before final verification.
+16. Final client rerun at exact local `07f7513e`: `pnpm test` **pass**, 10
+    files / 29 tests; `pnpm build` **pass**, including TypeScript no-emit and
+    43-module Vite production build. Only the two React Router v7 future-flag
+    warnings were emitted.
+17. Final kernel `pnpm run check:consistency` at blocked-accounting checkpoint
+    `4e06b055`: **pass** with the same 275 requirements / 55 errors / 74
+    schemas / 89 vectors denominator and the closed lease plus blocked task
+    state accepted.
+18. Final kernel handbook units at the same checkpoint:
+    `pnpm run check:handbook` **pass** (55 documents × 2 locales, 9 generated)
+    and `node tools/src/generate-handbook.mjs --check` **pass** (18 pages
+    byte-identical).
+19. Final `docs-sync-gate --push`, `git diff --check`, kernel/client worktree
+    checks and persistent `git bundle verify`: **pass**. The kernel branch
+    matched its upstream, both worktrees were clean, and the bundle verified
+    tip/base exactly.
 
 ## Blocked disposition
 
