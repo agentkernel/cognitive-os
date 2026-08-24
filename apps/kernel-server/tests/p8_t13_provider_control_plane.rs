@@ -700,7 +700,7 @@ fn dsh_web_overlay_follows_bound_catalog_and_drops_removed_grok() {
         .map(|row| row["id"].as_str().unwrap())
         .collect();
     assert_eq!(ids, vec!["grok-4.6"]);
-    assert!(!ids.iter().any(|id| *id == "deepseek-v4-flash"));
+    assert!(!ids.contains(&"deepseek-v4-flash"));
 
     add_manual_model(port, &management_token, &xai_id, "grok-4");
     let expanded: Value =
