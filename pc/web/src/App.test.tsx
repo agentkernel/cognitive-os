@@ -52,18 +52,22 @@ describe("Shell identity and navigation", () => {
     expect(headings[0].textContent).toBe("CognitiveOS Personal");
     const nav = host.querySelector('nav[aria-label="Primary"]');
     expect(nav).not.toBeNull();
+    // Frozen redesign IA (docs/design/06, owner-frozen labels): seven spaces.
+    // Bindings folds into Providers (DD-04); Session is chrome (DD-05);
+    // Tasks is renamed Work (DD-06).
     for (const label of [
       "Home",
+      "Work",
       "Agents",
       "Providers",
-      "Bindings",
-      "Tasks",
-      "Activity",
       "Resources",
-      "Session",
+      "Activity",
+      "System",
     ]) {
       expect(nav?.textContent).toContain(label);
     }
+    expect(nav?.textContent).not.toContain("Bindings");
+    expect(nav?.textContent).not.toContain("Tasks");
     act(() => {
       root.unmount();
     });
@@ -85,7 +89,8 @@ describe("Shell identity and navigation", () => {
   it("emits hash hrefs, not pathname routes that the daemon 404s", () => {
     const { host, root } = renderApp("#/session");
     const links = [...host.querySelectorAll("nav a")];
-    expect(links.length).toBeGreaterThanOrEqual(8);
+    // Frozen IA has 7 spaces (was 8 with Bindings/Session as peers).
+    expect(links.length).toBeGreaterThanOrEqual(7);
     for (const link of links) {
       const href = link.getAttribute("href") ?? "";
       expect(href.startsWith("#"), `href ${href}`).toBe(true);
