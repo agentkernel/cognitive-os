@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { DigestChip } from "../../components/DigestChip";
 import { MasterList } from "../../components/MasterList";
 import { EmptyState } from "../../components/states";
@@ -24,6 +25,14 @@ const ORIGIN_LABEL: Record<string, string> = {
  * task": the other two are "not read yet" and "the read failed".
  */
 export type InventorySource = "pending" | "failed" | "answered";
+
+/** The detail route, carrying the list state so the return trip is lossless. */
+export function detailPath(taskRef: string, listStateSearch: string): string {
+  const base = `/work/${encodeURIComponent(taskRef)}`;
+  const search = new URLSearchParams(listStateSearch);
+  search.set("task", taskRef);
+  return `${base}?${search.toString()}`;
+}
 
 function EmptyForSource({ source }: { source: InventorySource }) {
   if (source === "pending") {
@@ -65,6 +74,7 @@ export function WorkInventory({
   nowMs,
   atBound,
   source,
+  listStateSearch,
 }: {
   rows: WorkRow[];
   selectedRef?: string;
@@ -72,6 +82,8 @@ export function WorkInventory({
   nowMs: number;
   atBound: boolean;
   source: InventorySource;
+  /** Scope and filter carried into the detail view so it can hand them back. */
+  listStateSearch: string;
 }) {
   if (rows.length === 0) {
     return (
@@ -127,6 +139,13 @@ export function WorkInventory({
             header: "Observed",
             render: (row) => workRowAge(row, nowMs),
           },
+          {
+            key: "detail",
+            header: "Detail",
+            render: (row) => (
+              <Link to={detailPath(row.taskRef, listStateSearch)}>Open</Link>
+            ),
+          },
         ]}
       />
       <HonestyNote>
@@ -138,7 +157,9 @@ export function WorkInventory({
           ? " The daemon list came back at its row bound, so further contracts may exist without appearing here."
           : ""}{" "}
         The task watch snapshot is not used here: its snapshot list is always empty and its event
-        ring is process-local, so it does not represent task inventory.
+        ring is process-local, so it does not represent task inventory. Opening a row&apos;s detail
+        composes the same reads plus bounded observation and consumption; it does not reach a task
+        detail route, because the daemon has none.
       </HonestyNote>
     </>
   );

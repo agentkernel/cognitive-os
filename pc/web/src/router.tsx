@@ -8,6 +8,7 @@ import { ProviderDetailPage } from "./views/providers/ProviderDetailPage";
 import { ProvidersPage } from "./views/providers/ProvidersPage";
 import { NewTaskPage } from "./views/work/NewTaskPage";
 import { WorkPage } from "./views/work/WorkPage";
+import { WorkDetailPage } from "./views/work/detail/WorkDetailPage";
 import {
   ActivityPage,
   AgentsPage,
@@ -20,9 +21,10 @@ import {
  * designed 404. Home is the W3 attention surface; Providers is the W2
  * redesign (accounts master + five-section detail); Bindings folded into
  * Providers (DD-04) and redirects there. Work is the W4 inventory plus the
- * governed creation flow; there is deliberately no /work/:id route until W5
- * delivers a real detail view. The legacy governed-task page stays reachable
- * at /tasks until W5 migrates its watch/observation diagnostics.
+ * governed creation flow, and /work/:taskRef is the W5 detail view. The static
+ * /work/new segment is matched ahead of the dynamic one. The legacy
+ * governed-task page stays reachable at /tasks until its watch/observation
+ * diagnostics are migrated.
  */
 export function AppRoutes() {
   return (
@@ -49,6 +51,14 @@ export function AppRoutes() {
         element={
           <SessionGate channel="task" title="New task">
             <NewTaskPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/work/:taskRef"
+        element={
+          <SessionGate channel="task" title="Task">
+            <WorkDetailPage />
           </SessionGate>
         }
       />

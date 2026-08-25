@@ -42,9 +42,16 @@ const NO_OBSERVED: ObservedTask[] = [];
  */
 export function WorkPage() {
   const [nowMs, setNowMs] = useState(() => Date.now());
-  const [origin, setOrigin] = useState<WorkOriginFilter>("session");
-  const [query, setQuery] = useState("");
   const [params, setParams] = useSearchParams();
+  /*
+   * Scope, filter and selection live in the URL so a round trip through the
+   * detail view returns to the same list the operator left, rather than
+   * resetting to the default scope with nothing selected.
+   */
+  const [origin, setOrigin] = useState<WorkOriginFilter>(() =>
+    params.get("scope") === "all" ? "all" : "session",
+  );
+  const [query, setQuery] = useState(() => params.get("q") ?? "");
   const [selectedRef, setSelectedRef] = useState<string | undefined>(
     () => params.get("task") ?? undefined,
   );
@@ -150,19 +157,56 @@ export function WorkPage() {
   const selectedRow = visible.find((row) => row.taskRef === activeRef);
   const selectedIndex = activeRef ? probeRefs.indexOf(activeRef) : -1;
 
-  const select = useCallback(
-    (taskRef: string | undefined) => {
-      setSelectedRef(taskRef);
+  const writeListState = useCallback(
+    (patch: { task?: string; scope?: WorkOriginFilter; q?: string }) => {
       const next = new URLSearchParams(params);
-      if (taskRef) {
-        next.set("task", taskRef);
-      } else {
-        next.delete("task");
+      for (const [key, value] of Object.entries(patch)) {
+        if (value == null || value === "" || (key === "scope" && value === "session")) {
+          next.delete(key);
+        } else {
+          next.set(key, value);
+        }
       }
       setParams(next, { replace: true });
     },
     [params, setParams],
   );
+
+  const select = useCallback(
+    (taskRef: string | undefined) => {
+      setSelectedRef(taskRef);
+      writeListState({ task: taskRef });
+    },
+    [writeListState],
+  );
+
+  const changeOrigin = useCallback(
+    (next: WorkOriginFilter) => {
+      setOrigin(next);
+      writeListState({ scope: next });
+    },
+    [writeListState],
+  );
+
+  const changeQuery = useCallback(
+    (next: string) => {
+      setQuery(next);
+      writeListState({ q: next });
+    },
+    [writeListState],
+  );
+
+  /** Carries the list state forward so the detail view can hand it back. */
+  const listStateSearch = useMemo(() => {
+    const carried = new URLSearchParams();
+    if (origin === "all") {
+      carried.set("scope", "all");
+    }
+    if (query.trim() !== "") {
+      carried.set("q", query);
+    }
+    return carried.toString();
+  }, [origin, query]);
 
   const refreshAll = useCallback(() => {
     setNowMs(Date.now());
@@ -236,9 +280,9 @@ export function WorkPage() {
 
       <WorkFilters
         origin={origin}
-        onOrigin={setOrigin}
+        onOrigin={changeOrigin}
         query={query}
-        onQuery={setQuery}
+        onQuery={changeQuery}
         sessionCount={sessionRows.length}
         totalCount={allRows.length}
       />
@@ -252,6 +296,7 @@ export function WorkPage() {
             nowMs={nowMs}
             atBound={envelopes.length >= TASK_LIST_LIMIT}
             source={inventorySource}
+            listStateSearch={listStateSearch}
           />
         </div>
         {selectedRow ? (
@@ -260,6 +305,7 @@ export function WorkPage() {
             evidence={selectedIndex >= 0 ? evidenceProjections[selectedIndex] : undefined}
             effects={selectedIndex >= 0 ? effectProjections[selectedIndex] : undefined}
             nowMs={nowMs}
+            listStateSearch={listStateSearch}
           />
         ) : null}
       </div>
@@ -270,10 +316,10 @@ export function WorkPage() {
         observed, and — for at most {WORK_PROBE_LIMIT} of those refs —{" "}
         <code>/task/evidence</code> and <code>/task/effects</code>. There is no task search, no
         task-list-with-state route and no cross-task stream, so this page can only ever account for
-        refs it already knows. Per-task detail arrives with the Work detail view (W5); until then
-        no row links to a detail route, because an empty route is not a feature. The legacy
-        governed-task page stays reachable at <Link to="/tasks">/tasks</Link> with its watch and
-        observation diagnostics until W5 migrates them.
+        refs it already knows. Opening a row composes per-task detail from the same reads plus
+        bounded observation and consumption — there is no task detail route on this daemon. The
+        legacy governed-task page stays reachable at <Link to="/tasks">/tasks</Link> with its watch
+        and observation diagnostics until they are migrated.
       </HonestyNote>
     </>
   );

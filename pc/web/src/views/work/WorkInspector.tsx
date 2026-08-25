@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { DigestChip } from "../../components/DigestChip";
 import { FactGrid } from "../../components/FactGrid";
 import { Inspector } from "../../components/Inspector";
@@ -17,6 +18,7 @@ import type { Projection } from "../../data/store";
 import { HonestyNote } from "../../state/HonestyNote";
 import { StateChip } from "../../state/StateChip";
 import { readDomainState } from "../../state/stateMap";
+import { detailPath } from "./WorkInventory";
 
 function ProbeLine({ what, projection }: { what: string; projection?: Projection<unknown> }) {
   if (!projection) {
@@ -56,11 +58,13 @@ export function WorkInspector({
   evidence,
   effects,
   nowMs,
+  listStateSearch,
 }: {
   row: WorkRow;
   evidence?: Projection<TaskEvidenceView>;
   effects?: Projection<EffectEntryView[]>;
   nowMs: number;
+  listStateSearch: string;
 }) {
   const [copied, setCopied] = useState(false);
   const evidenceView = evidence?.data;
@@ -105,6 +109,12 @@ export function WorkInspector({
         ]}
       />
       <p className="cp-next">
+        <Link
+          className="cp-button cp-button--primary"
+          to={detailPath(row.taskRef, listStateSearch)}
+        >
+          Open detail
+        </Link>{" "}
         <button
           type="button"
           className="cp-button"
@@ -188,9 +198,10 @@ export function WorkInspector({
 
       <h4 className="cp-section-title">Watch</h4>
       <p className="cp-quiet">
-        No watch stream is attached from this space. Attaching, the event timeline and per-effect
-        detail are the Work detail view, which W5 delivers; detaching a watch has never cancelled a
-        task, and an unattached watch says nothing about progress.
+        No watch stream is attached from this space, and none is attached from the detail view
+        either — live delivery arrives with W11. The composed run timeline, per-effect detail and
+        consumption pins are in the detail view; detaching a watch has never cancelled a task, and
+        an unattached watch says nothing about progress.
       </p>
 
       <h4 className="cp-section-title">Not available</h4>

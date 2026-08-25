@@ -672,6 +672,148 @@ body {
   border-color: var(--cp-blocked);
 }
 
+/* W5 work detail — section navigator, header, two-lane run timeline */
+
+.cp-detail-head {
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-detail-title {
+  margin: var(--cp-space-1) 0 var(--cp-space-3);
+  font-size: var(--cp-size-body);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.cp-sectionnav {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--cp-canvas);
+  border-bottom: 1px solid var(--cp-line);
+  padding: var(--cp-space-2) 0;
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-sectionnav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-1);
+  list-style: none;
+  margin: 0 0 var(--cp-space-1);
+  padding: 0;
+}
+
+.cp-sectionnav-link {
+  border: 1px solid transparent;
+  background: none;
+  color: var(--cp-ink);
+  border-radius: var(--cp-radius-md);
+  padding: 4px var(--cp-space-2);
+  font-size: var(--cp-size-body);
+  cursor: pointer;
+}
+
+.cp-sectionnav-link:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-sectionnav-link[aria-current="true"] {
+  background: var(--cp-accent-soft);
+  border-color: var(--cp-line-strong);
+  font-weight: 600;
+}
+
+/*
+ * Two lanes, side by side and visually distinct. They are never one list:
+ * an observation rendered as a transition would read as evidence the task
+ * moved, which is the one inference this surface must never allow.
+ */
+.cp-lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--cp-space-4);
+  margin: var(--cp-space-3) 0;
+}
+
+.cp-lane {
+  min-width: 0;
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-3);
+  background: var(--cp-surface);
+}
+
+.cp-lane--authority {
+  border-left: 3px solid var(--cp-accent);
+}
+
+.cp-lane--observation {
+  border-left: 3px dashed var(--cp-line-strong);
+  background: var(--cp-canvas);
+}
+
+.cp-lane-title {
+  margin: 0 0 var(--cp-space-2);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  text-transform: uppercase;
+}
+
+.cp-lane-list {
+  list-style: none;
+  margin: var(--cp-space-2) 0 0;
+  padding: 0;
+}
+
+.cp-lane-row {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: flex-start;
+  padding: var(--cp-space-2) 0;
+  border-top: 1px solid var(--cp-line);
+  min-width: 0;
+}
+
+.cp-lane-row > div {
+  min-width: 0;
+}
+
+.cp-lane-row:first-child {
+  border-top: 0;
+}
+
+.cp-lane-head {
+  margin: 0 0 2px;
+  font-size: var(--cp-size-row);
+}
+
+.cp-lane-marker {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--cp-accent);
+}
+
+/* A sample is drawn hollow; a transition is drawn solid. */
+.cp-lane-marker--sample {
+  background: transparent;
+  border: 1px solid var(--cp-line-strong);
+}
+
+.cp-lane-marker--gap {
+  background: transparent;
+  border: 1px dashed var(--cp-line-strong);
+}
+
+@media (max-width: 1100px) {
+  .cp-lanes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
 /* W2 providers — master+inspector layout, secondary nav, sections, raw details */
 
 .cp-mi {

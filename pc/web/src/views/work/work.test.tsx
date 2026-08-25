@@ -512,10 +512,13 @@ describe("Work space", () => {
       );
       expect(control).toBeUndefined();
     }
-    // Nothing links to a W5 detail route that does not exist yet.
-    expect([...inspector.querySelectorAll("a")].map((a) => a.getAttribute("href"))).not.toContain(
-      `#/work/${encodeURIComponent(TASK_A)}`,
-    );
+    // The detail link is a real route and carries the ref, so returning lands
+    // on the same row rather than a reset list.
+    const detailHref = [...inspector.querySelectorAll("a")]
+      .map((a) => a.getAttribute("href") ?? "")
+      .find((href) => href.includes(`/work/${encodeURIComponent(TASK_A)}`));
+    expect(detailHref).toBeDefined();
+    expect(detailHref).toContain(`task=${encodeURIComponent(TASK_A)}`);
     unmount(host, root);
   });
 
