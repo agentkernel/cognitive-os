@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T05/d14-rendered-review` | `P7-T05/D17` Control Plane W7 Memory family page (same task lease after D16 close) | Lane-TSC | `personal/P7-T05-d14-rendered-review` | `clients/pc/web/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260825-personal-p7-t05-d16-w7-rendered-review-report.md` | owner-directed session 2026-08-25 | 2026-08-25 / 2026-08-25 | active |
+| `lease/personal/P7-T05/d14-rendered-review` | `P7-T05/D18` Control Plane W7 Skills family page (same task lease after D17 close) | Lane-TSC | `personal/P7-T05-d14-rendered-review` | `clients/pc/web/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260825-personal-p7-t05-d17-w7-memory-rendered-review-report.md` | owner-directed session 2026-08-25 | 2026-08-25 / 2026-08-25 | active |
 
 Only the row above is active. Writing to any other path requires claiming a new row first.
 
