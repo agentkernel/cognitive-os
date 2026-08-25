@@ -31,7 +31,7 @@ Shell、Agent adapter、native Agent 和 background job 均可作为 SMS 客户�
 ## 6. 指标与符合性
 报告 gap closure、marginal information gain、unsupported references、operation top-k/effect confusion、fallback correctness、egress denial、stagnation、latency/cost 与按风险分层结果；模型不可用场景必须保持确定性管理与停止路径。
 
-机器 schema：[semantic-service-manifest.schema.json](../schemas/semantic-service-manifest.schema.json)、[cognitive-allocation-decision.schema.json](../schemas/cognitive-allocation-decision.schema.json)。语义优化的端到端收益声明遵循 [agent-benefit-benchmark](../../docs/evaluation/agent-benefit-benchmark.md)（REQ-PERF-005）：未达预注册门槛的优化只能声明 hypothesis 或按 kill criteria 降级。
+机器 schema：[semantic-service-manifest.schema.json](../schemas/semantic-service-manifest.schema.json)、[cognitive-allocation-decision.schema.json](../schemas/cognitive-allocation-decision.schema.json)。语义优化的端到端收益声明遵循 [agent-benefit-benchmark](../../../docs/evaluation/agent-benefit-benchmark.md)（REQ-PERF-005）：未达预注册门槛的优化只能声明 hypothesis 或按 kill criteria 降级。
 
 
 ## Shell 与用户旅程映射

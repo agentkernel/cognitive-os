@@ -3,7 +3,7 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本文件是 [Enterprise 产品设计](./06-enterprise-product-design.md)的 candidate architecture。
+本文件是 [Enterprise 产品设计](06-enterprise-product-design.md)的 candidate architecture。
 它不创建 service、schema、protocol、ADR、tenant、index 或 implementation task。
 
 ## 1. Non-negotiable architecture
@@ -381,7 +381,7 @@ route or schema is accepted here。
 
 ## 18. Baseline delta and non-claims
 
-相对 `docs/design/01–41` 与 research `01`：
+相对 `clients/docs/design/01–41` 与 research `01`：
 
 - owner 选择 managed central Knowledge index，取代原 source-native-only recommendation；
 - owner 增加 cross-tool Continuation Package；

@@ -1,7 +1,7 @@
 //! Emit `{fixture id -> digest}` for every positive golden fixture, plus the
-//! live schema-bundle manifest digest of `specs/schemas/`, as canonical JSON
+//! live schema-bundle manifest digest of `core/specs/schemas/`, as canonical JSON
 //! on stdout. CI runs this and the TypeScript twin
-//! (`packages/contracts-ts/dist/emit-golden.js`) and asserts the outputs are
+//! (`core/packages/contracts-ts/dist/emit-golden.js`) and asserts the outputs are
 //! byte-identical (cross-language digest equality gate).
 
 #![allow(clippy::unwrap_used, clippy::expect_used)]
@@ -13,12 +13,12 @@ use cognitive_contracts::canonical::{canonical_bytes, canonicalize, digest, pars
 use serde_json::Value;
 use std::path::{Path, PathBuf};
 
-/// Live schema-bundle manifest digest over the current specs/schemas suite
+/// Live schema-bundle manifest digest over the current core/specs/schemas suite
 /// (registered section-13 procedure; twin logic in emit-golden.ts).
 fn live_schema_bundle_digest(repo_root: &Path) -> String {
     let dir = repo_root.join("specs").join("schemas");
     let mut files: Vec<PathBuf> = std::fs::read_dir(&dir)
-        .expect("specs/schemas must exist")
+        .expect("core/specs/schemas must exist")
         .map(|entry| entry.expect("dir entry").path())
         .filter(|path| path.extension().is_some_and(|ext| ext == "json"))
         .collect();

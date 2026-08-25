@@ -7,7 +7,7 @@
 - Classification: structural docs-only design; no machine registration
 - Baseline: `origin/main@0a30ac70769f0501f7928d96f55f17636eaa9888`
   (PR #53 merge)
-- Decision packet: [V02-CA-AUDIT-01](../plan/V02-CA-AUDIT-DESIGN-DECISION.md)
+- Decision packet: [V02-CA-AUDIT-01](../plan/archive/V02-CA-AUDIT-DESIGN-DECISION.md)
 
 ## Context
 

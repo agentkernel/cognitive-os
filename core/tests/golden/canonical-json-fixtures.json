@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "encoding_profile": "cognitiveos.canonical-json/0.1",
   "digest_domain": "conformance-fixture/0.1",
-  "generator": "packages/contracts-ts/src/dev/generate-fixtures.ts (verify with Rust twin before committing)",
+  "generator": "core/packages/contracts-ts/src/dev/generate-fixtures.ts (verify with Rust twin before committing)",
   "positive": [
     {
       "id": "empty-object",

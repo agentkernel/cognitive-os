@@ -4,97 +4,97 @@
   "rules": [
     {
       "id": "cli-product",
-      "sources": ["apps/admin-cli/src/personal_cli/**", "apps/admin-cli/src/cognitive_main.rs"],
+      "sources": ["personal/apps/admin-cli/src/personal_cli/**", "personal/apps/admin-cli/src/cognitive_main.rs"],
       "docs": ["ref.cli-cognitive", "user.cli-basics", "user.getting-started", "user.install-first-conversation", "user.operations-recovery", "user.provider-control-plane"],
       "note": "cognitive verb set, flags, usage text, exit codes"
     },
     {
       "id": "cli-admin",
-      "sources": ["apps/admin-cli/src/main.rs", "apps/admin-cli/src/lib.rs"],
+      "sources": ["personal/apps/admin-cli/src/main.rs", "personal/apps/admin-cli/src/lib.rs"],
       "docs": ["ref.cli-admin", "dev.management-plane"],
       "note": "admin-cli verbs, session gating, agent lifecycle commands"
     },
     {
       "id": "daemon-http",
-      "sources": ["apps/kernel-server/src/personal/server.rs", "apps/kernel-server/src/personal/auth.rs", "apps/kernel-server/src/personal/bounds.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/src/personal/resource_api.rs", "apps/kernel-server/src/personal/resource_manager.rs", "apps/kernel-server/src/personal/provider_control_plane.rs", "apps/kernel-server/src/personal/readiness.rs", "apps/kernel-server/src/personal/provider_proxy.rs", "apps/kernel-server/src/personal/tool_lifecycle.rs", "apps/kernel-server/src/personal/pinned_https.rs", "apps/kernel-server/src/personal/observation.rs", "apps/kernel-server/src/personal/user_backup.rs", "apps/kernel-server/src/personal/*doctor*.rs"],
+      "sources": ["personal/apps/kernel-server/src/personal/server.rs", "personal/apps/kernel-server/src/personal/auth.rs", "personal/apps/kernel-server/src/personal/bounds.rs", "personal/apps/kernel-server/src/personal/task_api.rs", "personal/apps/kernel-server/src/personal/resource_api.rs", "personal/apps/kernel-server/src/personal/resource_manager.rs", "personal/apps/kernel-server/src/personal/provider_control_plane.rs", "personal/apps/kernel-server/src/personal/readiness.rs", "personal/apps/kernel-server/src/personal/provider_proxy.rs", "personal/apps/kernel-server/src/personal/tool_lifecycle.rs", "personal/apps/kernel-server/src/personal/pinned_https.rs", "personal/apps/kernel-server/src/personal/observation.rs", "personal/apps/kernel-server/src/personal/user_backup.rs", "personal/apps/kernel-server/src/personal/*doctor*.rs"],
       "docs": ["ref.http-api", "dev.daemon-http-surface", "user.operations-recovery", "ai.validation-commands", "user.provider-control-plane", "user.system-overview"],
       "note": "routes, channels, auth, limits, readiness/doctor projections"
     },
     {
       "id": "scheduler-execution",
-      "sources": ["apps/kernel-server/src/personal/scheduler_authority/**", "apps/kernel-server/src/personal/tool_executor/**", "apps/kernel-server/src/personal/verification_executor.rs", "crates/cognitive-runtime/src/scheduler_service.rs"],
+      "sources": ["personal/apps/kernel-server/src/personal/scheduler_authority/**", "personal/apps/kernel-server/src/personal/tool_executor/**", "personal/apps/kernel-server/src/personal/verification_executor.rs", "personal/crates/cognitive-runtime/src/scheduler_service.rs"],
       "docs": ["dev.execution-chain-status", "dev.task-pipeline", "ref.capability-status"],
       "note": "execution wiring status is the most drift-sensitive handbook claim"
     },
     {
       "id": "a7-campaign-observation",
-      "sources": ["apps/kernel-server/src/personal/campaign_observation.rs", "apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs"],
+      "sources": ["personal/apps/kernel-server/src/personal/campaign_observation.rs", "personal/apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs"],
       "docs": ["dev.execution-chain-status"],
       "note": "A7 campaign loopback fixture and original-key observation; local/fixture evidence is not Gate/release/Profile"
     },
     {
       "id": "kernel-authority",
-      "sources": ["crates/cognitive-kernel/**", "crates/cognitive-domain/**"],
+      "sources": ["core/crates/cognitive-kernel/**", "core/crates/cognitive-domain/**"],
       "docs": ["dev.authority-kernel", "dev.context-artifact", "ref.transitions"],
       "note": "transition gate, intent chain, context pipeline, budgets, recovery"
     },
     {
       "id": "store",
-      "sources": ["crates/cognitive-store/**"],
+      "sources": ["personal/crates/cognitive-store/**"],
       "docs": ["dev.store-migrations", "dev.memory-skill", "user.operations-recovery", "user.provider-control-plane"],
       "note": "migration map, authority vs derived data, backup archive I/O"
     },
     {
       "id": "secrets-provider",
-      "sources": ["crates/cognitive-secret/**", "crates/cognitive-provider-transport/**"],
+      "sources": ["personal/crates/cognitive-secret/**", "personal/crates/cognitive-provider-transport/**"],
       "docs": ["user.provider-and-secrets", "user.provider-control-plane", "user.security-boundaries", "ref.config-files", "ref.env-vars"],
       "note": "SecretStore backends, provider config, discovery, transport bounds"
     },
     {
       "id": "pi-shell",
-      "sources": ["packages/pi-cognitiveos/**", "apps/pi-agent-adapter/**", "apps/kernel-server/src/personal/pi_runtime.rs"],
+      "sources": ["personal/packages/pi-cognitiveos/**", "personal/apps/pi-agent-adapter/**", "personal/apps/kernel-server/src/personal/pi_runtime.rs"],
       "docs": ["user.pi-shell", "dev.agent-pi-lifecycle", "ref.env-vars"],
       "note": "Pi extension, daemon client, candidate path, launch admission"
     },
     {
       "id": "dsh-akp-adapter",
-      "sources": ["crates/cognitive-akp/**", "packages/dsh-akp-adapter/**", "crates/cognitive-runtime/src/dsh_agent.rs", "apps/kernel-server/src/personal/task_api.rs", "apps/kernel-server/tests/p8_t09_dsh_akp_live.rs"],
+      "sources": ["core/crates/cognitive-akp/**", "personal/packages/dsh-akp-adapter/**", "personal/crates/cognitive-runtime/src/dsh_agent.rs", "personal/apps/kernel-server/src/personal/task_api.rs", "personal/apps/kernel-server/tests/p8_t09_dsh_akp_live.rs"],
       "docs": ["dev.agent-pi-lifecycle", "dev.performance-perf"],
       "note": "DeepSeek Harness candidate-only AKP bridge and bounded transport"
     },
     {
       "id": "agent-lifecycle-installer",
-      "sources": ["crates/cognitive-runtime/src/installer.rs", "crates/cognitive-runtime/src/agent_registration.rs", "crates/cognitive-runtime/src/linux_bundle*.rs", "crates/cognitive-runtime/src/bin/linux_bundle*.rs", "deploy/**"],
+      "sources": ["personal/crates/cognitive-runtime/src/installer.rs", "personal/crates/cognitive-runtime/src/agent_registration.rs", "personal/crates/cognitive-runtime/src/linux_bundle*.rs", "personal/crates/cognitive-runtime/src/bin/linux_bundle*.rs", "personal/deploy/**"],
       "docs": ["user.install-first-conversation", "user.getting-started", "dev.installer-service", "dev.agent-pi-lifecycle"],
       "note": "bundle verify/stage/activate, single-service transaction, Pi acquisition/registration"
     },
     {
       "id": "ts-clients",
-      "sources": ["packages/sdk-ts/**", "apps/agent-shell/**"],
+      "sources": ["personal/packages/sdk-ts/**", "personal/apps/agent-shell/**"],
       "docs": ["dev.clients-ts"],
       "note": "AKP envelopes, channels, watch, shell session"
     },
     {
       "id": "contracts",
-      "sources": ["specs/**", "crates/cognitive-contracts/**", "packages/contracts-ts/**", "tests/golden/**"],
+      "sources": ["core/specs/**", "core/crates/cognitive-contracts/**", "core/packages/contracts-ts/**", "core/tests/golden/**"],
       "docs": ["ref.schemas", "ref.errors", "ref.transitions", "dev.contracts-codegen", "ai.source-of-truth"],
       "note": "registries, schemas, transitions, codegen, golden parity; contract changes also follow Lane-CTR"
     },
     {
       "id": "conformance-tools",
-      "sources": ["conformance/**", "crates/cognitive-conformance/**", "tools/**", "tests/**"],
+      "sources": ["core/conformance/**", "personal/crates/cognitive-conformance/**", "tools/**", "core/tests/**", "personal/tests/**"],
       "docs": ["dev.conformance-testing", "ai.validation-commands", "meta.sync-policy"],
       "note": "vectors, runner, checkers, gate evaluators"
     },
     {
       "id": "management",
-      "sources": ["crates/cognitive-management/**"],
+      "sources": ["personal/crates/cognitive-management/**"],
       "docs": ["dev.management-plane", "ref.cli-admin", "ref.errors"],
       "note": "fallback verbs, sessions, approvals, audit port, task application service"
     },
     {
       "id": "performance",
-      "sources": ["crates/cognitive-runtime/src/perf.rs", "crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs", "crates/cognitive-runtime/src/bin/p9_t01_async_decision_gate.rs", "crates/cognitive-runtime/src/campaign_*.rs", "crates/cognitive-runtime/src/performance_campaign.rs", "crates/cognitive-runtime/src/loopback_transport.rs", "crates/cognitive-runtime/src/resource_sampler.rs", "crates/cognitive-runtime/src/provider_route_policy.rs", "crates/cognitive-runtime/src/task_scenario_harness.rs"],
+      "sources": ["personal/crates/cognitive-runtime/src/perf.rs", "personal/crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs", "personal/crates/cognitive-runtime/src/bin/p9_t01_async_decision_gate.rs", "personal/crates/cognitive-runtime/src/campaign_*.rs", "personal/crates/cognitive-runtime/src/performance_campaign.rs", "personal/crates/cognitive-runtime/src/loopback_transport.rs", "personal/crates/cognitive-runtime/src/resource_sampler.rs", "personal/crates/cognitive-runtime/src/provider_route_policy.rs", "personal/crates/cognitive-runtime/src/task_scenario_harness.rs"],
       "docs": ["dev.performance-perf"],
       "note": "hypothesis-only measurement surfaces; never benefit claims"
     },
@@ -106,13 +106,13 @@
     },
     {
       "id": "capability-truth-register",
-      "sources": ["apps/kernel-server/src/personal/capability_truth.rs"],
+      "sources": ["personal/apps/kernel-server/src/personal/capability_truth.rs"],
       "docs": ["ref.capability-status"],
       "note": "UJ1-UJ6 public-caller/oracle register; Web UI/Multi-Agent are scope-excluded"
     },
     {
       "id": "handbook-itself",
-      "sources": ["handbook/**", "llms.txt", ".cursor/rules/20-cognitiveos-personal-handbook-sync.mdc"],
+      "sources": ["personal/handbook/**", "llms.txt", ".cursor/rules/20-cognitiveos-personal-handbook-sync.mdc"],
       "docs": ["meta.doc-standards", "meta.sync-policy", "ai.entry"],
       "note": "changes here run the handbook checker and generator --check"
     },

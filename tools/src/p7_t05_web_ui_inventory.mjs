@@ -30,9 +30,10 @@ export const FORBIDDEN_BROWSER_TARGETS = Object.freeze([
 ]);
 export const MEMORY_ONLY_SESSION = "memory";
 
-const PERSONAL_SOURCE_ROOT = ["apps", "kernel-server", "src", "personal"];
-const CLIENTS_ROOT = "clients";
-const CONSOLE_STUB = ["apps", "cognitiveos-console"];
+const PERSONAL_SOURCE_ROOT = ["personal", "apps", "kernel-server", "src", "personal"];
+// ADR-0054: the formal SPA path is the imported clients subproject.
+const FORMAL_SPA_ROOT = ["clients", "pc", "web"];
+const CONSOLE_STUB = ["clients", "legacy", "cognitiveos-console"];
 const CONSOLE_IMPLEMENTATION_MARKERS = [
   "package.json",
   "vite.config.ts",
@@ -119,15 +120,17 @@ export function validateWebUiRouteInventory(inventory, options = {}) {
   assert(Array.isArray(inventory.forbidden_routes), "forbidden_routes required");
 
   if (typeof repositoryRoot === "string") {
+    // ADR-0054: clients/ is the imported formal client subproject; the only
+    // SPA implementation path is clients/pc/web (ADR-0053 location updated).
     assert(
-      !existsSync(path.join(repositoryRoot, CLIENTS_ROOT)),
-      "this repository must not recreate clients/**",
+      existsSync(path.join(repositoryRoot, ...FORMAL_SPA_ROOT)),
+      "the formal SPA path clients/pc/web must exist (ADR-0054 fold-in)",
     );
     const consoleRoot = path.join(repositoryRoot, ...CONSOLE_STUB);
     for (const marker of CONSOLE_IMPLEMENTATION_MARKERS) {
       assert(
         !existsSync(path.join(consoleRoot, marker)),
-        `Web UI must not be implemented in apps/cognitiveos-console (${marker})`,
+        `Web UI must not be implemented in the legacy cognitiveos-console stub (${marker})`,
       );
     }
   }

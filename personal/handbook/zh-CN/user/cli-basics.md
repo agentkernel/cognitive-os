@@ -6,20 +6,20 @@ audience: [user]
 status: implemented
 generated: false
 sources:
-  - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["parse_cognitive_args", "COGNITIVE_USAGE"]
-  - path: apps/admin-cli/src/personal_cli/daemon.rs
-  - path: apps/admin-cli/src/personal_cli/backup.rs
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
+  - path: personal/apps/admin-cli/src/personal_cli/backup.rs
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch", "status"]
-  - path: apps/admin-cli/src/personal_cli/provider.rs
+  - path: personal/apps/admin-cli/src/personal_cli/provider.rs
 tests:
-  - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - apps/kernel-server/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:fd58fd01d559fa84ce3da4601341836687ac628ff53d617089ce2a8f6ff97540"
+  - personal/apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/src/personal_cli/dsh.rs
+fingerprint: "sha256:55478fd6570b033d3ec467e2c318a3fa2956b95d9546c130710707797686b0ff"
 non_claims:
   - CLI 是非权威客户端；它打印的任何内容都不意味着 Task 完成或 Gate 结果。
 ---
@@ -48,7 +48,7 @@ daemon 进程、读取已认证投影。退出码：`0` 成功、`1` 运行错�
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | 读取私有六族投影（management 通道） |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | 通用 Resource Manager 只读信封（management 通道） |
 | `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | 通用 Resource Manager 变异，接到既有 Skill/Tool sinks；不是 generic create/execute/complete |
-| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane 账户；只用 `--api-key-file`；自定义 HTTP/私网端点需要 `--allow-insecure-http` / `--allow-private-network`。细节见 [Provider Control Plane](./provider-control-plane.md) |
+| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane 账户；只用 `--api-key-file`；自定义 HTTP/私网端点需要 `--allow-insecure-http` / `--allow-private-network`。细节见 [Provider Control Plane](provider-control-plane.md) |
 | `cognitive provider key set\|rotate\|remove` | 经 daemon 的 Secret Store 密钥操作；永不写 SQLite |
 | `cognitive provider models refresh\|list\|add\|set-price` | 前台发现、手动模型、价格 |
 | `cognitive agent binding set\|show\|list\|remove` | 固定 pi/dsh 账户+provider+model binding；无回退 |

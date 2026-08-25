@@ -38,7 +38,7 @@ additionally show them as `cross_slice_hosted` on layers 7/8, so the zero
 dedicated-slug count is never read as zero coverage.
 ## Manifests and status language
 
-A conformance claim is represented by `specs/schemas/profile-manifest.schema.json`. A manifest pins the specification, requirement and schema bundle digests, encoding/canonicalization profile, suite digest, implementation version, results, degradations, and evidence. Profile values have distinct meanings:
+A conformance claim is represented by `core/specs/schemas/profile-manifest.schema.json`. A manifest pins the specification, requirement and schema bundle digests, encoding/canonicalization profile, suite digest, implementation version, results, degradations, and evidence. Profile values have distinct meanings:
 
 - `implemented`: every applicable MUST requirement has passing behavioral evidence or a justified `not-applicable` determination. A documented degradation on an applicable MUST does not preserve `implemented`: it must either shrink the declared scope so the requirement becomes not-applicable, or downgrade the profile claim to `experimental`. Safety-negative requirements can never be degraded away.
 - `planned`: intended future work; excluded from conformance coverage.
@@ -49,13 +49,13 @@ The registry status `specified` means a normative requirement and its test mappi
 
 ## Intelligent Management Shell assets
 
-`specs/schemas/privileged-management-session.schema.json`, `management-action-proposal.schema.json`, `management-approval-request.schema.json` (the OS-issued tiered confirmation challenge, F-011 R1 registration), and `management-approval-decision.schema.json` define the signed session, proposal, approval-request, and approval data contracts. The `management-*.json` vectors are declarative scenarios for the optional `intelligent_management_shell` profile (the R1 structured-confirmation vectors additionally apply to `core_digital`), including negative authorization cases and deterministic fallback behavior. They do not provide or imply a Shell, Management API, CLI, test runner, or conforming implementation.
+`core/specs/schemas/privileged-management-session.schema.json`, `management-action-proposal.schema.json`, `management-approval-request.schema.json` (the OS-issued tiered confirmation challenge, F-011 R1 registration), and `management-approval-decision.schema.json` define the signed session, proposal, approval-request, and approval data contracts. The `management-*.json` vectors are declarative scenarios for the optional `intelligent_management_shell` profile (the R1 structured-confirmation vectors additionally apply to `core_digital`), including negative authorization cases and deterministic fallback behavior. They do not provide or imply a Shell, Management API, CLI, test runner, or conforming implementation.
 
-The management error codes used by expected denials are registered in `specs/registry/errors.yaml`. Every vector ID is mapped from its normative `REQ-MGMT-*` entries in `specs/registry/requirements.yaml`; a runner must verify those gates and observable outcomes rather than treating a schema-valid document as a pass.
+The management error codes used by expected denials are registered in `core/specs/registry/errors.yaml`. Every vector ID is mapped from its normative `REQ-MGMT-*` entries in `core/specs/registry/requirements.yaml`; a runner must verify those gates and observable outcomes rather than treating a schema-valid document as a pass.
 
 ## Performance and knowledge assets
 
-`specs/schemas/performance-report.schema.json` defines the report contract. `vectors/performance-report-contract.json` is a declarative schema example; knowledge vectors exercise invalidation, poisoning isolation, and bounded maintenance. These files are evidence formats and test cases, not measured implementation results. A profile manifest uses `cognitiveos_conformance.performance_reports` to reference digest-pinned reports.
+`core/specs/schemas/performance-report.schema.json` defines the report contract. `vectors/performance-report-contract.json` is a declarative schema example; knowledge vectors exercise invalidation, poisoning isolation, and bounded maintenance. These files are evidence formats and test cases, not measured implementation results. A profile manifest uses `cognitiveos_conformance.performance_reports` to reference digest-pinned reports.
 
 The following registered requirements are normatively owned by this document (metric semantics and the BenchmarkManifest input list are described informatively in the whitepaper §19.4):
 
@@ -63,7 +63,7 @@ The following registered requirements are normatively owned by this document (me
 
 [REQ-PERF-004] Performance claims for governed workloads MUST report the Governance overhead metric family (authorization / context-resolution / effect-protocol stage latencies, cache-hit preservation ratio, extra persistence per governed call, approval latency and rubber-stamp rate, overhead share of end-to-end latency and cost by risk class) and MUST declare the ungoverned baseline used; if governance overhead data is missing, the report MUST NOT claim that governance overhead is negligible.
 
-Agent benefit claims are additionally governed by [REQ-PERF-005] in [docs/evaluation/agent-benefit-benchmark.md](../docs/evaluation/agent-benefit-benchmark.md): a claim of significant agent benefit MUST be supported by the four-arm (native / governance-only / optimized / ablation) design with preregistered thresholds, and non-inferiority MUST NOT be reported as performance improvement.
+Agent benefit claims are additionally governed by [REQ-PERF-005] in [docs/evaluation/agent-benefit-benchmark.md](../../docs/evaluation/agent-benefit-benchmark.md): a claim of significant agent benefit MUST be supported by the four-arm (native / governance-only / optimized / ablation) design with preregistered thresholds, and non-inferiority MUST NOT be reported as performance improvement.
 
 The current namespace is `cognitiveos.*` and the manifest root is `cognitiveos_conformance`. Legacy `agentos.*` or `agentos_conformance` documents require an explicit old schema/adapter and cannot be silently mixed.
 
@@ -116,7 +116,7 @@ and blind re-dispatch on unknown outcome) and exits non-zero unless the
 runner fails every corrupted vector
 (`docs/standards/conformance-evidence.md` section 3).
 
-Schema `$id` policy: every schema under `specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.
+Schema `$id` policy: every schema under `core/specs/schemas/` declares a top-level `$id` exactly equal to its own file name (for example `"$id": "effect.schema.json"`). The file name is therefore the retrieval URI, and a relative `$ref` such as `common-defs.schema.json#/$defs/digest` resolves from the containing schema file without any base-URI rewriting. Consumers MUST NOT depend on absolute schema URLs.
 
 Do not report a vector as passed merely because the JSON parses. A runner must execute the stated input against an implementation, compare the observable result with `expected`, preserve evidence, and report pass, fail, not-applicable, or documented-degradation for each applicable requirement.
 

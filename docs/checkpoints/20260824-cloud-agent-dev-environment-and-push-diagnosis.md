@@ -47,7 +47,7 @@ repository, so any write to `agentkernel/cognitiveos-clients` fails closed with
 HTTP 403 no matter what that repository's visibility is. This reproduces and
 confirms — from an independent run and environment — the root cause already
 recorded in
-[the clients write-access remediation](./20260824-personal-p7-t05-clients-write-access-remediation.md)
+[the clients write-access remediation](20260824-personal-p7-t05-clients-write-access-remediation.md)
 §1 and §5.
 
 Additional fact for the owner: this environment's repository list

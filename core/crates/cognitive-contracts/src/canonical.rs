@@ -26,7 +26,7 @@ pub const DIGEST_PREIMAGE_PREFIX: &[u8] = b"CognitiveOS-Digest-V1\n";
 pub const SIGNATURE_PREIMAGE_PREFIX: &[u8] = b"CognitiveOS-Signature-V1\n";
 
 /// Rejection categories shared with the TypeScript implementation and the
-/// golden fixtures under `tests/golden/`. String forms are fixture contract.
+/// golden fixtures under `core/tests/golden/`. String forms are fixture contract.
 #[derive(Debug, Clone, PartialEq, Eq, thiserror::Error)]
 pub enum CanonicalError {
     /// Input bytes are not well-formed shortest-form UTF-8.

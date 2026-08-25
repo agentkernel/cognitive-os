@@ -406,9 +406,9 @@ pub(super) fn lateral_read_behavior(
 
 fn lateral_grounding() -> Vec<String> {
     vec![
-        "crates/cognitive-kernel/src/authz.rs (six-step gate, protected_read isomorphism)"
+        "core/crates/cognitive-kernel/src/authz.rs (six-step gate, protected_read isomorphism)"
             .to_owned(),
-        "specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
+        "core/specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
         "docs/standards/authn-authz-capability.md section 2".to_owned(),
     ]
 }
@@ -521,8 +521,8 @@ pub(super) fn attenuation_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-domain/src/capability.rs (attenuation_violations)".to_owned(),
-            "specs/registry/errors.yaml#AUTH_CAPABILITY_ATTENUATION_VIOLATION".to_owned(),
+            "core/crates/cognitive-domain/src/capability.rs (attenuation_violations)".to_owned(),
+            "core/specs/registry/errors.yaml#AUTH_CAPABILITY_ATTENUATION_VIOLATION".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -743,11 +743,11 @@ pub(super) fn revocation_cache_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context_cache.rs (governance-bound keys, serve_declared)"
+            "core/crates/cognitive-kernel/src/context_cache.rs (governance-bound keys, serve_declared)"
                 .to_owned(),
-            "crates/cognitive-kernel/src/authz.rs (per-object re-authorization on fresh resolve)"
+            "core/crates/cognitive-kernel/src/authz.rs (per-object re-authorization on fresh resolve)"
                 .to_owned(),
-            "specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
+            "core/specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -927,9 +927,9 @@ pub(super) fn rank_before_auth_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context.rs (stage 4 authorization before stage 5 ranking)"
+            "core/crates/cognitive-kernel/src/context.rs (stage 4 authorization before stage 5 ranking)"
                 .to_owned(),
-            "specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
+            "core/specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -1053,9 +1053,9 @@ pub(super) fn required_budget_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context.rs (stage 6 budget fitting, fail-closed)"
+            "core/crates/cognitive-kernel/src/context.rs (stage 6 budget fitting, fail-closed)"
                 .to_owned(),
-            "specs/registry/errors.yaml#CONTEXT_BUDGET_EXCEEDED".to_owned(),
+            "core/specs/registry/errors.yaml#CONTEXT_BUDGET_EXCEEDED".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -1196,8 +1196,8 @@ pub(super) fn render_stability_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context.rs (deterministic render, partition + arrival order)".to_owned(),
-            "specs/registry/requirements.yaml#REQ-CTX-012".to_owned(),
+            "core/crates/cognitive-kernel/src/context.rs (deterministic render, partition + arrival order)".to_owned(),
+            "core/specs/registry/requirements.yaml#REQ-CTX-012".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -1289,9 +1289,9 @@ pub(super) fn stagnation_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context.rs (ResolutionSession, STAGNATION_BOUND)"
+            "core/crates/cognitive-kernel/src/context.rs (ResolutionSession, STAGNATION_BOUND)"
                 .to_owned(),
-            "specs/registry/errors.yaml#CONTEXT_RESOLUTION_STAGNATED".to_owned(),
+            "core/specs/registry/errors.yaml#CONTEXT_RESOLUTION_STAGNATED".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -1419,8 +1419,8 @@ pub(super) fn candidate_admission_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context.rs (stages 2+4 narrow the candidate set before ranking/loading)".to_owned(),
-            "specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
+            "core/crates/cognitive-kernel/src/context.rs (stages 2+4 narrow the candidate set before ranking/loading)".to_owned(),
+            "core/specs/registry/errors.yaml#CONTEXT_AUTH_DENIED".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -1591,9 +1591,9 @@ pub(super) fn trust_plane_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/context.rs (effective_control_plane, admit_control_mutation)".to_owned(),
-            "specs/registry/requirements.yaml#REQ-CTX-008".to_owned(),
-            "specs/registry/requirements.yaml#REQ-SEC-002".to_owned(),
+            "core/crates/cognitive-kernel/src/context.rs (effective_control_plane, admit_control_mutation)".to_owned(),
+            "core/specs/registry/requirements.yaml#REQ-CTX-008".to_owned(),
+            "core/specs/registry/requirements.yaml#REQ-SEC-002".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),

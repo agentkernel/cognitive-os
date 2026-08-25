@@ -10,7 +10,7 @@
     "REQ-RUN-009"
   ],
   "input": {
-    "owner_spec": "specs/schemas/verification-report.schema.json",
+    "owner_spec": "core/specs/schemas/verification-report.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

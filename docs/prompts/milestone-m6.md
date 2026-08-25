@@ -10,7 +10,7 @@
 
 > 用法：将本文件全文粘贴到新 Cursor Agent 会话（工作目录 = **干净 worktree / 仓库根**，基于 `origin/main`）。自包含，不依赖历史对话。主车道 Lane-RUN（`lane/run`），Lane-CFR 协作平台矩阵证据。公共前缀内联自 `docs/prompts/common-prefix.md`。
 >
-> **权威计划**：[docs/plan/M6-PLAN.md](../plan/M6-PLAN.md)。本提示词是执行入口，不以本文件覆盖计划验收矩阵。
+> **权威计划**：[docs/plan/archive/M6-PLAN.md](../plan/archive/M6-PLAN.md)。本提示词是执行入口，不以本文件覆盖计划验收矩阵。
 
 ---
 
@@ -22,7 +22,7 @@
 2. 在干净 worktree 建车道分支；**禁止**从含 `personal-blog/**` 的本地 dirty `main` 推送。
 3. 排除：`personal-blog/**`、`History/`、clients 产品实现、无关打开的 clients PR。
 
-**接入三步**：① 读 `AGENTS.md` → ② 读 `docs/plan/PROGRESS.md` 与 `docs/plan/M6-PLAN.md` → ③ 读最近 `docs/checkpoints/*-handoff.md`（含 [20260721-m5-milestone-review.md](../checkpoints/20260721-m5-milestone-review.md)），对照 `docs/plan/PARALLEL-LANES.md` 确认边界。
+**接入三步**：① 读 `AGENTS.md` → ② 读 `docs/plan/PROGRESS.md` 与 `docs/plan/archive/M6-PLAN.md` → ③ 读最近 `docs/checkpoints/*-handoff.md`（含 [20260721-m5-milestone-review.md](../checkpoints/20260721-m5-milestone-review.md)），对照 `docs/plan/PARALLEL-LANES.md` 确认边界。
 
 **硬纪律（全程）**：① 确定性边界；② 规范优先级（机器资产 > companion/RFC > 白皮书 > 实现建议）；③ 四类状态用语，implemented 仅指全部适用 MUST 有通过证据；④ 测试先行，schema-valid ≠ behavior-pass；⑤ 冻结 + 漂移走台账；⑥ P0 门禁；⑦ 提交关联条目；⑧ 禁读 `History/`、禁虚构、禁改写向量。
 
@@ -30,7 +30,7 @@
 
 ---
 
-## 范围（见 M6-PLAN；DEVELOPMENT-PLAN M6；`specs/agent-compatibility/README.md`）
+## 范围（见 M6-PLAN；DEVELOPMENT-PLAN M6；`core/specs/agent-compatibility/README.md`）
 
 - AgentPackageManifest 验证（签名/digest；篡改拒装）。
 - 安装事务与回滚（中断后无半安装可见状态）。**注意**：仓库**无** installation transition table；按 companion 状态序列实现，不得声称“机器表已消费”（WP0 裁决见 Batch-0A）。
@@ -47,7 +47,7 @@
 
 ## 入口 gate
 
-M5 出口评审 **GO M6**（附带条件：D-018/剩余向量持续消化；clients blocked；F-017 阻断出口）。计划文档已批准：见 [M6-PLAN.md](../plan/M6-PLAN.md)。
+M5 出口评审 **GO M6**（附带条件：D-018/剩余向量持续消化；clients blocked；F-017 阻断出口）。计划文档已批准：见 [M6-PLAN.md](../plan/archive/M6-PLAN.md)。
 
 ## 验收判据（摘要；完整矩阵见 M6-PLAN §D）
 
@@ -64,9 +64,9 @@ M5 出口评审 **GO M6**（附带条件：D-018/剩余向量持续消化；clie
 
 | 批次 | 提示词 | 车道 |
 |---|---|---|
-| Batch-0A 合同绑定 + 缺口裁决 | [m6-batch0-contracts.md](./m6-batch0-contracts.md) | Lane-CTR |
-| Batch-0B/1 篡改拒装 tracer | [m6-batch1-installer.md](./m6-batch1-installer.md) | Lane-RUN |
-| 后续 WP2–WP10 | 按 [M6-PLAN.md](../plan/M6-PLAN.md) §B 另开会话 | 各 owner |
+| Batch-0A 合同绑定 + 缺口裁决 | [m6-batch0-contracts.md](m6-batch0-contracts.md) | Lane-CTR |
+| Batch-0B/1 篡改拒装 tracer | [m6-batch1-installer.md](m6-batch1-installer.md) | Lane-RUN |
+| 后续 WP2–WP10 | 按 [M6-PLAN.md](../plan/archive/M6-PLAN.md) §B 另开会话 | 各 owner |
 
 ## 工作分支
 
@@ -74,4 +74,4 @@ M5 出口评审 **GO M6**（附带条件：D-018/剩余向量持续消化；clie
 
 ## 第一个动作（若尚未完成 Batch-0A）
 
-读 `docs/plan/M6-PLAN.md` 与 findings-ledger F-017；若 bindings 未合入，先执行 [m6-batch0-contracts.md](./m6-batch0-contracts.md)。若 bindings 已合入，再执行 [m6-batch1-installer.md](./m6-batch1-installer.md)：先写失败测试（篡改 manifest 拒装）。
+读 `docs/plan/archive/M6-PLAN.md` 与 findings-ledger F-017；若 bindings 未合入，先执行 [m6-batch0-contracts.md](m6-batch0-contracts.md)。若 bindings 已合入，再执行 [m6-batch1-installer.md](m6-batch1-installer.md)：先写失败测试（篡改 manifest 拒装）。

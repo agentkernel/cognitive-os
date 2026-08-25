@@ -39,7 +39,7 @@ user installs a compliant Pi locally.
 
 ### 1. The Extension is a package in this repository, and Pi is not a dependency
 
-`packages/pi-cognitiveos/` carries the CognitiveOS Pi surface. It declares a
+`personal/packages/pi-cognitiveos/` carries the CognitiveOS Pi surface. It declares a
 structural mirror of the pinned Pi Extension API subset in `src/pi-api.ts`
 rather than importing `@earendil-works/pi-coding-agent`. Nothing Pi-related
 enters `pnpm-lock.yaml`, so a Pi dependency cannot be pulled into every
@@ -47,7 +47,7 @@ workspace install or CI job, and ADR-0025's non-vendoring decision is preserved
 mechanically rather than by review.
 
 The Pi compatibility pin stays single-sourced in the Rust
-`PiCompatibilityPin::expected()` (`apps/pi-agent-adapter/src/lib.rs`). Both
+`PiCompatibilityPin::expected()` (`personal/apps/pi-agent-adapter/src/lib.rs`). Both
 mirrors — the TypeScript `src/pin.ts` and the Rust `PINNED_PI_VERSION` in the
 daemon — are drift-checked against that constant by tests.
 
@@ -99,7 +99,7 @@ synthetic ready".
 
 ### 5. The `pi` readiness component becomes a real observation
 
-`apps/kernel-server/src/personal/pi_runtime.rs` observes the Pi runtime from a
+`personal/apps/kernel-server/src/personal/pi_runtime.rs` observes the Pi runtime from a
 new, non-secret `pi.json` in the Personal config directory:
 
 ```json

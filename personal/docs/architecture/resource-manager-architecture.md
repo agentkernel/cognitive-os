@@ -2,10 +2,10 @@
 
 - Status: informative target/design for CognitiveOS Personal
 - Change class: `implementation-only` companion (no new public contract)
-- Product pair: [resource-manager-design.md](../../product/personal/resource-manager-design.md)
-- Grounding: [system-architecture.md](./system-architecture.md) §3.1–3.2,
-  [ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md),
-  [cognitive-resource-model.md](../../product/personal/cognitive-resource-model.md)
+- Product pair: [resource-manager-design.md](../product/resource-manager-design.md)
+- Grounding: [system-architecture.md](system-architecture.md) §3.1–3.2,
+  [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
+  [cognitive-resource-model.md](../product/cognitive-resource-model.md)
 
 This document records how Personal implements the common
 `ResourceApplicationService` vocabulary without collapsing six domains into one
@@ -14,7 +14,7 @@ schema or one giant resource state machine.
 ## Placement
 
 The manager is a daemon-private HTTP surface in
-`apps/kernel-server/src/personal/resource_manager.rs`. Routes are matched
+`personal/apps/kernel-server/src/personal/resource_manager.rs`. Routes are matched
 before the `/management/resource/` family catch-all so they do not fall through
 to Memory/Skill handlers, and before `/task/resource/` rewrite so task callers
 receive an explicit channel denial instead of a projection 404.

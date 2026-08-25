@@ -44,7 +44,7 @@ const EVIDENCE_DIGEST_DOMAIN: &str = "governed-object-content/0.1";
 const EVENT_SCAN_LIMIT: usize = 1_000_000;
 
 /// Effect states that still carry open work or open uncertainty. Derived
-/// from `specs/transitions/effect.transitions.json`: everything that is
+/// from `core/specs/transitions/effect.transitions.json`: everything that is
 /// not one of the five terminal states.
 const PENDING_EFFECT_STATES: [&str; 9] = [
     "PROPOSED",
@@ -465,7 +465,7 @@ where
         let now = self.now()?;
 
         // Pending-effect precondition of the registered edges
-        // (specs/transitions/agent-execution.transitions.json): while any
+        // (core/specs/transitions/agent-execution.transitions.json): while any
         // effect is still open the guard fact does not hold, so the stop
         // is refused deterministically — with the guard named — before a
         // doomed command is submitted or any writer is fenced. Reconcile

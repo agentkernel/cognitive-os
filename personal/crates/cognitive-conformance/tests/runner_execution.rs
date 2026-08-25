@@ -25,7 +25,10 @@ use cognitive_conformance::{ImplementationKind, build_report, enumerate_vectors,
 use std::path::{Path, PathBuf};
 
 fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
 }
 
 /// Reference-run distribution over the committed vector corpus. These
@@ -367,7 +370,7 @@ fn ordinary_core_audit_inspect_executes_before_result_release() {
         record
             .grounding
             .iter()
-            .any(|path| path == "specs/core/ordinary-core-audit.md")
+            .any(|path| path == "core/specs/core/ordinary-core-audit.md")
     );
 }
 

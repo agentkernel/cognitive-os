@@ -6,12 +6,12 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-conformance/src/main.rs
-  - path: conformance/README.md
+  - path: personal/crates/cognitive-conformance/src/main.rs
+  - path: core/conformance/README.md
   - path: tools/src/check-consistency.mjs
   - path: tools/src/gen-matrix.mjs
   - path: tools/src/generate-handbook.mjs
-  - path: tests/golden/README.md
+  - path: core/tests/golden/README.md
   - path: tools/src/p2_t28_uj_matrix.mjs
     symbols: ["validateUjCapabilityTruthMatrix"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
@@ -22,7 +22,7 @@ tests:
   - tools/test/c1_c2_paired_p_arm.test.mjs
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:201986fa2135ebaa3734642f602dc5a7bd3dd1dd611bd705bcac804329088251"
+fingerprint: "sha256:e23bba35fef1f0eb0036f6f98e3d4e8bb7c178b2cc61523e725282fea18cd48b"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -34,8 +34,8 @@ non_claims:
 - **聚焦 failure-first 测试**贴近各 crate（`crates/*/tests/*.rs`、
   `apps/*/tests/*.rs`、`packages/*/src/*.test.ts`），以引入它们的任务命名
   （`p1_t04_…`）。先断言拒绝路径，后断言正常路径。
-- **跨语言 golden fixture**（`tests/golden/`）钉住 canonical 编码奇偶。
-- **符合性向量**（`conformance/vectors/`，89 个）是合同派生的行为用例，由
+- **跨语言 golden fixture**（`core/tests/golden/`）钉住 canonical 编码奇偶。
+- **符合性向量**（`core/conformance/vectors/`，89 个）是合同派生的行为用例，由
   `conformance-runner` 执行。
 - **C1/C2 成对测量仪器**（`tools/personal/c1-c2-paired/`）仅用于 campaign：loopback
   纯 Pi credential broker（经 D-Bus 做 Secret Service `get`，禁止 `secret-tool
@@ -70,9 +70,9 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 在 CI 与本地（`pnpm run check:consistency`）都运行。手册新增自己的检查器
 （`check-handbook.mjs`）与生成器漂移门——见
 [`_meta/sync-policy.md`](../../_meta/sync-policy.md)。HTTP 路由生成还会读取
-`apps/kernel-server/src/personal/tool_lifecycle.rs`、
-`apps/kernel-server/src/personal/pinned_https.rs` 与
-`apps/kernel-server/src/personal/observation.rs`，使已标注的 Tool lifecycle、
+`personal/apps/kernel-server/src/personal/tool_lifecycle.rs`、
+`personal/apps/kernel-server/src/personal/pinned_https.rs` 与
+`personal/apps/kernel-server/src/personal/observation.rs`，使已标注的 Tool lifecycle、
 钉住 HTTPS 与观测平面路径无法腐烂。
 
 ## UJ capability-truth 冻结
@@ -80,9 +80,9 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 `tools/src/p2_t28_uj_matrix.mjs` 冻结 BR-08 的 UJ1..UJ6 行。必选行必须命名已存在的
 公开调用方文件和机械 oracle 文件，并给出 cleanup 与有界 evidence schema。Web UI 与
 Multi-Agent 保持显式 `excluded`，不得标为 required。daemon 侧登记表是
-`apps/kernel-server/src/personal/capability_truth.rs`。该冻结不是 EVAL-004、Gate、
+`personal/apps/kernel-server/src/personal/capability_truth.rs`。该冻结不是 EVAL-004、Gate、
 release 或 Profile 结果。D02 密闭公开调用方冒烟是
-`apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`。命名 UJ oracle 在精确
+`personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`。命名 UJ oracle 在精确
 revision 的 `DEV-LINUX-NATIVE-01` 上执行；Windows GNU 对该 Rust 矩阵记 `not-run`。
 
 ## P7-T05 Web UI 路由清单

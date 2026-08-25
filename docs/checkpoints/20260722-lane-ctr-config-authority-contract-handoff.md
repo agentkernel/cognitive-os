@@ -4,7 +4,7 @@
 
 - 执行战役 `CONFIG-AUTHORITY-FOUNDATION-THEN-MGMT-CONFIG-CFR` 的 CA-0 合同充分性裁决。
 - 从 `origin/main@dfb3091` 创建 `lane/ctr-config-authority-contract`；主线 CI run `29853440295` = success。
-- 裁决 **NO-GO**，完整追踪矩阵与内部接口语义见 [CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md](../plan/CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md)。
+- 裁决 **NO-GO**，完整追踪矩阵与内部接口语义见 [CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md](../plan/archive/CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md)。
 - 登记 D-022：Management operation/config profile、session signature profile 与 authoritative audit carrier 未闭合；D-016 继续 deferred-to-v0.2。
 - 登记并闭合 D-023：matrix 非空 `impl` 实测为 70，修正 PROGRESS 的旧 68；不改变测试/Profile 状态。
 - 未修改 registry、schema、transition、error、vector、runner 或实现代码；全部 Management 目标向量保持 not-run。

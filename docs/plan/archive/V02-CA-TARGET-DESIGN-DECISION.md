@@ -4,9 +4,9 @@
 - Date: 2026-07-22
 - Status: **materialized for owner review; all three candidates blocked**
 - Baseline: `origin/main@88d5374430263c52c7b67e3178dcd752ad984dbc` (PR #51 merge; main CI run `29915808901` success)
-- OPS input: [V02-CA-OPS-01](./V02-CA-OPS-DESIGN-DECISION.md) and [ADR-0010](../adr/0010-v02-management-operation-set-governance.md)
-- Structural governance: [ADR-0011](../adr/0011-v02-configuration-target-authority-governance.md)
-- Classification: docs-only structural design under [V02-CA-GOV-00](./V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) and [ADR-0009](../adr/0009-v02-configuration-authority-surface-expansion-governance.md)
+- OPS input: [V02-CA-OPS-01](V02-CA-OPS-DESIGN-DECISION.md) and [ADR-0010](../../adr/0010-v02-management-operation-set-governance.md)
+- Structural governance: [ADR-0011](../../adr/0011-v02-configuration-target-authority-governance.md)
+- Classification: docs-only structural design under [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) and [ADR-0009](../../adr/0009-v02-configuration-authority-surface-expansion-governance.md)
 - Target asset version/digest: `unresolved/not assigned`; no machine asset exists
 - Operation-set digest: `unresolved/not computed`
 
@@ -113,7 +113,7 @@ targets. The following are explicitly non-authoritative fillers:
 
 ### 3.3 Structural direction
 
-[ADR-0011](../adr/0011-v02-configuration-target-authority-governance.md)
+[ADR-0011](../../adr/0011-v02-configuration-target-authority-governance.md)
 proposes the bounded direction:
 
 - reuse the governed-object outer model;

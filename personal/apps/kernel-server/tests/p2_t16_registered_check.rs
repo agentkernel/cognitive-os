@@ -5,8 +5,8 @@ use std::process::Command;
 #[test]
 fn fixed_c2a_worker_runs_without_shell_or_ambient_environment() {
     let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("tests/fixtures/p2_t16_registered_check/c2a-repair-typescript");
+        .join("../../..")
+        .join("personal/tests/fixtures/p2_t16_registered_check/c2a-repair-typescript");
     let output = Command::new(env!("CARGO_BIN_EXE_kernel-server"))
         .args([
             "--personal-registered-check-worker",
@@ -25,8 +25,8 @@ fn fixed_c2a_worker_runs_without_shell_or_ambient_environment() {
 #[test]
 fn fixed_worker_rejects_extra_argv_before_execution() {
     let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("tests/fixtures/p2_t16_registered_check/c2a-repair-typescript");
+        .join("../../..")
+        .join("personal/tests/fixtures/p2_t16_registered_check/c2a-repair-typescript");
     let output = Command::new(env!("CARGO_BIN_EXE_kernel-server"))
         .args([
             "--personal-registered-check-worker",
@@ -44,8 +44,8 @@ fn fixed_worker_rejects_extra_argv_before_execution() {
 #[test]
 fn fixed_rust_worker_runs_without_shell_or_ambient_environment() {
     let fixture = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-        .join("../..")
-        .join("tests/fixtures/p2_t16_registered_check/c2a-repair-rust");
+        .join("../../..")
+        .join("personal/tests/fixtures/p2_t16_registered_check/c2a-repair-rust");
     let output = Command::new(env!("CARGO_BIN_EXE_kernel-server"))
         .args(["--personal-registered-check-worker", "c2a.repair.rust"])
         .current_dir(fixture)

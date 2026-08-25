@@ -1,25 +1,25 @@
 # Handbook sync adapter
 
-This adapter keeps `handbook/` (the bilingual derived documentation system)
+This adapter keeps `personal/handbook/` (the bilingual derived documentation system)
 consistent with the tree. It adds no workflow, axiom, or status semantics; the
-policy is owned by `handbook/_meta/sync-policy.md` and canonical governance
+policy is owned by `personal/handbook/_meta/sync-policy.md` and canonical governance
 sources always win over handbook content.
 
-1. Before finishing any change under `crates/`, `apps/`, `packages/`, `specs/`,
-   `conformance/`, `tests/`, `tools/`, `deploy/`, `.github/`, or root manifests,
-   match the changed paths against `handbook/_meta/source-map.json` and update
+1. Before finishing any change under `crates/`, `apps/`, `packages/`, `core/specs/`,
+   `core/conformance/`, `tests/`, `tools/`, `personal/deploy/`, `.github/`, or root manifests,
+   match the changed paths against `personal/handbook/_meta/source-map.json` and update
    the mapped handbook documents in the same formal task and PR.
 2. User-visible behavior changes (CLI verbs/flags, configuration files, errors,
    security boundaries, installation, recovery) must update both locales of the
-   affected `handbook/*/user/**` and `handbook/*/reference/**` pages.
+   affected `personal/handbook/*/user/**` and `personal/handbook/*/reference/**` pages.
 3. Architecture, data, protocol, authority, or test-environment changes must
-   update the affected `handbook/*/developer/**` and `handbook/*/ai/**` pages.
+   update the affected `personal/handbook/*/developer/**` and `personal/handbook/*/ai/**` pages.
 4. Pages with `generated: true` are refreshed only by running
    `node tools/src/generate-handbook.mjs`; never hand-edit them. After editing a
    hand-written page or its mapped sources, run
    `node tools/src/fill-handbook-fingerprints.mjs`.
 5. A new tracked file must be classified in
-   `handbook/_meta/source-coverage.json` (owning docs, or an excluded category
+   `personal/handbook/_meta/source-coverage.json` (owning docs, or an excluded category
    with a reason).
 6. If a change truly affects no documentation, acknowledge it explicitly:
    pass `DOCS_IMPACT_NONE="<concrete reason>"` to the docs-sync gate and record
@@ -32,7 +32,7 @@ sources always win over handbook content.
    run `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
    `pnpm run check:consistency`; CI enforces the same set on every PR.
-8. When a canonical source (governance, formal plan, `specs/`, `conformance/`,
+8. When a canonical source (governance, formal plan, `core/specs/`, `core/conformance/`,
    standards) conflicts with a handbook page, the canonical source wins; correct
    the handbook page in the same delivery. Never copy dynamic
    `PROGRESS.md`/Gate status into the handbook — link it.

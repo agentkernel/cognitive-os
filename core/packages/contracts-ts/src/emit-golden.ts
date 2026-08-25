@@ -1,6 +1,6 @@
 /**
  * Emit `{fixture id -> digest}` for every positive golden fixture, plus the
- * live schema-bundle manifest digest of `specs/schemas/`, as canonical JSON
+ * live schema-bundle manifest digest of `core/specs/schemas/`, as canonical JSON
  * on stdout. CI runs this and the Rust twin
  * (`cargo run -p cognitive-contracts --example emit_golden`) and asserts the
  * outputs are byte-identical (cross-language digest equality gate).
@@ -33,7 +33,7 @@ interface FixtureFile {
 const REPO_ROOT = fileURLToPath(new URL("../../..", import.meta.url));
 
 /**
- * Live schema-bundle manifest digest over the current specs/schemas suite
+ * Live schema-bundle manifest digest over the current core/specs/schemas suite
  * (registered section-13 procedure; twin logic in emit_golden.rs).
  */
 function liveSchemaBundleDigest(): string {

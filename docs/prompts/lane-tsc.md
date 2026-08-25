@@ -25,7 +25,7 @@
 
 ## 代码纪律（`.cursor/rules/11-typescript-clients.mdc` 全文有效）
 
-TS 只消费生成合同（生成物禁手改，ADR-0006）；canonical/digest 只用 `@cognitiveos/contracts-ts`（禁止 `JSON.stringify` 直接哈希）；客户端不做授权判定/完成判定/状态聚合冒充权威；tsconfig strict 全开沿用 `packages/contracts-ts/tsconfig.json` 基线。
+TS 只消费生成合同（生成物禁手改，ADR-0006）；canonical/digest 只用 `@cognitiveos/contracts-ts`（禁止 `JSON.stringify` 直接哈希）；客户端不做授权判定/完成判定/状态聚合冒充权威；tsconfig strict 全开沿用 `core/packages/contracts-ts/tsconfig.json` 基线。
 
 ## 禁止越界
 
@@ -34,7 +34,7 @@ TS 只消费生成合同（生成物禁手改，ADR-0006）；canonical/digest �
 
 ## 相关规范路径
 
-`docs/standards/akp-envelope-and-http-profile.md`、`event-audit-watch.md`、`task-loop-verification.md`、`error-contract.md`；`specs/schemas/shell-*.json`、`watch-subscription.schema.json`、`user-intent-record.schema.json`；向量组 `shell-*`、`intent-*`、`remote-completed-not-acceptance`；`docs/adr/0001、0003、0006`。
+`docs/standards/akp-envelope-and-http-profile.md`、`event-audit-watch.md`、`task-loop-verification.md`、`error-contract.md`；`core/specs/schemas/shell-*.json`、`watch-subscription.schema.json`、`user-intent-record.schema.json`；向量组 `shell-*`、`intent-*`、`remote-completed-not-acceptance`；`docs/adr/0001、0003、0006`。
 
 ## 入口 gate 与验收
 
@@ -42,4 +42,4 @@ TS 只消费生成合同（生成物禁手改，ADR-0006）；canonical/digest �
 
 ## 第一个动作
 
-`git checkout -b lane/tsc`，读 `packages/sdk-ts/src/index.ts` 与 `docs/standards/akp-envelope-and-http-profile.md`，起草 sdk-ts 客户端接口（channel 绑定、envelope 封装、watch 迭代器）为失败测试。
+`git checkout -b lane/tsc`，读 `personal/packages/sdk-ts/src/index.ts` 与 `docs/standards/akp-envelope-and-http-profile.md`，起草 sdk-ts 客户端接口（channel 绑定、envelope 封装、watch 迭代器）为失败测试。

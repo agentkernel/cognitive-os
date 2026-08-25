@@ -1055,7 +1055,7 @@ pub(super) fn eff_crash_2_behavior(
             "event_chain_transitions": facts.iter().map(|f| format!("{:?}->{:?}@v{}", f.before, f.after, f.version)).collect::<Vec<_>>(),
             "reconciliation_queries": queries,
             "core": core.detail,
-            "next_gate_mapping": "specs/transitions/effect.transitions.json RECONCILED(executed) -> VERIFIED/VERIFY_FAILED",
+            "next_gate_mapping": "core/specs/transitions/effect.transitions.json RECONCILED(executed) -> VERIFIED/VERIFY_FAILED",
         }),
     })
 }
@@ -1400,9 +1400,9 @@ pub(super) fn idempotency_conflict_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/effects.rs (mint_intent idempotency arbitration over durable rows)".to_owned(),
+            "core/crates/cognitive-kernel/src/effects.rs (mint_intent idempotency arbitration over durable rows)".to_owned(),
             "crates/cognitive-store (intents table, UNIQUE idempotency_key + append-only)".to_owned(),
-            "specs/registry/errors.yaml#EFFECT_IDEMPOTENCY_CONFLICT".to_owned(),
+            "core/specs/registry/errors.yaml#EFFECT_IDEMPOTENCY_CONFLICT".to_owned(),
         ],
         // The two required_actions entries are prose guidance; they are
         // echoed for report completeness but the machine-compared substance
@@ -1596,9 +1596,9 @@ pub(super) fn recovery_reconciliation_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "crates/cognitive-kernel/src/recovery.rs (eight-step order; reconcile precedes checkpoint validation)".to_owned(),
-            "crates/cognitive-store/src/faults.rs (CrashHarness, ScriptedExecutor)".to_owned(),
-            "specs/registry/errors.yaml#EFFECT_OUTCOME_UNKNOWN".to_owned(),
+            "core/crates/cognitive-kernel/src/recovery.rs (eight-step order; reconcile precedes checkpoint validation)".to_owned(),
+            "personal/crates/cognitive-store/src/faults.rs (CrashHarness, ScriptedExecutor)".to_owned(),
+            "core/specs/registry/errors.yaml#EFFECT_OUTCOME_UNKNOWN".to_owned(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -1676,9 +1676,9 @@ fn fencing_probe() -> Result<Value, ExecError> {
 
 fn m4_grounding(code: &str) -> Vec<String> {
     vec![
-        "crates/cognitive-kernel/src/effects.rs + recovery.rs (protocol driver, eight-step recovery)".to_owned(),
-        "crates/cognitive-store/src/faults.rs (CrashHarness drop-and-reopen, ScriptedExecutor ledger)".to_owned(),
-        "specs/transitions/effect.transitions.json".to_owned(),
-        format!("specs/registry/errors.yaml#{code}"),
+        "core/crates/cognitive-kernel/src/effects.rs + recovery.rs (protocol driver, eight-step recovery)".to_owned(),
+        "personal/crates/cognitive-store/src/faults.rs (CrashHarness drop-and-reopen, ScriptedExecutor ledger)".to_owned(),
+        "core/specs/transitions/effect.transitions.json".to_owned(),
+        format!("core/specs/registry/errors.yaml#{code}"),
     ]
 }

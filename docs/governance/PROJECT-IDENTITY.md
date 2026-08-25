@@ -13,8 +13,8 @@ Personal 实现所依赖的架构、合同、研究和验证基础。当前开�
 `cognitiveos-personal`，不得把“CognitiveOS 参考实现”误解为第二个待交付产品。
 
 不可放松的公理（A1–A8）与工程原则（P1–P3）只由
-[AXIOMS.md](./AXIOMS.md) 拥有；工作流政策由
-[DEVELOPMENT-OPERATING-MODEL.md](./DEVELOPMENT-OPERATING-MODEL.md) 拥有。
+[AXIOMS.md](AXIOMS.md) 拥有；工作流政策由
+[DEVELOPMENT-OPERATING-MODEL.md](DEVELOPMENT-OPERATING-MODEL.md) 拥有。
 
 ## 2. 两层边界
 
@@ -22,9 +22,9 @@ Personal 实现所依赖的架构、合同、研究和验证基础。当前开�
 
 以下内容属于架构/合同/研究层：
 
-- `docs/architecture/cognitiveos/` 中的 CognitiveOS 白皮书、RFC、评审结论和架构说明；
-- `specs/` 中的 registry、schema、transition、error 和其他机器合同；
-- `conformance/`、`tests/golden/` 及其用于验证架构合同的夹具；
+- `core/docs/architecture/` 中的 CognitiveOS 白皮书、RFC、评审结论和架构说明；
+- `core/specs/` 中的 registry、schema、transition、error 和其他机器合同；
+- `core/conformance/`、`core/tests/golden/` 及其用于验证架构合同的夹具；
 - 能被 Personal 复用的 Rust/TypeScript 通用层。
 
 架构层的职责是定义和验证边界，不是独立发布产品。架构层的语义变更仍须遵守
@@ -39,14 +39,14 @@ Personal 实现所依赖的架构、合同、研究和验证基础。当前开�
 登记在 [PROGRESS.md](../plan/PROGRESS.md)。实现可以使用架构层资产，但任务必须以
 `P*-T*` Personal 任务或明确关联的 REQ/F/IMP 为落点。
 
-`docs/plan/DEVELOPMENT-PLAN.md`、M0-M11/M6/v0.1 计划、旧 lane prompts 和历史
+`docs/plan/archive/DEVELOPMENT-PLAN.md`、M0-M11/M6/v0.1 计划、旧 lane prompts 和历史
 milestone 状态只作为架构形成过程、验证资产或复用参考保留。除非 Personal 正式计划
 明确引用，它们不能生成当前任务、活动 lease、产品 Gate 或发布要求。
 
 Personal 的稳定产品愿景、用户资源模型和 release-scope 设计位于
-[`docs/product/personal/`](../product/personal/README.md)；Personal 如何组合 CognitiveOS
+[`personal/docs/product/`](../../personal/docs/product/README.md)；Personal 如何组合 CognitiveOS
 合同、daemon、Shell 与 Agent runtime 的说明位于
-[`docs/architecture/personal/`](../architecture/personal/README.md)。两者都是 informative
+[`personal/docs/architecture/`](../../personal/docs/architecture/README.md)。两者都是 informative
 设计源：前者不拥有任务/Gate/current status，后者不创建 public schema/transition/REQ。
 
 ## 3. 默认工作范围
@@ -71,7 +71,7 @@ Console、独立客户端、Memory、Multi-Agent、Web UI、Windows 安装面等
 遇到名称、状态或范围冲突时按以下顺序判断：
 
 1. 本文件（项目身份与范围）；
-2. [Development Operating Model](./DEVELOPMENT-OPERATING-MODEL.md)（通用治理）；
+2. [Development Operating Model](DEVELOPMENT-OPERATING-MODEL.md)（通用治理）；
 3. [PERSONAL-DEVELOPMENT-PLAN.md](../plan/PERSONAL-DEVELOPMENT-PLAN.md)（正式任务与 Gate）；
 4. [PROGRESS.md](../plan/PROGRESS.md) 的 `Current snapshot`（当前事实）；
 5. [PARALLEL-LANES.md](../plan/PARALLEL-LANES.md) 的活动 lease（当前可写路径）；
@@ -85,7 +85,7 @@ Console、独立客户端、Memory、Multi-Agent、Web UI、Windows 安装面等
 
 默认开发出口是一个完整正式 `P*-T*` 任务，不是单个 Slice、checkpoint 或会话。
 完整的 branch/PR/lease、持续推进、阻塞恢复、用户确认、性能验证和 deterministic closure
-语义只由 [Development Operating Model](./DEVELOPMENT-OPERATING-MODEL.md) 定义。本文件仅
+语义只由 [Development Operating Model](DEVELOPMENT-OPERATING-MODEL.md) 定义。本文件仅
 固定项目身份和来源优先级，不建立第二套工作流。Personal 正式计划拥有任务验收，Current
 snapshot 拥有当前事实，active lease table 拥有可写权限；任何实现都不得放松 daemon-only
 authority、SecretStore、Intent/Effect、budget/fencing 或 independent verifier 边界。

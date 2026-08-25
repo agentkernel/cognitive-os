@@ -1,8 +1,8 @@
 # CognitiveOS M6 出口闭合 / v0.1 重评审计划
 
 - 状态：approved（2026-07-21）；类别 plan（informative）
-- Canonical 出口计划；承接 [M6-PLAN.md](./M6-PLAN.md) 未闭合出口项
-- 更新责任：出口 WP 合入与 v0.1 重评审时同步本文件与 [PROGRESS.md](./PROGRESS.md)
+- Canonical 出口计划；承接 [M6-PLAN.md](M6-PLAN.md) 未闭合出口项
+- 更新责任：出口 WP 合入与 v0.1 重评审时同步本文件与 [PROGRESS.md](../PROGRESS.md)
 
 ## 1 页执行摘要
 
@@ -75,7 +75,7 @@
 ### WP-CLAIM
 
 - **Owner**：DOC + CFR + RUN
-- **交付**：发布声明集冻结表（见 [f017-platform-matrix.md](../traceability/f017-platform-matrix.md) Claim freeze）
+- **交付**：发布声明集冻结表（见 [f017-platform-matrix.md](../../traceability/f017-platform-matrix.md) Claim freeze）
 - **禁止**：扩大声明超过证据
 
 ### WP-F017
@@ -159,10 +159,10 @@ flowchart TD
 3. **Batch-E2+**：可选 store/PERF 战役 / D-018 闭合 / 后续重评（分会话）
 
 提示词：
-- [m6-exit-batch0-land-and-claim.md](../prompts/m6-exit-batch0-land-and-claim.md)
-- [m6-exit-batch1-f017-evidence.md](../prompts/m6-exit-batch1-f017-evidence.md)
-- [m6-exit-batch2-optional-store-perf.md](../prompts/m6-exit-batch2-optional-store-perf.md)
-- [m6-exit-batch3-rereview.md](../prompts/m6-exit-batch3-rereview.md)
+- [m6-exit-batch0-land-and-claim.md](../../prompts/m6-exit-batch0-land-and-claim.md)
+- [m6-exit-batch1-f017-evidence.md](../../prompts/m6-exit-batch1-f017-evidence.md)
+- [m6-exit-batch2-optional-store-perf.md](../../prompts/m6-exit-batch2-optional-store-perf.md)
+- [m6-exit-batch3-rereview.md](../../prompts/m6-exit-batch3-rereview.md)
 
 ---
 
@@ -172,5 +172,5 @@ R2/R3；distributed；具身/CIM；学习；M7 memory/discovery 产品面；Cons
 
 ## 相关入口
 
-- [M6-PLAN.md](./M6-PLAN.md) · [DEVELOPMENT-PLAN.md](./DEVELOPMENT-PLAN.md) · [f017-platform-matrix.md](../traceability/f017-platform-matrix.md)
-- [20260721-m6-milestone-review.md](../checkpoints/20260721-m6-milestone-review.md)
+- [M6-PLAN.md](M6-PLAN.md) · [DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md) · [f017-platform-matrix.md](../../traceability/f017-platform-matrix.md)
+- [20260721-m6-milestone-review.md](../../checkpoints/20260721-m6-milestone-review.md)

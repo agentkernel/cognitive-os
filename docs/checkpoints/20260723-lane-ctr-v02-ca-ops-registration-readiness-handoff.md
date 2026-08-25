@@ -43,7 +43,7 @@ runner classification, and the tracked implementation entry points for channel
 admission, session, approval, deterministic fallback dispatch, Effect recovery,
 and AKP envelopes.
 
-Result: [V02-CA-OPS-REG-READINESS-01](../plan/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
+Result: [V02-CA-OPS-REG-READINESS-01](../plan/archive/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
 is docs-only and returns **NO-GO for machine registration**.
 
 | Candidate | Registration status | Primary blocker |

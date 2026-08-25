@@ -134,7 +134,7 @@ fn generated_headers_pin_current_schema_digests() {
             .lines()
             .find(|l| l.starts_with("//! source: "))
             .unwrap_or_else(|| panic!("{} missing source header", path.display()));
-        let Some(schema_rel) = source_line.strip_prefix("//! source: specs/schemas/") else {
+        let Some(schema_rel) = source_line.strip_prefix("//! source: core/specs/schemas/") else {
             continue; // registry-sourced module (error_registry.rs)
         };
         let digest_line = text
@@ -290,7 +290,7 @@ fn m6_consumer_bindings_are_exported_with_required_members() {
 #[test]
 fn error_registry_matches_errors_yaml() {
     // Gap 2 of the 20260720 lane-tsc handoff: the generated registry table
-    // must match specs/registry/errors.yaml entry by entry, and the pinned
+    // must match core/specs/registry/errors.yaml entry by entry, and the pinned
     // REGISTRY_DIGEST must equal the spec-set manifest per-asset recipe
     // (canonical JSON projection of the parsed YAML, domain spec-set/0.1).
     use cognitive_contracts::bundle;

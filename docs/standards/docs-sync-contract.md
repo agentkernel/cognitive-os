@@ -38,7 +38,7 @@
 **产品语义型**：必须由产品 owner 明确决定；支持平台、产品版本、默认 Agent 或 release
 scope 变化必须新增/更新 Personal ADR。同一 atomic delivery 内同步：
 
-1. `docs/product/personal/` 与受影响 Personal architecture 文档；
+1. `personal/docs/product/` 与受影响 Personal architecture 文档；
 2. `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` 的任务、typed dependency、Gate 与验收；
 3. `docs/plan/personal-trace.yaml`、`PERSONAL-SUPPORT-MATRIX.md` 与 `docs/plan/plan.md` 细节；
 4. `PROGRESS.md` Current snapshot（只记录真实当前事实，不把新目标写成实现）；
@@ -52,10 +52,10 @@ scope 变化必须新增/更新 Personal ADR。同一 atomic delivery 内同步�
 **规范语义型**，除上述外必须同批联动更新以下受影响项（无影响者在 PR 描述写明"无"）：
 
 1. 受影响的白皮书章节与版本说明（informative 对齐）；
-2. 对应 companion 规范（`specs/*/README.md`、RFC-0001）；
-3. `specs/registry/*.yaml`（REQ/错误码/状态域）；
-4. `specs/schemas/*`（含再生成的语言绑定，ADR-0006）；
-5. `conformance/vectors/*`（禁止删除负例或放宽 expected 迎合实现）；
+2. 对应 companion 规范（`core/specs/*/README.md`、RFC-0001）；
+3. `core/specs/registry/*.yaml`（REQ/错误码/状态域）；
+4. `core/specs/schemas/*`（含再生成的语言绑定，ADR-0006）；
+5. `core/conformance/vectors/*`（禁止删除负例或放宽 expected 迎合实现）；
 6. 实现与测试；
 7. `docs/traceability/matrix.yaml`（跑 `gen-matrix`）与 findings-ledger；
 8. 受影响的产品文档；只有 public client-consumed contract 实际变化时才通知对应客户端仓库/兼容 stub，不再对无关 Console 文档强制追加漂移标注。
@@ -66,14 +66,14 @@ scope 变化必须新增/更新 Personal ADR。同一 atomic delivery 内同步�
 10. 迁移说明（旧对象/旧引用如何处置，读者为实现者与 runner）。
 
 **Handbook 联动（全部档位通用，P8-T08 起）**：任何改动路径命中
-`handbook/_meta/source-map.json` 规则的变更，必须在提交/推送/合并**之前**、在同一变更
-集内同步派生文档系统 `handbook/`：
+`personal/handbook/_meta/source-map.json` 规则的变更，必须在提交/推送/合并**之前**、在同一变更
+集内同步派生文档系统 `personal/handbook/`：
 
 1. 更新映射到的手写页面（en 与 zh-CN 双语，事实与 status 一致）；
 2. 生成页只经 `node tools/src/generate-handbook.mjs` 重生成，禁止手改；
 3. 手写页或其映射源变化后运行 `node tools/src/fill-handbook-fingerprints.mjs`
    刷新指纹（指纹漂移即 CI 红灯）；
-4. 新增 tracked 文件必须在 `handbook/_meta/source-coverage.json` 归类；
+4. 新增 tracked 文件必须在 `personal/handbook/_meta/source-coverage.json` 归类；
 5. 确实无文档影响时，必须以 `DOCS_IMPACT_NONE="<具体理由>"` 显式确认通过本地门，并把
    同一理由记入 commit/PR 描述——空白或敷衍理由不放行。
 
@@ -100,7 +100,7 @@ rg -n "REQ-EFF-002|EFFECT_IDEMPOTENCY_CONFLICT|effect.schema.json" --glob '!Hist
 
 ## 4. 白皮书/评审文档的特殊地位
 
-`docs/architecture/cognitiveos/CognitiveOS-Architecture.md`（informative）语义滞后允许存在，但必须登记：漂移在 findings-ledger 漂移节记录，修订按批次合并。两份评审文档与 `RFC-0001` 历史结论**不回改**（historical 证据），现状变化只写台账。
+`core/docs/architecture/CognitiveOS-Architecture.md`（informative）语义滞后允许存在，但必须登记：漂移在 findings-ledger 漂移节记录，修订按批次合并。两份评审文档与 `RFC-0001` 历史结论**不回改**（historical 证据），现状变化只写台账。
 
 ## 5. CI 强制（红灯即失败）
 

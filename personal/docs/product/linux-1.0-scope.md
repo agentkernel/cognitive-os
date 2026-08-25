@@ -3,13 +3,13 @@
 - Product version target: `1.0.0`
 - Release Gate: `GMVP-LINUX`
 - Platform target: Linux x86_64
-- Decisions: [ADR-0036](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md),
-  [ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md),
-  [ADR-0038](../../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
+- Decisions: [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md),
+  [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
+  [ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
 
 This document defines the stable release target. Current readiness, task state
 and every Gate status remain exclusively in
-[PROGRESS.md](../../plan/PROGRESS.md).
+[PROGRESS.md](../../../docs/plan/PROGRESS.md).
 
 ## 1. Release identity and authority
 

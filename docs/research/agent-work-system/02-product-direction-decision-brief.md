@@ -2105,6 +2105,6 @@ Therefore:
 - canonical adoption requires an accepted product-semantic ADR and formal-plan
   rebaseline after P7-T05/D13 ownership is resolved。
 
-See [Personal product design](./03-personal-product-design.md),
-[open-source reuse](./12-open-source-reuse-assessment.md), and
-[baseline delta map](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md).
+See [Personal product design](03-personal-product-design.md),
+[open-source reuse](12-open-source-reuse-assessment.md), and
+[baseline delta map](13-control-plane-baseline-to-personal-desktop-1.0-delta.md).

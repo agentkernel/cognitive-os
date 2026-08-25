@@ -7,7 +7,7 @@
 > applies to this repository — those files now live in the external repo.
 > Its packaging recommendation was carried out (batches landed as two commits).
 > The authoritative continuation record is
-> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](./20260726-toolchain-recovery-and-worktree-landing-handoff.md).
+> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](20260726-toolchain-recovery-and-worktree-landing-handoff.md).
 > Retained unchanged below as a point-in-time record.
 
 ### 1. Purpose

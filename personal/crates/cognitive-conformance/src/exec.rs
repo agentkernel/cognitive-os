@@ -304,7 +304,7 @@ pub struct AssetContext {
 }
 
 /// Resolves any retrieval URI to the schema whose file name matches the last
-/// path segment ($id == file name policy, `conformance/README.md`).
+/// path segment ($id == file name policy, `core/conformance/README.md`).
 struct FileNameRetriever {
     schemas: HashMap<String, Value>,
 }
@@ -333,6 +333,7 @@ impl AssetContext {
         };
 
         let req_path = repo_root
+            .join("core")
             .join("specs")
             .join("registry")
             .join("requirements.yaml");
@@ -341,14 +342,18 @@ impl AssetContext {
                 path: req_path.clone(),
                 reason: err.to_string(),
             })?;
-        let err_path = repo_root.join("specs").join("registry").join("errors.yaml");
+        let err_path = repo_root
+            .join("core")
+            .join("specs")
+            .join("registry")
+            .join("errors.yaml");
         let errors: ErrorsFile =
             serde_yaml::from_str(&read(&err_path)?).map_err(|err| ExecError::Registry {
                 path: err_path.clone(),
                 reason: err.to_string(),
             })?;
 
-        let schema_dir = repo_root.join("specs").join("schemas");
+        let schema_dir = repo_root.join("core").join("specs").join("schemas");
         let mut schemas = HashMap::new();
         let entries = fs::read_dir(&schema_dir).map_err(|source| ExecError::Io {
             path: schema_dir.clone(),
@@ -375,6 +380,7 @@ impl AssetContext {
         }
 
         let eff_path = repo_root
+            .join("core")
             .join("specs")
             .join("transitions")
             .join("effect.transitions.json");
@@ -407,7 +413,7 @@ impl AssetContext {
             .get(schema_name)
             .ok_or_else(|| ExecError::SchemaCompile {
                 name: schema_name.to_owned(),
-                reason: "schema not found under specs/schemas/".to_owned(),
+                reason: "schema not found under core/specs/schemas/".to_owned(),
             })?;
         jsonschema::options()
             .with_retriever(FileNameRetriever {
@@ -491,7 +497,7 @@ const ORDINARY_CORE_AUDIT_INSPECT_VECTOR_ID: &str = "ORDINARY-CORE-AUDIT-INSPECT
 const STORE_DEGRADATION_VECTOR_ID: &str = "STATE-STORE-DEGRADE-001";
 
 /// Reason strings for honestly-not-run layers: behavioral execution arrives
-/// with the owning subsystem milestone (docs/plan/DEVELOPMENT-PLAN.md).
+/// with the owning subsystem milestone (docs/plan/archive/DEVELOPMENT-PLAN.md).
 fn not_run_reason(vector: &LoadedVector) -> String {
     let milestone = match vector.layer_slug.as_str() {
         "effect-recovery" => "kernel Effect/recovery behavior (M4)",
@@ -820,9 +826,9 @@ fn schema_gate(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            format!("specs/schemas/{schema_name}"),
-            "specs/schemas/object-reference.schema.json#/$defs/strongReference".to_owned(),
-            "specs/registry/errors.yaml#SCHEMA_MISMATCH".to_owned(),
+            format!("core/specs/schemas/{schema_name}"),
+            "core/specs/schemas/object-reference.schema.json#/$defs/strongReference".to_owned(),
+            "core/specs/registry/errors.yaml#SCHEMA_MISMATCH".to_owned(),
         ],
         informative: vec!["rejection_reasons"],
         implementation: None,
@@ -869,7 +875,7 @@ fn traceability_gate(
                 // For schema-owned requirements, record the compiled
                 // contract's required members as citable static evidence
                 // (used by the findings-ledger M1 re-verification entries).
-                if owner_file.starts_with("specs/schemas/") {
+                if owner_file.starts_with("core/specs/schemas/") {
                     let name = owner_file.rsplit('/').next().unwrap_or(owner_file);
                     let compiles = ctx.validator(name).is_ok();
                     all_ok = all_ok && compiles;
@@ -917,7 +923,7 @@ fn traceability_gate(
             "schema_parse_alone_is_not_pass": true,
         }),
         grounding: vec![
-            "specs/registry/requirements.yaml".to_owned(),
+            "core/specs/registry/requirements.yaml".to_owned(),
             input_owner.to_owned(),
         ],
         informative: vec![],
@@ -971,7 +977,7 @@ fn coverage_gate(
             // feeds enumeration only.
             "status_does_not_imply_implementation": true,
         }),
-        grounding: vec!["specs/registry/requirements.yaml".to_owned()],
+        grounding: vec!["core/specs/registry/requirements.yaml".to_owned()],
         informative: vec![],
         implementation: None,
         evidence: json!({
@@ -1112,8 +1118,8 @@ fn perf_contract_gate(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            format!("specs/schemas/{schema_name}"),
-            "specs/registry/errors.yaml#PERFORMANCE_REPORT_INCOMPLETE".to_owned(),
+            format!("core/specs/schemas/{schema_name}"),
+            "core/specs/registry/errors.yaml#PERFORMANCE_REPORT_INCOMPLETE".to_owned(),
         ],
         informative: vec!["negative_case_result.reason"],
         implementation: None,

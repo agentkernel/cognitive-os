@@ -67,7 +67,7 @@ USAGE:
 
 Verbs run against the SQLite WAL authority store; every mutation goes
 through the central deterministic transition gate. Errors are registered
-codes (specs/registry/errors.yaml) as JSON on stderr.";
+codes (core/specs/registry/errors.yaml) as JSON on stderr.";
 
 /// Executor used when no external adapter is configured: outcome queries
 /// answer `Indeterminate` (still-unknown effects quarantine — fail safe),

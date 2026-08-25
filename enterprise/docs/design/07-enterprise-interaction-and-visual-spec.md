@@ -3,7 +3,7 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本规范建立在 [Enterprise 产品设计](./06-enterprise-product-design.md)上。所有 dimensions、
+本规范建立在 [Enterprise 产品设计](06-enterprise-product-design.md)上。所有 dimensions、
 tokens 与 interaction pattern 均是 design candidate。Enterprise 未实现；Desktop Fleet 与
 Web fallback 只描述目标关系。
 

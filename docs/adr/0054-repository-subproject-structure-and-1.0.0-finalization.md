@@ -114,7 +114,7 @@ location only.
 
 All path-bearing infrastructure is rewritten in the same change set: root
 `Cargo.toml` and `pnpm-workspace.yaml`, `.github/workflows/`, `tools/src/`
-checkers and generators, `handbook/_meta/source-map.json` routing,
+checkers and generators, `personal/handbook/_meta/source-map.json` routing,
 `.cursor/rules/`, `AGENTS.md`, `PROJECT-IDENTITY.md`, and documentation
 links/indexes. The docs-sync contract and its gate remain in force with
 updated paths. No canonical fact changes owner; old paths become new paths,

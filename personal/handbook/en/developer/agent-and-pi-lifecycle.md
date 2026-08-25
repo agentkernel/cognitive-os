@@ -6,47 +6,47 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-runtime/src/installer.rs
+  - path: personal/crates/cognitive-runtime/src/installer.rs
     symbols: ["install_package", "acquire_official_pi_durable"]
-  - path: crates/cognitive-runtime/src/agent_registration.rs
+  - path: personal/crates/cognitive-runtime/src/agent_registration.rs
     symbols: ["register_official_pi_agent_durable", "activate_official_pi_agent_durable"]
-  - path: crates/cognitive-runtime/src/pi_launcher.rs
+  - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
-  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
-  - path: packages/pi-cognitiveos/src/extension.ts
-  - path: apps/pi-agent-adapter/src/lib.rs
-  - path: apps/pi-agent-adapter/src/main.rs
-  - path: apps/kernel-server/src/personal/pi_runtime.rs
-  - path: crates/cognitive-runtime/src/agent_adapter_manifest.rs
+  - path: personal/packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: personal/packages/pi-cognitiveos/src/extension.ts
+  - path: personal/apps/pi-agent-adapter/src/lib.rs
+  - path: personal/apps/pi-agent-adapter/src/main.rs
+  - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
+  - path: personal/crates/cognitive-runtime/src/agent_adapter_manifest.rs
     symbols: ["register_agent_adapter"]
-  - path: crates/cognitive-runtime/src/non_pi_agent.rs
-  - path: crates/cognitive-runtime/src/dsh_agent.rs
+  - path: personal/crates/cognitive-runtime/src/non_pi_agent.rs
+  - path: personal/crates/cognitive-runtime/src/dsh_agent.rs
     symbols: ["register_dsh_adapter"]
-  - path: crates/cognitive-akp/src/deepseek_harness.rs
+  - path: core/crates/cognitive-akp/src/deepseek_harness.rs
     symbols: ["DeepSeekHarnessAdapter"]
-  - path: crates/cognitive-akp/src/bin/dsh-akp-bridge.rs
-  - path: packages/dsh-akp-adapter/src/index.ts
-  - path: packages/dsh-akp-adapter/src/plugin.ts
+  - path: core/crates/cognitive-akp/src/bin/dsh-akp-bridge.rs
+  - path: personal/packages/dsh-akp-adapter/src/index.ts
+  - path: personal/packages/dsh-akp-adapter/src/plugin.ts
     symbols: ["apply", "applyDshAkpCordisPlugin"]
-  - path: packages/dsh-akp-adapter/src/index.test.ts
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/packages/dsh-akp-adapter/src/index.test.ts
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch", "status"]
-  - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
-  - path: packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
-  - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
-  - crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
-  - crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
-  - crates/cognitive-runtime/tests/p5_t05_identity_recover.rs
-  - crates/cognitive-runtime/tests/p5_t05_upgrade_fencing.rs
-  - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
-  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
-  - apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
-  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-  - packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:2c9a382601fa981b34732474c606f5e1327cb48595e6fdde7074d8e0265a7f19"
+  - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
+  - personal/crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
+  - personal/crates/cognitive-runtime/tests/p5_t05_identity_recover.rs
+  - personal/crates/cognitive-runtime/tests/p5_t05_upgrade_fencing.rs
+  - personal/apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
+  - personal/packages/pi-cognitiveos/src/pi-route-observation.test.ts
+  - personal/apps/pi-agent-adapter/tests/daemon_candidate_protocol.rs
+  - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+  - personal/packages/dsh-akp-adapter/src/index.test.ts
+fingerprint: "sha256:ebb63e0d9919499cb8545051eba77265a3ea1c9e8999ac01ce6537137cae02b9"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -152,9 +152,9 @@ a long-lived, length-bounded transport. It never receives Provider
 credentials, writes authority state, or treats a dsh response as Task
 completion. Live linux-002 runs are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit result. Timing fields are measurement
-hooks, not a zero-overhead claim. `packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
+hooks, not a zero-overhead claim. `personal/packages/dsh-akp-adapter/scripts/linux002-e2e.mjs`
 drives `attachDshCordisPlugin` over HTTP on an identity-confirmed linux-002
-runtime and waits for Task `COMPLETED`. `packages/dsh-akp-adapter/src/plugin.ts`
+runtime and waits for Task `COMPLETED`. `personal/packages/dsh-akp-adapter/src/plugin.ts`
 is the Cordis `apply` entry for `dsh --patch`; `scripts/dsh-real-process.mjs`
 starts pinned dsh with compiled `apps/cli/lib/bin.js` when host `build:lib`
 outputs exist, otherwise `node --import tsx/esm apps/cli/src/bin.ts` (not

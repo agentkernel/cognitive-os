@@ -6,11 +6,11 @@ audience: [ai]
 status: implemented
 generated: false
 sources:
-  - path: handbook/_meta/source-map.json
+  - path: personal/handbook/_meta/source-map.json
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:d8533653d58158bf12f24bd2465390a38de6883058900e10d9c552088a607302"
+fingerprint: "sha256:d16857a7c9a9e56c4d6c4c793557b52c4e28255ecb90c0ef838a606e8f6d4e71"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -24,7 +24,7 @@ map 路由，命中即运行手册检查集，并使"映射源改动而无手册
 `DOCS_IMPACT_NONE="<具体理由>"`，且同一理由必须记入 commit/PR 描述。
 
 在完成变更**之前**，用
-[`handbook/_meta/source-map.json`](../../_meta/source-map.json) 判定文档影响：
+[`personal/handbook/_meta/source-map.json`](../../_meta/source-map.json) 判定文档影响：
 
 1. 将每个改动路径与 source-map 规则匹配，收集映射的 `doc_ids`。
 2. 对每个映射页面：手写页通过编辑页面并刷新指纹更新
@@ -51,6 +51,6 @@ git diff --check
 ```
 
 旧文档（`docs/**`）继续遵循
-[`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) 的自身义务；手册绝不吸收或替代
+[`docs-sync-contract.md`](../../../../docs/standards/docs-sync-contract.md) 的自身义务；手册绝不吸收或替代
 它们。canonical 来源与手册页冲突时，在同一交付中修正手册页——绝不为迎合文档去"修"
 canonical 来源。

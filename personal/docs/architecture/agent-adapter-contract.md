@@ -2,9 +2,9 @@
 
 - Status: informative Personal architecture design
 - Change class: product-semantic / normative-semantic documentation
-- Related: [ADR-0043](../../adr/0043-personal-universal-agent-adapter.md),
-  [ADR-0044](../../adr/0044-personal-multi-agent-mainline.md), P8-T02/P8-T03
-- Normative machines: `specs/schemas/agent-adapter-manifest.schema.json`
+- Related: [ADR-0043](../../../docs/adr/0043-personal-universal-agent-adapter.md),
+  [ADR-0044](../../../docs/adr/0044-personal-multi-agent-mainline.md), P8-T02/P8-T03
+- Normative machines: `core/specs/schemas/agent-adapter-manifest.schema.json`
   (P8-T02/D03 Lane-CTR); no transition/vector claim in this design file
 
 ## 1. Purpose

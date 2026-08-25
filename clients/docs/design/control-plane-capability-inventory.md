@@ -2,7 +2,7 @@
 
 - Phase: Product Redesign Phase 1 (design-only)
 - Date: 2026-08-24
-- Companion: [Current State Map](./control-plane-current-state.md)
+- Companion: [Current State Map](control-plane-current-state.md)
 - Method: every capability is rated from **verified daemon/UI evidence only** (route handlers, store schemas, canonical docs, frozen route inventory). Ratings:
   - **AVAILABLE** — implemented and reachable by an operator through the daemon HTTP API (the SPA's only possible backend).
   - **PARTIAL** — implemented with material restrictions (process-local, observe-only, CLI-only, placeholder, or inconsistent planes).

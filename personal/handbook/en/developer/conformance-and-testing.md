@@ -6,12 +6,12 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-conformance/src/main.rs
-  - path: conformance/README.md
+  - path: personal/crates/cognitive-conformance/src/main.rs
+  - path: core/conformance/README.md
   - path: tools/src/check-consistency.mjs
   - path: tools/src/gen-matrix.mjs
   - path: tools/src/generate-handbook.mjs
-  - path: tests/golden/README.md
+  - path: core/tests/golden/README.md
   - path: tools/src/p2_t28_uj_matrix.mjs
     symbols: ["validateUjCapabilityTruthMatrix"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
@@ -22,7 +22,7 @@ tests:
   - tools/test/c1_c2_paired_p_arm.test.mjs
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:201986fa2135ebaa3734642f602dc5a7bd3dd1dd611bd705bcac804329088251"
+fingerprint: "sha256:e23bba35fef1f0eb0036f6f98e3d4e8bb7c178b2cc61523e725282fea18cd48b"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -35,9 +35,9 @@ non_claims:
   (`crates/*/tests/*.rs`, `apps/*/tests/*.rs`, `packages/*/src/*.test.ts`) and
   are named for the task that introduced them (`p1_t04_…`). They assert denial
   paths first; happy paths second.
-- **Cross-language golden fixtures** (`tests/golden/`) pin canonical-encoding
+- **Cross-language golden fixtures** (`core/tests/golden/`) pin canonical-encoding
   parity.
-- **Conformance vectors** (`conformance/vectors/`, 89) are contract-derived
+- **Conformance vectors** (`core/conformance/vectors/`, 89) are contract-derived
   behavioral cases executed by the `conformance-runner`.
 - **C1/C2 paired measurement instruments** (`tools/personal/c1-c2-paired/`) are
   campaign-only: a loopback pure-Pi credential broker (Secret Service `get` via
@@ -76,9 +76,9 @@ and more. `tools/src/gen-matrix.mjs --check` keeps
 (`pnpm run check:consistency`). The handbook adds its own checker
 (`check-handbook.mjs`) and generator drift gate — see
 [`_meta/sync-policy.md`](../../_meta/sync-policy.md). HTTP route generation
-also reads `apps/kernel-server/src/personal/tool_lifecycle.rs`,
-`apps/kernel-server/src/personal/pinned_https.rs`, and
-`apps/kernel-server/src/personal/observation.rs` so annotated Tool lifecycle,
+also reads `personal/apps/kernel-server/src/personal/tool_lifecycle.rs`,
+`personal/apps/kernel-server/src/personal/pinned_https.rs`, and
+`personal/apps/kernel-server/src/personal/observation.rs` so annotated Tool lifecycle,
 pinned-HTTPS, and observation-plane paths cannot rot.
 
 ## UJ capability-truth freeze
@@ -87,9 +87,9 @@ pinned-HTTPS, and observation-plane paths cannot rot.
 must name an existing public caller file and a mechanical oracle file, plus
 cleanup and a bounded evidence schema. Web UI and Multi-Agent stay explicit
 `excluded` rows and cannot be marked required. The daemon-side register is
-`apps/kernel-server/src/personal/capability_truth.rs`. This freeze is not an
+`personal/apps/kernel-server/src/personal/capability_truth.rs`. This freeze is not an
 EVAL-004, Gate, release, or Profile result. The D02 hermetic public-caller
-smoke is `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`. Named UJ
+smoke is `personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`. Named UJ
 oracles run on exact-revision `DEV-LINUX-NATIVE-01`; Windows GNU is `not-run`
 for that Rust matrix.
 

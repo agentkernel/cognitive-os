@@ -1,12 +1,12 @@
 /**
  * Pi compatibility pin, mirrored from the Rust `PiCompatibilityPin::expected()`
- * in `apps/pi-agent-adapter/src/lib.rs`.
+ * in `personal/apps/pi-agent-adapter/src/lib.rs`.
  *
  * The Rust constant is the single source of truth; `pin.test.ts` parses that
  * file and fails if any value here drifts from it. These are compatibility pins
  * only — an npm SRI is not trusted signature or provenance evidence, and this
  * package makes no supply-chain claim (that verifier is Pi P2, see
- * `docs/plan/PI-AGENT-INTEGRATION-PLAN.md`).
+ * `docs/plan/archive/PI-AGENT-INTEGRATION-PLAN.md`).
  */
 
 export interface PiCompatibilityPin {

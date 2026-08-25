@@ -39,7 +39,7 @@ never be confused with a registered contract digest.
 - `implementation_baseline_revision`: the exact `origin/main` commit whose tree the
   handbook content was authored against (never a self-referential "current HEAD");
 - `digest`: SHA-256 over the sorted `path + "\0" + git_blob_sha + "\n"` lines of every
-  tracked file at that revision, excluding `handbook/**`, `llms.txt`,
+  tracked file at that revision, excluding `personal/handbook/**`, `llms.txt`,
   `docs/plan/PROGRESS.md`, `docs/plan/PARALLEL-LANES.md`, `Cargo.lock`,
   `pnpm-lock.yaml`, and `History/**` (domain prefix
   `cognitiveos-handbook-source-set/0.1\n`).
@@ -58,20 +58,20 @@ implementation and machine-contract sources only:
 
 | Page family | Machine inputs |
 |---|---|
-| `ref.errors` | `specs/registry/errors.yaml` |
-| `ref.transitions` | `specs/transitions/*.transitions.json` |
-| `ref.schemas` | `specs/schemas/*.json` (`$id`, title, description) |
-| `ref.cli-cognitive` | `COGNITIVE_USAGE` in `apps/admin-cli/src/personal_cli/mod.rs` + parsed verb set |
-| `ref.cli-admin` | `USAGE` in `apps/admin-cli/src/main.rs` + parsed verb set |
-| `ref.http-api` | route string literals in `apps/kernel-server/src/personal/{server.rs,task_api.rs,resource_api.rs,tool_lifecycle.rs,pinned_https.rs,observation.rs}` cross-checked against `_meta/http-routes.json` annotations |
+| `ref.errors` | `core/specs/registry/errors.yaml` |
+| `ref.transitions` | `core/specs/transitions/*.transitions.json` |
+| `ref.schemas` | `core/specs/schemas/*.json` (`$id`, title, description) |
+| `ref.cli-cognitive` | `COGNITIVE_USAGE` in `personal/apps/admin-cli/src/personal_cli/mod.rs` + parsed verb set |
+| `ref.cli-admin` | `USAGE` in `personal/apps/admin-cli/src/main.rs` + parsed verb set |
+| `ref.http-api` | route string literals in `personal/apps/kernel-server/src/personal/{server.rs,task_api.rs,resource_api.rs,tool_lifecycle.rs,pinned_https.rs,observation.rs}` cross-checked against `_meta/http-routes.json` annotations |
 | `ref.env-vars` | `env::var*("...")` literals across `apps/**` and `packages/**` cross-checked against `_meta/env-vars.json` annotations |
 | `ref.config-files` | config file-name literals in `crates/cognitive-secret` and `apps/admin-cli` cross-checked against `_meta/config-files.json` annotations |
-| `ref.tool-catalog` | native tool ids/limits in `crates/cognitive-kernel/src/tool_registry.rs` |
+| `ref.tool-catalog` | native tool ids/limits in `core/crates/cognitive-kernel/src/tool_registry.rs` |
 
 Rules:
 
-1. The generator writes both locales (`handbook/en/reference/…` and
-   `handbook/zh-CN/reference/…`); page scaffolding text is bilingual, extracted
+1. The generator writes both locales (`personal/handbook/en/reference/…` and
+   `personal/handbook/zh-CN/reference/…`); page scaffolding text is bilingual, extracted
    machine values (usage text, codes, ids, states) stay verbatim.
 2. `--check` regenerates in memory and fails on any byte difference; hand edits to
    generated pages are therefore build failures.

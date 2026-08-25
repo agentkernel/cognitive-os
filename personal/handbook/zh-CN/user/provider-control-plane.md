@@ -6,26 +6,26 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: apps/admin-cli/src/personal_cli/provider.rs
+  - path: personal/apps/admin-cli/src/personal_cli/provider.rs
     symbols: ["parse_provider_args", "parse_agent_args", "CONTROL_PLANE_FLAGS"]
-  - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["COGNITIVE_USAGE"]
-  - path: apps/admin-cli/src/personal_cli/secret_input.rs
+  - path: personal/apps/admin-cli/src/personal_cli/secret_input.rs
     symbols: ["read_api_key_material"]
-  - path: apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
     symbols: ["PI_AGENT", "DSH_AGENT", "set_binding"]
-  - path: apps/kernel-server/src/personal/provider_proxy.rs
+  - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
-  - path: crates/cognitive-secret/src/endpoint_trust.rs
+  - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
     symbols: ["TrustedEndpoint", "ProviderKind"]
-  - path: crates/cognitive-store/src/provider_control_plane.rs
+  - path: personal/crates/cognitive-store/src/provider_control_plane.rs
     symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS"]
 tests:
-  - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-  - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-  - crates/cognitive-store/tests/p8_t13_provider_store.rs
-  - apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:f3e3dd5c9bfb199bc8f13962b211731c408950d1153ebada916841d585ce872f"
+  - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
+  - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
+  - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
+  - personal/apps/admin-cli/src/personal_cli/mod.rs
+fingerprint: "sha256:75c5451c416435defc5fe95943c73b362defa6b034d7a0ebc746fa99f402bbfa"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
 ---
@@ -43,7 +43,7 @@ Gate 证明。
 
 精确动词文本也出现在生成的 [CLI 参考](../reference/cli-cognitive.md)。`cognitive
 init` 已经使用的 Secret Store 机制见
-[Provider 与 secret](./provider-and-secrets.md)。
+[Provider 与 secret](provider-and-secrets.md)。
 
 ## 它是什么
 

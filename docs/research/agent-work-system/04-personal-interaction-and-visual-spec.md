@@ -3,9 +3,9 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本规范依赖 [Personal 产品设计](./03-personal-product-design.md)。所有像素、token、motion
+本规范依赖 [Personal 产品设计](03-personal-product-design.md)。所有像素、token、motion
 与 component 值均为 **DESIGN CANDIDATE**，不是现有实现事实。现有 Web client、HTTP
-capability 与后端真实性以 [Personal 架构](./05-personal-architecture.md)为准。
+capability 与后端真实性以 [Personal 架构](05-personal-architecture.md)为准。
 
 ## 1. Experience contract
 
@@ -337,7 +337,7 @@ command 显示 reason；执行后 focus 返回 invocation point。
 
 ## 13. Baseline delta and non-claims
 
-相对 `docs/design/11–25` 与 `34–41` dated baseline：
+相对 `clients/docs/design/11–25` 与 `34–41` dated baseline：
 
 - 延续 token/state/honesty、sidebar、master/detail、evidence；
 - 以 native desktop window behavior 包裹 existing Web presentation；
@@ -611,7 +611,7 @@ Windows high contrast、light/dark and 1.5× text expansion variants.
 - fake streaming/progress or confetti as completion proof；
 - dense enterprise admin grid applied to first-run Personal。
 
-See [Personal product design](./03-personal-product-design.md),
-[candidate architecture](./05-personal-architecture.md),
-[open-source reuse](./12-open-source-reuse-assessment.md), and
-[baseline delta](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md).
+See [Personal product design](03-personal-product-design.md),
+[candidate architecture](05-personal-architecture.md),
+[open-source reuse](12-open-source-reuse-assessment.md), and
+[baseline delta](13-control-plane-baseline-to-personal-desktop-1.0-delta.md).

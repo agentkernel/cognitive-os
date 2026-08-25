@@ -8,7 +8,7 @@ generated: false
 sources:
   - path: Cargo.toml
   - path: pnpm-workspace.yaml
-fingerprint: "sha256:793f292954380524a0ebe0e71ee3ae9e49c7955cbbb750778f349e4136ae2c93"
+fingerprint: "sha256:82cdbc9bd0ff0e54eff16793f2ff10706ebc9d1ff878322e6d250ad8dae5d643"
 non_claims:
   - 组件存在不构成 Gate、release 或 Profile 声明；接线状态见开发者执行链页面。
 ---
@@ -46,6 +46,6 @@ non_claims:
 - Task 准入：`POST /task/*` → `TaskApi` → `KernelTaskApplicationService` → `cognitive_kernel::intent_chain` → SQLite。
 - Pi 对话：Pi 扩展 → `POST /provider/v1/chat/completions` → 绑定账户或 `provider.json` + daemon 持有的 SecretStore。
 - DeepSeek harness Path B：dsh 插件 → `POST /provider/v1/dsh/chat/completions` → 独立的 `agent://personal/dsh` binding 或 `provider.json`。
-- 安装：`deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate（单服务事务）。
+- 安装：`personal/deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate（单服务事务）。
 
 不得掩盖的执行接线缺口列于[执行链状态](../developer/execution-chain-status.md)。

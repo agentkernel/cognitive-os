@@ -3,7 +3,7 @@
 - Phase: Product Redesign Phase 1 (design-only)
 - Date: 2026-08-24
 - Method: product-skills stack (problem-validation lens, JTBD, opportunity mapping, scope cutting); stark `ux-design` product-type matching; `ai-agent-ux` supervision model. CognitiveOS reality (audited) outranks every framework on conflict.
-- Inputs: [Current State Map](./control-plane-current-state.md), [Capability Inventory](./control-plane-capability-inventory.md), canonical `docs/product/personal/*`.
+- Inputs: [Current State Map](control-plane-current-state.md), [Capability Inventory](control-plane-capability-inventory.md), canonical `docs/product/personal/*`.
 
 ---
 

@@ -5,8 +5,8 @@
 This is an owner-approved product design proposal for `cognitiveos-personal`.
 It is planning material, not an implementation, release, Gate, Profile,
 provider-quality, or agent-benefit claim. Formal task IDs and current status
-remain owned by [the Personal plan](../../plan/PERSONAL-DEVELOPMENT-PLAN.md) and
-[PROGRESS.md](../../plan/PROGRESS.md). This design extends existing
+remain owned by [the Personal plan](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) and
+[PROGRESS.md](../../../docs/plan/PROGRESS.md). This design extends existing
 Provider/Secret Store/daemon/Pi work; it creates no second authority writer.
 
 ## Product outcome
@@ -17,9 +17,9 @@ register models, bind an installed agent to one fixed account/model, inspect
 input/output/cache token usage, and receive cost/soft-budget alerts. The first
 delivery is daemon API, durable metadata, audit, usage queries, and CLI. A web
 or desktop panel is deferred. Operator usage of the shipped CLI is in
-[`handbook/en/user/provider-control-plane.md`](../../../handbook/en/user/provider-control-plane.md)
+[`personal/handbook/en/user/provider-control-plane.md`](../../handbook/en/user/provider-control-plane.md)
 (zh-CN:
-[`handbook/zh-CN/user/provider-control-plane.md`](../../../handbook/zh-CN/user/provider-control-plane.md)).
+[`personal/handbook/zh-CN/user/provider-control-plane.md`](../../handbook/zh-CN/user/provider-control-plane.md)).
 This page remains the product-design record and does not copy current task or Gate
 status.
 

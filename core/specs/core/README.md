@@ -14,7 +14,7 @@
 | 文档 | 版本/状态 | 规范范围 | 资产边界 |
 |---|---|---|---|
 | 本文 `cognitiveos.core/0.2` | v0.2 Draft / Companion Specification | 基础对象、状态、Context、Event、Capability、Effect、Loop、恢复与审计 | 已有 Core 文本要求；实现状态仍须单独声明 |
-| [RFC-0001：治理上下文、访问与知识编译](../../docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft / Normative Companion RFC | Tenant、Membership、Principal、ActorChain、Conversation、ResourceScope、ShareGrant、短期 privileged management session、混合授权、认知准入、缓存/检索隔离与执行上下文 | 治理对象族 machine schema 已由 [governed-object-contract](../../docs/standards/governed-object-contract.md) 登记 v0.1 Draft；知识对象仍为伪 schema；performance 与 management session/proposal/approval schema、registry 条目及 declarative vector 的实际登记各自决定机器边界，均不表示实现 |
+| [RFC-0001：治理上下文、访问与知识编译](../../docs/architecture/RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft / Normative Companion RFC | Tenant、Membership、Principal、ActorChain、Conversation、ResourceScope、ShareGrant、短期 privileged management session、混合授权、认知准入、缓存/检索隔离与执行上下文 | 治理对象族 machine schema 已由 [governed-object-contract](../../../docs/standards/governed-object-contract.md) 登记 v0.1 Draft；知识对象仍为伪 schema；performance 与 management session/proposal/approval schema、registry 条目及 declarative vector 的实际登记各自决定机器边界，均不表示实现 |
 
 RFC-0001 叠加于基础 Core：基础 Core 给出通用对象、状态、授权、Context Resolution、Effect 与恢复语义；RFC-0001 收紧企业多租户、并发 Conversation 和认知数据派生边界。实现声明支持 RFC-0001 时，必须显式固定其版本并提供独立测试证据，不能仅凭支持本 README 推导。
 
@@ -23,7 +23,7 @@ RFC-0001 叠加于基础 Core：基础 Core 给出通用对象、状态、授权
 - Tenant 是数据与策略隔离域，不是权限等级；同 tenant 和管理员身份不自动获得正文读取权。
 - Principal 是授权主体；AgentExecution 是绑定不可变 TenantContext、ActorChain、可选 Conversation 或显式 non-conversational scope 与治理版本的逻辑执行身份；Conversation 是交互资源作用域。切换 tenant 必须产生新的 execution identity。
 - 所有受治理对象显式区分 tenant 与 platform scope；缺失/null tenant 不表示公共，platform scope 只能由独立 platform governance authority 管理。
-- RFC-0001 的治理对象族已有登记机器 schema（[governed-object-contract](../../docs/standards/governed-object-contract.md)）；其正文代码块与知识对象仍是伪 schema；实际提交的 schema、registry 与 vector 可被固定 digest 后引用，但不证明实现。
+- RFC-0001 的治理对象族已有登记机器 schema（[governed-object-contract](../../../docs/standards/governed-object-contract.md)）；其正文代码块与知识对象仍是伪 schema；实际提交的 schema、registry 与 vector 可被固定 digest 后引用，但不证明实现。
 - Intelligent Shell 不是 authority 或永久 root Agent；它只能通过短期、可撤销、绑定 ActorChain/ActivityContext/scope/risk/policy 的 PrivilegedManagementSession 调用 Management API，每个写操作仍独立门禁和审计。
 - 白皮书仍为 informative；RFC-0001 是 normative companion draft；两者都不等于实现能力。若基础 Core 与 RFC-0001 对同一安全边界表述不同，采用不扩大读取、写入、委派、用途、保留或传播范围的解释。
 
@@ -85,7 +85,7 @@ Core 对象包括 `AgentExecution`、`Episode`、`Task`、`TaskContract`、`Stat
 
 ### 3.2 统一元数据
 
-统一元数据的机器合同是 [GovernedObjectHeader](../schemas/governed-object-header.schema.json)（对象以 `header` 属性携带，登记见 [governed-object-contract](../../docs/standards/governed-object-contract.md)）；它在下述最小集合之上还强制 `scope_domain`/`tenant_id`、`resource_scope_ref`、`policy_refs`、`purpose_constraints`、`compartments` 与 `retention` 治理维度。legacy `common-defs.metadata` 形状已标记 deprecated，仅供显式 legacy adapter 按已登记映射解释，Core 合同不得继续引用。
+统一元数据的机器合同是 [GovernedObjectHeader](../schemas/governed-object-header.schema.json)（对象以 `header` 属性携带，登记见 [governed-object-contract](../../../docs/standards/governed-object-contract.md)）；它在下述最小集合之上还强制 `scope_domain`/`tenant_id`、`resource_scope_ref`、`policy_refs`、`purpose_constraints`、`compartments` 与 `retention` 治理维度。legacy `common-defs.metadata` 形状已标记 deprecated，仅供显式 legacy adapter 按已登记映射解释，Core 合同不得继续引用。
 
 每个持久化或跨边界对象的最小元数据为：
 

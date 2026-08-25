@@ -11,7 +11,7 @@
     "REQ-ERR-001"
   ],
   "input": {
-    "validate_against": "specs/schemas/akp-result-envelope.schema.json",
+    "validate_against": "core/specs/schemas/akp-result-envelope.schema.json",
     "object": {
       "in_reply_to": "01890a5d-ac96-774b-bcce-b302099a8070",
       "correlation_id": "conv://tenant-a/session-1/turn-9",

@@ -2,8 +2,8 @@
 
 - Status: informative target/design
 - Change class: owner-approved `product-semantic + structural` documentation
-- Decision source: [ADR-0035](../../adr/0035-personal-pi-shell-and-managed-agent-role-separation.md)
-- Acquisition source: [ADR-0036](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
+- Decision source: [ADR-0035](../../../docs/adr/0035-personal-pi-shell-and-managed-agent-role-separation.md)
+- Acquisition source: [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
 
 ## 1. Agent Shell role and route
 
@@ -210,4 +210,4 @@ daemon.
 This entire document remains target/design. It does not claim that the sidecar,
 managed Pi lifecycle, any non-Pi adapter, B09, `GMVP-LINUX`, a release or a
 Profile is implemented or passed. Current facts remain in
-[PROGRESS.md](../../plan/PROGRESS.md).
+[PROGRESS.md](../../../docs/plan/PROGRESS.md).

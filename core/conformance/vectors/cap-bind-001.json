@@ -10,7 +10,7 @@
     "REQ-CAP-001"
   ],
   "input": {
-    "owner_spec": "specs/schemas/authorization-capability.schema.json",
+    "owner_spec": "core/specs/schemas/authorization-capability.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

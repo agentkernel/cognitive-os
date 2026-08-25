@@ -9,14 +9,14 @@ sources:
   - path: docs/governance/AXIOMS.md
     symbols: ["A1", "A8"]
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:7ee1b07070e3fe6e1c62a625e7de07a905056ac3a625c64a74cc94b2b3ae5068"
+fingerprint: "sha256:0b0b2e725a6c7bc2726a6f29ab1cc8430d8228527ca4856047c22c9194d1965f"
 non_claims:
   - This page summarizes for orientation only; the linked governance documents own the binding wording.
 ---
 
 # Safe editing boundaries
 
-## Never relax (axioms, owned by [`AXIOMS.md`](../../../docs/governance/AXIOMS.md))
+## Never relax (axioms, owned by [`AXIOMS.md`](../../../../docs/governance/AXIOMS.md))
 
 - A1/A2 — only the Rust daemon writes authority state; Pi, CLI, SDK, sidecars,
   fixtures, and third-party agents produce candidates and observations only.
@@ -35,16 +35,16 @@ non_claims:
 
 ## Protected trees
 
-- `specs/**` and `conformance/**`: architecture contracts; implementation-motivated
+- `core/specs/**` and `core/conformance/**`: architecture contracts; implementation-motivated
   edits are forbidden — a real contract change follows Lane-CTR and updates registry,
   schemas, bindings, transitions, and vectors together.
 - `docs/governance/**`, `docs/plan/**`: governance and formal-plan sources; edited
   only through their own governance procedures and active leases.
 - `History/**`: frozen; never read, cite, or modify. `personal-blog/` never enters
   this repository.
-- Generated trees (`crates/cognitive-contracts/src/generated/`,
-  `packages/contracts-ts/src/generated/`, generated handbook reference pages,
-  `docs/traceability/matrix.yaml`, `tests/golden/*.json`): regenerate via their
+- Generated trees (`core/crates/cognitive-contracts/src/generated/`,
+  `core/packages/contracts-ts/src/generated/`, generated handbook reference pages,
+  `docs/traceability/matrix.yaml`, `core/tests/golden/*.json`): regenerate via their
   generators; hand edits fail CI drift gates.
 
 ## Before writing anything
@@ -53,11 +53,11 @@ non_claims:
    table fresh. Writable ownership is an exact-path lease; active leases must not
    overlap.
 2. One formal task = one branch, one Draft PR, one lease, through complete
-   acceptance ([`DEVELOPMENT-OPERATING-MODEL.md`](../../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md)).
+   acceptance ([`DEVELOPMENT-OPERATING-MODEL.md`](../../../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md)).
 3. Declare a change class (`implementation-only`, `corrective`, `product-semantic`,
    `normative-semantic`, `structural`) and complete the sync obligations of
-   [`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) in the same delivery.
-4. Consult [docs impact](./docs-impact.md): handbook pages mapped to the paths you
+   [`docs-sync-contract.md`](../../../../docs/standards/docs-sync-contract.md) in the same delivery.
+4. Consult [docs impact](docs-impact.md): handbook pages mapped to the paths you
    change must be updated or regenerated in the same PR.
 
 ## Local environment hard facts
@@ -66,4 +66,4 @@ non_claims:
   commands or `if ($LASTEXITCODE -eq 0) { … }`.
 - The local Windows GNU host cannot link Rust (registered linker exit 121): never
   run workspace `cargo build/test/clippy/run/bench` there; route to CI or native
-  Linux (see [validation commands](./validation-commands.md)).
+  Linux (see [validation commands](validation-commands.md)).

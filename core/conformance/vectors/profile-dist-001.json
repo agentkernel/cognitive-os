@@ -10,7 +10,7 @@
     "REQ-PROFILE-DIST-001"
   ],
   "input": {
-    "owner_spec": "specs/distributed/README.md",
+    "owner_spec": "core/specs/distributed/README.md",
     "requirement_status": "specified"
   },
   "expected": {

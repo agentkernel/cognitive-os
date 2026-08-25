@@ -381,7 +381,7 @@ pub fn revalidate_grant(
 /// Compute the engine guard attestation `capability_and_revocation_current`
 /// deterministically from a revalidation result. This is the ONLY sanctioned
 /// way to attest that guard (effect transition guards,
-/// `specs/transitions/effect.transitions.json`).
+/// `core/specs/transitions/effect.transitions.json`).
 pub fn capability_and_revocation_current(
     grant: &AuthorizationGrant,
     current_revocation_epoch: i64,

@@ -4,7 +4,7 @@
 
 - 从最新 `origin/main@d1a4d6a` 创建独立分支 `lane/ctr-config-authority-spec-correction`；未叠加旧 discovery/lane 历史。
 - 对 D-016 / D-022 的 operation、configuration payload/target、signature profile 与 authoritative audit carrier 做逐字段规范审计。
-- 裁决 **NO-GO**：三个缺口不能全部作为 IMP-01 允许的纠错型收敛；完整矩阵见 [CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md](../plan/CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md)。
+- 裁决 **NO-GO**：三个缺口不能全部作为 IMP-01 允许的纠错型收敛；完整矩阵见 [CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md](../plan/archive/CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md)。
 - D-016 保持 `deferred-to-v0.2`；D-022 从 CA-0 open blocker 收敛为 `NO-GO / deferred-to-v0.2` blocker。未发现需要另编号的新漂移；vector 中的布尔签名前提、开放 payload 与内部 event/outbox 不充分均属于 D-022 已登记范围。
 - 未修改 registry、schema、errors、transitions、vectors、generated bindings、runner 或实现；未启动 CA-1，未触碰 KRN/RUN/CFR。
 

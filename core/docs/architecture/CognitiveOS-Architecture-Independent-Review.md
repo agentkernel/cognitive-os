@@ -4,7 +4,7 @@
 - **时效标注（2026-08-10）**：historical dated review snapshot；findings 已被后续 ADR/实现吸收或关闭处，以现行 `PROGRESS.md`、正式计划与 specs 为准。本文不创建当前任务、lease 或 Gate 状态。
 - **审查性质**：独立、反方优先、证据驱动、只读审查
 - **审查快照**：Git commit `f2f826adae6d0f61e31cf41d31c2b4d5905d0ca8`
-- **主文档摘要**：`docs/architecture/cognitiveos/CognitiveOS-Architecture.md` SHA-256 `f6853fa6eb55ed873d3f2b020a339f044d2756b94aea5c7d3492c9acb9d3052f`
+- **主文档摘要**：`core/docs/architecture/CognitiveOS-Architecture.md` SHA-256 `f6853fa6eb55ed873d3f2b020a339f044d2756b94aea5c7d3492c9acb9d3052f`
 - **唯一输出资产**：本报告；未修改架构、RFC、spec、registry、schema、transition、vector、计划、标准或 ADR
 
 本报告使用以下结论类型：
@@ -69,22 +69,22 @@
 
 | 资产 | 内容行数 | SHA-256 |
 |---|---:|---|
-| `docs/architecture/cognitiveos/CognitiveOS-Architecture.md` | 1915 | `f6853fa6...d3052f` |
-| `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md` | 356 | `474f0013...dc2f3` |
-| `docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md` | 669 | `25bcbd9e...7841` |
-| `specs/core/README.md` | 705 | `d478aa40...5f7ad` |
-| `specs/registry/requirements.yaml` | 1632 | `69991983...531c` |
-| `specs/schemas/performance-report.schema.json` | 365 | `981d9a36...f58da` |
+| `core/docs/architecture/CognitiveOS-Architecture.md` | 1915 | `f6853fa6...d3052f` |
+| `core/docs/architecture/CognitiveOS-Review-Conclusions.md` | 356 | `474f0013...dc2f3` |
+| `core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md` | 669 | `25bcbd9e...7841` |
+| `core/specs/core/README.md` | 705 | `d478aa40...5f7ad` |
+| `core/specs/registry/requirements.yaml` | 1632 | `69991983...531c` |
+| `core/specs/schemas/performance-report.schema.json` | 365 | `981d9a36...f58da` |
 
 ### 2.2 检查资产
 
 **[confirmed fact]** 已全文或结构化检查：
 
 - 主架构全文及当前历史差异；
-- `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md`，仅作为待复核输入；
-- RFC-0001、11 份 `specs/**/README.md` companion；
+- `core/docs/architecture/CognitiveOS-Review-Conclusions.md`，仅作为待复核输入；
+- RFC-0001、11 份 `core/specs/**/README.md` companion；
 - 3 个 registry、5 个 transition table、56 个 JSON Schema；
-- `conformance/README.md` 与 68 个 vector；
+- `core/conformance/README.md` 与 68 个 vector；
 - 4 个 `docs/standards/` 标准、2 个 `docs/adr/` ADR；
 - 归档开发计划与 History 边界；
 - Git 历史、owner path/anchor、REQ/vector/error 双向引用。
@@ -144,7 +144,7 @@
 
 | 资产 | 实测数量 | 状态解释 |
 |---|---:|---|
-| `specs/**/README.md` companion | 11 | 文本 Draft，不是实现 |
+| `core/specs/**/README.md` companion | 11 | 文本 Draft，不是实现 |
 | 根目录 normative RFC | 1 | v0.2 Draft |
 | JSON Schema | 56 | shape contract；不证明行为 |
 | transition table | 5 | 54 个状态、90 条边 |
@@ -155,9 +155,9 @@
 | standards | 4 | Draft |
 | ADR | 2 | ADR-0004、ADR-0005 |
 | 当前实现源文件 | 0 | 仅 History 中 2 个旧编辑脚本 |
-| 可执行 runner | 0 | `conformance/README.md` 明示不存在 |
+| 可执行 runner | 0 | `core/conformance/README.md` 明示不存在 |
 
-**[confirmed fact]** `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md` §1 的 40 schema/65 vector/244 REQ/49 error 等计数已经过期；归档开发计划中的 65 vector 也已过期。白皮书附录 D 的 270 REQ/68 vector 与当前实测一致。前一评审不能作为当前事实源。
+**[confirmed fact]** `core/docs/architecture/CognitiveOS-Review-Conclusions.md` §1 的 40 schema/65 vector/244 REQ/49 error 等计数已经过期；归档开发计划中的 65 vector 也已过期。白皮书附录 D 的 270 REQ/68 vector 与当前实测一致。前一评审不能作为当前事实源。
 
 ### 3.2 REQ、owner、vector 与错误码闭合
 
@@ -175,15 +175,15 @@
 
 | REQ | registry | owner_spec | schema | vector | 独立判定 |
 |---|---|---|---|---|---|
-| `REQ-PERF-004` | 已登记 | `docs/architecture/cognitiveos/CognitiveOS-Architecture.md#performance-contract` | `governance_overhead` 存在但非 required | `PERF-REPORT-CONTRACT-001` | **登记真实，但 owner 是 informative 白皮书，且 schema 不强制；不得视为闭合** |
-| `REQ-CTX-012` | 已登记 | `specs/core/README.md` §6.6 | 没有 renderer/prefix machine contract | `CTX-RENDER-001` | **登记真实；只验证重复 digest/相对顺序，未保证字节前缀追加稳定** |
-| `REQ-MEM-ADMIT-002` | 已登记 | `specs/governed-memory/README.md` §3 | candidate schema 无 writer/Activity/Conversation 私有绑定 | `MEM-RYW-001` | **登记真实；行为文本存在，机器形状不足以执行隔离** |
+| `REQ-PERF-004` | 已登记 | `core/docs/architecture/CognitiveOS-Architecture.md#performance-contract` | `governance_overhead` 存在但非 required | `PERF-REPORT-CONTRACT-001` | **登记真实，但 owner 是 informative 白皮书，且 schema 不强制；不得视为闭合** |
+| `REQ-CTX-012` | 已登记 | `core/specs/core/README.md` §6.6 | 没有 renderer/prefix machine contract | `CTX-RENDER-001` | **登记真实；只验证重复 digest/相对顺序，未保证字节前缀追加稳定** |
+| `REQ-MEM-ADMIT-002` | 已登记 | `core/specs/governed-memory/README.md` §3 | candidate schema 无 writer/Activity/Conversation 私有绑定 | `MEM-RYW-001` | **登记真实；行为文本存在，机器形状不足以执行隔离** |
 
 因此不应简单改回 candidate；应按规范变更流程修复 owner、schema 和 vector 后保留登记。
 
 ### 3.4 informative/normative 越界
 
-**[confirmed fact]** 17 个 requirement 的 `owner_spec` 是声明为 informative 的 `docs/architecture/cognitiveos/CognitiveOS-Architecture.md`，包括：
+**[confirmed fact]** 17 个 requirement 的 `owner_spec` 是声明为 informative 的 `core/docs/architecture/CognitiveOS-Architecture.md`，包括：
 
 `REQ-STATE-003/004`、`REQ-CTX-004/008`、`REQ-CAP-002/003`、`REQ-EFF-004/006`、`REQ-RES-001`、`REQ-SEC-002`、5 个 Profile REQ、`REQ-PERF-002/004`。
 
@@ -243,7 +243,7 @@
 
 - **严重度**：P0
 - **结论类型**：[confirmed fact]
-- **证据**：`conformance/README.md` 明示无 runner；仓库没有 Rust/TS/runtime 源码或 profile manifest。
+- **证据**：`core/conformance/README.md` 明示无 runner；仓库没有 Rust/TS/runtime 源码或 profile manifest。
 - **失败方式**：声明式 expected 字段可能与实现完全无关，仍被误读为“测试覆盖”。
 - **影响**：不能证明正确运行、非劣化或收益；不能标 implemented。
 - **建议方向**：先建最小 runner 和故意错误 adapter，再实现 tracer bullet。
@@ -253,7 +253,7 @@
 
 - **严重度**：P0
 - **结论类型**：[confirmed fact]
-- **证据**：requirements registry 的 17 个 `owner_spec=docs/architecture/cognitiveos/CognitiveOS-Architecture.md#...`；白皮书首部声明 informative；normative-source 标准 §2—§4。
+- **证据**：requirements registry 的 17 个 `owner_spec=core/docs/architecture/CognitiveOS-Architecture.md#...`；白皮书首部声明 informative；normative-source 标准 §2—§4。
 - **失败方式**：实现者无法判断白皮书修辞、Core 文本或 transition table 哪个定义真实行为。
 - **影响**：crash、fencing、profile、performance 等核心语义可发生无版本漂移。
 - **建议方向**：将行为正文迁到 Core/Profile/标准，registry owner 改为 normative asset；白皮书只反向引用。

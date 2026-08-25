@@ -2,7 +2,7 @@
  * Schema-valid sample builders for the shell-family payloads. Test support
  * shared by sdk-ts and agent-shell suites (and reusable by the M5 harness);
  * `views.test.ts` validates each builder's output against the real schemas
- * under `specs/schemas/` with ajv, so a drifting fixture is a red build,
+ * under `core/specs/schemas/` with ajv, so a drifting fixture is a red build,
  * not a silently wrong test double.
  */
 

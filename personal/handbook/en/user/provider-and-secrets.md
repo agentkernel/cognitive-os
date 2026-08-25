@@ -6,25 +6,25 @@ audience: [user]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-secret/src/store.rs
+  - path: personal/crates/cognitive-secret/src/store.rs
     symbols: ["SecretStore", "SecretRef"]
-  - path: crates/cognitive-secret/src/backend_select.rs
-  - path: crates/cognitive-secret/src/provider_service.rs
+  - path: personal/crates/cognitive-secret/src/backend_select.rs
+  - path: personal/crates/cognitive-secret/src/provider_service.rs
     symbols: ["ProviderKeyService"]
-  - path: crates/cognitive-secret/src/provider_transport.rs
+  - path: personal/crates/cognitive-secret/src/provider_transport.rs
     symbols: ["ProviderHttpRequest"]
-  - path: apps/kernel-server/src/personal/provider_proxy.rs
-  - path: crates/cognitive-secret/src/endpoint_trust.rs
+  - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
+  - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
     symbols: ["TrustedEndpoint", "ProviderKind"]
-  - path: apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
 tests:
-  - crates/cognitive-secret/tests/p1_t02_provider_secret.rs
-  - crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
-  - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-  - apps/kernel-server/tests/p9_t07_route_observation.rs
-  - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-  - crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:61f5d8866329a357a2bc38ca61ba8a4ddc0acc15c776866e0a3d6842b30b5161"
+  - personal/crates/cognitive-secret/tests/p1_t02_provider_secret.rs
+  - personal/crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
+  - personal/apps/kernel-server/tests/p1_t07_provider_proxy.rs
+  - personal/apps/kernel-server/tests/p9_t07_route_observation.rs
+  - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
+  - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
+fingerprint: "sha256:9b73f66320870e89724075e035ee78d26ac3461644252a027567befed378360b"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
 ---
@@ -50,7 +50,7 @@ operation refuses; there is deliberately no plaintext fallback. Rotation:
 `cognitive provider key set|rotate|remove --api-key-file` instead of putting a
 key on argv. Full operator steps (accounts, trust flags, bindings, usage,
 observe-only budgets) are in
-[Provider Control Plane](./provider-control-plane.md). The localhost Web UI is a
+[Provider Control Plane](provider-control-plane.md). The localhost Web UI is a
 daemon client for those same management routes; there is no desktop panel.
 
 ## How Provider traffic flows

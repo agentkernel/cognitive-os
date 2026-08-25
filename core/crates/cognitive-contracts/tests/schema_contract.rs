@@ -1,13 +1,13 @@
 //! Contract-layer schema re-verification (F-003 closure evidence, Rust side).
 //!
 //! Proves, without any conformance runner, that:
-//! 1. every schema under `specs/schemas/` compiles under draft 2020-12 with
+//! 1. every schema under `core/specs/schemas/` compiles under draft 2020-12 with
 //!    all relative `$ref`s resolvable (REQ-GOBJ-VALID-001 shape discipline);
 //! 2. the migrated single-track contracts REJECT the legacy
 //!    `common-defs.schema.json#/$defs/{metadata,strongRef}` dual-track shapes
 //!    (REQ-GOBJ-HEADER-001, REQ-GOBJ-REF-001, REQ-GOBJ-MIG-001) — the exact
 //!    instances pinned by the negative vectors
-//!    `conformance/vectors/governed-object-legacy-{metadata,strongref}-001.json`;
+//!    `core/conformance/vectors/governed-object-legacy-{metadata,strongref}-001.json`;
 //! 3. a migrated positive instance is accepted (the validator is not
 //!    vacuously rejecting).
 //!
@@ -59,7 +59,7 @@ fn load_schemas() -> HashMap<String, Value> {
 /// Resolves any URI (relative file name, absolute URL, or synthetic base)
 /// to the schema whose file name matches the URI's last path segment.
 /// Matches the repository convention that every relative `$ref` resolves
-/// from the containing schema file (`conformance/README.md`).
+/// from the containing schema file (`core/conformance/README.md`).
 struct FileNameRetriever {
     schemas: HashMap<String, Value>,
 }
@@ -328,7 +328,7 @@ fn migrated_positive_effect_is_accepted() {
 }
 
 /// Positive AKP request envelope: the D-013 wire schema must accept the
-/// members the companion describes (specs/akp/README.md section 3), so the
+/// members the companion describes (core/specs/akp/README.md section 3), so the
 /// negative vectors are not passing vacuously.
 fn positive_request_envelope() -> Value {
     serde_json::json!({

@@ -6,13 +6,13 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: docs/product/personal/product-design.md
-  - path: apps/kernel-server/src/personal/server.rs
+  - path: personal/docs/product/product-design.md
+  - path: personal/apps/kernel-server/src/personal/server.rs
     symbols: ["serve_personal_loopback"]
-  - path: docs/product/personal/linux-1.0-scope.md
+  - path: personal/docs/product/linux-1.0-scope.md
 tests:
-  - apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:17160faa14a99bae70bf741f2a0bd8f71588883db812e3ba664af2a9a260cec4"
+  - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
+fingerprint: "sha256:e6a88761a70a397baaf92ed549ec43667edfb79429763cd795e72c22dd8cff3a"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -56,6 +56,6 @@ budgeted, recoverable, and never falsely completed**:
 conversation, Task admission, and the six authority stores are implemented and
 tested; fully autonomous Task **execution** (scheduler-driven tool runs and
 independent verification wired end-to-end) is not yet connected — see
-[Tasks and execution](./tasks-and-execution.md). The stable product intent is owned
-by [`docs/product/personal/`](../../../docs/product/personal/README.md); this page
+[Tasks and execution](tasks-and-execution.md). The stable product intent is owned
+by [`personal/docs/product/`](../../../docs/product/README.md); this page
 tracks what the code does today.

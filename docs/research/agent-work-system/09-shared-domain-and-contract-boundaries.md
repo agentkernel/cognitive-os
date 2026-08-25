@@ -3,8 +3,8 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本文件协调 [Personal 架构](./05-personal-architecture.md)与
-[Enterprise 架构](./08-enterprise-architecture.md)。所有 API/schema/ADR disposition 均为
+本文件协调 [Personal 架构](05-personal-architecture.md)与
+[Enterprise 架构](../../../enterprise/docs/design/08-enterprise-architecture.md)。所有 API/schema/ADR disposition 均为
 Candidate；没有 Lane-CTR mutation 或 public contract 被接受。
 
 ## 1. Sharing principles
@@ -319,14 +319,14 @@ consumers、stable public API、measured delivery blockage。
 
 ## 17. Baseline delta and non-claims
 
-`docs/design/01–41` remains dated baseline。Owner-confirmed deltas：native Personal shell、inventory
+`clients/docs/design/01–41` remains dated baseline。Owner-confirmed deltas：native Personal shell、inventory
 P0、Continuation Package、qualified guarantee、managed central index、Desktop Fleet + Web fallback、
 Provider same-release track。This document changes no source, contract, ADR, schema or implementation。
 
 ## 18. Open-source boundary matrix
 
 No upstream project replaces CognitiveOS authority。See
-[open-source assessment](./12-open-source-reuse-assessment.md) for exact versions/licenses。
+[open-source assessment](12-open-source-reuse-assessment.md) for exact versions/licenses。
 
 | Candidate | Shared boundary type | May own | Must not own |
 |---|---|---|---|
@@ -397,5 +397,5 @@ Continuation/export must label every item：
 These Personal additions describe **Personal Desktop 1.0 candidate** only。Accepted ADR-0036 and the
 formal plan still reserve `1.0.0` for Linux。Enterprise remains discovery and is not activated by the
 shared model。Future canonicalization must follow
-[baseline delta](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md) and
-[validation gates](./10-validation-and-delivery-readiness.md).
+[baseline delta](13-control-plane-baseline-to-personal-desktop-1.0-delta.md) and
+[validation gates](10-validation-and-delivery-readiness.md).

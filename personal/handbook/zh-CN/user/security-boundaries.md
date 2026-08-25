@@ -6,19 +6,19 @@ audience: [user]
 status: implemented
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/auth.rs
+  - path: personal/apps/kernel-server/src/personal/auth.rs
     symbols: ["LocalSessionAuthority"]
-  - path: apps/kernel-server/src/personal/bounds.rs
-  - path: packages/pi-cognitiveos/src/tool-policy.ts
-  - path: crates/cognitive-runtime/src/pi_launcher.rs
+  - path: personal/apps/kernel-server/src/personal/bounds.rs
+  - path: personal/packages/pi-cognitiveos/src/tool-policy.ts
+  - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: docs/governance/AXIOMS.md
 tests:
-  - apps/kernel-server/tests/p1_t04_personal_daemon.rs
-  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-  - packages/pi-cognitiveos/src/safety.test.ts
-  - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:4434049915e38bf4384f04b027af5b52b9f08d158a0f14755a05a6ed4eb0ba42"
+  - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
+  - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+  - personal/packages/pi-cognitiveos/src/safety.test.ts
+  - personal/crates/cognitive-runtime/tests/pi_linux_launcher.rs
+fingerprint: "sha256:8c7625c32a5cc721572c00bbe13ed054a3fc65cebaf0480401aa24a755854c22"
 non_claims:
   - Windows 本地 runtime 文件仍缺少显式 ACL 加固——OS CSPRNG 令牌生成不构成 ACL 声明。
 ---
@@ -61,9 +61,9 @@ fail-closed 并返回注册错误码。
 ## 静态数据靠什么保护
 
 权威数据库是 daemon 拥有的 0600 WAL SQLite 文件；secret 只存在于 Secret Service
-（见 [Provider 与 secret](./provider-and-secrets.md)）。命名 Provider Control Plane
+（见 [Provider 与 secret](provider-and-secrets.md)）。命名 Provider Control Plane
 账户在 SQLite 中只持久化不透明 `secret_ref`；API key 永不出现在权威行、CLI 输出、
 审计载荷或 agent 可读文件中。CLI 操作（含 `--allow-private-network` /
 `--allow-insecure-http` 与 `--reconfirm`）见
-[Provider Control Plane](./provider-control-plane.md)。备份按构造排除 secret 材料。
+[Provider Control Plane](provider-control-plane.md)。备份按构造排除 secret 材料。
 追加式审计/事件历史无法经任何 daemon 面被改写——数据库触发器直接拒绝 update/delete。

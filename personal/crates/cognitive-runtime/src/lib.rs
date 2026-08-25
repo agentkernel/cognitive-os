@@ -1,7 +1,7 @@
 //! `cognitive-runtime`: execution layer of the CognitiveOS reference
 //! implementation.
 //!
-//! Scope (M4-M6, per `docs/plan/DEVELOPMENT-PLAN.md`): the Operation
+//! Scope (M4-M6, per `docs/plan/archive/DEVELOPMENT-PLAN.md`): the Operation
 //! executor (OperationDescriptor is never an AuthorizationCapability),
 //! sandbox and adapter ports for C0/C1 agent integration, and the bounded
 //! Harness Loop with progress/stagnation judgment. Dispatch goes through the

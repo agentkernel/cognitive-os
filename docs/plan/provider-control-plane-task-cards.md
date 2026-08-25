@@ -21,7 +21,7 @@ Profile, B01, provider-quality, or agent-benefit claims.
 ## PCP-T01: account, endpoint, and secret contract
 
 **Requires:** P1-T02, P1-T04, management auth. **Proposed paths:**
-`crates/cognitive-secret/**`, `apps/kernel-server/src/personal/**`, focused
+`personal/crates/cognitive-secret/**`, `personal/apps/kernel-server/src/personal/**`, focused
 tests, and formally mapped ADR/trace.
 
 **Acceptance:** multiple named accounts and opaque refs; no key in DB/config/
@@ -39,7 +39,7 @@ rotate/delete; supported Rust tests and static redaction scan.
 ## PCP-T02: model discovery and transport
 
 **Requires:** PCP-T01, P1-T03, approved HTTP/TLS dependency decision.
-**Proposed paths:** `crates/cognitive-secret/**`, daemon provider routes,
+**Proposed paths:** `personal/crates/cognitive-secret/**`, daemon provider routes,
 transport tests, dependency manifest, mapped ADR.
 
 **Acceptance:** creation performs one foreground discovery; compatible path is
@@ -55,8 +55,8 @@ tests locally and supported Rust tests on CI.
 ## PCP-T03: Pi fixed binding and proxy
 
 **Requires:** PCP-T02, P1-T07, current Pi pin and sidecar contracts.
-**Proposed paths:** `apps/kernel-server/src/personal/**`,
-`packages/pi-cognitiveos/**`, integration tests, trace.
+**Proposed paths:** `personal/apps/kernel-server/src/personal/**`,
+`personal/packages/pi-cognitiveos/**`, integration tests, trace.
 
 **Acceptance:** no Pi Secret Store/key env/auth file/SQLite access; one binding
 revision/endpoint/model; missing/expired/revoked/mismatched auth fails closed;

@@ -40,4 +40,4 @@ sole adaptation and authority path.
 ## Non-goals and non-claims
 
 This ADR does not ship a second agent, open a public A2A port, or alter
-specs/conformance. No Gate/release/Profile claim.
+core/specs/conformance. No Gate/release/Profile claim.

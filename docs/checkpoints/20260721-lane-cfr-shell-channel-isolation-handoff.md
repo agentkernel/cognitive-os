@@ -33,7 +33,7 @@
 
 ## 5. 下一步入口
 
-- 按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md) 选 P1：`SHELL-TARGET-AMBIGUITY-001` discovery 或 defer 族。
+- 按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md) 选 P1：`SHELL-TARGET-AMBIGUITY-001` discovery 或 defer 族。
 - 第一个动作：合入本 PR 后 `git pull origin main`。
 
 ## 6. 快照

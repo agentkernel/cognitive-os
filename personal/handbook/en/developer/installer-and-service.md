@@ -6,19 +6,19 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-runtime/src/linux_bundle.rs
+  - path: personal/crates/cognitive-runtime/src/linux_bundle.rs
     symbols: ["verify_linux_bundle", "stage_verified_bundle", "activate_after_health_check"]
-  - path: crates/cognitive-runtime/src/linux_bundle_installation.rs
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_installation.rs
     symbols: ["PreparedLinuxBundleInstallation", "install_linux_bundle"]
-  - path: crates/cognitive-runtime/src/linux_bundle_service.rs
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["install_linux_bundle_single_service", "render_personal_user_service_unit"]
-  - path: deploy/linux/install.sh
-  - path: crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs
+  - path: personal/deploy/linux/install.sh
+  - path: personal/crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs
 tests:
-  - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
-  - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
-  - crates/cognitive-runtime/tests/linux_bundle_installation.rs
-fingerprint: "sha256:2c6d89ca70c76f223dfd52bbbe917bf2d818934af47b10246592164eb06dc64c"
+  - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
+  - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
+  - personal/crates/cognitive-runtime/tests/linux_bundle_installation.rs
+fingerprint: "sha256:34782e8252bec39c742631966d1e809a9a2d554b0f3a0e3d536be7fd43f47857"
 non_claims:
   - The campaign builder uses an experimental signing key; no production signing ceremony, GitHub Release, or B01 claim is made here.
 ---
@@ -55,7 +55,7 @@ deployment root — a rogue same-port process fails activation.
 
 ## Bootstrap chain
 
-The rendered `install.sh` (template under `deploy/linux/`, filled by the campaign
+The rendered `install.sh` (template under `personal/deploy/linux/`, filled by the campaign
 builder with pinned URLs + digests) downloads over HTTPS with bounded sizes and a
 single pinned redirect host, SHA-256-verifies the installer binary, then hands off
 to the Rust installer — no `curl | sh`, no sudo, no embedded secrets. The builder

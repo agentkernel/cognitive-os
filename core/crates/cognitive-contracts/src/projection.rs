@@ -16,9 +16,9 @@
 //! - section 3 / AKP envelope: unknown critical extensions are rejected
 //!   before any payload processing (`CRITICAL_EXTENSION_UNKNOWN` semantics).
 //!
-//! The TypeScript twin is `packages/contracts-ts/src/projection.ts`;
+//! The TypeScript twin is `core/packages/contracts-ts/src/projection.ts`;
 //! cross-language behavior is pinned by
-//! `tests/golden/digest-and-projection-fixtures.json`.
+//! `core/tests/golden/digest-and-projection-fixtures.json`.
 
 use crate::canonical;
 use serde_json::Value;

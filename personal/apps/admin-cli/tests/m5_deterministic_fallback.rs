@@ -46,7 +46,7 @@ use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicU64, Ordering};
 
 // ---------------------------------------------------------------------
-// Deterministic fixtures (same shapes as crates/cognitive-store/tests/
+// Deterministic fixtures (same shapes as personal/crates/cognitive-store/tests/
 // m4_common; duplicated here because Cargo integration suites cannot
 // share test modules across crates).
 // ---------------------------------------------------------------------
@@ -397,7 +397,7 @@ fn seed_stuck_executing_effect(
 }
 
 // ---------------------------------------------------------------------
-// Session fixtures (shape source: specs/schemas/
+// Session fixtures (shape source: core/specs/schemas/
 // privileged-management-session.schema.json)
 // ---------------------------------------------------------------------
 

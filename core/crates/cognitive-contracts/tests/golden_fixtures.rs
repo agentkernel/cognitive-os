@@ -1,6 +1,6 @@
 //! Golden fixture verification (docs/standards/canonical-encoding-and-digest.md
 //! section 14). The same fixture file is verified by the TypeScript twin in
-//! `packages/contracts-ts/src/golden.test.ts`; CI additionally diffs the
+//! `core/packages/contracts-ts/src/golden.test.ts`; CI additionally diffs the
 //! emitted digest maps of both implementations.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]

@@ -5,8 +5,8 @@
 - Base: `origin/main@117df63dfd435f57cac8b700e11a200517f56d0d`
 - Outcome: docs-only owner-decision / machine-registration NO-GO
 - Decision packets:
-  - [V02-CA-OPS-FOUNDATION-01](../plan/V02-CA-OPS-FOUNDATION-DECISION-MATRIX.md)
-  - [V02-CA-OPS-STATUS-INSPECT-01](../plan/V02-CA-OPS-STATUS-INSPECT-DECISION-MATRIX.md)
+  - [V02-CA-OPS-FOUNDATION-01](../plan/archive/V02-CA-OPS-FOUNDATION-DECISION-MATRIX.md)
+  - [V02-CA-OPS-STATUS-INSPECT-01](../plan/archive/V02-CA-OPS-STATUS-INSPECT-DECISION-MATRIX.md)
 
 ## 1. Entry evidence
 

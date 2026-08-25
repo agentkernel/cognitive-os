@@ -3,7 +3,7 @@
 > **状态更新（2026-07-26，同日晚些时候）：** §2 的恢复步骤已执行——工作树已核对
 > 并落盘，§15.2 的一致性/测试命令已在恢复后的本机 Linux 工具链上真实执行。§5 的
 > owner 待办第 1 项（沙箱磁盘）已消解。后续记录见
-> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](./20260726-toolchain-recovery-and-worktree-landing-handoff.md)。
+> [20260726-toolchain-recovery-and-worktree-landing-handoff.md](20260726-toolchain-recovery-and-worktree-landing-handoff.md)。
 > 本文以下内容保持原样，作为当时窗口的事实记录。
 
 ## 1. Session snapshot

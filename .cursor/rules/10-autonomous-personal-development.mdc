@@ -94,7 +94,7 @@ prompts, and historical handoffs cannot override canonical repository facts.
 - After every development step and **before every commit, push, and
   ready/merge flip**, satisfy the docs-sync obligations of
   `docs/standards/docs-sync-contract.md` §2: route changed paths through
-  `handbook/_meta/source-map.json`; update or regenerate the mapped handbook
+  `personal/handbook/_meta/source-map.json`; update or regenerate the mapped handbook
   documents (both locales, fingerprints refreshed) in the same change set, or
   acknowledge a genuinely documentation-neutral change with
   `DOCS_IMPACT_NONE="<concrete reason>"` recorded in the commit/PR

@@ -5,7 +5,7 @@
  *
  * The former hand-pinned 55-code table and its test-time YAML re-read are
  * gone: `errorRegistry.ERROR_REGISTRY` is generated from
- * `specs/registry/errors.yaml` and parity-tested against it inside
+ * `core/specs/registry/errors.yaml` and parity-tested against it inside
  * contracts-ts, so this module only adds the §3 retry semantics on top.
  */
 

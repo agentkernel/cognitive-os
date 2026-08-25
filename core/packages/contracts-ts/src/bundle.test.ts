@@ -1,7 +1,7 @@
 /**
  * Bundle/set manifest digest tests (canonical-encoding-and-digest.md
  * section 13), twin of the unit tests in
- * `crates/cognitive-contracts/src/bundle.rs`.
+ * `core/crates/cognitive-contracts/src/bundle.rs`.
  */
 
 import assert from "node:assert/strict";

@@ -3,9 +3,9 @@
 - Status: informative product design for CognitiveOS Personal
 - Change class: `implementation-only` companion (no new public contract)
 - Project: `cognitiveos-personal`
-- Architecture pair: [resource-manager-architecture.md](../../architecture/personal/resource-manager-architecture.md)
-- Current-status owner: [PROGRESS.md](../../plan/PROGRESS.md) `Current snapshot`
-- Task owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../plan/PERSONAL-DEVELOPMENT-PLAN.md) `P8-T12`
+- Architecture pair: [resource-manager-architecture.md](../architecture/resource-manager-architecture.md)
+- Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md) `Current snapshot`
+- Task owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) `P8-T12`
 
 This document describes the owner-facing Resource Manager: one versioned way
 for the Shell and the deterministic CLI to list, inspect, watch, bind, unbind,
@@ -19,7 +19,7 @@ Context, Task, Runtime) and a private six-family projection. Family-specific
 mutations exist (`skill/bind`, `tool/enable`, `memory/remember`). Operators and
 clients still need one common envelope so they do not learn six HTTP dialects
 for the shared operations named in
-[system architecture §3.1](../../architecture/personal/system-architecture.md).
+[system architecture §3.1](../architecture/system-architecture.md).
 
 The Resource Manager is that envelope. Each command is resolved to a typed
 domain sink. The Rust daemon remains the only authority writer.

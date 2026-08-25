@@ -1,8 +1,8 @@
 # Multi-Agent Orchestration (design)
 
 - Status: informative Personal architecture design (mainline, fail-closed default)
-- Related: [ADR-0044](../../adr/0044-personal-multi-agent-mainline.md),
-  [agent-adapter-contract.md](./agent-adapter-contract.md)
+- Related: [ADR-0044](../../../docs/adr/0044-personal-multi-agent-mainline.md),
+  [agent-adapter-contract.md](agent-adapter-contract.md)
 
 ## 1. Intent
 

@@ -65,14 +65,14 @@ Non-goals:
   allowance, or invoices when a Provider exposes no supported interface.
 - **[RECOMMENDATION]** Do not force Personal to implement multitenancy, SCIM,
   ReBAC, SPIFFE, or centralized policy before a concrete Enterprise need.
-- **[FACT]** `docs/design/01–41` is a dated and currently untracked baseline,
+- **[FACT]** `clients/docs/design/01–41` is a dated and currently untracked baseline,
   not an Accepted product or architecture decision.
 
 ## 3. Repository Reality and Existing Assets
 
 ### 3.1 Authority and topology
 
-- **[FACT]** Repository facts are ordered as: `specs/` machine shape →
+- **[FACT]** Repository facts are ordered as: `core/specs/` machine shape →
   normative standards → Accepted ADRs → Personal formal plan → `PROGRESS.md`
   Current snapshot → active leases → product and design material.
 - **[FACT]** The Rust daemon is the sole authority writer. Agents, Providers,
@@ -87,12 +87,12 @@ Non-goals:
 
 | Capability | State | Evidence and delta |
 |---|---|---|
-| Task / TaskContract | specified; implemented; HTTP-accessible; tested; bounded Gate-proven in parts; not release/Profile-proven | `specs/schemas/task-contract.schema.json`; `crates/cognitive-management/src/task_application.rs`; KEEP and add a Work projection |
+| Task / TaskContract | specified; implemented; HTTP-accessible; tested; bounded Gate-proven in parts; not release/Profile-proven | `core/specs/schemas/task-contract.schema.json`; `personal/crates/cognitive-management/src/task_application.rs`; KEEP and add a Work projection |
 | Assignment | absent as a product work relation | `AgentExecutionBinding` may reference Task, but there is no typed assignee, priority, or assignment API; NEW |
-| Scheduler / lease / fencing | implemented; CLI/library-only; tested | Durable CAS lease, epoch, expiry, reclaim in `crates/cognitive-store/src/scheduler.rs`; KEEP |
-| Task budget | implemented; hard-enforced; tested | `crates/cognitive-runtime/src/scheduler_service.rs`; KEEP |
+| Scheduler / lease / fencing | implemented; CLI/library-only; tested | Durable CAS lease, epoch, expiry, reclaim in `personal/crates/cognitive-store/src/scheduler.rs`; KEEP |
+| Task budget | implemented; hard-enforced; tested | `personal/crates/cognitive-runtime/src/scheduler_service.rs`; KEEP |
 | Provider budget | implemented; HTTP-accessible; tested; observe-only | Add explicit enforcement class; never label as hard limit |
-| Intent / Effect | specified; implemented; tested; partly HTTP-readable | `crates/cognitive-kernel/src/ports.rs`; `specs/transitions/effect.transitions.json`; KEEP |
+| Intent / Effect | specified; implemented; tested; partly HTTP-readable | `core/crates/cognitive-kernel/src/ports.rs`; `core/specs/transitions/effect.transitions.json`; KEEP |
 | Evidence / Verification / Acceptance | implemented; HTTP-accessible; tested; bounded Gate-proven | Production fixed-effect and registered-check verifiers; KEEP as product differentiator |
 | Agent installation and runtime | implemented; mostly CLI/library-only; partly tested; HTTP projection incomplete | Installation, registration, instance, sidecar, and attempts are durable; runtime resource projection remains empty |
 | Provider access / model / binding / usage | implemented; HTTP/CLI-accessible; tested; not Provider-Control-Plane Gate-proven | Add entitlement and cost provenance; strengthen mutation atomicity and audit |
@@ -116,7 +116,7 @@ Non-goals:
   `593a5adf7f9b24f3e2e635ee3ce38be16b5d6c02`.
 - **[FACT]** `docs/plan/PROGRESS.md` is modified by the active work and is not
   owned by this discovery package.
-- **[FACT]** Existing untracked `.cursor/skills/`, `docs/design/`, and temporary
+- **[FACT]** Existing untracked `.cursor/skills/`, `clients/docs/design/`, and temporary
   scripts are protected and were not modified.
 - **[FACT]** Future Work, shared shell, client data/state, and visual paths can
   overlap the active Control Plane work.
@@ -1021,7 +1021,7 @@ Candidate ID: **`CAND-AWS-PERSONAL-001`** — unregistered and not a formal
 | Acceptance | Exact preview/admit, Assignment CAS, stale binding failure, fenced execution, state separation, accepted receipt, durable recovery |
 | Failure-first negatives | Duplicate Assignment, stale epoch, unhealthy Agent, wrong account, duplicate wakeup, expired lease, self-completion, missing verifier, unknown cost/worktree |
 | Validation | Local Node/TS and Rust fmt; CI Ubuntu/Windows; exact Linux revision; daemon-served browser journey |
-| Candidate paths | `crates/cognitive-store/`, `crates/cognitive-kernel/`, `apps/kernel-server/src/personal/`, focused tests, conditional contracts/bindings, client Work/data paths |
+| Candidate paths | `personal/crates/cognitive-store/`, `core/crates/cognitive-kernel/`, `personal/apps/kernel-server/src/personal/`, focused tests, conditional contracts/bindings, client Work/data paths |
 | Docs-sync | Source-map routing, bilingual handbook, generated fingerprints when implementation exists |
 | Risks | Lease collision, over-generalized Assignment, projection cost, capability overclaim, private API drift |
 | Non-claims | No market, Enterprise, release/Profile, quota, invoice, or multi-Agent claim |

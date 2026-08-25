@@ -6,20 +6,20 @@ audience: [user]
 status: implemented
 generated: false
 sources:
-  - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["parse_cognitive_args", "COGNITIVE_USAGE"]
-  - path: apps/admin-cli/src/personal_cli/daemon.rs
-  - path: apps/admin-cli/src/personal_cli/backup.rs
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
+  - path: personal/apps/admin-cli/src/personal_cli/backup.rs
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch", "status"]
-  - path: apps/admin-cli/src/personal_cli/provider.rs
+  - path: personal/apps/admin-cli/src/personal_cli/provider.rs
 tests:
-  - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - apps/kernel-server/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/src/personal_cli/dsh.rs
-fingerprint: "sha256:fd58fd01d559fa84ce3da4601341836687ac628ff53d617089ce2a8f6ff97540"
+  - personal/apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/src/personal_cli/dsh.rs
+fingerprint: "sha256:55478fd6570b033d3ec467e2c318a3fa2956b95d9546c130710707797686b0ff"
 non_claims:
   - The CLI is a non-authority client; nothing it prints implies Task completion or Gate results.
 ---
@@ -49,7 +49,7 @@ reads authenticated projections. Exit codes: `0` success, `1` operational error,
 | `cognitive resource get/watch --family <memory\|skill\|tool\|context\|task\|runtime>` | read the private six-family projection (management channel) |
 | `cognitive resource list/inspect --family <…> [--id <id>]` | common Resource Manager read envelope (management channel) |
 | `cognitive resource bind\|unbind\|enable\|disable\|revoke --family <…> --id <id> --expected-version <n> --idempotency-key <key>` | common Resource Manager mutation onto existing Skill/Tool sinks; not generic create/execute/complete |
-| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane accounts; `--api-key-file` only; custom HTTP/private endpoints need `--allow-insecure-http` / `--allow-private-network`. Details: [Provider Control Plane](./provider-control-plane.md) |
+| `cognitive provider account create\|list\|show\|update\|delete` | management Provider Control Plane accounts; `--api-key-file` only; custom HTTP/private endpoints need `--allow-insecure-http` / `--allow-private-network`. Details: [Provider Control Plane](provider-control-plane.md) |
 | `cognitive provider key set\|rotate\|remove` | Secret Store key ops via the daemon; never SQLite |
 | `cognitive provider models refresh\|list\|add\|set-price` | foreground discovery, manual models, prices |
 | `cognitive agent binding set\|show\|list\|remove` | fixed pi/dsh account+provider+model binding; no fallback |

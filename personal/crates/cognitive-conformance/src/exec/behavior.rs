@@ -551,8 +551,8 @@ pub(super) fn cas_behavior(
         grounding: vec![
             "crates/cognitive-kernel (TransitionEngine centralized gate)".to_owned(),
             "crates/cognitive-store (SqliteAuthorityStore, WAL)".to_owned(),
-            "specs/transitions/task.transitions.json".to_owned(),
-            "specs/registry/errors.yaml#STATE_CONFLICT".to_owned(),
+            "core/specs/transitions/task.transitions.json".to_owned(),
+            "core/specs/registry/errors.yaml#STATE_CONFLICT".to_owned(),
         ],
         informative: vec![],
         implementation: Some(match kind {
@@ -709,8 +709,8 @@ pub(super) fn effect_closure_behavior(
         grounding: vec![
             "crates/cognitive-kernel (TransitionEngine centralized gate)".to_owned(),
             "crates/cognitive-store (SqliteAuthorityStore, WAL)".to_owned(),
-            "specs/transitions/effect.transitions.json".to_owned(),
-            "specs/registry/errors.yaml#EFFECT_OUTCOME_UNKNOWN".to_owned(),
+            "core/specs/transitions/effect.transitions.json".to_owned(),
+            "core/specs/registry/errors.yaml#EFFECT_OUTCOME_UNKNOWN".to_owned(),
         ],
         informative: vec![],
         implementation: Some(match kind {
@@ -854,8 +854,8 @@ pub(super) fn task_acceptance_behavior(
         grounding: vec![
             "crates/cognitive-kernel (TransitionEngine centralized gate)".to_owned(),
             "crates/cognitive-store (SqliteAuthorityStore, WAL)".to_owned(),
-            "specs/transitions/task.transitions.json".to_owned(),
-            "specs/registry/errors.yaml#STATE_CONFLICT".to_owned(),
+            "core/specs/transitions/task.transitions.json".to_owned(),
+            "core/specs/registry/errors.yaml#STATE_CONFLICT".to_owned(),
         ],
         informative: vec!["transition_to_completed_requires"],
         implementation: Some(match kind {

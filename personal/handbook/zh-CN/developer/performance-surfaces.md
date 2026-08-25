@@ -6,24 +6,24 @@ audience: [developer]
 status: partial
 generated: false
 sources:
-  - path: crates/cognitive-runtime/src/perf.rs
+  - path: personal/crates/cognitive-runtime/src/perf.rs
     symbols: ["GovernanceOverheadSample", "GovernedPathStageCollector"]
-  - path: crates/cognitive-runtime/src/performance_campaign.rs
-  - path: crates/cognitive-runtime/src/campaign_runner.rs
-  - path: crates/cognitive-runtime/src/loopback_transport.rs
-  - path: crates/cognitive-runtime/src/resource_sampler.rs
-  - path: crates/cognitive-runtime/src/provider_route_policy.rs
-  - path: crates/cognitive-runtime/src/task_scenario_harness.rs
-  - path: packages/dsh-akp-adapter/src/index.ts
+  - path: personal/crates/cognitive-runtime/src/performance_campaign.rs
+  - path: personal/crates/cognitive-runtime/src/campaign_runner.rs
+  - path: personal/crates/cognitive-runtime/src/loopback_transport.rs
+  - path: personal/crates/cognitive-runtime/src/resource_sampler.rs
+  - path: personal/crates/cognitive-runtime/src/provider_route_policy.rs
+  - path: personal/crates/cognitive-runtime/src/task_scenario_harness.rs
+  - path: personal/packages/dsh-akp-adapter/src/index.ts
     symbols: ["DshAkpTiming"]
-  - path: packages/dsh-akp-adapter/src/plugin.ts
+  - path: personal/packages/dsh-akp-adapter/src/plugin.ts
     symbols: ["applyDshAkpCordisPlugin"]
-  - path: packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
-  - path: packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
-  - path: packages/dsh-akp-adapter/scripts/paired-path.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
-  - crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:135d4ca9219c746d9ad457e23a597ada91243c3767f61db0747debef3429a5d5"
+  - personal/crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
+fingerprint: "sha256:896f148962ebdde4aef4d9d3616604565371b326d9116b90081d3981513214d6"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---

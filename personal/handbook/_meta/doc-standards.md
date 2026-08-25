@@ -20,12 +20,12 @@ delivery（canonical 来源恒优先；冲突在同一交付内修正手册）�
 ## Structure
 
 - One locale-independent `doc_id` per document; identical content commitments in
-  `handbook/en/**` and `handbook/zh-CN/**` (full parallel trees, no mixed-language
-  pages). Meta pages under `handbook/_meta/` are locale-neutral single files.
-- Every document is registered in [`manifest.json`](./manifest.json); an
-  unregistered markdown file under `handbook/` fails the checker (HB004).
+  `personal/handbook/en/**` and `personal/handbook/zh-CN/**` (full parallel trees, no mixed-language
+  pages). Meta pages under `personal/handbook/_meta/` are locale-neutral single files.
+- Every document is registered in [`manifest.json`](manifest.json); an
+  unregistered markdown file under `personal/handbook/` fails the checker (HB004).
 - Frontmatter must validate against
-  [`handbook-frontmatter.schema.json`](./handbook-frontmatter.schema.json):
+  [`handbook-frontmatter.schema.json`](handbook-frontmatter.schema.json):
   `doc_id`, `locale`, `kind`, `audience`, `generated`, plus — for every
   fact-bearing kind — `status`, `sources`, `fingerprint`, `non_claims`.
 

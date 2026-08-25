@@ -408,6 +408,7 @@ fn tracer_bullet_intent_to_acceptance_end_to_end() {
     let evidence_dir = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .join("..")
         .join("..")
+        .join("..")
         .join("artifacts")
         .join("evidence")
         .join("faults");

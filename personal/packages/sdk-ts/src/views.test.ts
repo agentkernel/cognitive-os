@@ -2,7 +2,7 @@
  * Fixture gates for the generated shell-family bindings:
  *
  * 1. every sample fixture (typed by the GENERATED interfaces) validates
- *    against the real schema under `specs/schemas/` (ajv draft 2020-12,
+ *    against the real schema under `core/specs/schemas/` (ajv draft 2020-12,
  *    full $ref closure) — proves the shared test doubles stay schema-valid
  *    and that schema conditionals still bite through the typed surface;
  * 2. the `isShellStatusView` ingestion guard accepts the valid fixture and
@@ -36,8 +36,8 @@ import { isShellStatusView, SHELL_STATUS_VALUES } from "./views.js";
 
 const addFormats = addFormatsImport as unknown as (ajv: Ajv2020) => Ajv2020;
 
-const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..");
-const SCHEMA_DIR = path.join(REPO_ROOT, "specs", "schemas");
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..", "..", "..");
+const SCHEMA_DIR = path.join(REPO_ROOT, "core", "specs", "schemas");
 
 function buildAjv(): Ajv2020 {
   const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: true });

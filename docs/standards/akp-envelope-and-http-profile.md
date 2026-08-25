@@ -5,12 +5,12 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: AKP envelope rules in `specs/akp/README.md`;
-  `specs/registry/errors.yaml` protocol codes; envelope/stream/control wire
-  schemas `specs/schemas/akp-request-envelope.schema.json`,
+- Machine assets: AKP envelope rules in `core/specs/akp/README.md`;
+  `core/specs/registry/errors.yaml` protocol codes; envelope/stream/control wire
+  schemas `core/specs/schemas/akp-request-envelope.schema.json`,
   `akp-result-envelope.schema.json`, `akp-stream-frame.schema.json`,
   `shell-control-request.schema.json` (D-013/D-014/D-015 closure)
-- Normative sources: AKP companion (`specs/akp/README.md`); ADR-0003
+- Normative sources: AKP companion (`core/specs/akp/README.md`); ADR-0003
   (reference implementation transport decision, not a specification
   requirement)
 

@@ -1,8 +1,8 @@
 # Personal Cognitive Resource Model
 
 - Status: canonical product concept model
-- Architecture mapping: [System architecture](../../architecture/personal/system-architecture.md)
-- Decision: [ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md)
+- Architecture mapping: [System architecture](../architecture/system-architecture.md)
+- Decision: [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md)
 
 ## 1. Definition and boundaries
 
@@ -325,4 +325,4 @@ marketplaces/chaining/auto-download, complex Context ranking, broad Tool/MCP
 ecosystems, non-Pi qualification and Multi-Agent orchestration remain deferred.
 
 Documented scope is not implementation evidence. Current task, Gate, release
-and Profile facts remain in [PROGRESS.md](../../plan/PROGRESS.md).
+and Profile facts remain in [PROGRESS.md](../../../docs/plan/PROGRESS.md).

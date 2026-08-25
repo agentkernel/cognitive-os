@@ -3,16 +3,16 @@
 - Status: informative post-1.0 target/design
 - Formal task: `P7-T05` (non-blocking Web UI)
 - Change class: `product-semantic + structural` documentation
-- Product companion: [Web UI product design](../../product/personal/web-ui-design.md)
-- Reuse: [System architecture](./system-architecture.md), [Resource Manager](./resource-manager-architecture.md), [Provider Control Plane](./provider-control-plane.md)
+- Product companion: [Web UI product design](../product/web-ui-design.md)
+- Reuse: [System architecture](system-architecture.md), [Resource Manager](resource-manager-architecture.md), [Provider Control Plane](provider-control-plane.md)
 
 This design places a static React/TypeScript/Vite client in the external
 `cognitiveos-clients` repository under `pc/web/`, as already anticipated by the
 Personal plan. It does not add a daemon, database writer, public contract or
-alternate authority. [ADR-0053](../../adr/0053-personal-web-ui-stack.md) accepts
+alternate authority. [ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md) accepts
 that stack, same-origin daemon serving under `/ui/`, memory-only sessions, and
 the browser Origin/Referer allowlist. The route inventory is
-[web-ui-route-inventory.json](./web-ui-route-inventory.json). SPA
+[web-ui-route-inventory.json](web-ui-route-inventory.json). SPA
 implementation lives in the approved checkout `D:\cognitiveos-clients\pc\web\`
 (official `agentkernel/cognitiveos-clients`). This repository must not recreate
 `clients/**` or implement the UI in `apps/cognitiveos-console`.
@@ -45,7 +45,7 @@ credential. The daemon remains the only authority writer.
 The first delivery binds the API to numeric loopback and is intended for the
 same owner account. Existing daemon front-door authentication, channel
 separation, request bounds and error envelopes remain authoritative.
-[ADR-0053](../../adr/0053-personal-web-ui-stack.md) binds origin, CORS and CSRF:
+[ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md) binds origin, CORS and CSRF:
 cookies stay forbidden; the product origin is daemon-served `/ui/` on loopback;
 CORS is not used; a present `Origin`/`Referer` must be the daemon's own
 loopback origin. The SPA must not assume that a browser bearer or same-origin
@@ -98,7 +98,7 @@ expected logical groups are:
 These names are design-level route groups, not permission to introduce a second
 API shape. Exact envelopes, pagination, stable errors, channel checks and
 versioning follow existing Personal contracts, Lane-CTR, and the frozen
-[web-ui-route-inventory.json](./web-ui-route-inventory.json). If a required
+[web-ui-route-inventory.json](web-ui-route-inventory.json). If a required
 operation is not currently exposed as a typed daemon service, P7-T05 must show
 an explicit unavailable/not-run state and record the missing dependency; it must
 not add a generic browser-driven transition endpoint. Current honest gaps:

@@ -6,20 +6,20 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: deploy/linux/install.sh
-  - path: crates/cognitive-runtime/src/linux_bundle_service.rs
+  - path: personal/deploy/linux/install.sh
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["install_linux_bundle_single_service", "cognitiveos-personal.service"]
-  - path: crates/cognitive-runtime/src/bin/linux_bundle_installer.rs
-  - path: apps/admin-cli/src/personal_cli/init.rs
+  - path: personal/crates/cognitive-runtime/src/bin/linux_bundle_installer.rs
+  - path: personal/apps/admin-cli/src/personal_cli/init.rs
     symbols: ["run_init"]
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch"]
 tests:
-  - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
-  - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
-  - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:87be53055be8081e458b4b45e5b17d0b719efcec656e8f7ba28eca8654feab1b"
+  - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
+  - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
+  - personal/apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+fingerprint: "sha256:896784d196bafa5946d959ce01698f723336965a761f81438c2cf47b77673c82"
 non_claims:
   - 尚无公开 GitHub Release 或生产签名仪式；迄今可安装产物均为实验签名的 campaign 构建。安装路线正确性证据（B01）由正式计划拥有，此处不复述。
 ---
@@ -33,7 +33,7 @@ x86_64 + user systemd；桌面需要 Secret Service 密钥环（GNOME Keyring）
 ## 1. 运行可检查的引导安装脚本
 
 release 形态的 bundle 附带渲染好的 `install.sh`（模板为可检查的
-[`deploy/linux/install.sh`](../../../deploy/linux/install.sh)）。它刻意乏味：
+[`personal/deploy/linux/install.sh`](../../../deploy/linux/install.sh)）。它刻意乏味：
 fail-closed 的 shell 设置、HTTPS-only 有界下载、单一钉住的跳转主机、执行前对安装器二
 进制做 SHA-256 校验；没有 `curl | sh`、没有 `sudo`、不内嵌密钥。
 
@@ -58,7 +58,7 @@ secret 文件：`provider.json`（含不透明 `SecretRef`）与 `selected-model
 fail-closed——没有明文回退。
 
 命名账户、密钥轮换、固定 agent binding 与用量查询是 daemon 运行之后的独立操作员面：
-[Provider Control Plane](./provider-control-plane.md)。该面是 CLI 与 daemon 对话；本阶
+[Provider Control Plane](provider-control-plane.md)。该面是 CLI 与 daemon 对话；本阶
 段没有 Web 或桌面控制面板。在设置 control-plane binding 之前，`cognitive init` 仍是
 首次对话路径（`provider.json` / `selected-model.json`）。
 
@@ -85,7 +85,7 @@ cognitive pi launch
 
 launch 是 fail-closed 的：要求 doctor 全组件 ready 与精确钉住的 Pi 版本，只加载已配置
 的 Extension，禁用绕过 daemon authority 的 Pi 原生工具，绝不把 Provider key 交给 Pi。你
-的第一条消息经 Pi → daemon Provider 代理 → Provider；见 [Pi 对话壳](./pi-shell.md)。
+的第一条消息经 Pi → daemon Provider 代理 → Provider；见 [Pi 对话壳](pi-shell.md)。
 若要进行有界的非交互对话，使用 `cognitive pi launch --print`，并通过 stdin 提供
 prompt。CLI 会保持连接直到钉住的 Pi 进程退出；prompt 不是 Provider 凭据，Provider key
 不会进入命令行或环境。可选 `--append-system-prompt <绝对路径>` 把已存在且非空的

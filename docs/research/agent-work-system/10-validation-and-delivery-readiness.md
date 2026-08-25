@@ -353,7 +353,7 @@ Before implementation：
 ## 16. Open-source PoC gates
 
 No OSS candidate may enter product paths before all common gates pass。Exact project/version/license
-evidence is in [open-source reuse assessment](./12-open-source-reuse-assessment.md)：
+evidence is in [open-source reuse assessment](12-open-source-reuse-assessment.md)：
 
 | Gate | Required evidence | Failure disposition |
 |---|---|---|
@@ -457,8 +457,8 @@ Executed on 2026-08-25：
 | `CognitiveOS` terminology/spelling scan | PASS, zero known misspellings |
 | ReadLints on edited/new files + lease ledger | PASS, no diagnostics |
 | `git diff --check` limited to owned paths | PASS |
-| source-map inspection | PASS: no `docs/agent-work-system/**` mapping |
-| protected `docs/design/**` | intentionally untouched; only read/indexed |
+| source-map inspection | PASS: no `docs/research/agent-work-system/**` mapping |
+| protected `clients/docs/design/**` | intentionally untouched; only read/indexed |
 | product tests/build/benchmark/usability/Gate | **not-run** |
 
 These results validate documentation structure only。No product test、capability、release or Gate
@@ -477,4 +477,4 @@ claim is implied。
 - no supersession of Linux `1.0.0` by the Desktop candidate。
 
 Canonical conflict and D13 sequencing are defined in
-[baseline delta map](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md).
+[baseline delta map](13-control-plane-baseline-to-personal-desktop-1.0-delta.md).

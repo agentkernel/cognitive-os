@@ -3,9 +3,9 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本文件把 [owner 决策简报](./02-product-direction-decision-brief.md)转化为 Personal
+本文件把 [owner 决策简报](02-product-direction-decision-brief.md)转化为 Personal
 候选产品设计。它不注册正式任务、PRD、ADR、contract、Gate 或实现授权。仓库事实仍由
-`specs/`、规范、Accepted ADR、正式计划、Current snapshot、active lease 与实际代码按
+`core/specs/`、规范、Accepted ADR、正式计划、Current snapshot、active lease 与实际代码按
 既定优先级决定。
 
 标记：
@@ -368,7 +368,7 @@ Explicit non-claims：
 
 ## 11. Baseline delta and dependencies
 
-相对 `docs/design/01–41` dated baseline，本文件：
+相对 `clients/docs/design/01–41` dated baseline，本文件：
 
 - 保留其 shell/state/honesty、Providers、Home、Work detail 与 evidence layering；
 - 把 P0 从 task-first 改为 inventory/readiness activation；
@@ -377,10 +377,10 @@ Explicit non-claims：
 - 把 Task execution 明确放到 next vertical slice；
 - 不覆盖 baseline，也不把其 implementation waves 视为当前授权。
 
-相关文档：[视觉交互](./04-personal-interaction-and-visual-spec.md) ·
-[架构](./05-personal-architecture.md) ·
-[共享边界](./09-shared-domain-and-contract-boundaries.md) ·
-[验证与 readiness](./10-validation-and-delivery-readiness.md)。
+相关文档：[视觉交互](04-personal-interaction-and-visual-spec.md) ·
+[架构](05-personal-architecture.md) ·
+[共享边界](09-shared-domain-and-contract-boundaries.md) ·
+[验证与 readiness](10-validation-and-delivery-readiness.md)。
 
 ## 12. Plain-language object model
 
@@ -583,14 +583,14 @@ Every screen/component specifies：
 | export/delete/purge scenarios give complete receipt | deleted Memory/index resurrection = 0 |
 
 Thresholds are **RECOMMENDATION / untested**。See
-[interaction scenarios](./04-personal-interaction-and-visual-spec.md),
-[OSS boundaries](./12-open-source-reuse-assessment.md), and
-[candidate acceptance](./10-validation-and-delivery-readiness.md).
+[interaction scenarios](04-personal-interaction-and-visual-spec.md),
+[OSS boundaries](12-open-source-reuse-assessment.md), and
+[candidate acceptance](10-validation-and-delivery-readiness.md).
 
 ## 19. Canonical release warning
 
 This is **Personal Desktop 1.0 candidate** design。Accepted ADR-0036 and the formal plan still reserve
 Personal `1.0.0` for Linux x86_64 and classify Web UI/Windows installer as post-1.0。No wording in this
 document supersedes that release boundary。Canonical adoption requires the sequence in
-[baseline delta map](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md) after active
+[baseline delta map](13-control-plane-baseline-to-personal-desktop-1.0-delta.md) after active
 P7-T05/D13 ownership is resolved。

@@ -62,7 +62,7 @@ pub const PI_CONFIG_SURFACE: &str = "personal-pi-config";
 /// Pi version this product is pinned to.
 ///
 /// Mirrors `PiCompatibilityPin::expected().package_version` in
-/// `apps/pi-agent-adapter/src/lib.rs`, which stays the single source of truth.
+/// `personal/apps/pi-agent-adapter/src/lib.rs`, which stays the single source of truth.
 /// `pinned_pi_version_matches_the_adapter_pin` fails if the two ever drift.
 pub const PINNED_PI_VERSION: &str = "0.81.1";
 
@@ -1090,7 +1090,7 @@ mod tests {
         let needle = format!("package_version: \"{PINNED_PI_VERSION}\"");
         assert!(
             adapter_source.contains(&needle),
-            "PINNED_PI_VERSION drifted from apps/pi-agent-adapter/src/lib.rs"
+            "PINNED_PI_VERSION drifted from personal/apps/pi-agent-adapter/src/lib.rs"
         );
     }
 

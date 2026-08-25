@@ -6,11 +6,11 @@ audience: [ai]
 status: implemented
 generated: false
 sources:
-  - path: handbook/_meta/source-map.json
+  - path: personal/handbook/_meta/source-map.json
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:d8533653d58158bf12f24bd2465390a38de6883058900e10d9c552088a607302"
+fingerprint: "sha256:d16857a7c9a9e56c4d6c4c793557b52c4e28255ecb90c0ef838a606e8f6d4e71"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -27,7 +27,7 @@ documentation-neutral change is `DOCS_IMPACT_NONE="<concrete reason>"`, and the
 same reason must be recorded in the commit/PR description.
 
 Decide documentation impact **before** finishing a change, using
-[`handbook/_meta/source-map.json`](../../_meta/source-map.json):
+[`personal/handbook/_meta/source-map.json`](../../_meta/source-map.json):
 
 1. Match every changed path against the source-map rules; collect the mapped
    `doc_ids`.
@@ -56,6 +56,6 @@ git diff --check
 ```
 
 Legacy documentation (`docs/**`) keeps its own obligations under
-[`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md); the handbook never absorbs or
+[`docs-sync-contract.md`](../../../../docs/standards/docs-sync-contract.md); the handbook never absorbs or
 replaces them. When a canonical source and a handbook page conflict, fix the handbook
 page in the same delivery — never "fix" the canonical source to match documentation.

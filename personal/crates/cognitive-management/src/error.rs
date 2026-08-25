@@ -2,7 +2,7 @@
 //!
 //! Denial codes are consumed from the GENERATED error-registry binding
 //! (`cognitive_contracts::generated::error_registry`, digest-pinned to
-//! `specs/registry/errors.yaml`) — this crate never hand-writes a code
+//! `core/specs/registry/errors.yaml`) — this crate never hand-writes a code
 //! table, so an unregistered code cannot be surfaced.
 
 use cognitive_contracts::generated::common_defs::ErrorCategory;

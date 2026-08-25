@@ -3,7 +3,7 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本文件把 [owner Rounds 1–5](./02-product-direction-decision-brief.md)转成 Enterprise
+本文件把 [owner Rounds 1–5](../../../docs/research/agent-work-system/02-product-direction-decision-brief.md)转成 Enterprise
 candidate product design。Enterprise 未实现、未注册正式任务、未通过 release/Profile/Gate。
 node/workspace daemon 继续是 local authority 唯一 writer；central plane 不写 remote SQLite。
 

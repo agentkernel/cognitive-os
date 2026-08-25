@@ -1,6 +1,6 @@
 # M6 Batch-1：篡改拒装 tracer（Lane-RUN）
 
-> 用法：粘贴到干净 worktree 的新 Cursor Agent 会话。**前置**：Batch-0A（[m6-batch0-contracts.md](./m6-batch0-contracts.md)）已合入 main。本批只做到 VERIFIED/拒绝，不做完整 sandbox/adapter/OOB。
+> 用法：粘贴到干净 worktree 的新 Cursor Agent 会话。**前置**：Batch-0A（[m6-batch0-contracts.md](m6-batch0-contracts.md)）已合入 main。本批只做到 VERIFIED/拒绝，不做完整 sandbox/adapter/OOB。
 
 ---
 
@@ -36,7 +36,7 @@
 
 ## 第一个动作
 
-1. 读 `specs/agent-compatibility/README.md` §2、package/installation schema、Batch-0A 裁决。
+1. 读 `core/specs/agent-compatibility/README.md` §2、package/installation schema、Batch-0A 裁决。
 2. 先写上述失败测试（应失败）。
 3. 实现 verifier ports + orchestration 到绿。
 4. `cargo test`（相关包）+ consistency；更新 matrix/PROGRESS/handoff。

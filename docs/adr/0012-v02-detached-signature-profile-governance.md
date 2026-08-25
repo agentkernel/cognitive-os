@@ -7,7 +7,7 @@
 - Classification: structural docs-only design; no machine registration
 - Baseline: `origin/main@42d609b2f49e2db641f46aa99b6cc9a538a7f4fd`
   (PR #52 merge)
-- Decision packet: [V02-CA-SIG-01](../plan/V02-CA-SIG-DESIGN-DECISION.md)
+- Decision packet: [V02-CA-SIG-01](../plan/archive/V02-CA-SIG-DESIGN-DECISION.md)
 
 ## Context
 

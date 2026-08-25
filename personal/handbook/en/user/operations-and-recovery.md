@@ -6,35 +6,35 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/readiness.rs
+  - path: personal/apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
-  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/observation.rs
+  - path: personal/apps/kernel-server/src/personal/observation.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/six_resource_doctor.rs
-  - path: apps/admin-cli/src/personal_cli/daemon.rs
-  - path: apps/kernel-server/src/personal/user_backup.rs
+  - path: personal/apps/kernel-server/src/personal/six_resource_doctor.rs
+  - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
+  - path: personal/apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
-  - path: apps/admin-cli/src/personal_cli/backup.rs
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/apps/admin-cli/src/personal_cli/backup.rs
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["launch"]
-  - path: apps/admin-cli/src/personal_cli/provider.rs
-  - path: crates/cognitive-store/src/personal_backup.rs
+  - path: personal/apps/admin-cli/src/personal_cli/provider.rs
+  - path: personal/crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
-  - path: crates/cognitive-store/src/personal_db.rs
+  - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
-  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+  - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
-  - apps/kernel-server/tests/p1_t05_personal_readiness.rs
-  - apps/kernel-server/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:0c167fc221199969098248ed4cd55af4577ca12c3d4326fbb506c895ed4166fe"
+  - personal/apps/kernel-server/tests/p1_t05_personal_readiness.rs
+  - personal/apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
+fingerprint: "sha256:436cf76adf372a7e1dddf1d14a572bcff7c0ff29dab60a81b7ddaf21b5f5a7db"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -78,7 +78,7 @@ non_claims:
   it requires daemon-owned system/database/secret/daemon ready (Pi and Pi
   `provider.json` may stay blocked), loads the pinned AKP plugin, and never
   treats a dsh response as Task completion.
-  Direct Flash (`--path a`) is refused; use `packages/dsh-akp-adapter/scripts/paired-path.mjs`
+  Direct Flash (`--path a`) is refused; use `personal/packages/dsh-akp-adapter/scripts/paired-path.mjs`
   for same-host Path A vs Path B measurement only.
 - `cognitive dsh web` starts the native dsh control panel (`dsh --profile web --no-open`)
   at `http://127.0.0.1:3080` by default. This is not Personal `/ui/`. Bind is
@@ -188,7 +188,7 @@ reroute calls. Custom HTTP or private-network endpoints require durable
 send optional `expected_revision`; a mismatch is HTTP 409
 `PROVIDER_BINDING_REVISION_STALE`. Operator steps, worked commands, and common
 failures:
-[Provider Control Plane](./provider-control-plane.md).
+[Provider Control Plane](provider-control-plane.md).
 
 ## Backup and restore — `partial`
 

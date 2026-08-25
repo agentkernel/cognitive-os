@@ -6,18 +6,18 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
-  - path: apps/kernel-server/src/personal/observation.rs
-  - path: apps/kernel-server/src/personal/pi_runtime.rs
-  - path: apps/kernel-server/src/personal/pinned_https.rs
-  - path: apps/kernel-server/src/personal/provider_control_plane.rs
-  - path: apps/kernel-server/src/personal/resource_api.rs
-  - path: apps/kernel-server/src/personal/resource_manager.rs
-  - path: apps/kernel-server/src/personal/server.rs
-  - path: apps/kernel-server/src/personal/task_api.rs
-  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
-  - path: handbook/_meta/annotations/http-routes.json
-  - path: packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:ead9179c7cbdda5486df63a002af94b78b3ce8aba3fe68a955243e7a021ea2f2"
+  - path: personal/apps/kernel-server/src/personal/observation.rs
+  - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
+  - path: personal/apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: personal/apps/kernel-server/src/personal/resource_api.rs
+  - path: personal/apps/kernel-server/src/personal/resource_manager.rs
+  - path: personal/apps/kernel-server/src/personal/server.rs
+  - path: personal/apps/kernel-server/src/personal/task_api.rs
+  - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/handbook/_meta/annotations/http-routes.json
+  - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
+fingerprint: "sha256:00b63cca974a11ec333b0b7340f84244e0a84cf635220dc0a9d7b909eff12105"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

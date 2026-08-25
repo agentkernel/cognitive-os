@@ -2,10 +2,10 @@
 
 - Status: informative target/design composition
 - Change class: owner-approved `product-semantic + structural` documentation
-- Normative behavior: [Task/Loop/Verification](../../standards/task-loop-verification.md),
-  [Intent/Effect](../../standards/intent-effect-idempotency.md),
-  [authorization](../../standards/authn-authz-capability.md), and
-  [event/watch](../../standards/event-audit-watch.md)
+- Normative behavior: [Task/Loop/Verification](../../../docs/standards/task-loop-verification.md),
+  [Intent/Effect](../../../docs/standards/intent-effect-idempotency.md),
+  [authorization](../../../docs/standards/authn-authz-capability.md), and
+  [event/watch](../../../docs/standards/event-audit-watch.md)
 
 ## 1. Sole authority boundary
 
@@ -225,4 +225,4 @@ This recovery and sidecar composition is target/design, not a statement that it
 has been implemented or tested. Local, fixture, WSL and ordinary CI tests may
 prove implementation behavior but do not advance B01, B09, `GMVP-LINUX`, a
 release or Profile unless a preregistered campaign explicitly includes them.
-Current facts remain in [PROGRESS.md](../../plan/PROGRESS.md).
+Current facts remain in [PROGRESS.md](../../../docs/plan/PROGRESS.md).

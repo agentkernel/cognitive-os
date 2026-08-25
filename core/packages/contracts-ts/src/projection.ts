@@ -1,10 +1,10 @@
 /**
  * Digest projections, content-digest verification, canonical timestamp and
  * digest-string validation, and the unknown-critical-extension gate.
- * TypeScript twin of `crates/cognitive-contracts/src/projection.rs`
+ * TypeScript twin of `core/crates/cognitive-contracts/src/projection.rs`
  * (docs/standards/canonical-encoding-and-digest.md sections 3, 6, 8, 10,
  * 15); cross-language behavior pinned by
- * `tests/golden/digest-and-projection-fixtures.json`.
+ * `core/tests/golden/digest-and-projection-fixtures.json`.
  */
 
 import { canonicalize, digest } from "./canonical.js";

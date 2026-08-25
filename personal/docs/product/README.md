@@ -2,9 +2,9 @@
 
 - Status: canonical stable product-design index
 - Project: `cognitiveos-personal`
-- Current-status owner: [PROGRESS.md](../../plan/PROGRESS.md) `Current snapshot`
-- Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../plan/PERSONAL-DEVELOPMENT-PLAN.md)
-- Product decisions: [Personal ADRs](../../adr)
+- Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md) `Current snapshot`
+- Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
+- Product decisions: [Personal ADRs](../../../docs/adr)
 
 This directory owns stable product intent, user concepts, release boundaries
 and user journeys. It does not own implementation status, active leases,
@@ -18,7 +18,7 @@ low-friction place to organize and govern six user-visible families: Memory,
 Skill, Tool, Context, Task and Runtime/Process. A Pi-hosted Agent Shell is the
 primary conversational entry for Linux 1.0, while the Rust daemon remains the
 sole authority writer. Post-1.0 design (see
-[personal-2.0-scope.md](./personal-2.0-scope.md)) extends the same substrate to
+[personal-2.0-scope.md](personal-2.0-scope.md)) extends the same substrate to
 independently qualified Agents under a Universal Adapter Contract.
 
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
@@ -62,18 +62,18 @@ The stable top-level spaces are:
 
 | Document | Responsibility |
 |---|---|
-| [Product design](./product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
-| [Cognitive resource model](./cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
-| [Resource Manager](./resource-manager-design.md) | common list/inspect/watch/bind/unbind/enable/disable/revoke envelope; no generic create/install/execute/complete |
-| [Provider Control Plane](./provider-control-plane.md) | owner-local provider accounts, model discovery, fixed agent bindings, usage, cost, and soft alerts |
-| [Web UI product design](./web-ui-design.md) | post-1.0 localhost operator experience for Agents, Providers, bindings and Activity |
-| [Linux 1.0 scope](./linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
-| [Personal 2.0 scope](./personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
-| [User journeys](./user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
+| [Product design](product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
+| [Cognitive resource model](cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
+| [Resource Manager](resource-manager-design.md) | common list/inspect/watch/bind/unbind/enable/disable/revoke envelope; no generic create/install/execute/complete |
+| [Provider Control Plane](provider-control-plane.md) | owner-local provider accounts, model discovery, fixed agent bindings, usage, cost, and soft alerts |
+| [Web UI product design](web-ui-design.md) | post-1.0 localhost operator experience for Agents, Providers, bindings and Activity |
+| [Linux 1.0 scope](linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
+| [Personal 2.0 scope](personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
+| [User journeys](user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
 
 The baseline decisions are
-[ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md) and
-[ADR-0038](../../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md).
+[ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md) and
+[ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md).
 
 ## Non-duplication and non-claim rules
 
@@ -82,7 +82,7 @@ The baseline decisions are
 - `CognitiveResourceManifest` keeps its normative ActivityContext discovery
   meaning; it is not redefined as this product taxonomy.
 - Environment results are linked from
-  [PERSONAL-TEST-ENVIRONMENTS.md](../../plan/PERSONAL-TEST-ENVIRONMENTS.md).
+  [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
 - Release claims use only the exact scope proved by `GMVP-LINUX`.
 - Architecture presence, a documented Gate composition and these product
   decisions do not imply implementation, Gate, release or Profile evidence.

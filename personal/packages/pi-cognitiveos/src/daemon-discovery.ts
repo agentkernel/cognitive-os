@@ -1,6 +1,6 @@
 /**
  * Locate the Personal daemon the same way `cognitive` does (ADR-0022 §2,
- * `crates/cognitive-store/src/layout.rs`, `apps/admin-cli/src/personal_cli`).
+ * `personal/crates/cognitive-store/src/layout.rs`, `personal/apps/admin-cli/src/personal_cli`).
  *
  * The Extension reads exactly two local files:
  *   - `$XDG_STATE_HOME/cognitiveos/daemon-endpoint.json` — the loopback address

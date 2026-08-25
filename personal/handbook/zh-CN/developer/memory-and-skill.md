@@ -6,24 +6,24 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-store/src/sqlite/memory.rs
-  - path: crates/cognitive-store/src/memory_admission.rs
+  - path: personal/crates/cognitive-store/src/sqlite/memory.rs
+  - path: personal/crates/cognitive-store/src/memory_admission.rs
     symbols: ["admit_memory_candidate"]
-  - path: crates/cognitive-kernel/src/memory_admission.rs
+  - path: core/crates/cognitive-kernel/src/memory_admission.rs
     symbols: ["decide_memory_admission"]
-  - path: crates/cognitive-store/src/sqlite/harness_skill.rs
-  - path: apps/kernel-server/src/personal/resource_api.rs
-  - path: apps/kernel-server/src/personal/memory_skill_consumer.rs
+  - path: personal/crates/cognitive-store/src/sqlite/harness_skill.rs
+  - path: personal/apps/kernel-server/src/personal/resource_api.rs
+  - path: personal/apps/kernel-server/src/personal/memory_skill_consumer.rs
     symbols: ["load_governed_memory_skill_candidates"]
-  - path: crates/cognitive-store/src/memory_skill_consumption.rs
+  - path: personal/crates/cognitive-store/src/memory_skill_consumption.rs
     symbols: ["memory_skill_consumption_migration_entry"]
 tests:
-  - crates/cognitive-store/tests/p4_t01_memory_store.rs
-  - crates/cognitive-store/tests/p4_t02_memory_search.rs
-  - crates/cognitive-store/tests/p4_t04_skill_store.rs
-  - apps/kernel-server/tests/p4_t05_resource_api.rs
-  - apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:533041e14638e3cbe085677daa0be1cee801da0d55f923fc0c33390677e1cec3"
+  - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
+  - personal/crates/cognitive-store/tests/p4_t02_memory_search.rs
+  - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
+  - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
+  - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
+fingerprint: "sha256:8d488463a4a97229be07eb298e9d5ed5dbf8308ae487407be56f133f15c596f5"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---

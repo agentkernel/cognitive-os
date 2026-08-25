@@ -3,7 +3,7 @@
 ## 1. 本次会话完成
 
 - **规划会话交付（docs-only）**：落地 Post-v0.1 / Post-L3 下一阶段可执行任务计划，**未**执行代码战役、**未**改向量/pins、**未**跑 PERF。
-- Canonical 计划：[docs/plan/POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md)（A–D：目标边界、候选排序、主战役工作包、文档联动与提示词指针）。
+- Canonical 计划：[docs/plan/POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md)（A–D：目标边界、候选排序、主战役工作包、文档联动与提示词指针）。
 - 下一窗口执行提示词：[docs/prompts/cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)。
 - 规划入口提示词（可复用）：[docs/prompts/post-v01-next-phase-planning.md](../prompts/post-v01-next-phase-planning.md)。
 - 推荐**唯一**主战役：`CFR-M5-INTENT-AUTHORITY-SLICE`（Lane-CFR；建议分支 `lane/cfr-m5-intent-authority-slice`）。

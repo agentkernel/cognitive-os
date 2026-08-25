@@ -463,8 +463,8 @@ pub(super) fn intent_supersede_002_behavior(
                 "error": {"code": "OK", "category": "auth"}
             }),
             grounding: vec![
-                "specs/registry/errors.yaml#INTENT_VERSION_SUPERSEDED".into(),
-                "crates/cognitive-kernel/src/intent_chain.rs".into(),
+                "core/specs/registry/errors.yaml#INTENT_VERSION_SUPERSEDED".into(),
+                "core/crates/cognitive-kernel/src/intent_chain.rs".into(),
             ],
             informative: vec![],
             implementation: implementation_label(kind),
@@ -662,10 +662,10 @@ pub(super) fn intent_supersede_002_behavior(
             "error": error,
         }),
         grounding: vec![
-            "crates/cognitive-kernel/src/intent_chain.rs#supersede_task_contract".into(),
-            "crates/cognitive-kernel/src/effects.rs#mint_intent/dispatch_effect".into(),
+            "core/crates/cognitive-kernel/src/intent_chain.rs#supersede_task_contract".into(),
+            "core/crates/cognitive-kernel/src/effects.rs#mint_intent/dispatch_effect".into(),
             "crates/cognitive-store (SqliteAuthorityStore, WAL)".into(),
-            "specs/registry/errors.yaml#INTENT_VERSION_SUPERSEDED".into(),
+            "core/specs/registry/errors.yaml#INTENT_VERSION_SUPERSEDED".into(),
             "REQ-INTENT-SUPERSEDE-001".into(),
         ],
         informative: vec![],
@@ -905,7 +905,7 @@ pub(super) fn intent_acceptance_007_behavior(
                 "next_gate": "none"
             }),
             grounding: vec![
-                "specs/transitions/task.transitions.json".into(),
+                "core/specs/transitions/task.transitions.json".into(),
                 "REQ-INTENT-ACCEPT-001".into(),
             ],
             informative: vec![],
@@ -959,8 +959,8 @@ pub(super) fn intent_acceptance_007_behavior(
         grounding: vec![
             "crates/cognitive-kernel (TransitionEngine centralized gate)".into(),
             "crates/cognitive-store (SqliteAuthorityStore, WAL)".into(),
-            "specs/transitions/task.transitions.json#CANDIDATE_COMPLETE→COMPLETED".into(),
-            "specs/registry/errors.yaml#STATE_CONFLICT".into(),
+            "core/specs/transitions/task.transitions.json#CANDIDATE_COMPLETE→COMPLETED".into(),
+            "core/specs/registry/errors.yaml#STATE_CONFLICT".into(),
             "REQ-INTENT-ACCEPT-001".into(),
             "REQ-SHELL-STATUS-001".into(),
         ],

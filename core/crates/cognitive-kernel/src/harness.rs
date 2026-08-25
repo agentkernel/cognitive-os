@@ -1,7 +1,7 @@
 //! Deterministic kernel ports for the bounded Harness Loop
 //! (`docs/standards/task-loop-verification.md` section 4; REQ-RUN-004,
 //! REQ-RUN-005, REQ-RUN-007, REQ-RUN-008; loop table
-//! `specs/transitions/loop.transitions.json`).
+//! `core/specs/transitions/loop.transitions.json`).
 //!
 //! Division of labor (frozen for Lane-RUN): the OODA orchestration —
 //! which phase to enter, what to observe, when to diagnose — is the M5

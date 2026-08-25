@@ -13,7 +13,7 @@
 - 桌面平台切片（macOS/Linux/windows/parity/决策）：[clients/pc/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/pc/README.md)
 - 移动平台切片（iPhone/Android/parity/决策）：[clients/mobile/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/mobile/README.md)
 - Agent Hub 平台 parity：[clients/agent-hub/docs/platforms/agent-hub-platform-parity.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/platforms/agent-hub-platform-parity.md)
-- 激活前文档例外条款：[PARALLEL-LANES §2.1](../plan/PARALLEL-LANES.md)
+- 激活前文档例外条款：[PARALLEL-LANES §2.1](../../../docs/plan/PARALLEL-LANES.md)
 
 <a id="implementation-gate"></a>
 ## Console 实现 gate

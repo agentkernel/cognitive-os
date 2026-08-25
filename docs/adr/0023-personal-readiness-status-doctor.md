@@ -21,7 +21,7 @@ isolated crates to avoid taking Lane-RUN ownership.
 ## Decision
 
 1. Implement `evaluate_personal_readiness` in
-   `apps/kernel-server/src/personal/readiness.rs` (Personal composition root).
+   `personal/apps/kernel-server/src/personal/readiness.rs` (Personal composition root).
 2. Expose authenticated projections:
    - `GET /personal/status` and `GET /personal/readiness` (compact)
    - `GET /personal/doctor` (component facts, durations, guidance)

@@ -9,14 +9,14 @@ sources:
   - path: docs/governance/AXIOMS.md
     symbols: ["A1", "A8"]
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:7ee1b07070e3fe6e1c62a625e7de07a905056ac3a625c64a74cc94b2b3ae5068"
+fingerprint: "sha256:0b0b2e725a6c7bc2726a6f29ab1cc8430d8228527ca4856047c22c9194d1965f"
 non_claims:
   - 本页仅为导引摘要；具约束力的措辞由所链接的治理文档拥有。
 ---
 
 # 安全编辑边界
 
-## 绝不放松（公理，由 [`AXIOMS.md`](../../../docs/governance/AXIOMS.md) 拥有）
+## 绝不放松（公理，由 [`AXIOMS.md`](../../../../docs/governance/AXIOMS.md) 拥有）
 
 - A1/A2 —— 只有 Rust daemon 写权威状态；Pi、CLI、SDK、sidecar、fixture 与第三方
   agent 只产 candidate 与 observation。
@@ -30,14 +30,14 @@ non_claims:
 
 ## 受保护目录
 
-- `specs/**` 与 `conformance/**`：架构合同；禁止实现驱动的改写——真正的合同变更走
+- `core/specs/**` 与 `core/conformance/**`：架构合同；禁止实现驱动的改写——真正的合同变更走
   Lane-CTR，并同批联动 registry、schema、绑定、transition 与向量。
 - `docs/governance/**`、`docs/plan/**`：治理与正式计划来源；只能经各自治理流程与活动
   lease 修改。
 - `History/**`：冻结；绝不读取、引用或修改。`personal-blog/` 绝不进入本仓库。
-- 生成目录（`crates/cognitive-contracts/src/generated/`、
-  `packages/contracts-ts/src/generated/`、手册生成参考页、
-  `docs/traceability/matrix.yaml`、`tests/golden/*.json`）：只能经生成器再生；手改会
+- 生成目录（`core/crates/cognitive-contracts/src/generated/`、
+  `core/packages/contracts-ts/src/generated/`、手册生成参考页、
+  `docs/traceability/matrix.yaml`、`core/tests/golden/*.json`）：只能经生成器再生；手改会
   被 CI 漂移门拦截。
 
 ## 写入前必做
@@ -45,11 +45,11 @@ non_claims:
 1. 现读 `PROGRESS.md` Current snapshot 与 `PARALLEL-LANES.md` 活动 lease 表。可写权
    属是精确路径 lease；活动 lease 不得重叠。
 2. 一个正式任务 = 一个 branch、一个 Draft PR、一个 lease，直至完整验收
-   （[`DEVELOPMENT-OPERATING-MODEL.md`](../../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md)）。
+   （[`DEVELOPMENT-OPERATING-MODEL.md`](../../../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md)）。
 3. 声明变更类别（`implementation-only`、`corrective`、`product-semantic`、
    `normative-semantic`、`structural`），并在同一交付内完成
-   [`docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) 的联动义务。
-4. 查[文档影响](./docs-impact.md)：所改路径映射到的手册页必须在同一 PR 内更新或
+   [`docs-sync-contract.md`](../../../../docs/standards/docs-sync-contract.md) 的联动义务。
+4. 查[文档影响](docs-impact.md)：所改路径映射到的手册页必须在同一 PR 内更新或
    重生成。
 
 ## 本地环境硬事实
@@ -58,4 +58,4 @@ non_claims:
   `if ($LASTEXITCODE -eq 0) { … }`。
 - 本地 Windows GNU 主机无法链接 Rust（已登记 linker exit 121）：绝不在本机运行
   workspace `cargo build/test/clippy/run/bench`；路由到 CI 或 native Linux（见
-  [验证命令](./validation-commands.md)）。
+  [验证命令](validation-commands.md)）。

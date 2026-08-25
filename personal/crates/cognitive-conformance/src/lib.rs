@@ -1,9 +1,9 @@
 //! `cognitive-conformance`: conformance runner of the CognitiveOS reference
 //! implementation.
 //!
-//! M3 capability (Lane-CFR, per `docs/plan/DEVELOPMENT-PLAN.md`): enumerate
-//! the fifteen test layers of `conformance/README.md` and every declarative
-//! vector under `conformance/vectors/`, execute the statically decidable
+//! M3 capability (Lane-CFR, per `docs/plan/archive/DEVELOPMENT-PLAN.md`): enumerate
+//! the fifteen test layers of `core/conformance/README.md` and every declarative
+//! vector under `core/conformance/vectors/`, execute the statically decidable
 //! subset against deterministic reference gates grounded in the registered
 //! machine assets (schemas, registries, transition tables — see
 //! `exec::classify`), execute the M2 kernel-backed vectors behaviorally
@@ -16,7 +16,7 @@
 //! with a recorded reason.
 //!
 //! A schema-valid vector file is never reported as `pass`
-//! (`conformance/README.md` "Running"; REQ-CONF-* in the registry). The
+//! (`core/conformance/README.md` "Running"; REQ-CONF-* in the registry). The
 //! runner self-check (`exec::self_check`) proves a deliberately wrong,
 //! schema-valid implementation is failed.
 
@@ -32,7 +32,7 @@ pub use exec::{
 };
 
 /// Result states used in runner reports. The four executed-outcome states
-/// come from `conformance/README.md`; `not-run` is the report-level state for
+/// come from `core/conformance/README.md`; `not-run` is the report-level state for
 /// vectors that were enumerated but never executed
 /// (see `docs/standards/conformance-evidence.md`).
 pub const RESULT_STATES: [&str; 5] = [
@@ -43,7 +43,7 @@ pub const RESULT_STATES: [&str; 5] = [
     "not-run",
 ];
 
-/// The fifteen numbered test layers of `conformance/README.md`, with the
+/// The fifteen numbered test layers of `core/conformance/README.md`, with the
 /// vector `layer` slugs currently mapped to each. Layers 7 and 8 have no
 /// dedicated slug: their scenarios are cross-slice-hosted under other slugs
 /// (`CROSS_SLICE_HOSTED`, D-004 documented disposition).
@@ -117,7 +117,7 @@ pub const NUMBERED_LAYERS: [(u8, &str, &[&str]); 15] = [
 /// dedicated `layer` slug because their scenarios are genuinely
 /// cross-cutting; this mapping pins which vectors host them so the report
 /// shows the coverage instead of a misleading zero. Kept in sync with
-/// `conformance/README.md` ("Fifteen test layers" note).
+/// `core/conformance/README.md` ("Fifteen test layers" note).
 pub const CROSS_SLICE_HOSTED: [(u8, &[(&str, &str)]); 2] = [
     (
         7,
@@ -135,7 +135,7 @@ pub const CROSS_SLICE_HOSTED: [(u8, &[(&str, &str)]); 2] = [
 pub const CROSS_CUTTING_SLUGS: [&str; 1] = ["contract-traceability"];
 
 /// All thirteen profile keys required by
-/// `specs/schemas/profile-manifest.schema.json`.
+/// `core/specs/schemas/profile-manifest.schema.json`.
 pub const PROFILE_KEYS: [&str; 13] = [
     "core_digital",
     "distributed",
@@ -281,7 +281,7 @@ pub struct RunnerInfo {
 
 /// Enumerate and parse every vector under `<repo_root>/conformance/vectors`.
 pub fn enumerate_vectors(repo_root: &Path) -> Result<Vec<LoadedVector>, RunnerError> {
-    let dir = repo_root.join("conformance").join("vectors");
+    let dir = repo_root.join("core").join("conformance").join("vectors");
     let entries = fs::read_dir(&dir).map_err(|source| RunnerError::Io {
         path: dir.clone(),
         source,
@@ -353,7 +353,7 @@ pub fn enumerate_vectors(repo_root: &Path) -> Result<Vec<LoadedVector>, RunnerEr
             .unwrap_or_default();
         vectors.push(LoadedVector {
             id: field_str("id")?,
-            file: format!("conformance/vectors/{file_name}"),
+            file: format!("core/conformance/vectors/{file_name}"),
             layer_slug: field_str("layer")?,
             profiles: field_str_array("profiles")?,
             requirement_ids: field_str_array("requirement_ids")?,
@@ -457,7 +457,7 @@ pub fn build_report(outcomes: Vec<VectorOutcome>) -> ConformanceReport {
                vectors through the public fault-injection framework (CrashHarness + \
                ScriptedExecutor). Remaining behavioral layers stay not-run with recorded \
                reasons. A pass is scoped to its execution mode and is never a Profile claim; \
-               schema-valid parsing alone is never a pass (conformance/README.md; \
+               schema-valid parsing alone is never a pass (core/conformance/README.md; \
                docs/standards/conformance-evidence.md).",
         layers,
         cross_cutting,
@@ -481,7 +481,7 @@ pub fn human_summary(report: &ConformanceReport) -> String {
         report.summary.documented_degradation,
         report.summary.not_run
     ));
-    out.push_str("Layers (conformance/README.md numbering):\n");
+    out.push_str("Layers (core/conformance/README.md numbering):\n");
     for layer in &report.layers {
         let slugs = if layer.vector_slugs.is_empty() {
             "(cross-slice, D-004)".to_owned()
@@ -537,7 +537,7 @@ pub fn human_summary(report: &ConformanceReport) -> String {
 /// procedure implemented by `cognitive_contracts::bundle`; recipe documented
 /// in `docs/standards/conformance-evidence.md` section 6):
 ///
-/// - `schema_bundle_digest`: manifest over every `specs/schemas/*.json`
+/// - `schema_bundle_digest`: manifest over every `core/specs/schemas/*.json`
 ///   asset (id = file name == `$id`, suite version, schema media type,
 ///   per-asset canonical content digest), domain `schema-bundle/0.1`;
 /// - `requirement_set_digest`: manifest over the specification set beyond
@@ -569,7 +569,7 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
     };
 
     // Schema bundle assets: every registered schema, id = file name ($id).
-    let schema_dir = repo_root.join("specs").join("schemas");
+    let schema_dir = repo_root.join("core").join("specs").join("schemas");
     let entries = fs::read_dir(&schema_dir).map_err(|source| RunnerError::Io {
         path: schema_dir.clone(),
         source,
@@ -621,7 +621,7 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
     // projection) + transition tables, ids = repo-relative paths.
     let mut set_assets: Vec<BundleAsset> = Vec::new();
     for registry in ["requirements.yaml", "errors.yaml", "state-domains.yaml"] {
-        let path = repo_root.join("specs").join("registry").join(registry);
+        let path = repo_root.join("core").join("specs").join("registry").join(registry);
         let value: serde_json::Value =
             serde_yaml::from_str(&read(&path)?).map_err(|err| RunnerError::InvalidRegistry {
                 path: path.clone(),
@@ -630,7 +630,7 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
         let content_digest = bundle::asset_content_digest(&value, SPEC_SET_DOMAIN)
             .map_err(bundle_err(&path.display().to_string()))?;
         set_assets.push(BundleAsset {
-            id: format!("specs/registry/{registry}"),
+            id: format!("core/specs/registry/{registry}"),
             version: SPEC_SUITE_VERSION.to_owned(),
             media_type: MEDIA_TYPE_YAML.to_owned(),
             content_digest,
@@ -638,6 +638,7 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
     }
     for domain in ["agent-execution", "effect", "loop", "task", "verification"] {
         let path = repo_root
+            .join("core")
             .join("specs")
             .join("transitions")
             .join(format!("{domain}.transitions.json"));
@@ -658,7 +659,7 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
             }
         })?;
         set_assets.push(BundleAsset {
-            id: format!("specs/transitions/{domain}.transitions.json"),
+            id: format!("core/specs/transitions/{domain}.transitions.json"),
             version: SPEC_SUITE_VERSION.to_owned(),
             media_type: MEDIA_TYPE_JSON.to_owned(),
             content_digest,
@@ -672,7 +673,7 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
 
 /// Build the sample profile manifest: every profile `planned`, zero test
 /// runs, no conformance claim. Validated against
-/// `specs/schemas/profile-manifest.schema.json` by the repo tools in CI.
+/// `core/specs/schemas/profile-manifest.schema.json` by the repo tools in CI.
 /// Static-contract vector passes do not move any profile off `planned`:
 /// `implemented` requires behavioral evidence for every applicable MUST
 /// (`docs/standards/conformance-evidence.md` section 5).
@@ -791,7 +792,7 @@ pub fn release_candidate_profile_manifest(
                 "effect_recovery": "reconcile_or_quarantine"
             },
             "test_runs": [{
-                "suite": "conformance/vectors",
+                "suite": "core/conformance/vectors",
                 "suite_digest": report_digest,
                 "result_ref": "./conformance-report.json",
                 "status": status
@@ -828,6 +829,7 @@ pub fn release_candidate_profile_manifest(
 pub fn golden_fixture_digest(repo_root: &Path) -> Result<String, RunnerError> {
     use cognitive_contracts::canonical;
     let path = repo_root
+        .join("core")
         .join("tests")
         .join("golden")
         .join("canonical-json-fixtures.json");
@@ -857,7 +859,7 @@ mod tests {
     fn outcome(id: &str, slug: &str, result: &'static str) -> VectorOutcome {
         VectorOutcome {
             id: id.to_owned(),
-            file: format!("conformance/vectors/{}.json", id.to_lowercase()),
+            file: format!("core/conformance/vectors/{}.json", id.to_lowercase()),
             layer_slug: slug.to_owned(),
             profiles: vec!["core_digital".to_owned()],
             requirement_ids: vec!["REQ-OBJ-001".to_owned()],

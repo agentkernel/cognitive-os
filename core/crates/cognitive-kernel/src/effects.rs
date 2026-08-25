@@ -4,7 +4,7 @@
 //!
 //! Seven-property model (IMP-07). Each property names its deterministic
 //! enforcement point here and its behavioral test in
-//! `crates/cognitive-store/tests/m4_effects.rs` /
+//! `personal/crates/cognitive-store/tests/m4_effects.rs` /
 //! `m4_recovery.rs` / `m4_tracer_bullet.rs`:
 //!
 //! 1. **Idempotency**: one key per logical attempt chain, minted at Intent

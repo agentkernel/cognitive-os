@@ -1,12 +1,12 @@
 # Post-v0.1 / Post-L3 下一阶段开发与调试测试任务计划
 
-- 状态：active（2026-07-23）；`V02-CA-GOV-00` 与 OPS/TARGET/SIG/AUDIT docs-only 设计已合入；AUDIT exact merged design 的 owner-authorized security/audit/compliance review 已完成且未发现阻断性设计缺陷，但不是外部人类、第三方或 GitHub review；SIG independent security/cryptography review 仍未完成；[V02-CA-OPS-REG-READINESS-01](./V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md) 判定八项 operation candidates 全部 blocked，foundation choices 亦未唯一闭合；OPS/TARGET/SIG/AUDIT machine contracts 全部未登记，D-016 open，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
-- 承接：[20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
-- 对齐：[DEVELOPMENT-PLAN.md](./DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](./V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](./V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../traceability/findings-ledger.md)
-- RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
-- CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
+- 状态：active（2026-07-23）；`V02-CA-GOV-00` 与 OPS/TARGET/SIG/AUDIT docs-only 设计已合入；AUDIT exact merged design 的 owner-authorized security/audit/compliance review 已完成且未发现阻断性设计缺陷，但不是外部人类、第三方或 GitHub review；SIG independent security/cryptography review 仍未完成；[V02-CA-OPS-REG-READINESS-01](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md) 判定八项 operation candidates 全部 blocked，foundation choices 亦未唯一闭合；OPS/TARGET/SIG/AUDIT machine contracts 全部未登记，D-016 open，D-022 与 CA-1～CA-8 blocker 不变；pins **59/25**；self-check **40**；类别 plan（informative）
+- 承接：[20260721-v01-rereview.md](../../checkpoints/20260721-v01-rereview.md)（GO-with-explicit-non-claim）+ [20260721-v01-auto-run-l3-handoff.md](../../checkpoints/20260721-v01-auto-run-l3-handoff.md)（L3 non-claim）
+- 对齐：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md)、[V01-AUTO-RUN-VERIFY-PERF-PLAN.md](V01-AUTO-RUN-VERIFY-PERF-PLAN.md)、[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（附录；默认不触发）、[findings-ledger.md](../../traceability/findings-ledger.md)
+- RUN handoff：[20260722-lane-run-shell-target-ambiguity-handoff.md](../../checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md)
+- CFR handoff：[20260722-lane-cfr-shell-target-ambiguity-handoff.md](../../checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md)
 - 产品优先级（ADR-0015）：普通用户与一般企业以 Ordinary Core 为默认范围；SIG/AUDIT/TARGET 的独立审查、外部 verifier、签名、留存/导出与复杂配置 authority 维持 High-Assurance deferred/tracking，不作为近期普通产品交付的日常门禁。D-016/D-022 的事实、registration/Profile claim 门禁不变；不得登记 placeholder、虚构外部证据或批量清 not-run。
-- 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](./PROGRESS.md)
+- 更新责任：主战役合入或候选优先级变更时同批更新本文件与 [PROGRESS.md](../PROGRESS.md)
 
 ## A. 阶段目标与边界
 
@@ -112,7 +112,7 @@
 
 **defer-1：PERF-004 campaign / PERF-005 benefit**
 
-- [V01-PERF-CAMPAIGN-PLAN.md](./V01-PERF-CAMPAIGN-PLAN.md) 已明确为 informative appendix，默认不执行。
+- [V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md) 已明确为 informative appendix，默认不执行。
 - PERF-004 触发需 HUMAN-PERF004-CAMPAIGN、L2 green、硬件拓扑/并发预注册和 campaign digest；PERF-005 还需 M7+ 四臂 harness、BenchmarkManifest、独立 verifier。当前不得把 sample/builder 写成 campaign 或 benefit。
 
 **defer-2：MGMT-FALLBACK-008 全族（OPS/TARGET/SIG/AUDIT designs merged；machine registration / implementation blocked）**
@@ -146,7 +146,7 @@
 
 **车道与分支：**Lane-CFR；建议 `lane/cfr-m5-intent-authority-slice`。依赖的 KRN/RUN 代码只读消费；若发现业务实现缺陷，停止并另开所属车道分支，不在 CFR 分支越权修复。
 
-**执行提示词：**[cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)
+**执行提示词：**[cfr-m5-intent-authority-slice.md](../../prompts/cfr-m5-intent-authority-slice.md)
 
 ### 工作包
 
@@ -247,4 +247,4 @@
 
 ## D. 下一窗口执行提示词
 
-完整可粘贴正文见 [docs/prompts/cfr-m5-intent-authority-slice.md](../prompts/cfr-m5-intent-authority-slice.md)。
+完整可粘贴正文见 [docs/prompts/cfr-m5-intent-authority-slice.md](../../prompts/cfr-m5-intent-authority-slice.md)。

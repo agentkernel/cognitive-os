@@ -6,21 +6,21 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: deploy/linux/install.sh
-  - path: crates/cognitive-runtime/src/linux_bundle_service.rs
+  - path: personal/deploy/linux/install.sh
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["cognitiveos-personal.service"]
-  - path: apps/admin-cli/src/personal_cli/init.rs
+  - path: personal/apps/admin-cli/src/personal_cli/init.rs
     symbols: ["run_init"]
-  - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["COGNITIVE_USAGE"]
-  - path: apps/admin-cli/src/personal_cli/daemon.rs
-  - path: apps/admin-cli/src/personal_cli/pi.rs
+  - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
+  - path: personal/apps/admin-cli/src/personal_cli/pi.rs
 tests:
-  - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
-  - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
-  - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:197ab38453e6b0c0ea2ca6c4c6819b79a1eaaabe97fc1ccefb248c65afd2911a"
+  - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
+  - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
+  - personal/apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
+fingerprint: "sha256:ace7c10d3efbc0516ab7a519ec384fd251e8e95b467cfc77d83ebcdcc42481f6"
 non_claims:
   - There is no public production release artifact yet; installable bundles are experimental campaign builds.
   - This guide does not claim a Gate, Profile, production readiness, or Windows installation.
@@ -117,5 +117,5 @@ SQLite. Run the preflight before a restore. After recovery, re-run `cognitive
 status` and `cognitive doctor`; if the secret store no longer has the key, run
 `cognitive init` again.
 
-For troubleshooting, see [Operations and recovery](./operations-and-recovery.md),
-[Provider and secrets](./provider-and-secrets.md), and [Known limitations](./known-limitations.md).
+For troubleshooting, see [Operations and recovery](operations-and-recovery.md),
+[Provider and secrets](provider-and-secrets.md), and [Known limitations](known-limitations.md).

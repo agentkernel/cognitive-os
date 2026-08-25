@@ -5,10 +5,10 @@ architecture_layer:
   id: cognitiveos-architecture
   status: reference-and-contract-foundation
   sources:
-    - docs/architecture/cognitiveos/CognitiveOS-Architecture.md
-    - docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
-    - specs/
-    - conformance/
+    - core/docs/architecture/CognitiveOS-Architecture.md
+    - core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
+    - core/specs/
+    - core/conformance/
 active_project:
   id: cognitiveos-personal
   name: CognitiveOS Personal
@@ -16,8 +16,8 @@ active_project:
   formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
   current_snapshot: docs/plan/PROGRESS.md
   lease_ledger: docs/plan/PARALLEL-LANES.md
-  product_design: docs/product/personal/README.md
-  architecture_design: docs/architecture/personal/README.md
+  product_design: personal/docs/product/README.md
+  architecture_design: personal/docs/architecture/README.md
 canonical_sources:
   project_identity: docs/governance/PROJECT-IDENTITY.md
   axioms: docs/governance/AXIOMS.md

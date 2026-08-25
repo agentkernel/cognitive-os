@@ -1252,7 +1252,7 @@ mod tests {
         let deployment =
             LinuxBundleDeployment::open(temporary_directory.path().join("deploy")).unwrap();
         deployment.replace_active_version("1.0.0").unwrap();
-        fs::create_dir_all(temporary_directory.path().join("deploy/versions/1.0.0")).unwrap();
+        fs::create_dir_all(temporary_directory.path().join("personal/deploy/versions/1.0.0")).unwrap();
         let bundle_directory = temporary_directory.path().join("bundle");
         fs::create_dir(&bundle_directory).unwrap();
         write_bundle(&bundle_directory, "2.0.0");
@@ -1275,13 +1275,13 @@ mod tests {
         assert!(
             temporary_directory
                 .path()
-                .join("deploy/versions/1.0.0")
+                .join("personal/deploy/versions/1.0.0")
                 .is_dir()
         );
         assert!(
             temporary_directory
                 .path()
-                .join("deploy/versions/2.0.0")
+                .join("personal/deploy/versions/2.0.0")
                 .is_dir()
         );
     }

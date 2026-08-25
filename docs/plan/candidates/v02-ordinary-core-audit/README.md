@@ -12,7 +12,7 @@ independent final-byte review.
 
 This directory freezes the smallest candidate contract needed by the implemented
 Ordinary Core `status.inspect` audit-before-result path. It is deliberately
-outside `specs/`, registries, transitions, and conformance vectors. Its JSON
+outside `core/specs/`, registries, transitions, and conformance vectors. Its JSON
 objects are review inputs only; they create no generated bindings, machine
 registration, CA-0 GO, behavior-pass, or Profile-implemented claim.
 

@@ -1,9 +1,9 @@
 # V01 Auto-Run / Verify / Perf Plan（无人值守优先）
 
 - 状态：active（2026-07-21）；类别 plan（informative）
-- Canonical 一键编排计划；承接 [M6-EXIT-PLAN.md](./M6-EXIT-PLAN.md) / [20260721-v01-rereview.md](../checkpoints/20260721-v01-rereview.md) 的 **GO-with-explicit-non-claim**
-- 更新责任：编排脚本或 pins/入口面变化时同批更新本文件与 [PROGRESS.md](./PROGRESS.md)
-- 战役升格附录：[V01-PERF-CAMPAIGN-PLAN.md](./V01-PERF-CAMPAIGN-PLAN.md)（默认不触发）
+- Canonical 一键编排计划；承接 [M6-EXIT-PLAN.md](M6-EXIT-PLAN.md) / [20260721-v01-rereview.md](../../checkpoints/20260721-v01-rereview.md) 的 **GO-with-explicit-non-claim**
+- 更新责任：编排脚本或 pins/入口面变化时同批更新本文件与 [PROGRESS.md](../PROGRESS.md)
+- 战役升格附录：[V01-PERF-CAMPAIGN-PLAN.md](V01-PERF-CAMPAIGN-PLAN.md)（默认不触发）
 
 ## 1 页执行摘要
 
@@ -157,10 +157,10 @@ flowchart TD
 
 ## F. Batch 拆分与提示词
 
-1. Batch-A：入口 + 平台 + 编排骨架 — [v01-auto-orchestrator.md](../prompts/v01-auto-orchestrator.md)
-2. Batch-B：Boot + Connect — [v01-auto-boot-connect.md](../prompts/v01-auto-boot-connect.md)
-3. Batch-C：Verify — [v01-auto-verify-regress.md](../prompts/v01-auto-verify-regress.md)
-4. Batch-D：Perf — [v01-auto-perf-report.md](../prompts/v01-auto-perf-report.md)
+1. Batch-A：入口 + 平台 + 编排骨架 — [v01-auto-orchestrator.md](../../prompts/v01-auto-orchestrator.md)
+2. Batch-B：Boot + Connect — [v01-auto-boot-connect.md](../../prompts/v01-auto-boot-connect.md)
+3. Batch-C：Verify — [v01-auto-verify-regress.md](../../prompts/v01-auto-verify-regress.md)
+4. Batch-D：Perf — [v01-auto-perf-report.md](../../prompts/v01-auto-perf-report.md)
 5. Batch-E：本计划 + summary 模板
 
 ---

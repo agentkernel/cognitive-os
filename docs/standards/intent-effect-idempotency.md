@@ -5,8 +5,8 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: `specs/schemas/intent.schema.json`,
-  `effect.schema.json`, `specs/transitions/effect.transitions.json`,
+- Machine assets: `core/specs/schemas/intent.schema.json`,
+  `effect.schema.json`, `core/specs/transitions/effect.transitions.json`,
   `loop-checkpoint.schema.json`
 - Normative sources: Core companion; whitepaper sections 11, 16 (informative)
 
@@ -42,7 +42,7 @@ the Intent and appending its event MUST be one atomic transaction
 blindly. From unknown, the only exits are reconciliation to a confirmed
 outcome or quarantine (`EFFECT_RECOVERY_QUARANTINED`); there is no direct
 path from unknown to VERIFIED/COMMITTED
-(`specs/transitions/effect.transitions.json`, vector
+(`core/specs/transitions/effect.transitions.json`, vector
 `effect-unknown-outcome.json`, [REQ-EFF-004]). A receipt, a remote
 `completed` flag, or a model narrative is never acceptance ([REQ-GW-002],
 vector `remote-completed-not-acceptance.json`). Compensation is a new Intent

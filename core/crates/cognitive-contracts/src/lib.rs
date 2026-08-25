@@ -3,7 +3,7 @@
 //!
 //! Scope: canonical JSON encoding, domain-separated digests and signature
 //! preimages, strict parsing, the shared golden fixtures under
-//! `tests/golden/`, and the schema-generated Rust bindings for the IMP-08
+//! `core/tests/golden/`, and the schema-generated Rust bindings for the IMP-08
 //! minimal core object set (`generated`, emitted by the committed
 //! `contracts-codegen` binary per `docs/adr/0006-code-generation-policy.md`;
 //! CI regenerates and diffs).

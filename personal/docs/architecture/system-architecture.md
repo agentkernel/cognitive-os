@@ -3,8 +3,8 @@
 - Status: informative target/design architecture
 - Change class: owner-approved `product-semantic + structural` documentation
 - Product release target: Linux 1.0 through `GMVP-LINUX`
-- Existing decisions: [ADR-0035](../../adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
-  [ADR-0036](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
+- Existing decisions: [ADR-0035](../../../docs/adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
+  [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
 
 ## 1. Architectural purpose and invariant
 
@@ -320,6 +320,6 @@ grant capability or dispatch work by themselves.
 This document defines target composition only. It does not assert that all six
 domain services, the sidecar, UCR-01, managed Pi lifecycle, Task/Tool/recovery
 closure, any Gate, Linux release or Profile are implemented or passed. Exact
-current facts remain only in [PROGRESS.md](../../plan/PROGRESS.md); formal task
+current facts remain only in [PROGRESS.md](../../../docs/plan/PROGRESS.md); formal task
 and Gate meaning remains in the
-[Personal development plan](../../plan/PERSONAL-DEVELOPMENT-PLAN.md).
+[Personal development plan](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md).

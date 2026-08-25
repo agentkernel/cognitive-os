@@ -6,30 +6,30 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-kernel/src/engine.rs
+  - path: core/crates/cognitive-kernel/src/engine.rs
     symbols: ["TransitionEngine", "prepare_object_admission", "prepare_transition", "validate_registered_transition"]
-  - path: crates/cognitive-kernel/src/intent_chain.rs
+  - path: core/crates/cognitive-kernel/src/intent_chain.rs
     symbols: ["record_user_intent", "admit_interpretation", "mint_schedulable_task_contract", "prepare_task_execution_bootstrap", "supersede_task_contract", "verify_task_binding_current"]
-  - path: crates/cognitive-kernel/src/effects.rs
+  - path: core/crates/cognitive-kernel/src/effects.rs
     symbols: ["EffectProtocol", "mint_intent", "COMMIT_SINKS"]
-  - path: crates/cognitive-kernel/src/authz.rs
+  - path: core/crates/cognitive-kernel/src/authz.rs
     symbols: ["authorize", "revalidate_grant", "capability_and_revocation_current"]
-  - path: crates/cognitive-kernel/src/budget.rs
+  - path: core/crates/cognitive-kernel/src/budget.rs
     symbols: ["check_and_debit"]
-  - path: crates/cognitive-kernel/src/recovery.rs
+  - path: core/crates/cognitive-kernel/src/recovery.rs
     symbols: ["RECOVERY_ORDER", "run_recovery"]
-  - path: crates/cognitive-kernel/src/harness.rs
+  - path: core/crates/cognitive-kernel/src/harness.rs
     symbols: ["return_to_decide_after_closed_effect", "advance_start_to_decide_after_context_view"]
 contracts:
-  - specs/transitions/effect.transitions.json
-  - specs/transitions/task.transitions.json
-  - specs/registry/errors.yaml
+  - core/specs/transitions/effect.transitions.json
+  - core/specs/transitions/task.transitions.json
+  - core/specs/registry/errors.yaml
 tests:
-  - crates/cognitive-kernel/tests/engine_gate.rs
-  - crates/cognitive-kernel/tests/governance_gate.rs
-  - crates/cognitive-store/tests/m4_effects.rs
-  - crates/cognitive-store/tests/m4_recovery.rs
-fingerprint: "sha256:530000ebd734a26292cfa479c1a10ee2aaaff0a651e433336ac8103d26dc5047"
+  - core/crates/cognitive-kernel/tests/engine_gate.rs
+  - core/crates/cognitive-kernel/tests/governance_gate.rs
+  - personal/crates/cognitive-store/tests/m4_effects.rs
+  - personal/crates/cognitive-store/tests/m4_recovery.rs
+fingerprint: "sha256:e62c2e615469692d713e557c76f6716b25e6282c8d1f250ab19c66abd7e9d368"
 non_claims:
   - 内核正确性证据是聚焦测试证据，不构成 Gate、release 或 Profile 结论。
 ---

@@ -54,7 +54,7 @@ immutable managed installation. Pi is therefore not a workspace dependency of
 this Extension: `src/pi-api.ts` declares the reviewed structural API mirror and
 nothing Pi-related enters `pnpm-lock.yaml`. The compatibility pin in
 `src/pin.ts` is drift-checked against the authoritative Rust
-`PiCompatibilityPin` in `apps/pi-agent-adapter/src/lib.rs`.
+`PiCompatibilityPin` in `personal/apps/pi-agent-adapter/src/lib.rs`.
 
 ## Daemon discovery
 
@@ -82,4 +82,4 @@ uninstall Pi as a managed Agent; those are the separate P5-T01/P5-T02 track.
 
 Nothing in this package alone is a B01-B12, `GMVP-LINUX`, C0/C1, Profile, or
 release claim. Current status and evidence scope are owned by
-[`PROGRESS.md`](../../docs/plan/PROGRESS.md), not by this README.
+[`PROGRESS.md`](../../../docs/plan/PROGRESS.md), not by this README.

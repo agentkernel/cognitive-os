@@ -2,7 +2,7 @@
  * Bounded loopback client for the Personal daemon front door (ADR-0022).
  *
  * This is the Extension's only source of CognitiveOS facts. It speaks exactly
- * the protocol `apps/kernel-server/src/personal/server.rs` implements:
+ * the protocol `personal/apps/kernel-server/src/personal/server.rs` implements:
  *
  *   - `POST /local/session` with `{channel, principal_id, bootstrap_secret}`
  *     mints a channel-scoped bearer;

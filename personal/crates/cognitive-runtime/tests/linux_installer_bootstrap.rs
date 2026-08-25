@@ -7,14 +7,14 @@ use std::path::{Path, PathBuf};
 fn repository_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
-        .nth(2)
+        .nth(3)
         .expect("runtime crate must be nested under repository root")
         .to_path_buf()
 }
 
 #[test]
 fn production_template_contains_only_inspected_fail_closed_bootstrap_primitives() {
-    let template = std::fs::read_to_string(repository_root().join("deploy/linux/install.sh"))
+    let template = std::fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh"))
         .expect("production bootstrap template must exist");
 
     for required_fragment in [
@@ -107,7 +107,7 @@ mod unix {
 
             let rendered_installer = temporary_directory.path().join("install.sh");
             let template =
-                fs::read_to_string(repository_root().join("deploy/linux/install.sh")).unwrap();
+                fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh")).unwrap();
             let rendered = render_template(&template, &public_key, &installer_digest);
             fs::write(&rendered_installer, rendered).unwrap();
             fs::set_permissions(&rendered_installer, fs::Permissions::from_mode(0o700)).unwrap();
@@ -222,7 +222,7 @@ mod unix {
     fn unrendered_template_rejects_before_network_access() {
         let fixture = BootstrapFixture::new();
         let output = Command::new("sh")
-            .arg(repository_root().join("deploy/linux/install.sh"))
+            .arg(repository_root().join("personal/deploy/linux/install.sh"))
             .env(
                 "PATH",
                 format!("{}:/usr/bin:/bin", fixture.fake_curl_directory.display()),
@@ -277,7 +277,7 @@ mod unix {
     fn installer_digest_mismatch_prevents_execution() {
         let fixture = BootstrapFixture::new();
         let rendered = render_template(
-            &fs::read_to_string(repository_root().join("deploy/linux/install.sh")).unwrap(),
+            &fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh")).unwrap(),
             &fixture.public_key,
             "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         );

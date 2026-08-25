@@ -1,7 +1,7 @@
 //! `cognitive-store`: persistence adapter of the CognitiveOS reference
 //! implementation.
 //!
-//! M2 scope (per `docs/plan/DEVELOPMENT-PLAN.md`): the SQLite (WAL)
+//! M2 scope (per `docs/plan/archive/DEVELOPMENT-PLAN.md`): the SQLite (WAL)
 //! authority store implementing the `cognitive-kernel` port traits —
 //! governed object rows with CAS versioning, the append-only event log
 //! (storage-level triggers), transition records, the outbox, and hard

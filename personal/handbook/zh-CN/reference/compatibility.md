@@ -8,10 +8,10 @@ generated: false
 sources:
   - path: rust-toolchain.toml
   - path: package.json
-  - path: apps/admin-cli/src/personal_cli/pi.rs
+  - path: personal/apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
-  - path: docs/product/personal/linux-1.0-scope.md
-fingerprint: "sha256:91f1a3bd03ccefc894beffbc727d519531df4f509cc70a77f08a320808651640"
+  - path: personal/docs/product/linux-1.0-scope.md
+fingerprint: "sha256:fbab466a1f8f3f6b85621c162462fc69e2592ac3b4aaf6e8678c135f33408b33"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---

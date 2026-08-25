@@ -3,8 +3,8 @@
 Date: 2026-08-25
 Status: **candidate / owner-confirmed discovery / non-canonical / no implementation authorization**
 
-本文件描述 [Personal 产品](./03-personal-product-design.md)的候选 architecture。它不修改
-contract、schema、transition、ADR、code 或正式计划。`docs/design/26–41` 是 2026-08-24
+本文件描述 [Personal 产品](03-personal-product-design.md)的候选 architecture。它不修改
+contract、schema、transition、ADR、code 或正式计划。`clients/docs/design/26–41` 是 2026-08-24
 dated baseline；本文只记录 owner-confirmed delta。
 
 ## 1. Capability truth
@@ -122,7 +122,7 @@ Tauri 是 **conditionally preferred/adopt candidate**。Electron 默认 reject�
 
 Spike output 是 Candidate ADR input，不是自动 selection。不得因 Rust 与 daemon 同语言就
 推定 Tauri 更安全，也不得因 Electron 成熟就忽略 Node/Chromium attack surface。Tauri
-必须满足 [OSS assessment](./12-open-source-reuse-assessment.md) 的 exact-version、CSP、
+必须满足 [OSS assessment](12-open-source-reuse-assessment.md) 的 exact-version、CSP、
 IPC、updater、SBOM、accessibility、origin-confusion 与 removal gates。
 
 ## 6. P0 data flows
@@ -366,7 +366,7 @@ release/Profile/Gate。本文未运行任何 product validation。
 
 ## 15. Baseline delta, risks, open questions
 
-相对 `docs/design/26–41`：
+相对 `clients/docs/design/26–41`：
 
 - KEEP existing Web client logic、loopback auth、daemon routes 与 page-level refactor strategy；
 - NEW native shell boundary 与 fixed framework spike；
@@ -399,7 +399,7 @@ Context policy engine or completion verifier。
 | MCP TS SDK | post-1.0 protocol dependency | Tool adapter | framed descriptor/call/result candidates | dynamic auto-enable、registry trust、Tool authority |
 
 Detailed license/security/PoC evidence is in
-[12-open-source-reuse-assessment.md](./12-open-source-reuse-assessment.md).
+[12-open-source-reuse-assessment.md](12-open-source-reuse-assessment.md).
 
 ### 16.1 Adapter lifecycle
 
@@ -551,5 +551,5 @@ is not capability evidence。
 This architecture supports a **Personal Desktop 1.0 candidate** only。Accepted ADR-0036/formal plan
 remain authoritative for Linux `1.0.0`。Tauri preference、OSS adapters、Conversation archive、
 Continuation Package and candidate APIs are not selected or implemented。Canonicalization follows
-[baseline delta §8](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md) after D13 ownership
-resolution and requires [validation gates](./10-validation-and-delivery-readiness.md).
+[baseline delta §8](13-control-plane-baseline-to-personal-desktop-1.0-delta.md) after D13 ownership
+resolution and requires [validation gates](10-validation-and-delivery-readiness.md).

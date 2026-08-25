@@ -3,7 +3,7 @@
 # Release automation renders every CognitiveOS policy placeholder below into a
 # reviewed, version-specific script before publication. The source template
 # deliberately fails closed and must not be represented as a usable release
-# installer. It mirrors deploy/linux/install.sh: policy validation before any
+# installer. It mirrors personal/deploy/linux/install.sh: policy validation before any
 # network or filesystem action, a private owned temporary directory, bounded
 # HTTPS-only downloads through the absolute System32 curl.exe, digest
 # verification of the downloaded installer, and delegation to that verified

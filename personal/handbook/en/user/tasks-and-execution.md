@@ -6,18 +6,18 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/task_api.rs
+  - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
-  - path: crates/cognitive-management/src/task_application.rs
+  - path: personal/crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
-  - path: crates/cognitive-kernel/src/intent_chain.rs
+  - path: core/crates/cognitive-kernel/src/intent_chain.rs
     symbols: ["record_user_intent", "mint_schedulable_task_contract"]
-  - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
+  - path: personal/apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick"]
 tests:
-  - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-  - crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:6107d5cc09985149edccc0da4e15028b79aa4c3bea63e5477e17a13b10cb8100"
+  - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
+  - personal/crates/cognitive-store/tests/m5_intent_chain.rs
+fingerprint: "sha256:4d5da7fad11014cc66879490ff44e68c1a668e51e03db5f36e3bff1b8b716811"
 non_claims:
   - Admission still does not consume the worker authorization or acquire a scheduler lease on the same pass; a later tick does. No Gate, release, Profile, or EVAL promotion.
 ---

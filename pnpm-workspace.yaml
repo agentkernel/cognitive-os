@@ -1,6 +1,8 @@
 packages:
-  - packages/*
-  - apps/agent-shell
+  - core/packages/*
+  - personal/packages/*
+  - personal/apps/agent-shell
   - tools
-# apps/cognitiveos-console is a planned product-design folder (no package.json);
-# it is intentionally NOT part of the pnpm workspace until its lane is activated.
+# clients/ carries the imported cognitiveos-clients project (own package
+# manifests under clients/pc/web etc.); it stays outside this workspace until
+# its packages are intentionally adopted (ADR-0054).

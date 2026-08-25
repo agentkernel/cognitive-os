@@ -6,7 +6,7 @@
 
 你是 CognitiveOS Lane-CTR 工程代理。开工前：`git fetch origin main`；`git status`；保护未提交改动；逐路径 `git add`，禁 `git add -A`。从最新 `origin/main` 建分支 `lane/ctr-m6-bindings`（干净 worktree）。
 
-**接入**：`AGENTS.md` → `docs/plan/PROGRESS.md` → `docs/plan/M6-PLAN.md` WP0 → 最近 handoff。对照 `PARALLEL-LANES.md`：本批只动 `crates/cognitive-contracts`、`packages/contracts-ts`、codegen 工具、必要 docs（ledger/PROGRESS/handoff）。
+**接入**：`AGENTS.md` → `docs/plan/PROGRESS.md` → `docs/plan/archive/M6-PLAN.md` WP0 → 最近 handoff。对照 `PARALLEL-LANES.md`：本批只动 `crates/cognitive-contracts`、`packages/contracts-ts`、codegen 工具、必要 docs（ledger/PROGRESS/handoff）。
 
 ## 目标
 
@@ -17,9 +17,9 @@
    - `performance-report.schema.json`
    - `profile-manifest.schema.json`（若尚未在生成集）
 2. 出具合同裁决并登记台账：
-   - **无** `specs/transitions/*installation*` 机器表 → 实现按 companion prose 状态序列；禁止声称“安装迁移表已消费”；是否构成修正型漏登由本批证明，**默认不新增表**（IMP-01 冻结）。
+   - **无** `core/specs/transitions/*installation*` 机器表 → 实现按 companion prose 状态序列；禁止声称“安装迁移表已消费”；是否构成修正型漏登由本批证明，**默认不新增表**（IMP-01 冻结）。
    - **无** readiness REQ/schema/vector/carrier → M6 readiness 证据归 milestone e2e/fault；禁止新增 carrier 除非可证明修正型漏登。
-3. 事务中断错误码：对照 `specs/registry/errors.yaml` 列出可用码；**禁止虚构**新码。
+3. 事务中断错误码：对照 `core/specs/registry/errors.yaml` 列出可用码；**禁止虚构**新码。
 
 ## 禁止
 
@@ -41,4 +41,4 @@
 - 生成绑定入库；CI regenerate-diff 空。
 - 裁决明文写入 handoff；实现车道消费边界清晰。
 - 无规范表面扩张；四类状态用语诚实。
-- PR 可合入 main 后方启动 [m6-batch1-installer.md](./m6-batch1-installer.md)。
+- PR 可合入 main 后方启动 [m6-batch1-installer.md](m6-batch1-installer.md)。

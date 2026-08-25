@@ -6,47 +6,47 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/server.rs
+  - path: personal/apps/kernel-server/src/personal/server.rs
     symbols: ["serve_personal_loopback", "PersonalDaemonConfig"]
-  - path: apps/kernel-server/src/personal/auth.rs
+  - path: personal/apps/kernel-server/src/personal/auth.rs
     symbols: ["LocalSessionAuthority", "ChannelClass"]
-  - path: apps/kernel-server/src/personal/bounds.rs
-  - path: apps/kernel-server/src/personal/readiness.rs
+  - path: personal/apps/kernel-server/src/personal/bounds.rs
+  - path: personal/apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
-  - path: apps/kernel-server/src/personal/provider_proxy.rs
-  - path: apps/kernel-server/src/personal/route_observation.rs
+  - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
+  - path: personal/apps/kernel-server/src/personal/route_observation.rs
     symbols: ["observation_response_headers"]
-  - path: apps/kernel-server/src/personal/fault_profile.rs
+  - path: personal/apps/kernel-server/src/personal/fault_profile.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/observation.rs
+  - path: personal/apps/kernel-server/src/personal/observation.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/user_backup.rs
+  - path: personal/apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/resource_manager.rs
+  - path: personal/apps/kernel-server/src/personal/resource_manager.rs
     symbols: ["handle", "matches"]
-  - path: apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
     symbols: ["handle", "matches"]
-  - path: apps/kernel-server/src/personal/task_api.rs
+  - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
-  - apps/kernel-server/tests/p1_t04_personal_daemon.rs
-  - apps/kernel-server/tests/p1_t05_personal_readiness.rs
-  - apps/kernel-server/tests/p1_t07_provider_proxy.rs
-  - apps/kernel-server/tests/p9_t07_route_observation.rs
-  - apps/kernel-server/tests/p2_t24_effect_fault.rs
-  - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-  - apps/kernel-server/tests/p2_t26_observation_plane.rs
-  - apps/kernel-server/tests/p2_t27_backup_restore.rs
-  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-  - apps/kernel-server/tests/p8_t12_resource_manager.rs
-  - apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:6692fc3daf126760cc81aa6a472edba1c267ea0770c92e89d638f3e2cf79b3ba"
+  - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
+  - personal/apps/kernel-server/tests/p1_t05_personal_readiness.rs
+  - personal/apps/kernel-server/tests/p1_t07_provider_proxy.rs
+  - personal/apps/kernel-server/tests/p9_t07_route_observation.rs
+  - personal/apps/kernel-server/tests/p2_t24_effect_fault.rs
+  - personal/apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
+  - personal/apps/kernel-server/tests/p2_t26_observation_plane.rs
+  - personal/apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+  - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
+  - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
+fingerprint: "sha256:3f6363989e4a7ee5896230b4ee9f4e13c8331d81e25836622c641d77f4c9b4d6"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -71,7 +71,7 @@ periodic tick observes the facts admit just wrote. The worker owns the scheduler
 passes behind a non-reentrant gate, logs and retries pass-level failures, and is
 explicitly cancelled, unparked, and joined on orderly exit. Row-local failures
 remain isolated inside each pass. There is still no HTTP shutdown route (see
-[execution-chain status](./execution-chain-status.md)). `cognitive daemon start`
+[execution-chain status](execution-chain-status.md)). `cognitive daemon start`
 appends this process's stdout/stderr to `state/cognitiveos/daemon.log` (mode
 `0600`); systemd `Type=simple` still uses the journal.
 

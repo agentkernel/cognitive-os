@@ -5,12 +5,12 @@
 - Status: **merged; owner-authorized security/audit/compliance review completed with limited provenance; machine registration pending**
 - Baseline: `origin/main@0a30ac70769f0501f7928d96f55f17636eaa9888`
   (PR #53 merge; main CI run `29930557168` Ubuntu/Windows success)
-- Inputs: [V02-CA-GOV-00](./V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),
-  [V02-CA-OPS-01](./V02-CA-OPS-DESIGN-DECISION.md),
-  [V02-CA-TARGET-01](./V02-CA-TARGET-DESIGN-DECISION.md), and
-  [V02-CA-SIG-01](./V02-CA-SIG-DESIGN-DECISION.md)
+- Inputs: [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md),
+  [V02-CA-OPS-01](V02-CA-OPS-DESIGN-DECISION.md),
+  [V02-CA-TARGET-01](V02-CA-TARGET-DESIGN-DECISION.md), and
+  [V02-CA-SIG-01](V02-CA-SIG-DESIGN-DECISION.md)
 - Structural governance:
-  [ADR-0013](../adr/0013-v02-authoritative-audit-governance.md)
+  [ADR-0013](../../adr/0013-v02-authoritative-audit-governance.md)
 - Classification: docs-only structural design; no machine registration
 - Proposed family version: `0.2.0-draft.1`; every digest is
   `unresolved/not computed`

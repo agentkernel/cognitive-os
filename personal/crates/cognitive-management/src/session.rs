@@ -1,7 +1,7 @@
 //! PrivilegedManagementSession: the mandatory gate in front of every
 //! management verb.
 //!
-//! Type shape source: `specs/schemas/privileged-management-session.schema.json`
+//! Type shape source: `core/specs/schemas/privileged-management-session.schema.json`
 //! (registered machine contract; REQ-MGMT-SESSION-001). The schema has no
 //! generated binding yet (Lane-CTR CORE_SET follow-up), so this module
 //! hand-builds the type against the schema shape and validates the same

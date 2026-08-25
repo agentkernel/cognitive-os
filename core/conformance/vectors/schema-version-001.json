@@ -10,7 +10,7 @@
     "REQ-PROTO-001"
   ],
   "input": {
-    "owner_spec": "specs/schemas/common-defs.schema.json",
+    "owner_spec": "core/specs/schemas/common-defs.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

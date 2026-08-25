@@ -1,6 +1,6 @@
 /**
  * AKP envelope build/parse tests over the generated wire bindings
- * (akp-request-envelope / akp-result-envelope, D-013; specs/akp/README.md
+ * (akp-request-envelope / akp-result-envelope, D-013; core/specs/akp/README.md
  * §3/§5/§6; docs/standards/akp-envelope-and-http-profile.md §2;
  * REQ-AKP-ENV-001, REQ-AKP-ENV-002, REQ-AKP-VER-001, REQ-AKP-CAN-001,
  * REQ-AKP-IDEM-001).

@@ -6,20 +6,20 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: deploy/linux/install.sh
-  - path: crates/cognitive-runtime/src/linux_bundle_service.rs
+  - path: personal/deploy/linux/install.sh
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["install_linux_bundle_single_service", "cognitiveos-personal.service"]
-  - path: crates/cognitive-runtime/src/bin/linux_bundle_installer.rs
-  - path: apps/admin-cli/src/personal_cli/init.rs
+  - path: personal/crates/cognitive-runtime/src/bin/linux_bundle_installer.rs
+  - path: personal/apps/admin-cli/src/personal_cli/init.rs
     symbols: ["run_init"]
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["configure", "launch"]
 tests:
-  - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
-  - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
-  - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:87be53055be8081e458b4b45e5b17d0b719efcec656e8f7ba28eca8654feab1b"
+  - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
+  - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
+  - personal/apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+fingerprint: "sha256:896784d196bafa5946d959ce01698f723336965a761f81438c2cf47b77673c82"
 non_claims:
   - No public GitHub Release or production signing ceremony exists yet; installable artifacts so far are experimentally signed campaign builds. Install-route correctness evidence (B01) is owned by the formal plan and not restated here.
 ---
@@ -35,7 +35,7 @@ keyring (GNOME Keyring).
 ## 1. Run the inspected bootstrap installer
 
 A release-shaped bundle ships a rendered `install.sh` (from the inspected template
-[`deploy/linux/install.sh`](../../../deploy/linux/install.sh)). It is deliberately
+[`personal/deploy/linux/install.sh`](../../../deploy/linux/install.sh)). It is deliberately
 boring: fail-closed shell settings, HTTPS-only bounded downloads, one pinned
 redirect host, SHA-256 verification of the installer binary before executing it, and
 no `curl | sh`, no `sudo`, no embedded keys.
@@ -66,7 +66,7 @@ closed — there is no plaintext fallback.
 
 Named accounts, key rotation, fixed agent bindings, and usage queries are a
 separate operator surface after the daemon is running:
-[Provider Control Plane](./provider-control-plane.md). That surface is CLI talking
+[Provider Control Plane](provider-control-plane.md). That surface is CLI talking
 to the daemon only; there is no Web or desktop control panel in this phase.
 `cognitive init` remains the first-conversation path (`provider.json` /
 `selected-model.json`) until you set a control-plane binding.
@@ -96,7 +96,7 @@ cognitive pi launch
 Launch is fail-closed: it requires all doctor components ready and the exact pinned
 Pi version, loads only the configured Extension, disables Pi-native tools that bypass
 daemon authority, and never hands Pi a Provider key. Your first message flows Pi →
-daemon Provider proxy → Provider; see [The Pi shell](./pi-shell.md).
+daemon Provider proxy → Provider; see [The Pi shell](pi-shell.md).
 For a bounded non-interactive conversation, use `cognitive pi launch --print` and
 provide the prompt on stdin. The CLI remains attached until the pinned Pi process
 exits; the prompt is not a Provider credential and no Provider key is placed in

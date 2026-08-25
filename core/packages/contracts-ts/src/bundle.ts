@@ -1,6 +1,6 @@
 /**
  * Set and bundle digests (registered procedure), TypeScript twin of
- * `crates/cognitive-contracts/src/bundle.rs`.
+ * `core/crates/cognitive-contracts/src/bundle.rs`.
  *
  * Implements docs/standards/canonical-encoding-and-digest.md section 13: a
  * specification set or schema bundle is digested over a CANONICAL LOGICAL
@@ -10,7 +10,7 @@
  * first; the manifest digest then pins the whole set.
  *
  * Cross-language byte identity with the Rust twin is held by the golden
- * fixtures (`tests/golden/`) and the emit-golden CI gate.
+ * fixtures (`core/tests/golden/`) and the emit-golden CI gate.
  */
 
 import { canonicalize, digest } from "./canonical.js";

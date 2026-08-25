@@ -112,7 +112,7 @@ pub(super) fn approval_r1_009_behavior(
                 "structured_decision_required_before_dispatch": false
             }),
             grounding: vec![
-                "specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
+                "core/specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
             ],
             informative: vec![],
             implementation: implementation_label(kind),
@@ -169,8 +169,8 @@ pub(super) fn approval_r1_009_behavior(
             "structured_decision_required_before_dispatch": true
         }),
         grounding: vec![
-            "crates/cognitive-management/src/approval.rs".into(),
-            "specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
+            "personal/crates/cognitive-management/src/approval.rs".into(),
+            "core/specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -207,7 +207,7 @@ pub(super) fn approval_self_010_behavior(
                 "self_approval_accepted": true
             }),
             grounding: vec![
-                "specs/registry/errors.yaml#MANAGEMENT_SELF_AUTHORIZATION_DENIED".into(),
+                "core/specs/registry/errors.yaml#MANAGEMENT_SELF_AUTHORIZATION_DENIED".into(),
             ],
             informative: vec![],
             implementation: implementation_label(kind),
@@ -269,8 +269,8 @@ pub(super) fn approval_self_010_behavior(
             "self_approval_accepted": false
         }),
         grounding: vec![
-            "crates/cognitive-management/src/approval.rs".into(),
-            "specs/registry/errors.yaml#MANAGEMENT_SELF_AUTHORIZATION_DENIED".into(),
+            "personal/crates/cognitive-management/src/approval.rs".into(),
+            "core/specs/registry/errors.yaml#MANAGEMENT_SELF_AUTHORIZATION_DENIED".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -297,7 +297,7 @@ pub(super) fn approval_fatigue_011_behavior(
                 "expired_or_reused_approval_executes": true
             }),
             grounding: vec![
-                "specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
+                "core/specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
             ],
             informative: vec![],
             implementation: implementation_label(kind),
@@ -446,8 +446,8 @@ pub(super) fn approval_fatigue_011_behavior(
             "expired_or_reused_approval_executes": false
         }),
         grounding: vec![
-            "crates/cognitive-management/src/approval.rs".into(),
-            "specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
+            "personal/crates/cognitive-management/src/approval.rs".into(),
+            "core/specs/registry/errors.yaml#MANAGEMENT_INDEPENDENT_APPROVAL_REQUIRED".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -473,7 +473,7 @@ pub(super) fn shell_cancel_005_behavior(
                 "task_cancelled": true,
                 "required_action": "none"
             }),
-            grounding: vec!["specs/registry/errors.yaml#CANCEL_PENDING".into()],
+            grounding: vec!["core/specs/registry/errors.yaml#CANCEL_PENDING".into()],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({"anti_pattern":"cancel treated as authority closure"}),
@@ -505,8 +505,8 @@ pub(super) fn shell_cancel_005_behavior(
             "required_action": "reconcile"
         }),
         grounding: vec![
-            "crates/cognitive-runtime/src/shell.rs".into(),
-            "specs/registry/errors.yaml#CANCEL_PENDING".into(),
+            "personal/crates/cognitive-runtime/src/shell.rs".into(),
+            "core/specs/registry/errors.yaml#CANCEL_PENDING".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -528,7 +528,7 @@ pub(super) fn shell_detach_004_behavior(
                 "watch_restored_from_cursor": false,
                 "privileged_authority_restored": true
             }),
-            grounding: vec!["crates/cognitive-runtime/src/shell.rs".into()],
+            grounding: vec!["personal/crates/cognitive-runtime/src/shell.rs".into()],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({"anti_pattern":"detach cancels and restores privilege"}),
@@ -564,7 +564,7 @@ pub(super) fn shell_detach_004_behavior(
             "watch_restored_from_cursor": true,
             "privileged_authority_restored": false
         }),
-        grounding: vec!["crates/cognitive-runtime/src/shell.rs".into()],
+        grounding: vec!["personal/crates/cognitive-runtime/src/shell.rs".into()],
         informative: vec![],
         implementation: implementation_label(kind),
         evidence: json!({
@@ -599,7 +599,7 @@ pub(super) fn shell_watch_006_behavior(
                 "required_action": "continue",
                 "silent_gap": true
             }),
-            grounding: vec!["specs/registry/errors.yaml#WATCH_CURSOR_STALE".into()],
+            grounding: vec!["core/specs/registry/errors.yaml#WATCH_CURSOR_STALE".into()],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({"anti_pattern":"stale cursor silently resumed"}),
@@ -621,8 +621,8 @@ pub(super) fn shell_watch_006_behavior(
             "silent_gap": false
         }),
         grounding: vec![
-            "crates/cognitive-akp/src/lib.rs".into(),
-            "specs/registry/errors.yaml#WATCH_CURSOR_STALE".into(),
+            "core/crates/cognitive-akp/src/lib.rs".into(),
+            "core/specs/registry/errors.yaml#WATCH_CURSOR_STALE".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -649,7 +649,7 @@ pub(super) fn shell_channel_isolation_003_behavior(
                 "error": {"code": "OK", "category": "auth"},
                 "management_context_leaked": true
             }),
-            grounding: vec!["specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into()],
+            grounding: vec!["core/specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into()],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({"anti_pattern":"task credential allowed on system.configure"}),
@@ -687,9 +687,9 @@ pub(super) fn shell_channel_isolation_003_behavior(
             "management_context_leaked": decision.management_context_leaked
         }),
         grounding: vec![
-            "crates/cognitive-runtime/src/channel_binding.rs".into(),
-            "specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into(),
-            "conformance/vectors/shell-channel-isolation-003.json".into(),
+            "personal/crates/cognitive-runtime/src/channel_binding.rs".into(),
+            "core/specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into(),
+            "core/conformance/vectors/shell-channel-isolation-003.json".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),
@@ -720,7 +720,7 @@ pub(super) fn shell_target_ambiguity_001_behavior(
                 "error": {"code": "INTENT_CLARIFICATION_REQUIRED", "category": "intent"},
                 "dispatch": true
             }),
-            grounding: vec!["specs/registry/errors.yaml#SHELL_TARGET_AMBIGUOUS".into()],
+            grounding: vec!["core/specs/registry/errors.yaml#SHELL_TARGET_AMBIGUOUS".into()],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({
@@ -763,9 +763,9 @@ pub(super) fn shell_target_ambiguity_001_behavior(
             "dispatch": decision.dispatch
         }),
         grounding: vec![
-            "crates/cognitive-runtime/src/target_resolution.rs".into(),
-            "specs/registry/errors.yaml#SHELL_TARGET_AMBIGUOUS".into(),
-            "conformance/vectors/shell-target-ambiguity-001.json".into(),
+            "personal/crates/cognitive-runtime/src/target_resolution.rs".into(),
+            "core/specs/registry/errors.yaml#SHELL_TARGET_AMBIGUOUS".into(),
+            "core/conformance/vectors/shell-target-ambiguity-001.json".into(),
         ],
         informative: vec![],
         implementation: implementation_label(kind),

@@ -18,7 +18,7 @@ bundle, release URL, or release digest exists yet.
 
 ## Decision
 
-1. `deploy/linux/install.sh` is an inspected, version-specific release
+1. `personal/deploy/linux/install.sh` is an inspected, version-specific release
    template. The supported user flow is `curl -o install.sh`, inspect with
    `less`, then `sh install.sh`; `curl | sh` is never recommended or executed.
 2. The checked-in source is intentionally unrendered. It fails before calling

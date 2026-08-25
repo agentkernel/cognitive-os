@@ -2,30 +2,30 @@
 
 本仓库的唯一活动实现项目是 **`cognitiveos-personal`（CognitiveOS Personal）**。
 原 CognitiveOS 设计、白皮书、规范和通用内核是架构参考与合同基础，不是第二个待交付
-项目。完整边界见 [PROJECT-IDENTITY.md](./docs/governance/PROJECT-IDENTITY.md)；本文件只
+项目。完整边界见 [PROJECT-IDENTITY.md](docs/governance/PROJECT-IDENTITY.md)；本文件只
 保留代理必须立即知道的操作规则，通用治理正文见
-[DEVELOPMENT-OPERATING-MODEL.md](./docs/governance/DEVELOPMENT-OPERATING-MODEL.md)。
+[DEVELOPMENT-OPERATING-MODEL.md](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)。
 
 ## 新会话启动顺序
 
-1. 阅读本文件和 [项目身份](./docs/governance/PROJECT-IDENTITY.md)；
-2. 阅读 [公理体系](./docs/governance/AXIOMS.md) 与
-   [Development Operating Model](./docs/governance/DEVELOPMENT-OPERATING-MODEL.md)；
-3. 阅读 Personal 正式计划 [PERSONAL-DEVELOPMENT-PLAN.md](./docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)；
+1. 阅读本文件和 [项目身份](docs/governance/PROJECT-IDENTITY.md)；
+2. 阅读 [公理体系](docs/governance/AXIOMS.md) 与
+   [Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)；
+3. 阅读 Personal 正式计划 [PERSONAL-DEVELOPMENT-PLAN.md](docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)；
 4. 只读 `PROGRESS.md` 的 `Current snapshot`；
-5. 只读 [PARALLEL-LANES.md](./docs/plan/PARALLEL-LANES.md) 的活动 lease；
-6. 产品/架构任务再读 [Personal 产品设计](./docs/product/personal/README.md) 与
-   [Personal 架构](./docs/architecture/personal/README.md) 的相关章节；
+5. 只读 [PARALLEL-LANES.md](docs/plan/PARALLEL-LANES.md) 的活动 lease；
+6. 产品/架构任务再读 [Personal 产品设计](personal/docs/product/README.md) 与
+   [Personal 架构](personal/docs/architecture/README.md) 的相关章节；
 7. 再阅读所选任务对应的最新 matching handoff 和 `docs/plan/plan.md` 任务卡。
 
 正式计划决定任务和 Gate，`PROGRESS.md` 决定当前事实，Parallel Lanes 决定当前可写路径，
 handoff 只提供操作连续性，`docs/plan/plan.md` 只提供研究和细节。历史 handoff、旧提示词和
 聊天上下文不能覆盖正式来源。禁止读取或引用 `History/`。
 
-面向使用者/开发者/AI 工具的派生说明书在 [`handbook/`](./handbook/README.md)（双语；AI
-入口 `handbook/en/ai/README.md`）。它不拥有任何任务、Gate、合同或状态事实；改动实现
+面向使用者/开发者/AI 工具的派生说明书在 [`personal/handbook/`](personal/handbook/README.md)（双语；AI
+入口 `personal/handbook/en/ai/README.md`）。它不拥有任何任务、Gate、合同或状态事实；改动实现
 时按 `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` 与
-`handbook/_meta/sync-policy.md` 联动更新。
+`personal/handbook/_meta/sync-policy.md` 联动更新。
 
 ### 上下文压缩与跨窗口连续推进
 
@@ -63,7 +63,7 @@ handoff 只提供操作连续性，`docs/plan/plan.md` 只提供研究和细节�
 ## 整任务连续交付协议（Operating Model 摘要）
 
 本节仅是代理入口摘要。完整定义、确认边界、性能验证和冲突解释只由
-[Development Operating Model](./docs/governance/DEVELOPMENT-OPERATING-MODEL.md) 拥有；
+[Development Operating Model](docs/governance/DEVELOPMENT-OPERATING-MODEL.md) 拥有；
 本文件不得建立更严格或不同的第二套工作流。
 
 - 默认只领取 `cognitiveos-personal` 的 `P*-T*` 任务；架构层改动必须服务于当前 Personal
@@ -141,7 +141,7 @@ handoff 只提供操作连续性，`docs/plan/plan.md` 只提供研究和细节�
   closure docs 或新 PR；验证结果累计到任务最终收口记录。Draft PR 在完整 task acceptance
   未满足前必须保持 Draft，禁止 merge。
 - 每次 commit/push 之前必须满足 docs-sync 义务（docs-sync-contract §2/§5）：改动路径
-  命中 `handbook/_meta/source-map.json` 时，同一变更集内同步受影响 handbook 页面
+  命中 `personal/handbook/_meta/source-map.json` 时，同一变更集内同步受影响 handbook 页面
   （双语）、重生成生成页并刷新指纹；确无文档影响时以
   `DOCS_IMPACT_NONE="<具体理由>"` 过门并把理由记入 commit/PR。本地门为
   `node tools/src/docs-sync-gate.mjs --staged|--push`（`pnpm run hooks:install`
@@ -188,7 +188,7 @@ handoff 只提供操作连续性，`docs/plan/plan.md` 只提供研究和细节�
 ## 不可放松的不变量
 
 完整公理体系（A1–A8）与工程原则层（P1–P3）只由
-[docs/governance/AXIOMS.md](./docs/governance/AXIOMS.md) 拥有；本入口不得维护第二套
+[docs/governance/AXIOMS.md](docs/governance/AXIOMS.md) 拥有；本入口不得维护第二套
 编号清单。日常提醒（以 AXIOMS 为准）：
 
 1. Rust daemon 是唯一 authority writer（A1）；概率组件与第三方 agent 只产 candidate（A2）。
@@ -216,7 +216,7 @@ handoff 只提供操作连续性，`docs/plan/plan.md` 只提供研究和细节�
   使用 `DEV-LINUX-NATIVE-01`；环境不可用时按 Slice 规则记 `blocked`/`not-run`，不得先在
   本机 GNU 重现已知 linker failure。
 - 权威环境能力和命令路由见
-  [PERSONAL-TEST-ENVIRONMENTS.md](./docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)。每个 Slice 在
+  [PERSONAL-TEST-ENVIRONMENTS.md](docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)。每个 Slice 在
   写 failure-first test 前先选择其 required validation environment。
 
 | 目的 | Windows PowerShell（本地） | CI（bash） |
@@ -280,15 +280,15 @@ revision 同步到该主机的可清理 Git worktree，再在该 exact revision 
 
 ## 目录和变更边界
 
-- `specs/`、`conformance/`：架构合同和符合性资产；不得为实现改写。
+- `core/specs/`、`core/conformance/`：架构合同和符合性资产；不得为实现改写。
 - `crates/`、`apps/`、`packages/`、`tests/`、`tools/`：Personal 实现及其验证工作面。
 - `docs/governance/`、`docs/plan/`、`docs/checkpoints/`：治理、正式计划、快照和移交。
-- `apps/cognitiveos-console/`、独立客户端和其他 deferred 能力：默认只维护设计/台账，
+- `clients/legacy/cognitiveos-console/`、独立客户端和其他 deferred 能力：默认只维护设计/台账，
   不启动独立实现。
 - `personal-blog/` 是独立仓库，禁止推入本仓库；禁止在其他路径建立平行副本。
 
 变更必须声明 `implementation-only`、`corrective`、`product-semantic`、
 `normative-semantic` 或 `structural`，
-并按 [docs-sync-contract](./docs/standards/docs-sync-contract.md) 完成联动。提交/PR 必须
+并按 [docs-sync-contract](docs/standards/docs-sync-contract.md) 完成联动。提交/PR 必须
 关联 Personal 任务或 REQ/F/IMP；没有关联时说明原因。未知工作树改动不得覆盖、回退、
 混入或使用 `git add -A`。

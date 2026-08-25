@@ -6,16 +6,16 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: docs/product/personal/README.md
-  - path: docs/product/personal/cognitive-resource-model.md
-  - path: docs/architecture/personal/README.md
-  - path: apps/kernel-server/src/personal/resource_api.rs
-  - path: apps/kernel-server/src/personal/task_api.rs
+  - path: personal/docs/product/README.md
+  - path: personal/docs/product/cognitive-resource-model.md
+  - path: personal/docs/architecture/README.md
+  - path: personal/apps/kernel-server/src/personal/resource_api.rs
+  - path: personal/apps/kernel-server/src/personal/task_api.rs
 tests:
-  - apps/kernel-server/tests/p2_t02_resource_projection.rs
-  - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-  - apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:4f72ff9d8badb8656fbe390643e814b996065842cf38f3daaa880f122a35e9f2"
+  - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
+  - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
+  - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
+fingerprint: "sha256:a3e5c88501e93bcd424f27a48c62a0e92475d1d5c1df118c2cd8f648b6a1c080"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -71,5 +71,5 @@ daemon 是唯一的权威写入者。客户端响应、Provider 响应、Pi `age
 存储、Task 准入以及资源/任务投影。端到端完全自主执行仍为 `partial`；请使用 Task
 watch 和 evidence 命令观察持久事实，不要把一次对话回答理解成 Task 已完成。
 
-接下来按[快速上手](./getting-started.md)走最短路径；精确命令见[CLI 基础](./cli-basics.md)
+接下来按[快速上手](getting-started.md)走最短路径；精确命令见[CLI 基础](cli-basics.md)
 和[参考手册](../reference/README.md)。

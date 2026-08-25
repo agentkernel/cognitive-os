@@ -6,25 +6,25 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-store/src/personal_backup.rs
+  - path: personal/crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
-  - path: crates/cognitive-store/src/personal_db.rs
+  - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
-  - path: crates/cognitive-store/src/migration.rs
+  - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
-  - path: crates/cognitive-store/src/provider_control_plane.rs
-  - path: crates/cognitive-store/src/sqlite/store.rs
+  - path: personal/crates/cognitive-store/src/provider_control_plane.rs
+  - path: personal/crates/cognitive-store/src/sqlite/store.rs
     symbols: ["SqliteAuthorityStore"]
-  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+  - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
-  - path: crates/cognitive-store/src/scheduler.rs
+  - path: personal/crates/cognitive-store/src/scheduler.rs
     symbols: ["SchedulerRepository", "acquire_eligible_lease"]
 tests:
-  - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-  - crates/cognitive-store/tests/p8_t13_provider_store.rs
-  - crates/cognitive-store/tests/m2_acceptance.rs
-  - crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:cf9d0cc6132e7acbd490c2154bb3477179b4e4555a6b7f685b734fee8f31c6d3"
+  - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
+  - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
+  - personal/crates/cognitive-store/tests/m2_acceptance.rs
+  - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
+fingerprint: "sha256:1427222bbb2f4cf3873cc9af6067e4ec3e38d0aed97adc4a1c51b2ceb6b30bf5"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---

@@ -4,8 +4,8 @@
 - Effective date: 2026-08-10
 - Owner: this document (canonical axiom list)
 - Decision carrier: [ADR-0041](../adr/0041-personal-axiom-system-revision.md)
-- Related: [DEVELOPMENT-OPERATING-MODEL.md](./DEVELOPMENT-OPERATING-MODEL.md),
-  [PROJECT-IDENTITY.md](./PROJECT-IDENTITY.md),
+- Related: [DEVELOPMENT-OPERATING-MODEL.md](DEVELOPMENT-OPERATING-MODEL.md),
+  [PROJECT-IDENTITY.md](PROJECT-IDENTITY.md),
   [ADR-0042](../adr/0042-personal-three-pillar-engineering.md)
 
 This document is the **sole owner** of CognitiveOS Personal's immutable axioms

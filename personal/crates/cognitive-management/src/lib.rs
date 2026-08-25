@@ -1,7 +1,7 @@
 //! `cognitive-management`: management plane of the CognitiveOS reference
 //! implementation.
 //!
-//! M5 batch 1 (per `docs/plan/DEVELOPMENT-PLAN.md` and
+//! M5 batch 1 (per `docs/plan/archive/DEVELOPMENT-PLAN.md` and
 //! `docs/prompts/milestone-m5.md`): the deterministic fallback path —
 //! PrivilegedManagementSession gate + the four no-model verbs inspect /
 //! stop / revoke / reconcile (REQ-MGMT-FALLBACK-001,
@@ -16,7 +16,7 @@
 //! The only model seam is [`ModelProvider`], which no deterministic verb
 //! reads (proven by a zero-call probe in the behavior tests).
 //!
-//! Machine contracts: `specs/schemas/privileged-management-session.schema.json`,
+//! Machine contracts: `core/specs/schemas/privileged-management-session.schema.json`,
 //! `management-action-proposal.schema.json`,
 //! `management-approval-request.schema.json`,
 //! `management-approval-decision.schema.json`; vectors `management-*.json`

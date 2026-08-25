@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:5dcfa03b1941891552feb1c494df0a6bd7008250cd1e23a576da4e5ae4e5e0c9"
+fingerprint: "sha256:1c5068ea096bb1288835261f5cd5024575d7015596eb5ad176271d27dfddd698"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -18,7 +18,7 @@ non_claims:
 # 开发环境
 
 环境注册表
-（[`PERSONAL-TEST-ENVIRONMENTS.md`](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)）
+（[`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)）
 拥有每个环境可声明的上限。实用路由：
 
 | 环境 | 用于 | 绝不用于 |

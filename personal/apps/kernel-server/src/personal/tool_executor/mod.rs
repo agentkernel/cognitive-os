@@ -48,7 +48,7 @@ pub(crate) use workspace::*;
 /// This says one thing only: **this binary contains an executor for the
 /// family**. It is not a claim that an Agent can reach it. The production call
 /// chain from an admitted Task to one of these sinks does not exist yet — see
-/// gaps 1, 2 and 4 on `handbook/*/developer/execution-chain-status.md` — and
+/// gaps 1, 2 and 4 on `personal/handbook/*/developer/execution-chain-status.md` — and
 /// `execution_ready` must not be read as "an Agent can use this tool".
 pub const ASSEMBLED_EXECUTOR_FAMILIES: [cognitive_kernel::tool_registry::NativeOperationFamily; 7] = [
     cognitive_kernel::tool_registry::NativeOperationFamily::WorkspaceRead,

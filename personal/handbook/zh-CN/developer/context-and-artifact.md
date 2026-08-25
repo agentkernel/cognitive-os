@@ -6,21 +6,21 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-kernel/src/context.rs
+  - path: core/crates/cognitive-kernel/src/context.rs
     symbols: ["resolve", "STAGNATION_BOUND", "effective_control_plane"]
-  - path: crates/cognitive-kernel/src/context_cache.rs
+  - path: core/crates/cognitive-kernel/src/context_cache.rs
     symbols: ["GovernedContextCache", "ContextCacheKey"]
-  - path: crates/cognitive-store/src/context_store.rs
-  - path: crates/cognitive-store/src/artifact_store.rs
+  - path: personal/crates/cognitive-store/src/context_store.rs
+  - path: personal/crates/cognitive-store/src/artifact_store.rs
     symbols: ["put_expected", "get_authorized"]
 contracts:
-  - specs/schemas/context-request.schema.json
-  - specs/schemas/context-view.schema.json
+  - core/specs/schemas/context-request.schema.json
+  - core/specs/schemas/context-view.schema.json
 tests:
-  - crates/cognitive-kernel/tests/context_pipeline.rs
-  - crates/cognitive-store/tests/m5_context_store.rs
-  - crates/cognitive-store/tests/p3_t03_artifact_store.rs
-fingerprint: "sha256:0faeb3aeaee5e36cd150c344ac527eff4fc2fc19520ff85377fffdc420a26ddf"
+  - core/crates/cognitive-kernel/tests/context_pipeline.rs
+  - personal/crates/cognitive-store/tests/m5_context_store.rs
+  - personal/crates/cognitive-store/tests/p3_t03_artifact_store.rs
+fingerprint: "sha256:a3c3f65bcc7f11aedf531df0dcdacd8b9de62b03785eab7c67a0a5f0ced2d3d0"
 non_claims:
   - Context 正确性证据是聚焦测试证据；收益/效率观察是他处拥有的 non-claim。
 ---

@@ -1,5 +1,5 @@
 //! The five execution lifecycle transition tables, consumed from
-//! `specs/transitions/*.transitions.json` (REQ-STATE-001..003;
+//! `core/specs/transitions/*.transitions.json` (REQ-STATE-001..003;
 //! `docs/standards/state-and-transition-contract.md`).
 //!
 //! Single source of truth: the registered JSON tables are embedded verbatim
@@ -23,7 +23,7 @@ use std::fmt;
 use std::sync::OnceLock;
 
 /// The five registered execution lifecycle state domains
-/// (`specs/registry/state-domains.yaml`). The registry keeps the domain set
+/// (`core/specs/registry/state-domains.yaml`). The registry keeps the domain set
 /// open (REQ-STATE-001); these five are the v0.1 execution core and are
 /// never merged into one machine (architecture invariant).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -129,7 +129,7 @@ pub struct LoadedTable {
     pub table: TransitionTable,
     /// Canonical digest of the registered JSON asset: canonical bytes under
     /// domain `spec-set/0.1`, byte-identical to the per-asset digest the
-    /// conformance runner records for `specs/transitions/*.json`.
+    /// conformance runner records for `core/specs/transitions/*.json`.
     pub digest: String,
 }
 
@@ -249,7 +249,7 @@ struct EmbeddedAsset {
 }
 
 /// Registered table assets embedded at compile time from
-/// `specs/transitions/`. The paths are the single source; editing a table
+/// `core/specs/transitions/`. The paths are the single source; editing a table
 /// recompiles this crate.
 const EMBEDDED: [EmbeddedAsset; 5] = [
     EmbeddedAsset {

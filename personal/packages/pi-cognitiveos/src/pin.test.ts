@@ -1,7 +1,7 @@
 /**
  * Pi compatibility pin drift guard.
  *
- * `apps/pi-agent-adapter/src/lib.rs` holds the authoritative
+ * `personal/apps/pi-agent-adapter/src/lib.rs` holds the authoritative
  * `PiCompatibilityPin::expected()`. If this package's mirror drifts from it,
  * the TypeScript surface would claim compatibility with a version the Rust
  * admission path refuses — so the mirror is compared field by field against the

@@ -6,8 +6,8 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
-  - path: apps/admin-cli/src/main.rs
-fingerprint: "sha256:6c7edb37443b51d3f565a6ec1af34bdc01bee458fb4b511f3a4ef2a4f42df618"
+  - path: personal/apps/admin-cli/src/main.rs
+fingerprint: "sha256:5a4eb72f27cc0835ab60308be43b137d510d53881cf5e60467a1204df792ccec"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -43,5 +43,5 @@ USAGE:
 
 Verbs run against the SQLite WAL authority store; every mutation goes
 through the central deterministic transition gate. Errors are registered
-codes (specs/registry/errors.yaml) as JSON on stderr.
+codes (core/specs/registry/errors.yaml) as JSON on stderr.
 ```

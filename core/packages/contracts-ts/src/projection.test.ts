@@ -2,7 +2,7 @@
  * Golden fixture verification for digest projections, set manifests,
  * canonical timestamp / digest-string forms, and the critical-extension
  * gate — TypeScript side (the Rust twin re-verifies the same file byte for
- * byte: `crates/cognitive-contracts/tests/projection_fixtures.rs`).
+ * byte: `core/crates/cognitive-contracts/tests/projection_fixtures.rs`).
  */
 
 import assert from "node:assert/strict";

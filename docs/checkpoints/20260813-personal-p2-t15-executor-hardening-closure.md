@@ -67,7 +67,7 @@ recreated as fresh `NotExecuted`.
   - disposable native worktree removed cleanly.
 - Final defect-first review: **no findings**.
 - Running detail:
-  [20260813-personal-executor-hardening-validation.md](./20260813-personal-executor-hardening-validation.md).
+  [20260813-personal-executor-hardening-validation.md](20260813-personal-executor-hardening-validation.md).
 
 ## Residual limits and non-claims
 

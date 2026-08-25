@@ -2,7 +2,7 @@
 
 - Status: product-semantic design baseline (documentation)
 - Date: 2026-08-10
-- Decision carriers: [ADR-0041](../../adr/0041-personal-axiom-system-revision.md)–[ADR-0045](../../adr/0045-personal-os-positioning.md)
+- Decision carriers: [ADR-0041](../../../docs/adr/0041-personal-axiom-system-revision.md)–[ADR-0045](../../../docs/adr/0045-personal-os-positioning.md)
 - Does not own: task status, Gate results, release claims, Profile conformance
 
 ## 1. Positioning
@@ -31,7 +31,7 @@ the 1.0 claim composition.
   but not a 1.0 claim (ADR-0044).
 - IoT/embodied and enterprise multi-tenant bridges are architecture **headroom**
   only; they are not Phase 8/9 formal tasks (ADR-0045).
-- This document does not change specs/conformance machines, Gate denominators,
+- This document does not change core/specs/conformance machines, Gate denominators,
   or Profile matrices.
 
 ## 4. Relationship to Linux 1.0

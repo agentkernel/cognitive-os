@@ -6,9 +6,9 @@ audience: [user, developer, ai]
 status: implemented
 generated: true
 sources:
-  - path: crates/cognitive-kernel/src/tool_registry.rs
-  - path: handbook/_meta/annotations/tool-catalog.json
-fingerprint: "sha256:7617f311d2cfcdb928028c8bbe35ac099baf613a27dca1a063933879783cb207"
+  - path: core/crates/cognitive-kernel/src/tool_registry.rs
+  - path: personal/handbook/_meta/annotations/tool-catalog.json
+fingerprint: "sha256:fb07d8c6783ed9f2d9bad14bd256e606795a3ac9674281900c2446faee36fba7"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

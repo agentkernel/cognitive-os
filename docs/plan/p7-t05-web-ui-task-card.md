@@ -10,11 +10,11 @@
 - Lease: `lease/personal/P7-T05/provider-webui-apple-theme` (closed blocked
   2026-08-24; earlier `web-ui-control-panel` lease closed 2026-08-23)
 - Stack ADR: [ADR-0053](../adr/0053-personal-web-ui-stack.md)
-- Route inventory: [web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json)
+- Route inventory: [web-ui-route-inventory.json](../../personal/docs/architecture/web-ui-route-inventory.json)
 - Priority: non-blocking for Linux 1.0 / `GMVP-LINUX`
-- Product design: [Web UI product design](../product/personal/web-ui-design.md)
-- Architecture: [Web UI architecture](../architecture/personal/web-ui-architecture.md)
-- Formal plan anchor: [P7-T05 in `plan.md`](./plan.md#p7-t05--web-ui)
+- Product design: [Web UI product design](../../personal/docs/product/web-ui-design.md)
+- Architecture: [Web UI architecture](../../personal/docs/architecture/web-ui-architecture.md)
+- Formal plan anchor: [P7-T05 in `plan.md`](plan.md#p7-t05--web-ui)
 
 This card decomposes the existing formal task without changing its status,
 dependencies or release scope. Delivery remains one formal task, one branch,
@@ -46,7 +46,7 @@ the Personal plan. Before implementation starts, the task also requires:
   the local static-bundle serving path.
 
 D01 accepted [ADR-0053](../adr/0053-personal-web-ui-stack.md), froze the
-[route inventory](../architecture/personal/web-ui-route-inventory.json), and
+[route inventory](../../personal/docs/architecture/web-ui-route-inventory.json), and
 declared the validation route. Owner approved cloning the official existing
 repository. Approved checkout: `D:\cognitiveos-clients` (`pc/web/`). Do not
 recreate `clients/**` in this repository and do not implement the SPA in

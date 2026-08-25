@@ -11,11 +11,11 @@ result.
 
 ## Authority and evidence boundaries
 
-- Repository facts follow `specs/` for machine shape, normative standards for
+- Repository facts follow `core/specs/` for machine shape, normative standards for
   behavior, accepted ADRs for decisions, the formal Personal plan for task
   acceptance, `PROGRESS.md` Current snapshot for current status, and actual
   code for implementation reality.
-- `docs/design/01–41` is treated as a dated design baseline. Its current
+- `clients/docs/design/01–41` is treated as a dated design baseline. Its current
   untracked state means it is not promoted here into canonical product or
   architecture authority.
 - Public product documentation and selected public issue reports are research
@@ -42,46 +42,46 @@ result.
 
 ## Current documents
 
-1. [Research and development readiness](./01-research-and-development-readiness.md)
+1. [Research and development readiness](01-research-and-development-readiness.md)
    Dated repository, market, Paperclip, Provider, Personal, and Enterprise
    research plus the pre-development readiness package.
-2. [Product direction decision brief](./02-product-direction-decision-brief.md)
+2. [Product direction decision brief](02-product-direction-decision-brief.md)
    Rounds 1–5 owner decisions, preserved recommendations/tradeoffs, and final
    requirement closure.
-3. [Personal product design](./03-personal-product-design.md)
+3. [Personal product design](03-personal-product-design.md)
    Positioning, scope, activation, IA, object UX, screens, states, metrics, and
    P0 acceptance.
-4. [Personal interaction and visual specification](./04-personal-interaction-and-visual-spec.md)
+4. [Personal interaction and visual specification](04-personal-interaction-and-visual-spec.md)
    Shared brand, spacious cards, operational views, candidate tokens,
    components, accessibility, notifications, and usability scenarios.
-5. [Personal architecture](./05-personal-architecture.md)
+5. [Personal architecture](05-personal-architecture.md)
    Native-shell/Web/daemon boundaries, fixed framework spike, P0 data flows,
    security, private/public seams, and validation route.
-6. [Enterprise product design](./06-enterprise-product-design.md)
+6. [Enterprise product design](../../../enterprise/docs/design/06-enterprise-product-design.md)
    Governed work, Continuation Package, qualified completion, Provider
    same-release track, managed Knowledge, Desktop Fleet, and workflows.
-7. [Enterprise interaction and visual specification](./07-enterprise-interaction-and-visual-spec.md)
+7. [Enterprise interaction and visual specification](../../../enterprise/docs/design/07-enterprise-interaction-and-visual-spec.md)
    Higher-density fleet operations, queues, evidence, approvals, Knowledge,
    role views, Desktop/Web parity, and accessibility.
-8. [Enterprise architecture](./08-enterprise-architecture.md)
+8. [Enterprise architecture](../../../enterprise/docs/design/08-enterprise-architecture.md)
    Central/node topology, federation, policy contract, evidence projections,
    continuation/sync, managed Knowledge index, Provider track, and threats.
-9. [Shared domain and contract boundaries](./09-shared-domain-and-contract-boundaries.md)
+9. [Shared domain and contract boundaries](09-shared-domain-and-contract-boundaries.md)
    Shared/not-shared matrix, domain dispositions, SoR/authority, contract gaps,
    Candidate ADRs, compatibility, and repository strategy.
-10. [Validation and delivery readiness](./10-validation-and-delivery-readiness.md)
+10. [Validation and delivery readiness](10-validation-and-delivery-readiness.md)
     Decision trace, acceptance/negative matrices, supported environments,
     candidate waves, readiness gates, blockers, and non-claims.
-11. [Repository governance and topology recommendation](./11-repository-governance-and-topology-recommendation.md)
+11. [Repository governance and topology recommendation](11-repository-governance-and-topology-recommendation.md)
     Evidence-based recommendation to modularize before splitting, candidate
     Core boundaries, future four-repository topology, objective triggers,
     versioning, migration runbook, governance, validation, and rollback.
-12. [Open-source reuse assessment](./12-open-source-reuse-assessment.md)
+12. [Open-source reuse assessment](12-open-source-reuse-assessment.md)
     Evidence-ranked project/license/security matrix, direct-dependency versus
     adapter/import/reference decisions, no-copy list, PoC gates, SBOM,
     provenance, and upgrade governance.
-13. [Control Plane baseline → Personal Desktop 1.0 delta](./13-control-plane-baseline-to-personal-desktop-1.0-delta.md)
-    Complete `docs/design/01–41` disposition, candidate IA/product/visual/
+13. [Control Plane baseline → Personal Desktop 1.0 delta](13-control-plane-baseline-to-personal-desktop-1.0-delta.md)
+    Complete `clients/docs/design/01–41` disposition, candidate IA/product/visual/
     architecture deltas, D13 protection, canonical conflict, and future
     canonicalization sequence.
 
@@ -123,7 +123,7 @@ unknown-worktree protection remain binding.
 
 In particular, it does not authorize a Tauri/Electron spike, MCP activation,
 ccusage import, OpenHands/LiteLLM/RAGFlow/Mem0/OpenLLMetry adapter, migration
-from another client, or changes to `docs/design/**`.
+from another client, or changes to `clients/docs/design/**`.
 
 ## Repository and docs-sync status
 
@@ -138,9 +138,9 @@ from another client, or changes to `docs/design/**`.
   for the exact files listed in `PARALLEL-LANES.md` and is closed after
   document `12`/`13`, cross-link, lint, and whitespace validation complete.
 - Active P7-T05 facts were refreshed before writing: evaluation routing is
-  off; P7-T05/D13 is active. `docs/design/**` was intentionally left untouched.
-- The current `handbook/_meta/source-map.json` has no rule matching
-  `docs/agent-work-system/**`. **Docs-sync impact:** documentation-only,
+  off; P7-T05/D13 is active. `clients/docs/design/**` was intentionally left untouched.
+- The current `personal/handbook/_meta/source-map.json` has no rule matching
+  `docs/research/agent-work-system/**`. **Docs-sync impact:** documentation-only,
   non-canonical discovery; no generated handbook route exists and no handbook
   file was edited. A future commit would require a concrete
   `DOCS_IMPACT_NONE` reason unless separately authorized work extends the

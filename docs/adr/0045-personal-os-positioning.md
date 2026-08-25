@@ -4,7 +4,7 @@
 - Date: 2026-08-10
 - Decision owner: CognitiveOS Personal product owner
 - Classification: product-semantic documentation decision
-- Related: P8-T01, AXIOMS.md §3, docs/architecture/cognitiveos/CognitiveOS-Architecture.md, AIOS literature
+- Related: P8-T01, AXIOMS.md §3, core/docs/architecture/CognitiveOS-Architecture.md, AIOS literature
 
 ## Context
 

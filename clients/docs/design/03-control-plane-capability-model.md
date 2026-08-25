@@ -2,7 +2,7 @@
 
 - Phase: Product Redesign Phase 1 (design-only)
 - Date: 2026-08-24
-- Purpose: turn the audited [Capability Inventory](./control-plane-capability-inventory.md) (current-state ratings) into the **product capability model** the redesign is allowed to design with: the capability domains, the operator actions inside each, the state vocabularies, and the honesty class of every action. This is the contract between product design and backend reality.
+- Purpose: turn the audited [Capability Inventory](control-plane-capability-inventory.md) (current-state ratings) into the **product capability model** the redesign is allowed to design with: the capability domains, the operator actions inside each, the state vocabularies, and the honesty class of every action. This is the contract between product design and backend reality.
 - Rule inherited from the workflow skill: **CognitiveOS Reality outranks every design authority.** Nothing below invents a route, a lifecycle, or a state.
 
 ---

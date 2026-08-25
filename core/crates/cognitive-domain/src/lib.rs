@@ -1,14 +1,14 @@
 //! `cognitive-domain`: pure domain layer of the CognitiveOS reference
 //! implementation.
 //!
-//! Scope (M2, per `docs/plan/DEVELOPMENT-PLAN.md`): the five execution
-//! lifecycle state machines consumed from `specs/transitions/*.json`
+//! Scope (M2, per `docs/plan/archive/DEVELOPMENT-PLAN.md`): the five execution
+//! lifecycle state machines consumed from `core/specs/transitions/*.json`
 //! (embedded registered assets, digest-pinned), logical-version CAS rules,
 //! and validated identifier newtypes. This crate performs no I/O and never
 //! depends on HTTP, SQLite, or model SDKs.
 //!
 //! Normative sources: `docs/standards/state-and-transition-contract.md`,
-//! `specs/registry/state-domains.yaml`, `specs/transitions/`, ADR-0005.
+//! `core/specs/registry/state-domains.yaml`, `core/specs/transitions/`, ADR-0005.
 //! REQ coverage: REQ-STATE-001/002/003, REQ-GOBJ-ID-001 (format layer),
 //! REQ-CAP-001/002 (capability constraint arithmetic,
 //! `docs/standards/authn-authz-capability.md`).
@@ -35,7 +35,7 @@ pub use transitions::{
 pub use version::Version;
 
 /// The five registered execution lifecycle state domain names, exactly
-/// matching `specs/transitions/<domain>.transitions.json`. The registry
+/// matching `core/specs/transitions/<domain>.transitions.json`. The registry
 /// keeps the domain set open (REQ-STATE-001); these five are the v0.1
 /// execution core and must never be merged into one machine.
 pub const EXECUTION_LIFECYCLE_DOMAINS: [&str; 5] =

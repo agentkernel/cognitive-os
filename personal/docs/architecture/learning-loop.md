@@ -1,7 +1,7 @@
 # Learning Loop (design)
 
 - Status: informative Personal architecture design
-- Related: AXIOMS P3, [ADR-0042](../../adr/0042-personal-three-pillar-engineering.md),
+- Related: AXIOMS P3, [ADR-0042](../../../docs/adr/0042-personal-three-pillar-engineering.md),
   P4-T01/P4-T04/P4-T05, P8-T06
 
 ## 1. Intent

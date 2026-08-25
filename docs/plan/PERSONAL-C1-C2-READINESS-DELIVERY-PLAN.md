@@ -26,11 +26,11 @@ readiness programme. It does **not** own task acceptance, task status, leases,
 campaign activation, benchmark denominators, or performance claims:
 
 - Formal Personal tasks, dependencies, and Delivery Slices remain owned by
-  [PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md).
+  [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md).
 - Current facts and the unique next action remain owned by the `Current
-  snapshot` in [PROGRESS.md](./PROGRESS.md).
+  snapshot` in [PROGRESS.md](PROGRESS.md).
 - Writable ownership remains owned by the active table in
-  [PARALLEL-LANES.md](./PARALLEL-LANES.md).
+  [PARALLEL-LANES.md](PARALLEL-LANES.md).
 - Parent measurement contract:
   [personal-performance-benchmark-execution-plan.md](../evaluation/personal-performance-benchmark-execution-plan.md)
   v1.1 (especially §2 arms/fairness/broker, §3.1 B0, §9 order, §10 C1/C2

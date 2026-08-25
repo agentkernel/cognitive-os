@@ -35,9 +35,9 @@ fn service_lifecycle_api_is_explicit_and_separate_from_offline_installation() {
 fn checked_in_user_unit_is_unrendered_and_rejected_before_systemctl() {
     let repository_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
-        .nth(2)
+        .nth(3)
         .unwrap();
-    let template = repository_root.join("deploy/linux/cognitiveos-personal.service");
+    let template = repository_root.join("personal/deploy/linux/cognitiveos-personal.service");
     let source = fs::read_to_string(&template).unwrap();
     assert!(source.contains("@COGNITIVEOS_RELEASE_ROOT@"));
     assert!(source.contains("--personal --bind 127.0.0.1:"));

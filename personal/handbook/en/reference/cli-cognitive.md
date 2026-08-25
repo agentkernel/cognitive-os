@@ -6,8 +6,8 @@ audience: [user, developer, ai]
 status: implemented
 generated: true
 sources:
-  - path: apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:3404e15f6df1545a32e7d86638bf865002ced02b0cacf64b670fa0e5ada969db"
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
+fingerprint: "sha256:76a9d8985719fa043caf1ba0dfd16544ca9d29fa4cacda4daa18937513fd0dd3"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."

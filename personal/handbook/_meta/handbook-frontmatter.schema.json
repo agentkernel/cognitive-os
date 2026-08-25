@@ -58,7 +58,7 @@
     },
     "contracts": {
       "type": "array",
-      "items": { "type": "string", "pattern": "^(specs|conformance|docs/standards)/[A-Za-z0-9._/-]+$" },
+      "items": { "type": "string", "pattern": "^(core/specs|core/conformance|docs/standards)/[A-Za-z0-9._/-]+$" },
       "description": "Canonical machine/behavior contract paths this page's normative statements link to."
     },
     "tests": {

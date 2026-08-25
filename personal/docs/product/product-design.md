@@ -2,9 +2,9 @@
 
 - Status: canonical stable product intent
 - Initial release target: Linux x86_64 `1.0.0` through `GMVP-LINUX`
-- Architecture: [Personal architecture](../../architecture/personal/README.md)
-- Decisions: [ADR-0037](../../adr/0037-personal-unified-cognitive-resource-substrate.md),
-  [ADR-0038](../../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
+- Architecture: [Personal architecture](../architecture/README.md)
+- Decisions: [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
+  [ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
 
 ## 1. Product statement
 
@@ -12,7 +12,7 @@ CognitiveOS Personal is a local **operating system for cognitive resources** for
 one owner and their Agents. It makes Memory, Skill, Tool, Context, Task and
 Runtime/Process visible and governable through one local product while keeping
 their domain-specific identities, stores and lifecycles separate. See
-[personal-2.0-scope.md](./personal-2.0-scope.md) for the post-1.0 design baseline.
+[personal-2.0-scope.md](personal-2.0-scope.md) for the post-1.0 design baseline.
 
 Users can work through a conversational Agent Shell or deterministic commands.
 The Rust daemon is the sole authority writer: it resolves identity and policy,
@@ -282,5 +282,5 @@ that B01 or the release gate has passed.
 `B06`, `B07`, `B10` and `B11` do not block Linux 1.0. This statement changes no
 current Gate status and claims no implementation or evidence.
 
-See [Linux 1.0 scope](./linux-1.0-scope.md) for the exact target and non-claim
+See [Linux 1.0 scope](linux-1.0-scope.md) for the exact target and non-claim
 boundary.

@@ -6,14 +6,14 @@ audience: [developer]
 status: partial
 generated: false
 sources:
-  - path: docs/architecture/personal/system-architecture.md
-  - path: docs/architecture/personal/resource-manager-architecture.md
-  - path: docs/product/personal/resource-manager-design.md
-  - path: apps/kernel-server/src/personal/mod.rs
-  - path: apps/kernel-server/src/personal/resource_manager.rs
-  - path: crates/cognitive-kernel/src/lib.rs
+  - path: personal/docs/architecture/system-architecture.md
+  - path: personal/docs/architecture/resource-manager-architecture.md
+  - path: personal/docs/product/resource-manager-design.md
+  - path: personal/apps/kernel-server/src/personal/mod.rs
+  - path: personal/apps/kernel-server/src/personal/resource_manager.rs
+  - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:48b3ffe09e232ec21aa97482b89083324d47a4320ab8ac2c836f9f76f30ec845"
+fingerprint: "sha256:7d4c85a3d00f411981de256ba6b5df6d3da16e7c3e158765cdaae9b4ef20555b"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -31,7 +31,7 @@ digest 钉住转移表与 `cognitive-contracts` 的 canonical digest 校验。
 
 ## 目标分层 vs 当前组合
 
-目标设计（[`system-architecture.md`](../../../docs/architecture/personal/system-architecture.md)）
+目标设计（[`system-architecture.md`](../../../docs/architecture/system-architecture.md)）
 画了五层：体验客户端 → Task/Resource 应用服务 → 六域服务 → sidecar/调度/执行器/验证
 器执行层 → SQLite + artifact + secret + Linux 端口。
 
@@ -47,7 +47,7 @@ digest 钉住转移表与 `cognitive-contracts` 的 canonical digest 校验。
   `implemented`。
 - **执行层**：每个原语都存在（调度 CAS lease、封存 Context、candidate 准入、工具执行
   器、verifier 接缝、恢复），但连接它们的自主循环未接线——`partial`；见
-  [执行链状态](./execution-chain-status.md)。
+  [执行链状态](execution-chain-status.md)。
 - **平台端口**：SQLite WAL（双库）、文件系统 artifact CAS、Linux Secret Service、
   systemd 用户服务。`implemented`。
 

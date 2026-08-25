@@ -6,16 +6,16 @@ audience: [user, developer, ai]
 status: implemented
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/server.rs
-  - path: apps/admin-cli/src/personal_cli/mod.rs
-  - path: crates/cognitive-store/src/personal_backup.rs
-  - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
-  - path: crates/cognitive-secret/src/backend_select.rs
-  - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-  - path: crates/cognitive-management/src/task_application.rs
-  - path: apps/kernel-server/src/personal/capability_truth.rs
+  - path: personal/apps/kernel-server/src/personal/server.rs
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
+  - path: personal/crates/cognitive-store/src/personal_backup.rs
+  - path: personal/apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
+  - path: personal/crates/cognitive-secret/src/backend_select.rs
+  - path: personal/apps/kernel-server/src/personal/tool_executor/mod.rs
+  - path: personal/crates/cognitive-management/src/task_application.rs
+  - path: personal/apps/kernel-server/src/personal/capability_truth.rs
     symbols: ["FROZEN_UJ_CAPABILITY_TRUTH", "validate_capability_truth_matrix"]
-fingerprint: "sha256:9b9f32429910e3decef316c1b4d881f9e35875f7f743dcae1c46467d3a2ee453"
+fingerprint: "sha256:b155459984006293ff9b6e3d698d1e16299541a39d81496a1cfc9465c417f6f3"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---

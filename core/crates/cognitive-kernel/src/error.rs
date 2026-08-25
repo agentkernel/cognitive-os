@@ -2,7 +2,7 @@
 //! single mapping from typed rejection kinds to those codes.
 //!
 //! Code discipline (`docs/standards/error-contract.md`): a governed failure
-//! surfaces exactly one code registered in `specs/registry/errors.yaml`;
+//! surfaces exactly one code registered in `core/specs/registry/errors.yaml`;
 //! codes are never invented, reused for a different meaning, or collapsed.
 //! The mapping below is the one place where kernel rejection kinds meet
 //! registered codes:
@@ -31,7 +31,7 @@
 use cognitive_domain::{StateName, Version};
 
 /// One registered error code with its registry-declared category and
-/// retryability (`specs/registry/errors.yaml`; a unit test pins these
+/// retryability (`core/specs/registry/errors.yaml`; a unit test pins these
 /// triples against the registry file).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub struct RegisteredError {
@@ -287,7 +287,7 @@ impl TransitionRejection {
 mod tests {
     use super::*;
 
-    /// Pin every code constant against `specs/registry/errors.yaml`:
+    /// Pin every code constant against `core/specs/registry/errors.yaml`:
     /// the code exists and its registered category/retryable match.
     #[test]
     fn code_constants_match_the_registry() {

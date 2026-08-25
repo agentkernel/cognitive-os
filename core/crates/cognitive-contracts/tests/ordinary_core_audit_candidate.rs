@@ -1,6 +1,6 @@
 //! Review-only Ordinary Core AUDIT candidate verification.
 //!
-//! This test deliberately reads `docs/plan/candidates/`, never `specs/`. It is
+//! This test deliberately reads `docs/plan/candidates/`, never `core/specs/`. It is
 //! a freeze reproducibility check, not a conformance runner or machine-asset
 //! registration path.
 
@@ -29,6 +29,7 @@ struct RegisteredError {
 
 fn candidate_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
         .join("..")
         .join("..")
         .join("docs")

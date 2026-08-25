@@ -1,7 +1,7 @@
 # Headroom: IoT / Embodied and Enterprise Multi-Tenancy
 
 - Status: architecture headroom only (not a formal plan task)
-- Related: [ADR-0045](../../adr/0045-personal-os-positioning.md),
+- Related: [ADR-0045](../../../docs/adr/0045-personal-os-positioning.md),
   RFC-0001, CognitiveOS embodied/safety domain notes in the whitepaper
 
 ## 1. Purpose

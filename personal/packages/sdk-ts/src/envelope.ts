@@ -1,7 +1,7 @@
 /**
  * AKP envelope construction and parsing over the GENERATED wire bindings
  * (`akp-request-envelope.schema.json` / `akp-result-envelope.schema.json`,
- * D-013 closure; specs/akp/README.md §3/§5/§9; REQ-AKP-ENV-001,
+ * D-013 closure; core/specs/akp/README.md §3/§5/§9; REQ-AKP-ENV-001,
  * REQ-AKP-ENV-002, REQ-AKP-VER-001, REQ-AKP-CAN-001, REQ-AKP-IDEM-001,
  * REQ-AKP-RES-001).
  *
@@ -43,7 +43,7 @@ export const AKP_PROTOCOL_VERSION: akpRequestEnvelope.AkpRequestEnvelopeProtocol
 
 /**
  * Digest domain for inline payload/result values, pinned by the
- * `signature-preimage` golden fixture (tests/golden/canonical-json-fixtures).
+ * `signature-preimage` golden fixture (core/tests/golden/canonical-json-fixtures).
  */
 export const AKP_PAYLOAD_DIGEST_DOMAIN = "akp-payload/0.2";
 

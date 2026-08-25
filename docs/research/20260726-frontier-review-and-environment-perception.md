@@ -64,7 +64,7 @@
 | `environment_digest` | execution-context.schema | 执行绑定的环境指纹（引用，无内容模型） |
 | `pinned_environment_versions` | loop-checkpoint.schema | 恢复时按 pin 重验证 |
 | `environment_fingerprint` | profile-manifest.schema | 证据环境标识 |
-| Cognitive Discovery manifest | specs/cognitive-discovery | **受治理资源**（context/memory/operation 域）的可发现性 |
+| Cognitive Discovery manifest | core/specs/cognitive-discovery | **受治理资源**（context/memory/operation 域）的可发现性 |
 
 **缺口定义：** 没有一个统一对象回答 Agent 的问题："我现在运行在什么宿主上（OS/arch/资源余量）、有哪些系统工具和运行时及其版本、依赖状态（lockfile digest）、网络可达性等级（offline/proxy/端点存活）、哪些 MCP/Tool server 活着"。后果：每个 Agent 每个 loop 用 bash 临时探测（token/延迟浪费，且学术证据表明 agent 自主探测做得差），或基于过期假设行动（漂移→失败→触发重试预算）。`environment_digest` 有指纹无内容模型，正是这个洞的形状。
 

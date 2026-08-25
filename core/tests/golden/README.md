@@ -24,20 +24,20 @@ ADR-0004):
 
 Consumers that must stay byte-identical:
 
-- Rust: `crates/cognitive-contracts/tests/golden_fixtures.rs`,
+- Rust: `core/crates/cognitive-contracts/tests/golden_fixtures.rs`,
   `tests/projection_fixtures.rs`
-- TypeScript: `packages/contracts-ts/src/golden.test.ts`,
+- TypeScript: `core/packages/contracts-ts/src/golden.test.ts`,
   `src/projection.test.ts`
 - CI cross-language gate: both `emit_golden` programs must print identical
   canonical digest maps, including the LIVE schema-bundle manifest digest of
-  `specs/schemas/` (`.github/workflows/ci.yml`).
+  `core/specs/schemas/` (`.github/workflows/ci.yml`).
 
 Never edit fixture JSON by hand. Regenerate deliberately (byte-faithful
 write, no shell redirection on Windows PowerShell — it adds BOM/CRLF):
 
 ```powershell
 pnpm --filter @cognitiveos/contracts-ts run build
-node -e "const {execFileSync} = require('child_process'); const fs = require('fs'); for (const [arg, file] of [['canonical','tests/golden/canonical-json-fixtures.json'],['projection','tests/golden/digest-and-projection-fixtures.json']]) { fs.writeFileSync(file, execFileSync(process.execPath, ['packages/contracts-ts/dist/dev/generate-fixtures.js', arg])); }"
+node -e "const {execFileSync} = require('child_process'); const fs = require('fs'); for (const [arg, file] of [['canonical','core/tests/golden/canonical-json-fixtures.json'],['projection','core/tests/golden/digest-and-projection-fixtures.json']]) { fs.writeFileSync(file, execFileSync(process.execPath, ['core/packages/contracts-ts/dist/dev/generate-fixtures.js', arg])); }"
 cargo test -p cognitive-contracts   # Rust twin must re-verify before commit
 ```
 

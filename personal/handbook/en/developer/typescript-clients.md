@@ -6,22 +6,22 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: packages/sdk-ts/src/client.ts
+  - path: personal/packages/sdk-ts/src/client.ts
     symbols: ["TaskChannelClient", "ManagementChannelClient"]
-  - path: packages/sdk-ts/src/channel.ts
-  - path: packages/sdk-ts/src/watch.ts
-  - path: packages/pi-cognitiveos/src/daemon-client.ts
+  - path: personal/packages/sdk-ts/src/channel.ts
+  - path: personal/packages/sdk-ts/src/watch.ts
+  - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
     symbols: ["PersonalDaemonClient"]
-  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: personal/packages/pi-cognitiveos/src/pi-route-observation.ts
     symbols: ["assemblePiRouteObservation"]
-  - path: apps/agent-shell/src/session.ts
+  - path: personal/apps/agent-shell/src/session.ts
     symbols: ["ShellSession"]
 tests:
-  - packages/sdk-ts/src/client.test.ts
-  - packages/pi-cognitiveos/src/daemon-client.test.ts
-  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
-  - apps/agent-shell/src/session.test.ts
-fingerprint: "sha256:68fc36ac9d4f8a0719efcb0e9d2d77c6e36f34b3a1bb64250a0f81a4e1d48064"
+  - personal/packages/sdk-ts/src/client.test.ts
+  - personal/packages/pi-cognitiveos/src/daemon-client.test.ts
+  - personal/packages/pi-cognitiveos/src/pi-route-observation.test.ts
+  - personal/apps/agent-shell/src/session.test.ts
+fingerprint: "sha256:577d07f7dd3c2a0301e584fa0763fcb9134ada885e0441df45c1b74225ec5729"
 non_claims:
   - All TypeScript surfaces are candidate/observation clients; none can hold authority or complete Tasks.
 ---
@@ -87,4 +87,4 @@ Shared invariants: no secret material ever reaches these layers (bearer tokens
 are process-local session tokens, not Provider keys); every mutation-shaped call
 carries an idempotency key; all list/watch surfaces are bounded; JSON parsing is
 schema-shaped via `packages/contracts-ts` generated types with canonical-digest
-parity against Rust (`tests/golden/`).
+parity against Rust (`core/tests/golden/`).

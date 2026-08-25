@@ -6,19 +6,19 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: crates/cognitive-runtime/src/linux_bundle.rs
+  - path: personal/crates/cognitive-runtime/src/linux_bundle.rs
     symbols: ["verify_linux_bundle", "stage_verified_bundle", "activate_after_health_check"]
-  - path: crates/cognitive-runtime/src/linux_bundle_installation.rs
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_installation.rs
     symbols: ["PreparedLinuxBundleInstallation", "install_linux_bundle"]
-  - path: crates/cognitive-runtime/src/linux_bundle_service.rs
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["install_linux_bundle_single_service", "render_personal_user_service_unit"]
-  - path: deploy/linux/install.sh
-  - path: crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs
+  - path: personal/deploy/linux/install.sh
+  - path: personal/crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs
 tests:
-  - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
-  - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
-  - crates/cognitive-runtime/tests/linux_bundle_installation.rs
-fingerprint: "sha256:2c6d89ca70c76f223dfd52bbbe917bf2d818934af47b10246592164eb06dc64c"
+  - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
+  - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
+  - personal/crates/cognitive-runtime/tests/linux_bundle_installation.rs
+fingerprint: "sha256:34782e8252bec39c742631966d1e809a9a2d554b0f3a0e3d536be7fd43f47857"
 non_claims:
   - campaign 构建器使用实验签名密钥；此处不做生产签名仪式、GitHub Release 或 B01 声明。
 ---
@@ -50,7 +50,7 @@ systemd）：`ExecStart=<版本化 kernel-server> --personal --bind 127.0.0.1:48
 
 ## 引导链
 
-渲染出的 `install.sh`（模板在 `deploy/linux/`，由 campaign 构建器填入钉住 URL 与
+渲染出的 `install.sh`（模板在 `personal/deploy/linux/`，由 campaign 构建器填入钉住 URL 与
 digest）经 HTTPS 有界下载、单一钉住跳转主机、对安装器二进制做 SHA-256 校验后移交
 Rust 安装器——无 `curl | sh`、无 sudo、无内嵌 secret。构建器
 （`linux_bundle_builder`）组装 daemon+CLI+installer bundle 并用**实验**密钥签名；

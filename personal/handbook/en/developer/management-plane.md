@@ -6,22 +6,22 @@ audience: [developer]
 status: partial
 generated: false
 sources:
-  - path: crates/cognitive-management/src/plane.rs
+  - path: personal/crates/cognitive-management/src/plane.rs
     symbols: ["ManagementPlane", "reconcile"]
-  - path: crates/cognitive-management/src/session.rs
+  - path: personal/crates/cognitive-management/src/session.rs
     symbols: ["PrivilegedManagementSession"]
-  - path: crates/cognitive-management/src/approval.rs
+  - path: personal/crates/cognitive-management/src/approval.rs
     symbols: ["ApprovalGate"]
-  - path: crates/cognitive-management/src/audit.rs
+  - path: personal/crates/cognitive-management/src/audit.rs
     symbols: ["FileManagementAuditLog", "ResultReleaseGate"]
-  - path: crates/cognitive-management/src/task_application.rs
+  - path: personal/crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
-  - path: apps/admin-cli/src/main.rs
+  - path: personal/apps/admin-cli/src/main.rs
 tests:
-  - crates/cognitive-management/tests/m5_session_approval.rs
-  - apps/admin-cli/tests/m5_deterministic_fallback.rs
-  - apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
-fingerprint: "sha256:7f3c8b16d4b03bce656e63d84fb00f38d28e37a7556cbdb9db6c5b535b97f156"
+  - personal/crates/cognitive-management/tests/m5_session_approval.rs
+  - personal/apps/admin-cli/tests/m5_deterministic_fallback.rs
+  - personal/apps/admin-cli/tests/p2_t27_pi_lifecycle.rs
+fingerprint: "sha256:90d0cfb56dc53e4e5f62859cf31760aa836df0c7fb231ab8a97926a8b03c697e"
 non_claims:
   - R0/R2/R3 approval flows and a durable governance-ledger production path are not implemented; only what is listed here exists.
 ---
@@ -60,7 +60,7 @@ are not implemented — hence `partial`.
 
 `admin-cli install/register/activate/activate-root/rollback/agent-pause/agent-resume/agent-stop/
 agent-recover/agent-health/uninstall` call the runtime lifecycle described in
-[Agent and Pi lifecycle](./agent-and-pi-lifecycle.md), all session-gated.
+[Agent and Pi lifecycle](agent-and-pi-lifecycle.md), all session-gated.
 
 ## Task admission
 

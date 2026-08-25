@@ -4,12 +4,12 @@
 - Formal task: `P7-T05` (non-blocking Web UI)
 - Product boundary: local single-owner Personal; Linux 1.0 does not require this surface
 - Change class: `product-semantic + structural` documentation
-- Related: [Product design](./product-design.md), [Provider Control Plane](./provider-control-plane.md), [User journeys](./user-journeys.md)
+- Related: [Product design](product-design.md), [Provider Control Plane](provider-control-plane.md), [User journeys](user-journeys.md)
 
 This document defines the operator experience for a future Web UI. It does not
 claim that a Web UI, its API surface, a Gate, a release or a Profile is
-implemented. Current facts remain in [PROGRESS.md](../../plan/PROGRESS.md).
-[ADR-0053](../../adr/0053-personal-web-ui-stack.md) accepts React + TypeScript +
+implemented. Current facts remain in [PROGRESS.md](../../../docs/plan/PROGRESS.md).
+[ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md) accepts React + TypeScript +
 Vite in `cognitiveos-clients/pc/web/`, same-origin daemon serving, and
 memory-only sessions. The SPA is implemented in the approved checkout
 `D:\cognitiveos-clients\pc\web\`, not in this repository.

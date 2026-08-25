@@ -6,43 +6,43 @@ audience: [developer, ai]
 status: partial
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/server.rs
+  - path: personal/apps/kernel-server/src/personal/server.rs
     symbols: ["PeriodicSchedulerWorker", "serve_personal_loopback"]
-  - path: apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
+  - path: personal/apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick_with_store"]
-  - path: apps/kernel-server/src/personal/scheduler_authority/worker.rs
-  - path: apps/kernel-server/src/personal/tool_executor/mod.rs
-  - path: apps/kernel-server/src/personal/registered_check/mod.rs
-  - path: apps/kernel-server/src/personal/verification_executor.rs
-  - path: apps/kernel-server/src/personal/campaign_observation.rs
+  - path: personal/apps/kernel-server/src/personal/scheduler_authority/worker.rs
+  - path: personal/apps/kernel-server/src/personal/tool_executor/mod.rs
+  - path: personal/apps/kernel-server/src/personal/registered_check/mod.rs
+  - path: personal/apps/kernel-server/src/personal/verification_executor.rs
+  - path: personal/apps/kernel-server/src/personal/campaign_observation.rs
     symbols: ["CampaignMutationObservationService", "CampaignExternalStateFixture"]
-  - path: apps/kernel-server/src/personal/fault_profile.rs
+  - path: personal/apps/kernel-server/src/personal/fault_profile.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/observation.rs
+  - path: personal/apps/kernel-server/src/personal/observation.rs
     symbols: ["handle"]
-  - path: crates/cognitive-store/src/sqlite/protocol.rs
+  - path: personal/crates/cognitive-store/src/sqlite/protocol.rs
     symbols: ["insert_intent"]
-  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+  - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
-  - path: crates/cognitive-management/src/task_application.rs
+  - path: personal/crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService"]
 tests:
-  - apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs
-  - apps/kernel-server/src/personal/scheduler_authority/tests.rs
-  - apps/kernel-server/src/personal/tool_executor/tests.rs
-  - apps/kernel-server/tests/p2_t16_registered_check.rs
-  - apps/kernel-server/tests/p2_t24_effect_fault.rs
-  - apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
-  - apps/kernel-server/tests/p2_t26_observation_plane.rs
-  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - apps/kernel-server/src/personal/fault_profile.rs
-  - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:ff09b2144b7dc344181608720d72a6a34ac9fdf6b9704e15510f55e1497b5311"
+  - personal/apps/kernel-server/src/personal/p2_t17_a7_failure_first.rs
+  - personal/apps/kernel-server/src/personal/scheduler_authority/tests.rs
+  - personal/apps/kernel-server/src/personal/tool_executor/tests.rs
+  - personal/apps/kernel-server/tests/p2_t16_registered_check.rs
+  - personal/apps/kernel-server/tests/p2_t24_effect_fault.rs
+  - personal/apps/kernel-server/tests/p2_t25_tool_lifecycle.rs
+  - personal/apps/kernel-server/tests/p2_t26_observation_plane.rs
+  - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/apps/kernel-server/src/personal/fault_profile.rs
+  - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
+fingerprint: "sha256:9c3ec97b4b87c440e99284a6aff000ff0ae004988df55d038368474320a93f5d"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。

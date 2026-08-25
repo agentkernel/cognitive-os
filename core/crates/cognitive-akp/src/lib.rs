@@ -1,13 +1,13 @@
 //! `cognitive-akp`: Agent Kernel Protocol envelope and transport profile of
 //! the CognitiveOS reference implementation.
 //!
-//! Scope (M5, per `docs/plan/DEVELOPMENT-PLAN.md`): the AKP envelope with
+//! Scope (M5, per `docs/plan/archive/DEVELOPMENT-PLAN.md`): the AKP envelope with
 //! pinned schema digests, unknown-critical-extension fail-closed handling,
 //! and the single-node HTTP JSON + SSE watch transport profile
 //! (`docs/adr/0003-json-http-sse.md`, reference implementation decision).
 //!
-//! Normative source: `specs/akp/README.md` and the registered AKP error
-//! codes in `specs/registry/errors.yaml`.
+//! Normative source: `core/specs/akp/README.md` and the registered AKP error
+//! codes in `core/specs/registry/errors.yaml`.
 
 use cognitive_contracts::generated::akp_request_envelope::AkpRequestEnvelope;
 use serde_json::{Value, json};

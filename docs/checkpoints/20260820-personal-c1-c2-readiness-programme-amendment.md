@@ -18,7 +18,7 @@ product/adapter/asset/fairness/guest/secret/denominator gap that would force
 `not-run` of the C1/C2 arms.
 
 The prior assessment
-[20260820-personal-c1-c2-readiness-delivery-assessment.md](./20260820-personal-c1-c2-readiness-delivery-assessment.md)
+[20260820-personal-c1-c2-readiness-delivery-assessment.md](20260820-personal-c1-c2-readiness-delivery-assessment.md)
 remains historical evidence of packages 1–5. It is **not** a completion claim
 for the amended programme.
 

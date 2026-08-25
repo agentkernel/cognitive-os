@@ -14,8 +14,8 @@
 //!
 //! This replaces the provisional M0 digest recipe that hashed a bare
 //! `{id, content_digest}` list. The TypeScript twin lives in
-//! `packages/contracts-ts/src/bundle.ts`; cross-language byte identity is
-//! held by the golden fixtures (`tests/golden/`) and the emit-golden CI gate.
+//! `core/packages/contracts-ts/src/bundle.ts`; cross-language byte identity is
+//! held by the golden fixtures (`core/tests/golden/`) and the emit-golden CI gate.
 
 use crate::canonical;
 use serde_json::Value;

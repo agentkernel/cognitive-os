@@ -14,7 +14,7 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:057d95d6155d995d5dd98062699de732de168633426dbc417517645cc08e6d74"
+fingerprint: "sha256:e1995c2a419ec2b794c4d433dcc5a99465d7497ff0660c467daa7605c4f35ee2"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -22,7 +22,7 @@ non_claims:
 # Validation commands
 
 Environment routing is a precondition, owned by
-[`PERSONAL-TEST-ENVIRONMENTS.md`](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
+[`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
 
 ## Safe on every platform (including the Windows GNU host)
 
@@ -68,18 +68,18 @@ can run the whole block — it is a native GNU/Linux link host — but its resul
 container-class pre-CI triage, never a substitute for required CI or for
 exact-revision native evidence. Remote/native validation
 consumes only pushed, immutable revisions — never a copied working tree.
-P2-T25 focused HTTP coverage is `apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
+P2-T25 focused HTTP coverage is `personal/apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 (lifecycle, selection, and pinned HTTPS origin registry).
-P2-T26 focused HTTP coverage is `apps/kernel-server/tests/p2_t26_observation_plane.rs`
+P2-T26 focused HTTP coverage is `personal/apps/kernel-server/tests/p2_t26_observation_plane.rs`
 (O2/O3/O4/O5/O13 observation plane, controlled zeros, audit cursor negatives,
 and channel negatives).
-P2-T27 focused HTTP coverage is `apps/kernel-server/tests/p2_t27_backup_restore.rs`
+P2-T27 focused HTTP coverage is `personal/apps/kernel-server/tests/p2_t27_backup_restore.rs`
 (secret-excluding backup/restore, preflight, tamper, and task-channel denial).
 P2-T28 D01 freeze is `tools/test/p2_t28_capability_truth.test.mjs` against
 `tools/fixtures/p2_t28_uj_matrix.json` (existing public callers/oracles;
 Web UI/Multi-Agent stay explicit `excluded`). The matching daemon register is
-`apps/kernel-server/src/personal/capability_truth.rs` (Linux/CI only).
-P2-T28 D02 public-caller smoke is `apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`.
+`personal/apps/kernel-server/src/personal/capability_truth.rs` (Linux/CI only).
+P2-T28 D02 public-caller smoke is `personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs`.
 P2-T28 D03 exact-revision `DEV-LINUX-NATIVE-01` aggregate runs the named UJ
 oracles plus `cargo test -p kernel-server --bins`, `cargo test --workspace`,
 `cargo fmt --all -- --check`, and `cargo clippy --workspace --all-targets -- -D warnings`.
@@ -87,37 +87,37 @@ P2-T30 public-admit scheduler lease coverage is the kernel-server focused test
 `public_admit_c1_search_leaves_draft_only_until_scheduler_acquires_lease`
 (Linux/CI only; Windows GNU `not-run`).
 P2-T33 private-candidate host-path coverage is
-`apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs` plus the
+`personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs` plus the
 `provider_proxy` private-candidate unit tests (Linux/CI only; Windows GNU
 `not-run`).
-P8-T12 Resource Manager coverage is `apps/kernel-server/tests/p8_t12_resource_manager.rs`
+P8-T12 Resource Manager coverage is `personal/apps/kernel-server/tests/p8_t12_resource_manager.rs`
 (management list/inspect/mutate, task-channel 403, generic create refuse;
 Linux/CI only; Windows GNU `not-run`).
 P8-T13 Provider Control Plane coverage is
-`apps/kernel-server/tests/p8_t13_provider_control_plane.rs`,
-`crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs`, and
-`crates/cognitive-store/tests/p8_t13_provider_store.rs`
+`personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs`,
+`personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs`, and
+`personal/crates/cognitive-store/tests/p8_t13_provider_store.rs`
 (endpoint trust/SSRF negatives, catalog preservation, Pi vs dsh binding isolation;
 Linux/CI only; Windows GNU `not-run`).
 P7-T05/D01 Web UI route inventory is
 `tools/test/p7_t05_web_ui_inventory.test.mjs` against
-`docs/architecture/personal/web-ui-route-inventory.json` (invented lifecycle,
+`personal/docs/architecture/web-ui-route-inventory.json` (invented lifecycle,
 missing daemon route, Task-channel secrets, Web storage, and browser-direct
 targets fail closed). It is not a Gate or release result. Daemon Origin/Referer
 and `GET /ui` serving tests live in
-`apps/kernel-server/src/personal/server.rs` (foreign/null Origin,
+`personal/apps/kernel-server/src/personal/server.rs` (foreign/null Origin,
 missing-bundle `not_available`, path traversal); they require supported
 Rust linking (CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 / DEV-LINUX-NATIVE-01).
 P7-T05/D08 binding CAS is `expected_revision` on
 `POST /management/agent-bindings` with 409 `PROVIDER_BINDING_REVISION_STALE`
-(`apps/kernel-server/tests/p8_t13_provider_control_plane.rs`; Linux/CI only).
+(`personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs`; Linux/CI only).
 SPA unit tests live in the external clients checkout `pc/web` (`vitest run`);
 they are not kernel CI and not live SecretStore proof.
 
 ## What CI enforces on every PR
 
 The `verify` matrix (Ubuntu + Windows MSVC) in
-[`ci.yml`](../../../.github/workflows/ci.yml): TypeScript build/test, Rust
+[`ci.yml`](../../../../.github/workflows/ci.yml): TypeScript build/test, Rust
 build/test/clippy/fmt, codegen drift diff, consistency check, traceability freshness,
 conformance runner with pinned five-state counts and evidence-honesty assertions,
 wrong-implementation self-check, cross-language golden digest byte equality.

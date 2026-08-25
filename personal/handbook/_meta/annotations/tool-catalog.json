@@ -1,6 +1,6 @@
 {
   "schema": "cognitiveos-handbook-tool-catalog/0.1",
-  "description": "Hand-maintained annotations for the generated native Tool catalog reference. The generator extracts `native.*.*` ids from crates/cognitive-kernel/src/tool_registry.rs and fails on any bidirectional mismatch.",
+  "description": "Hand-maintained annotations for the generated native Tool catalog reference. The generator extracts `native.*.*` ids from core/crates/cognitive-kernel/src/tool_registry.rs and fails on any bidirectional mismatch.",
   "tools": [
     { "id": "native.workspace.read", "risk": "ReadOnly", "executor": "daemon.workspace", "description_en": "Bounded read of a validated relative path inside an admitted workspace root.", "description_zh": "在已准入 workspace 根内对经校验相对路径的有界读取。" },
     { "id": "native.workspace.search", "risk": "ReadOnly", "executor": "daemon.workspace", "description_en": "Bounded search within admitted workspace roots.", "description_zh": "在已准入 workspace 根内的有界搜索。" },

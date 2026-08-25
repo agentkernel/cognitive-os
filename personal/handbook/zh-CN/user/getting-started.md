@@ -6,21 +6,21 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: deploy/linux/install.sh
-  - path: crates/cognitive-runtime/src/linux_bundle_service.rs
+  - path: personal/deploy/linux/install.sh
+  - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["cognitiveos-personal.service"]
-  - path: apps/admin-cli/src/personal_cli/init.rs
+  - path: personal/apps/admin-cli/src/personal_cli/init.rs
     symbols: ["run_init"]
-  - path: apps/admin-cli/src/personal_cli/mod.rs
+  - path: personal/apps/admin-cli/src/personal_cli/mod.rs
     symbols: ["COGNITIVE_USAGE"]
-  - path: apps/admin-cli/src/personal_cli/daemon.rs
-  - path: apps/admin-cli/src/personal_cli/pi.rs
+  - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
+  - path: personal/apps/admin-cli/src/personal_cli/pi.rs
 tests:
-  - crates/cognitive-runtime/tests/linux_bundle_single_service.rs
-  - crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
-  - apps/admin-cli/tests/p1_t06_cognitive_cli.rs
-  - apps/admin-cli/tests/p2_t27_backup_restore.rs
-fingerprint: "sha256:197ab38453e6b0c0ea2ca6c4c6819b79a1eaaabe97fc1ccefb248c65afd2911a"
+  - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
+  - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
+  - personal/apps/admin-cli/tests/p1_t06_cognitive_cli.rs
+  - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
+fingerprint: "sha256:ace7c10d3efbc0516ab7a519ec384fd251e8e95b467cfc77d83ebcdcc42481f6"
 non_claims:
   - 尚无公开生产发布产物；可安装 bundle 来自实验 campaign 构建。
   - 本页不构成 Gate、Profile、生产就绪或 Windows 安装声明。
@@ -109,5 +109,5 @@ cognitive restore --archive <目录>
 preflight。恢复后重新运行 `cognitive status` 与 `cognitive doctor`；如果 secret store
 中没有 key，再运行 `cognitive init`。
 
-排障请看[运维与恢复](./operations-and-recovery.md)、[Provider 与 secret](./provider-and-secrets.md)
-和[已知限制](./known-limitations.md)。
+排障请看[运维与恢复](operations-and-recovery.md)、[Provider 与 secret](provider-and-secrets.md)
+和[已知限制](known-limitations.md)。

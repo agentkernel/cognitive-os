@@ -2,7 +2,7 @@
 //!
 //! These are pure validation errors: they carry no registered machine error
 //! code by themselves. The deterministic kernel maps domain rejections to
-//! codes registered in `specs/registry/errors.yaml` at its gate
+//! codes registered in `core/specs/registry/errors.yaml` at its gate
 //! (`cognitive_kernel::error`); this layer never invents codes
 //! (`docs/standards/error-contract.md` section 2).
 

@@ -1,9 +1,9 @@
 {
   "schema": "cognitiveos-handbook-manifest/0.1",
   "description": "Machine inventory of every handbook document. Paths are repo-relative. Each doc_id exists once per locale; the checker enforces pairing, frontmatter agreement, and file existence. This manifest owns navigation structure only; it creates no task, Gate, contract, or release facts.",
-  "root_entry": "handbook/README.md",
+  "root_entry": "personal/handbook/README.md",
   "locales": ["en", "zh-CN"],
-  "locale_roots": { "en": "handbook/en", "zh-CN": "handbook/zh-CN" },
+  "locale_roots": { "en": "personal/handbook/en", "zh-CN": "personal/handbook/zh-CN" },
   "audiences": ["user", "developer", "ai"],
   "documents": [
     { "doc_id": "index", "kind": "navigation", "audience": ["user", "developer", "ai"], "generated": false, "rel_path": "README.md" },

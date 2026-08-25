@@ -3,25 +3,25 @@
 Date: 2026-08-25
 Status: **candidate delta index / non-canonical / no implementation authorization**
 
-本文件把 `docs/design/01–41` 作为 2026-08-24 的 dated Control Plane baseline，映射到
-[Personal Desktop 1.0 候选产品](./03-personal-product-design.md)、
-[交互视觉](./04-personal-interaction-and-visual-spec.md)和
-[架构](./05-personal-architecture.md)。它不编辑、移动、重命名或删除 baseline 文件，也不
+本文件把 `clients/docs/design/01–41` 作为 2026-08-24 的 dated Control Plane baseline，映射到
+[Personal Desktop 1.0 候选产品](03-personal-product-design.md)、
+[交互视觉](04-personal-interaction-and-visual-spec.md)和
+[架构](05-personal-architecture.md)。它不编辑、移动、重命名或删除 baseline 文件，也不
 宣称 candidate 文档已 supersede Accepted ADR、正式计划或活动任务。
 
 ## 1. Why a delta index
 
 **FACT**：
 
-- `docs/design/**` 当前是受保护的 untracked dated baseline；
+- `clients/docs/design/**` 当前是受保护的 untracked dated baseline；
 - active `lease/personal/P7-T05/control-plane-foundation` 正在执行 P7-T05/D13
-  Work inventory + governed Task creation，并明确消费 `docs/design/14`、`39`；
+  Work inventory + governed Task creation，并明确消费 `clients/docs/design/14`、`39`；
 - Accepted ADR-0036 和正式 Personal plan 仍把 `1.0.0` 定义为 Linux x86_64 release，
   Web UI、Windows installer 与 non-Pi adapters 为 post-1.0；
 - 2026-08-25 owner 新方向把“Personal Desktop 1.0”作为候选产品范围，尚未通过
   product-semantic ADR 或 formal-plan rebaseline。
 
-因此，本轮只在 `docs/agent-work-system/**` 记录 delta，避免同时存在两个 writer 修改
+因此，本轮只在 `docs/research/agent-work-system/**` 记录 delta，避免同时存在两个 writer 修改
 D13 的 design inputs。
 
 ## 2. Disposition vocabulary
@@ -160,8 +160,8 @@ Desktop 1.0 candidate 内的交付深度，不表示这些能力已实现或已�
 ## 6. Canonical conflict
 
 **FACT**：Accepted
-[`ADR-0036`](../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)和
-[`PERSONAL-DEVELOPMENT-PLAN.md`](../plan/PERSONAL-DEVELOPMENT-PLAN.md)仍规定：
+[`ADR-0036`](../../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)和
+[`PERSONAL-DEVELOPMENT-PLAN.md`](../../plan/PERSONAL-DEVELOPMENT-PLAN.md)仍规定：
 
 - `GMVP-LINUX` 是 Personal `1.0.0` Gate；
 - Linux x86_64 是 1.0 product platform；
@@ -199,10 +199,10 @@ P7-T05/D13 当前负责 Control Plane W4 Work inventory + governed Task creation
 1. **Ownership resolution**：P7-T05/D13 完整收口或明确 transfer；相关 worktree clean。
 2. **Product-semantic ADR**：决定 Linux `1.0.0` 与 Desktop candidate 的命名、版本轴、release
    relationship、platform、scope。
-3. **Canonical product/architecture scope**：更新 `docs/product/personal/` 与
-   `docs/architecture/personal/`，不是由 untracked design baseline 直接拥有。
+3. **Canonical product/architecture scope**：更新 `personal/docs/product/` 与
+   `personal/docs/architecture/`，不是由 untracked design baseline 直接拥有。
 4. **Delta review**：逐条审查本文件 01–41 disposition，决定 KEEP/AMEND/SUPERSEDE。
-5. **Design baseline index**：在 `docs/design/` 增加 canonical delta/index，而不是覆盖旧证据。
+5. **Design baseline index**：在 `clients/docs/design/` 增加 canonical delta/index，而不是覆盖旧证据。
 6. **Formal plan rebaseline**：注册 task、dependencies、acceptance、validation environment、
    Gate/non-claim。
 7. **Lane-CTR**：只对真实 public contract/API changes 修改 schema/bindings/vectors。
@@ -223,7 +223,7 @@ P7-T05/D13 当前负责 Control Plane W4 Work inventory + governed Task creation
 
 ## 10. Non-claims
 
-- `docs/design/**` 本轮完全未修改。
+- `clients/docs/design/**` 本轮完全未修改。
 - 本文件没有接受 ADR、PRD、contract、formal task 或 release scope。
 - 没有 UI/code/dependency/OSS migration。
 - 没有 product test、usability test、Gate、Profile 或 release evidence。

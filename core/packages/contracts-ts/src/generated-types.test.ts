@@ -1,6 +1,6 @@
 /**
  * Generated-binding integration with the canonical encoding layer, TS twin
- * of `crates/cognitive-contracts/tests/generated_types.rs` (ADR-0006
+ * of `core/crates/cognitive-contracts/tests/generated_types.rs` (ADR-0006
  * acceptance: generated types compile under strict settings and describe
  * real contract instances; canonical digests stay byte-identical).
  */
@@ -147,7 +147,7 @@ test("M6 consumer bindings export required members and digest pins", () => {
 
 test("generated error registry is table-complete and fail-closed on unknown codes", () => {
   // Gap 2 of the 20260720 lane-tsc handoff. The entry-by-entry parity with
-  // specs/registry/errors.yaml is pinned by the Rust twin
+  // core/specs/registry/errors.yaml is pinned by the Rust twin
   // (`error_registry_matches_errors_yaml`) plus the CI regenerate-and-diff
   // gate; this side checks the table invariants and the lookup surface.
   assert.equal(REGISTERED_ERRORS.length, 55, "registered code count drifted");

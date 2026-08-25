@@ -6,19 +6,19 @@ audience: [user]
 status: implemented
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/auth.rs
+  - path: personal/apps/kernel-server/src/personal/auth.rs
     symbols: ["LocalSessionAuthority"]
-  - path: apps/kernel-server/src/personal/bounds.rs
-  - path: packages/pi-cognitiveos/src/tool-policy.ts
-  - path: crates/cognitive-runtime/src/pi_launcher.rs
+  - path: personal/apps/kernel-server/src/personal/bounds.rs
+  - path: personal/packages/pi-cognitiveos/src/tool-policy.ts
+  - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: docs/governance/AXIOMS.md
 tests:
-  - apps/kernel-server/tests/p1_t04_personal_daemon.rs
-  - apps/kernel-server/tests/p2_t18_local_token_csprng.rs
-  - packages/pi-cognitiveos/src/safety.test.ts
-  - crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:4434049915e38bf4384f04b027af5b52b9f08d158a0f14755a05a6ed4eb0ba42"
+  - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
+  - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
+  - personal/packages/pi-cognitiveos/src/safety.test.ts
+  - personal/crates/cognitive-runtime/tests/pi_linux_launcher.rs
+fingerprint: "sha256:8c7625c32a5cc721572c00bbe13ed054a3fc65cebaf0480401aa24a755854c22"
 non_claims:
   - Windows file ACL hardening for local runtime files is absent — OS-CSPRNG token generation does not make an ACL claim.
 ---
@@ -70,12 +70,12 @@ connections (16 in-flight) — all fail-closed with registered error codes.
 
 Authority databases are 0600 WAL SQLite files owned by the daemon; secrets live
 exclusively in the Secret Service (see
-[Provider and secrets](./provider-and-secrets.md)). Named Provider Control Plane
+[Provider and secrets](provider-and-secrets.md)). Named Provider Control Plane
 accounts persist only an opaque `secret_ref` in SQLite; API keys never appear in
 authority rows, CLI output, audit payloads, or agent-readable files. Operator
 usage of the CLI (including `--allow-private-network` / `--allow-insecure-http`
 and `--reconfirm`) is in
-[Provider Control Plane](./provider-control-plane.md). Backups
+[Provider Control Plane](provider-control-plane.md). Backups
 exclude secret material
 by construction. The append-only audit/event history cannot be rewritten through
 any daemon surface — updates and deletes are rejected by database triggers.

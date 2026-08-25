@@ -6,35 +6,35 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/readiness.rs
+  - path: personal/apps/kernel-server/src/personal/readiness.rs
     symbols: ["evaluate_personal_readiness"]
-  - path: apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/pinned_https.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/observation.rs
+  - path: personal/apps/kernel-server/src/personal/observation.rs
     symbols: ["handle"]
-  - path: apps/kernel-server/src/personal/six_resource_doctor.rs
-  - path: apps/admin-cli/src/personal_cli/daemon.rs
-  - path: apps/kernel-server/src/personal/user_backup.rs
+  - path: personal/apps/kernel-server/src/personal/six_resource_doctor.rs
+  - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
+  - path: personal/apps/kernel-server/src/personal/user_backup.rs
     symbols: ["handle"]
-  - path: apps/admin-cli/src/personal_cli/backup.rs
-  - path: apps/admin-cli/src/personal_cli/dsh.rs
+  - path: personal/apps/admin-cli/src/personal_cli/backup.rs
+  - path: personal/apps/admin-cli/src/personal_cli/dsh.rs
     symbols: ["launch"]
-  - path: apps/admin-cli/src/personal_cli/provider.rs
-  - path: crates/cognitive-store/src/personal_backup.rs
+  - path: personal/apps/admin-cli/src/personal_cli/provider.rs
+  - path: personal/crates/cognitive-store/src/personal_backup.rs
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
-  - path: crates/cognitive-store/src/personal_db.rs
+  - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
-  - path: crates/cognitive-store/src/sqlite/intent_chain.rs
+  - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
-  - apps/kernel-server/tests/p1_t05_personal_readiness.rs
-  - apps/kernel-server/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/tests/p2_t27_backup_restore.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:0c167fc221199969098248ed4cd55af4577ca12c3d4326fbb506c895ed4166fe"
+  - personal/apps/kernel-server/tests/p1_t05_personal_readiness.rs
+  - personal/apps/kernel-server/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
+fingerprint: "sha256:436cf76adf372a7e1dddf1d14a572bcff7c0ff29dab60a81b7ddaf21b5f5a7db"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -72,7 +72,7 @@ non_claims:
   的 system/database/secret/daemon 就绪（Pi 与 Pi `provider.json` 可保持
   blocked），加载钉住的 AKP 插件，绝不把 dsh 响应当作 Task 完成。直接 Flash
   （`--path a`）被拒绝；同机 Path A/B 测量只用
-  `packages/dsh-akp-adapter/scripts/paired-path.mjs`。
+  `personal/packages/dsh-akp-adapter/scripts/paired-path.mjs`。
 - `cognitive dsh web` 启动原生 dsh 控制面板（`dsh --profile web --no-open`），默认
   `http://127.0.0.1:3080`。这不是 Personal `/ui/`。只绑定 loopback（拒绝
   `--host 0.0.0.0`）。钉住的 dsh 根必须有 `apps/web/dist`（`pnpm run build`）。
@@ -158,7 +158,7 @@ SecretStore，永不进入 SQLite、argv 或浏览器存储。没有桌面控制
 `--allow-insecure-http` / `--allow-private-network` 授权。binding 更新可发送可选
 `expected_revision`；不匹配时 HTTP 409 `PROVIDER_BINDING_REVISION_STALE`。操作
 步骤、可执行命令与常见失败见
-[Provider Control Plane](./provider-control-plane.md)。
+[Provider Control Plane](provider-control-plane.md)。
 
 ## 备份与恢复 —— `partial`
 

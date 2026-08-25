@@ -2,7 +2,7 @@
 
 ## 1. 本次会话完成
 
-- 落地 canonical 计划：[docs/plan/M6-PLAN.md](../plan/M6-PLAN.md)（A–G 完整：目标/WP/合入序/验收矩阵/风险/Batch-0/不做项）。
+- 落地 canonical 计划：[docs/plan/M6-PLAN.md](../plan/archive/M6-PLAN.md)（A–G 完整：目标/WP/合入序/验收矩阵/风险/Batch-0/不做项）。
 - 修订 [docs/prompts/milestone-m6.md](../prompts/milestone-m6.md)：干净 worktree、pins 52/32、安装表与 readiness 缺口、分批入口。
 - 新增执行提示词：
   - [docs/prompts/m6-batch0-contracts.md](../prompts/m6-batch0-contracts.md)（Lane-CTR WP0）
@@ -16,7 +16,7 @@
 |---|---|
 | `origin/main` tip（规划基线） | `3c7115c3eaa50de468505d2e125e5ad81abbf673`（PR #30） |
 | runner pins | pass **52** / not-run **32** / self-check ≥**33** |
-| M5 出口 | [20260721-m5-milestone-review.md](./20260721-m5-milestone-review.md) **GO M6** |
+| M5 出口 | [20260721-m5-milestone-review.md](20260721-m5-milestone-review.md) **GO M6** |
 | 附带条件 | D-018 持续；clients blocked；F-017 出口阻断 |
 | 本地 dirty `main` | 含 personal-blog 恢复提交且 ahead/behind；**不得**用作推送基线 |
 

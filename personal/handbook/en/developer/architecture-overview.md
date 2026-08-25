@@ -6,14 +6,14 @@ audience: [developer]
 status: partial
 generated: false
 sources:
-  - path: docs/architecture/personal/system-architecture.md
-  - path: docs/architecture/personal/resource-manager-architecture.md
-  - path: docs/product/personal/resource-manager-design.md
-  - path: apps/kernel-server/src/personal/mod.rs
-  - path: apps/kernel-server/src/personal/resource_manager.rs
-  - path: crates/cognitive-kernel/src/lib.rs
+  - path: personal/docs/architecture/system-architecture.md
+  - path: personal/docs/architecture/resource-manager-architecture.md
+  - path: personal/docs/product/resource-manager-design.md
+  - path: personal/apps/kernel-server/src/personal/mod.rs
+  - path: personal/apps/kernel-server/src/personal/resource_manager.rs
+  - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:48b3ffe09e232ec21aa97482b89083324d47a4320ab8ac2c836f9f76f30ec845"
+fingerprint: "sha256:7d4c85a3d00f411981de256ba6b5df6d3da16e7c3e158765cdaae9b4ef20555b"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -33,7 +33,7 @@ adapter, checked against embedded, digest-pinned transition tables from
 
 ## Target layers vs current composition
 
-The target design ([`system-architecture.md`](../../../docs/architecture/personal/system-architecture.md))
+The target design ([`system-architecture.md`](../../../docs/architecture/system-architecture.md))
 draws five layers: experience clients → Task/Resource application services → six
 domain services → sidecar/scheduler/executor/verifier execution layer → SQLite +
 artifact + secret + Linux ports.
@@ -52,7 +52,7 @@ What exists today:
 - **Execution layer**: every primitive exists (scheduler CAS leases, sealed
   Context, candidate admission, tool executors, verifier seam, recovery), but the
   autonomous loop that connects them is not wired — `partial`; see
-  [execution-chain status](./execution-chain-status.md).
+  [execution-chain status](execution-chain-status.md).
 - **Platform ports**: SQLite WAL (two databases), filesystem artifact CAS, Linux
   Secret Service, systemd user service. `implemented`.
 

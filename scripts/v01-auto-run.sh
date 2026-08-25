@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # V01 unattended Boot → Connect → Verify → Perf Auto orchestrator (POSIX).
 # Tip-honest: kernel-server uses --once --bind only (no /health, no --data-dir).
-# See docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md
+# See docs/plan/archive/V01-AUTO-RUN-VERIFY-PERF-PLAN.md
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"

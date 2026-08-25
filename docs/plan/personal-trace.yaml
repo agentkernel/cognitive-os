@@ -10,7 +10,7 @@ sources:
   delivery_slice_definitions: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
   current_progress: docs/plan/PROGRESS.md
   research_plan: docs/plan/plan.md
-  registry: specs/registry/requirements.yaml
+  registry: core/specs/registry/requirements.yaml
   registry_matrix: docs/traceability/matrix.yaml
 
 rules:

@@ -6,13 +6,13 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: docs/product/personal/product-design.md
-  - path: apps/kernel-server/src/personal/server.rs
+  - path: personal/docs/product/product-design.md
+  - path: personal/apps/kernel-server/src/personal/server.rs
     symbols: ["serve_personal_loopback"]
-  - path: docs/product/personal/linux-1.0-scope.md
+  - path: personal/docs/product/linux-1.0-scope.md
 tests:
-  - apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:17160faa14a99bae70bf741f2a0bd8f71588883db812e3ba664af2a9a260cec4"
+  - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
+fingerprint: "sha256:e6a88761a70a397baaf92ed549ec43667edfb79429763cd795e72c22dd8cff3a"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -46,6 +46,6 @@ non_claims:
 
 总体 `partial`：安装、daemon、CLI、secret、Provider 代理、Pi 对话、Task 准入与六类
 权威存储已实现并有测试；完全自主的 Task **执行**（调度驱动的工具执行与独立验证的端到
-端接线）尚未接通——见 [Task 与执行](./tasks-and-execution.md)。稳定产品意图由
-[`docs/product/personal/`](../../../docs/product/personal/README.md) 拥有；本页跟踪
+端接线）尚未接通——见 [Task 与执行](tasks-and-execution.md)。稳定产品意图由
+[`personal/docs/product/`](../../../docs/product/README.md) 拥有；本页跟踪
 代码今天真实做到的部分。

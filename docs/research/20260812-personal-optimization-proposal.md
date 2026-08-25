@@ -7,7 +7,7 @@
   `4b072c011f551b7bf4e5d67c09099876308e05c9`
 - Current fact owner: `docs/plan/PROGRESS.md` `Current snapshot`
 - Architecture/axiom owners:
-  `docs/governance/AXIOMS.md`、accepted ADRs、`specs/` 与适用 standards
+  `docs/governance/AXIOMS.md`、accepted ADRs、`core/specs/` 与适用 standards
 - Scope: 结合当前架构与实现，从 OS、Agent 基座、管理、性能、完成任务能力和协作
   六个视角，给出可验证、可裁剪、不过度扩张的优化决策框架
 
@@ -138,7 +138,7 @@ SecretStore 和证据分级都已在承重代码中落地；SQLite 单写者和�
 - 当前 `agent_adapter_manifest.rs` 只验证 `AkpHttpJsonSse` profile、声明 digest、
   candidate-only 和 lifecycle；Personal sidecar 路径没有调用
   `cognitive_akp::parse_request/result_ok/WatchLog`。真实 envelope 消费只在 legacy
-  `apps/kernel-server/src/main.rs` 和 conformance 测试中可见。
+  `personal/apps/kernel-server/src/main.rs` 和 conformance 测试中可见。
 
 #### 缺口与处理
 

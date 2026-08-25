@@ -8,8 +8,8 @@
 - **文档性质**：Informative Architecture Whitepaper
 - **适用对象**：Agent 平台、自治系统、机器人、边缘智能与异构计算架构师
 - **定稿边界**：1.0.x 仅表示本白皮书的架构基线冻结与评审闭环；各 companion 规范、schema、registry 保持各自 Draft 版本，全部规范资产仍处于"已登记、未经实现验证"状态（§1.2），实现状态以机器可读 manifest 为准
-- **配套资产**：本仓库的 [规范套件](../../../specs) 与 [符合性资产](../../../conformance) 分别承载实际存在的规范和测试材料；[RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md) 是 v0.2 Draft normative companion；仓库已登记治理对象族（[governed-object-contract](../../standards/governed-object-contract.md)）、管理会话、性能报告等机器 schema 与 REQ/错误码/声明式向量条目，但这些资产不等于实现
-- **Personal 现行入口**：活动实现项目见 [AGENTS.md](../../../AGENTS.md)、[AXIOMS.md](../../governance/AXIOMS.md)、[Personal 产品](../../product/personal/README.md) 与 [Personal 架构](../personal/README.md)。本文是架构层 informative 白皮书；当前任务/Gate 事实只由 `docs/plan/PROGRESS.md` 拥有。
+- **配套资产**：本仓库的 [规范套件](../../specs) 与 [符合性资产](../../conformance) 分别承载实际存在的规范和测试材料；[RFC-0001](RFC-0001-cognitiveos-governance-context-access.md) 是 v0.2 Draft normative companion；仓库已登记治理对象族（[governed-object-contract](../../../docs/standards/governed-object-contract.md)）、管理会话、性能报告等机器 schema 与 REQ/错误码/声明式向量条目，但这些资产不等于实现
+- **Personal 现行入口**：活动实现项目见 [AGENTS.md](../../../AGENTS.md)、[AXIOMS.md](../../../docs/governance/AXIOMS.md)、[Personal 产品](../../../personal/docs/product/README.md) 与 [Personal 架构](../../../personal/docs/architecture/README.md)。本文是架构层 informative 白皮书；当前任务/Gate 事实只由 `docs/plan/PROGRESS.md` 拥有。
 > 本文解释 CognitiveOS 的问题边界、总体结构、关键抽象与演进方向。
 > 本文不直接定义一致性义务。
 > 规范性对象、状态机、线协议、错误码与测试要求由规范套件给出。
@@ -20,8 +20,8 @@
 > **认知资源操作系统**（资源抽象、调度语义、隔离保护、统一 Agent 接口、持久状态）；
 > 补充 context / harness / loop 三支柱工程原则；补充与主流 agent harness 的对标差距；
 > 补充生态定位（AKP 唯一适配、A2A 发现语义对齐且默认无公网 listener）。公理正文以
-> [AXIOMS.md](../../governance/AXIOMS.md) 为准；本白皮书不覆盖其编号清单。该修订不
-> 改变 specs/conformance 机器合同，也不产生 Gate/release/Profile 证据。
+> [AXIOMS.md](../../../docs/governance/AXIOMS.md) 为准；本白皮书不覆盖其编号清单。该修订不
+> 改变 core/specs/conformance 机器合同，也不产生 Gate/release/Profile 证据。
 
 ### 架构契约与规范优先级
 
@@ -54,7 +54,7 @@ CognitiveOS Personal 是**认知资源操作系统**，覆盖：
 | 持久状态 | SQLite WAL authority、Intent/Effect、Event、Checkpoint/Resume |
 
 它**不是** Linux 内核替代、设备固件 ABI，或默认的企业多租户控制面。延伸余量见
-[headroom-iot-and-multitenancy.md](../personal/headroom-iot-and-multitenancy.md)。
+[headroom-iot-and-multitenancy.md](../../../personal/docs/architecture/headroom-iot-and-multitenancy.md)。
 
 #### 对标差距（主流 agent harness）
 
@@ -70,7 +70,7 @@ Agent 适配面、确定性 hooks/分级加载、Context compaction、跨 episod
 2. **Harness engineering** — WIA、fencing、budget、独立 verifier、分级 hooks（不得放松公理）。
 3. **Loop engineering** — ACT→VERIFY→CONTINUE→OBSERVE、分层终止、candidate→admission 学习。
 
-详见 [AXIOMS.md](../../governance/AXIOMS.md) P1–P3 与 [ADR-0042](../../adr/0042-personal-three-pillar-engineering.md)。
+详见 [AXIOMS.md](../../../docs/governance/AXIOMS.md) P1–P3 与 [ADR-0042](../../../docs/adr/0042-personal-three-pillar-engineering.md)。
 
 #### 生态定位
 
@@ -94,7 +94,7 @@ v0.7 在 v0.6 的统一治理模型上补齐从“治理型白皮书”到“可
 1. **上下文重要，但不是新的 authority**：`ContextView` 是派生工作视图，不与 World State、事件提交历史或 TaskContract 争夺权威性。
 2. **CVM 是实现模型，不是假装存在硬件页表**：page fault、pin、working set 等术语只有在能映射为明确对象、错误、预算与审计行为时才有工程意义。
 3. **治理机制与优化策略分离**：授权、版本固定、硬预算和损失声明属于机制；检索器、排序器、摘要器和所谓“认知经济学”目标属于可替换策略或待验证假设。
-4. **不扩张规范承诺**：本文仍是说明性白皮书，不虚构 schema、REQ-ID、错误码或测试向量。[RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md) 是 v0.2 Draft normative companion；已提交的机器资产边界以其正文和规范索引为准。
+4. **不扩张规范承诺**：本文仍是说明性白皮书，不虚构 schema、REQ-ID、错误码或测试向量。[RFC-0001](RFC-0001-cognitiveos-governance-context-access.md) 是 v0.2 Draft normative companion；已提交的机器资产边界以其正文和规范索引为准。
 5. **隔离不等于授权**：Tenant 是数据与策略隔离域，不是权限等级；同租户、管理员或基础设施控制权均不自动获得正文读取权。
 6. **对话是资源作用域**：Conversation 与 AuthenticationSession、RuntimeSession 分离；并发对话默认使用独立 AgentExecution，认知缓存和 working memory 不得串用。
 7. **Intelligent Shell 不持有常驻特权**：管理操作使用强认证建立的短期 `PrivilegedManagementSession`；session 只给出管理权限上界，每个写操作仍需结构化 proposal、确定性门禁、必要的独立批准与 Effect 对账。
@@ -184,18 +184,18 @@ Context Engineering 因而不是 Prompt Engineering 的新名称。它治理选�
 ### 1.2 规范套件索引
 规范性细节按主题分布：
 
-- [Core 规范索引](../../../specs/core/README.md)：对象、状态、上下文、事件、授权、副作用、恢复与基础错误语义；
-- [Agent Compatibility](../../../specs/agent-compatibility/README.md)、[Governed Memory](../../../specs/governed-memory/README.md)、[Cognitive Discovery](../../../specs/cognitive-discovery/README.md)、[Operation Catalog](../../../specs/operation-catalog/README.md) 与 [Semantic Mediation](../../../specs/semantic-mediation/README.md)：分别规范安装适配、记忆生命周期、增量发现、工具目录和 SMS/CRB；
-- [RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md)：v0.2 Draft normative companion，定义治理域、对话、认知数据准入、执行上下文与受治理知识编译；治理对象机器 schema 已由 [governed-object-contract](../../standards/governed-object-contract.md) 登记，知识对象仍为伪 schema；
-- [AKP 规范](../../../specs/akp/README.md)：Agent Kernel Protocol 的对象交互、会话、协商与传输映射；
-- [分布式 Profile](../../../specs/distributed/README.md)：租约、epoch、fencing、分区、复制与跨域 authority；
-- [具身 Profile](../../../specs/embodied/README.md)：安全域、技能包络、实时回路、急停和设备语义；
-- [异构计算 Profile](../../../specs/heterogeneous/README.md)：ResourceGraph、放置、数据驻留、CIM 与编译栈；
-- [持续学习 Profile](../../../specs/learning/README.md)：候选、评估、发布、回滚和生产隔离；
-- [符合性索引](../../../conformance/README.md)：测试层级、profile manifest、互操作与证据格式。
+- [Core 规范索引](../../specs/core/README.md)：对象、状态、上下文、事件、授权、副作用、恢复与基础错误语义；
+- [Agent Compatibility](../../specs/agent-compatibility/README.md)、[Governed Memory](../../specs/governed-memory/README.md)、[Cognitive Discovery](../../specs/cognitive-discovery/README.md)、[Operation Catalog](../../specs/operation-catalog/README.md) 与 [Semantic Mediation](../../specs/semantic-mediation/README.md)：分别规范安装适配、记忆生命周期、增量发现、工具目录和 SMS/CRB；
+- [RFC-0001](RFC-0001-cognitiveos-governance-context-access.md)：v0.2 Draft normative companion，定义治理域、对话、认知数据准入、执行上下文与受治理知识编译；治理对象机器 schema 已由 [governed-object-contract](../../../docs/standards/governed-object-contract.md) 登记，知识对象仍为伪 schema；
+- [AKP 规范](../../specs/akp/README.md)：Agent Kernel Protocol 的对象交互、会话、协商与传输映射；
+- [分布式 Profile](../../specs/distributed/README.md)：租约、epoch、fencing、分区、复制与跨域 authority；
+- [具身 Profile](../../specs/embodied/README.md)：安全域、技能包络、实时回路、急停和设备语义；
+- [异构计算 Profile](../../specs/heterogeneous/README.md)：ResourceGraph、放置、数据驻留、CIM 与编译栈；
+- [持续学习 Profile](../../specs/learning/README.md)：候选、评估、发布、回滚和生产隔离；
+- [符合性索引](../../conformance/README.md)：测试层级、profile manifest、互操作与证据格式。
 
 白皮书与规范发生歧义时，以被实现声明固定版本和摘要的规范文本为准。 外部协议符合性不能替代 CognitiveOS 自身的符合性要求。
-本文档在相关章节起点以隐式 HTML 锚点（`<a id="..."/>`）固定 `state-protocol`、`context-resolution-protocol`、`context-engineering`、`context-virtualization-profile`、`capability-protocol`、`core-effect-protocol`、`resources`、`threats`、`core-digital-profile`、`distributed-profile`、`embodied-safety-profile`、`controlled-learning-profile` 等 slug 作为主题检索入口；[specs/registry/requirements.yaml](../../../specs/registry/requirements.yaml) 的 `owner_spec` 自 1.0.1 起全部指向 normative companion、标准或 schema，不再指向本说明性白皮书（形状/行为权威分离，见 [normative-source-and-versioning](../../standards/normative-source-and-versioning.md) §2）；下表"规范性落点"列同时给出主题锚点便于检索。
+本文档在相关章节起点以隐式 HTML 锚点（`<a id="..."/>`）固定 `state-protocol`、`context-resolution-protocol`、`context-engineering`、`context-virtualization-profile`、`capability-protocol`、`core-effect-protocol`、`resources`、`threats`、`core-digital-profile`、`distributed-profile`、`embodied-safety-profile`、`controlled-learning-profile` 等 slug 作为主题检索入口；[core/specs/registry/requirements.yaml](../../specs/registry/requirements.yaml) 的 `owner_spec` 自 1.0.1 起全部指向 normative companion、标准或 schema，不再指向本说明性白皮书（形状/行为权威分离，见 [normative-source-and-versioning](../../../docs/standards/normative-source-and-versioning.md) §2）；下表"规范性落点"列同时给出主题锚点便于检索。
 
 | 评审问题 | 本文主入口 | 规范性落点 |
 |---|---|---|
@@ -208,24 +208,24 @@ Context Engineering 因而不是 Prompt Engineering 的新名称。它治理选�
 | 如何进入物理执行和异构硬件？ | 第 13、14 节 | Embodied、Heterogeneous |
 | 如何学习、上线并证明系统状态？ | 第 18、19 节 | Learning、Conformance |
 
-Profile 状态字段由 [specs/schemas/profile-manifest.schema.json](../../../specs/schemas/profile-manifest.schema.json) 定义为 `implemented`、`planned`、`experimental` 或 `unsupported`；下列"本文锚点/章节"应在规范发生矛盾时以被实现固定的 companion 文本为准。
+Profile 状态字段由 [core/specs/schemas/profile-manifest.schema.json](../../specs/schemas/profile-manifest.schema.json) 定义为 `implemented`、`planned`、`experimental` 或 `unsupported`；下列"本文锚点/章节"应在规范发生矛盾时以被实现固定的 companion 文本为准。
 
 | Profile 名 | Companion spec | Companion 版本/状态 | 本文档主章节 | 关键 REQ-ID | 典型风险等级 |
 |---|---|---|---|---|---|
-| `core_digital` | [specs/core/README.md](../../../specs/core/README.md) | v0.2 Draft / Companion | §6、§7、§8、§9、§10、§12、§20.1 | `REQ-PROFILE-CORE-001`、`REQ-CHARTER-*`、`REQ-OBJ-*`、`REQ-STATE-*`、`REQ-CTX-*`、`REQ-EFF-*`、`REQ-RUN-*` | R0—R2 |
-| `context_virtualization` | [specs/core/README.md](../../../specs/core/README.md) | v0.2 Draft / Companion | §9（`context-virtualization-profile`、`context-engineering`） | `REQ-CTX-001`–`REQ-CTX-012` | R0—R2 |
-| `harnessed_autonomous_execution` | [specs/core/README.md](../../../specs/core/README.md) | v0.2 Draft / Companion | §6、§10、§19.2 | `REQ-RUN-001`–`REQ-RUN-009`、`REQ-PROFILE-HARNESS-001/002` | R1—R3 |
-| `intelligent_management_shell` | [Core](../../../specs/core/README.md) + [RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft / Companion | §12.8—§12.10、§20.1—§20.2 | `REQ-MGMT-SESSION-001`–`003`、`REQ-MGMT-GATE-001`、`REQ-MGMT-APPROVAL-001`、`REQ-MGMT-AUTHZ-001`、`REQ-MGMT-TRUST-001`、`REQ-MGMT-EFFECT-001`、`REQ-MGMT-IDEM-001`、`REQ-MGMT-RECOVERY-001`、`REQ-MGMT-FALLBACK-001`、`REQ-MGMT-SESSION-LIFECYCLE-001` | R0—R3（按操作风险适用） |
-| `agent_compatibility` | [spec](../../../specs/agent-compatibility/README.md) | v0.1 Draft / Companion | §5 | `REQ-AGENT-*` | C0—C3 与 R0—R3 正交 |
-| `governed_memory` | [spec](../../../specs/governed-memory/README.md) | v0.1 Draft / Companion | §9、§18 | `REQ-MEM-*` | R0—R3 |
-| `cognitive_discovery` | [spec](../../../specs/cognitive-discovery/README.md) | v0.1 Draft / Companion | §9.9 | `REQ-DISC-*` | R0—R3 |
-| `operation_catalog` | [spec](../../../specs/operation-catalog/README.md) | v0.1 Draft / Companion | §12.7 | `REQ-CAT-*` | R0—R3 |
-| `semantic_mediation` | [spec](../../../specs/semantic-mediation/README.md) | v0.1 Draft / Companion | §10.2 | `REQ-SEM-*`、`REQ-CRB-*` | soft signal；R0—R3 |
-| `akp`（协议面） | [specs/akp/README.md](../../../specs/akp/README.md) | v0.2 Draft / Companion | §11 | `REQ-AKP-ENV-*`、`REQ-AKP-RES-*`、`REQ-GW-*` | 全部 Profile |
-| `distributed` | [specs/distributed/README.md](../../../specs/distributed/README.md) | v0.2 Draft / Companion | §15、§16（`distributed-profile`） | `REQ-PROFILE-DIST-001`、`REQ-DIST-*`、`REQ-CAP-003` | R1—R3 |
-| `embodied_safety` | [specs/embodied/README.md](../../../specs/embodied/README.md) | v0.2 Draft / Companion | §13、§16.1、§20.3、§20.5（`embodied-safety-profile`） | `REQ-PROFILE-EMB-001`、`REQ-EMB-*`、`REQ-EFF-007` | R3 |
-| `heterogeneous_cim` | [specs/heterogeneous/README.md](../../../specs/heterogeneous/README.md) | v0.2 Draft / Companion | §14（`resources`）、§20.3 | `REQ-PROFILE-HET-001`、`REQ-HET-*` | R2—R3（含硬件认证） |
-| `controlled_learning` | [specs/learning/README.md](../../../specs/learning/README.md) | v0.2 Draft / Companion | §18、§19.7（`controlled-learning-profile`） | `REQ-PROFILE-LEARN-001`、`REQ-LEARN-*` | R1—R3（生产改写） |
+| `core_digital` | [core/specs/core/README.md](../../specs/core/README.md) | v0.2 Draft / Companion | §6、§7、§8、§9、§10、§12、§20.1 | `REQ-PROFILE-CORE-001`、`REQ-CHARTER-*`、`REQ-OBJ-*`、`REQ-STATE-*`、`REQ-CTX-*`、`REQ-EFF-*`、`REQ-RUN-*` | R0—R2 |
+| `context_virtualization` | [core/specs/core/README.md](../../specs/core/README.md) | v0.2 Draft / Companion | §9（`context-virtualization-profile`、`context-engineering`） | `REQ-CTX-001`–`REQ-CTX-012` | R0—R2 |
+| `harnessed_autonomous_execution` | [core/specs/core/README.md](../../specs/core/README.md) | v0.2 Draft / Companion | §6、§10、§19.2 | `REQ-RUN-001`–`REQ-RUN-009`、`REQ-PROFILE-HARNESS-001/002` | R1—R3 |
+| `intelligent_management_shell` | [Core](../../specs/core/README.md) + [RFC-0001](RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft / Companion | §12.8—§12.10、§20.1—§20.2 | `REQ-MGMT-SESSION-001`–`003`、`REQ-MGMT-GATE-001`、`REQ-MGMT-APPROVAL-001`、`REQ-MGMT-AUTHZ-001`、`REQ-MGMT-TRUST-001`、`REQ-MGMT-EFFECT-001`、`REQ-MGMT-IDEM-001`、`REQ-MGMT-RECOVERY-001`、`REQ-MGMT-FALLBACK-001`、`REQ-MGMT-SESSION-LIFECYCLE-001` | R0—R3（按操作风险适用） |
+| `agent_compatibility` | [spec](../../specs/agent-compatibility/README.md) | v0.1 Draft / Companion | §5 | `REQ-AGENT-*` | C0—C3 与 R0—R3 正交 |
+| `governed_memory` | [spec](../../specs/governed-memory/README.md) | v0.1 Draft / Companion | §9、§18 | `REQ-MEM-*` | R0—R3 |
+| `cognitive_discovery` | [spec](../../specs/cognitive-discovery/README.md) | v0.1 Draft / Companion | §9.9 | `REQ-DISC-*` | R0—R3 |
+| `operation_catalog` | [spec](../../specs/operation-catalog/README.md) | v0.1 Draft / Companion | §12.7 | `REQ-CAT-*` | R0—R3 |
+| `semantic_mediation` | [spec](../../specs/semantic-mediation/README.md) | v0.1 Draft / Companion | §10.2 | `REQ-SEM-*`、`REQ-CRB-*` | soft signal；R0—R3 |
+| `akp`（协议面） | [core/specs/akp/README.md](../../specs/akp/README.md) | v0.2 Draft / Companion | §11 | `REQ-AKP-ENV-*`、`REQ-AKP-RES-*`、`REQ-GW-*` | 全部 Profile |
+| `distributed` | [core/specs/distributed/README.md](../../specs/distributed/README.md) | v0.2 Draft / Companion | §15、§16（`distributed-profile`） | `REQ-PROFILE-DIST-001`、`REQ-DIST-*`、`REQ-CAP-003` | R1—R3 |
+| `embodied_safety` | [core/specs/embodied/README.md](../../specs/embodied/README.md) | v0.2 Draft / Companion | §13、§16.1、§20.3、§20.5（`embodied-safety-profile`） | `REQ-PROFILE-EMB-001`、`REQ-EMB-*`、`REQ-EFF-007` | R3 |
+| `heterogeneous_cim` | [core/specs/heterogeneous/README.md](../../specs/heterogeneous/README.md) | v0.2 Draft / Companion | §14（`resources`）、§20.3 | `REQ-PROFILE-HET-001`、`REQ-HET-*` | R2—R3（含硬件认证） |
+| `controlled_learning` | [core/specs/learning/README.md](../../specs/learning/README.md) | v0.2 Draft / Companion | §18、§19.7（`controlled-learning-profile`） | `REQ-PROFILE-LEARN-001`、`REQ-LEARN-*` | R1—R3（生产改写） |
 
 白皮书与任一 companion 发生歧义时，以被实现声明固定版本和摘要的规范文本为准（与上文 §1.2 一致）。
 
@@ -562,10 +562,10 @@ flowchart LR
   SG[ShareGrant] -. local reauthorization .-> RS
 ```
 
-完整规范语义见 [RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md)。它是 v0.2 Draft normative companion；上述治理对象族的机器 schema 已由 [governed-object-contract](../../standards/governed-object-contract.md) 登记为 v0.1 Draft，知识对象仍为伪 schema；已登记的规范与声明式测试资产不表示实现。
+完整规范语义见 [RFC-0001](RFC-0001-cognitiveos-governance-context-access.md)。它是 v0.2 Draft normative companion；上述治理对象族的机器 schema 已由 [governed-object-contract](../../../docs/standards/governed-object-contract.md) 登记为 v0.1 Draft，知识对象仍为伪 schema；已登记的规范与声明式测试资产不表示实现。
 
 ### 6.3 五个执行生命周期状态机
-旧式 Agent 实现常把“任务正在运行”塞进一个枚举。 这会混淆身份、业务进度、控制循环、外部效果和验收事实。 CognitiveOS 明确分离五个正交的**执行生命周期状态机**。它们不是 authority-managed state domain 的闭合集合；World、Conversation、Membership、Policy、Knowledge、Memory 与安全状态等治理域仍可扩展。下列文本图是 [specs/transitions/](../../../specs/transitions) 中已登记迁移表的投影；完整的 guard、reason code 与证据要求以对应 `*.transitions.json` 及 [state-domains.yaml](../../../specs/registry/state-domains.yaml) 为准。
+旧式 Agent 实现常把“任务正在运行”塞进一个枚举。 这会混淆身份、业务进度、控制循环、外部效果和验收事实。 CognitiveOS 明确分离五个正交的**执行生命周期状态机**。它们不是 authority-managed state domain 的闭合集合；World、Conversation、Membership、Policy、Knowledge、Memory 与安全状态等治理域仍可扩展。下列文本图是 [core/specs/transitions/](../../specs/transitions) 中已登记迁移表的投影；完整的 guard、reason code 与证据要求以对应 `*.transitions.json` 及 [state-domains.yaml](../../specs/registry/state-domains.yaml) 为准。
 #### AgentExecution State
 回答逻辑执行主体是否可被调度：
 ```text
@@ -891,7 +891,7 @@ LOADED | CONTEXT_DENIED | REQUIRED_MISSING | STALE
 BUDGET_EXHAUSTED | CONFLICT_UNRESOLVED | TARGET_INCOMPATIBLE
 ```
 
-这些是 Context Resolution 的操作结果与 Activity 状态，不新增第六个执行生命周期状态机。这些名称也只是语义类别：已登记机器错误码以 [specs/registry/errors.yaml](../../../specs/registry/errors.yaml) 为准（如 `CONTEXT_AUTH_DENIED`、`CONTEXT_INCOMPLETE`、`CONTEXT_BUDGET_EXCEEDED`），其余为待登记类别。需要恢复时，通用 Checkpoint 的 LoopCheckpoint payload 保存 ContextView 引用、解析参数与失效条件，而不是假定整个渲染文本可永久复用。
+这些是 Context Resolution 的操作结果与 Activity 状态，不新增第六个执行生命周期状态机。这些名称也只是语义类别：已登记机器错误码以 [core/specs/registry/errors.yaml](../../specs/registry/errors.yaml) 为准（如 `CONTEXT_AUTH_DENIED`、`CONTEXT_INCOMPLETE`、`CONTEXT_BUDGET_EXCEEDED`），其余为待登记类别。需要恢复时，通用 Checkpoint 的 LoopCheckpoint payload 保存 ContextView 引用、解析参数与失效条件，而不是假定整个渲染文本可永久复用。
 
 工作集还承担记忆/知识准入的写读衔接：candidate 的准入（含语义 lint 与 authority 决定）**可以异步**执行，不要求阻塞写路径；准入完成前，候选以"本 Activity/Conversation 私有工作集条目"的形式对写入者立即可见（read-your-write），但不得跨 scope、跨 Conversation 或向其他主体泄露；准入失败时，工作集内的候选被标记并隔离，而不是静默消失（`REQ-MEM-ADMIT-002`，详见 governed-memory companion）。该语义避免"刚写的记忆读不到"的行为回归，同时保持长期事实仍只能经准入产生。
 
@@ -958,7 +958,7 @@ sequenceDiagram
 ### 9.10 最小符合性负例
 一个声明 Context Engineering 能力的实现至少应证明：required 超预算时 fail closed；未授权正文不会泄漏到 ranker/renderer；缓存不绕过撤销；压缩保留 loss declaration；过期或冲突不被静默覆盖；注入文本不能修改 control 或扩大 capability。上述负例已有已登记向量支撑：CTX-REQ-007（required 超预算）、CTX-RANK-AUTH-001（授权先于 ranker）、CTX-REVOKE-CACHE-001（缓存不绕过撤销）、CTX-TRUST-004（注入隔离）、GOBJ-TENANT-LATERAL-001（同租户横向读取拒绝）；其余测试资产以仓库实际存在并由实现声明固定的 conformance 文件为准。
 
-[REQ-PROFILE-CVM-001] 声明 `context_virtualization` Profile 的实现 **MUST** 覆盖 `REQ-CTX-001`–`REQ-CTX-012` 的全部适用要求，并提供本节所列负例（required fail-closed、授权先于正文、缓存不绕过撤销、注入隔离）的测试证据（规范条文已由 [Core companion](../../../specs/core/README.md) §15.3 承载）。
+[REQ-PROFILE-CVM-001] 声明 `context_virtualization` Profile 的实现 **MUST** 覆盖 `REQ-CTX-001`–`REQ-CTX-012` 的全部适用要求，并提供本节所列负例（required fail-closed、授权先于正文、缓存不绕过撤销、注入隔离）的测试证据（规范条文已由 [Core companion](../../specs/core/README.md) §15.3 承载）。
 
 ---
 ## 10. Harness 与 Loop Engineering
@@ -1045,13 +1045,13 @@ MCP 描述模型上下文与工具互操作；A2A 描述 Agent 间消息、任�
 AKP 传递引用或封装以下对象：
 基础 AKP 对象族包括 AgentExecution、Episode、Task、TaskContract；StateSnapshot、StateProposal、ConflictSet；ContextRequest、ContextView、ContextReference；OperationDescriptor、InvocationBinding；AuthorizationCapability、AuthorizationDecision；Intent、Effect、Receipt、VerificationReport；Event、Checkpoint、ResourceReservation；Principal、AuthorityDescriptor、PolicyRef。
 
-[RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md) v0.2 Draft 规范扩展传递或引用 TenantContext、Membership、ActorChain、Conversation、Turn、ResourceScope、ShareGrant、AdmissionDecision、ExecutionContext 与 ActivityContext。这些治理对象自身的机器 schema 已由 [governed-object-contract](../../standards/governed-object-contract.md) 登记；但这是 normative companion 草案的协议语义扩展，不表示对应的 AKP machine schema、扩展号或 wire 编码已经登记。
+[RFC-0001](RFC-0001-cognitiveos-governance-context-access.md) v0.2 Draft 规范扩展传递或引用 TenantContext、Membership、ActorChain、Conversation、Turn、ResourceScope、ShareGrant、AdmissionDecision、ExecutionContext 与 ActivityContext。这些治理对象自身的机器 schema 已由 [governed-object-contract](../../../docs/standards/governed-object-contract.md) 登记；但这是 normative companion 草案的协议语义扩展，不表示对应的 AKP machine schema、扩展号或 wire 编码已经登记。
 ### 11.3 Envelope 与协商
 跨边界 envelope 通常需要：
 protocol 与 schema version；message identity；source、destination、TenantContext、ActorChain、ConversationBinding、AgentExecution/ActivityContext 和 purpose；correlation、causation 和 trace；deadline 与 cancellation；content digest 和签名/证明；sensitivity 与 residency；payload 或不可变引用；ack、delivery 和 backpressure 语义。
 版本协商必须在解释 payload 前完成。 未知 critical 扩展应 fail closed。
 
-下表把 AKP 交互模式与 [Core 规范 §12](../../../specs/core/README.md) 的最小传输无关操作一一对应，便于阅读与映射实现。 该表是说明性映射，不引入新规范性要求。
+下表把 AKP 交互模式与 [Core 规范 §12](../../specs/core/README.md) 的最小传输无关操作一一对应，便于阅读与映射实现。 该表是说明性映射，不引入新规范性要求。
 
 | AKP 交互模式 | 对应 Core Operation | 典型场景 | unknown-outcome / 失败处理 |
 |---|---|---|---|
@@ -1063,7 +1063,7 @@ protocol 与 schema version；message identity；source、destination、TenantCo
 | `checkpoint/resume` | `Checkpoint`、`Resume` | AgentExecution 持久迁移 | 恢复时重验 ActorChain、Conversation、权限、freshness 与 fencing（现有 AKP companion 另有 continuation 要求） |
 | `negotiate/bind` | `operation.describe / bind`、`SubmitPlacement` | OperationDescriptor 协商、placement 绑定 | schema/digest 漂移触发重新协商与重新授权 |
 
-任何模式映射跨传输时都必须保留版本、错误、取消、幂等、流式与 unknown-outcome 语义（与 `REQ-CORE-OPS-002`、`REQ-AKP-RES-001` 一致）。上表“失败处理”列中的错误名为语义类别；机器登记码以 [specs/registry/errors.yaml](../../../specs/registry/errors.yaml) 为准（对照关系见 Core §13）。
+任何模式映射跨传输时都必须保留版本、错误、取消、幂等、流式与 unknown-outcome 语义（与 `REQ-CORE-OPS-002`、`REQ-AKP-RES-001` 一致）。上表“失败处理”列中的错误名为语义类别；机器登记码以 [core/specs/registry/errors.yaml](../../specs/registry/errors.yaml) 为准（对照关系见 Core §13）。
 
 ### 11.4 交互模式
 AKP 支持：
@@ -1072,7 +1072,7 @@ request/response：快照、解析和授权查询；command/result：受管操�
 ### 11.5 传输无关性
 AKP 可映射到：
 进程内调用；Unix socket 或 named pipe；HTTP/gRPC；QUIC；消息队列；共享内存 ring；实时域 mailbox。
-传输不同不能改变对象身份、授权和 Effect 状态机语义。 详细线协议见 [AKP 规范](../../../specs/akp/README.md)。
+传输不同不能改变对象身份、授权和 Effect 状态机语义。 详细线协议见 [AKP 规范](../../specs/akp/README.md)。
 ---
 <a id="capability-protocol"></a><a id="core-effect-protocol"></a>
 ## 12. OperationDescriptor、AuthorizationCapability 与 Agent Shell
@@ -1316,11 +1316,11 @@ ResourceGraph 是版本化事实投影。 调度前应验证其 freshness。
 数据是否允许离开设备、区域或租户；模型权重是否可移动；中间激活和 KV cache 的敏感度；传输能耗是否超过计算节省；verifier 是否必须在 authority 附近运行；设备断网后是否需要本地继续；物理控制 deadline 是否允许远端路径。
 “最近的加速器”不是“最合适的加速器”。
 ### 14.4 CIM 的特殊约束（边界声明）
-Compute-in-Memory 可降低某些数据移动成本，但引入器件变异、漂移、写入耐久、转换开销、有限精度与校准依赖；论文芯片上的吞吐或能效不能直接外推到完整 Agent 系统，系统级收益必须包含编译、校准、数据转换、fallback 和传输成本。具体的可靠性约束、校准与漂移语义由 [Heterogeneous 规范](../../../specs/heterogeneous/README.md) §6 定义。
+Compute-in-Memory 可降低某些数据移动成本，但引入器件变异、漂移、写入耐久、转换开销、有限精度与校准依赖；论文芯片上的吞吐或能效不能直接外推到完整 Agent 系统，系统级收益必须包含编译、校准、数据转换、fallback 和传输成本。具体的可靠性约束、校准与漂移语义由 [Heterogeneous 规范](../../specs/heterogeneous/README.md) §6 定义。
 ### 14.5 CIM 误差调度（边界声明）
-CIM placement 不只是容量调度，也是**误差预算调度**：placement 调度器把候选路径的总误差包络与 OperationDescriptor 声明的可接受误差比较，"近似可接受"的任务走 CIM 路径，"近似不可接受"或属高风险决策路径的任务路由到确定性 fallback。近似结果可用于候选生成、排序或感知前处理；一旦要承载授权判定、审计完整性或最终安全仲裁，必须走确定性或经认证的 fallback 路径（`REQ-HET-ERR-001`/`REQ-PROFILE-HET-001`），并保留从原 decision 到新 decision 的谱系（`REQ-HET-FB-001`）。误差包络的分解模型与调度匹配项细节下沉至 [Heterogeneous 规范](../../../specs/heterogeneous/README.md)。
+CIM placement 不只是容量调度，也是**误差预算调度**：placement 调度器把候选路径的总误差包络与 OperationDescriptor 声明的可接受误差比较，"近似可接受"的任务走 CIM 路径，"近似不可接受"或属高风险决策路径的任务路由到确定性 fallback。近似结果可用于候选生成、排序或感知前处理；一旦要承载授权判定、审计完整性或最终安全仲裁，必须走确定性或经认证的 fallback 路径（`REQ-HET-ERR-001`/`REQ-PROFILE-HET-001`），并保留从原 decision 到新 decision 的谱系（`REQ-HET-FB-001`）。误差包络的分解模型与调度匹配项细节下沉至 [Heterogeneous 规范](../../specs/heterogeneous/README.md)。
 ### 14.6 编译栈（边界声明）
-异构 CognitiveOS 的编译路径是从语义 IR 逐级下降到设备 IR、最终固化为执行 manifest 的多级结构；每级缩小自由度并固定影响语义、驻留与误差的版本。编译不是一次性离线动作：运行时可基于资源变化重新放置，但必须保持语义约束、版本和审计。IR 层级划分与执行 manifest 内容作为参考模型下沉至 [Heterogeneous 规范](../../../specs/heterogeneous/README.md)。
+异构 CognitiveOS 的编译路径是从语义 IR 逐级下降到设备 IR、最终固化为执行 manifest 的多级结构；每级缩小自由度并固定影响语义、驻留与误差的版本。编译不是一次性离线动作：运行时可基于资源变化重新放置，但必须保持语义约束、版本和审计。IR 层级划分与执行 manifest 内容作为参考模型下沉至 [Heterogeneous 规范](../../specs/heterogeneous/README.md)。
 ### 14.7 Heterogeneous Intelligence Fabric
 HIF 是说明性资源服务层。 它可统一本地、边缘和远端模型：
 能力发现；预算与数据策略；路由、hedging 和 ensemble；取消与费用计量；reducer 和证据谱系；模型、adapter 和量化版本固定。
@@ -1561,7 +1561,7 @@ TaskContract 和环境版本；模型、采样和 provider；Context 与 Loop �
 <a id="performance-contract"></a>
 ### 19.4 可复现实验与性能契约
 
-每份性能声明都由 `BenchmarkManifest` 固定输入：workload 与 TaskContract 分布；warm/cold cache 与模型启动状态；模型、provider、revision、sampling/seed；CPU/GPU/NPU/内存/存储/网络、节点拓扑和并发；数据集、版本、split 与许可；fault profile；R0—R3 risk class；样本量、重复次数、置信区间方法；baseline 与逐项 ablation；机制延迟与模型/工具/网络延迟的分离计量。报告必须声明 profile/SLO、测量时钟、窗口、缺失/取消样本处理和单位。机器格式见 [performance-report schema](../../../specs/schemas/performance-report.schema.json)。
+每份性能声明都由 `BenchmarkManifest` 固定输入：workload 与 TaskContract 分布；warm/cold cache 与模型启动状态；模型、provider、revision、sampling/seed；CPU/GPU/NPU/内存/存储/网络、节点拓扑和并发；数据集、版本、split 与许可；fault profile；R0—R3 risk class；样本量、重复次数、置信区间方法；baseline 与逐项 ablation；机制延迟与模型/工具/网络延迟的分离计量。报告必须声明 profile/SLO、测量时钟、窗口、缺失/取消样本处理和单位。机器格式见 [performance-report schema](../../specs/schemas/performance-report.schema.json)。
 
 统一统计约定：对延迟样本 `x` 以毫秒报告 p50/p95/p99；比例指标为 `100 * numerator / denominator %`，同时报告两者计数和 Wilson/bootstrap 95% CI；吞吐为窗口内完成数/墙钟秒；费用为货币/Task 与货币/accepted claim；能量为 J/Task、J/accepted claim 或 J/inference，并说明测量边界。滑动窗口必须给出起止时间/持续时长，不能删除 timeout、拒绝、unknown outcome 或 quarantine 样本。
 
@@ -1575,15 +1575,15 @@ TaskContract 和环境版本；模型、采样和 provider；Context 与 Loop �
 - **Security/Knowledge**：unauthorized disclosure = leaked protected objects / adversarial access trials；revocation propagation latency；poison admission/escape；claim/citation、contradiction、staleness、invalidation、recompile、deletion closure 指标按 §18.3 定义。
 - **Governance overhead**：治理机制自身的开销是"规范太贵所以绕开"风险的量化盲区，须独立报告——授权判定、Context 解析（不含模型/检索 I/O）与 Effect 协议各阶段延迟的 p50/p95/p99；cache-hit preservation ratio = 治理绑定下供应商推理缓存命中率 / 无治理基线命中率；每受治理调用的额外持久化写次数与字节；审批延迟分布、审批吞吐与橡皮图章率（批准延迟低于阈值的比例）、拒绝后重试率；治理开销占端到端延迟与费用的百分比，按 R0—R3 分层报告，并给出与无治理（或原生 Agent 裸跑）基线的对比。
 
-本节的规范义务与 [specs/registry/requirements.yaml](../../../specs/registry/requirements.yaml) 登记条目对应：
+本节的规范义务与 [core/specs/registry/requirements.yaml](../../specs/registry/requirements.yaml) 登记条目对应：
 
-- [REQ-PERF-001] 性能声明 **MUST** 由符合 [performance-report schema](../../../specs/schemas/performance-report.schema.json) 的可复现报告支撑，并固定本节 BenchmarkManifest 所列全部输入（负载、环境、模型、数据、fault profile、risk class、统计方法与基线）。
+- [REQ-PERF-001] 性能声明 **MUST** 由符合 [performance-report schema](../../specs/schemas/performance-report.schema.json) 的可复现报告支撑，并固定本节 BenchmarkManifest 所列全部输入（负载、环境、模型、数据、fault profile、risk class、统计方法与基线）。
 - [REQ-PERF-002] 实现可以发布面向特定 profile 的 dashboard 或多目标 Pareto 前沿，但 **MUST NOT** 用一个“通用综合分”掩盖安全失败、拒绝路径、p95/p99 尾延迟、risk-class 分层或 unknown outcome。
 - [REQ-PERF-003] 比例、延迟、吞吐、费用与能量指标 **MUST** 按上文统一统计约定给出分子/分母计数、窗口与置信区间，且 **MUST NOT** 删除 timeout、拒绝、unknown outcome 或 quarantine 样本。
 - [REQ-PERF-004] 面向受治理负载的性能声明 **MUST** 报告 Governance overhead 指标族（门禁/解析/Effect 阶段延迟、cache-hit preservation ratio、额外持久化量、审批延迟与橡皮图章率、治理开销占比），并声明所用无治理基线；治理开销数据缺失时 **MUST NOT** 声称"治理开销可忽略"。
-- [REQ-PERF-005] 任何"显著 Agent 收益"级别的声明 **MUST** 由 [Agent 收益评测合同](../../evaluation/agent-benefit-benchmark.md)的四臂设计（native baseline / governance-only / optimized / ablation）与预注册统计门槛支撑，填充 performance report 的 `comparison` 块（arms、primary endpoint、95% CI、effect size、ablation、`claim_level`、`preregistration_ref`）；未达门槛的结果 **MUST** 声明为 `hypothesis` 或 `non_inferiority`，**MUST NOT** 表述为性能提升。
+- [REQ-PERF-005] 任何"显著 Agent 收益"级别的声明 **MUST** 由 [Agent 收益评测合同](../../../docs/evaluation/agent-benefit-benchmark.md)的四臂设计（native baseline / governance-only / optimized / ablation）与预注册统计门槛支撑，填充 performance report 的 `comparison` 块（arms、primary endpoint、95% CI、effect size、ablation、`claim_level`、`preregistration_ref`）；未达门槛的结果 **MUST** 声明为 `hypothesis` 或 `non_inferiority`，**MUST NOT** 表述为性能提升。
 
-**收益声明与非劣化的边界**：B（governance-only）相对 A（native）达到非劣化门槛时，只能声明"治理附加成本可接受"；C（optimized）未超过 B 时，对应优化按评测合同的 kill criteria 降级为 experimental、延后、替换或删除。局部检索或工具指标（归因指标）改善若未传导到端到端 verified completion / time / token / 费用，只能声明局部能力改善。收益门槛、workload-specific 治理开销预算与 cache 保持门槛必须同时进入 SLO profile、BenchmarkManifest、performance report 与 CI/release gate，而不只留在说明文字中。REQ-PERF-002/004 的规范条文由[符合性索引](../../../conformance/README.md)承载，REQ-PERF-005 由评测合同承载；本节为 informative 汇总。
+**收益声明与非劣化的边界**：B（governance-only）相对 A（native）达到非劣化门槛时，只能声明"治理附加成本可接受"；C（optimized）未超过 B 时，对应优化按评测合同的 kill criteria 降级为 experimental、延后、替换或删除。局部检索或工具指标（归因指标）改善若未传导到端到端 verified completion / time / token / 费用，只能声明局部能力改善。收益门槛、workload-specific 治理开销预算与 cache 保持门槛必须同时进入 SLO profile、BenchmarkManifest、performance report 与 CI/release gate，而不只留在说明文字中。REQ-PERF-002/004 的规范条文由[符合性索引](../../conformance/README.md)承载，REQ-PERF-005 由评测合同承载；本节为 informative 汇总。
 
 跨报告比较只有在 manifest 兼容，或明确列出差异和 ablation 时才有意义。
 
@@ -1598,7 +1598,7 @@ TaskContract 和环境版本；模型、采样和 provider；Context 与 Loop �
 7. Harness、Loop 与 Verification；
 8. distributed partition 与 fencing；
 9. embodied safety 与异构 profile。
-本节九级是按主题的宏观分层；[符合性索引](../../../conformance/README.md) 将其细化为 15 个累积测试层（在上述主题外单列知识编译、性能契约、管理会话、Agent 安装、受治理记忆、认知发现、Operation 目录、语义中介与意图/Shell 层），测试资产以后者的层编号为准。实现应发布机器可读 profile manifest，区分 implemented、experimental、planned 和 unsupported。 详细要求见 [符合性索引](../../../conformance/README.md)。Effect/恢复/fencing 状态机的形式模型（§21 Phase 4 交付项）可作为第 3、5 层的补充证据，但不替代对真实实现的行为测试。
+本节九级是按主题的宏观分层；[符合性索引](../../conformance/README.md) 将其细化为 15 个累积测试层（在上述主题外单列知识编译、性能契约、管理会话、Agent 安装、受治理记忆、认知发现、Operation 目录、语义中介与意图/Shell 层），测试资产以后者的层编号为准。实现应发布机器可读 profile manifest，区分 implemented、experimental、planned 和 unsupported。 详细要求见 [符合性索引](../../conformance/README.md)。Effect/恢复/fencing 状态机的形式模型（§21 Phase 4 交付项）可作为第 3、5 层的补充证据，但不替代对真实实现的行为测试。
 ### 19.6 外部协议测试边界
 通过 MCP 测试只说明 MCP 互操作。 通过 A2A TCK 只说明 A2A 互操作。 通过宿主 OS 或容器安全测试也不自动证明 CognitiveOS 的 Context、Capability、Effect 和 Verification 正确。
 
@@ -1618,7 +1618,7 @@ TaskContract 和环境版本；模型、采样和 provider；Context 与 Loop �
 11. **认知服务**：Memory admission、discovery delta、catalog binding、SMS fallback 与 CRB hard-bound 是否有负例证据；
 12. **验收容量**：人审容量与 verifier 吞吐预算是多少，任务量是否与之匹配；人审机制是否包含风险分层抽样复核、批处理审批、审批 SLA 与超时升级，以及橡皮图章率监控（与 §12.12、§19.4 审批指标共用）。
 
-Readiness Case 还应包含同租户横向越权、管理员正文拒绝、跨 Conversation 污染、撤销后缓存失效、检索前过滤、跨 scope 晋升和 ShareGrant 本地重授权的负例证据。建议将上述结论与 [profile manifest schema](../../../specs/schemas/profile-manifest.schema.json)、适用规范版本、测试向量和已记录 degradation 一并发布。 不具备某项证据并不必然禁止低风险实验，但必须缩小 capability、数据范围和效果类别，且不得把实验状态包装成生产保证。
+Readiness Case 还应包含同租户横向越权、管理员正文拒绝、跨 Conversation 污染、撤销后缓存失效、检索前过滤、跨 scope 晋升和 ShareGrant 本地重授权的负例证据。建议将上述结论与 [profile manifest schema](../../specs/schemas/profile-manifest.schema.json)、适用规范版本、测试向量和已记录 degradation 一并发布。 不具备某项证据并不必然禁止低风险实验，但必须缩小 capability、数据范围和效果类别，且不得把实验状态包装成生产保证。
 ---
 <a id="core-digital-profile"></a><a id="distributed-profile"></a><a id="embodied-safety-profile"></a><a id="controlled-learning-profile"></a>
 ## 20. 参考部署形态
@@ -1673,7 +1673,7 @@ identity 与 policy authority；分布式 State/Context Runtime；AgentExecution
 ### Phase 0：对象与治理基线
 稳定现有治理语义并登记 AgentPackageManifest、MemoryObject、OperationSummary 与 CognitiveResourceManifest；建立 schema/requirement/error/vector 的可追踪边界。
 ### Phase 1：最小可安装系统
-交付 AgentInstallation、C0/C1、sandbox、Identity/Memory/Tool adapters、静态 Catalog、确定性 Context Resolution、legacy Agent 参考适配器与不可绕过负例。legacy 参考适配器交付时，按 [Agent 收益评测合同](../../evaluation/agent-benefit-benchmark.md)发布适配前后 A/B 性能对齐报告：A（native baseline）与 B（governance-only）两臂、BenchmarkManifest 固定输入、报告任务成功率、延迟、token/费用、缓存命中与 §19.4 Governance overhead 指标族，并对照该合同 §5.4 的 workload-specific 开销预算与 cache 保持门槛给出非劣化判定。该报告只能声明"治理附加成本可接受"，不得声明性能提升；它同时作为后续语义优化（C/D 臂）的预注册对照基线。
+交付 AgentInstallation、C0/C1、sandbox、Identity/Memory/Tool adapters、静态 Catalog、确定性 Context Resolution、legacy Agent 参考适配器与不可绕过负例。legacy 参考适配器交付时，按 [Agent 收益评测合同](../../../docs/evaluation/agent-benefit-benchmark.md)发布适配前后 A/B 性能对齐报告：A（native baseline）与 B（governance-only）两臂、BenchmarkManifest 固定输入、报告任务成功率、延迟、token/费用、缓存命中与 §19.4 Governance overhead 指标族，并对照该合同 §5.4 的 workload-specific 开销预算与 cache 保持门槛给出非劣化判定。该报告只能声明"治理附加成本可接受"，不得声明性能提升；它同时作为后续语义优化（C/D 臂）的预注册对照基线。
 ### Phase 2：认知发现与受治理记忆
 交付 InformationGap、ContextViewDelta、目录/正文分离、累计预算、停滞检测，以及 MemoryCandidate/admission/promotion/conflict/invalidation/delete。
 ### Phase 3：Semantic Mediation
@@ -1878,21 +1878,21 @@ CognitiveOS 的核心价值是把认知活动纳入可验证的操作系统机�
 ## 附录 B：规范套件导航
 | 主题 | 规范入口 | 版本 | 状态 | 主文档关系 |
 |---|---|---|---|---|
-| Core 对象与机制 | [Core](../../../specs/core/README.md) | v0.2 Draft | Companion Specification | 规范化第 6—12 节的核心语义 |
-| 多租户、对话与认知准入 | [RFC-0001](./RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft | Normative Companion RFC | 规范化治理上下文、Conversation、知识编译与访问；治理对象机器 schema 已由 [governed-object-contract](../../standards/governed-object-contract.md) 登记，知识对象仍为伪 schema |
-| Agent 安装与适配 | [Agent Compatibility](../../../specs/agent-compatibility/README.md) | v0.1 Draft | Companion Specification | 规范化第 5 节 |
-| 受治理记忆 | [Governed Memory](../../../specs/governed-memory/README.md) | v0.1 Draft | Companion Specification | 规范化记忆准入与生命周期 |
-| 认知发现 | [Cognitive Discovery](../../../specs/cognitive-discovery/README.md) | v0.1 Draft | Companion Specification | 规范化 manifest、gap 与 delta |
-| Operation 目录 | [Operation Catalog](../../../specs/operation-catalog/README.md) | v0.1 Draft | Companion Specification | 规范化 discover/match/bind |
-| 语义中介与资源代理 | [Semantic Mediation](../../../specs/semantic-mediation/README.md) | v0.1 Draft | Companion Specification | 规范化 SMS/CRB soft-signal 边界 |
-| 内核协议 | [AKP](../../../specs/akp/README.md) | v0.2 Draft | Companion Specification | 规范化第 11 节 |
-| 分布式系统 | [Distributed](../../../specs/distributed/README.md) | v0.2 Draft | Companion Specification | 规范化第 15—16 节的分布式部分 |
-| 具身与安全 | [Embodied](../../../specs/embodied/README.md) | v0.2 Draft | Companion Specification | 规范化第 13 节 |
-| 异构与 CIM | [Heterogeneous](../../../specs/heterogeneous/README.md) | v0.2 Draft | Companion Specification | 规范化第 14 节 |
-| 持续学习 | [Learning](../../../specs/learning/README.md) | v0.2 Draft | Companion Specification | 规范化第 18 节 |
-| 测试与声明 | [Conformance](../../../conformance/README.md) | — | Conformance Assets | 规范化第 19 节的符合性要求 |
+| Core 对象与机制 | [Core](../../specs/core/README.md) | v0.2 Draft | Companion Specification | 规范化第 6—12 节的核心语义 |
+| 多租户、对话与认知准入 | [RFC-0001](RFC-0001-cognitiveos-governance-context-access.md) | v0.2 Draft | Normative Companion RFC | 规范化治理上下文、Conversation、知识编译与访问；治理对象机器 schema 已由 [governed-object-contract](../../../docs/standards/governed-object-contract.md) 登记，知识对象仍为伪 schema |
+| Agent 安装与适配 | [Agent Compatibility](../../specs/agent-compatibility/README.md) | v0.1 Draft | Companion Specification | 规范化第 5 节 |
+| 受治理记忆 | [Governed Memory](../../specs/governed-memory/README.md) | v0.1 Draft | Companion Specification | 规范化记忆准入与生命周期 |
+| 认知发现 | [Cognitive Discovery](../../specs/cognitive-discovery/README.md) | v0.1 Draft | Companion Specification | 规范化 manifest、gap 与 delta |
+| Operation 目录 | [Operation Catalog](../../specs/operation-catalog/README.md) | v0.1 Draft | Companion Specification | 规范化 discover/match/bind |
+| 语义中介与资源代理 | [Semantic Mediation](../../specs/semantic-mediation/README.md) | v0.1 Draft | Companion Specification | 规范化 SMS/CRB soft-signal 边界 |
+| 内核协议 | [AKP](../../specs/akp/README.md) | v0.2 Draft | Companion Specification | 规范化第 11 节 |
+| 分布式系统 | [Distributed](../../specs/distributed/README.md) | v0.2 Draft | Companion Specification | 规范化第 15—16 节的分布式部分 |
+| 具身与安全 | [Embodied](../../specs/embodied/README.md) | v0.2 Draft | Companion Specification | 规范化第 13 节 |
+| 异构与 CIM | [Heterogeneous](../../specs/heterogeneous/README.md) | v0.2 Draft | Companion Specification | 规范化第 14 节 |
+| 持续学习 | [Learning](../../specs/learning/README.md) | v0.2 Draft | Companion Specification | 规范化第 18 节 |
+| 测试与声明 | [Conformance](../../conformance/README.md) | — | Conformance Assets | 规范化第 19 节的符合性要求 |
 
-白皮书与规范歧义时，以被实现固定版本和摘要的规范文本为准（与 §1.2 末段一致）。 Companion 版本与状态字段独立漂移；调用者应以 [profile-manifest](../../../specs/schemas/profile-manifest.schema.json) 中实际声明的 `spec.version`、`requirement_set_digest` 与 `schema_bundle_digest` 为权威。 全部机器 schema 位于 [specs/schemas/](../../../specs/schemas)；治理对象族的登记清单见 [governed-object-contract](../../standards/governed-object-contract.md)，其余 schema 由各 companion README 的“机器 schema”标注与 [requirements.yaml](../../../specs/registry/requirements.yaml) 的 `owner_spec` 字段索引。
+白皮书与规范歧义时，以被实现固定版本和摘要的规范文本为准（与 §1.2 末段一致）。 Companion 版本与状态字段独立漂移；调用者应以 [profile-manifest](../../specs/schemas/profile-manifest.schema.json) 中实际声明的 `spec.version`、`requirement_set_digest` 与 `schema_bundle_digest` 为权威。 全部机器 schema 位于 [core/specs/schemas/](../../specs/schemas)；治理对象族的登记清单见 [governed-object-contract](../../../docs/standards/governed-object-contract.md)，其余 schema 由各 companion README 的“机器 schema”标注与 [requirements.yaml](../../specs/registry/requirements.yaml) 的 `owner_spec` 字段索引。
 ---
 ## 附录 C：参考资料与证据等级
 ### C.1 证据等级
@@ -1951,7 +1951,7 @@ CognitiveOS 的核心价值是把认知活动纳入可验证的操作系统机�
 ### 1.0.2（治理对象合同统一）
 本版完成独立审查报告（F-001–F-030）中最后一项 P0 残余（F-003，双轨对象合同）及一处两轮审查均未完全闭合的对账字段漂移，并做证据分级校准。架构语义、对象族、Profile 与 REQ 域均不变，符合 §21 冻结条款。
 
-1. **治理对象合同统一（P0 残余闭合）**：35 份仍引用 legacy 形状的 `specs/schemas/` 合同一次性迁移——30 份 `common-defs.metadata` 引用改为携带 [GovernedObjectHeader](../../../specs/schemas/governed-object-header.schema.json)（属性名 `metadata`→`header`，digest 投影路径与 REQ-GOBJ-REF-004 一致），22 份文件中的全部 `common-defs.strongRef` 引用改为 [object-reference](../../../specs/schemas/object-reference.schema.json) `strongReference`（`version`/`digest`→`object_version`/`content_digest`）。Core 竖切对象（Intent、Effect、Event、TaskContract、ContextRequest/View、LoopCheckpoint、VerificationReport、AuthorizationCapability 等）自此在机器层强制 `scope_domain`/`tenant_id`、`resource_scope_ref`、`policy_refs`、`purpose_constraints`、`retention` 治理维度；缺失租户/范围绑定的实例不再 schema-valid。legacy `metadata`/`strongRef` 定义保留在 common-defs 并标记 deprecated，仅供显式 legacy adapter 按 governed-object-contract §3/§6 的登记映射解释；governed-object-contract 补迁移状态声明；Core §3.2 改指 GovernedObjectHeader 为统一元数据机器合同；REQ-OBJ-001 的 owner_spec 迁至 governed-object-header schema（SCHEMA-META-001 同步）。
+1. **治理对象合同统一（P0 残余闭合）**：35 份仍引用 legacy 形状的 `core/specs/schemas/` 合同一次性迁移——30 份 `common-defs.metadata` 引用改为携带 [GovernedObjectHeader](../../specs/schemas/governed-object-header.schema.json)（属性名 `metadata`→`header`，digest 投影路径与 REQ-GOBJ-REF-004 一致），22 份文件中的全部 `common-defs.strongRef` 引用改为 [object-reference](../../specs/schemas/object-reference.schema.json) `strongReference`（`version`/`digest`→`object_version`/`content_digest`）。Core 竖切对象（Intent、Effect、Event、TaskContract、ContextRequest/View、LoopCheckpoint、VerificationReport、AuthorizationCapability 等）自此在机器层强制 `scope_domain`/`tenant_id`、`resource_scope_ref`、`policy_refs`、`purpose_constraints`、`retention` 治理维度；缺失租户/范围绑定的实例不再 schema-valid。legacy `metadata`/`strongRef` 定义保留在 common-defs 并标记 deprecated，仅供显式 legacy adapter 按 governed-object-contract §3/§6 的登记映射解释；governed-object-contract 补迁移状态声明；Core §3.2 改指 GovernedObjectHeader 为统一元数据机器合同；REQ-OBJ-001 的 owner_spec 迁至 governed-object-header schema（SCHEMA-META-001 同步）。
 2. **Effect 对账字段闭合（两轮审查未竟项）**：effect schema 新增 `reconciliation_result`（`executed|not_executed|still_unknown`）与 `reconciliation_report_ref` 持久字段，与 effect 迁移表 v0.2 的 `reconciliation_result_equals_*` guard 一一对应；条件闭包同步收紧——`RECONCILED` 必须携带对账结果与报告引用，`VERIFIED`/`VERIFY_FAILED`/`COMMITTED` 必须 `reconciliation_result=executed`，对账前状态禁止携带该字段；`COMMITTED` 不再强制 `observed_outcome=succeeded`（经 `OUTCOME_UNKNOWN` 对账确认已执行的提交路径合法保持 `unknown|not_observed` 观察事实，禁止为提交改写观察记录）；Core §9.5 增补对应条文。EFFECT-STATE-CLOSURE-008 的 `allowed_exits` 修正为与迁移表一致（`OUTCOME_UNKNOWN` 直接出口仅 `RECONCILED`，补偿/隔离是 still_unknown 对账后的出口）。
 3. **验证过期唯一表达**：VerificationReport 不可变（`passed|failed|indeterminate`）；`PASSED→EXPIRED` 由 Verification 生命周期与失效事件承载；Effect 内嵌 `verification.status` 为当前 standing 投影并增加 `expired` 值；commit guard `verification_still_current` 拒绝非当前验证（Core §9.5 落定，消除报告可变性歧义）。
 4. **证据分级校准与措辞对齐**：附录 C.1 拆分 `[DRAFT]`（在议草案）、`[REG]`（法规/监管技术标准）、`[GUIDE]`（官方指南/威胁知识库）；IETF on-behalf-of 草案、WIMSE、CISA、MITRE ATT&CK、PSD2 RTS 重新归类；SP 800-63B 引用更新为 2025 年 SP 800-63B-4；NIST AI RMF 归类 `[GUIDE]`。§23 决策一补"规范层成立、待实现证明"限定，与 §3.1/§1.2 诚实边界一致。
@@ -1959,9 +1959,9 @@ CognitiveOS 的核心价值是把认知活动纳入可验证的操作系统机�
 机器资产净变化：REQ 273（数量不变，REQ-OBJ-001 owner_spec 迁移）、错误码 55（不变）、向量 74（数量不变，SCHEMA-META-001 与 EFFECT-STATE-CLOSURE-008 修订）；36 份 schema 修订（35 份迁移 + common-defs deprecation 标注），effect schema 为字段级扩展与条件闭包收紧。属 draft 期 breaking 变更（治理头字段集与引用字段名变化），随附迁移说明：曾按 legacy `metadata`/`strongRef` 生成实例的消费者按 governed-object-contract §3 映射到 `header`/`object_version`/`content_digest` 并重算 digest；仓库处于 0.x draft 期且无已发布 pin，不触发新 specification set。
 
 ### 1.0.1（证据闭环修订）
-本版由第二轮独立架构审查驱动（审查报告见 [docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md](./CognitiveOS-Review-Conclusions.md) v2.0），在 1.0.0 架构语义不变的前提下修复五类已证实缺口。本版不新增对象族、Profile 或 REQ 域，符合 §21 冻结条款（既有域内的修正、澄清与登记）。
+本版由第二轮独立架构审查驱动（审查报告见 [core/docs/architecture/CognitiveOS-Review-Conclusions.md](CognitiveOS-Review-Conclusions.md) v2.0），在 1.0.0 架构语义不变的前提下修复五类已证实缺口。本版不新增对象族、Profile 或 REQ 域，符合 §21 冻结条款（既有域内的修正、澄清与登记）。
 
-1. **Agent 收益评测合同（P0）**：新增 [docs/evaluation/agent-benefit-benchmark.md](../../evaluation/agent-benefit-benchmark.md)（v0.1 Draft normative standard），定义 native / governance-only / optimized / ablation 四臂设计、W1/W2/W3 workload family、六条显著收益门槛、非劣化门槛、workload-specific 治理开销预算候选值、机制 A/B/C/D 分级、gaming 防护与 kill criteria；登记 `REQ-PERF-005`；performance-report schema 加法式扩展（`agent_benefit` 类别、`comparison` 块含 arms/CI/effect size/ablation/claim_level/preregistration）；PERF-REPORT-CONTRACT-001 向量扩展 comparison 正例与"无对照收益声明被拒"负例。§19.4 增补收益声明与非劣化边界；§21 Phase 1 A/B 报告绑定该合同。
+1. **Agent 收益评测合同（P0）**：新增 [docs/evaluation/agent-benefit-benchmark.md](../../../docs/evaluation/agent-benefit-benchmark.md)（v0.1 Draft normative standard），定义 native / governance-only / optimized / ablation 四臂设计、W1/W2/W3 workload family、六条显著收益门槛、非劣化门槛、workload-specific 治理开销预算候选值、机制 A/B/C/D 分级、gaming 防护与 kill criteria；登记 `REQ-PERF-005`；performance-report schema 加法式扩展（`agent_benefit` 类别、`comparison` 块含 arms/CI/effect size/ablation/claim_level/preregistration）；PERF-REPORT-CONTRACT-001 向量扩展 comparison 正例与"无对照收益声明被拒"负例。§19.4 增补收益声明与非劣化边界；§21 Phase 1 A/B 报告绑定该合同。
 2. **存储降级语义（P1）**：§16.1 故障表新增"提交路径存储失败"行；§16.5 定义 fail-closed 语义（禁止内存缓冲冒充提交、禁止 Intent 未持久化时分派）；登记 `REQ-REC-003` 与错误码 `STATE_STORE_UNAVAILABLE`、向量 STATE-STORE-DEGRADE-001。
 3. **同键异参通用化（P1）**：同键异参拒绝从管理域（REQ-MGMT-IDEM-001）推广为通用 Effect 语义：Core `REQ-EFF-002` 扩充拒绝条文，登记错误码 `EFFECT_IDEMPOTENCY_CONFLICT` 与向量 EFF-IDEM-CONFLICT-001；§12.5 同步；AKP companion 错误名对齐。
 4. **安全负例向量补齐（P0→已闭合）**：新增 CTX-RANK-AUTH-001（授权先于 ranker）、CTX-REVOKE-CACHE-001（缓存不绕过撤销）、GOBJ-TENANT-LATERAL-001（同租户横向读取拒绝，首个 GOBJ 行为向量）、GW-REMOTE-COMPLETE-001（远端 completed 不推进本地验收）；EFF-CRASH-001/002/003 从 traceability stub 升级为逐崩溃点行为断言（状态前后、原键重放、无重复 Effect）。§9.10 负例清单改为引用已登记向量。
@@ -2001,7 +2001,7 @@ CognitiveOS 的核心价值是把认知活动纳入可验证的操作系统机�
 ### 0.3 Draft
 保持 0.2 的核心语义不变，并进行面向架构评审与生产落地的增量重构：明确文档保证边界、前提与非保证项；以决策导航表替代单一密集索引；补充从 Context Resolution 到验证提交/隔离的受治理改变主链路；将 AgentExecution 的所有权与故障域显式分离；在分布式章节前置故障模型、未知事实和拜占庭边界；新增 Readiness Case 与 R0—R3 风险分级，使 Profile、测试证据、上线范围和安全强度可以对应审查。 本次更新不新增规范性要求，所有具体 MUST 仍以相应 Companion Specification 为准。
 
-本版本同时进行了面向可读性与一致性体验的增补：增加全文目录与读者路线图；新增 12 个隐式 HTML 锚点（`state-protocol`/`context-resolution-protocol`/`context-engineering`/`context-virtualization-profile`/`capability-protocol`/`core-effect-protocol`/`resources`/`threats`/`core-digital-profile`/`distributed-profile`/`embodied-safety-profile`/`controlled-learning-profile`），与 `specs/registry/requirements.yaml` 的 `owner_spec` 字段逐一对齐；以集中表格与图示补全不变量—机制映射、五域状态协作、机制/策略分离、三时间尺度、恢复顺序；新增 Profile 总表（含 Companion 版本与 REQ-ID）；将"描述≠权限"与 prompt-injection 议题收敛到单一信源并在具身章节回引；附录 B 标注 Companion 版本与状态。 全过程未新增任何规范性 REQ-ID。
+本版本同时进行了面向可读性与一致性体验的增补：增加全文目录与读者路线图；新增 12 个隐式 HTML 锚点（`state-protocol`/`context-resolution-protocol`/`context-engineering`/`context-virtualization-profile`/`capability-protocol`/`core-effect-protocol`/`resources`/`threats`/`core-digital-profile`/`distributed-profile`/`embodied-safety-profile`/`controlled-learning-profile`），与 `core/specs/registry/requirements.yaml` 的 `owner_spec` 字段逐一对齐；以集中表格与图示补全不变量—机制映射、五域状态协作、机制/策略分离、三时间尺度、恢复顺序；新增 Profile 总表（含 Companion 版本与 REQ-ID）；将"描述≠权限"与 prompt-injection 议题收敛到单一信源并在具身章节回引；附录 B 标注 Companion 版本与状态。 全过程未新增任何规范性 REQ-ID。
 
 ### 0.2 Draft
 将文档定位从单体 Core RFC 调整为中文总体架构白皮书；建立严格 OS 判据及宿主 OS、Agent Runtime 和外部协议边界；完整定义双内核、三平面和七层参考架构；强化持久认知进程及五个分离状态域；整合认知微内核、CVM、Harness、Loop 和 AKP；明确 OperationDescriptor 与 AuthorizationCapability 的差异；明确日志提交历史与 World State authority 的分工；扩展具身、异构/CIM、多 Agent、安全和持续学习架构；将规范性细节下沉到规范套件和符合性索引；所有频率、EDF 和性能数字保持为 Profile 或部署参考。

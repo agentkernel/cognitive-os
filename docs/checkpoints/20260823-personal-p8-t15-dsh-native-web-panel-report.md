@@ -384,4 +384,4 @@ Task closed. Wait for a fresh owner delivery instruction. Do not auto-claim P6 /
 
 ### 2026-08-24 — task closure (pass)
 
-Merged PR [#265](https://github.com/agentkernel/cognitive-os/pull/265) at `main@562d2a5d` (content head `f846540f`). Required CI run `32687964519` passed Ubuntu, Windows, and required-ci. Lease `lease/personal/P8-T15/dsh-native-web-panel` closed. Closure: [P8-T15 closure](./20260824-personal-p8-t15-dsh-native-web-panel-closure.md). Post-closure guest replace to `f846540f`: daemon **519845** `:48681`, Cos **519871** `:3080`, health/Cos **200**. Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.
+Merged PR [#265](https://github.com/agentkernel/cognitive-os/pull/265) at `main@562d2a5d` (content head `f846540f`). Required CI run `32687964519` passed Ubuntu, Windows, and required-ci. Lease `lease/personal/P8-T15/dsh-native-web-panel` closed. Closure: [P8-T15 closure](20260824-personal-p8-t15-dsh-native-web-panel-closure.md). Post-closure guest replace to `f846540f`: daemon **519845** `:48681`, Cos **519871** `:3080`, health/Cos **200**. Claim ceiling `hypothesis`. No Gate / release / Profile / B01 / Agent-benefit.

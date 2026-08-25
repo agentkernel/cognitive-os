@@ -4,9 +4,9 @@ Date: 2026-08-25
 Status: **candidate / owner-confirmed scope input / non-canonical / no implementation authorization**
 
 本文件记录 Personal Desktop 1.0 的开源项目复用研判。它以
-[产品设计](./03-personal-product-design.md)、[候选架构](./05-personal-architecture.md)、
-[共享边界](./09-shared-domain-and-contract-boundaries.md)和
-[验证计划](./10-validation-and-delivery-readiness.md)为约束，不导入代码、资产、配置、状态或
+[产品设计](03-personal-product-design.md)、[候选架构](05-personal-architecture.md)、
+[共享边界](09-shared-domain-and-contract-boundaries.md)和
+[验证计划](10-validation-and-delivery-readiness.md)为约束，不导入代码、资产、配置、状态或
 依赖，不注册正式任务、ADR、contract、release 或 Gate。
 
 标记：

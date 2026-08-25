@@ -14,9 +14,9 @@ const toolsDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), ".."
 const repositoryRoot = path.resolve(toolsDir, "..");
 const inventoryPath = path.join(
   repositoryRoot,
+  "personal",
   "docs",
   "architecture",
-  "personal",
   "web-ui-route-inventory.json",
 );
 

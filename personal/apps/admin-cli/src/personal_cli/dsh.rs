@@ -202,7 +202,7 @@ pub fn configure(options: &DshConfigureOptions) -> Result<Value, String> {
 pub fn launch(options: &DshLaunchOptions) -> Result<Value, String> {
     if options.provider_path == DshProviderPath::Direct {
         return Err(
-            "direct Flash path is measurement-only; run packages/dsh-akp-adapter/scripts/paired-path.mjs"
+            "direct Flash path is measurement-only; run personal/packages/dsh-akp-adapter/scripts/paired-path.mjs"
                 .to_owned(),
         );
     }

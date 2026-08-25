@@ -23,28 +23,28 @@
    - 最新一份 `docs/checkpoints/*-handoff.md`
    - `docs/plan/PARALLEL-LANES.md`
 3. 阅读现有 Console 产品设计：
-   - `apps/cognitiveos-console/README.md`
-   - `apps/cognitiveos-console/PRODUCT-DESIGN.md`
-   - `apps/cognitiveos-console/docs/decision-log.md`
-   - `apps/cognitiveos-console/docs/product-brief.md`
-   - `apps/cognitiveos-console/docs/windows-v1-scope.md`
-   - `apps/cognitiveos-console/docs/information-architecture.md`
-   - `apps/cognitiveos-console/docs/journeys-and-screens.md`
-   - `apps/cognitiveos-console/docs/design-system.md`
-   - `apps/cognitiveos-console/docs/trust-safety-ux.md`
-   - `apps/cognitiveos-console/docs/requirements-traceability.md`
-   - `apps/cognitiveos-console/docs/roadmap.md`
+   - `clients/legacy/cognitiveos-console/README.md`
+   - `clients/legacy/cognitiveos-console/PRODUCT-DESIGN.md`
+   - `clients/legacy/cognitiveos-console/docs/decision-log.md`
+   - `clients/legacy/cognitiveos-console/docs/product-brief.md`
+   - `clients/legacy/cognitiveos-console/docs/windows-v1-scope.md`
+   - `clients/legacy/cognitiveos-console/docs/information-architecture.md`
+   - `clients/legacy/cognitiveos-console/docs/journeys-and-screens.md`
+   - `clients/legacy/cognitiveos-console/docs/design-system.md`
+   - `clients/legacy/cognitiveos-console/docs/trust-safety-ux.md`
+   - `clients/legacy/cognitiveos-console/docs/requirements-traceability.md`
+   - `clients/legacy/cognitiveos-console/docs/roadmap.md`
 4. 阅读现有平台设计：
-   - `docs/platforms/README.md`
-   - `docs/platforms/macos-product-design.md`
-   - `docs/platforms/linux-product-design.md`
-   - `docs/platforms/desktop-parity-matrix.md`
-   - `docs/platforms/platform-decision-log.md`
+   - `clients/docs/platforms/README.md`
+   - `clients/docs/platforms/macos-product-design.md`
+   - `clients/docs/platforms/linux-product-design.md`
+   - `clients/docs/platforms/desktop-parity-matrix.md`
+   - `clients/docs/platforms/platform-decision-log.md`
 5. 按需核实：
-   - `docs/plan/DEVELOPMENT-PLAN.md` 的 Console gate
+   - `docs/plan/archive/DEVELOPMENT-PLAN.md` 的 Console gate
    - `docs/standards/docs-sync-contract.md`
    - `docs/traceability/findings-ledger.md`
-   - `specs/registry/requirements.yaml`
+   - `core/specs/registry/requirements.yaml`
    - 与 Task、Loop、AgentExecution、Effect、Verification、authorization、notification、session、acquisition 相关的真实 schema、transition 和向量
 6. 按需加载 `.cursor/skills/`：
    - `frontend-design`
@@ -271,10 +271,10 @@
 
 至少生成：
 
-1. `docs/platforms/ios-product-design.md`
-2. `docs/platforms/android-product-design.md`
-3. `docs/platforms/mobile-parity-matrix.md`
-4. `docs/platforms/mobile-platform-decision-log.md`
+1. `clients/docs/platforms/ios-product-design.md`
+2. `clients/docs/platforms/android-product-design.md`
+3. `clients/docs/platforms/mobile-parity-matrix.md`
+4. `clients/docs/platforms/mobile-platform-decision-log.md`
 5. 平台决策记录、支持矩阵、关键旅程、页面/状态矩阵、安全威胁模型、分发与更新策略、官方来源 ledger。
 6. 独立平台 ID：
    - `CONSOLE-IOS-V1-PRD-*`
@@ -295,10 +295,10 @@
    - 移动端明确不提供；
    - 暂时阻断。
 9. 更新：
-   - `docs/platforms/README.md`
-   - `apps/cognitiveos-console/README.md`
-   - `apps/cognitiveos-console/docs/roadmap.md`
-   - `apps/cognitiveos-console/docs/decision-log.md`
+   - `clients/docs/platforms/README.md`
+   - `clients/legacy/cognitiveos-console/README.md`
+   - `clients/legacy/cognitiveos-console/docs/roadmap.md`
+   - `clients/legacy/cognitiveos-console/docs/decision-log.md`
    - `docs/README.md`
    - 必要的 PROGRESS 与 handoff
 10. 不破坏 Windows/macOS/Linux 现有 ID、锚点、parity 语义或 gate。
@@ -347,7 +347,7 @@
 
 ## 状态与追踪纪律
 
-- 平台 `PRD-*` 是 informative product requirement，不自动进入 `specs/registry/requirements.yaml`。
+- 平台 `PRD-*` 是 informative product requirement，不自动进入 `core/specs/registry/requirements.yaml`。
 - `contract` 只能引用仓库中真实存在的 `REQ-*`、schema、transition 或 vector；不存在时写明 `unregistered`，并列 `blocked_by`。
 - `implementation` 只能依据真实代码和构建事实；文档或原型不等于 implementation。
 - `evidence` 只能引用实际执行的真机/模拟器/自动化结果；设计评审不等于测试通过。

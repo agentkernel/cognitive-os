@@ -8,7 +8,7 @@ generated: false
 sources:
   - path: Cargo.toml
   - path: pnpm-workspace.yaml
-fingerprint: "sha256:793f292954380524a0ebe0e71ee3ae9e49c7955cbbb750778f349e4136ae2c93"
+fingerprint: "sha256:82cdbc9bd0ff0e54eff16793f2ff10706ebc9d1ff878322e6d250ad8dae5d643"
 non_claims:
   - Component presence is not a Gate, release, or Profile claim; wiring status is tracked in the developer execution-chain page.
 ---
@@ -46,7 +46,7 @@ Key real call chains (details in the [developer guide](../developer/README.md)):
 - Task admission: `POST /task/*` → `TaskApi` → `KernelTaskApplicationService` → `cognitive_kernel::intent_chain` → SQLite.
 - Pi conversation: Pi extension → `POST /provider/v1/chat/completions` → bound account or `provider.json` + daemon-owned SecretStore.
 - DeepSeek harness Path B: dsh plugin → `POST /provider/v1/dsh/chat/completions` → independent `agent://personal/dsh` binding or `provider.json`.
-- Install: `deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate (single-service transaction).
+- Install: `personal/deploy/linux/install.sh` → `linux_bundle_installer` → verify → stage → health → activate (single-service transaction).
 
 Execution wiring gaps you must not paper over are listed in
 [execution-chain status](../developer/execution-chain-status.md).

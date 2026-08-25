@@ -6,8 +6,8 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
-  - path: handbook/_meta/annotations/env-vars.json
-fingerprint: "sha256:4b6cade9a033f81ad1e23650add217bf288a337081dbd9e79b65edf17071271e"
+  - path: personal/handbook/_meta/annotations/env-vars.json
+fingerprint: "sha256:a5b3e8dd258290ccaf6e27e0b0f08f7840ef920ff749ddcea38325eb10a1ad24"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

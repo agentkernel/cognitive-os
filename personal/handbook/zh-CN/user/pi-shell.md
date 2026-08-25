@@ -6,22 +6,22 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: packages/pi-cognitiveos/src/extension.ts
+  - path: personal/packages/pi-cognitiveos/src/extension.ts
     symbols: ["registerCognitiveOsExtension"]
-  - path: packages/pi-cognitiveos/src/daemon-provider.ts
-  - path: packages/pi-cognitiveos/src/pi-route-observation.ts
-  - path: packages/pi-cognitiveos/src/tool-policy.ts
-  - path: apps/kernel-server/src/personal/pi_runtime.rs
-  - path: apps/admin-cli/src/personal_cli/pi.rs
+  - path: personal/packages/pi-cognitiveos/src/daemon-provider.ts
+  - path: personal/packages/pi-cognitiveos/src/pi-route-observation.ts
+  - path: personal/packages/pi-cognitiveos/src/tool-policy.ts
+  - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
+  - path: personal/apps/admin-cli/src/personal_cli/pi.rs
 tests:
-  - packages/pi-cognitiveos/src/extension.test.ts
-  - packages/pi-cognitiveos/src/daemon-provider.test.ts
-  - packages/pi-cognitiveos/src/pi-route-observation.test.ts
-  - packages/pi-cognitiveos/src/safety.test.ts
-  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-  - apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:e7717bba310f2c00adf47369600bd54ceb0bb87a9d001d4ed8077d4a4f9d6c60"
+  - personal/packages/pi-cognitiveos/src/extension.test.ts
+  - personal/packages/pi-cognitiveos/src/daemon-provider.test.ts
+  - personal/packages/pi-cognitiveos/src/pi-route-observation.test.ts
+  - personal/packages/pi-cognitiveos/src/safety.test.ts
+  - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
+fingerprint: "sha256:22e923efa7fdf9796c5c89c27096700a31772202dea1781579b0619d5a6c9b11"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---

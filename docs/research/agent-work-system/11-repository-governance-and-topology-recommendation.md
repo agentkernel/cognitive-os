@@ -15,15 +15,15 @@ Change class: **structural discovery documentation**
 
 关联材料：
 
-- [Research and development readiness](./01-research-and-development-readiness.md)
-- [Personal architecture](./05-personal-architecture.md)
-- [Enterprise architecture](./08-enterprise-architecture.md)
-- [Shared domain and contract boundaries](./09-shared-domain-and-contract-boundaries.md)
-- [Validation and delivery readiness](./10-validation-and-delivery-readiness.md)
-- [Project identity](../governance/PROJECT-IDENTITY.md)
-- [Personal formal plan](../plan/PERSONAL-DEVELOPMENT-PLAN.md)
-- [Normative source and versioning](../standards/normative-source-and-versioning.md)
-- [Docs-sync contract](../standards/docs-sync-contract.md)
+- [Research and development readiness](01-research-and-development-readiness.md)
+- [Personal architecture](05-personal-architecture.md)
+- [Enterprise architecture](../../../enterprise/docs/design/08-enterprise-architecture.md)
+- [Shared domain and contract boundaries](09-shared-domain-and-contract-boundaries.md)
+- [Validation and delivery readiness](10-validation-and-delivery-readiness.md)
+- [Project identity](../../governance/PROJECT-IDENTITY.md)
+- [Personal formal plan](../../plan/PERSONAL-DEVELOPMENT-PLAN.md)
+- [Normative source and versioning](../../standards/normative-source-and-versioning.md)
+- [Docs-sync contract](../../standards/docs-sync-contract.md)
 
 ## 1. Executive decision
 
@@ -64,7 +64,7 @@ cognitiveos-personal   cognitiveos-enterprise   cognitiveos-clients
 | **FACT**：Rust/TS schema bindings 由同一 generator 在同一 CI 中原子再生成 | 过早拆仓会破坏最强的防漂移门 |
 | **FACT**：两个仓库均无 Git tags 或 GitHub Releases | 尚无稳定 release/version continuity |
 | **FACT**：Enterprise 不是活动实现项目 | 建立 Enterprise 仓库会制造无实现依据的第二项目身份 |
-| **FACT**：P7-T05/D13 正在活动开发并消费 `docs/design/14`、`39`；相关 worktree/lease 受保护 | 当前不是安全迁移窗口 |
+| **FACT**：P7-T05/D13 正在活动开发并消费 `clients/docs/design/14`、`39`；相关 worktree/lease 受保护 | 当前不是安全迁移窗口 |
 
 ### 1.3 What would reverse this recommendation
 
@@ -95,8 +95,8 @@ cognitiveos-personal   cognitiveos-enterprise   cognitiveos-clients
 本研判读取：
 
 - root Cargo/pnpm workspace、各 package manifest 和 dependency direction；
-- `apps/`、`crates/`、`packages/`、`specs/`、`conformance/`、`tests/`、`tools/`、
-  `deploy/`、CI、docs 和 handbook routing；
+- `apps/`、`crates/`、`packages/`、`core/specs/`、`core/conformance/`、`tests/`、`tools/`、
+  `personal/deploy/`、CI、docs 和 handbook routing；
 - accepted ADR-0001/0006/0007/0025/0034/0037/0043/0044/0045/0053；
 - current project identity、Personal plan、Current snapshot 和 active leases；
 - `D:\cognitiveos-clients` 的 tracked topology、Git state、manifests 和治理文档；
@@ -119,7 +119,7 @@ cognitiveos-personal   cognitiveos-enterprise   cognitiveos-clients
 - **FACT**：CognitiveOS architecture/contracts 是 Personal 的架构和合同基础，不是第二
   backlog。
 - **FACT**：Enterprise 目前只有 candidate product/architecture design，不是活动实现项目。
-- **FACT**：`docs/agent-work-system/` 全部文档是 non-canonical candidate。
+- **FACT**：`docs/research/agent-work-system/` 全部文档是 non-canonical candidate。
 - **RECOMMENDATION**：仓库拓扑不得先于项目身份、formal plan 和 implementation
   authorization 自行创造产品。
 
@@ -146,12 +146,12 @@ Read-only `git ls-files` top-level counts show：
 | `crates/` | 277 | contracts/domain/kernel/store/runtime/management/conformance |
 | `packages/` | 130 | TS contracts/SDK、Pi/dsh adapters |
 | `apps/` | 122 | daemon、CLI、Agent Shell、Pi adapter |
-| `handbook/` | 120 | generated/derived bilingual user/developer documentation |
-| `specs/` | 94 | machine contracts and normative companions |
-| `conformance/` | 90 | vectors and test definitions |
+| `personal/handbook/` | 120 | generated/derived bilingual user/developer documentation |
+| `core/specs/` | 94 | machine contracts and normative companions |
+| `core/conformance/` | 90 | vectors and test definitions |
 | `tools/` | 62 | codegen、consistency、Gate/report tooling |
 | `tests/` | 13 | golden/e2e/fault/security assets |
-| `deploy/` | 5 | Personal Linux/Windows installation surfaces |
+| `personal/deploy/` | 5 | Personal Linux/Windows installation surfaces |
 
 **INFERENCE**：仓库重量不是主要问题；真正问题是同一 workspace 内“可复用 Core”和
 “Personal composition”仍有源代码依赖交叉。按目录数量拆仓不会自动得到正确边界。
@@ -206,9 +206,9 @@ Important coupling:
 
 ```mermaid
 flowchart LR
-  SPEC[specs/schemas] --> GEN[contracts-codegen]
-  GEN --> RUST[crates/cognitive-contracts/generated]
-  GEN --> TS[packages/contracts-ts/generated]
+  SPEC[core/specs/schemas] --> GEN[contracts-codegen]
+  GEN --> RUST[core/crates/cognitive-contracts/generated]
+  GEN --> TS[core/packages/contracts-ts/generated]
   TS --> SDK[packages/sdk-ts]
   SDK --> SHELL[apps/agent-shell]
   SDK --> PI[packages/pi-cognitiveos]
@@ -255,7 +255,7 @@ matrix 前，Git repository 不应被当作 API versioning mechanism 拆分。
 
 | Change | Required same-revision assets today | Split risk |
 |---|---|---|
-| registered schema | `specs/` + Rust generated + TS generated + tests + conformance + docs | multi-repo generated drift |
+| registered schema | `core/specs/` + Rust generated + TS generated + tests + conformance + docs | multi-repo generated drift |
 | authority transition/error | standard + registry/schema/transition/vector + kernel + store + runner | consumer may observe semantic half-state |
 | Task/Effect/Evidence path | contracts + kernel + store + runtime + daemon + verifier tests | incompatible daemon/core versions |
 | Provider route | SecretStore + transport + store + daemon + CLI + handbook | Personal-specific; does not belong in Core |
@@ -299,7 +299,7 @@ matrix 前，Git repository 不应被当作 API versioning mechanism 拆分。
 
 | Asset | Core disposition | Qualification |
 |---|---|---|
-| `specs/registry`、schemas、transitions、normative companions | INCLUDE | canonical contract source |
+| `core/specs/registry`、schemas、transitions、normative companions | INCLUDE | canonical contract source |
 | applicable `docs/standards/` | INCLUDE | behavior/versioning authority |
 | `cognitive-contracts` | INCLUDE | generated bindings/canonical digest |
 | `cognitive-domain` | INCLUDE | pure state machines/invariants |
@@ -493,7 +493,7 @@ Now:
   cognitive-os (single repo)
     ├─ internally isolated core packages
     ├─ Personal reference/product composition
-    └─ atomic specs/codegen/conformance CI
+    └─ atomic core/specs/codegen/conformance CI
 
   cognitiveos-clients
     └─ independent client boundary, hardened with published SDK + CI
@@ -806,7 +806,7 @@ Core stable must not be promoted merely because Core unit tests pass.
 
 | Area | Required owners |
 |---|---|
-| specs/standards/contracts/conformance | Core contract + security |
+| core/specs/standards/contracts/conformance | Core contract + security |
 | authority/kernel/crypto/digest | Core kernel + security |
 | Personal daemon/store/provider/secret | Personal runtime + security |
 | Enterprise identity/policy/Knowledge/fleet | Enterprise platform + security/data governance |
@@ -988,7 +988,7 @@ Candidate mapping after internal refactor：
 
 | Current family | Future Core | Future Personal | Future Enterprise | Clients |
 |---|---|---|---|---|
-| `specs/` | yes | consume | consume | generated consume |
+| `core/specs/` | yes | consume | consume | generated consume |
 | `docs/standards/` | applicable contract standards | Personal governance separate | Enterprise governance separate | consume |
 | `crates/cognitive-contracts` | yes | dependency | dependency | via SDK |
 | `crates/cognitive-domain` | yes | dependency | dependency only if public | no |
@@ -1003,7 +1003,7 @@ Candidate mapping after internal refactor：
 | `apps/kernel-server` | no | yes | no | static bundle consumer |
 | `apps/admin-cli` | no | yes | possible separate enterprise CLI | no |
 | Pi/dsh packages/apps | no | yes | no | shell UI only where relevant |
-| `deploy/` | no | yes | own deploy later | app packaging |
+| `personal/deploy/` | no | yes | own deploy later | app packaging |
 | Personal docs/plan/handbook | no | yes | no | links/derived client docs |
 | Enterprise candidate docs | protocol refs only | no | promote only after authorization | UI specs |
 | `tools/` | split by owner | Personal tools | Enterprise tools | client tools |
@@ -1225,7 +1225,7 @@ continue modular monorepo operation.
 
 ## 23. OSS adapter/dependency consequences
 
-The [open-source assessment](./12-open-source-reuse-assessment.md) reinforces, rather than reverses,
+The [open-source assessment](12-open-source-reuse-assessment.md) reinforces, rather than reverses,
 the “modularize before split” recommendation。
 
 ### 23.1 Package boundaries
@@ -1295,8 +1295,8 @@ must verify:
 
 ## 24. Docs-sync and validation statement
 
-- `handbook/_meta/source-map.json` has no route matching
-  `docs/agent-work-system/**`.
+- `personal/handbook/_meta/source-map.json` has no route matching
+  `docs/research/agent-work-system/**`.
 - Docs-sync impact：candidate governance analysis only；no user/runtime/API behavior changed；
   no generated handbook file should be edited.
 - A future commit must record a concrete

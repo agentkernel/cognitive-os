@@ -6,7 +6,7 @@
   "profiles": ["core_digital"],
   "requirement_ids": ["REQ-RUN-011"],
   "input": {
-    "owner_spec": "specs/schemas/operation-candidate-proposal.schema.json",
+    "owner_spec": "core/specs/schemas/operation-candidate-proposal.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

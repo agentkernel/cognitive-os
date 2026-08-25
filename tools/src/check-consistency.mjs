@@ -78,7 +78,7 @@ let schemas = [];
 try {
   schemas = loadSchemas();
 } catch (err) {
-  fail("specs/schemas", `unparseable schema JSON: ${err.message}`);
+  fail("core/specs/schemas", `unparseable schema JSON: ${err.message}`);
 }
 
 const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: true });
@@ -86,7 +86,7 @@ addFormats(ajv);
 for (const schema of schemas) {
   // $id policy (D-001/D-006 closure): every schema declares a top-level $id
   // exactly equal to its file name, so every relative $ref resolves FROM THE
-  // CONTAINING SCHEMA FILE (conformance/README.md "Running") and the $id is
+  // CONTAINING SCHEMA FILE (core/conformance/README.md "Running") and the $id is
   // the retrieval URI — no stripping compatibility layer.
   if (schema.doc.$id !== schema.name) {
     fail(
@@ -115,7 +115,7 @@ let registries;
 try {
   registries = loadRegistries();
 } catch (err) {
-  fail("specs/registry", `unparseable registry YAML: ${err.message}`);
+  fail("core/specs/registry", `unparseable registry YAML: ${err.message}`);
 }
 
 // ---------- transitions parse and validate against the transition-table schema
@@ -126,7 +126,7 @@ const transitionFiles = [
   "loop",
   "task",
   "verification",
-].map((d) => repoPath("specs", "transitions", `${d}.transitions.json`));
+].map((d) => repoPath("core", "specs", "transitions", `${d}.transitions.json`));
 const transitionValidate = ajv.getSchema("state-transition-table.schema.json");
 for (const abs of transitionFiles) {
   const rel = toRepoRelative(abs);
@@ -150,7 +150,7 @@ let vectors = [];
 try {
   vectors = loadVectors();
 } catch (err) {
-  fail("conformance/vectors", `unparseable vector JSON: ${err.message}`);
+  fail("core/conformance/vectors", `unparseable vector JSON: ${err.message}`);
 }
 
 if (registries) {
@@ -161,14 +161,14 @@ if (registries) {
   const registeredTestIds = new Set();
   for (const req of requirements.requirements) {
     if (seenReq.has(req.id)) {
-      fail("specs/registry/requirements.yaml", `duplicate requirement id ${req.id}`);
+      fail("core/specs/registry/requirements.yaml", `duplicate requirement id ${req.id}`);
     }
     seenReq.add(req.id);
     if (!/^REQ-[A-Z0-9-]+$/.test(req.id)) {
-      fail("specs/registry/requirements.yaml", `malformed requirement id ${req.id}`);
+      fail("core/specs/registry/requirements.yaml", `malformed requirement id ${req.id}`);
     }
     if (!Array.isArray(req.tests) || req.tests.length === 0) {
-      fail("specs/registry/requirements.yaml", `${req.id} has no test mapping`);
+      fail("core/specs/registry/requirements.yaml", `${req.id} has no test mapping`);
     }
     for (const testId of req.tests ?? []) {
       registeredTestIds.add(testId);
@@ -176,13 +176,13 @@ if (registries) {
     if (typeof req.owner_spec === "string") {
       const target = req.owner_spec.split("#")[0];
       if (!existsSync(repoPath(...target.split("/")))) {
-        fail("specs/registry/requirements.yaml", `${req.id} owner_spec path missing: ${target}`);
+        fail("core/specs/registry/requirements.yaml", `${req.id} owner_spec path missing: ${target}`);
       }
       if (target.startsWith("History/")) {
-        fail("specs/registry/requirements.yaml", `${req.id} owner_spec points into frozen History/`);
+        fail("core/specs/registry/requirements.yaml", `${req.id} owner_spec points into frozen History/`);
       }
     } else {
-      fail("specs/registry/requirements.yaml", `${req.id} has no owner_spec`);
+      fail("core/specs/registry/requirements.yaml", `${req.id} has no owner_spec`);
     }
   }
 
@@ -238,7 +238,7 @@ if (registries) {
   }
   for (const testId of registeredTestIds) {
     if (!vectorIds.has(testId)) {
-      fail("specs/registry/requirements.yaml", `test mapping ${testId} has no vector with that id (orphan test id)`);
+      fail("core/specs/registry/requirements.yaml", `test mapping ${testId} has no vector with that id (orphan test id)`);
     }
   }
 
@@ -248,17 +248,17 @@ if (registries) {
   const mentioned = new Set();
   for (const req of requirements.requirements) {
     const target = String(req.owner_spec ?? "").split("#")[0];
-    if (target.startsWith("specs/schemas/")) {
-      mentioned.add(target.slice("specs/schemas/".length));
+    if (target.startsWith("core/specs/schemas/")) {
+      mentioned.add(target.slice("core/specs/schemas/".length));
     }
   }
   const mentionSources = [
     ...listMarkdownFiles().filter((p) => {
       const rel = toRepoRelative(p);
       return (
-        rel.startsWith("specs/") ||
+        rel.startsWith("core/specs/") ||
         rel.startsWith("docs/standards/") ||
-        rel === "conformance/README.md" ||
+        rel === "core/conformance/README.md" ||
         rel.startsWith("docs/adr/")
       );
     }),
@@ -328,10 +328,10 @@ if (registries) {
 // ---------- 4: relative markdown links resolve (living docs; frozen architecture reviews excluded)
 
 const FROZEN_DOCS = new Set([
-  "docs/architecture/cognitiveos/CognitiveOS-Architecture.md",
-  "docs/architecture/cognitiveos/CognitiveOS-Architecture-Independent-Review.md",
-  "docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md",
-  "docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md",
+  "core/docs/architecture/CognitiveOS-Architecture.md",
+  "core/docs/architecture/CognitiveOS-Architecture-Independent-Review.md",
+  "core/docs/architecture/CognitiveOS-Review-Conclusions.md",
+  "core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md",
 ]);
 const linkPattern = /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
 for (const mdAbs of listMarkdownFiles()) {
@@ -829,7 +829,7 @@ const commandEnvironmentGuardDocuments = [
     ],
   },
   {
-    path: "tests/baseline/README.md",
+    path: "personal/tests/baseline/README.md",
     requiredFragments: [
       "COMMAND-SHELL-PS51",
       "RUST-LINK-DEV-WIN-GNU-01",
@@ -1223,7 +1223,7 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
       "docs/plan/**",
       "docs/standards/**",
       "docs/adr/**",
-      "specs/**",
+      "core/specs/**",
     ]);
 
     for (const row of activeLeaseRows) {

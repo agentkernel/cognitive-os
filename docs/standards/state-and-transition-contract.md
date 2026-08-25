@@ -6,7 +6,7 @@
 - Status: `Draft`
 - Date: 2026-07-19
 - Classification: registered normative machine-contract companion
-- Machine assets: `specs/schemas/state-transition-*.schema.json`, `specs/registry/state-domains.yaml`, and `specs/transitions/*.transitions.json`
+- Machine assets: `core/specs/schemas/state-transition-*.schema.json`, `core/specs/registry/state-domains.yaml`, and `core/specs/transitions/*.transitions.json`
 
 ## 1. Scope and authority
 

@@ -3,10 +3,10 @@
 - Status: informative target/design baseline
 - Change class: owner-approved `product-semantic + structural` documentation
 - Project: `cognitiveos-personal`
-- Current-status owner: [PROGRESS.md](../../plan/PROGRESS.md) `Current snapshot`
-- Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../plan/PERSONAL-DEVELOPMENT-PLAN.md)
-- Normative contracts: [`specs/`](../../../specs) and applicable
-  [standards](../../standards)
+- Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md) `Current snapshot`
+- Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
+- Normative contracts: [`core/specs/`](../../../core/specs) and applicable
+  [standards](../../../docs/standards)
 
 This directory explains the intended Personal composition. It does not create
 registry requirements, public DTOs, a second authority, current task status,
@@ -59,21 +59,21 @@ remain distinct even when an implementation co-locates some of them.
 
 | Document | Responsibility |
 |---|---|
-| [System architecture](./system-architecture.md) | layered control plane, six domains, common projection, execution boundary and future Linux/hardware ports |
-| [Resource Manager](./resource-manager-architecture.md) | common ResourceApplicationService HTTP envelope, authority sources, and fail-closed generics (P8-T12) |
-| [Provider Control Plane](./provider-control-plane.md) | daemon-owned provider registry, Secret Store boundary, transport, usage ledger, pricing, and alerts |
-| [Web UI architecture](./web-ui-architecture.md) | localhost SPA topology, daemon projections, sessions, watch/reconnect, runtime controls and security boundary (P7-T05; ADR-0053) |
-| [Web UI route inventory](./web-ui-route-inventory.json) | frozen mapping of UI capabilities to existing daemon routes, unavailable/not-run gaps, and forbidden generic transitions |
-| [Agent Shell and Agent lifecycle](./agent-shell-and-agent-lifecycle.md) | Pi dual roles, strict runtime identity, sidecar supervision, channels and lifecycle operations |
-| [Authority, data and recovery](./authority-data-and-recovery.md) | authority data, control/data-plane separation, mutation permits, evidence and restart/reconciliation order |
-| [Agent adapter contract](./agent-adapter-contract.md) | universal AKP adapter capabilities, lifecycle, negatives (P8 design) |
-| [Multi-agent orchestration](./multi-agent-orchestration.md) | mainline multi-agent design with fail-closed default |
-| [Context evolution](./context-evolution.md) | compaction and adaptive budgets (P8-T05 design) |
-| [Learning loop](./learning-loop.md) | cross-episode Skill/Memory candidate admission (P8-T06 design) |
-| [Async event evolution](./async-event-evolution.md) | measured async migration decision gate (P9-T01) |
-| [Performance architecture](./performance-architecture.md) | floors, stage timing, structure-debt candidates |
-| [Headroom: IoT and multi-tenancy](./headroom-iot-and-multitenancy.md) | reserved bridges; not formal plan tasks |
-| [UCR-01 workload](../../evaluation/personal-unified-cognitive-resource-workload.md) | target six-resource trace, fault/reuse assertions and bounded benefit-evaluation design |
+| [System architecture](system-architecture.md) | layered control plane, six domains, common projection, execution boundary and future Linux/hardware ports |
+| [Resource Manager](resource-manager-architecture.md) | common ResourceApplicationService HTTP envelope, authority sources, and fail-closed generics (P8-T12) |
+| [Provider Control Plane](provider-control-plane.md) | daemon-owned provider registry, Secret Store boundary, transport, usage ledger, pricing, and alerts |
+| [Web UI architecture](web-ui-architecture.md) | localhost SPA topology, daemon projections, sessions, watch/reconnect, runtime controls and security boundary (P7-T05; ADR-0053) |
+| [Web UI route inventory](web-ui-route-inventory.json) | frozen mapping of UI capabilities to existing daemon routes, unavailable/not-run gaps, and forbidden generic transitions |
+| [Agent Shell and Agent lifecycle](agent-shell-and-agent-lifecycle.md) | Pi dual roles, strict runtime identity, sidecar supervision, channels and lifecycle operations |
+| [Authority, data and recovery](authority-data-and-recovery.md) | authority data, control/data-plane separation, mutation permits, evidence and restart/reconciliation order |
+| [Agent adapter contract](agent-adapter-contract.md) | universal AKP adapter capabilities, lifecycle, negatives (P8 design) |
+| [Multi-agent orchestration](multi-agent-orchestration.md) | mainline multi-agent design with fail-closed default |
+| [Context evolution](context-evolution.md) | compaction and adaptive budgets (P8-T05 design) |
+| [Learning loop](learning-loop.md) | cross-episode Skill/Memory candidate admission (P8-T06 design) |
+| [Async event evolution](async-event-evolution.md) | measured async migration decision gate (P9-T01) |
+| [Performance architecture](performance-architecture.md) | floors, stage timing, structure-debt candidates |
+| [Headroom: IoT and multi-tenancy](headroom-iot-and-multitenancy.md) | reserved bridges; not formal plan tasks |
+| [UCR-01 workload](../../../docs/evaluation/personal-unified-cognitive-resource-workload.md) | target six-resource trace, fault/reuse assertions and bounded benefit-evaluation design |
 
 ## Stable composition rules
 
@@ -94,7 +94,7 @@ remain distinct even when an implementation co-locates some of them.
 
 When these documents disagree with another source:
 
-1. machine shape and registered state transitions come from `specs/`;
+1. machine shape and registered state transitions come from `core/specs/`;
 2. behavioral semantics come from applicable normative companions and
    `docs/standards/`;
 3. Personal product decisions come from accepted Personal ADRs;

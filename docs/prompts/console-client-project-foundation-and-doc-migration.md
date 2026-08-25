@@ -67,7 +67,7 @@ git worktree list --porcelain
 2. `docs/plan/PROGRESS.md`
 3. 最近一份 `docs/checkpoints/*-handoff.md`
 4. `docs/plan/PARALLEL-LANES.md`
-5. `docs/plan/DEVELOPMENT-PLAN.md`
+5. `docs/plan/archive/DEVELOPMENT-PLAN.md`
 6. `docs/standards/docs-sync-contract.md`
 7. `docs/clients/README.md`
 8. `.cursor/rules/11-typescript-clients.mdc`
@@ -75,12 +75,12 @@ git worktree list --porcelain
 
 再盘点：
 
-- `apps/cognitiveos-console/**`
-- `apps/agent-shell/**`
-- `packages/sdk-ts/**`
-- `packages/contracts-ts/**`
-- `docs/platforms/**`
-- `apps/cognitiveos-console/docs/agent-hub/**`
+- `clients/legacy/cognitiveos-console/**`
+- `personal/apps/agent-shell/**`
+- `personal/packages/sdk-ts/**`
+- `core/packages/contracts-ts/**`
+- `clients/docs/platforms/**`
+- `clients/legacy/cognitiveos-console/docs/agent-hub/**`
 - `docs/plan/agent-hub*`
 - `docs/prompts/agent-hub/**`
 
@@ -240,7 +240,7 @@ clients/
 - Git 不跟踪空目录；每个保留目录必须有薄 README，说明用途、边界、owner、状态、canonical 入口和 gate；
 - 不使用 `.gitkeep` 冒充项目已建立；
 - `app/README.md` 只能声明未来实现位置和 NO-GO 条件，不得含技术栈已批准或实现已启动的暗示；
-- 不创建与现有 `packages/`、`apps/agent-shell/` 平行的 SDK/契约代码副本。
+- 不创建与现有 `packages/`、`personal/apps/agent-shell/` 平行的 SDK/契约代码副本。
 
 ## 六、文档迁移原则与默认映射
 
@@ -251,21 +251,21 @@ clients/
 - `clients/README.md` 成为客户端项目和目录的唯一 canonical 地图；
 - `docs/clients/README.md` 降为兼容入口，只链接 `clients/README.md`，不保留并行正文；
 - 具体产品、平台、Agent Hub 事实仍各有且只有一个 canonical 文件；
-- 机器合同仍只在 `specs/**`、`conformance/**` 与 normative companion 中；
+- 机器合同仍只在 `core/specs/**`、`core/conformance/**` 与 normative companion 中；
 - `PROGRESS.md` 仍是全局工程状态真相，`clients/plan/progress.md` 只能记录客户端局部准备状态。
 
 ### 6.2 默认迁移范围
 
 在 migration map 中逐文件确认后，默认采用：
 
-1. `apps/cognitiveos-console/docs/*` → `clients/pc/docs/**`；
-2. `docs/platforms/macos-product-design.md`、`linux-product-design.md`、桌面 parity/decision → `clients/pc/docs/platforms/**`；
-3. `docs/platforms/ios-product-design.md`、`android-product-design.md`、移动 parity/decision → `clients/mobile/**/docs` 与 `clients/mobile/shared/docs`；
-4. `apps/cognitiveos-console/docs/agent-hub/**` → `clients/agent-hub/docs/**`；
+1. `clients/legacy/cognitiveos-console/docs/*` → `clients/pc/docs/**`；
+2. `clients/docs/platforms/macos-product-design.md`、`linux-product-design.md`、桌面 parity/decision → `clients/pc/docs/platforms/**`；
+3. `clients/docs/platforms/ios-product-design.md`、`android-product-design.md`、移动 parity/decision → `clients/mobile/**/docs` 与 `clients/mobile/shared/docs`；
+4. `clients/legacy/cognitiveos-console/docs/agent-hub/**` → `clients/agent-hub/docs/**`；
 5. `docs/plan/agent-hub*` → `clients/agent-hub/plan/**`；
 6. `docs/prompts/agent-hub/**` → `clients/agent-hub/prompts/**`；
 7. 共享 SDK、双通道、Relay、身份和设计系统的说明 → `clients/shared/docs/**`，但只移动 informative 文档，不移动机器合同或 package；
-8. `apps/cognitiveos-console/README.md`、`PRODUCT-DESIGN.md`、`docs/platforms/README.md` 保留为薄兼容入口；既有依赖的 §17、§20.3 和显式 anchor 必须可达。
+8. `clients/legacy/cognitiveos-console/README.md`、`PRODUCT-DESIGN.md`、`clients/docs/platforms/README.md` 保留为薄兼容入口；既有依赖的 §17、§20.3 和显式 anchor 必须可达。
 
 不得机械移动。若一个文件同时拥有 PC、手机、shared 或 Agent Hub canonical 职责，先在 `canonical-sources.md` 决定唯一 owner，再移动或拆成“canonical 正文 + 薄引用”，不得复制正文。
 
@@ -373,7 +373,7 @@ PC、iOS、Android 至少分别具备：
 
 若编号未冲突，新建 `.cursor/rules/17-client-project-boundaries.mdc`，控制在 50 行左右，至少包含：
 
-- globs 覆盖 `clients/**` 及仍在旧位置的 `apps/agent-shell/**`、`packages/sdk-ts/**`、`packages/contracts-ts/**`；
+- globs 覆盖 `clients/**` 及仍在旧位置的 `personal/apps/agent-shell/**`、`personal/packages/sdk-ts/**`、`core/packages/contracts-ts/**`；
 - PC/手机/SDK 都不是 authority；
 - 手机 remote companion 边界；
 - 四类状态与 gate；
@@ -392,7 +392,7 @@ PC、iOS、Android 至少分别具备：
 - `AGENTS.md` 目录地图
 - `docs/README.md`
 - `docs/plan/PARALLEL-LANES.md` 所有权表
-- `docs/plan/DEVELOPMENT-PLAN.md` Console 依赖入口
+- `docs/plan/archive/DEVELOPMENT-PLAN.md` Console 依赖入口
 - `docs/plan/PROGRESS.md`
 - `clients/GOVERNANCE.md`
 

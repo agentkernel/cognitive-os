@@ -1,14 +1,14 @@
 /**
  * Contract-layer schema re-verification (F-003 closure evidence, TS side).
- * Twin of `crates/cognitive-contracts/tests/schema_contract.rs`:
+ * Twin of `core/crates/cognitive-contracts/tests/schema_contract.rs`:
  *
- * 1. every schema under `specs/schemas/` compiles under draft 2020-12 with
+ * 1. every schema under `core/specs/schemas/` compiles under draft 2020-12 with
  *    all relative `$ref`s resolvable;
  * 2. the migrated single-track contracts REJECT the legacy
  *    `common-defs.schema.json#/$defs/{metadata,strongRef}` dual-track shapes
  *    (REQ-GOBJ-HEADER-001, REQ-GOBJ-REF-001, REQ-GOBJ-MIG-001), using the
  *    exact instances pinned by the negative vectors
- *    `conformance/vectors/governed-object-legacy-{metadata,strongref}-001.json`;
+ *    `core/conformance/vectors/governed-object-legacy-{metadata,strongref}-001.json`;
  * 3. a migrated positive instance is accepted.
  *
  * This is NOT vector execution (no expected-outcome comparison engine, no
@@ -54,7 +54,7 @@ function loadSchemas(): SchemaDoc[] {
 /**
  * $id policy (D-001/D-006 closure): every schema declares `$id` equal to its
  * file name, so each relative `$ref` resolves from the containing schema
- * file (`conformance/README.md` convention) and `$id` is the retrieval URI.
+ * file (`core/conformance/README.md` convention) and `$id` is the retrieval URI.
  */
 function buildAjv(schemas: SchemaDoc[]): Ajv2020 {
   const ajv = new Ajv2020({ strict: false, allErrors: true, validateFormats: true });
@@ -131,7 +131,7 @@ test("migrated positive Effect instance is accepted", () => {
 
 /**
  * Positive AKP request envelope (D-013 wire schema): the members the
- * companion describes (specs/akp/README.md section 3) must be accepted, so
+ * companion describes (core/specs/akp/README.md section 3) must be accepted, so
  * the negative vectors are not passing vacuously.
  */
 function positiveRequestEnvelope(): Record<string, unknown> {

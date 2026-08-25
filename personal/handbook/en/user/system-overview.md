@@ -6,16 +6,16 @@ audience: [user]
 status: partial
 generated: false
 sources:
-  - path: docs/product/personal/README.md
-  - path: docs/product/personal/cognitive-resource-model.md
-  - path: docs/architecture/personal/README.md
-  - path: apps/kernel-server/src/personal/resource_api.rs
-  - path: apps/kernel-server/src/personal/task_api.rs
+  - path: personal/docs/product/README.md
+  - path: personal/docs/product/cognitive-resource-model.md
+  - path: personal/docs/architecture/README.md
+  - path: personal/apps/kernel-server/src/personal/resource_api.rs
+  - path: personal/apps/kernel-server/src/personal/task_api.rs
 tests:
-  - apps/kernel-server/tests/p2_t02_resource_projection.rs
-  - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-  - apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:4f72ff9d8badb8656fbe390643e814b996065842cf38f3daaa880f122a35e9f2"
+  - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
+  - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
+  - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
+fingerprint: "sha256:a3e5c88501e93bcd424f27a48c62a0e92475d1d5c1df118c2cd8f648b6a1c080"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -80,5 +80,5 @@ resource/task projections. The end-to-end autonomous execution path is still
 `partial`; use the task watch and evidence commands to inspect durable facts,
 and do not interpret an interactive answer as a completed task.
 
-For the shortest practical route, continue with [Getting started](./getting-started.md).
-For exact commands, see [CLI basics](./cli-basics.md) and the [reference](../reference/README.md).
+For the shortest practical route, continue with [Getting started](getting-started.md).
+For exact commands, see [CLI basics](cli-basics.md) and the [reference](../reference/README.md).

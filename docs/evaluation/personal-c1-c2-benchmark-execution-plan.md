@@ -1,9 +1,9 @@
 # CognitiveOS Personal C1/C2 governed-task benchmark addendum
 
 - Campaign: `PERSONAL-PERF-EVAL-004`
-- Status: **closed 2026-08-17** after remaining required cells. B0/B1/B2 C0 pass; C1/C2 workspace bytes frozen, paired adapter `not-run` after public-path re-check; UJ2 cold 10/10 retained; MS-AUTH Skill 10/10, Memory sealed-header `not-run`; B3 executable faults 10/10, stale `not-run`. Reviewer `not_reviewed`. Final: [personal-performance-assessment-20260817-full-os-only.md](./personal-performance-assessment-20260817-full-os-only.md)
-- Full OS-only scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](./personal-performance-benchmark-full-os-only-addendum.md)
-- Parent execution contract: [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md) v1.1
+- Status: **closed 2026-08-17** after remaining required cells. B0/B1/B2 C0 pass; C1/C2 workspace bytes frozen, paired adapter `not-run` after public-path re-check; UJ2 cold 10/10 retained; MS-AUTH Skill 10/10, Memory sealed-header `not-run`; B3 executable faults 10/10, stale `not-run`. Reviewer `not_reviewed`. Final: [personal-performance-assessment-20260817-full-os-only.md](personal-performance-assessment-20260817-full-os-only.md)
+- Full OS-only scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](personal-performance-benchmark-full-os-only-addendum.md)
+- Parent execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Scope: this document defines C1/C2 execution. The owner-authorized full
   OS-only amendment additionally governs the O2-O14, Tool, fault, concurrency,
   soak, and journey-register dispositions without creating a second campaign.
@@ -83,8 +83,8 @@ pricing facts are exposed for both arms.
 - Campaign: `PERSONAL-PERF-EVAL-004`
 - Scope: C1 read/search, C2 mutation/recovery, Memory/Skill reuse, and
   independently verified completion
-- Execution contract: [C1/C2 benchmark addendum](./personal-c1-c2-benchmark-execution-plan.md)
-- Parent contract: [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md) v1.1
+- Execution contract: [C1/C2 benchmark addendum](personal-c1-c2-benchmark-execution-plan.md)
+- Parent contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Owner authorization: explicitly granted in the user instruction on
   2026-08-15 to re-execute C1/C2 benchmark cells.
 - Source revision: `93dde21da1635329bd11949b265f205ead46186b`

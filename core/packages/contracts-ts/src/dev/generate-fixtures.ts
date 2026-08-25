@@ -1,15 +1,15 @@
 /**
  * Golden fixture generator. Prints one complete fixture document to stdout;
- * writing to `tests/golden/` is a deliberate, reviewed act:
+ * writing to `core/tests/golden/` is a deliberate, reviewed act:
  *
- *   node packages/contracts-ts/dist/dev/generate-fixtures.js canonical \
- *     > tests/golden/canonical-json-fixtures.json
- *   node packages/contracts-ts/dist/dev/generate-fixtures.js projection \
- *     > tests/golden/digest-and-projection-fixtures.json
+ *   node core/packages/contracts-ts/dist/dev/generate-fixtures.js canonical \
+ *     > core/tests/golden/canonical-json-fixtures.json
+ *   node core/packages/contracts-ts/dist/dev/generate-fixtures.js projection \
+ *     > core/tests/golden/digest-and-projection-fixtures.json
  *
  * Fixture INPUTS are defined here; expected values are computed by this
  * implementation and independently re-verified by the Rust twin
- * (`crates/cognitive-contracts/tests/golden_fixtures.rs`,
+ * (`core/crates/cognitive-contracts/tests/golden_fixtures.rs`,
  * `tests/projection_fixtures.rs`), which is what makes the fixtures a
  * cross-language gate rather than a self-test. Never edit fixture JSON by
  * hand.
@@ -197,7 +197,7 @@ const canonicalDoc = {
   version: "0.2.0",
   encoding_profile: "cognitiveos.canonical-json/0.1",
   digest_domain: DIGEST_DOMAIN,
-  generator: "packages/contracts-ts/src/dev/generate-fixtures.ts (verify with Rust twin before committing)",
+  generator: "core/packages/contracts-ts/src/dev/generate-fixtures.ts (verify with Rust twin before committing)",
   positive,
   negative: negativeSpecs,
 };
@@ -460,7 +460,7 @@ const projectionDoc = {
   version: "0.1.0",
   encoding_profile: "cognitiveos.canonical-json/0.1",
   generator:
-    "packages/contracts-ts/src/dev/generate-fixtures.ts projection (verify with Rust twin before committing)",
+    "core/packages/contracts-ts/src/dev/generate-fixtures.ts projection (verify with Rust twin before committing)",
   projection_positive: projectionPositives(),
   projection_negative: projectionNegatives(),
   set_manifest_positive: setManifestFixtures().positive,

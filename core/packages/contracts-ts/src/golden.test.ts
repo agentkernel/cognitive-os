@@ -1,7 +1,7 @@
 /**
  * Golden fixture verification (docs/standards/canonical-encoding-and-digest.md
  * section 14). The same fixture file is verified byte-for-byte by the Rust
- * twin in `crates/cognitive-contracts/tests/golden_fixtures.rs`; CI
+ * twin in `core/crates/cognitive-contracts/tests/golden_fixtures.rs`; CI
  * additionally diffs the emitted digest maps of both implementations.
  */
 

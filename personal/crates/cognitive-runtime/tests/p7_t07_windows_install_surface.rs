@@ -13,18 +13,18 @@ use std::path::{Path, PathBuf};
 fn repository_root() -> PathBuf {
     Path::new(env!("CARGO_MANIFEST_DIR"))
         .ancestors()
-        .nth(2)
+        .nth(3)
         .expect("runtime crate must be nested under repository root")
         .to_path_buf()
 }
 
 fn bootstrap_template() -> String {
-    std::fs::read_to_string(repository_root().join("deploy/windows/install.ps1"))
+    std::fs::read_to_string(repository_root().join("personal/deploy/windows/install.ps1"))
         .expect("windows bootstrap template must exist")
 }
 
 fn task_template() -> String {
-    std::fs::read_to_string(repository_root().join("deploy/windows/cognitiveos-personal-task.xml"))
+    std::fs::read_to_string(repository_root().join("personal/deploy/windows/cognitiveos-personal-task.xml"))
         .expect("windows scheduled task template must exist")
 }
 
@@ -116,7 +116,7 @@ fn task_template_is_least_privilege_interactive_and_unrendered() {
 #[test]
 fn task_template_reuses_the_linux_service_placeholder_contract() {
     let linux_unit = std::fs::read_to_string(
-        repository_root().join("deploy/linux/cognitiveos-personal.service"),
+        repository_root().join("personal/deploy/linux/cognitiveos-personal.service"),
     )
     .expect("linux service template must exist");
     let windows_task = task_template();
@@ -250,7 +250,7 @@ mod windows_native {
     #[test]
     fn unrendered_template_rejects_before_any_network_or_temp_side_effect() {
         let fixture = BootstrapFixture::new();
-        let output = fixture.run(&repository_root().join("deploy/windows/install.ps1"), &[]);
+        let output = fixture.run(&repository_root().join("personal/deploy/windows/install.ps1"), &[]);
 
         assert_eq!(
             output.status.code(),
@@ -351,7 +351,7 @@ mod windows_native {
     #[test]
     fn task_template_parses_as_least_privilege_interactive_task_xml() {
         let fixture = BootstrapFixture::new();
-        let task_path = repository_root().join("deploy/windows/cognitiveos-personal-task.xml");
+        let task_path = repository_root().join("personal/deploy/windows/cognitiveos-personal-task.xml");
         let check_script = fixture.script_directory.join("check-task-xml.ps1");
         fs::write(
             &check_script,

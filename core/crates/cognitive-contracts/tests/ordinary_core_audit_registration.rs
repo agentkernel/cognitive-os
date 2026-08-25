@@ -16,11 +16,14 @@ const DECISION: &str = "privileged-read-decision.schema.json";
 const RECEIPT: &str = "audit-commit-receipt.schema.json";
 
 fn repo_root() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
+    Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("..")
+        .join("..")
+        .join("..")
 }
 
 fn schemas() -> HashMap<String, Value> {
-    let dir = repo_root().join("specs").join("schemas");
+    let dir = repo_root().join("core").join("specs").join("schemas");
     let mut docs = HashMap::new();
     for entry in fs::read_dir(&dir).expect("read schemas") {
         let path = entry.expect("schema entry").path();
@@ -85,7 +88,7 @@ struct ErrorEntry {
 
 fn registered_error_codes() -> BTreeSet<String> {
     serde_yaml::from_slice::<ErrorRegistry>(
-        &fs::read(repo_root().join("specs/registry/errors.yaml")).expect("errors registry"),
+        &fs::read(repo_root().join("core/specs/registry/errors.yaml")).expect("errors registry"),
     )
     .expect("parse errors registry")
     .errors
@@ -193,7 +196,7 @@ fn registered_audit_decision_and_receipt_reject_negative_shapes() {
 #[test]
 fn registered_audit_schema_digests_are_reproducible() {
     for name in [DECISION, RECEIPT] {
-        let raw = fs::read_to_string(repo_root().join("specs/schemas").join(name)).unwrap();
+        let raw = fs::read_to_string(repo_root().join("core/specs/schemas").join(name)).unwrap();
         let parsed = canonical::parse_strict(&raw).unwrap();
         let digest = canonical::digest(
             &canonical::canonical_bytes(&parsed).unwrap(),

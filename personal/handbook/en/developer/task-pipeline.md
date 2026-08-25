@@ -6,24 +6,24 @@ audience: [developer]
 status: implemented
 generated: false
 sources:
-  - path: apps/kernel-server/src/personal/task_api.rs
+  - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi", "persist_owner_local_context_authorization"]
-  - path: crates/cognitive-management/src/task_application.rs
+  - path: personal/crates/cognitive-management/src/task_application.rs
     symbols: ["KernelTaskApplicationService", "contract_preview_digest"]
-  - path: crates/cognitive-kernel/src/intent_chain.rs
+  - path: core/crates/cognitive-kernel/src/intent_chain.rs
     symbols: ["mint_schedulable_task_contract", "validate_context_request_binding"]
 contracts:
-  - specs/schemas/task-preview-request.schema.json
-  - specs/schemas/task-admit-request.schema.json
-  - specs/schemas/task-contract.schema.json
+  - core/specs/schemas/task-preview-request.schema.json
+  - core/specs/schemas/task-admit-request.schema.json
+  - core/specs/schemas/task-contract.schema.json
 tests:
-  - crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-  - apps/kernel-server/tests/p2_t02_task_api_watch.rs
-  - apps/kernel-server/tests/p2_t24_effect_fault.rs
-  - apps/kernel-server/tests/p2_t26_observation_plane.rs
-  - apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
-  - apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:4d5e3ef2857188d1b6ee1bfb7adf04427b27ab35f8555b7185e61dc32364fb64"
+  - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
+  - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
+  - personal/apps/kernel-server/tests/p2_t24_effect_fault.rs
+  - personal/apps/kernel-server/tests/p2_t26_observation_plane.rs
+  - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
+  - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
+fingerprint: "sha256:7cd1e091b613fb697304f9fffb25fdd4e308d09ee5c6521d7d8d51a9f8f50bda"
 non_claims:
   - Admission still does not consume a worker iteration authorization or acquire a scheduler lease; a later tick does.
 ---

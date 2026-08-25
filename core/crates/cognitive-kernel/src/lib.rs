@@ -1,7 +1,7 @@
 //! `cognitive-kernel`: deterministic governance core of the CognitiveOS
 //! reference implementation.
 //!
-//! M2 scope (per `docs/plan/DEVELOPMENT-PLAN.md`): the centralized
+//! M2 scope (per `docs/plan/archive/DEVELOPMENT-PLAN.md`): the centralized
 //! transition gate over the five registered lifecycle tables (CAS, guard
 //! and evidence verification, registered-error rejection), deterministic
 //! hard-budget metering, projection replay over the committed event

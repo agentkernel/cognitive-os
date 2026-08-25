@@ -1,7 +1,7 @@
 # Context Evolution (design)
 
 - Status: informative Personal architecture design
-- Related: AXIOMS P1, [ADR-0042](../../adr/0042-personal-three-pillar-engineering.md),
+- Related: AXIOMS P1, [ADR-0042](../../../docs/adr/0042-personal-three-pillar-engineering.md),
   P3-T02/P3-T04, P8-T05
 
 ## 1. Current baseline (already shipped design/impl path)

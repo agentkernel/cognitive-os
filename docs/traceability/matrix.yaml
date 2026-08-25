@@ -1,7 +1,7 @@
 version: "0.1"
 generated_by: tools/src/gen-matrix.mjs (registry-derived; impl/evidence/docs fields are hand-maintained and preserved)
 field_semantics:
-  registry_tests: test IDs mapped in specs/registry/requirements.yaml
+  registry_tests: test IDs mapped in core/specs/registry/requirements.yaml
   vectors: conformance vector files whose requirement_ids include this REQ (derived)
   impl: implementation module paths (hand-maintained from M1)
   impl_tests: unit/integration/fault test paths (hand-maintained)
@@ -10,42 +10,42 @@ field_semantics:
 requirements:
   - id: REQ-OBJ-001
     owner: core-object
-    owner_spec: specs/schemas/governed-object-header.schema.json
+    owner_spec: core/specs/schemas/governed-object-header.schema.json
     status: specified
     registry_tests:
       - SCHEMA-META-001
     vectors:
-      - conformance/vectors/schema-meta-001.json
+      - core/conformance/vectors/schema-meta-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROTO-001
     owner: core-protocol
-    owner_spec: specs/schemas/common-defs.schema.json
+    owner_spec: core/specs/schemas/common-defs.schema.json
     status: specified
     registry_tests:
       - SCHEMA-VERSION-001
     vectors:
-      - conformance/vectors/schema-version-001.json
+      - core/conformance/vectors/schema-version-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-STATE-003
     owner: state
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - STATE-CAS-002
     vectors:
-      - conformance/vectors/state-conflict.json
+      - core/conformance/vectors/state-conflict.json
     impl:
-      - crates/cognitive-kernel/src/engine.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
+      - core/crates/cognitive-kernel/src/engine.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
-      - crates/cognitive-store/tests/m2_acceptance.rs
-      - crates/cognitive-kernel/tests/engine_gate.rs
+      - personal/crates/cognitive-store/tests/m2_acceptance.rs
+      - core/crates/cognitive-kernel/tests/engine_gate.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
@@ -53,7 +53,7 @@ requirements:
       stays with Lane-CFR.
   - id: REQ-STATE-004
     owner: state
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - RECOVERY-CRASH-006
@@ -64,28 +64,28 @@ requirements:
     docs: []
   - id: REQ-CTX-001
     owner: context
-    owner_spec: specs/schemas/context-request.schema.json
+    owner_spec: core/specs/schemas/context-request.schema.json
     status: specified
     registry_tests:
       - CTX-SCHEMA-001
     vectors:
-      - conformance/vectors/ctx-schema-001.json
+      - core/conformance/vectors/ctx-schema-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CTX-004
     owner: context
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CTX-REQ-007
     vectors:
-      - conformance/vectors/context-required-over-budget.json
+      - core/conformance/vectors/context-required-over-budget.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -93,32 +93,32 @@ requirements:
       (CONTEXT_INCOMPLETE) executed."
   - id: REQ-CTX-005
     owner: context
-    owner_spec: specs/schemas/context-view.schema.json
+    owner_spec: core/specs/schemas/context-view.schema.json
     status: specified
     registry_tests:
       - CTX-VIEW-001
     vectors:
-      - conformance/vectors/ctx-view-001.json
+      - core/conformance/vectors/ctx-view-001.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
     notes: "M3: loaded/rejected/pinned-versions/loss-declaration provenance emitted and asserted."
   - id: REQ-CTX-008
     owner: context
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CTX-TRUST-004
     vectors:
-      - conformance/vectors/prompt-injection-isolation.json
+      - core/conformance/vectors/prompt-injection-isolation.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -126,32 +126,32 @@ requirements:
       (prompt-injection-isolation behavior side executed)."
   - id: REQ-EVT-001
     owner: event
-    owner_spec: specs/schemas/event.schema.json
+    owner_spec: core/specs/schemas/event.schema.json
     status: specified
     registry_tests:
       - EVT-SCHEMA-001
     vectors:
-      - conformance/vectors/evt-schema-001.json
+      - core/conformance/vectors/evt-schema-001.json
     impl:
-      - crates/cognitive-runtime/src/event_envelope.rs
+      - personal/crates/cognitive-runtime/src/event_envelope.rs
     impl_tests:
-      - crates/cognitive-runtime/tests/m5_event_envelope.rs
+      - personal/crates/cognitive-runtime/tests/m5_event_envelope.rs
     evidence: []
     docs: []
   - id: REQ-CAP-001
     owner: capability
-    owner_spec: specs/schemas/authorization-capability.schema.json
+    owner_spec: core/specs/schemas/authorization-capability.schema.json
     status: specified
     registry_tests:
       - CAP-BIND-001
     vectors:
-      - conformance/vectors/cap-bind-001.json
+      - core/conformance/vectors/cap-bind-001.json
     impl:
-      - crates/cognitive-domain/src/capability.rs
-      - crates/cognitive-kernel/src/authz.rs
+      - core/crates/cognitive-domain/src/capability.rs
+      - core/crates/cognitive-kernel/src/authz.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/governance_gate.rs
-      - crates/cognitive-domain/src/capability.rs
+      - core/crates/cognitive-kernel/tests/governance_gate.rs
+      - core/crates/cognitive-domain/src/capability.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -159,17 +159,17 @@ requirements:
       executed); vector execution stays with Lane-CFR."
   - id: REQ-CAP-002
     owner: capability
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CAP-ATTEN-004
     vectors:
-      - conformance/vectors/capability-attenuation.json
+      - core/conformance/vectors/capability-attenuation.json
     impl:
-      - crates/cognitive-domain/src/capability.rs
+      - core/crates/cognitive-domain/src/capability.rs
     impl_tests:
-      - crates/cognitive-domain/src/capability.rs
-      - crates/cognitive-kernel/tests/governance_gate.rs
+      - core/crates/cognitive-domain/src/capability.rs
+      - core/crates/cognitive-kernel/tests/governance_gate.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -177,18 +177,18 @@ requirements:
       tests executed; vector execution stays with Lane-CFR."
   - id: REQ-CAP-003
     owner: capability
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CAP-LEASE-003
     vectors:
-      - conformance/vectors/cap-lease-003.json
+      - core/conformance/vectors/cap-lease-003.json
     impl:
-      - crates/cognitive-domain/src/capability.rs
-      - crates/cognitive-kernel/src/authz.rs
+      - core/crates/cognitive-domain/src/capability.rs
+      - core/crates/cognitive-kernel/src/authz.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/governance_gate.rs
-      - crates/cognitive-store/tests/m3_revocation_races.rs
+      - core/crates/cognitive-kernel/tests/governance_gate.rs
+      - personal/crates/cognitive-store/tests/m3_revocation_races.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -196,18 +196,18 @@ requirements:
       cross-node write fencing stays M4."
   - id: REQ-EFF-001
     owner: effect
-    owner_spec: specs/schemas/intent.schema.json
+    owner_spec: core/specs/schemas/intent.schema.json
     status: specified
     registry_tests:
       - EFF-FLOW-001
     vectors:
-      - conformance/vectors/eff-flow-001.json
+      - core/conformance/vectors/eff-flow-001.json
     impl:
-      - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
+      - core/crates/cognitive-kernel/src/effects.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_effects.rs
-      - crates/cognitive-store/tests/m4_tracer_bullet.rs
+      - personal/crates/cognitive-store/tests/m4_effects.rs
+      - personal/crates/cognitive-store/tests/m4_tracer_bullet.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -215,18 +215,18 @@ requirements:
       executed; vector execution stays with Lane-CFR."
   - id: REQ-EFF-004
     owner: effect
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - EFF-UNK-003
     vectors:
-      - conformance/vectors/effect-unknown-outcome.json
+      - core/conformance/vectors/effect-unknown-outcome.json
     impl:
-      - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-kernel/src/recovery.rs
+      - core/crates/cognitive-kernel/src/effects.rs
+      - core/crates/cognitive-kernel/src/recovery.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_effects.rs
-      - crates/cognitive-store/tests/m4_recovery.rs
+      - personal/crates/cognitive-store/tests/m4_effects.rs
+      - personal/crates/cognitive-store/tests/m4_recovery.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -234,22 +234,22 @@ requirements:
       bound; behavior tests executed."
   - id: REQ-EFF-006
     owner: effect
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - EFF-CRASH-001
       - EFF-CRASH-002
       - EFF-CRASH-003
     vectors:
-      - conformance/vectors/crash-recovery.json
-      - conformance/vectors/eff-crash-001.json
-      - conformance/vectors/eff-crash-002.json
-      - conformance/vectors/eff-crash-003.json
+      - core/conformance/vectors/crash-recovery.json
+      - core/conformance/vectors/eff-crash-001.json
+      - core/conformance/vectors/eff-crash-002.json
+      - core/conformance/vectors/eff-crash-003.json
     impl:
-      - crates/cognitive-kernel/src/recovery.rs
-      - crates/cognitive-store/src/faults.rs
+      - core/crates/cognitive-kernel/src/recovery.rs
+      - personal/crates/cognitive-store/src/faults.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_recovery.rs
+      - personal/crates/cognitive-store/tests/m4_recovery.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -257,21 +257,21 @@ requirements:
       original key, reconcile-not-retry, commit-from-evidence; behavior tests executed."
   - id: REQ-RUN-004
     owner: runtime
-    owner_spec: specs/schemas/task-contract.schema.json
+    owner_spec: core/specs/schemas/task-contract.schema.json
     status: specified
     registry_tests:
       - LOOP-CONTRACT-001
     vectors:
-      - conformance/vectors/loop-contract-001.json
+      - core/conformance/vectors/loop-contract-001.json
     impl:
-      - crates/cognitive-kernel/src/intent_chain.rs
-      - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-runtime/src/harness_loop.rs
-      - crates/cognitive-runtime/src/intent_flow.rs
+      - core/crates/cognitive-kernel/src/intent_chain.rs
+      - core/crates/cognitive-kernel/src/harness.rs
+      - personal/crates/cognitive-runtime/src/harness_loop.rs
+      - personal/crates/cognitive-runtime/src/intent_flow.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_intent_chain.rs
-      - crates/cognitive-store/tests/m5_harness.rs
-      - crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-store/tests/m5_intent_chain.rs
+      - personal/crates/cognitive-store/tests/m5_harness.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
@@ -282,18 +282,18 @@ requirements:
       (stagnation Stop/Escalate; never unbounded spin)."
   - id: REQ-RUN-005
     owner: runtime
-    owner_spec: specs/schemas/loop-checkpoint.schema.json
+    owner_spec: core/specs/schemas/loop-checkpoint.schema.json
     status: specified
     registry_tests:
       - LOOP-GATE-001
     vectors:
-      - conformance/vectors/loop-gate-001.json
+      - core/conformance/vectors/loop-gate-001.json
     impl:
-      - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-runtime/src/harness_loop.rs
+      - core/crates/cognitive-kernel/src/harness.rs
+      - personal/crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_harness.rs
-      - crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-store/tests/m5_harness.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
@@ -304,19 +304,19 @@ requirements:
       consecutive_without_progress ceiling (unit-tested; EffectError hard ceilings propagate)."
   - id: REQ-RUN-006
     owner: runtime
-    owner_spec: specs/schemas/loop-checkpoint.schema.json
+    owner_spec: core/specs/schemas/loop-checkpoint.schema.json
     status: specified
     registry_tests:
       - RECOVERY-CRASH-006
     vectors:
-      - conformance/vectors/crash-recovery.json
+      - core/conformance/vectors/crash-recovery.json
     impl:
-      - crates/cognitive-kernel/src/recovery.rs
-      - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
+      - core/crates/cognitive-kernel/src/recovery.rs
+      - core/crates/cognitive-kernel/src/harness.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_recovery.rs
-      - crates/cognitive-store/tests/m5_harness.rs
+      - personal/crates/cognitive-store/tests/m4_recovery.rs
+      - personal/crates/cognitive-store/tests/m5_harness.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
@@ -326,181 +326,181 @@ requirements:
       orchestration lands with the M5 runtime."
   - id: REQ-RUN-009
     owner: runtime
-    owner_spec: specs/schemas/verification-report.schema.json
+    owner_spec: core/specs/schemas/verification-report.schema.json
     status: specified
     registry_tests:
       - LOOP-VERIFY-003
     vectors:
-      - conformance/vectors/loop-verify-003.json
+      - core/conformance/vectors/loop-verify-003.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RUN-010
     owner: runtime
-    owner_spec: specs/schemas/worker-iteration-authorization.schema.json
+    owner_spec: core/specs/schemas/worker-iteration-authorization.schema.json
     status: specified
     registry_tests:
       - WORKER-AUTHORIZATION-001
     vectors:
-      - conformance/vectors/worker-authorization-001.json
+      - core/conformance/vectors/worker-authorization-001.json
     impl:
-      - apps/kernel-server/src/personal/scheduler_authority/mod.rs
-      - apps/kernel-server/src/personal/scheduler_authority/tests.rs
-      - crates/cognitive-runtime/src/harness_loop.rs
+      - personal/apps/kernel-server/src/personal/scheduler_authority/mod.rs
+      - personal/apps/kernel-server/src/personal/scheduler_authority/tests.rs
+      - personal/crates/cognitive-runtime/src/harness_loop.rs
     impl_tests: []
     evidence: []
     docs:
-      - specs/core/README.md
+      - core/specs/core/README.md
     notes: "P2-T03/D05 public contract foundation: daemon-only immutable iteration authorization binds pre-dispatch
       authority. Issuance/consumption implementation evidence is not yet claimed."
   - id: REQ-RUN-011
     owner: runtime
-    owner_spec: specs/schemas/operation-candidate-proposal.schema.json
+    owner_spec: core/specs/schemas/operation-candidate-proposal.schema.json
     status: specified
     registry_tests:
       - OPERATION-CANDIDATE-ADMISSION-001
     vectors:
-      - conformance/vectors/operation-candidate-admission-001.json
+      - core/conformance/vectors/operation-candidate-admission-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RES-001
     owner: resource
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CTX-REQ-007
     vectors:
-      - conformance/vectors/context-required-over-budget.json
+      - core/conformance/vectors/context-required-over-budget.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SEC-002
     owner: security
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CTX-TRUST-004
     vectors:
-      - conformance/vectors/prompt-injection-isolation.json
+      - core/conformance/vectors/prompt-injection-isolation.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
     notes: "M3: control plane fixed by authority metadata only; untrusted input never promoted."
   - id: REQ-CONF-001
     owner: conformance
-    owner_spec: specs/schemas/profile-manifest.schema.json
+    owner_spec: core/specs/schemas/profile-manifest.schema.json
     status: specified
     registry_tests:
       - MANIFEST-SCHEMA-001
     vectors:
-      - conformance/vectors/manifest-schema-001.json
+      - core/conformance/vectors/manifest-schema-001.json
     impl:
-      - crates/cognitive-conformance/src/lib.rs
+      - personal/crates/cognitive-conformance/src/lib.rs
       - tools/src/validate-manifest.mjs
     impl_tests:
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-m1-milestone-review.md
     docs:
       - docs/standards/conformance-evidence.md
   - id: REQ-CONF-003
     owner: conformance
-    owner_spec: specs/schemas/profile-manifest.schema.json
+    owner_spec: core/specs/schemas/profile-manifest.schema.json
     status: specified
     registry_tests:
       - MANIFEST-STATUS-003
     vectors:
-      - conformance/vectors/manifest-status-003.json
+      - core/conformance/vectors/manifest-status-003.json
     impl:
-      - crates/cognitive-conformance/src/lib.rs
+      - personal/crates/cognitive-conformance/src/lib.rs
     impl_tests:
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-m1-milestone-review.md
     docs:
       - docs/standards/conformance-evidence.md
   - id: REQ-PROFILE-CORE-001
     owner: profile-core
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - PROFILE-CORE-001
     vectors:
-      - conformance/vectors/profile-core-001.json
+      - core/conformance/vectors/profile-core-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROFILE-DIST-001
     owner: profile-distributed
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - PROFILE-DIST-001
     vectors:
-      - conformance/vectors/profile-dist-001.json
+      - core/conformance/vectors/profile-dist-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROFILE-EMB-001
     owner: profile-embodied
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - EMB-STALE-002
     vectors:
-      - conformance/vectors/stale-embodied-observation.json
+      - core/conformance/vectors/stale-embodied-observation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROFILE-HET-001
     owner: profile-heterogeneous-cim
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - CIM-CAL-003
     vectors:
-      - conformance/vectors/cim-calibration-mismatch.json
+      - core/conformance/vectors/cim-calibration-mismatch.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROFILE-LEARN-001
     owner: profile-controlled-learning
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - LEARN-PROMOTE-005
     vectors:
-      - conformance/vectors/learning-direct-promotion-denied.json
+      - core/conformance/vectors/learning-direct-promotion-denied.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROFILE-CVM-001
     owner: profile-context-virtualization
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CVM-STALE-001
       - CTX-REVOKE-CACHE-001
     vectors:
-      - conformance/vectors/context-revocation-cache-reuse.json
-      - conformance/vectors/cvm-stale-001.json
+      - core/conformance/vectors/context-revocation-cache-reuse.json
+      - core/conformance/vectors/cvm-stale-001.json
     impl:
-      - crates/cognitive-kernel/src/context_cache.rs
+      - core/crates/cognitive-kernel/src/context_cache.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -508,72 +508,72 @@ requirements:
       + conversation; stale keys cannot hit."
   - id: REQ-PROFILE-HARNESS-001
     owner: profile-harness
-    owner_spec: specs/schemas/profile-manifest.schema.json
+    owner_spec: core/specs/schemas/profile-manifest.schema.json
     status: specified
     registry_tests:
       - HARNESS-MANIFEST-001
     vectors:
-      - conformance/vectors/harness-manifest-001.json
+      - core/conformance/vectors/harness-manifest-001.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROFILE-HARNESS-002
     owner: profile-harness
-    owner_spec: specs/schemas/loop-checkpoint.schema.json
+    owner_spec: core/specs/schemas/loop-checkpoint.schema.json
     status: specified
     registry_tests:
       - HARNESS-EPISODE-002
     vectors:
-      - conformance/vectors/harness-episode-002.json
+      - core/conformance/vectors/harness-episode-002.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PERF-001
     owner: performance
-    owner_spec: specs/schemas/performance-report.schema.json
+    owner_spec: core/specs/schemas/performance-report.schema.json
     status: specified
     registry_tests:
       - PERF-REPORT-CONTRACT-001
     vectors:
-      - conformance/vectors/performance-report-contract.json
+      - core/conformance/vectors/performance-report-contract.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PERF-002
     owner: performance
-    owner_spec: conformance/README.md
+    owner_spec: core/conformance/README.md
     status: specified
     registry_tests:
       - PERF-REPORT-CONTRACT-001
     vectors:
-      - conformance/vectors/performance-report-contract.json
+      - core/conformance/vectors/performance-report-contract.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PERF-003
     owner: performance
-    owner_spec: specs/schemas/performance-report.schema.json
+    owner_spec: core/specs/schemas/performance-report.schema.json
     status: specified
     registry_tests:
       - PERF-REPORT-CONTRACT-001
     vectors:
-      - conformance/vectors/performance-report-contract.json
+      - core/conformance/vectors/performance-report-contract.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PERF-004
     owner: performance
-    owner_spec: conformance/README.md
+    owner_spec: core/conformance/README.md
     status: specified
     registry_tests:
       - PERF-REPORT-CONTRACT-001
     vectors:
-      - conformance/vectors/performance-report-contract.json
+      - core/conformance/vectors/performance-report-contract.json
     impl: []
     impl_tests: []
     evidence: []
@@ -585,110 +585,110 @@ requirements:
     registry_tests:
       - PERF-REPORT-CONTRACT-001
     vectors:
-      - conformance/vectors/performance-report-contract.json
+      - core/conformance/vectors/performance-report-contract.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-001
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-INVALIDATION-001
     vectors:
-      - conformance/vectors/knowledge-source-invalidation.json
+      - core/conformance/vectors/knowledge-source-invalidation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-002
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-INVALIDATION-001
     vectors:
-      - conformance/vectors/knowledge-source-invalidation.json
+      - core/conformance/vectors/knowledge-source-invalidation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-003
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-POISON-001
     vectors:
-      - conformance/vectors/knowledge-poisoning-isolation.json
+      - core/conformance/vectors/knowledge-poisoning-isolation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-004
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-POISON-001
     vectors:
-      - conformance/vectors/knowledge-poisoning-isolation.json
+      - core/conformance/vectors/knowledge-poisoning-isolation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-005
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-MAINTENANCE-001
     vectors:
-      - conformance/vectors/knowledge-maintenance-bounded.json
+      - core/conformance/vectors/knowledge-maintenance-bounded.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-006
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - KNOW-INVALIDATION-001
     vectors:
-      - conformance/vectors/knowledge-source-invalidation.json
+      - core/conformance/vectors/knowledge-source-invalidation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-SESSION-001
     owner: management-session
-    owner_spec: specs/schemas/privileged-management-session.schema.json
+    owner_spec: core/specs/schemas/privileged-management-session.schema.json
     status: specified
     registry_tests:
       - MGMT-CONFIG-001
     vectors:
-      - conformance/vectors/management-valid-configuration.json
+      - core/conformance/vectors/management-valid-configuration.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-SESSION-002
     owner: management-session
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
     status: specified
     registry_tests:
       - MGMT-SESSION-DENY-002
       - MGMT-GATE-DENY-003
     vectors:
-      - conformance/vectors/management-gate-denials.json
-      - conformance/vectors/management-session-denials.json
+      - core/conformance/vectors/management-gate-denials.json
+      - core/conformance/vectors/management-session-denials.json
     impl:
-      - crates/cognitive-management/src/session.rs
+      - personal/crates/cognitive-management/src/session.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_fallback_verbs.rs
-      - apps/admin-cli/tests/m5_deterministic_fallback.rs
+      - personal/crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - personal/apps/admin-cli/tests/m5_deterministic_fallback.rs
     evidence:
       - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
@@ -697,16 +697,16 @@ requirements:
       Lane-CFR."
   - id: REQ-MGMT-SESSION-003
     owner: management-session
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#75-privilegedmanagementsession-与管理授权
     status: specified
     registry_tests:
       - MGMT-SESSION-DENY-002
     vectors:
-      - conformance/vectors/management-session-denials.json
+      - core/conformance/vectors/management-session-denials.json
     impl:
-      - crates/cognitive-management/src/session.rs
+      - personal/crates/cognitive-management/src/session.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - personal/crates/cognitive-management/tests/m5_fallback_verbs.rs
     evidence:
       - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
@@ -714,22 +714,22 @@ requirements:
       retained untouched."
   - id: REQ-MGMT-GATE-001
     owner: management-gate
-    owner_spec: specs/schemas/management-action-proposal.schema.json
+    owner_spec: core/specs/schemas/management-action-proposal.schema.json
     status: specified
     registry_tests:
       - MGMT-CONFIG-001
       - MGMT-GATE-DENY-003
       - MGMT-APPROVAL-R1-009
     vectors:
-      - conformance/vectors/management-approval-missing-confirmation.json
-      - conformance/vectors/management-gate-denials.json
-      - conformance/vectors/management-valid-configuration.json
+      - core/conformance/vectors/management-approval-missing-confirmation.json
+      - core/conformance/vectors/management-gate-denials.json
+      - core/conformance/vectors/management-valid-configuration.json
     impl:
-      - crates/cognitive-management/src/session.rs
-      - crates/cognitive-management/src/plane.rs
+      - personal/crates/cognitive-management/src/session.rs
+      - personal/crates/cognitive-management/src/plane.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_fallback_verbs.rs
-      - apps/admin-cli/tests/m5_deterministic_fallback.rs
+      - personal/crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - personal/apps/admin-cli/tests/m5_deterministic_fallback.rs
     evidence:
       - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
@@ -738,7 +738,7 @@ requirements:
       batch."
   - id: REQ-MGMT-APPROVAL-001
     owner: management-approval
-    owner_spec: specs/schemas/management-approval-decision.schema.json
+    owner_spec: core/specs/schemas/management-approval-decision.schema.json
     status: specified
     registry_tests:
       - MGMT-APPROVAL-005
@@ -746,96 +746,96 @@ requirements:
       - MGMT-APPROVAL-SELF-010
       - MGMT-APPROVAL-FATIGUE-011
     vectors:
-      - conformance/vectors/management-approval-fatigue-guard.json
-      - conformance/vectors/management-approval-missing-confirmation.json
-      - conformance/vectors/management-approval-self-approval.json
-      - conformance/vectors/management-independent-approval.json
+      - core/conformance/vectors/management-approval-fatigue-guard.json
+      - core/conformance/vectors/management-approval-missing-confirmation.json
+      - core/conformance/vectors/management-approval-self-approval.json
+      - core/conformance/vectors/management-independent-approval.json
     impl:
-      - crates/cognitive-management/src/approval.rs
+      - personal/crates/cognitive-management/src/approval.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_session_approval.rs
+      - personal/crates/cognitive-management/tests/m5_session_approval.rs
     evidence: []
     docs: []
   - id: REQ-MGMT-AUTHZ-001
     owner: management-authorization
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
     status: specified
     registry_tests:
       - MGMT-AUTHZ-004
       - MGMT-APPROVAL-SELF-010
     vectors:
-      - conformance/vectors/management-approval-self-approval.json
-      - conformance/vectors/management-untrusted-self-authorization.json
+      - core/conformance/vectors/management-approval-self-approval.json
+      - core/conformance/vectors/management-untrusted-self-authorization.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-TRUST-001
     owner: management-trust
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#76-managementactionproposalchallenge-与-approval
     status: specified
     registry_tests:
       - MGMT-AUTHZ-004
     vectors:
-      - conformance/vectors/management-untrusted-self-authorization.json
+      - core/conformance/vectors/management-untrusted-self-authorization.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-EFFECT-001
     owner: management-effect
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    owner_spec: core/specs/core/README.md#121-management-api-与确定性管理门禁
     status: specified
     registry_tests:
       - MGMT-CONFIG-001
       - MGMT-IDEM-006
       - MGMT-RECOVERY-007
     vectors:
-      - conformance/vectors/management-idempotent-lifecycle.json
-      - conformance/vectors/management-shell-crash-reconciliation.json
-      - conformance/vectors/management-valid-configuration.json
+      - core/conformance/vectors/management-idempotent-lifecycle.json
+      - core/conformance/vectors/management-shell-crash-reconciliation.json
+      - core/conformance/vectors/management-valid-configuration.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-IDEM-001
     owner: management-effect
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    owner_spec: core/specs/core/README.md#121-management-api-与确定性管理门禁
     status: specified
     registry_tests:
       - MGMT-IDEM-006
     vectors:
-      - conformance/vectors/management-idempotent-lifecycle.json
+      - core/conformance/vectors/management-idempotent-lifecycle.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-RECOVERY-001
     owner: management-recovery
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    owner_spec: core/specs/core/README.md#121-management-api-与确定性管理门禁
     status: specified
     registry_tests:
       - MGMT-RECOVERY-007
     vectors:
-      - conformance/vectors/management-shell-crash-reconciliation.json
+      - core/conformance/vectors/management-shell-crash-reconciliation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MGMT-FALLBACK-001
     owner: management-fallback
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    owner_spec: core/specs/core/README.md#121-management-api-与确定性管理门禁
     status: specified
     registry_tests:
       - MGMT-FALLBACK-008
     vectors:
-      - conformance/vectors/management-deterministic-fallback.json
+      - core/conformance/vectors/management-deterministic-fallback.json
     impl:
-      - crates/cognitive-management/src/plane.rs
-      - apps/admin-cli/src/main.rs
+      - personal/crates/cognitive-management/src/plane.rs
+      - personal/apps/admin-cli/src/main.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_fallback_verbs.rs
-      - apps/admin-cli/tests/m5_deterministic_fallback.rs
+      - personal/crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - personal/apps/admin-cli/tests/m5_deterministic_fallback.rs
     evidence:
       - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
@@ -844,19 +844,19 @@ requirements:
       batch; vector execution stays with Lane-CFR."
   - id: REQ-MGMT-SESSION-LIFECYCLE-001
     owner: management-session
-    owner_spec: specs/core/README.md#121-management-api-与确定性管理门禁
+    owner_spec: core/specs/core/README.md#121-management-api-与确定性管理门禁
     status: specified
     registry_tests:
       - MGMT-SESSION-DENY-002
       - MGMT-RECOVERY-007
     vectors:
-      - conformance/vectors/management-session-denials.json
-      - conformance/vectors/management-shell-crash-reconciliation.json
+      - core/conformance/vectors/management-session-denials.json
+      - core/conformance/vectors/management-shell-crash-reconciliation.json
     impl:
-      - crates/cognitive-management/src/session.rs
-      - crates/cognitive-management/src/plane.rs
+      - personal/crates/cognitive-management/src/session.rs
+      - personal/crates/cognitive-management/src/plane.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_fallback_verbs.rs
+      - personal/crates/cognitive-management/tests/m5_fallback_verbs.rs
     evidence:
       - docs/checkpoints/20260720-lane-run-m5-batch1-handoff.md
     docs: []
@@ -865,439 +865,439 @@ requirements:
       renewal/re-authentication flow is the Management API batch."
   - id: REQ-AGENT-INSTALL-001
     owner: agent-installation
-    owner_spec: specs/schemas/agent-installation.schema.json
+    owner_spec: core/specs/schemas/agent-installation.schema.json
     status: specified
     registry_tests:
       - AGENT-INSTALL-001
     vectors:
-      - conformance/vectors/agent-installation-verification.json
+      - core/conformance/vectors/agent-installation-verification.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-ADAPTER-001
     owner: agent-adapter
-    owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+    owner_spec: core/specs/agent-compatibility/README.md#4-adapter-interface-family
     status: specified
     registry_tests:
       - AGENT-BYPASS-002
     vectors:
-      - conformance/vectors/agent-adapter-bypass.json
+      - core/conformance/vectors/agent-adapter-bypass.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-OOB-001
     owner: agent-adapter
-    owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+    owner_spec: core/specs/agent-compatibility/README.md#4-adapter-interface-family
     status: specified
     registry_tests:
       - AGENT-OOB-001
     vectors:
-      - conformance/vectors/agent-out-of-band-reconciliation.json
+      - core/conformance/vectors/agent-out-of-band-reconciliation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-COMPLETE-001
     owner: agent-completion
-    owner_spec: specs/agent-compatibility/README.md#4-adapter-interface-family
+    owner_spec: core/specs/agent-compatibility/README.md#4-adapter-interface-family
     status: specified
     registry_tests:
       - AGENT-BYPASS-002
     vectors:
-      - conformance/vectors/agent-adapter-bypass.json
+      - core/conformance/vectors/agent-adapter-bypass.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-SANDBOX-001
     owner: agent-sandbox
-    owner_spec: specs/agent-compatibility/README.md#5-不可绕过性与恢复
+    owner_spec: core/specs/agent-compatibility/README.md#5-不可绕过性与恢复
     status: specified
     registry_tests:
       - AGENT-BYPASS-002
     vectors:
-      - conformance/vectors/agent-adapter-bypass.json
+      - core/conformance/vectors/agent-adapter-bypass.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-RECOVERY-001
     owner: agent-recovery
-    owner_spec: specs/agent-compatibility/README.md#5-不可绕过性与恢复
+    owner_spec: core/specs/agent-compatibility/README.md#5-不可绕过性与恢复
     status: specified
     registry_tests:
       - AGENT-RECOVERY-003
     vectors:
-      - conformance/vectors/agent-recovery-reconciliation.json
+      - core/conformance/vectors/agent-recovery-reconciliation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-OBJECT-001
     owner: governed-memory
-    owner_spec: specs/schemas/memory-object.schema.json
+    owner_spec: core/specs/schemas/memory-object.schema.json
     status: specified
     registry_tests:
       - MEM-ADMISSION-001
     vectors:
-      - conformance/vectors/memory-admission-denied.json
+      - core/conformance/vectors/memory-admission-denied.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-ADMIT-001
     owner: governed-memory
-    owner_spec: specs/governed-memory/README.md#3-写入与准入
+    owner_spec: core/specs/governed-memory/README.md#3-写入与准入
     status: specified
     registry_tests:
       - MEM-ADMISSION-001
     vectors:
-      - conformance/vectors/memory-admission-denied.json
+      - core/conformance/vectors/memory-admission-denied.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-ADMIT-002
     owner: governed-memory
-    owner_spec: specs/governed-memory/README.md#3-写入与准入
+    owner_spec: core/specs/governed-memory/README.md#3-写入与准入
     status: specified
     registry_tests:
       - MEM-RYW-001
     vectors:
-      - conformance/vectors/memory-read-your-write.json
+      - core/conformance/vectors/memory-read-your-write.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-PROMOTE-001
     owner: governed-memory
-    owner_spec: specs/governed-memory/README.md#4-晋升冲突与修改
+    owner_spec: core/specs/governed-memory/README.md#4-晋升冲突与修改
     status: specified
     registry_tests:
       - MEM-PROMOTION-002
     vectors:
-      - conformance/vectors/memory-cross-scope-promotion.json
+      - core/conformance/vectors/memory-cross-scope-promotion.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-DELETE-001
     owner: governed-memory
-    owner_spec: specs/governed-memory/README.md#5-失效遗忘与删除
+    owner_spec: core/specs/governed-memory/README.md#5-失效遗忘与删除
     status: specified
     registry_tests:
       - MEM-INVALIDATION-003
     vectors:
-      - conformance/vectors/memory-derived-invalidation.json
+      - core/conformance/vectors/memory-derived-invalidation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DISC-MANIFEST-001
     owner: cognitive-discovery
-    owner_spec: specs/schemas/cognitive-resource-manifest.schema.json
+    owner_spec: core/specs/schemas/cognitive-resource-manifest.schema.json
     status: specified
     registry_tests:
       - DISC-DISCOVER-READ-001
     vectors:
-      - conformance/vectors/discovery-read-separation.json
+      - core/conformance/vectors/discovery-read-separation.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DISC-ADMIT-001
     owner: cognitive-discovery
-    owner_spec: specs/schemas/context-request-admission.schema.json
+    owner_spec: core/specs/schemas/context-request-admission.schema.json
     status: specified
     registry_tests:
       - DISC-ADMISSION-002
     vectors:
-      - conformance/vectors/context-candidate-admission.json
+      - core/conformance/vectors/context-candidate-admission.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DISC-DELTA-001
     owner: cognitive-discovery
-    owner_spec: specs/schemas/context-view-delta.schema.json
+    owner_spec: core/specs/schemas/context-view-delta.schema.json
     status: specified
     registry_tests:
       - DISC-DELTA-SCOPE-003
     vectors:
-      - conformance/vectors/context-delta-scope.json
+      - core/conformance/vectors/context-delta-scope.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DISC-STAGNATION-001
     owner: cognitive-discovery
-    owner_spec: specs/cognitive-discovery/README.md#4-停滞与错误隐私
+    owner_spec: core/specs/cognitive-discovery/README.md#4-停滞与错误隐私
     status: specified
     registry_tests:
       - DISC-STAGNATION-004
     vectors:
-      - conformance/vectors/context-resolution-stagnation.json
+      - core/conformance/vectors/context-resolution-stagnation.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
     notes: "M3: bounded no-gain re-resolution surfaces CONTEXT_RESOLUTION_STAGNATED."
   - id: REQ-CAT-LIFECYCLE-001
     owner: operation-catalog
-    owner_spec: specs/schemas/operation-catalog-snapshot.schema.json
+    owner_spec: core/specs/schemas/operation-catalog-snapshot.schema.json
     status: specified
     registry_tests:
       - CAT-STALE-001
     vectors:
-      - conformance/vectors/catalog-stale-binding.json
+      - core/conformance/vectors/catalog-stale-binding.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CAT-DISCOVER-001
     owner: operation-catalog
-    owner_spec: specs/operation-catalog/README.md#3-discovermatch-与-bind
+    owner_spec: core/specs/operation-catalog/README.md#3-discovermatch-与-bind
     status: specified
     registry_tests:
       - CAT-EFFECT-CONFUSION-002
     vectors:
-      - conformance/vectors/catalog-effect-confusion.json
+      - core/conformance/vectors/catalog-effect-confusion.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CAT-MATCH-001
     owner: operation-catalog
-    owner_spec: specs/schemas/operation-match-report.schema.json
+    owner_spec: core/specs/schemas/operation-match-report.schema.json
     status: specified
     registry_tests:
       - CAT-EFFECT-CONFUSION-002
     vectors:
-      - conformance/vectors/catalog-effect-confusion.json
+      - core/conformance/vectors/catalog-effect-confusion.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CAT-BIND-001
     owner: operation-catalog
-    owner_spec: specs/operation-catalog/README.md#3-discovermatch-与-bind
+    owner_spec: core/specs/operation-catalog/README.md#3-discovermatch-与-bind
     status: specified
     registry_tests:
       - CAT-STALE-001
     vectors:
-      - conformance/vectors/catalog-stale-binding.json
+      - core/conformance/vectors/catalog-stale-binding.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SEM-SOFT-001
     owner: semantic-mediation
-    owner_spec: specs/semantic-mediation/README.md#1-sms-边界
+    owner_spec: core/specs/semantic-mediation/README.md#1-sms-边界
     status: specified
     registry_tests:
       - SEM-FALLBACK-001
     vectors:
-      - conformance/vectors/semantic-fallback-bounds.json
+      - core/conformance/vectors/semantic-fallback-bounds.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SEM-ENVELOPE-001
     owner: semantic-mediation
-    owner_spec: specs/schemas/semantic-service-manifest.schema.json
+    owner_spec: core/specs/schemas/semantic-service-manifest.schema.json
     status: specified
     registry_tests:
       - SEM-FALLBACK-001
     vectors:
-      - conformance/vectors/semantic-fallback-bounds.json
+      - core/conformance/vectors/semantic-fallback-bounds.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SEM-FALLBACK-001
     owner: semantic-mediation
-    owner_spec: specs/semantic-mediation/README.md#3-降级
+    owner_spec: core/specs/semantic-mediation/README.md#3-降级
     status: specified
     registry_tests:
       - SEM-FALLBACK-001
     vectors:
-      - conformance/vectors/semantic-fallback-bounds.json
+      - core/conformance/vectors/semantic-fallback-bounds.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CRB-BOUND-001
     owner: cognitive-resource-broker
-    owner_spec: specs/schemas/cognitive-allocation-decision.schema.json
+    owner_spec: core/specs/schemas/cognitive-allocation-decision.schema.json
     status: specified
     registry_tests:
       - SEM-FALLBACK-001
     vectors:
-      - conformance/vectors/semantic-fallback-bounds.json
+      - core/conformance/vectors/semantic-fallback-bounds.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CRB-ACCOUNT-001
     owner: cognitive-resource-broker
-    owner_spec: specs/semantic-mediation/README.md#4-cognitive-resource-broker
+    owner_spec: core/specs/semantic-mediation/README.md#4-cognitive-resource-broker
     status: specified
     registry_tests:
       - DISC-DELTA-SCOPE-003
     vectors:
-      - conformance/vectors/context-delta-scope.json
+      - core/conformance/vectors/context-delta-scope.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-ADDR-001
     owner: addr-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-ADDR-002
     owner: addr-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-COMPAT-001
     owner: agent-compat
-    owner_spec: specs/agent-compatibility/README.md
+    owner_spec: core/specs/agent-compatibility/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-INSTALL-002
     owner: agent-install
-    owner_spec: specs/agent-compatibility/README.md
+    owner_spec: core/specs/agent-compatibility/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AGENT-SHELL-001
     owner: agent-shell
-    owner_spec: specs/agent-compatibility/README.md
+    owner_spec: core/specs/agent-compatibility/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-CAN-001
     owner: akp-can
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - SHELL-CONTROL-UNREASONED-CANCEL-001
     vectors:
-      - conformance/vectors/shell-control-unreasoned-cancel-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-control-unreasoned-cancel-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-CONF-001
     owner: akp-conf
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-CONT-001
     owner: akp-cont
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-ECO-001
     owner: akp-eco
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-ECO-002
     owner: akp-eco
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-ECO-003
     owner: akp-eco
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-ENV-001
     owner: akp-env
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
@@ -1305,311 +1305,311 @@ requirements:
       - AKP-ENVELOPE-AMBIGUOUS-PAYLOAD-002
       - AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003
     vectors:
-      - conformance/vectors/akp-envelope-ambiguous-payload-002.json
-      - conformance/vectors/akp-envelope-no-schema-pin-001.json
-      - conformance/vectors/akp-result-error-without-machine-code-003.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/akp-envelope-ambiguous-payload-002.json
+      - core/conformance/vectors/akp-envelope-no-schema-pin-001.json
+      - core/conformance/vectors/akp-result-error-without-machine-code-003.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-ENV-002
     owner: akp-env
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - AKP-ENVELOPE-NO-SCHEMA-PIN-001
     vectors:
-      - conformance/vectors/akp-envelope-no-schema-pin-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/akp-envelope-no-schema-pin-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-IDEM-001
     owner: akp-idem
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-INTENT-001
     owner: akp-intent
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - INTENT-SUPERSEDE-002
     vectors:
-      - conformance/vectors/intent-supersede-002.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/intent-supersede-002.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
     notes: Covered by INTENT-SUPERSEDE-002 behavior execution (Lane-CFR 2026-07-21); AKP wire surface unchanged.
   - id: REQ-AKP-MGMT-001
     owner: akp-mgmt
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-MGMT-002
     owner: akp-mgmt
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - MGMT-APPROVAL-R1-009
       - MGMT-APPROVAL-FATIGUE-011
     vectors:
-      - conformance/vectors/management-approval-fatigue-guard.json
-      - conformance/vectors/management-approval-missing-confirmation.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/management-approval-fatigue-guard.json
+      - core/conformance/vectors/management-approval-missing-confirmation.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-management/src/approval.rs
+      - personal/crates/cognitive-management/src/approval.rs
     impl_tests:
-      - crates/cognitive-management/tests/m5_session_approval.rs
+      - personal/crates/cognitive-management/tests/m5_session_approval.rs
     evidence: []
     docs: []
   - id: REQ-AKP-MGMT-003
     owner: akp-mgmt
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-RES-001
     owner: akp-res
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-SEC-001
     owner: akp-sec
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-SHELL-001
     owner: akp-shell
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-SHELL-002
     owner: akp-shell
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SHELL-WATCH-RESUME-006
     vectors:
-      - conformance/vectors/shell-watch-resume-006.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-watch-resume-006.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-SHELL-003
     owner: akp-shell
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SHELL-CANCEL-SEMANTICS-005
       - SHELL-CONTROL-UNREASONED-CANCEL-001
     vectors:
-      - conformance/vectors/shell-cancel-semantics-005.json
-      - conformance/vectors/shell-control-unreasoned-cancel-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-cancel-semantics-005.json
+      - core/conformance/vectors/shell-control-unreasoned-cancel-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-AKP-STR-001
     owner: akp-str
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - AKP-STREAM-FRAME-UNSEQUENCED-004
     vectors:
-      - conformance/vectors/akp-stream-frame-unsequenced-004.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/akp-stream-frame-unsequenced-004.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-STR-002
     owner: akp-str
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AKP-VER-001
     owner: akp-ver
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-AUDIT-001
     owner: audit-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - ORDINARY-CORE-AUDIT-INSPECT-001
     vectors:
-      - conformance/vectors/ordinary-core-audit-inspect-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/ordinary-core-audit-inspect-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-management/src/audit.rs
-      - crates/cognitive-management/src/plane.rs
+      - personal/crates/cognitive-management/src/audit.rs
+      - personal/crates/cognitive-management/src/plane.rs
     impl_tests:
-      - crates/cognitive-contracts/tests/ordinary_core_audit_registration.rs
-      - crates/cognitive-management/tests/v02_file_audit.rs
-      - crates/cognitive-management/tests/v02_registered_audit_bindings.rs
+      - core/crates/cognitive-contracts/tests/ordinary_core_audit_registration.rs
+      - personal/crates/cognitive-management/tests/v02_file_audit.rs
+      - personal/crates/cognitive-management/tests/v02_registered_audit_bindings.rs
     evidence:
       - docs/plan/candidates/v02-ordinary-core-audit/registration-readiness.md
     docs:
-      - specs/core/ordinary-core-audit.md
+      - core/specs/core/ordinary-core-audit.md
     notes: Formal decision/receipt schemas and generated bindings are registered/provided for Ordinary Core status.inspect.
       Lane-RUN production binding adoption is provided, and ORDINARY-CORE-AUDIT-INSPECT-001 has executed against the
       audited public consumer; this is vector-scoped evidence, not a Profile claim.
   - id: REQ-AUDIT-002
     owner: audit-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - ORDINARY-CORE-AUDIT-INSPECT-001
     vectors:
-      - conformance/vectors/ordinary-core-audit-inspect-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/ordinary-core-audit-inspect-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-management/src/audit.rs
-      - crates/cognitive-management/src/plane.rs
+      - personal/crates/cognitive-management/src/audit.rs
+      - personal/crates/cognitive-management/src/plane.rs
     impl_tests:
-      - crates/cognitive-contracts/tests/ordinary_core_audit_registration.rs
-      - crates/cognitive-management/tests/v02_file_audit.rs
-      - crates/cognitive-management/tests/v02_registered_audit_bindings.rs
+      - core/crates/cognitive-contracts/tests/ordinary_core_audit_registration.rs
+      - personal/crates/cognitive-management/tests/v02_file_audit.rs
+      - personal/crates/cognitive-management/tests/v02_registered_audit_bindings.rs
     evidence:
       - docs/plan/candidates/v02-ordinary-core-audit/registration-readiness.md
     docs:
-      - specs/core/ordinary-core-audit.md
+      - core/specs/core/ordinary-core-audit.md
     notes: Minimal port responsibility is registered in the normative companion. ORDINARY-CORE-AUDIT-INSPECT-001 has
       executed durable readback, receipt binding, positive sequence/epoch, time ordering, and mismatch withholding; no
       CA-0 GO, High-Assurance, D-022 closure, or Profile claim is made.
   - id: REQ-AUTH-001
     owner: auth-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CAP-004
     owner: cap-004
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CAP-005
     owner: cap-005
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - CTX-REVOKE-CACHE-001
     vectors:
-      - conformance/vectors/context-revocation-cache-reuse.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/context-revocation-cache-reuse.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/authz.rs
-      - crates/cognitive-kernel/src/context_cache.rs
+      - core/crates/cognitive-kernel/src/authz.rs
+      - core/crates/cognitive-kernel/src/context_cache.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/governance_gate.rs
-      - crates/cognitive-kernel/tests/context_pipeline.rs
-      - crates/cognitive-store/tests/m3_revocation_races.rs
+      - core/crates/cognitive-kernel/tests/governance_gate.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
+      - personal/crates/cognitive-store/tests/m3_revocation_races.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -1617,217 +1617,217 @@ requirements:
       behavior side executed)."
   - id: REQ-CAT-SHELL-001
     owner: cat-shell
-    owner_spec: specs/operation-catalog/README.md
+    owner_spec: core/specs/operation-catalog/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CHARTER-CTX-001
     owner: charter-ctx
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CHARTER-DET-001
     owner: charter-det
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CHARTER-HIER-001
     owner: charter-hier
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CHARTER-OBJ-001
     owner: charter-obj
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CHARTER-PROTO-001
     owner: charter-proto
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CHARTER-STATE-001
     owner: charter-state
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CONF-002
     owner: conf-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-conformance/src/lib.rs
-      - crates/cognitive-contracts/src/bundle.rs
+      - personal/crates/cognitive-conformance/src/lib.rs
+      - core/crates/cognitive-contracts/src/bundle.rs
     impl_tests:
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-m1-milestone-review.md
     docs:
       - docs/standards/conformance-evidence.md
   - id: REQ-CONF-004
     owner: conf-004
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CONF-005
     owner: conf-005
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CONF-006
     owner: conf-006
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CORE-CANDIDATE-001
     owner: core-candidate
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CORE-DELTA-001
     owner: core-delta
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CORE-MEDIATION-001
     owner: core-mediation
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CORE-OPS-001
     owner: core-ops
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CORE-OPS-002
     owner: core-ops
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CTX-002
     owner: ctx-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - CTX-RANK-AUTH-001
       - GOBJ-TENANT-LATERAL-001
     vectors:
-      - conformance/vectors/context-rank-before-auth.json
-      - conformance/vectors/spec-contract-coverage.json
-      - conformance/vectors/tenant-lateral-read-denial.json
+      - core/conformance/vectors/context-rank-before-auth.json
+      - core/conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/tenant-lateral-read-denial.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -1835,100 +1835,100 @@ requirements:
       (context-rank-before-auth behavior side executed)."
   - id: REQ-CTX-003
     owner: ctx-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CTX-006
     owner: ctx-006
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
     notes: "M3: context errors never degrade silently; explicit partial emits complete:false with missing list."
   - id: REQ-CTX-007
     owner: ctx-007
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
     notes: "M3: nine-stage pipeline with per-stage reason codes asserted in order."
   - id: REQ-CTX-009
     owner: ctx-009
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CTX-010
     owner: ctx-010
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-CTX-011
     owner: ctx-011
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
     notes: "M3: ranking stage records candidate digests and discarded out-of-set proposals."
   - id: REQ-CTX-012
     owner: context
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - CTX-RENDER-001
     vectors:
-      - conformance/vectors/context-render-stability.json
+      - core/conformance/vectors/context-render-stability.json
     impl:
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -1936,163 +1936,163 @@ requirements:
       (context-render-stability behavior side executed)."
   - id: REQ-DISC-PRIVACY-001
     owner: disc-privacy
-    owner_spec: specs/cognitive-discovery/README.md
+    owner_spec: core/specs/cognitive-discovery/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DISC-SHELL-001
     owner: disc-shell
-    owner_spec: specs/cognitive-discovery/README.md
+    owner_spec: core/specs/cognitive-discovery/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-BUD-001
     owner: dist-bud
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-CONF-001
     owner: dist-conf
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-DEL-001
     owner: dist-del
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-MBX-001
     owner: dist-mbx
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-MBX-002
     owner: dist-mbx
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-OBJ-001
     owner: dist-obj
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-PART-001
     owner: dist-part
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-REC-001
     owner: dist-rec
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-SEC-001
     owner: dist-sec
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-DIST-SHELL-001
     owner: dist-shell
-    owner_spec: specs/distributed/README.md
+    owner_spec: core/specs/distributed/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EFF-002
     owner: eff-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - EFF-IDEM-CONFLICT-001
     vectors:
-      - conformance/vectors/effect-idempotency-conflict.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/effect-idempotency-conflict.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-kernel/src/executor.rs
+      - core/crates/cognitive-kernel/src/effects.rs
+      - core/crates/cognitive-kernel/src/executor.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_effects.rs
+      - personal/crates/cognitive-store/tests/m4_effects.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -2100,28 +2100,28 @@ requirements:
       same-key/different-digest rejected EFFECT_IDEMPOTENCY_CONFLICT (no dedup, no overwrite); behavior tests executed."
   - id: REQ-EFF-003
     owner: eff-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EFF-005
     owner: eff-005
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/effects.rs
+      - core/crates/cognitive-kernel/src/effects.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_effects.rs
+      - personal/crates/cognitive-store/tests/m4_effects.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -2129,31 +2129,31 @@ requirements:
       refused; behavior tests executed."
   - id: REQ-EFF-007
     owner: eff-007
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EFF-STATE-001
     owner: eff-state
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - EFFECT-STATE-CLOSURE-008
     vectors:
-      - conformance/vectors/effect-state-closure-008.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/effect-state-closure-008.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/engine.rs
-      - crates/cognitive-kernel/src/effects.rs
+      - core/crates/cognitive-kernel/src/engine.rs
+      - core/crates/cognitive-kernel/src/effects.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_effects.rs
-      - crates/cognitive-kernel/tests/engine_gate.rs
+      - personal/crates/cognitive-store/tests/m4_effects.rs
+      - core/crates/cognitive-kernel/tests/engine_gate.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -2161,210 +2161,210 @@ requirements:
       retry); rejections carry current state and safe exits.
   - id: REQ-EMB-ACT-001
     owner: emb-act
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-CONF-001
     owner: emb-conf
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-FRAME-001
     owner: emb-frame
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-LOOP-001
     owner: emb-loop
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-LOOP-002
     owner: emb-loop
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-SAFE-001
     owner: emb-safe
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-SEC-001
     owner: emb-sec
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-SHELL-001
     owner: emb-shell
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-STATE-001
     owner: emb-state
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-TIME-001
     owner: emb-time
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EMB-UNC-001
     owner: emb-unc
-    owner_spec: specs/embodied/README.md
+    owner_spec: core/specs/embodied/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-ERR-001
     owner: err-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - AKP-RESULT-ERROR-WITHOUT-MACHINE-CODE-003
     vectors:
-      - conformance/vectors/akp-result-error-without-machine-code-003.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/akp-result-error-without-machine-code-003.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-ERR-002
     owner: err-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EVT-002
     owner: evt-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EVT-003
     owner: evt-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-EVT-004
     owner: evt-004
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-store/src/sqlite/mod.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
-      - crates/cognitive-store/tests/m2_acceptance.rs
+      - personal/crates/cognitive-store/tests/m2_acceptance.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
     notes: Storage-level append-only triggers; UPDATE/DELETE negatives executed in M2 acceptance tests.
   - id: REQ-EVT-005
     owner: evt-005
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
@@ -2377,11 +2377,11 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
     vectors: []
     impl:
-      - crates/cognitive-domain/src/ids.rs
-      - crates/cognitive-store/src/ids.rs
+      - core/crates/cognitive-domain/src/ids.rs
+      - personal/crates/cognitive-store/src/ids.rs
     impl_tests:
-      - crates/cognitive-domain/src/ids.rs
-      - crates/cognitive-store/src/ids.rs
+      - core/crates/cognitive-domain/src/ids.rs
+      - personal/crates/cognitive-store/src/ids.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
@@ -2418,8 +2418,8 @@ requirements:
       - GOBJ-TENANT-LATERAL-001
       - GOBJ-LEGACY-METADATA-001
     vectors:
-      - conformance/vectors/governed-object-legacy-metadata-001.json
-      - conformance/vectors/tenant-lateral-read-denial.json
+      - core/conformance/vectors/governed-object-legacy-metadata-001.json
+      - core/conformance/vectors/tenant-lateral-read-denial.json
     impl: []
     impl_tests: []
     evidence: []
@@ -2432,7 +2432,7 @@ requirements:
       - SPEC-CONTRACT-COVERAGE-001
       - GOBJ-LEGACY-STRONGREF-001
     vectors:
-      - conformance/vectors/governed-object-legacy-strongref-001.json
+      - core/conformance/vectors/governed-object-legacy-strongref-001.json
     impl: []
     impl_tests: []
     evidence: []
@@ -2567,8 +2567,8 @@ requirements:
       - GOBJ-LEGACY-METADATA-001
       - GOBJ-LEGACY-STRONGREF-001
     vectors:
-      - conformance/vectors/governed-object-legacy-metadata-001.json
-      - conformance/vectors/governed-object-legacy-strongref-001.json
+      - core/conformance/vectors/governed-object-legacy-metadata-001.json
+      - core/conformance/vectors/governed-object-legacy-strongref-001.json
     impl: []
     impl_tests: []
     evidence: []
@@ -2641,277 +2641,277 @@ requirements:
     docs: []
   - id: REQ-GOV-DISC-001
     owner: gov-disc
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-GOV-MEM-001
     owner: gov-mem
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-GW-001
     owner: gw-001
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-GW-002
     owner: gw-002
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - GW-REMOTE-COMPLETE-001
     vectors:
-      - conformance/vectors/remote-completed-not-acceptance.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/remote-completed-not-acceptance.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-GW-003
     owner: gw-003
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-GW-004
     owner: gw-004
-    owner_spec: specs/akp/README.md
+    owner_spec: core/specs/akp/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-CAL-001
     owner: het-cal
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-CONF-001
     owner: het-conf
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-DATA-001
     owner: het-data
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-DRIFT-001
     owner: het-drift
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-ERR-001
     owner: het-err
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-FB-001
     owner: het-fb
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-HDL-001
     owner: het-hdl
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-LIFE-001
     owner: het-life
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-OBS-001
     owner: het-obs
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-OPS-001
     owner: het-ops
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-PLC-001
     owner: het-plc
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-PLC-002
     owner: het-plc
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-RG-001
     owner: het-rg
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-SEC-001
     owner: het-sec
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-HET-SHELL-001
     owner: het-shell
-    owner_spec: specs/heterogeneous/README.md
+    owner_spec: core/specs/heterogeneous/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-INTENT-ACCEPT-001
     owner: intent-accept
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - INTENT-ACCEPTANCE-007
       - GW-REMOTE-COMPLETE-001
     vectors:
-      - conformance/vectors/intent-acceptance-007.json
-      - conformance/vectors/remote-completed-not-acceptance.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/intent-acceptance-007.json
+      - core/conformance/vectors/remote-completed-not-acceptance.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-kernel/src/engine.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+      - core/crates/cognitive-kernel/src/effects.rs
+      - core/crates/cognitive-kernel/src/engine.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_effects.rs
-      - crates/cognitive-store/tests/m4_tracer_bullet.rs
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-store/tests/m4_effects.rs
+      - personal/crates/cognitive-store/tests/m4_tracer_bullet.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
       - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
@@ -2923,19 +2923,19 @@ requirements:
       next_gate=verification_or_acceptance. Distinct from GW-REMOTE-COMPLETE-001."
   - id: REQ-INTENT-ADMISSION-001
     owner: intent-admission
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - TASK-PREVIEW-ADMIT-008
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
-      - conformance/vectors/task-preview-admit-008.json
+      - core/conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/task-preview-admit-008.json
     impl:
-      - crates/cognitive-kernel/src/intent_chain.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
+      - core/crates/cognitive-kernel/src/intent_chain.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_intent_chain.rs
+      - personal/crates/cognitive-store/tests/m5_intent_chain.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
@@ -2945,19 +2945,19 @@ requirements:
       executed; vector execution stays with Lane-CFR."
   - id: REQ-INTENT-RECORD-001
     owner: intent-record
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - TASK-INTENT-API-009
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
-      - conformance/vectors/task-intent-api-009.json
+      - core/conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/task-intent-api-009.json
     impl:
-      - crates/cognitive-kernel/src/intent_chain.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
+      - core/crates/cognitive-kernel/src/intent_chain.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_intent_chain.rs
+      - personal/crates/cognitive-store/tests/m5_intent_chain.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
     docs: []
@@ -2966,21 +2966,21 @@ requirements:
       never overwrite; Rust behavior tests executed."
   - id: REQ-INTENT-SUPERSEDE-001
     owner: intent-supersede
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - INTENT-SUPERSEDE-002
     vectors:
-      - conformance/vectors/intent-supersede-002.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/intent-supersede-002.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/intent_chain.rs
-      - crates/cognitive-kernel/src/effects.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+      - core/crates/cognitive-kernel/src/intent_chain.rs
+      - core/crates/cognitive-kernel/src/effects.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_intent_chain.rs
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-store/tests/m5_intent_chain.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
       - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
@@ -2991,367 +2991,367 @@ requirements:
       behavior-executed by Lane-CFR (2026-07-21) via conformance runner (oracle twin m5_intent_chain)."
   - id: REQ-KNOW-007
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-008
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-KNOW-009
     owner: knowledge-compilation
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md#knowledge-compilation
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-CAN-001
     owner: learn-can
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-CAND-001
     owner: learn-cand
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-CAND-002
     owner: learn-cand
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-CONF-001
     owner: learn-conf
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-DATA-001
     owner: learn-data
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-FAIL-001
     owner: learn-fail
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-MEM-001
     owner: learn-mem
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-MEM-002
     owner: learn-mem
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-MEM-003
     owner: learn-mem
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-MEM-004
     owner: learn-mem
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-MEM-005
     owner: learn-mem
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-OFF-001
     owner: learn-off
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-RBK-001
     owner: learn-rbk
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-REL-001
     owner: learn-rel
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-SEC-001
     owner: learn-sec
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-SHD-001
     owner: learn-shd
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-LEARN-SHELL-001
     owner: learn-shell
-    owner_spec: specs/learning/README.md
+    owner_spec: core/specs/learning/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-MUTATE-001
     owner: mem-mutate
-    owner_spec: specs/governed-memory/README.md
+    owner_spec: core/specs/governed-memory/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-MEM-SHELL-001
     owner: mem-shell
-    owner_spec: specs/governed-memory/README.md
+    owner_spec: core/specs/governed-memory/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-OBJ-002
     owner: obj-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-OBJ-003
     owner: obj-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-OP-001
     owner: op-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-OP-002
     owner: op-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROTO-002
     owner: proto-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROTO-003
     owner: proto-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-PROTO-004
     owner: proto-004
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-REC-001
     owner: rec-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/recovery.rs
-      - crates/cognitive-runtime/src/recovery_flow.rs
+      - core/crates/cognitive-kernel/src/recovery.rs
+      - personal/crates/cognitive-runtime/src/recovery_flow.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_recovery.rs
-      - crates/cognitive-store/tests/m5_recovery_governance.rs
-      - crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-store/tests/m4_recovery.rs
+      - personal/crates/cognitive-store/tests/m5_recovery_governance.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
@@ -3365,16 +3365,16 @@ requirements:
       (stale grant / pre-crash binding fail closed; unit-tested)."
   - id: REQ-REC-002
     owner: rec-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/recovery.rs
+      - core/crates/cognitive-kernel/src/recovery.rs
     impl_tests:
-      - crates/cognitive-store/tests/m4_recovery.rs
+      - personal/crates/cognitive-store/tests/m4_recovery.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m4-handoff.md
     docs: []
@@ -3382,18 +3382,18 @@ requirements:
       crash boundaries)."
   - id: REQ-REC-003
     owner: rec-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - STATE-STORE-DEGRADE-001
     vectors:
-      - conformance/vectors/state-store-degradation.json
+      - core/conformance/vectors/state-store-degradation.json
     impl:
-      - crates/cognitive-store/src/sqlite/mod.rs
-      - crates/cognitive-kernel/src/error.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
+      - core/crates/cognitive-kernel/src/error.rs
     impl_tests:
-      - crates/cognitive-store/tests/m2_acceptance.rs
-      - crates/cognitive-kernel/tests/engine_gate.rs
+      - personal/crates/cognitive-store/tests/m2_acceptance.rs
+      - core/crates/cognitive-kernel/tests/engine_gate.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
@@ -3401,79 +3401,79 @@ requirements:
       STATE_STORE_UNAVAILABLE); full degradation vector execution stays with Lane-CFR (M4 adds disk-full faults).
   - id: REQ-RES-002
     owner: res-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RES-003
     owner: res-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RUN-001
     owner: run-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RUN-002
     owner: run-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RUN-003
     owner: run-003
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-RUN-007
     owner: run-007
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-store/src/sqlite/mod.rs
-      - crates/cognitive-runtime/src/harness_loop.rs
+      - core/crates/cognitive-kernel/src/harness.rs
+      - personal/crates/cognitive-store/src/sqlite/mod.rs
+      - personal/crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_harness.rs
-      - crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-store/tests/m5_harness.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
@@ -3484,18 +3484,18 @@ requirements:
       records progress then folds decide_stagnation (Stop/Escalate; never spin)."
   - id: REQ-RUN-008
     owner: run-008
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/harness.rs
-      - crates/cognitive-runtime/src/harness_loop.rs
+      - core/crates/cognitive-kernel/src/harness.rs
+      - personal/crates/cognitive-runtime/src/harness_loop.rs
     impl_tests:
-      - crates/cognitive-store/tests/m5_harness.rs
-      - crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-store/tests/m5_harness.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m5-handoff.md
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
@@ -3506,56 +3506,56 @@ requirements:
       propagate as EffectError (caller must not retry unboundedly)."
   - id: REQ-RUN-STATE-001
     owner: run-state
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
       - SHELL-EXECUTION-MIGRATION-009
     vectors:
-      - conformance/vectors/shell-execution-migration-009.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-execution-migration-009.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SCOPE-001
     owner: scope-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SCOPE-002
     owner: scope-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SEC-001
     owner: sec-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/authz.rs
-      - crates/cognitive-kernel/src/context.rs
+      - core/crates/cognitive-kernel/src/authz.rs
+      - core/crates/cognitive-kernel/src/context.rs
     impl_tests:
-      - crates/cognitive-kernel/tests/governance_gate.rs
-      - crates/cognitive-kernel/tests/context_pipeline.rs
+      - core/crates/cognitive-kernel/tests/governance_gate.rs
+      - core/crates/cognitive-kernel/tests/context_pipeline.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m3-handoff.md
     docs: []
@@ -3563,31 +3563,31 @@ requirements:
       not-found)."
   - id: REQ-SEM-SHELL-001
     owner: sem-shell
-    owner_spec: specs/semantic-mediation/README.md
+    owner_spec: core/specs/semantic-mediation/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-SHELL-AMBIGUITY-001
     owner: shell-ambiguity
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SHELL-TARGET-AMBIGUITY-001
     vectors:
-      - conformance/vectors/shell-target-ambiguity-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-target-ambiguity-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/target_resolution.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5.rs
+      - personal/crates/cognitive-runtime/src/target_resolution.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
       - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
@@ -3596,38 +3596,38 @@ requirements:
       - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
   - id: REQ-SHELL-ATTACH-001
     owner: shell-attach
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SHELL-DETACH-ATTACH-004
     vectors:
-      - conformance/vectors/shell-detach-attach-004.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-detach-attach-004.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/shell.rs
-      - apps/kernel-server/src/main.rs
+      - personal/crates/cognitive-runtime/src/shell.rs
+      - personal/apps/kernel-server/src/main.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M5 RUN batch 2b: ShellService.attach is projection-only (non-authority); HTTP POST /shell/attach ready."
   - id: REQ-SHELL-CHANNEL-001
     owner: shell-channel
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SHELL-CHANNEL-ISOLATION-003
     vectors:
-      - conformance/vectors/shell-channel-isolation-003.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-channel-isolation-003.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/channel_binding.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5.rs
+      - personal/crates/cognitive-runtime/src/channel_binding.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
       - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
@@ -3636,23 +3636,23 @@ requirements:
       - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
   - id: REQ-SHELL-CONTROL-001
     owner: shell-control
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SHELL-CANCEL-SEMANTICS-005
       - SHELL-EXECUTION-MIGRATION-009
       - SHELL-CONTROL-UNREASONED-CANCEL-001
     vectors:
-      - conformance/vectors/shell-cancel-semantics-005.json
-      - conformance/vectors/shell-control-unreasoned-cancel-001.json
-      - conformance/vectors/shell-execution-migration-009.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-cancel-semantics-005.json
+      - core/conformance/vectors/shell-control-unreasoned-cancel-001.json
+      - core/conformance/vectors/shell-execution-migration-009.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/shell.rs
-      - apps/kernel-server/src/main.rs
+      - personal/crates/cognitive-runtime/src/shell.rs
+      - personal/apps/kernel-server/src/main.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
@@ -3660,18 +3660,18 @@ requirements:
       CANCEL_TOO_LATE; detach never cancels. Full Effect reconcile path + migration vectors remain CFR."
   - id: REQ-SHELL-CORRECTION-001
     owner: shell-correction
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - INTENT-SUPERSEDE-002
     vectors:
-      - conformance/vectors/intent-supersede-002.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/intent-supersede-002.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/intent_flow.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+      - personal/crates/cognitive-runtime/src/intent_flow.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
       - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
@@ -3680,35 +3680,35 @@ requirements:
       INTENT-SUPERSEDE-002 behavior-executed 2026-07-21 (Lane-CFR Intent Authority slice)."
   - id: REQ-SHELL-DETACH-001
     owner: shell-detach
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SHELL-DETACH-ATTACH-004
     vectors:
-      - conformance/vectors/shell-detach-attach-004.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-detach-attach-004.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/shell.rs
-      - apps/kernel-server/src/main.rs
+      - personal/crates/cognitive-runtime/src/shell.rs
+      - personal/apps/kernel-server/src/main.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
     notes: "M5 RUN batch 2b: detach never cancels (cancelled=false even if cancel was pending); unit + HTTP e2e."
   - id: REQ-SHELL-PREVIEW-001
     owner: shell-preview
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/shell.rs
+      - personal/crates/cognitive-runtime/src/shell.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-m5-batch2b-handoff.md
     docs: []
@@ -3716,17 +3716,17 @@ requirements:
       digest (stale digest → STATE_CONFLICT)."
   - id: REQ-SHELL-STATUS-001
     owner: shell-status
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - INTENT-ACCEPTANCE-007
     vectors:
-      - conformance/vectors/intent-acceptance-007.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/intent-acceptance-007.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5_intent.rs
     impl_tests:
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260721-lane-cfr-m5-intent-authority-handoff.md
     docs: []
@@ -3734,19 +3734,19 @@ requirements:
       verification_or_acceptance; authority task_state remains CANDIDATE_COMPLETE."
   - id: REQ-SHELL-TARGET-001
     owner: shell-target
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SHELL-TARGET-AMBIGUITY-001
     vectors:
-      - conformance/vectors/shell-target-ambiguity-001.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-target-ambiguity-001.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/target_resolution.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5.rs
+      - personal/crates/cognitive-runtime/src/target_resolution.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260722-lane-run-shell-target-ambiguity-handoff.md
       - docs/checkpoints/20260722-lane-cfr-shell-target-ambiguity-handoff.md
@@ -3757,19 +3757,19 @@ requirements:
       SHELL_TARGET_AMBIGUOUS + dispatch=false; never top-1 guess."
   - id: REQ-SHELL-UX-001
     owner: shell-ux
-    owner_spec: docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
+    owner_spec: core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
     status: specified
     registry_tests:
       - SHELL-CHANNEL-ISOLATION-003
     vectors:
-      - conformance/vectors/shell-channel-isolation-003.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-channel-isolation-003.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-runtime/src/channel_binding.rs
-      - crates/cognitive-conformance/src/exec/behavior_m5.rs
+      - personal/crates/cognitive-runtime/src/channel_binding.rs
+      - personal/crates/cognitive-conformance/src/exec/behavior_m5.rs
     impl_tests:
-      - crates/cognitive-runtime/src/lib.rs
-      - crates/cognitive-conformance/tests/runner_execution.rs
+      - personal/crates/cognitive-runtime/src/lib.rs
+      - personal/crates/cognitive-conformance/tests/runner_execution.rs
     evidence:
       - docs/checkpoints/20260721-lane-run-shell-channel-authority-handoff.md
       - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
@@ -3778,59 +3778,59 @@ requirements:
       - docs/checkpoints/20260721-lane-cfr-shell-channel-isolation-handoff.md
   - id: REQ-SHELL-WATCH-001
     owner: shell-watch
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SHELL-WATCH-RESUME-006
       - SHELL-EXECUTION-MIGRATION-009
     vectors:
-      - conformance/vectors/shell-execution-migration-009.json
-      - conformance/vectors/shell-watch-resume-006.json
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/shell-execution-migration-009.json
+      - core/conformance/vectors/shell-watch-resume-006.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-akp/src/lib.rs
+      - core/crates/cognitive-akp/src/lib.rs
     impl_tests:
-      - crates/cognitive-akp/tests/m5_envelope_watch.rs
-      - apps/kernel-server/tests/m5_http_sse.rs
+      - core/crates/cognitive-akp/tests/m5_envelope_watch.rs
+      - personal/apps/kernel-server/tests/m5_http_sse.rs
     evidence: []
     docs: []
   - id: REQ-STATE-001
     owner: state-001
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []
     docs: []
   - id: REQ-STATE-002
     owner: state-002
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl:
-      - crates/cognitive-kernel/src/replay.rs
+      - core/crates/cognitive-kernel/src/replay.rs
     impl_tests:
-      - crates/cognitive-store/tests/m2_acceptance.rs
-      - crates/cognitive-kernel/tests/engine_gate.rs
+      - personal/crates/cognitive-store/tests/m2_acceptance.rs
+      - core/crates/cognitive-kernel/tests/engine_gate.rs
     evidence:
       - docs/checkpoints/20260720-lane-krn-m2-handoff.md
     docs: []
     notes: M2 Rust behavior tests executed (replay digest stability); vector execution stays with Lane-CFR.
   - id: REQ-STATE-005
     owner: state-005
-    owner_spec: specs/core/README.md
+    owner_spec: core/specs/core/README.md
     status: specified
     registry_tests:
       - SPEC-CONTRACT-COVERAGE-001
     vectors:
-      - conformance/vectors/spec-contract-coverage.json
+      - core/conformance/vectors/spec-contract-coverage.json
     impl: []
     impl_tests: []
     evidence: []

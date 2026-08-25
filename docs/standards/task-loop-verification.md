@@ -5,10 +5,10 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: `specs/schemas/task-contract.schema.json`,
+- Machine assets: `core/specs/schemas/task-contract.schema.json`,
   `user-intent-record.schema.json`, `intent-interpretation.schema.json`,
   `verification-report.schema.json`, `shell-action-proposal.schema.json`,
-  `shell-command-preview.schema.json`, `specs/transitions/task.transitions.json`,
+  `shell-command-preview.schema.json`, `core/specs/transitions/task.transitions.json`,
   `loop.transitions.json`, `verification.transitions.json`
 - Normative sources: Core companion; RFC-0001 section 19
 
@@ -56,7 +56,7 @@ effecting step goes through the Intent/Effect gate
 Task completion is decided only by the acceptance authority consuming
 Verification evidence ([REQ-INTENT-ACCEPT-001], [REQ-RUN-009], vector
 `loop-verify-003.json`). Verification has its own lifecycle and can expire
-independently (`specs/transitions/verification.transitions.json`); expired
+independently (`core/specs/transitions/verification.transitions.json`); expired
 verification does not keep a Task complete-able. Remote `completed`,
 receipts, tool exit codes, or model self-reports are never acceptance
 ([REQ-GW-002], vector `remote-completed-not-acceptance.json`). A Task with

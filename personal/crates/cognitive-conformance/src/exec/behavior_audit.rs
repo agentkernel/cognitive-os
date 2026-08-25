@@ -180,7 +180,7 @@ pub(super) fn ordinary_core_audit_inspect_001_behavior(
                 "durable_readback_present": false,
                 "mismatched_receipt_withholds_result": false
             }),
-            grounding: vec!["specs/core/ordinary-core-audit.md".into()],
+            grounding: vec!["core/specs/core/ordinary-core-audit.md".into()],
             informative: vec![],
             implementation: Some(WRONG_IMPLEMENTATION),
             evidence: json!({"anti_pattern": "success released without a matching durable receipt"}),
@@ -326,11 +326,11 @@ pub(super) fn ordinary_core_audit_inspect_001_behavior(
     Ok(GateOutput {
         actual,
         grounding: vec![
-            "specs/core/ordinary-core-audit.md".into(),
-            "specs/schemas/privileged-read-decision.schema.json".into(),
-            "specs/schemas/audit-commit-receipt.schema.json".into(),
-            "crates/cognitive-management/src/plane.rs#ManagementPlane::inspect_with_audit".into(),
-            "crates/cognitive-management/src/audit.rs#FileManagementAuditLog".into(),
+            "core/specs/core/ordinary-core-audit.md".into(),
+            "core/specs/schemas/privileged-read-decision.schema.json".into(),
+            "core/specs/schemas/audit-commit-receipt.schema.json".into(),
+            "personal/crates/cognitive-management/src/plane.rs#ManagementPlane::inspect_with_audit".into(),
+            "personal/crates/cognitive-management/src/audit.rs#FileManagementAuditLog".into(),
         ],
         informative: vec![],
         implementation: Some(REFERENCE_IMPLEMENTATION),

@@ -1,16 +1,16 @@
 # CognitiveOS M6 开发与验收计划
 
 - 状态：approved（2026-07-21）；类别 plan（informative）
-- **出口闭合与 v0.1 重评审**：见 canonical [M6-EXIT-PLAN.md](./M6-EXIT-PLAN.md)（本文件保留 M6 进入/交付计划；出口 WP 以 EXIT 为准）
-- 入口证据：`origin/main` tip `3c7115c`（PR #30 pins：pass 52 / not-run 32 / self-check ≥33）；[M5 milestone review](../checkpoints/20260721-m5-milestone-review.md) **GO M6**
-- 出口：v0.1 发布评审；F-017 平台矩阵为出口硬阻断（声明集闭合见 EXIT / [f017-platform-matrix.md](../traceability/f017-platform-matrix.md)）
-- 更新责任：M6 批次合入与出口评审时同步本文件与 [PROGRESS.md](./PROGRESS.md)
+- **出口闭合与 v0.1 重评审**：见 canonical [M6-EXIT-PLAN.md](M6-EXIT-PLAN.md)（本文件保留 M6 进入/交付计划；出口 WP 以 EXIT 为准）
+- 入口证据：`origin/main` tip `3c7115c`（PR #30 pins：pass 52 / not-run 32 / self-check ≥33）；[M5 milestone review](../../checkpoints/20260721-m5-milestone-review.md) **GO M6**
+- 出口：v0.1 发布评审；F-017 平台矩阵为出口硬阻断（声明集闭合见 EXIT / [f017-platform-matrix.md](../../traceability/f017-platform-matrix.md)）
+- 更新责任：M6 批次合入与出口评审时同步本文件与 [PROGRESS.md](../PROGRESS.md)
 
 ## 1 页执行摘要
 
 **目标**：在不扩大 v0.1 规范表面的前提下，交付可复现的 C0/C1 安装、回滚、adapter、sandbox、OOB 对账、readiness 与治理开销证据，并以诚实的 profile manifest 完成 v0.1 发布评审。
 
-**已核实入口**：`origin/main` = `3c7115c3eaa50de468505d2e125e5ad81abbf673`（PR #30）；CI run success；PROGRESS 标记 M5 done / GO M6；[M5 review §7](../checkpoints/20260721-m5-milestone-review.md) 三项附带条件。工程会话必须在干净 worktree 从 `git fetch origin main` 后的 tip 建车道；禁止从含 `personal-blog/**` 的本地 dirty `main` 推送。
+**已核实入口**：`origin/main` = `3c7115c3eaa50de468505d2e125e5ad81abbf673`（PR #30）；CI run success；PROGRESS 标记 M5 done / GO M6；[M5 review §7](../../checkpoints/20260721-m5-milestone-review.md) 三项附带条件。工程会话必须在干净 worktree 从 `git fetch origin main` 后的 tip 建车道；禁止从含 `personal-blog/**` 的本地 dirty `main` 推送。
 
 **出口**：v0.1 发布评审不是“所有 profile implemented”。要求 M6 七项验收、F-017 平台矩阵、F-011 R1 回归核验、M0–M6 review 链、两 OS CI、真实 evidence digest、诚实 manifest、无禁止范围；任何适用 MUST 缺证据时维持 `planned`/`experimental`，安全负例不得降级豁免。
 
@@ -28,9 +28,9 @@
 
 ### A2. 入口证据
 
-- [DEVELOPMENT-PLAN §M6](./DEVELOPMENT-PLAN.md)：入口 = M5 出口，出口 = v0.1 review。
-- [PROGRESS](./PROGRESS.md)：M5 done、52/32、self-check ≥33、Profile implemented = 0。
-- [M5 review §7](../checkpoints/20260721-m5-milestone-review.md)：GO M6；D-018/剩余向量持续消化；clients blocked；F-017 阻断出口。
+- [DEVELOPMENT-PLAN §M6](DEVELOPMENT-PLAN.md)：入口 = M5 出口，出口 = v0.1 review。
+- [PROGRESS](../PROGRESS.md)：M5 done、52/32、self-check ≥33、Profile implemented = 0。
+- [M5 review §7](../../checkpoints/20260721-m5-milestone-review.md)：GO M6；D-018/剩余向量持续消化；clients blocked；F-017 阻断出口。
 - Git/CI：`origin/main=3c7115c...`；开工复核：`git fetch origin main`、`git rev-parse origin/main`、`gh run list --commit $(git rev-parse origin/main)`、`git status --short --branch`。
 
 ### A3. v0.1 出口检查清单
@@ -53,13 +53,13 @@
 
 依赖 M5 GO。输入：现有 AgentPackage/Installation/Compatibility、performance-report、profile-manifest schema，agent compatibility companion 与 registry。交付：将现有 M6 schema 纳入 Rust/TS codegen（修正型绑定）；对“安装迁移表不存在”和“readiness 无 carrier”出具裁决并写 ledger/handoff。若无法证明为修正型漏登，不新增机器资产；实现按 companion 状态序列测试并把缺口留作已知限制。测试先行：regenerate-diff/round-trip。相关：REQ-AGENT-INSTALL-001/002、COMPAT-001、CONF-001/003、PERF-004；不得新增错误码。
 
-提示词：[m6-batch0-contracts.md](../prompts/m6-batch0-contracts.md)
+提示词：[m6-batch0-contracts.md](../../prompts/m6-batch0-contracts.md)
 
 ### WP1 Package 验证（M，Lane-RUN）
 
 依赖 WP0 bindings。交付：`cognitive-runtime` installer/verifier + `kernel-server` 管理入口；签名经端口注入；确定性代码判定 digest/schema/provenance/绑定一致性。失败测试先行：tamper/signature/provenance/digest mismatch → `AGENT_PACKAGE_VERIFICATION_FAILED`、零 commit、零 capability 扩张。REQ-AGENT-INSTALL-001/002；AGENT-INSTALL-001。
 
-提示词：[m6-batch1-installer.md](../prompts/m6-batch1-installer.md)
+提示词：[m6-batch1-installer.md](../../prompts/m6-batch1-installer.md)
 
 ### WP2 安装事务与回滚（L，Lane-KRN → Lane-RUN）
 
@@ -114,7 +114,7 @@ flowchart LR
 ```
 
 - 单车道分支、单 crate owner、逐路径 `git add`；禁 `git add -A`。
-- 合入序 CTR → {KRN, CFR, TSC} → RUN（见 [PARALLEL-LANES](./PARALLEL-LANES.md)）。
+- 合入序 CTR → {KRN, CFR, TSC} → RUN（见 [PARALLEL-LANES](../PARALLEL-LANES.md)）。
 - CTR 只做既有 schema 绑定与修正型裁决；新增 transition/schema/REQ/error 必须先证明修正型。
 - CON 可独立更新 clients gate 事实；implementation-ready 仍 blocked。
 - F-017 若需新 CI job：CFR 单独 workflow-scope PR，先获权限确认。
@@ -149,10 +149,10 @@ flowchart LR
 
 ## F. Week-0 / Batch-0
 
-1. **Batch-0A**（Lane-CTR）：[m6-batch0-contracts.md](../prompts/m6-batch0-contracts.md) — 既有 M6 schema codegen + 安装表/readiness 缺口裁决。
-2. **Batch-0B**（Lane-RUN，待 0A 合入）：[m6-batch1-installer.md](../prompts/m6-batch1-installer.md) — 篡改拒装 tracer（VERIFIED/拒绝为止）。
+1. **Batch-0A**（Lane-CTR）：[m6-batch0-contracts.md](../../prompts/m6-batch0-contracts.md) — 既有 M6 schema codegen + 安装表/readiness 缺口裁决。
+2. **Batch-0B**（Lane-RUN，待 0A 合入）：[m6-batch1-installer.md](../../prompts/m6-batch1-installer.md) — 篡改拒装 tracer（VERIFIED/拒绝为止）。
 
-总入口：[milestone-m6.md](../prompts/milestone-m6.md)。不要把 11 个工作包装进单个工程会话。
+总入口：[milestone-m6.md](../../prompts/milestone-m6.md)。不要把 11 个工作包装进单个工程会话。
 
 ## G. 明确不做
 
@@ -160,7 +160,7 @@ R2/R3 完整审批；distributed/多 Agent；具身/CIM；在线或受控学习�
 
 ## 相关入口
 
-- 规划源：[DEVELOPMENT-PLAN.md](./DEVELOPMENT-PLAN.md) §1 + §M6；[PARALLEL-LANES.md](./PARALLEL-LANES.md)
-- 台账：[../traceability/findings-ledger.md](../traceability/findings-ledger.md)（F-017 / D-018 / IMP-04/06/11/12）
-- 规范：[../../specs/agent-compatibility/README.md](../../specs/agent-compatibility/README.md)
-- 规划 handoff：[../checkpoints/20260721-m6-planning-handoff.md](../checkpoints/20260721-m6-planning-handoff.md)
+- 规划源：[DEVELOPMENT-PLAN.md](DEVELOPMENT-PLAN.md) §1 + §M6；[PARALLEL-LANES.md](../PARALLEL-LANES.md)
+- 台账：[../traceability/findings-ledger.md](../../traceability/findings-ledger.md)（F-017 / D-018 / IMP-04/06/11/12）
+- 规范：[../../specs/agent-compatibility/README.md](../../../core/specs/agent-compatibility/README.md)
+- 规划 handoff：[../checkpoints/20260721-m6-planning-handoff.md](../../checkpoints/20260721-m6-planning-handoff.md)

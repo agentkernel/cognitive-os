@@ -5,9 +5,9 @@
 - Status: **materialized for owner review; all candidates blocked**
 - Design SemVer: `0.2.0-draft.1` (**proposal only; not a published or specified identity**)
 - Set digest: `unresolved/not computed`
-- Classification: docs-only structural design under [V02-CA-GOV-00](./V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) and [ADR-0009](../adr/0009-v02-configuration-authority-surface-expansion-governance.md)
-- Governance ADR: [ADR-0010](../adr/0010-v02-management-operation-set-governance.md)
-- Release and migration companions: [release notes](./V02-CA-OPS-RELEASE-NOTES.md), [compatibility window](./V02-CA-OPS-COMPATIBILITY-WINDOW.md), [migration plan](./V02-CA-OPS-MIGRATION-PLAN.md)
+- Classification: docs-only structural design under [V02-CA-GOV-00](V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) and [ADR-0009](../../adr/0009-v02-configuration-authority-surface-expansion-governance.md)
+- Governance ADR: [ADR-0010](../../adr/0010-v02-management-operation-set-governance.md)
+- Release and migration companions: [release notes](V02-CA-OPS-RELEASE-NOTES.md), [compatibility window](V02-CA-OPS-COMPATIBILITY-WINDOW.md), [migration plan](V02-CA-OPS-MIGRATION-PLAN.md)
 
 ## 1. Decision and status boundary
 
@@ -296,7 +296,7 @@ Unknown operation, unnegotiated operation, and epoch-specific failures do not cu
 
 ## 10. Release, compatibility, and migration decision
 
-The release delta is documented in [V02-CA-OPS-RELEASE-NOTES.md](./V02-CA-OPS-RELEASE-NOTES.md). The proposed finite compatibility window is documented in [V02-CA-OPS-COMPATIBILITY-WINDOW.md](./V02-CA-OPS-COMPATIBILITY-WINDOW.md). Migration is documented in [V02-CA-OPS-MIGRATION-PLAN.md](./V02-CA-OPS-MIGRATION-PLAN.md).
+The release delta is documented in [V02-CA-OPS-RELEASE-NOTES.md](V02-CA-OPS-RELEASE-NOTES.md). The proposed finite compatibility window is documented in [V02-CA-OPS-COMPATIBILITY-WINDOW.md](V02-CA-OPS-COMPATIBILITY-WINDOW.md). Migration is documented in [V02-CA-OPS-MIGRATION-PLAN.md](V02-CA-OPS-MIGRATION-PLAN.md).
 
 No adapter, set, descriptor, schema, epoch, or migration implementation exists as a result of those documents.
 
@@ -329,7 +329,7 @@ OPS merge alone does not unblock TARGET implementation, CA-1 through CA-8, or an
 After PR #54 merged and main CI `29937238562` succeeded on Ubuntu and Windows,
 the owner authorized a security-first registration eligibility audit. The result
 is recorded in
-[V02-CA-OPS-REG-READINESS-01](./V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md):
+[V02-CA-OPS-REG-READINESS-01](V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md):
 
 - all eight candidates remain `blocked` after every mandatory binding was
   rechecked;

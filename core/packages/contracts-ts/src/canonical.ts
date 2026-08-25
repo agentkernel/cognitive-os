@@ -1,7 +1,7 @@
 /**
  * Canonical JSON (`cognitiveos.canonical-json/0.1`) and domain-separated
  * digest / signature preimages — TypeScript twin of
- * `crates/cognitive-contracts/src/canonical.rs`.
+ * `core/crates/cognitive-contracts/src/canonical.rs`.
  *
  * Implements `docs/standards/canonical-encoding-and-digest.md` sections 2-9
  * and 12 for the encoding layer: UTF-8 without BOM, I-JSON, RFC 8785 JCS
@@ -27,7 +27,7 @@ export const SIGNATURE_PREIMAGE_PREFIX = "CognitiveOS-Signature-V1\n";
 
 /**
  * Rejection categories shared with the Rust implementation and the golden
- * fixtures under `tests/golden/`. String forms are fixture contract.
+ * fixtures under `core/tests/golden/`. String forms are fixture contract.
  */
 export type CanonicalErrorCategory =
   | "invalid-utf8"

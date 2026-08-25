@@ -7,7 +7,7 @@
  * parse/gate result → contract-driven retry (error-contract §3):
  *
  * - only registry-retryable codes are ever resent, with the SAME
- *   idempotency key and a fresh message id (specs/akp/README.md §6,
+ *   idempotency key and a fresh message id (core/specs/akp/README.md §6,
  *   REQ-AKP-IDEM-001);
  * - EFFECT_OUTCOME_UNKNOWN and `outcome_unknown` results are surfaced for
  *   reconciliation, never blindly re-dispatched;
@@ -42,7 +42,7 @@ import type { commonDefs } from "@cognitiveos/contracts-ts";
 
 /**
  * Task-channel operation families, exactly the ones named by
- * specs/akp/README.md §13. The task client sends nothing outside this list;
+ * core/specs/akp/README.md §13. The task client sends nothing outside this list;
  * the management client sends nothing inside it.
  */
 export const TASK_CHANNEL_OPERATIONS = [
