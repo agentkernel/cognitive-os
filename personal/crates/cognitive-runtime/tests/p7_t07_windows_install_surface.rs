@@ -24,8 +24,10 @@ fn bootstrap_template() -> String {
 }
 
 fn task_template() -> String {
-    std::fs::read_to_string(repository_root().join("personal/deploy/windows/cognitiveos-personal-task.xml"))
-        .expect("windows scheduled task template must exist")
+    std::fs::read_to_string(
+        repository_root().join("personal/deploy/windows/cognitiveos-personal-task.xml"),
+    )
+    .expect("windows scheduled task template must exist")
 }
 
 #[test]
@@ -250,7 +252,10 @@ mod windows_native {
     #[test]
     fn unrendered_template_rejects_before_any_network_or_temp_side_effect() {
         let fixture = BootstrapFixture::new();
-        let output = fixture.run(&repository_root().join("personal/deploy/windows/install.ps1"), &[]);
+        let output = fixture.run(
+            &repository_root().join("personal/deploy/windows/install.ps1"),
+            &[],
+        );
 
         assert_eq!(
             output.status.code(),
@@ -351,7 +356,8 @@ mod windows_native {
     #[test]
     fn task_template_parses_as_least_privilege_interactive_task_xml() {
         let fixture = BootstrapFixture::new();
-        let task_path = repository_root().join("personal/deploy/windows/cognitiveos-personal-task.xml");
+        let task_path =
+            repository_root().join("personal/deploy/windows/cognitiveos-personal-task.xml");
         let check_script = fixture.script_directory.join("check-task-xml.ps1");
         fs::write(
             &check_script,

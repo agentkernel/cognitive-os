@@ -649,7 +649,9 @@ pub(super) fn shell_channel_isolation_003_behavior(
                 "error": {"code": "OK", "category": "auth"},
                 "management_context_leaked": true
             }),
-            grounding: vec!["core/specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into()],
+            grounding: vec![
+                "core/specs/registry/errors.yaml#SHELL_CHANNEL_BINDING_MISMATCH".into(),
+            ],
             informative: vec![],
             implementation: implementation_label(kind),
             evidence: json!({"anti_pattern":"task credential allowed on system.configure"}),

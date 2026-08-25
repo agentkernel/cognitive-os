@@ -14,8 +14,9 @@ fn repository_root() -> PathBuf {
 
 #[test]
 fn production_template_contains_only_inspected_fail_closed_bootstrap_primitives() {
-    let template = std::fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh"))
-        .expect("production bootstrap template must exist");
+    let template =
+        std::fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh"))
+            .expect("production bootstrap template must exist");
 
     for required_fragment in [
         "#!/bin/sh",
@@ -107,7 +108,8 @@ mod unix {
 
             let rendered_installer = temporary_directory.path().join("install.sh");
             let template =
-                fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh")).unwrap();
+                fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh"))
+                    .unwrap();
             let rendered = render_template(&template, &public_key, &installer_digest);
             fs::write(&rendered_installer, rendered).unwrap();
             fs::set_permissions(&rendered_installer, fs::Permissions::from_mode(0o700)).unwrap();
@@ -277,7 +279,8 @@ mod unix {
     fn installer_digest_mismatch_prevents_execution() {
         let fixture = BootstrapFixture::new();
         let rendered = render_template(
-            &fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh")).unwrap(),
+            &fs::read_to_string(repository_root().join("personal/deploy/linux/install.sh"))
+                .unwrap(),
             &fixture.public_key,
             "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
         );

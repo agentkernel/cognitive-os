@@ -621,7 +621,11 @@ pub fn registered_digests(repo_root: &Path) -> Result<(String, String), RunnerEr
     // projection) + transition tables, ids = repo-relative paths.
     let mut set_assets: Vec<BundleAsset> = Vec::new();
     for registry in ["requirements.yaml", "errors.yaml", "state-domains.yaml"] {
-        let path = repo_root.join("core").join("specs").join("registry").join(registry);
+        let path = repo_root
+            .join("core")
+            .join("specs")
+            .join("registry")
+            .join(registry);
         let value: serde_json::Value =
             serde_yaml::from_str(&read(&path)?).map_err(|err| RunnerError::InvalidRegistry {
                 path: path.clone(),

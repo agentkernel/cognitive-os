@@ -25,7 +25,8 @@ use std::time::{Duration, Instant};
 const EXPIRED_LOCAL_NATIVE_PROVIDER_SECRET_FLAG: &str =
     "allow-local-native-provider-secret-development";
 const EXTENSION_LOAD_TIMEOUT: Duration = Duration::from_secs(30);
-const P0_T06_EXTENSION_FIXTURE: &str = "personal/apps/pi-agent-adapter/fixtures/p0_t06_extension.ts";
+const P0_T06_EXTENSION_FIXTURE: &str =
+    "personal/apps/pi-agent-adapter/fixtures/p0_t06_extension.ts";
 const P0_T06_EXTENSION_STATUS_COMMAND: &str = "/cognitiveos-p0-t06-status";
 const DAEMON_CANDIDATE_PROVIDER_ID: &str = "cognitiveos-private-candidate";
 const DAEMON_CANDIDATE_TIMEOUT: Duration = Duration::from_secs(60);

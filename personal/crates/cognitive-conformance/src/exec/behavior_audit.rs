@@ -329,7 +329,8 @@ pub(super) fn ordinary_core_audit_inspect_001_behavior(
             "core/specs/core/ordinary-core-audit.md".into(),
             "core/specs/schemas/privileged-read-decision.schema.json".into(),
             "core/specs/schemas/audit-commit-receipt.schema.json".into(),
-            "personal/crates/cognitive-management/src/plane.rs#ManagementPlane::inspect_with_audit".into(),
+            "personal/crates/cognitive-management/src/plane.rs#ManagementPlane::inspect_with_audit"
+                .into(),
             "personal/crates/cognitive-management/src/audit.rs#FileManagementAuditLog".into(),
         ],
         informative: vec![],
