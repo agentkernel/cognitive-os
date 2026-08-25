@@ -16,7 +16,7 @@ import { MemoryPage } from "./views/resources/MemoryPage";
 import { SkillsPage } from "./views/resources/SkillsPage";
 import { ToolsPage } from "./views/resources/ToolsPage";
 import { ActivityPage } from "./views/activity/ActivityPage";
-import { SystemPage } from "./views/placeholders";
+import { SystemPage } from "./views/system/SystemPage";
 
 /**
  * Route map — docs/design/06. Seven frozen spaces + session (utility) +
@@ -26,6 +26,7 @@ import { SystemPage } from "./views/placeholders";
  * governed creation flow, and /work/:taskRef is the W5 detail view. Agents is
  * the W6 inventory plus dossier. Resources is the W7 family hub plus the
  * Memory, Skills and Tools family pages. Activity is the W8 evidence stream.
+ * System is the W9 readiness/doctor/stewardship/session/about surface.
  * The static /work/new segment is matched ahead of the dynamic one. The legacy
  * governed-task page stays reachable at /tasks until its watch/observation
  * diagnostics are migrated.
