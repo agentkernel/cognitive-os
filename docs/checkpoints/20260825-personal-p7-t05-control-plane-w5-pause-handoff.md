@@ -222,12 +222,24 @@ owner 指示让出仓库给另一窗口整理。关闭**不表示** D14 完成�
 整理仓库的窗口若需要 kernel 在 `main` 上，必须**先由 owner 决定如何处置那行未提交
 改动**，不得直接 checkout、stash、revert 或 `git add -A`。
 
-### 未合并说明（owner 决定项）
+### 合并说明（owner 已决定：合并）
 
-两个 PR 均未 merge，这是刻意的：完整 P7-T05 acceptance 未满足（W6–W12 未做），
-且 W5 的 rendered review 未执行。按 Operating Model，task PR 在完整 acceptance 前
-必须保持 Draft，禁止 merge。是否要把已验收的 W1–W4 部分单独落地到 `main`，属于
-owner 的范围决定，本会话不代为执行。
+本会话最初把两个 PR 保持 Draft 未合并，理由是完整 P7-T05 acceptance 未满足
+（W6–W12 未做）且 W5 的 rendered review 未执行。**owner 随后明确决定合并两个 PR**，
+并接受「W5 未经 rendered review 即进入 main」「P7-T05 acceptance 不完整」这两项后果。
+
+因此 `main` 上现在同时存在：
+
+- **已验收**的 W1–W4（各自有通过的 rendered review；D13 在 clients `7a7c159` 上
+  33/33 cells、310/310 assertions、屏内屏外 contrast findings 均为 0）；
+- **未验收**的 W5 实现（clients `d7f6816`，192/192 tests + build 通过，
+  **rendered review = not-run**）。
+
+合并是 owner 的交付/范围决定，**不是** acceptance 信号：它不产生 Gate、release、
+Profile、capability 或 Agent-benefit 声明，`P7-T05` 与 `P7-T05/D14` 仍为
+`in-progress`。恢复 D14 时仍须先跑 W5 的 rendered review（见 §5），并按发现修复。
+
+合并后两个 task branch 已删除（远端与本地）。
 
 ### 必须保护的 owner-owned 内容（未被本会话触碰）
 
@@ -239,11 +251,20 @@ owner 的范围决定，本会话不代为执行。
 - `tmp-ff-launch.sh`、`tmp-ff-launch2.sh`、`tmp-ff-restart.sh`、`tmp-fix-proxy.sh`、
   `tmp-ignore.sh`、`tmp-session.sh`（untracked，6 个）
 - `docs/plan/PARALLEL-LANES.md` 中 `lease/personal/DISCOVERY-personal-1.0/oss-and-ux-refinement`
-  的 discovery closure 行（tracked 文件的未提交 hunk）
+  的 discovery closure 行——**owner 随后指示将其单独提交**，见下。
 
-隔离方式：`PARALLEL-LANES.md` 的两次治理提交都通过 `git diff` → 过滤为仅 active-lease
-hunk → `git apply --cached` 完成；每次提交前均以 `git diff --cached` 证明
-`DISCOVERY-personal-1.0` 出现次数为 **0**，提交后该行仍存在于工作树。
+隔离方式：`PARALLEL-LANES.md` 的治理提交均通过 `git diff` → 过滤 → `git apply --cached`
+完成。第二次提交时该 discovery 行与本会话的 closed-lease 行落在**同一个 hunk**，
+hunk 级选择已不足，因此改为行级过滤：丢弃 owner 的 `+` 行并相应减少该 hunk 的
+post-image 行数（过滤脚本 `d:\tmp\filter-lanes-patch.mjs`）。每次提交前均以
+`git diff --cached` 证明 `PARALLEL-LANES.md` 中 `DISCOVERY-personal-1.0` 出现次数为
+**0**，提交后该行仍存在于工作树。
+
+**owner 决定：单独提交 discovery 行。** 该行已按 owner 指示以独立提交
+`edf9cea6`（`docs(plan): record the owner's Personal 1.0 OSS/UX discovery lease
+closure`）原样提交，未做任何编辑（包括其中已过时的「active D13 blocker」措辞），
+以保持作者归属清晰，并使 kernel 工作树得以安全切回 `main`。该 lease 产出的候选
+discovery 文档仍为 untracked。
 
 ---
 
