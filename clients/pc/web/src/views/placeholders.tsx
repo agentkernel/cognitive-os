@@ -29,17 +29,6 @@ function Placeholder({
   );
 }
 
-export function ResourcesPage() {
-  return (
-    <Placeholder
-      title="Resources"
-      wave="Wave 7"
-      willBe="The four cognitive-resource families with family-native depth: Memory, Skills, Tools, Context."
-      now={null}
-    />
-  );
-}
-
 export function ActivityPage() {
   return (
     <Placeholder

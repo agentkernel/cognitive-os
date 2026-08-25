@@ -1147,3 +1147,15 @@ body {
   text-transform: uppercase;
   letter-spacing: var(--cp-track-label);
 }
+
+/* W7 Resources — family index (four quiet rows, not a card wall) */
+
+.cp-family-index {
+  max-width: 960px;
+  margin-top: var(--cp-space-4);
+}
+
+.cp-family-index th[scope="row"] {
+  font-weight: 600;
+  white-space: nowrap;
+}

@@ -11,11 +11,8 @@ import { WorkPage } from "./views/work/WorkPage";
 import { WorkDetailPage } from "./views/work/detail/WorkDetailPage";
 import { AgentsPage } from "./views/agents/AgentsPage";
 import { AgentDetailPage } from "./views/agents/AgentDetailPage";
-import {
-  ActivityPage,
-  ResourcesPage,
-  SystemPage,
-} from "./views/placeholders";
+import { ResourcesPage } from "./views/resources/ResourcesPage";
+import { ActivityPage, SystemPage } from "./views/placeholders";
 
 /**
  * Route map — docs/design/06. Seven frozen spaces + session (utility) +
@@ -23,9 +20,10 @@ import {
  * redesign (accounts master + five-section detail); Bindings folded into
  * Providers (DD-04) and redirects there. Work is the W4 inventory plus the
  * governed creation flow, and /work/:taskRef is the W5 detail view. Agents is
- * the W6 inventory plus dossier. The static /work/new segment is matched ahead
- * of the dynamic one. The legacy governed-task page stays reachable at /tasks
- * until its watch/observation diagnostics are migrated.
+ * the W6 inventory plus dossier. Resources is the W7 family hub. The static
+ * /work/new segment is matched ahead of the dynamic one. The legacy
+ * governed-task page stays reachable at /tasks until its watch/observation
+ * diagnostics are migrated.
  */
 export function AppRoutes() {
   return (
