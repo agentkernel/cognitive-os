@@ -29,17 +29,6 @@ function Placeholder({
   );
 }
 
-export function ActivityPage() {
-  return (
-    <Placeholder
-      title="Activity"
-      wave="Wave 8"
-      willBe="The evidence stream — events, changes, effects, errors, interventions, verifications, acceptances — with its coverage honestly stated (no unified feed exists over HTTP yet, BD-5)."
-      now={null}
-    />
-  );
-}
-
 export function SystemPage() {
   return (
     <Placeholder
