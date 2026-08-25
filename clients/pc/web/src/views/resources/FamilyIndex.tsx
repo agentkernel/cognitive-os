@@ -3,7 +3,7 @@ import type { FamilyIndexRow } from "../../data/projections/resources";
 
 /**
  * Four quiet index rows — docs/design/18 §1. Not a card wall. Context's
- * entry is Work; Memory and Skills browse; Tools names that its page follows.
+ * entry is Work; Memory, Skills and Tools browse.
  */
 export function FamilyIndex({ rows }: { rows: FamilyIndexRow[] }) {
   return (

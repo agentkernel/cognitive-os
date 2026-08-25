@@ -163,6 +163,9 @@ function familyAction(id: HubFamilyId): FamilyRowAction {
   if (id === "skill") {
     return { kind: "browse", href: "/resources/skill", label: "browse" };
   }
+  if (id === "tool") {
+    return { kind: "browse", href: "/resources/tool", label: "browse" };
+  }
   return { kind: "later", label: "family page follows" };
 }
 
