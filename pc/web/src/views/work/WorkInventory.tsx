@@ -18,6 +18,39 @@ const ORIGIN_LABEL: Record<string, string> = {
 };
 
 /**
+ * Whether the envelope list — the only source that can add refs this session
+ * has not seen — has actually answered. A zero-row inventory means three very
+ * different things depending on this, and only one of them is "there is no
+ * task": the other two are "not read yet" and "the read failed".
+ */
+export type InventorySource = "pending" | "failed" | "answered";
+
+function EmptyForSource({ source }: { source: InventorySource }) {
+  if (source === "pending") {
+    return (
+      <EmptyState title="Reading the daemon task list">
+        The envelope list has not answered yet. This is a read in flight, not a statement that no
+        task exists.
+      </EmptyState>
+    );
+  }
+  if (source === "failed") {
+    return (
+      <EmptyState title="The task list could not be read">
+        The envelope list is the only source that can name a task this session did not observe, and
+        it did not answer. Nothing is claimed about whether tasks exist.
+      </EmptyState>
+    );
+  }
+  return (
+    <EmptyState title="No task refs in this scope">
+      This page knows of no task in the selected scope. Widening the scope shows every ref this page
+      has loaded; it does not fetch more, because the daemon exposes no task search.
+    </EmptyState>
+  );
+}
+
+/**
  * R1 inventory — docs/design/14 §3. A Tier-1 list of the tasks this page can
  * actually account for. It is not a task browser and does not pretend to be
  * complete: the daemon exposes no task-list-with-state route, so every row's
@@ -31,21 +64,19 @@ export function WorkInventory({
   onSelect,
   nowMs,
   atBound,
+  source,
 }: {
   rows: WorkRow[];
   selectedRef?: string;
   onSelect: (row: WorkRow) => void;
   nowMs: number;
   atBound: boolean;
+  source: InventorySource;
 }) {
   if (rows.length === 0) {
     return (
       <>
-        <EmptyState title="No task refs in this scope">
-          This page knows of no task in the selected scope. Widening the scope shows every ref
-          this page has loaded; it does not fetch more, because the daemon exposes no task
-          search.
-        </EmptyState>
+        <EmptyForSource source={source} />
         <HonestyNote>{inventoryFooter(0)}</HonestyNote>
       </>
     );

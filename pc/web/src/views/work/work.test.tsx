@@ -548,6 +548,83 @@ describe("Work space", () => {
     unmount(host, root);
   });
 
+  it("distinguishes a pending read from an authoritative empty inventory", async () => {
+    let release: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    // The list read is held open, so the projection stays `loading` with no
+    // last-good data — the real first-load case.
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: unknown) => {
+        const url = new URL(String(input), "http://localhost");
+        if (url.pathname === "/management/resource/v1/list") {
+          await held;
+        }
+        return new Response(JSON.stringify({ status: "ok", resources: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        });
+      }),
+    );
+
+    const { host, root } = renderAppAt("#/work");
+    await flush(4);
+    selectScope(host, "all");
+    await flush(2);
+
+    const pending = text(host);
+    expect(pending).toContain("Reading the daemon task list");
+    expect(pending).not.toContain("No task refs in this scope");
+    expect(pending).toContain("read in flight, not a statement that no task exists");
+
+    release?.();
+    await flush(6);
+
+    const answered = text(host);
+    expect(answered).toContain("No task refs in this scope");
+    expect(answered).not.toContain("Reading the daemon task list");
+    unmount(host, root);
+  });
+
+  it("never reports a failed task-list read as an empty inventory", async () => {
+    installFetch({
+      "GET /management/resource/v1/list": {
+        status: 401,
+        body: { status: "error", error: { code: "UNAUTHORIZED", message: "denied" } },
+      },
+    });
+    const { host, root } = renderAppAt("#/work");
+    await flush();
+    selectScope(host, "all");
+    await flush(4);
+
+    const body = text(host);
+    expect(body).toContain("The task list could not be read");
+    expect(body).toContain("Nothing is claimed about whether tasks exist");
+    expect(body).not.toContain("This page knows of no task in the selected scope");
+    unmount(host, root);
+  });
+
+  it("never reports the daemon 200-stub as an empty inventory", async () => {
+    installFetch({
+      "GET /management/resource/v1/list": {
+        status: 200,
+        body: { status: "ok", note: "business routes deferred to the daemon front door" },
+      },
+    });
+    const { host, root } = renderAppAt("#/work");
+    await flush();
+    selectScope(host, "all");
+    await flush(4);
+
+    const body = text(host);
+    expect(body).toContain("The task list could not be read");
+    expect(body).not.toContain("This page knows of no task in the selected scope");
+    unmount(host, root);
+  });
+
   it("keeps landmarks, a labelled table and focusable rows", async () => {
     installFetch({
       "GET /management/resource/v1/list": {

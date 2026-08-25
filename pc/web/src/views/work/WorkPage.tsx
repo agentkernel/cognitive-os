@@ -30,7 +30,7 @@ import { StateChip } from "../../state/StateChip";
 import { readDomainState } from "../../state/stateMap";
 import { WorkFilters } from "./WorkFilters";
 import { WorkInspector } from "./WorkInspector";
-import { WorkInventory } from "./WorkInventory";
+import { WorkInventory, type InventorySource } from "./WorkInventory";
 
 const NO_OBSERVED: ObservedTask[] = [];
 
@@ -178,6 +178,17 @@ export function WorkPage() {
     tasks.status === "unknown" ||
     tasks.status === "not-run";
 
+  /*
+   * A zero-row inventory is only an authoritative empty when the envelope list
+   * actually answered. Reporting a pending or failed read as "no task in this
+   * scope" would be the page asserting knowledge it does not have.
+   */
+  const inventorySource: InventorySource = failed
+    ? "failed"
+    : tasks.status === "loading"
+      ? "pending"
+      : "answered";
+
   return (
     <>
       <PageHeader
@@ -240,6 +251,7 @@ export function WorkPage() {
             onSelect={(row) => select(row.taskRef)}
             nowMs={nowMs}
             atBound={envelopes.length >= TASK_LIST_LIMIT}
+            source={inventorySource}
           />
         </div>
         {selectedRow ? (
