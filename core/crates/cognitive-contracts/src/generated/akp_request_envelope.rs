@@ -33,7 +33,7 @@ pub enum AkpRequestEnvelopeProtocolVersion {
     CognitiveosAkp02,
 }
 
-/// AKP request envelope wire shape (core/specs/akp/README.md sections 3, 6 and 10.1; REQ-AKP-ENV-001, REQ-AKP-ENV-002, REQ-AKP-MGMT-001). Registers the machine schema for the envelope members the companion describes. Behavioral gates stay runtime contracts: version negotiation, unknown-critical-extension rejection before payload processing, payload-digest verification, and the idempotency-key requirement for effecting operations.
+/// AKP request envelope wire shape (specs/akp/README.md sections 3, 6 and 10.1; REQ-AKP-ENV-001, REQ-AKP-ENV-002, REQ-AKP-MGMT-001). Registers the machine schema for the envelope members the companion describes. Behavioral gates stay runtime contracts: version negotiation, unknown-critical-extension rejection before payload processing, payload-digest verification, and the idempotency-key requirement for effecting operations.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AkpRequestEnvelope {

@@ -20,7 +20,7 @@ export const SCHEMA_DIGEST = "sha256:0e9c12eba75936d591202578a89c401f6f67fb2188a
 
 export type AkpStreamFrameKind = "snapshot" | "delta" | "error";
 
-/** AKP stream fragment wire shape (core/specs/akp/README.md section 8; REQ-AKP-STR-001, REQ-AKP-STR-002, REQ-AKP-SHELL-002). Every fragment carries stream identity, a monotonic sequence, a kind, an optional payload content digest, a final flag and optional cumulative cost. The registered kinds pin the reference-implementation watch profile (event-audit-watch section 5): one snapshot, ordered deltas, machine-coded stream errors. Duplicate/gap/truncation detection and backpressure remain behavioral gates. */
+/** AKP stream fragment wire shape (specs/akp/README.md section 8; REQ-AKP-STR-001, REQ-AKP-STR-002, REQ-AKP-SHELL-002). Every fragment carries stream identity, a monotonic sequence, a kind, an optional payload content digest, a final flag and optional cumulative cost. The registered kinds pin the reference-implementation watch profile (event-audit-watch section 5): one snapshot, ordered deltas, machine-coded stream errors. Duplicate/gap/truncation detection and backpressure remain behavioral gates. */
 export interface AkpStreamFrame {
   cost?: Budget;
   error?: Error;

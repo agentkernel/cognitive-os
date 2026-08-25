@@ -44,7 +44,7 @@ export interface TaskScope {
 }
 
 export interface TaskContract {
-  /** Authority-managed state domain names; the domain registry (core/specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum. */
+  /** Authority-managed state domain names; the domain registry (specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum. */
   allowed_state_domains: string[];
   allowed_tools: string[];
   budget: Budget;

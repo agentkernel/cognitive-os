@@ -29,7 +29,7 @@ pub enum AkpStreamFrameKind {
     Error,
 }
 
-/// AKP stream fragment wire shape (core/specs/akp/README.md section 8; REQ-AKP-STR-001, REQ-AKP-STR-002, REQ-AKP-SHELL-002). Every fragment carries stream identity, a monotonic sequence, a kind, an optional payload content digest, a final flag and optional cumulative cost. The registered kinds pin the reference-implementation watch profile (event-audit-watch section 5): one snapshot, ordered deltas, machine-coded stream errors. Duplicate/gap/truncation detection and backpressure remain behavioral gates.
+/// AKP stream fragment wire shape (specs/akp/README.md section 8; REQ-AKP-STR-001, REQ-AKP-STR-002, REQ-AKP-SHELL-002). Every fragment carries stream identity, a monotonic sequence, a kind, an optional payload content digest, a final flag and optional cumulative cost. The registered kinds pin the reference-implementation watch profile (event-audit-watch section 5): one snapshot, ordered deltas, machine-coded stream errors. Duplicate/gap/truncation detection and backpressure remain behavioral gates.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct AkpStreamFrame {

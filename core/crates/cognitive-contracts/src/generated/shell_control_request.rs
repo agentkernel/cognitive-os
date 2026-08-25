@@ -31,7 +31,7 @@ pub enum ShellControlRequestSchemaVersion {
     CognitiveosShellControlRequest01,
 }
 
-/// Payload of the `shell.control` operation (core/specs/akp/README.md sections 7 and 13; REQ-AKP-CAN-001, REQ-AKP-SHELL-003, REQ-SHELL-CONTROL-001). A control request is a causally related request naming its target and reason; deadline and principal ride on the AKP request envelope (akp-request-envelope.schema.json). `cancel` is the only control described by the companion; the result-side distinctions of REQ-AKP-SHELL-003 stay on the result envelope status, registered lifecycle error codes and the ShellStatusView projection, and are never derived from transport close or client exit.
+/// Payload of the `shell.control` operation (specs/akp/README.md sections 7 and 13; REQ-AKP-CAN-001, REQ-AKP-SHELL-003, REQ-SHELL-CONTROL-001). A control request is a causally related request naming its target and reason; deadline and principal ride on the AKP request envelope (akp-request-envelope.schema.json). `cancel` is the only control described by the companion; the result-side distinctions of REQ-AKP-SHELL-003 stay on the result envelope status, registered lifecycle error codes and the ShellStatusView projection, and are never derived from transport close or client exit.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct ShellControlRequest {

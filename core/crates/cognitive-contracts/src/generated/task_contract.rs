@@ -64,7 +64,7 @@ pub struct TaskScope {
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct TaskContract {
-    /// Authority-managed state domain names; the domain registry (core/specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum.
+    /// Authority-managed state domain names; the domain registry (specs/registry/state-domains.yaml) is open (domain_name_closed_enum: false), so values are registry domain identifiers, not a closed enum.
     pub allowed_state_domains: Vec<String>,
     pub allowed_tools: Vec<String>,
     pub budget: crate::generated::common_defs::Budget,
