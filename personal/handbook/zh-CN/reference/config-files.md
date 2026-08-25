@@ -13,7 +13,7 @@ sources:
   - path: personal/crates/cognitive-store/src/layout.rs
   - path: personal/handbook/_meta/annotations/config-files.json
   - path: personal/packages/pi-cognitiveos/src/daemon-discovery.ts
-fingerprint: "sha256:9d97f1b06f5cdebdae736810d41e31235ec1fdaf1cd5d18ef9f9b3bf4224dc76"
+fingerprint: "sha256:e1a5d98c56fceb6cb5b7bf4936b086e47b7216b33e67b445699ffb67b6019144"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

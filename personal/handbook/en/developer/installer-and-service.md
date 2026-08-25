@@ -18,7 +18,7 @@ tests:
   - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - personal/crates/cognitive-runtime/tests/linux_bundle_installation.rs
-fingerprint: "sha256:34782e8252bec39c742631966d1e809a9a2d554b0f3a0e3d536be7fd43f47857"
+fingerprint: "sha256:1f54bbef780b30b3f4e7bd7219d2746ddfeee04ac34ad0ce7ee204ae9f9ddbf6"
 non_claims:
   - The campaign builder uses an experimental signing key; no production signing ceremony, GitHub Release, or B01 claim is made here.
 ---
