@@ -22,10 +22,10 @@ export function FamilyIndex({ rows }: { rows: FamilyIndexRow[] }) {
             <th scope="row">{row.title}</th>
             <td>{row.fact}</td>
             <td>
-              {row.action.kind === "work" ? (
-                <Link to={row.action.href}>{row.action.label}</Link>
-              ) : (
+              {row.action.kind === "later" ? (
                 <span className="cp-quiet">{row.action.label}</span>
+              ) : (
+                <Link to={row.action.href}>{row.action.label}</Link>
               )}
             </td>
           </tr>

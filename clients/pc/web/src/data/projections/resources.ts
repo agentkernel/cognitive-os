@@ -142,6 +142,7 @@ export type FamilyRowKind =
 
 export type FamilyRowAction =
   | { kind: "work"; href: "/work"; label: "Work" }
+  | { kind: "browse"; href: string; label: "browse" }
   | { kind: "later"; label: "family page follows" };
 
 export interface FamilyIndexRow {
@@ -153,9 +154,13 @@ export interface FamilyIndexRow {
 }
 
 function familyAction(id: HubFamilyId): FamilyRowAction {
-  return id === "context"
-    ? { kind: "work", href: "/work", label: "Work" }
-    : { kind: "later", label: "family page follows" };
+  if (id === "context") {
+    return { kind: "work", href: "/work", label: "Work" };
+  }
+  if (id === "memory") {
+    return { kind: "browse", href: "/resources/memory", label: "browse" };
+  }
+  return { kind: "later", label: "family page follows" };
 }
 
 function populatedFact(id: HubFamilyId, view: ResourceListView): string {
