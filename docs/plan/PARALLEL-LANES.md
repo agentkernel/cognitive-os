@@ -85,9 +85,10 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P0-T08/subproject-restructure` | P0-T08 owner-directed repository restructure into `core/`/`personal/`/`enterprise/`/`clients/` subproject directories with 1.0.0 boundary finalization (structural; ADR-0054) | Lane-DOC (+ CTR/CFR path migration) | `structural/subprojects-and-1.0.0` | Repository-wide path moves (`git mv` only, no semantic change) plus the path-literal rewrites they force: root manifests, `.github/`, `tools/src/`, `handbook/_meta/`, `.cursor/rules/`, `AGENTS.md`, `docs/**` index/link updates, new `core/ personal/ enterprise/ clients/` trees, `docs/adr/0054-*`, `docs/plan/{PROGRESS,PARALLEL-LANES,PERSONAL-DEVELOPMENT-PLAN}.md` | owner-directed session 2026-08-25 | 2026-08-25 / 2026-08-25 | active |
 
-No lease is active. Writing to any path requires claiming a new row above
-first.
+Only the row above is active. Writing to any other path requires claiming a
+new row first.
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](./PARALLEL-LANES-CLOSED.md). That archive grants no
