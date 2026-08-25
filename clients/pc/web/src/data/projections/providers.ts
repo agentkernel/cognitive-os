@@ -249,17 +249,69 @@ export function projectAuditEvents(body: unknown): AuditEventView[] {
 
 /* ---------- dsh runtime (observation only; candidate_only per contract) ---------- */
 
+export const DSH_RUNTIME_KEY = "dsh:runtime";
+export const DSH_SELECTED_KEY = "dsh:selected";
+
+export interface DshSessionView {
+  sessionId: string;
+  state?: string;
+  fencingEpoch?: number;
+  lastSequence?: number;
+  taskRef?: string;
+}
+
 export interface DshRuntimeView {
   state?: string;
   processAlive?: boolean;
+  processId?: number;
+  sessionCount?: number;
+  sessions: DshSessionView[];
+  lastHeartbeatUnixMs?: number;
+  candidateOnly?: boolean;
+  dshResponseIsNotTaskCompletion?: boolean;
 }
 
 export function projectDshRuntime(body: unknown): DshRuntimeView {
   const record = asRecord(body);
+  const heartbeat = Number(record.last_heartbeat_unix_ms);
+  const processId = Number(record.process_id);
+  const sessionCount = Number(record.session_count);
   return {
     state: record.state == null ? undefined : String(record.state),
     processAlive:
       typeof record.process_alive === "boolean" ? record.process_alive : undefined,
+    processId:
+      record.process_id == null || !Number.isFinite(processId) ? undefined : processId,
+    sessionCount:
+      record.session_count == null || !Number.isFinite(sessionCount)
+        ? undefined
+        : sessionCount,
+    sessions: asList(body, ["sessions"]).map((row) => {
+      const session = asRecord(row);
+      const epoch = Number(session.fencing_epoch);
+      const sequence = Number(session.last_sequence);
+      return {
+        sessionId: String(session.session_id ?? "unknown"),
+        state: session.state == null ? undefined : String(session.state),
+        fencingEpoch:
+          session.fencing_epoch == null || !Number.isFinite(epoch) ? undefined : epoch,
+        lastSequence:
+          session.last_sequence == null || !Number.isFinite(sequence)
+            ? undefined
+            : sequence,
+        taskRef:
+          session.task_ref == null || session.task_ref === ""
+            ? undefined
+            : String(session.task_ref),
+      };
+    }),
+    lastHeartbeatUnixMs:
+      record.last_heartbeat_unix_ms == null || !Number.isFinite(heartbeat)
+        ? undefined
+        : heartbeat,
+    candidateOnly: record.candidate_only === true ? true : undefined,
+    dshResponseIsNotTaskCompletion:
+      record.dsh_response_is_not_task_completion === true ? true : undefined,
   };
 }
 

@@ -1121,3 +1121,29 @@ body {
   border-color: var(--cp-accent);
   color: var(--cp-accent-ink);
 }
+
+/* W6 Agents — identity documents (DD-10 exception: cards are identity, not decoration) */
+
+.cp-identity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: var(--cp-space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.cp-identity-card {
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  background: var(--cp-surface);
+}
+
+.cp-identity-key {
+  margin: 0 0 var(--cp-space-2);
+  font-size: var(--cp-size-label);
+  color: var(--cp-quiet);
+  text-transform: uppercase;
+  letter-spacing: var(--cp-track-label);
+}

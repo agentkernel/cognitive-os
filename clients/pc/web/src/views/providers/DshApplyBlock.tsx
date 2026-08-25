@@ -3,6 +3,8 @@ import { readJson } from "../../api";
 import { fetchProjection } from "../../data/fetchProjection";
 import { asRecord } from "../../data/projections";
 import {
+  DSH_RUNTIME_KEY,
+  DSH_SELECTED_KEY,
   projectDshRuntime,
   projectDshSelected,
   type BindingView,
@@ -13,9 +15,6 @@ import {
 import { appProjections } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
 import { acceptDshApply, bindingRevisionForCas } from "../../policy";
-
-const DSH_RUNTIME_KEY = "dsh:runtime";
-const DSH_SELECTED_KEY = "dsh:selected";
 
 /**
  * DshApplyBlock — the fail-closed "apply to running dsh" (docs/design/17

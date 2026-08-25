@@ -5,10 +5,8 @@
  * No fake content, no fake progress, no invented capability.
  */
 
-import { Link } from "react-router-dom";
 import { PageHeader } from "../components/PageHeader";
 import { EmptyState } from "../components/states";
-import { HonestyNote } from "../state/HonestyNote";
 
 function Placeholder({
   title,
@@ -28,23 +26,6 @@ function Placeholder({
         {willBe} <span className="cp-wave">Lands in {wave} of the Control Plane redesign.</span>
       </EmptyState>
     </section>
-  );
-}
-
-export function AgentsPage() {
-  return (
-    <>
-      <Placeholder
-        title="Agents"
-        wave="Wave 6"
-        willBe="The actor dossier: the seven runtime identities, binding, capabilities, current work, activity — read-honest, with lifecycle control marked CLI-only until BD-2."
-        now={<Link to="/providers">Govern agent provider bindings</Link>}
-      />
-      <HonestyNote>
-        Agent lifecycle verbs (pause/resume/stop/restart/quarantine) are not available over HTTP
-        (BD-2); they run through <code>cognitive</code> admin commands.
-      </HonestyNote>
-    </>
   );
 }
 
