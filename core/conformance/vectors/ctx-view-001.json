@@ -10,7 +10,7 @@
     "REQ-CTX-005"
   ],
   "input": {
-    "owner_spec": "specs/schemas/context-view.schema.json",
+    "owner_spec": "core/specs/schemas/context-view.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

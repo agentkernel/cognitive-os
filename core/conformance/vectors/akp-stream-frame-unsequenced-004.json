@@ -10,7 +10,7 @@
     "REQ-AKP-STR-001"
   ],
   "input": {
-    "validate_against": "specs/schemas/akp-stream-frame.schema.json",
+    "validate_against": "core/specs/schemas/akp-stream-frame.schema.json",
     "object": {
       "kind": "delta",
       "payload": {

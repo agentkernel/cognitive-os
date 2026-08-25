@@ -10,7 +10,7 @@
     "REQ-PROFILE-HARNESS-002"
   ],
   "input": {
-    "owner_spec": "specs/schemas/loop-checkpoint.schema.json",
+    "owner_spec": "core/specs/schemas/loop-checkpoint.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

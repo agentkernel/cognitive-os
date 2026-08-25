@@ -10,7 +10,7 @@
     "REQ-PROFILE-CORE-001"
   ],
   "input": {
-    "owner_spec": "specs/core/README.md",
+    "owner_spec": "core/specs/core/README.md",
     "requirement_status": "specified"
   },
   "expected": {

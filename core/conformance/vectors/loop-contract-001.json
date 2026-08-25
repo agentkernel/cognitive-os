@@ -10,7 +10,7 @@
     "REQ-RUN-004"
   ],
   "input": {
-    "owner_spec": "specs/schemas/task-contract.schema.json",
+    "owner_spec": "core/specs/schemas/task-contract.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

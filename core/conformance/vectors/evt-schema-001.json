@@ -10,7 +10,7 @@
     "REQ-EVT-001"
   ],
   "input": {
-    "owner_spec": "specs/schemas/event.schema.json",
+    "owner_spec": "core/specs/schemas/event.schema.json",
     "requirement_status": "specified"
   },
   "expected": {
