@@ -540,13 +540,65 @@ body {
 }
 
 .cp-field input,
-.cp-field select {
+.cp-field select,
+.cp-field textarea {
   width: 100%;
   max-width: 420px;
   padding: 6px var(--cp-space-2);
   border: 1px solid var(--cp-line-strong);
   border-radius: var(--cp-radius-md);
   background: var(--cp-surface);
+}
+
+.cp-field textarea {
+  min-height: 4.5em;
+  font: inherit;
+  resize: vertical;
+}
+
+/* Radio and checkbox fields read as one line, not as a stacked label block. */
+.cp-field:has(> input[type="radio"]),
+.cp-field:has(> input[type="checkbox"]) {
+  display: flex;
+  align-items: baseline;
+  gap: var(--cp-space-1);
+  margin-bottom: var(--cp-space-1);
+}
+
+.cp-field > input[type="radio"],
+.cp-field > input[type="checkbox"] {
+  width: auto;
+  max-width: none;
+  flex: none;
+}
+
+.cp-fieldset {
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-3);
+  margin: 0 0 var(--cp-space-3);
+  max-width: 560px;
+}
+
+.cp-fieldset legend {
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  padding: 0 var(--cp-space-1);
+}
+
+.cp-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--cp-space-4);
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-plain-list {
+  margin: 0 0 var(--cp-space-3);
+  padding-left: var(--cp-space-5);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
 }
 
 .cp-button {

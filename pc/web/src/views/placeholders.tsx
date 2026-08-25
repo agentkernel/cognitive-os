@@ -31,23 +31,6 @@ function Placeholder({
   );
 }
 
-export function WorkPage() {
-  return (
-    <>
-      <Placeholder
-        title="Work"
-        wave="Waves 4–5"
-        willBe="The task/run inventory and the supervision detail: intent chain, run timeline (authority + observation lanes), effects, evidence."
-        now={<Link to="/tasks">Open the legacy governed-task flow</Link>}
-      />
-      <HonestyNote>
-        Until the inventory lands, the daemon exposes envelope-level task listing only (BD-3). The
-        legacy governed-task flow at <code>#/tasks</code> is unchanged.
-      </HonestyNote>
-    </>
-  );
-}
-
 export function AgentsPage() {
   return (
     <>
