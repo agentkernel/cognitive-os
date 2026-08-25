@@ -198,6 +198,9 @@ describe("Resources family hub (W7)", () => {
     const browse = host.querySelector("[data-family='memory'] a");
     expect(browse?.textContent).toBe("browse");
     expect(browse?.getAttribute("href")).toMatch(/#\/resources\/memory$/);
+    const skills = host.querySelector("[data-family='skill'] a");
+    expect(skills?.textContent).toBe("browse");
+    expect(skills?.getAttribute("href")).toMatch(/#\/resources\/skill$/);
     unmount(host, root);
   });
 

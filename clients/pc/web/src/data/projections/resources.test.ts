@@ -128,7 +128,8 @@ describe("composeFamilyRows", () => {
     expect(rows[0].kind).toBe("denied");
     expect(rows[0].fact).not.toMatch(/admitted/);
     expect(rows[1].kind).toBe("empty");
-    expect(rows[1].fact).toMatch(/remember is on the family page|import is on the family page/);
+    expect(rows[1].fact).toMatch(/import is on the family page/);
+    expect(rows[1].action).toEqual({ kind: "browse", href: "/resources/skill", label: "browse" });
     expect(rows[2].kind).toBe("ready");
     expect(rows[3].kind).toBe("projection-only");
     expect(rows[3].action.kind).toBe("work");

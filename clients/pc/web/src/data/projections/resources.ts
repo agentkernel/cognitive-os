@@ -160,6 +160,9 @@ function familyAction(id: HubFamilyId): FamilyRowAction {
   if (id === "memory") {
     return { kind: "browse", href: "/resources/memory", label: "browse" };
   }
+  if (id === "skill") {
+    return { kind: "browse", href: "/resources/skill", label: "browse" };
+  }
   return { kind: "later", label: "family page follows" };
 }
 

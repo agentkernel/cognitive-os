@@ -13,6 +13,7 @@ import { AgentsPage } from "./views/agents/AgentsPage";
 import { AgentDetailPage } from "./views/agents/AgentDetailPage";
 import { ResourcesPage } from "./views/resources/ResourcesPage";
 import { MemoryPage } from "./views/resources/MemoryPage";
+import { SkillsPage } from "./views/resources/SkillsPage";
 import { ActivityPage, SystemPage } from "./views/placeholders";
 
 /**
@@ -22,7 +23,7 @@ import { ActivityPage, SystemPage } from "./views/placeholders";
  * Providers (DD-04) and redirects there. Work is the W4 inventory plus the
  * governed creation flow, and /work/:taskRef is the W5 detail view. Agents is
  * the W6 inventory plus dossier. Resources is the W7 family hub plus the
- * Memory family page. The static /work/new segment is matched ahead of the dynamic one. The legacy
+ * Memory and Skills family pages. The static /work/new segment is matched ahead of the dynamic one. The legacy
  * governed-task page stays reachable at /tasks until its watch/observation
  * diagnostics are migrated.
  */
@@ -116,6 +117,14 @@ export function AppRoutes() {
         element={
           <SessionGate channel="management" title="Memory">
             <MemoryPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/resources/skill"
+        element={
+          <SessionGate channel="management" title="Skills">
+            <SkillsPage />
           </SessionGate>
         }
       />
