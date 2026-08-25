@@ -10,7 +10,7 @@
     "REQ-PROFILE-HARNESS-001"
   ],
   "input": {
-    "owner_spec": "core/specs/schemas/profile-manifest.schema.json",
+    "owner_spec": "specs/schemas/profile-manifest.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

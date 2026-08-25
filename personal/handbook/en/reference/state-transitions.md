@@ -12,7 +12,7 @@ sources:
   - path: core/specs/transitions/loop.transitions.json
   - path: core/specs/transitions/task.transitions.json
   - path: core/specs/transitions/verification.transitions.json
-fingerprint: "sha256:e9c496825e2674369894bd3065ad6c7980ece528558ee5ebfd2724eaf59e050e"
+fingerprint: "sha256:9dcec1d6b94ebd8841f26a715c284f97b69e24e35d52745f3027483b3ba00f7f"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."

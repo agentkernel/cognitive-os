@@ -41,7 +41,7 @@ function rustPinField(source: string, fieldName: string): string {
 
 test("the TypeScript Pi pin matches the Rust PiCompatibilityPin field by field", () => {
   const rustSource = readFileSync(
-    path.join(repositoryRoot(), "apps", "pi-agent-adapter", "src", "lib.rs"),
+    path.join(repositoryRoot(), "personal", "apps", "pi-agent-adapter", "src", "lib.rs"),
     "utf8",
   );
 
@@ -59,7 +59,7 @@ test("the TypeScript Pi pin matches the Rust PiCompatibilityPin field by field",
 test("the pinned package name is the one the integration plan names", () => {
   assert.equal(PI_COMPATIBILITY_PIN.packageName, "@earendil-works/pi-coding-agent");
   const planSource = readFileSync(
-    path.join(repositoryRoot(), "docs", "plan", "PI-AGENT-INTEGRATION-PLAN.md"),
+    path.join(repositoryRoot(), "docs", "plan", "archive", "PI-AGENT-INTEGRATION-PLAN.md"),
     "utf8",
   );
   assert.ok(planSource.includes(PI_COMPATIBILITY_PIN.packageName));
@@ -69,7 +69,7 @@ test("the pinned package name is the one the integration plan names", () => {
 test("Pi is not a runtime or lockfile dependency of this package", () => {
   const manifest: unknown = JSON.parse(
     readFileSync(
-      path.join(repositoryRoot(), "packages", "pi-cognitiveos", "package.json"),
+      path.join(repositoryRoot(), "personal", "packages", "pi-cognitiveos", "package.json"),
       "utf8",
     ),
   );

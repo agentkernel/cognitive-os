@@ -12,7 +12,7 @@
     "REQ-SHELL-CONTROL-001"
   ],
   "input": {
-    "validate_against": "core/specs/schemas/shell-control-request.schema.json",
+    "validate_against": "specs/schemas/shell-control-request.schema.json",
     "object": {
       "schema_version": "cognitiveos.shell-control-request/0.1",
       "control": "cancel",
@@ -28,7 +28,7 @@
     },
     "rejection_reasons": [
       "required property `reason` is missing",
-      "cancellation is a causally related request carrying target and reason (core/specs/akp/README.md section 7); deadline and principal ride on the request envelope"
+      "cancellation is a causally related request carrying target and reason (specs/akp/README.md section 7); deadline and principal ride on the request envelope"
     ]
   }
 }

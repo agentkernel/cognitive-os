@@ -11,7 +11,7 @@
     "REQ-GOBJ-MIG-001"
   ],
   "input": {
-    "validate_against": "core/specs/schemas/effect.schema.json",
+    "validate_against": "specs/schemas/effect.schema.json",
     "object": {
       "metadata": {
         "id": "effect://tenant-a/payments/eff-0001",

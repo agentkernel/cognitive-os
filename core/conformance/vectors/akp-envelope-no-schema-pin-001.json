@@ -11,7 +11,7 @@
     "REQ-AKP-ENV-002"
   ],
   "input": {
-    "validate_against": "core/specs/schemas/akp-request-envelope.schema.json",
+    "validate_against": "specs/schemas/akp-request-envelope.schema.json",
     "object": {
       "message_id": "01890a5d-ac96-774b-bcce-b302099a8070",
       "operation": "shell.submit",

@@ -10,7 +10,7 @@
     "REQ-RUN-010"
   ],
   "input": {
-    "owner_spec": "core/specs/schemas/worker-iteration-authorization.schema.json",
+    "owner_spec": "specs/schemas/worker-iteration-authorization.schema.json",
     "requirement_status": "specified"
   },
   "expected": {

@@ -2,7 +2,7 @@
   "fixture_set": "CognitiveOS digest projection, set manifest and validation golden fixtures",
   "version": "0.1.0",
   "encoding_profile": "cognitiveos.canonical-json/0.1",
-  "generator": "core/packages/contracts-ts/src/dev/generate-fixtures.ts projection (verify with Rust twin before committing)",
+  "generator": "packages/contracts-ts/src/dev/generate-fixtures.ts projection (verify with Rust twin before committing)",
   "projection_positive": [
     {
       "id": "projection-self-fields-excluded",

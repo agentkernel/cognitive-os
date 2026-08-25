@@ -10,7 +10,7 @@
     "REQ-EFF-001"
   ],
   "input": {
-    "owner_spec": "core/specs/schemas/intent.schema.json",
+    "owner_spec": "specs/schemas/intent.schema.json",
     "requirement_status": "specified"
   },
   "expected": {
