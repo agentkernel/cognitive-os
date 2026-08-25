@@ -25,6 +25,16 @@ body {
   color: var(--cp-ink);
 }
 
+/*
+ * styles.css sets `a { color: var(--accent) }` with the legacy #0071e3, which
+ * measures 4.31:1 on --cp-canvas — below AA. This rule outranks it on
+ * specificity alone, and sits before .cp-nav a / .cp-region-chips a so those
+ * keep their own ink colour.
+ */
+.cp-app a {
+  color: var(--cp-link);
+}
+
 .cp-app :focus-visible {
   outline: 2px solid var(--cp-focus);
   outline-offset: 2px;
@@ -433,7 +443,7 @@ body {
 .cp-digestchip button {
   border: 0;
   background: none;
-  color: var(--cp-accent);
+  color: var(--cp-link);
   cursor: pointer;
   padding: 0 2px;
   font-size: var(--cp-size-label);

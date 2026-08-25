@@ -61,6 +61,7 @@
   --cp-accent: #0a6cff;
   --cp-accent-ink: #ffffff; /* text on an --cp-accent fill */
   --cp-accent-soft: rgba(10, 108, 255, 0.1);
+  --cp-link: #0b5ed7; /* accent as *text*: measured ≥4.5:1 on canvas, surface and tints */
   --cp-focus: #0a6cff;
   --cp-line: rgba(17, 24, 39, 0.1);
   --cp-line-strong: rgba(17, 24, 39, 0.18);
@@ -99,6 +100,7 @@
     --cp-accent: #7eb6ff;
     --cp-accent-ink: #0b1220;
     --cp-accent-soft: rgba(126, 182, 255, 0.14);
+    --cp-link: #7eb6ff;
     --cp-focus: #7eb6ff;
     --cp-line: rgba(232, 237, 245, 0.1);
     --cp-line-strong: rgba(232, 237, 245, 0.2);
