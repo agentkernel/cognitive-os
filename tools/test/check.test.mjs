@@ -223,9 +223,18 @@ function injectEvaluationLease(leaseRow) {
       assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
       const leaseId = leaseRow.match(/`(lease\/personal\/[^`]+)`/)?.[1];
       assert.ok(leaseId, "evaluation lease row must carry a lease id");
-      const referencedRow = /`none`/.test(activeLeaseRow)
-        ? activeLeaseRow.replace(/`none`/, `\`${leaseId}\``)
-        : activeLeaseRow.replace(/`(lease\/personal\/[^`]+)`/, `\`${leaseId}\``);
+      // The override tree replaced the whole active-lease table with the
+      // injected lease, so the temporary Current snapshot must stop naming any
+      // real lease. Rewrite every reference in the row — the canonical id and
+      // any narrative mention in the later columns — so the fixture depends
+      // only on the injected lease whatever the live table currently holds.
+      const sanitizedRow = activeLeaseRow.replaceAll(
+        /`lease\/personal\/[^`]+`/g,
+        `\`${leaseId}\``,
+      );
+      const referencedRow = sanitizedRow.includes(`\`${leaseId}\``)
+        ? sanitizedRow
+        : sanitizedRow.replace(/`none`/, `\`${leaseId}\``);
       assert.notEqual(referencedRow, activeLeaseRow);
       return source.replace(activeLeaseRow, referencedRow);
     },
