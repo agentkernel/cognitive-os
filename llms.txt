@@ -7,28 +7,28 @@ state; agents and clients produce candidates.
 
 ## Read first (AI tools)
 
-- handbook/en/ai/README.md — compact AI entry (5 pages: source-of-truth order,
+- personal/handbook/en/ai/README.md — compact AI entry (5 pages: source-of-truth order,
   code map, safe editing, validation commands, docs impact)
-- handbook/zh-CN/ai/README.md — 中文 AI 入口
+- personal/handbook/zh-CN/ai/README.md — 中文 AI 入口
 - AGENTS.md — agent operating entry (governance, workflow, environment rules)
-- handbook/_meta/manifest.json — machine inventory of all handbook documents
-- handbook/_meta/source-map.json — change -> documentation impact routing
+- personal/handbook/_meta/manifest.json — machine inventory of all handbook documents
+- personal/handbook/_meta/source-map.json — change -> documentation impact routing
 
 ## Source-of-truth order (summary)
 
 docs/governance/PROJECT-IDENTITY.md > docs/governance/DEVELOPMENT-OPERATING-MODEL.md
 > docs/plan/PERSONAL-DEVELOPMENT-PLAN.md > docs/plan/PROGRESS.md (Current
 snapshot; read fresh, never copy) > docs/plan/PARALLEL-LANES.md (active leases)
-> stable design docs. Machine contracts: specs/registry, specs/schemas,
-specs/transitions, conformance/vectors. Immutable axioms: docs/governance/AXIOMS.md.
+> stable design docs. Machine contracts: core/specs/registry, core/specs/schemas,
+core/specs/transitions, core/conformance/vectors. Immutable axioms: docs/governance/AXIOMS.md.
 The handbook is a derived layer below all of these.
 
 ## Hard boundaries
 
 - Never read or cite History/ (frozen archive).
 - Secrets never enter argv, config, SQLite, logs, tests, CI output, or evidence.
-- specs/ and conformance/ are contracts; never edit them to fit an implementation.
-- Generated trees (crates/cognitive-contracts/src/generated,
-  packages/contracts-ts/src/generated, handbook generated reference pages) are
+- core/specs/ and core/conformance/ are contracts; never edit them to fit an implementation.
+- Generated trees (core/crates/cognitive-contracts/src/generated,
+  core/packages/contracts-ts/src/generated, handbook generated reference pages) are
   regenerated, never hand-edited.
-- Validation commands and platform limits: handbook/en/ai/validation-commands.md.
+- Validation commands and platform limits: personal/handbook/en/ai/validation-commands.md.

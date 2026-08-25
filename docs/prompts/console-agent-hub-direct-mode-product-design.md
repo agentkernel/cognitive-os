@@ -1,9 +1,9 @@
 # CognitiveOS Console Agent Hub 直连接管模式产品设计与任务编排提示词
 
 > 状态（2026-07-20）：**已执行**。本提示词已产出 canonical 文档体系，不再作为事实源。事实与决策改以以下为准：
-> - canonical 文档：[apps/cognitiveos-console/docs/agent-hub/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/README.md)
-> - 已冻结决策：[apps/cognitiveos-console/docs/agent-hub/decisions/decision-log.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/decisions/decision-log.md)
-> - 来源 ledger：[apps/cognitiveos-console/docs/agent-hub/sources/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/sources/README.md)
+> - canonical 文档：[clients/legacy/cognitiveos-console/docs/agent-hub/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/README.md)
+> - 已冻结决策：[clients/legacy/cognitiveos-console/docs/agent-hub/decisions/decision-log.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/decisions/decision-log.md)
+> - 来源 ledger：[clients/legacy/cognitiveos-console/docs/agent-hub/sources/README.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/docs/sources/README.md)
 > - 开发计划：[docs/plan/agent-hub-development-plan.md](https://github.com/agentkernel/cognitiveos-clients/blob/main/agent-hub/plan/agent-hub-development-plan.md)
 >
 > 下文保留原始提示词内容，仅作历史入口；如与 canonical 文档冲突，以 canonical 文档为准。
@@ -74,32 +74,32 @@
    - 最新一份 `docs/checkpoints/*-handoff.md`
    - `docs/plan/PARALLEL-LANES.md`
 3. 阅读现有 Console 产品基线：
-   - `apps/cognitiveos-console/README.md`
-   - `apps/cognitiveos-console/PRODUCT-DESIGN.md`
-   - `apps/cognitiveos-console/docs/product-brief.md`
-   - `apps/cognitiveos-console/docs/information-architecture.md`
-   - `apps/cognitiveos-console/docs/journeys-and-screens.md`
-   - `apps/cognitiveos-console/docs/design-system.md`
-   - `apps/cognitiveos-console/docs/trust-safety-ux.md`
-   - `apps/cognitiveos-console/docs/requirements-traceability.md`
-   - `apps/cognitiveos-console/docs/roadmap.md`
-   - `apps/cognitiveos-console/docs/decision-log.md`
+   - `clients/legacy/cognitiveos-console/README.md`
+   - `clients/legacy/cognitiveos-console/PRODUCT-DESIGN.md`
+   - `clients/legacy/cognitiveos-console/docs/product-brief.md`
+   - `clients/legacy/cognitiveos-console/docs/information-architecture.md`
+   - `clients/legacy/cognitiveos-console/docs/journeys-and-screens.md`
+   - `clients/legacy/cognitiveos-console/docs/design-system.md`
+   - `clients/legacy/cognitiveos-console/docs/trust-safety-ux.md`
+   - `clients/legacy/cognitiveos-console/docs/requirements-traceability.md`
+   - `clients/legacy/cognitiveos-console/docs/roadmap.md`
+   - `clients/legacy/cognitiveos-console/docs/decision-log.md`
 4. 阅读跨平台与移动基线：
-   - `docs/platforms/README.md`
-   - `docs/platforms/desktop-parity-matrix.md`
-   - `docs/platforms/mobile-parity-matrix.md`
-   - `docs/platforms/ios-product-design.md`
-   - `docs/platforms/android-product-design.md`
-   - `docs/platforms/platform-decision-log.md`
-   - `docs/platforms/mobile-platform-decision-log.md`
+   - `clients/docs/platforms/README.md`
+   - `clients/docs/platforms/desktop-parity-matrix.md`
+   - `clients/docs/platforms/mobile-parity-matrix.md`
+   - `clients/docs/platforms/ios-product-design.md`
+   - `clients/docs/platforms/android-product-design.md`
+   - `clients/docs/platforms/platform-decision-log.md`
+   - `clients/docs/platforms/mobile-platform-decision-log.md`
 5. 按需核实：
-   - `docs/plan/DEVELOPMENT-PLAN.md` 的 Console gate 与 M9 Multi-Agent 范围
+   - `docs/plan/archive/DEVELOPMENT-PLAN.md` 的 Console gate 与 M9 Multi-Agent 范围
    - `docs/standards/docs-sync-contract.md`
    - `docs/standards/task-loop-verification.md`
    - `docs/standards/intent-effect-idempotency.md`
    - `docs/standards/authn-authz-capability.md`
    - `docs/traceability/findings-ledger.md`
-   - `specs/registry/requirements.yaml`
+   - `core/specs/registry/requirements.yaml`
    - 与 Task、Loop、AgentExecution、Effect、Verification、authorization、Agent adapter、Shell、session、watch 相关的真实 schema、transition 和向量
 6. 按需加载并遵循：
    - `.cursor/skills/frontend-design/SKILL.md`
@@ -745,21 +745,21 @@ Takeover Host 内部职责必须继续分离：
 
 关键决策确认、文件级计划获用户批准后，只生成 informative 文档。建议至少产出：
 
-1. `apps/cognitiveos-console/docs/agent-hub-product-design.md`
+1. `clients/legacy/cognitiveos-console/docs/agent-hub-product-design.md`
    - 产品问题、persona/JTBD、部署模式、范围、IA、成功指标和非目标。
-2. `apps/cognitiveos-console/docs/agent-hub-adapter-matrix.md`
+2. `clients/legacy/cognitiveos-console/docs/agent-hub-adapter-matrix.md`
    - Agent dossier、逐能力支持等级、版本策略、来源与许可证 ledger。
-3. `apps/cognitiveos-console/docs/agent-hub-takeover-architecture.md`
+3. `clients/legacy/cognitiveos-console/docs/agent-hub-takeover-architecture.md`
    - Paseo 与同类项目事实、接管分级、Takeover Host、进程/PTY/stdio/session/file ownership、attach/adopt/release/recovery、OS 差异和禁止路径。
-4. `apps/cognitiveos-console/docs/agent-hub-security-and-credentials.md`
+4. `clients/legacy/cognitiveos-console/docs/agent-hub-security-and-credentials.md`
    - Host/Adapter/Vault/Relay/Mobile 边界、账号、key、远控和威胁模型。
-5. `apps/cognitiveos-console/docs/agent-hub-journeys-and-screens.md`
+5. `clients/legacy/cognitiveos-console/docs/agent-hub-journeys-and-screens.md`
    - PC/手机旅程、页面、组件、状态和文字线框。
-6. `apps/cognitiveos-console/docs/agent-hub-collaboration.md`
+6. `clients/legacy/cognitiveos-console/docs/agent-hub-collaboration.md`
    - 群组模型、DAG、worktree/artifact 隔离、handoff、评审和冲突。
-7. `apps/cognitiveos-console/docs/agent-hub-decision-log.md`
+7. `clients/legacy/cognitiveos-console/docs/agent-hub-decision-log.md`
    - 产品决策、替代方案、依据、状态和 blocked_by。
-8. `docs/platforms/agent-hub-platform-parity.md`
+8. `clients/docs/platforms/agent-hub-platform-parity.md`
    - Windows/macOS/Linux/iOS/Android 与直连接管/完整治理两种部署模式的能力、限制和证据边界。
 9. `docs/plan/agent-hub-development-plan.md`
    - 只编排、不执行的开发任务包：阶段、依赖 DAG、车道/所有权、里程碑 gate、任务卡、验收 oracle、风险、估算假设、并行/串行关系和回滚点。
@@ -780,7 +780,7 @@ Takeover Host 内部职责必须继续分离：
 - `CONSOLE-AGENTHUB-V1-PAGE-*`
 - `CONSOLE-AGENTHUB-V1-POC-*`
 
-这些 ID 不进入 `specs/registry/requirements.yaml`，也不是 CognitiveOS machine contract。
+这些 ID 不进入 `core/specs/registry/requirements.yaml`，也不是 CognitiveOS machine contract。
 
 每项产品要求至少记录：
 
@@ -872,7 +872,7 @@ Takeover Host 内部职责必须继续分离：
 
 1. 先由多个只读代理独立研究仓库、用户痛点、Paseo/同类项目、目标 Agent、平台限制、安全、许可和供应商条款。
 2. 主代理综合事实、冲突、风险与建议，并通过交互式问题确认关键决策。
-3. 决策确认后，先检查 `@docs` 与 `apps/cognitiveos-console/docs/` 中现有产品设计，逐文件判断采用：
+3. 决策确认后，先检查 `@docs` 与 `clients/legacy/cognitiveos-console/docs/` 中现有产品设计，逐文件判断采用：
    - 原样保留并建立引用；
    - 补充完善；
    - 局部优化；
@@ -1073,4 +1073,4 @@ Takeover Host 内部职责必须继续分离：
 
 ## 最终强制执行提示
 
-完成独立、多代理、只读调研与交互式决策确认后，禁止直接进入编码：必须先审查现有 `@docs` 及 `apps/cognitiveos-console/docs/` 产品设计，根据事实选择补充完善、优化、局部重构、整体重构或新建产品设计文档，并完成评审；随后建立 Agent Hub 独立文档目录和成熟文档治理体系，明确文档地图、canonical source、owner、状态、版本、决策、ADR、来源 ledger、追踪、模板、同步和迁移规则；再生成开发总计划、分系统/分平台/分 Adapter 的若干具体开发计划，以及里程碑、依赖 DAG、风险阻断、证据索引和统一开发进度表。每份开发计划必须明确要求维护上述独立文档目录和治理体系，并为每项任务写清车道、依赖、允许/禁止路径、交付物、测试、oracle、evidence、更新文档和 handoff。只有产品设计、文档治理、具体开发计划和进度表全部批准，且仓库、Console、平台、合同和安全 gate 均满足后，才可严格依据具体开发计划并发调用多个独立代理，按车道/分支/worktree 测试先行地实施；任一 gate 未满足时必须停止在文档与计划阶段并标记 `blocked`，不得用 mock、原型、代码存在或 Agent 自述冒充开发完成。
+完成独立、多代理、只读调研与交互式决策确认后，禁止直接进入编码：必须先审查现有 `@docs` 及 `clients/legacy/cognitiveos-console/docs/` 产品设计，根据事实选择补充完善、优化、局部重构、整体重构或新建产品设计文档，并完成评审；随后建立 Agent Hub 独立文档目录和成熟文档治理体系，明确文档地图、canonical source、owner、状态、版本、决策、ADR、来源 ledger、追踪、模板、同步和迁移规则；再生成开发总计划、分系统/分平台/分 Adapter 的若干具体开发计划，以及里程碑、依赖 DAG、风险阻断、证据索引和统一开发进度表。每份开发计划必须明确要求维护上述独立文档目录和治理体系，并为每项任务写清车道、依赖、允许/禁止路径、交付物、测试、oracle、evidence、更新文档和 handoff。只有产品设计、文档治理、具体开发计划和进度表全部批准，且仓库、Console、平台、合同和安全 gate 均满足后，才可严格依据具体开发计划并发调用多个独立代理，按车道/分支/worktree 测试先行地实施；任一 gate 未满足时必须停止在文档与计划阶段并标记 `blocked`，不得用 mock、原型、代码存在或 Agent 自述冒充开发完成。

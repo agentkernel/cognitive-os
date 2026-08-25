@@ -29,7 +29,7 @@ exposes the same verbs. No public generic Resource DTO.
 - Required CI `32561124182` at `1adbdd13` **pass** Ubuntu, Windows, and
   `required-ci`.
 
-Running report: [P8-T12 report](./20260822-personal-p8-t12-resource-manager-report.md).
+Running report: [P8-T12 report](20260822-personal-p8-t12-resource-manager-report.md).
 
 ## Remaining
 

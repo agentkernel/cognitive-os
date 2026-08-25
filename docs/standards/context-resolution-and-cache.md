@@ -5,7 +5,7 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: `specs/schemas/context-request.schema.json`,
+- Machine assets: `core/specs/schemas/context-request.schema.json`,
   `context-request-admission.schema.json`, `context-view.schema.json`,
   `context-view-delta.schema.json`, `activity-context.schema.json`
 - Normative sources: RFC-0001 sections 10-11, 15; Core companion section 6

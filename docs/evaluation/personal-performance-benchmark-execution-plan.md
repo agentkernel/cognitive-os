@@ -89,11 +89,11 @@ conditions、claim 上限、`not-run`/`not_available` 诚实台账和统计规�
 
 稳定事实来源：
 
-- [Task 与执行](../../handbook/zh-CN/user/tasks-and-execution.md)
-- [Pi 对话壳](../../handbook/zh-CN/user/pi-shell.md)
-- [已知限制](../../handbook/zh-CN/user/known-limitations.md)
-- [执行链状态](../../handbook/zh-CN/developer/execution-chain-status.md)
-- [性能面](../../handbook/zh-CN/developer/performance-surfaces.md)
+- [Task 与执行](../../personal/handbook/zh-CN/user/tasks-and-execution.md)
+- [Pi 对话壳](../../personal/handbook/zh-CN/user/pi-shell.md)
+- [已知限制](../../personal/handbook/zh-CN/user/known-limitations.md)
+- [执行链状态](../../personal/handbook/zh-CN/developer/execution-chain-status.md)
+- [性能面](../../personal/handbook/zh-CN/developer/performance-surfaces.md)
 
 ### 1.2 历史真机结果
 
@@ -1081,6 +1081,6 @@ payload 不足以支持后续复核。
 - `apps/kernel-server/src/personal/task_api.rs`
 - `apps/kernel-server/src/personal/pi_runtime.rs`
 - `packages/pi-cognitiveos/src/daemon-provider.ts`
-- [Agent benefit benchmark](./agent-benefit-benchmark.md)
-- [UCR-01](./personal-unified-cognitive-resource-workload.md)
+- [Agent benefit benchmark](agent-benefit-benchmark.md)
+- [UCR-01](personal-unified-cognitive-resource-workload.md)
 - [Test environments](../plan/PERSONAL-TEST-ENVIRONMENTS.md)

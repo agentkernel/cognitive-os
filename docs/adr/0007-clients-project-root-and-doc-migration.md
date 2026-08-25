@@ -10,8 +10,8 @@
 ## Context
 
 客户端相关 informative 文档此前分散在四处：`docs/clients/`（目录索引）、
-`apps/cognitiveos-console/docs/`（Windows 产品设计 + Agent Hub canonical 树）、
-`docs/platforms/`（macOS/Linux/iPhone/Android 切片、parity、平台决策与实现 gate）、
+`clients/legacy/cognitiveos-console/docs/`（Windows 产品设计 + Agent Hub canonical 树）、
+`clients/docs/platforms/`（macOS/Linux/iPhone/Android 切片、parity、平台决策与实现 gate）、
 `docs/plan/agent-hub*` 与 `docs/prompts/agent-hub/`（开发计划与提示词）。目录索引
 维护成本高、canonical 漂移风险大，且 PC/手机/共享/Agent Hub 四域没有统一的项目根。
 
@@ -25,9 +25,9 @@
    `git mv` 迁入；old→new 对照、anchor/ID 保全与批次哈希登记在
    `clients/MIGRATION-MAP.md`。
 3. 旧路径保留 4 个兼容 stub（deprecated + successor，不复制正文）：
-   `docs/clients/README.md`、`apps/cognitiveos-console/README.md`、
-   `apps/cognitiveos-console/PRODUCT-DESIGN.md`（23 个既有 anchor 与漂移登记表
-   原样保留）、`docs/platforms/README.md`（`implementation-gate` 等 anchor 保留）。
+   `docs/clients/README.md`、`clients/legacy/cognitiveos-console/README.md`、
+   `clients/legacy/cognitiveos-console/PRODUCT-DESIGN.md`（23 个既有 anchor 与漂移登记表
+   原样保留）、`clients/docs/platforms/README.md`（`implementation-gate` 等 anchor 保留）。
    Console 实现 gate 的 canonical 正文迁入 `clients/governance/readiness-gates.md`。
 4. 不移动代码 package：`apps/agent-shell`、`packages/sdk-ts`（Lane-TSC）、
    `packages/contracts-ts`（Lane-CTR）原地不动；`apps/kernel-server`、
@@ -49,7 +49,7 @@
 ## Consequences
 
 - 全部客户端文档单点导航；旧链接经 stub 与保留 anchor 可达。
-- `docs/plan/`、`docs/prompts/`、`docs/platforms/` 变薄；Agent Hub 计划/提示词
+- `docs/plan/`、`docs/prompts/`、`clients/docs/platforms/` 变薄；Agent Hub 计划/提示词
   随产品文档同树。
 - 在 Lane-CFR 工具落地前，`clients/**` 的链接/anchor/结构检查是**手动 gate**
   （`clients/README.md` §9），每个触碰 PR 必须执行。

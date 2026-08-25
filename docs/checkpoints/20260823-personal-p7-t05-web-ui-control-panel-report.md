@@ -12,7 +12,7 @@
 
 ## Gaps versus D01–D07 closure
 
-Prior closure ([P7-T05 report](./20260823-personal-p7-t05-web-ui-report.md))
+Prior closure ([P7-T05 report](20260823-personal-p7-t05-web-ui-report.md))
 left live Provider/SecretStore key entry and post-session Agent/Provider/Task
 click-through as `not-run`. Audit of `pc/web` at clients `c9a3b34` plus daemon
 P8-T13 routes found:

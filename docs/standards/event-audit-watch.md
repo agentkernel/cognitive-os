@@ -5,7 +5,7 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: `specs/schemas/event.schema.json`,
+- Machine assets: `core/specs/schemas/event.schema.json`,
   `watch-subscription.schema.json`, `shell-status-view.schema.json`,
   `akp-stream-frame.schema.json` (watch stream fragment wire shape)
 - Normative sources: RFC-0001 section 14; Core companion; AKP companion
@@ -74,4 +74,4 @@ client-side aggregates.
 Vectors `evt-schema-001.json` and `shell-watch-resume-006.json` execute with
 evidence; M2 exit adds the replay-digest-stability test and the
 no-in-place-edit negative; watch scope re-validation has a negative test in
-`tests/security/`.
+`personal/tests/security/`.

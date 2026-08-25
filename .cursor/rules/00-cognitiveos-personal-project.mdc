@@ -15,8 +15,8 @@ alwaysApply: true
   `PROGRESS.md` Current snapshot registers an active `Owner-directed campaign`
   row (Operating Model §2.5): then execute that evaluation campaign and claim
   no development task while it is active.
-- For product or architecture work, use `docs/product/personal/` and
-  `docs/architecture/personal/` as stable design indexes; neither owns current
+- For product or architecture work, use `personal/docs/product/` and
+  `personal/docs/architecture/` as stable design indexes; neither owns current
   task or Gate status.
 
 # Current facts and writes

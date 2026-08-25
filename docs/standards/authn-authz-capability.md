@@ -5,7 +5,7 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: `specs/schemas/authorization-capability.schema.json`,
+- Machine assets: `core/specs/schemas/authorization-capability.schema.json`,
   `authorization-delegation.schema.json`, `principal.schema.json`,
   `membership.schema.json`, `actor-chain.schema.json`,
   `privileged-management-session.schema.json`,
@@ -52,7 +52,7 @@ after revocation epoch advance is a defect (vector
 `context-resolution-and-cache.md`). Long-running dispatch paths MUST
 re-validate capability at dispatch and at commit, not only at Context
 resolution time (effect transition guards,
-`specs/transitions/effect.transitions.json`).
+`core/specs/transitions/effect.transitions.json`).
 
 ## 4. Descriptor is not permission
 

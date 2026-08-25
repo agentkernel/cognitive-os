@@ -1,7 +1,7 @@
 # PARALLEL-LANES closed lease history
 
 - Status: historical coordination archive; grants no writable lease
-- Owner index: [PARALLEL-LANES.md](./PARALLEL-LANES.md) §3 active table
+- Owner index: [PARALLEL-LANES.md](PARALLEL-LANES.md) §3 active table
 - Updated: 2026-08-22 (P8-T09 task closure)
 
 Rows below are closed ownership records only. They cannot grant write access,
@@ -148,7 +148,7 @@ block new leases, or override PROGRESS.md Current snapshot.
 | `lease/personal/P1-T09/provider-fixture-ci-repair` | deterministic binary Provider fixture CI repair | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | PR #117 required CI green |
 | `lease/personal/P1-T09/linux-environment-qualification` | Linux-native Pi environment qualification | `lane/personal-p1-t09-provider-fixture` | 2026-07-30 | SSH qualification recorded; exact Pi availability remains `not-run` |
 
-Normative assets under `specs/registry/`, `specs/schemas/`, `specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
+Normative assets under `core/specs/registry/`, `core/specs/schemas/`, `core/specs/transitions/`, generated contracts, and conformance vector semantics remain Lane-CTR-owned regardless of lease.
 | `lease/personal/P9-T06/readiness-secretstore-coalesce` | readiness SecretStore coalesce: one status/doctor evaluation binds one SecretStore (probe + resolve), skips get when the probe already proved the backend cannot answer, drops material immediately, and does not cache ready across requests | `personal/P9-T06-readiness-secretstore-coalesce` | 2026-08-14 | Merged PR #218 at `main@56e5b2d6` with required Ubuntu/Windows CI green. No Gate/release/Profile claim. |
 | `lease/personal/P2-T20/mutation-carriers` | C2 parameter-bearing mutation request carriers: production request carriers for WorkspaceSearch (query), WorkspaceWrite/Patch (preimage + payload), ProcessCheck, and HttpFetchReadOnly, all through the hardened Effect/authority path | `personal/P2-T20-mutation-carriers` | 2026-08-14 | Merged PR #219 at `main@1989b6ff` with required Ubuntu/Windows CI green. No Gate/release/Profile claim. |
 | `lease/personal/P2-T17/a7-unknown-outcome-observation` | A7 external-mutation unknown-outcome production observation: campaign-owned idempotent loopback fixture, persist-before-dispatch Effect, default-off fault points, original-key restart reconcile, and P2-T13 independent verification | `personal/P2-T17-a7-unknown-outcome-observation` | 2026-08-14 | Merged PR #212 at `main@300552e0` with required Ubuntu/Windows CI green. No Gate/release/Profile/B01/EVAL-003 claim. |

@@ -16,12 +16,12 @@
 3. 最新 `docs/checkpoints/*-handoff.md`
 4. `docs/plan/PARALLEL-LANES.md`
 5. 重点读取：
-   - `docs/plan/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md`
-   - `docs/plan/V02-CA-OPS-DESIGN-DECISION.md`
+   - `docs/plan/archive/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md`
+   - `docs/plan/archive/V02-CA-OPS-DESIGN-DECISION.md`
    - `docs/adr/0010-v02-management-operation-set-governance.md`
    - OPS release/compatibility/migration companions
    - TARGET/SIG/AUDIT decisions and ADR-0011～0013
-   - `docs/plan/V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md`
+   - `docs/plan/archive/V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md`
    - findings-ledger D-016、D-022、IMP-01
    - normative source/versioning、canonical digest、authn/authz、Intent/Effect、
      state/transition、event/audit/watch、conformance evidence 与 docs-sync

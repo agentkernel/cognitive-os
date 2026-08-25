@@ -5,7 +5,7 @@
 - This document is P9-T08 package 14 scaffolding. It must not start samples,
   bind guest ports, or replace the `PROGRESS.md` Owner-directed campaign row.
 - Claim ceiling: `hypothesis` / non-claim. Reviewer: `not_reviewed`.
-- Parent: [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md)
+- Parent: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
   v1.1. C1/C2 overlay:
   [PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md](../plan/PERSONAL-C1-C2-READINESS-DELIVERY-PLAN.md)
   §6 (replaces stale “OS arm unreachable” gates for a new EVAL only).

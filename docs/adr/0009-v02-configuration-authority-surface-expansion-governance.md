@@ -8,11 +8,11 @@
 
 ## Context
 
-CA-0 的 [Configuration Authority Contract Sufficiency Decision](../plan/CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md) 与后续 [Spec-Correction Feasibility Decision](../plan/CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md) 已分别裁决 NO-GO：Management operation set/configure target、session/approval signature 和 authoritative audit carrier 存在新的 normative/wire surface，不能全部解释成 IMP-01 允许的 v0.1 修正型收敛。
+CA-0 的 [Configuration Authority Contract Sufficiency Decision](../plan/archive/CONFIGURATION-AUTHORITY-CONTRACT-DECISION.md) 与后续 [Spec-Correction Feasibility Decision](../plan/archive/CONFIGURATION-AUTHORITY-SPEC-CORRECTION-DECISION.md) 已分别裁决 NO-GO：Management operation set/configure target、session/approval signature 和 authoritative audit carrier 存在新的 normative/wire surface，不能全部解释成 IMP-01 允许的 v0.1 修正型收敛。
 
 该历史理由保持不变。以开放字符串、vector reachability、URI、Event 开放 payload、outbox、SQLite 私有行、`audit_ref` 或字符串长度校验补合同，会扩大既有规范解释或把实现私有形状当 authority。继续坚持 v0.1 PATCH 路径会违反冻结纪律；直接启动实现则没有合法冻结输入。
 
-仓库所有者已逐项批准 [V02-CA-GOV-00](../plan/V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) 所列八项治理裁决，需要为其建立独立、可审计的版本边界和交付门禁。
+仓库所有者已逐项批准 [V02-CA-GOV-00](../plan/archive/V02-CONFIGURATION-AUTHORITY-NORMATIVE-SURFACE-AUTHORIZATION.md) 所列八项治理裁决，需要为其建立独立、可审计的版本边界和交付门禁。
 
 ## Decision
 

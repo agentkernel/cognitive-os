@@ -169,7 +169,7 @@ executed, or has not reached this environment's tokens.
 A separate Cloud Agent run (`bc-0c6f2f39-7484-5007-ad1f-f96a2cfd18be`,
 environment `9a1980df-9f6c-11f1-a7d1-d6b4613131ce`) re-probed the boundary
 while fixing the kernel development environment. Full record:
-[Cloud Agent development environment and push/merge diagnosis](./20260824-cloud-agent-dev-environment-and-push-diagnosis.md).
+[Cloud Agent development environment and push/merge diagnosis](20260824-cloud-agent-dev-environment-and-push-diagnosis.md).
 
 | Fact | Verified result (2026-08-24, ~06:20–06:30 UTC) |
 |---|---|

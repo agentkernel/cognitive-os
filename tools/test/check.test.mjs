@@ -96,8 +96,8 @@ test("Personal governance drift is rejected by failure injection", () => {
         .replace("| `P2-T03/D05` | `done` |", "| `P2-T03/D05` | `in-progress` |"),
     "docs/governance/project-scope.yaml": (source) =>
       source.replace(
-        "product_design: docs/product/personal/README.md",
-        "product_design: docs/product/personal/MISSING.md",
+        "product_design: personal/docs/product/README.md",
+        "product_design: personal/docs/product/MISSING.md",
       ),
     "docs/prompts/common-prefix.md": (source) =>
       source.replace("dated non-executable reference", "legacy executable prompt"),
@@ -255,7 +255,7 @@ test("owner-directed evaluation lease is accepted without a formal task slice", 
 test("evaluation lease rejects product paths and unregistered campaigns", () => {
   const result = runConsistencyFailureInjection(
     injectEvaluationLease(
-      "| `lease/personal/EVAL-20260812/rogue` | `PERSONAL-PERF-EVAL-999` unregistered evaluation fixture | Lane-CFR | `evaluation/fixture` | `crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md` | evaluation session | 2026-08-12 / 2026-08-12 | active |",
+      "| `lease/personal/EVAL-20260812/rogue` | `PERSONAL-PERF-EVAL-999` unregistered evaluation fixture | Lane-CFR | `evaluation/fixture` | `personal/crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md` | evaluation session | 2026-08-12 / 2026-08-12 | active |",
     ),
   );
 
@@ -263,7 +263,7 @@ test("evaluation lease rejects product paths and unregistered campaigns", () => 
   assert.match(result.stderr, /EVAL_LEASE_UNREGISTERED: evaluation campaign PERSONAL-PERF-EVAL-999/);
   assert.match(
     result.stderr,
-    /EVAL_LEASE_PATH_FORBIDDEN: evaluation lease lease\/personal\/EVAL-20260812\/rogue .* not crates\/cognitive-runtime\/src\/lib\.rs/,
+    /EVAL_LEASE_PATH_FORBIDDEN: evaluation lease lease\/personal\/EVAL-20260812\/rogue .* not personal\/crates\/cognitive-runtime\/src\/lib\.rs/,
   );
 });
 

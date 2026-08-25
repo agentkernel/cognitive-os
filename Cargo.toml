@@ -1,23 +1,24 @@
-# CognitiveOS reference implementation — Rust virtual workspace (M0 skeleton).
-# Dependency direction is fixed: contracts -> domain -> ports (traits) -> adapters/apps.
-# See .cursor/rules/10-rust-kernel.mdc and docs/adr/0001-rust-typescript.md.
+# CognitiveOS — Rust virtual workspace across the subproject roots (ADR-0054).
+# Dependency direction is fixed: contracts -> domain -> ports (traits) -> adapters/apps,
+# and core/ crates never depend on personal/ crates.
+# See docs/adr/0001-rust-typescript.md and docs/adr/0054-*.md.
 
 [workspace]
 resolver = "2"
 members = [
-    "crates/cognitive-contracts",
-    "crates/cognitive-domain",
-    "crates/cognitive-store",
-    "crates/cognitive-kernel",
-    "crates/cognitive-runtime",
-    "crates/cognitive-management",
-    "crates/cognitive-akp",
-    "crates/cognitive-conformance",
-    "crates/cognitive-secret",
-    "crates/cognitive-provider-transport",
-    "apps/kernel-server",
-    "apps/admin-cli",
-    "apps/pi-agent-adapter",
+    "core/crates/cognitive-contracts",
+    "core/crates/cognitive-domain",
+    "core/crates/cognitive-kernel",
+    "core/crates/cognitive-akp",
+    "personal/crates/cognitive-store",
+    "personal/crates/cognitive-runtime",
+    "personal/crates/cognitive-management",
+    "personal/crates/cognitive-conformance",
+    "personal/crates/cognitive-secret",
+    "personal/crates/cognitive-provider-transport",
+    "personal/apps/kernel-server",
+    "personal/apps/admin-cli",
+    "personal/apps/pi-agent-adapter",
 ]
 
 [workspace.package]
@@ -29,16 +30,16 @@ license = "Apache-2.0"
 # License decided P0-T03 / ADR-0025. publish remains false until a later P7 owner decision.
 
 [workspace.dependencies]
-cognitive-contracts = { path = "crates/cognitive-contracts" }
-cognitive-domain = { path = "crates/cognitive-domain" }
-cognitive-store = { path = "crates/cognitive-store" }
-cognitive-kernel = { path = "crates/cognitive-kernel" }
-cognitive-runtime = { path = "crates/cognitive-runtime" }
-cognitive-management = { path = "crates/cognitive-management" }
-cognitive-akp = { path = "crates/cognitive-akp" }
-cognitive-conformance = { path = "crates/cognitive-conformance" }
-cognitive-secret = { path = "crates/cognitive-secret" }
-cognitive-provider-transport = { path = "crates/cognitive-provider-transport" }
+cognitive-contracts = { path = "core/crates/cognitive-contracts" }
+cognitive-domain = { path = "core/crates/cognitive-domain" }
+cognitive-store = { path = "personal/crates/cognitive-store" }
+cognitive-kernel = { path = "core/crates/cognitive-kernel" }
+cognitive-runtime = { path = "personal/crates/cognitive-runtime" }
+cognitive-management = { path = "personal/crates/cognitive-management" }
+cognitive-akp = { path = "core/crates/cognitive-akp" }
+cognitive-conformance = { path = "personal/crates/cognitive-conformance" }
+cognitive-secret = { path = "personal/crates/cognitive-secret" }
+cognitive-provider-transport = { path = "personal/crates/cognitive-provider-transport" }
 
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

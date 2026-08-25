@@ -5,7 +5,7 @@
  * Executes only inside a fixture root. Never talks to the CognitiveOS daemon.
  *
  * WorkspacePatch `input_b64` is a UTF-8 unified diff, matching
- * `apply_unified_patch` in `apps/kernel-server/src/personal/tool_executor/mutate.rs`.
+ * `apply_unified_patch` in `personal/apps/kernel-server/src/personal/tool_executor/mutate.rs`.
  * Replacement bytes are refused. WorkspaceWrite remains replacement bytes.
  */
 

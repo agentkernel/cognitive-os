@@ -1,0 +1,9 @@
+# OS / editor noise
+.DS_Store
+Thumbs.db
+*.log
+
+# Node / TypeScript (client app scaffolding under pc/app, mobile/*/app)
+node_modules/
+dist/
+*.tsbuildinfo

@@ -1,7 +1,7 @@
 /**
  * Handbook checker library (pure logic; no process.exit, no direct git calls).
  *
- * The handbook (`handbook/`) is an informative derived documentation layer.
+ * The handbook (`personal/handbook/`) is an informative derived documentation layer.
  * These checks keep it machine-consistent with the tracked source tree without
  * creating any task, Gate, contract, or release semantics. Every rule returns
  * structured diagnostics: { rule, file, message }.
@@ -111,7 +111,7 @@ const DYNAMIC_STATUS_PATTERNS = [
  * - sourceMap: parsed source-map.json
  * - readSource: (repoPath) => string  (throws when unreadable)
  * - generatedOutputs: Map<repoPath, string> | null (expected bytes for generated pages)
- * - handbookFiles: string[] (all tracked files under handbook/)
+ * - handbookFiles: string[] (all tracked files under personal/handbook/)
  */
 export function runHandbookChecks(inputs) {
   const diagnostics = [];
@@ -136,18 +136,18 @@ export function runHandbookChecks(inputs) {
   const docsById = new Map();
   for (const doc of manifest.documents ?? []) {
     if (docsById.has(doc.doc_id)) {
-      fail("HB001", "handbook/_meta/manifest.json", `duplicate doc_id: ${doc.doc_id}`);
+      fail("HB001", "personal/handbook/_meta/manifest.json", `duplicate doc_id: ${doc.doc_id}`);
     }
     docsById.set(doc.doc_id, doc);
   }
   if (!manifest.root_entry || !tracked.has(manifest.root_entry)) {
-    fail("HB001", "handbook/_meta/manifest.json", `root_entry missing or untracked: ${manifest.root_entry}`);
+    fail("HB001", "personal/handbook/_meta/manifest.json", `root_entry missing or untracked: ${manifest.root_entry}`);
   }
 
   /** Resolve the expected on-disk paths of a manifest document. */
   const docPaths = (doc) =>
     doc.locale_neutral
-      ? [{ locale: null, p: `handbook/${doc.rel_path}` }]
+      ? [{ locale: null, p: `personal/handbook/${doc.rel_path}` }]
       : locales.map((locale) => ({ locale, p: `${localeRoots[locale]}/${doc.rel_path}` }));
 
   // ---- HB004: manifest <-> filesystem --------------------------------------------
@@ -163,7 +163,7 @@ export function runHandbookChecks(inputs) {
   for (const filePath of handbookFiles) {
     if (!filePath.endsWith(".md")) continue;
     if (!manifestedPaths.has(filePath)) {
-      fail("HB004", filePath, "markdown page is not registered in handbook/_meta/manifest.json");
+      fail("HB004", filePath, "markdown page is not registered in personal/handbook/_meta/manifest.json");
     }
   }
 
@@ -302,21 +302,21 @@ export function runHandbookChecks(inputs) {
   for (const trackedPath of trackedPaths) {
     const matched = compiledRules.find(({ regex }) => regex.test(trackedPath));
     if (!matched) {
-      fail("HB009", trackedPath, "tracked file matches no rule in handbook/_meta/source-coverage.json; classify it (first-party-source with owning docs, or an excluded category with a reason)");
+      fail("HB009", trackedPath, "tracked file matches no rule in personal/handbook/_meta/source-coverage.json; classify it (first-party-source with owning docs, or an excluded category with a reason)");
       continue;
     }
     const { rule } = matched;
     if (rule.category === "first-party-source") {
       for (const docId of rule.docs ?? []) {
         if (!docsById.has(docId)) {
-          fail("HB009", "handbook/_meta/source-coverage.json", `rule ${rule.glob} names unknown doc ${docId}`);
+          fail("HB009", "personal/handbook/_meta/source-coverage.json", `rule ${rule.glob} names unknown doc ${docId}`);
         }
       }
       if (!rule.docs?.length) {
-        fail("HB009", "handbook/_meta/source-coverage.json", `first-party rule ${rule.glob} must own at least one doc`);
+        fail("HB009", "personal/handbook/_meta/source-coverage.json", `first-party rule ${rule.glob} must own at least one doc`);
       }
     } else if (rule.category?.startsWith("excluded-") && !rule.reason) {
-      fail("HB009", "handbook/_meta/source-coverage.json", `excluded rule ${rule.glob} must record a reason`);
+      fail("HB009", "personal/handbook/_meta/source-coverage.json", `excluded rule ${rule.glob} must record a reason`);
     }
   }
 
@@ -325,12 +325,12 @@ export function runHandbookChecks(inputs) {
     for (const glob of rule.sources ?? []) {
       const regex = compileGlob(glob);
       if (!trackedPaths.some((p) => regex.test(p))) {
-        fail("HB015", "handbook/_meta/source-map.json", `rule ${rule.id}: glob matches no tracked file: ${glob}`);
+        fail("HB015", "personal/handbook/_meta/source-map.json", `rule ${rule.id}: glob matches no tracked file: ${glob}`);
       }
     }
     for (const docId of rule.docs ?? []) {
       if (!docsById.has(docId)) {
-        fail("HB015", "handbook/_meta/source-map.json", `rule ${rule.id}: unknown doc ${docId}`);
+        fail("HB015", "personal/handbook/_meta/source-map.json", `rule ${rule.id}: unknown doc ${docId}`);
       }
     }
   }

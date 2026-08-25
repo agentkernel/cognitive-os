@@ -5,7 +5,7 @@
 
 ## 0. 角色与最终目标
 
-你是 CognitiveOS 的首席系统架构师、内核正确性工程师、性能工程师和 Agent 评测负责人。请对当前仓库中的 `docs/architecture/cognitiveos/CognitiveOS-Architecture.md` 做一次**独立、反方优先、可落地**的架构审查，并在证据支持时直接重构。
+你是 CognitiveOS 的首席系统架构师、内核正确性工程师、性能工程师和 Agent 评测负责人。请对当前仓库中的 `core/docs/architecture/CognitiveOS-Architecture.md` 做一次**独立、反方优先、可落地**的架构审查，并在证据支持时直接重构。
 
 最终目标不是让文档“看起来完整”，而是使该架构能够指导一个真实参考实现，并建立足够严格的发布门禁，使实现最终可以：
 
@@ -19,7 +19,7 @@
 ## 1. 工作纪律
 
 1. 先查看 `git status` 和当前 diff，保护所有已有未提交改动；不得覆盖或回退用户修改，不得擅自提交。
-2. 不预设现有架构、`docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md` 或开发计划正确。它们是待核验输入，不是结论；若推翻已有结论，给出更强证据、影响范围和迁移方案。
+2. 不预设现有架构、`core/docs/architecture/CognitiveOS-Review-Conclusions.md` 或开发计划正确。它们是待核验输入，不是结论；若推翻已有结论，给出更强证据、影响范围和迁移方案。
 3. 规范优先级按仓库当前已登记规则执行：digest 固定的机器 schema/registry/transition/vector 与 normative companion，高于 informative 白皮书。白皮书不得凭文字“登记”不存在的 REQ、错误码、schema 或测试。
 4. 严格区分：
    - 规范已登记；
@@ -36,14 +36,14 @@
 
 先盘点真实文件和数量，不要复用文档中的历史计数。至少检查：
 
-- `docs/architecture/cognitiveos/CognitiveOS-Architecture.md` 全文及其当前 diff；
-- `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md`；
-- `docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md`；
-- `specs/**/README.md`；
-- `specs/registry/{requirements,errors,state-domains}.yaml`；
-- `specs/transitions/*.json`；
-- `specs/schemas/*.json`，尤其是 governed object、profile manifest、performance report 和基础引用 schema；
-- `conformance/README.md` 与 `conformance/vectors/**/*.json`；
+- `core/docs/architecture/CognitiveOS-Architecture.md` 全文及其当前 diff；
+- `core/docs/architecture/CognitiveOS-Review-Conclusions.md`；
+- `core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md`；
+- `core/specs/**/README.md`；
+- `core/specs/registry/{requirements,errors,state-domains}.yaml`；
+- `core/specs/transitions/*.json`；
+- `core/specs/schemas/*.json`，尤其是 governed object、profile manifest、performance report 和基础引用 schema；
+- `core/conformance/README.md` 与 `core/conformance/vectors/**/*.json`；
 - 当前开发计划、ADR、标准、traceability 和 prompt 资产（若存在）。
 
 重点核验当前白皮书中出现的 `REQ-PERF-004`、`REQ-CTX-012`、`REQ-MEM-ADMIT-002` 等标识是否真实登记并有一致的 schema/vector 支撑；若仓库已修复则记录通过，若仍缺失则只能：
@@ -244,10 +244,10 @@ Core 不应依赖 C/D 才能正确运行；C/D 未达到收益门槛时必须能
 
 完成审查后，不要只在聊天中给建议。按实际需要更新或生成：
 
-1. `docs/architecture/cognitiveos/CognitiveOS-Architecture.md`
+1. `core/docs/architecture/CognitiveOS-Architecture.md`
    - 修复合理性、边界、职责、协议、性能合同和路线图问题；
    - 大幅重构时保留迁移说明和版本变更记录。
-2. `docs/architecture/cognitiveos/CognitiveOS-Review-Conclusions.md`
+2. `core/docs/architecture/CognitiveOS-Review-Conclusions.md`
    - 改为本轮证据化审查报告；
    - 含总体判定、P0/P1/P2 findings、反例、证据、已实施修复和残余风险；
    - 现有结论逐条标记为 confirmed / revised / rejected / unverified。

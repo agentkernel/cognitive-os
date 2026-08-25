@@ -80,7 +80,7 @@ SPA into this repository.
   only and does not replace the accepted D09 authority-path evidence.
 
 The complete incremental log is in
-[the running report](./20260824-personal-p7-t05-provider-webui-apple-theme-report.md).
+[the running report](20260824-personal-p7-t05-provider-webui-apple-theme-report.md).
 
 ## 3. External blocker and recovery payload
 

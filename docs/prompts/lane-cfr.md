@@ -33,7 +33,7 @@
 
 ## 相关规范路径
 
-`conformance/README.md`（15 层、状态语言、Running）；`docs/standards/conformance-evidence.md`、`canonical-encoding-and-digest.md` §14；`specs/schemas/profile-manifest.schema.json`；`.cursor/rules/15-conformance-evidence.mdc`；`docs/traceability/findings-ledger.md`（F-001/F-015/F-016、D-002/D-004）。
+`core/conformance/README.md`（15 层、状态语言、Running）；`docs/standards/conformance-evidence.md`、`canonical-encoding-and-digest.md` §14；`core/specs/schemas/profile-manifest.schema.json`；`.cursor/rules/15-conformance-evidence.mdc`；`docs/traceability/findings-ledger.md`（F-001/F-015/F-016、D-002/D-004）。
 
 ## 入口 gate 与验收
 
@@ -42,4 +42,4 @@
 
 ## 第一个动作
 
-`git checkout -b lane/cfr`，读 `crates/cognitive-conformance/src/lib.rs` 与 `conformance/README.md` Running 节，列出 74 向量中可静态判定（wire-schema/contract-traceability 类）与需实现行为（effect-recovery 等）的执行分批清单，写入 PROGRESS 车道栏。
+`git checkout -b lane/cfr`，读 `personal/crates/cognitive-conformance/src/lib.rs` 与 `core/conformance/README.md` Running 节，列出 74 向量中可静态判定（wire-schema/contract-traceability 类）与需实现行为（effect-recovery 等）的执行分批清单，写入 PROGRESS 车道栏。

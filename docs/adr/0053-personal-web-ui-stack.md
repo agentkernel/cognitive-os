@@ -86,7 +86,7 @@ accepted; D02–D07 SPA work is blocked on that checkout.
 ### 4. Contract reuse
 
 The SPA consumes existing management and Task routes inventoried in
-[web-ui-route-inventory.json](../architecture/personal/web-ui-route-inventory.json).
+[web-ui-route-inventory.json](../../personal/docs/architecture/web-ui-route-inventory.json).
 If a typed daemon operation is missing (Task cancel HTTP; Agent
 pause/resume/stop/restart/quarantine HTTP), the UI renders
 unavailable/not-run and records the missing dependency. P7-T05 must not add a
@@ -151,7 +151,7 @@ Agent-benefit claims.
 ## Compliance checks
 
 - `tools/test/p7_t05_web_ui_inventory.test.mjs` against
-  `docs/architecture/personal/web-ui-route-inventory.json`.
+  `personal/docs/architecture/web-ui-route-inventory.json`.
 - `pnpm run check:consistency` and handbook sync for mapped pages.
 - No `clients/` directory in this repository; `apps/cognitiveos-console`
   remains a documentation stub.

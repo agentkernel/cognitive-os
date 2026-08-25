@@ -69,7 +69,7 @@ test("required rows fail closed when a named caller path does not exist", () => 
     () =>
       validateUjCapabilityTruthMatrix(matrix, {
         repositoryRoot,
-        fileExists: (relativePath) => relativePath !== "apps/admin-cli/src/personal_cli/init.rs",
+        fileExists: (relativePath) => relativePath !== "personal/apps/admin-cli/src/personal_cli/init.rs",
       }),
     /UJ1-install-init-first-response public_caller does not exist/,
   );
@@ -81,8 +81,8 @@ test("Web UI and Multi-Agent stay explicit and must not be required", () => {
   assert.ok(webUi);
   webUi.required = true;
   webUi.scope = "required";
-  webUi.public_caller = "apps/admin-cli/src/main.rs";
-  webUi.mechanical_oracle = "apps/admin-cli/tests/p2_t27_backup_restore.rs";
+  webUi.public_caller = "personal/apps/admin-cli/src/main.rs";
+  webUi.mechanical_oracle = "personal/apps/admin-cli/tests/p2_t27_backup_restore.rs";
   webUi.cleanup = "none";
   webUi.evidence_schema = "forbidden";
   assert.throws(

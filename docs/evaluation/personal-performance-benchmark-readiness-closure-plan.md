@@ -4,11 +4,11 @@
 - Owner direction: close every required product and environment prerequisite
   before executing the complete performance benchmark
 - Parent contract:
-  [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md)
+  [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md)
 - C1/C2 contract:
-  [personal-c1-c2-benchmark-execution-plan.md](./personal-c1-c2-benchmark-execution-plan.md)
+  [personal-c1-c2-benchmark-execution-plan.md](personal-c1-c2-benchmark-execution-plan.md)
 - Current full-OS disposition:
-  [personal-performance-benchmark-full-os-only-addendum.md](./personal-performance-benchmark-full-os-only-addendum.md)
+  [personal-performance-benchmark-full-os-only-addendum.md](personal-performance-benchmark-full-os-only-addendum.md)
 - Target execution environment: `B01-DESKTOP-002` / `B01-Desktop-Linux-002`
   (简称 `linux-002`)
 - Host route: `wuz@192.168.1.2` (`hal9000`, system libvirt) -> ProxyJump ->

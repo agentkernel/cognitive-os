@@ -25,12 +25,12 @@
 ## 范围（DEVELOPMENT-PLAN M2 节为准；标准 `docs/standards/state-and-transition-contract.md`、ADR-0002/0005）
 
 - GovernedObject SQLite(WAL) 仓储（`crates/cognitive-store`；rusqlite 依赖此时引入；ADR-0002 五条绑定规则：一事务一提交、WAL+synchronous=FULL、CAS=WHERE version、失败 `STATE_STORE_UNAVAILABLE` fail-closed、单写者）。
-- 五状态机执行器（`crates/cognitive-domain` 表驱动 + `cognitive-kernel` 集中 transition 入口，消费 `specs/transitions/*.json` 五表；非法迁移返回 registry 错误码且状态不变）。
+- 五状态机执行器（`crates/cognitive-domain` 表驱动 + `cognitive-kernel` 集中 transition 入口，消费 `core/specs/transitions/*.json` 五表；非法迁移返回 registry 错误码且状态不变）。
 - CAS、append-only 事件日志 + outbox、预算计量原语、状态+事件原子提交；ID=UUIDv7 newtype、三时钟域分型（ADR-0005）。
 
 ## 依赖方向红线（`.cursor/rules/10-rust-kernel.mdc`）
 
-`domain`/`kernel` 禁依赖 HTTP、SQLite 具体类型、模型 SDK；SQLite 只出现在 `cognitive-store`；库代码禁 panic/unwrap；迁移表单一来源 `specs/transitions/`，禁止复制常量。
+`domain`/`kernel` 禁依赖 HTTP、SQLite 具体类型、模型 SDK；SQLite 只出现在 `cognitive-store`；库代码禁 panic/unwrap；迁移表单一来源 `core/specs/transitions/`，禁止复制常量。
 
 ## 禁止越界
 
@@ -55,4 +55,4 @@ M1 出口评审通过（生成合同冻结 + runner 可执行 + F-003 关闭）�
 
 ## 第一个动作
 
-读 `specs/transitions/effect.transitions.json` 与 `state-and-transition-contract.md`，先写失败测试：并发 CAS 单胜者 + task 表一条非法迁移拒绝。
+读 `core/specs/transitions/effect.transitions.json` 与 `state-and-transition-contract.md`，先写失败测试：并发 CAS 单胜者 + task 表一条非法迁移拒绝。

@@ -8,7 +8,7 @@
   Tip-honest: kernel-server uses --once --bind only (no /health, no --data-dir).
   Emits artifacts/evidence/v01-auto-run/<run_id>/{summary.json,summary.md,...}.
   Default: L3 report-ready with PERF campaign/benefit non-claim.
-  See docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md.
+  See docs/plan/archive/V01-AUTO-RUN-VERIFY-PERF-PLAN.md.
 
 .PARAMETER SkipBuild
   Skip cargo/pnpm build (assume binaries/packages already built).

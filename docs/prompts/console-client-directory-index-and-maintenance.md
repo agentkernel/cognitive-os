@@ -39,12 +39,12 @@
 
 用 `Glob`/`Grep`/`Read` 实测盘点，不臆造。至少覆盖并逐一核实以下候选（存在与否、真实状态都以仓库当前内容为准）：
 
-- PC 客户端与产品设计：`apps/cognitiveos-console/`（`README.md`、`PRODUCT-DESIGN.md`、`docs/**`，含 `docs/agent-hub/**`）。
-- 客户端外壳（TS）：`apps/agent-shell/`。
-- 共享/SDK/契约层（客户端消费）：`packages/sdk-ts/`、`packages/contracts-ts/`。
-- 跨平台产品设计：`docs/platforms/**`（macOS/Linux/iPhone/Android 产品设计、parity matrix、决策）。
-- Agent Hub 客户端设计：`apps/cognitiveos-console/docs/agent-hub/**`（两部署模式、平台 parity、旅程与页面、无障碍）。
-- 手机 companion：如仓库尚无独立移动客户端目录，索引中以 `planned` 记录其规划位置与入口（`docs/platforms/ios-product-design.md`、`android-product-design.md`、`docs/agent-hub/platforms/product-scope.md`），不虚构不存在的代码目录。
+- PC 客户端与产品设计：`clients/legacy/cognitiveos-console/`（`README.md`、`PRODUCT-DESIGN.md`、`docs/**`，含 `docs/agent-hub/**`）。
+- 客户端外壳（TS）：`personal/apps/agent-shell/`。
+- 共享/SDK/契约层（客户端消费）：`personal/packages/sdk-ts/`、`core/packages/contracts-ts/`。
+- 跨平台产品设计：`clients/docs/platforms/**`（macOS/Linux/iPhone/Android 产品设计、parity matrix、决策）。
+- Agent Hub 客户端设计：`clients/legacy/cognitiveos-console/docs/agent-hub/**`（两部署模式、平台 parity、旅程与页面、无障碍）。
+- 手机 companion：如仓库尚无独立移动客户端目录，索引中以 `planned` 记录其规划位置与入口（`clients/docs/platforms/ios-product-design.md`、`android-product-design.md`、`docs/agent-hub/platforms/product-scope.md`），不虚构不存在的代码目录。
 - 其他：`kernel-server`、`admin-cli` 等**非客户端**目录明确标注为“非客户端，不纳入索引主体”，避免误收。
 
 对每个目录记录：路径、平台、角色、状态（四态/planned/blocked）、owner 车道（对照 `PARALLEL-LANES.md` 所有权表）、canonical 入口、上游 gate、是否已有自己的 README/说明。
@@ -53,7 +53,7 @@
 
 - 选定唯一 canonical 位置（推荐新建 `docs/clients/README.md` 作为“PC + 手机客户端目录索引”单一入口；若你判断扩展某既有入口更合适，需说明理由并保证不产生第二个 canonical）。
 - 索引主体是一张可导航的表，按 **PC 客户端 / 手机 companion / 共享·SDK·契约 / 平台设计 / Agent Hub** 分组，字段见“目标产物”第 1 条。
-- 明确“单一事实来源”：索引只**引用**各目录既有 canonical 文档，不复制其正文；对已有的 `docs/README.md`、`docs/platforms/README.md`、`apps/cognitiveos-console/docs/agent-hub/README.md` 只做交叉引用，不重定义。
+- 明确“单一事实来源”：索引只**引用**各目录既有 canonical 文档，不复制其正文；对已有的 `docs/README.md`、`clients/docs/platforms/README.md`、`clients/legacy/cognitiveos-console/docs/agent-hub/README.md` 只做交叉引用，不重定义。
 - 固定状态真相：客户端 implementation 未启动处一律 `not-implemented`；测试/Profile 未达处标 `none`/`not implemented`；计数从 `docs/plan/PROGRESS.md` 实测读取，禁止沿用旧数。
 
 ### 第 3 步：生成说明与阅读导航
@@ -88,7 +88,7 @@
 ## 约束与红线（务必遵守）
 
 - 只产出索引、说明与维护规则；**不实现客户端、不搭脚手架、不写 mock、不物理移动/重命名代码目录**。
-- 单一 canonical：不制造第二个客户端索引；既有 `docs/README.md`、`docs/platforms/README.md`、`apps/cognitiveos-console/docs/agent-hub/README.md` 的 canonical 含义与 anchor 保持不变。
+- 单一 canonical：不制造第二个客户端索引；既有 `docs/README.md`、`clients/docs/platforms/README.md`、`clients/legacy/cognitiveos-console/docs/agent-hub/README.md` 的 canonical 含义与 anchor 保持不变。
 - 四态状态用语严格区分；目录存在 ≠ 实现已提供；文档存在 ≠ 测试已执行。
 - 保护他人未提交工作（`personal-blog/`、`.cursor/skills/` 等），逐路径暂存。
 - 禁 `History/`；禁虚构规范资产；计数一律实测。

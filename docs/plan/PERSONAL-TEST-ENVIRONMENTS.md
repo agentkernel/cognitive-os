@@ -2,8 +2,8 @@
 
 - Status: active environment registry
 - Last reconciled: 2026-08-06
-- Product/task status source: [PROGRESS.md](./PROGRESS.md) `Current snapshot`
-- Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](./PERSONAL-SUPPORT-MATRIX.md)
+- Product/task status source: [PROGRESS.md](PROGRESS.md) `Current snapshot`
+- Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](PERSONAL-SUPPORT-MATRIX.md)
 
 This registry explains where existing development and test evidence was
 obtained and the maximum claim that each environment can support. It is not a
@@ -90,7 +90,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 - **Maximum evidence:** local TS/development checks actually executed.
 - **Cannot claim:** supported Windows Rust, Windows product install, B01-W,
   sandbox/containment, release or Profile.
-- **Evidence:** [`tests/baseline/README.md`](../../tests/baseline/README.md).
+- **Evidence:** [`personal/tests/baseline/README.md`](../../personal/tests/baseline/README.md).
 
 ## 4. `CI-UBUNTU-01` — supported Ubuntu ordinary CI
 
@@ -115,7 +115,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 - **Maximum evidence:** supported Windows compile/test implementation evidence.
 - **Cannot claim:** Windows installer/service, native credential backend,
   B01-W, install parity, release or Profile.
-- **Evidence:** [baseline](../../tests/baseline/README.md) and CI workflow.
+- **Evidence:** [baseline](../../personal/tests/baseline/README.md) and CI workflow.
 
 ## 6. `DEV-WSL2-01` — WSL2 Linux guest
 
@@ -267,7 +267,7 @@ ordinary development target.
 - **Maximum evidence:** deterministic runtime/installer implementation tests.
 - **Cannot claim:** real systemd, native persistence, Secret Service, Provider,
   Pi, clean VM, B01, release, containment or Profile.
-- **Tests:** `crates/cognitive-runtime/tests/linux_bundle_*.rs` and
+- **Tests:** `personal/crates/cognitive-runtime/tests/linux_bundle_*.rs` and
   `linux_installer_bootstrap.rs`.
 
 ## 13. `FIXTURE-PROVIDER-HTTPS-01` — loopback HTTPS Provider fixture
@@ -282,12 +282,12 @@ ordinary development target.
 - **Cannot claim:** live Provider, native Secret Service, Pi conversation,
   B01 or release.
 - **Test:**
-  [`p1_t09_deterministic_provider_fixture.rs`](../../crates/cognitive-provider-transport/tests/p1_t09_deterministic_provider_fixture.rs).
+  [`p1_t09_deterministic_provider_fixture.rs`](../../personal/crates/cognitive-provider-transport/tests/p1_t09_deterministic_provider_fixture.rs).
 
 ## 14. `CONTRACT-RUNNERS-01` — golden, conformance and consistency
 
 - **Golden:** Rust and TypeScript canonical JSON/digest consumers share
-  `tests/golden/` fixtures.
+  `core/tests/golden/` fixtures.
 - **Conformance:** declarative vectors and executable runners distinguish pass,
   fail, not-run and not-applicable; static validity is not behavior pass.
 - **Consistency:** registry/schema/vector/link/project/lease and Personal-plan

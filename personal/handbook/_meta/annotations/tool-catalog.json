@@ -1,0 +1,13 @@
+{
+  "schema": "cognitiveos-handbook-tool-catalog/0.1",
+  "description": "Hand-maintained annotations for the generated native Tool catalog reference. The generator extracts `native.*.*` ids from core/crates/cognitive-kernel/src/tool_registry.rs and fails on any bidirectional mismatch.",
+  "tools": [
+    { "id": "native.workspace.read", "risk": "ReadOnly", "executor": "daemon.workspace", "description_en": "Bounded read of a validated relative path inside an admitted workspace root.", "description_zh": "在已准入 workspace 根内对经校验相对路径的有界读取。" },
+    { "id": "native.workspace.search", "risk": "ReadOnly", "executor": "daemon.workspace", "description_en": "Bounded search within admitted workspace roots.", "description_zh": "在已准入 workspace 根内的有界搜索。" },
+    { "id": "native.workspace.write", "risk": "WorkspaceMutation", "executor": "daemon.workspace", "description_en": "Governed workspace write; requires the persist-before-dispatch Intent/Effect path.", "description_zh": "受治理的 workspace 写入；要求 persist-before-dispatch 的 Intent/Effect 路径。" },
+    { "id": "native.workspace.patch", "risk": "WorkspaceMutation", "executor": "daemon.workspace", "description_en": "Governed workspace patch (patch-shaped payload enforced by the pre-executor validator).", "description_zh": "受治理的 workspace patch（预执行校验器强制 patch 形状载荷）。" },
+    { "id": "native.process.check", "risk": "ProcessExecution", "executor": "daemon.process", "description_en": "Bounded registered check-command execution with timeout, output caps, and supervision.", "description_zh": "有界的已注册检查命令执行，含超时、输出上限与监督。" },
+    { "id": "native.http.fetch", "risk": "NetworkRead", "executor": "daemon.http", "description_en": "Read-only HTTPS GET/HEAD against an exact registered origin allowlist; no userinfo, query, or fragment. An explicit port is part of the exact origin pin.", "description_zh": "只读 HTTPS GET/HEAD，仅限精确注册的 origin 白名单；不允许 userinfo、query 或 fragment。显式端口是精确 origin 钉的一部分。" },
+    { "id": "native.registered-check.run", "risk": "ProcessExecution", "executor": "daemon.registered-check", "description_en": "Run one immutable daemon-registered deterministic check selected only by check_id; executable, argv, cwd, environment, timeout, output, process-tree, write-root, network and digest bounds are fixed.", "description_zh": "仅按 check_id 运行 daemon 不可变登记的确定性检查；可执行文件、argv、cwd、环境、超时、输出、进程树、写入根、网络和 digest 边界全部固定。" }
+  ]
+}

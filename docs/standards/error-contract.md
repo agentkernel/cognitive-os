@@ -5,7 +5,7 @@
 - Machine version: `0.1.0-draft.1`
 - Status: Draft Normative Standard
 - Date: 2026-07-20
-- Machine assets: `specs/registry/errors.yaml` (55 registered codes, 18 categories)
+- Machine assets: `core/specs/registry/errors.yaml` (55 registered codes, 18 categories)
 
 ## 1. Scope and normative language
 
@@ -13,12 +13,12 @@ The key words MUST, MUST NOT, SHOULD, and MAY follow RFC 2119/8174. This
 standard binds how registered error codes are produced, propagated, retried,
 and audited. It registers no new requirement and no new code: the code set is
 frozen with the v0.1 specification surface. Owning requirements:
-[REQ-ERR-001] and [REQ-ERR-002] in `specs/registry/requirements.yaml`.
+[REQ-ERR-001] and [REQ-ERR-002] in `core/specs/registry/requirements.yaml`.
 
 ## 2. Registered codes only
 
 A governed failure MUST surface exactly one registered `code` from
-`specs/registry/errors.yaml`. Implementations MUST NOT invent codes, reuse a
+`core/specs/registry/errors.yaml`. Implementations MUST NOT invent codes, reuse a
 code for a different meaning, or collapse distinct registered codes into a
 generic failure. Free-text detail goes in a `detail` field, never in `code`.
 
@@ -77,6 +77,6 @@ use the same code value; translation tables are forbidden.
 ## 7. Compliance checks
 
 An implementation claim against this standard requires: negative tests per
-consumed code path (`tests/security/`, `tests/faults/`), the registry
+consumed code path (`personal/tests/security/`, `personal/tests/faults/`), the registry
 consistency check green, and no occurrence of an unregistered code string in
 `crates/**` or `packages/**` machine responses.

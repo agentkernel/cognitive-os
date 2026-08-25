@@ -1,6 +1,6 @@
 /**
  * Traceability matrix generator: derives the committed baseline of
- * `docs/traceability/matrix.yaml` from `specs/registry/requirements.yaml`
+ * `docs/traceability/matrix.yaml` from `core/specs/registry/requirements.yaml`
  * plus the vector set, PRESERVING any hand-maintained `impl`, `impl_tests`,
  * `evidence`, `docs` and `notes` fields of an existing matrix.
  *
@@ -60,7 +60,7 @@ const doc = {
   version: "0.1",
   generated_by: "tools/src/gen-matrix.mjs (registry-derived; impl/evidence/docs fields are hand-maintained and preserved)",
   field_semantics: {
-    registry_tests: "test IDs mapped in specs/registry/requirements.yaml",
+    registry_tests: "test IDs mapped in core/specs/registry/requirements.yaml",
     vectors: "conformance vector files whose requirement_ids include this REQ (derived)",
     impl: "implementation module paths (hand-maintained from M1)",
     impl_tests: "unit/integration/fault test paths (hand-maintained)",

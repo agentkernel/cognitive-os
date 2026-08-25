@@ -19,7 +19,7 @@ in this freeze batch.
 ## Reachable safe-reason closure
 
 The candidate enum is mechanically compared to every code in
-`specs/registry/errors.yaml`; it therefore permits no unregistered value. The
+`core/specs/registry/errors.yaml`; it therefore permits no unregistered value. The
 currently reachable `status.inspect` paths evidenced by the implementation are
 `CONTEXT_AUTH_DENIED` for protected-read denial/not-found and
 `STATE_STORE_UNAVAILABLE` for the in-process durable authority boundary failure

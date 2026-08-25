@@ -1,0 +1,14 @@
+{
+  "schema": "cognitiveos-handbook-config-files/0.1",
+  "description": "Hand-maintained annotations for the generated configuration/state file reference. The generator verifies each file-name literal appears in its declared_in source, so entries cannot rot silently.",
+  "files": [
+    { "name": "provider.json", "location": "XDG config / cognitiveos", "declared_in": "personal/crates/cognitive-secret/src/provider_config.rs", "description_en": "Non-secret Provider configuration: provider id, HTTPS base URL, opaque SecretRef, optional snapshot digest.", "description_zh": "非 secret 的 Provider 配置：provider id、HTTPS base URL、不透明 SecretRef、可选 snapshot digest。" },
+    { "name": "selected-model.json", "location": "XDG config / cognitiveos", "declared_in": "personal/crates/cognitive-secret/src/selected_model.rs", "description_en": "Selected chat-capable model plus the discovery snapshot digest it was chosen from.", "description_zh": "选定的可对话模型及其来源发现快照的 digest。" },
+    { "name": "pi.json", "location": "XDG config / cognitiveos", "declared_in": "personal/apps/admin-cli/src/personal_cli/pi.rs", "description_en": "Non-secret Pi launch configuration: absolute executable and Extension entry paths.", "description_zh": "非 secret 的 Pi 启动配置：可执行文件与 Extension 入口的绝对路径。" },
+    { "name": "daemon-endpoint.json", "location": "XDG state / cognitiveos", "declared_in": "personal/packages/pi-cognitiveos/src/daemon-discovery.ts", "description_en": "Atomically published loopback endpoint document consumed by CLI and Pi extension.", "description_zh": "原子发布的 loopback endpoint 文档，供 CLI 与 Pi 扩展消费。" },
+    { "name": "local-bootstrap.secret", "location": "XDG runtime / cognitiveos", "declared_in": "personal/packages/pi-cognitiveos/src/daemon-discovery.ts", "description_en": "Per-boot bootstrap proof (0600) exchanged at POST /local/session for channel-bound bearers. Never leaves the local machine.", "description_zh": "每次启动的 bootstrap 证明（0600），在 POST /local/session 兑换通道绑定 bearer。绝不离开本机。" },
+    { "name": "migration.lock", "location": "XDG runtime / cognitiveos", "declared_in": "personal/crates/cognitive-store/src/layout.rs", "description_en": "Exclusive lock taken while preparing/migrating the two SQLite databases.", "description_zh": "准备/迁移两个 SQLite 数据库期间持有的排他锁。" },
+    { "name": "daemon.lock", "location": "XDG runtime / cognitiveos", "declared_in": "personal/crates/cognitive-store/src/layout.rs", "description_en": "Single-daemon-instance lock; `cognitive daemon stop` removes it only after confirming staleness.", "description_zh": "daemon 单实例锁；`cognitive daemon stop` 仅在确认过期后移除。" },
+    { "name": "active-version", "location": "deployment root", "declared_in": "personal/crates/cognitive-runtime/src/linux_bundle.rs", "description_en": "Atomic text pointer naming the active installed bundle version; switched only after health confirmation.", "description_zh": "指向当前激活 bundle 版本的原子文本指针；仅在健康确认后切换。" }
+  ]
+}

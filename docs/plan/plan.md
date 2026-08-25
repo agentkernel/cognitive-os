@@ -4,7 +4,7 @@
 > 规范和通用实现是其架构/合同基础，不是并行项目。身份与工作范围以
 > [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md) 为准。
 > **文档状态：研究与任务卡草案；不代表实现已提供、测试已执行或 Profile 已符合。**
-> **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
+> **正式开发计划与进度台账：** [docs/plan/PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)。后续开发完成任一部分时，必须更新该文件对应任务的状态、日期和证据。
 > **研究与审计日期：2026-07-24。**
 > **审计基线：`origin/main@9b53cf4c6c2b744a60283c3ea1431a9d1090aafd`。**
 > **2026-07-26 一致性评审批：** 任务卡不再承载正式状态行；正式状态、完成日期与证据一律以台账为准。§3/§6 为审计日快照，此后交付不逐项回写。本批新增 P7-T07（Windows 安装面归宿）、P2-T08 增补 ADR-0018 例外到期核查、§9 改用 DEC-P-* 编号、§12 修正依赖图与 critical path。
@@ -178,9 +178,9 @@ retrieval/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI/Windows 与 non
 | Rust workspace | 11 members |
 | TS workspace | contracts-ts、sdk-ts、agent-shell、tools 等 |
 | 数据库 | SQLite WAL；authority store 与 installation store |
-| 服务入口 | `apps/kernel-server/src/main.rs` |
-| 管理 CLI | `apps/admin-cli/src/main.rs` |
-| Pi 候选适配器 | `apps/pi-agent-adapter/src/main.rs` |
+| 服务入口 | `personal/apps/kernel-server/src/main.rs` |
+| 管理 CLI | `personal/apps/admin-cli/src/main.rs` |
+| Pi 候选适配器 | `personal/apps/pi-agent-adapter/src/main.rs` |
 | TS Shell | library，无 `bin` |
 | CI | `.github/workflows/ci.yml`，Windows/Linux |
 | License | **Apache-2.0**（P0-T03 / ADR-0025）；Rust `publish=false`；TS `private: true`；Pi/Node 不 vendor |
@@ -299,11 +299,11 @@ SDK、UI 不成为 authority；sample/fixture/smoke/局部测试不成为 Profil
 
 | 能力 | 当前 | 目标 | 代码证据 | 主要差距 | 计划 |
 |---|---:|---:|---|---|---|
-| 安装 | L0 | L5 | 无 deploy/install/release | 无 bundle、verifier、rollback | P1-T08、P7-T01/T02 |
+| 安装 | L0 | L5 | 无 personal/deploy/install/release | 无 bundle、verifier、rollback | P1-T08、P7-T01/T02 |
 | 初始化 | L0 | L5 | `admin-cli` 无 init | 数据布局、Secret、Provider、daemon、Pi | P1-T01..T09 |
-| CLI | L3 管理型 | L5 产品型 | `apps/admin-cli/src/main.rs` | 缺共享 Personal application service | P1-T05/T06 |
-| daemon | L2 | L5 | `apps/kernel-server/src/main.rs` | 手写无界 parser、无 auth、canned routes | P1-T04 |
-| Pi 集成 | L1/L2 | L5 Interactive | `apps/pi-agent-adapter/src/main.rs` | evaluator 与 admission 未连接 | P0-T06、P1-T07 |
+| CLI | L3 管理型 | L5 产品型 | `personal/apps/admin-cli/src/main.rs` | 缺共享 Personal application service | P1-T05/T06 |
+| daemon | L2 | L5 | `personal/apps/kernel-server/src/main.rs` | 手写无界 parser、无 auth、canned routes | P1-T04 |
+| Pi 集成 | L1/L2 | L5 Interactive | `personal/apps/pi-agent-adapter/src/main.rs` | evaluator 与 admission 未连接 | P0-T06、P1-T07 |
 | Provider | L1 | L5 narrow slice | proposal trait、Pi-specific path | 无 catalog/probes/snapshot/proxy | P1-T03 |
 | Secret Store | L0 | L5 Linux desktop | 不存在 | native backend、redaction、rotation | P0-T05、P1-T02 |
 | Task | L3/L4 core | L5 product | `intent_chain.rs` | 无应用服务、API、queue | P2-T01/T02 |
@@ -536,9 +536,9 @@ Pi 不可以：
 ### P0-T01 — 固定可复现基线与支持工具链
 
 - **优先级/目标/价值：** P0；让后续会话可复现 Rust、TS、CI 基线。
-- **证据/研究：** 本机 LLVM-MinGW 缺 `libgcc`；远端双 OS CI green。2026-07-25 的正式台账记录确认：`01ceb93` 的 CI run 30140381194 在 Ubuntu 与 Windows/MSVC 均通过；本机 Windows GNU 在默认和已记录的 LLVM-MinGW/shim 处置下均于 linker exit 121 失败，故 GNU host 是非支持开发环境。详见 `tests/baseline/README.md`。
+- **证据/研究：** 本机 LLVM-MinGW 缺 `libgcc`；远端双 OS CI green。2026-07-25 的正式台账记录确认：`01ceb93` 的 CI run 30140381194 在 Ubuntu 与 Windows/MSVC 均通过；本机 Windows GNU 在默认和已记录的 LLVM-MinGW/shim 处置下均于 linker exit 121 失败，故 GNU host 是非支持开发环境。详见 `personal/tests/baseline/README.md`。
 - **依赖/不包含：** 无；不改生产逻辑。
-- **文件：** 修改 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`、本研究报告及 CI/toolchain docs；计划新增 `tests/baseline/README.md`；不删文件。
+- **文件：** 修改 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`、本研究报告及 CI/toolchain docs；计划新增 `personal/tests/baseline/README.md`；不删文件。
 - **数据/API/配置/迁移：** 无数据/API；明确 Linux runner、Windows GNU/MSVC 支持组合。
 - **步骤：** 重跑 Git 状态、两套工具链、全部 baseline commands；记录 SHA、exit、耗时。
 - **验收：** Linux clean runner 全绿；Windows 选择官方支持 linker 后全绿或明确 non-supported。
@@ -573,7 +573,7 @@ Pi 不可以：
 ### P0-T04 — 数据布局、迁移、备份与回滚设计验证
 
 - **目标：** 为现有 inline SQLite Schema 建立迁移策略。
-- **证据：** `crates/cognitive-store/src/sqlite.rs`、`installation.rs` 无 schema version。
+- **证据：** `personal/crates/cognitive-store/src/sqlite.rs`、`installation.rs` 无 schema version。
 - **依赖：** P0-T02；不改变当前 DB。
 - **文件：** 新增 ADR-0017（ADR-0003 已是 HTTP/SSE 传输决策，不得复用）；新增 `crates/cognitive-store` 本地迁移适配器和 focused tests；不创建运行时 XDG 目录或用户数据。
 - **数据/API：** 设计 `schema_migrations(version, digest, applied_at)`、preflight、backup、rollback policy。调用方显式提供 scratch/backup 路径；不暴露客户端 authority 写入口。
@@ -602,7 +602,7 @@ Pi 不可以：
 - **状态：** 以正式台账为准（台账记录：in-progress；已交付 version pin/SRI + strict-LF RPC parser、pinned Extension fixture 两个原子部分；剩余：pinned package 的实际 session/RPC load evidence）。ADR-0018 本机开发例外（显式开关 + 独立 Provider config 目录，默认拒绝，不用于 Windows/CI/发布，P2 结束到期）已获 owner 批准，到期核查归属 P2-T08 验收。
 - **证据：** registry 0.82.0；仓库 smoke 使用 0.81.1；API 快速变化。
 - **依赖：** P0-T03；不启动 governed background Agent。
-- **文件：** 修改 `apps/pi-agent-adapter` tests/docs；计划新增 `tests/golden/pi-rpc/` 和 Extension PoC。
+- **文件：** 修改 `apps/pi-agent-adapter` tests/docs；计划新增 `core/tests/golden/pi-rpc/` 和 Extension PoC。
 - **API：** 固定 Extension command/provider/event subset；RPC 只做 contract fixture。
 - **验收：** project trust、tool replacement、session event、strict LF framing、version mismatch 均有测试。
 - **安全：** Extension 无 DB/secret；built-in write/edit/bash 在 governed mode 不可用。通常 Provider material 不进入 Pi 或环境；唯一的 ADR-0018 local-development exception 仅传给初始 Pi child，不构成 sandbox/containment 声明，P2 后必须移除、替换为 proxy 或重新批准。
@@ -629,7 +629,7 @@ Pi 不可以：
 - **目标：** 初始化 config/data/state/cache/runtime，安全迁移两套 SQLite。
 - **证据：** inline schema、无 migration framework。
 - **依赖：** P0-T04。
-- **文件：** 修改 `crates/cognitive-store/src/{sqlite,installation,lib}.rs`；新增 `layout.rs`、`personal_db.rs`、`tests/p1_t01_layout_migrations.rs`；ADR-0017 补记 XDG 实现。
+- **文件：** 修改 `personal/crates/cognitive-store/src/{sqlite,installation,lib}.rs`；新增 `layout.rs`、`personal_db.rs`、`tests/p1_t01_layout_migrations.rs`；ADR-0017 补记 XDG 实现。
 - **数据变化：** 新增 migration metadata；不改变 authority transition semantics。
 - **配置：** XDG paths，目录 0700，DB 0600。
 - **迁移：** 先备份、checksum、transaction、integrity check；失败保留旧 DB。
@@ -668,7 +668,7 @@ Pi 不可以：
 
 - **目标：** 替换 synthetic composition 的 Personal 入口，建立 loopback 有界 front door 与本地认证。
 - **状态：** 以正式台账为准（台账记录：done，PR #95 + PR #96，timeout/concurrency 行为测试已由 CI 执行）。
-- **文件：** `apps/kernel-server/src/personal/{mod,auth,bounds,lifecycle,server}.rs`、`main.rs --personal`、`tests/p1_t04_personal_daemon.rs`；layout daemon 路径；ADR-0022。
+- **文件：** `personal/apps/kernel-server/src/personal/{mod,auth,bounds,lifecycle,server}.rs`、`main.rs --personal`、`tests/p1_t04_personal_daemon.rs`；layout daemon 路径；ADR-0022。
 - **配置：** loopback-only bind、ADR-0019 body/header/concurrency bounds、single-instance `daemon.lock`、runtime bootstrap secret。
 - **API：** `POST /local/session`；channel-scoped bearer on `/management/*` and `/task/*`；`GET /personal/health`（non-claim）。
 - **验收：** oversized body、bad auth、wrong channel、cookie/host reject、second-instance lock、restart。
@@ -680,7 +680,7 @@ Pi 不可以：
 
 - **目标：** CLI、Pi、未来 UI 共用同一事实源。
 - **状态：** 以正式台账为准。
-- **文件：** `apps/kernel-server/src/personal/readiness.rs`、`server.rs` 路由、`tests/p1_t05_personal_readiness.rs`、ADR-0023。**未**修改 `cognitive-management`（Lane-RUN 所有权；Personal 组合根承载 projection）。
+- **文件：** `personal/apps/kernel-server/src/personal/readiness.rs`、`server.rs` 路由、`tests/p1_t05_personal_readiness.rs`、ADR-0023。**未**修改 `cognitive-management`（Lane-RUN 所有权；Personal 组合根承载 projection）。
 - **API：** management-channel `GET /personal/status`、`GET /personal/readiness`、`GET /personal/doctor`；组件 system/database/secret/provider/daemon/pi；返回事实、duration、source、error_class 与 non-claim。
 - **验收：** degraded/blocked/ready 分离；静态检查通过不写成 runtime ready（`static_check_is_not_runtime_ready`）；secret_ref/bootstrap 不入投影。
 - **观测：** 每项 check duration/error class；doctor guidance 可操作。
@@ -691,7 +691,7 @@ Pi 不可以：
 
 - **状态：** 以正式台账为准。
 - **目标：** 将 `admin-cli` 演进为 `cognitive` 产品入口。
-- **文件：** 修改 `apps/admin-cli/Cargo.toml`、`src/main.rs`、tests；计划添加 `cognitive` bin，保留 `admin-cli` 兼容。
+- **文件：** 修改 `personal/apps/admin-cli/Cargo.toml`、`src/main.rs`、tests；计划添加 `cognitive` bin，保留 `admin-cli` 兼容。
 - **API：** 只调用 daemon/application service，不直接编排 SQLite。
 - **步骤：** env check→dirs→secret→provider→model→daemon→Pi check→self-test。
 - **验收：** hidden input、URL修正、重试、手填 model、可操作错误、重复 init 幂等。
@@ -702,11 +702,11 @@ Pi 不可以：
 ### P1-T07 — CognitiveOS Pi Package/Extension 与 Provider proxy
 
 - **优先级/目标/价值：** P1 收尾前的关键件；复用 Pi TUI 完成 `cognitive` 首次受治理会话，同时把"Pi 是 Shell 不是 authority"（PERS-PR-005）从纸面约束变成进程内可执行的拒绝。
-- **状态：** 以正式台账为准（[PERSONAL-DEVELOPMENT-PLAN.md](./PERSONAL-DEVELOPMENT-PLAN.md)）。
-- **证据/研究：** PI-01/PI-05/PI-06/PI-07（§7 来源表）；P0-T06 已固定 `@earendil-works/pi-coding-agent@0.81.1` 的版本/SRI/source commit/Node engine 于 `apps/pi-agent-adapter/src/lib.rs`，并交付 Extension fixture 与 strict-LF RPC parser；`apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 loopback front door、bootstrap secret 与 channel bearer（ADR-0022）；`crates/cognitive-secret` 已有 `ProviderKeyService`/`ProviderTransport`/`ProviderDiscoveryService`（ADR-0020/0021），但**仓库内无生产 `ProviderTransport` 实现，也无 HTTP/TLS 依赖**，且 Personal front door 单请求单连接、无 SSE。
+- **状态：** 以正式台账为准（[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)）。
+- **证据/研究：** PI-01/PI-05/PI-06/PI-07（§7 来源表）；P0-T06 已固定 `@earendil-works/pi-coding-agent@0.81.1` 的版本/SRI/source commit/Node engine 于 `personal/apps/pi-agent-adapter/src/lib.rs`，并交付 Extension fixture 与 strict-LF RPC parser；`personal/apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 loopback front door、bootstrap secret 与 channel bearer（ADR-0022）；`crates/cognitive-secret` 已有 `ProviderKeyService`/`ProviderTransport`/`ProviderDiscoveryService`（ADR-0020/0021），但**仓库内无生产 `ProviderTransport` 实现，也无 HTTP/TLS 依赖**，且 Personal front door 单请求单连接、无 SSE。
 - **依赖：** P0-T06（Pi 表面固定）、P1-T03、P1-T04、P1-T05。P0-T06 的剩余缺口是 Linux-native 上的运行时加载证据，不阻断本任务的接口实现，按台账"开发状态解耦"注记走 `experimental-local-only`。
 - **不包含：** 真实 Task API 与 watch（P2-T02）、scheduler/worker（P2-T03/T04）、受治理工具执行与 Tool Registry（P2-T05/T06）、Memory、MCP、多 Agent、Pi 供应链 provenance verifier（Pi P2）、OS sandbox（Pi P4）。不得 vendor 或分发 Pi/Node（ADR-0025）。
-- **文件：** 新增 `packages/pi-cognitiveos/`（`pi-api.ts` 固定 API 结构镜像、`pin.ts` 兼容 pin、`tool-policy.ts`、`daemon-discovery.ts`、`daemon-client.ts`、`status.ts`、`extension.ts`、`index.ts` 与对应测试）；修改 `pnpm-lock.yaml`（**不得**出现 `@earendil-works/*`）；后续批次修改 `apps/kernel-server/src/personal/{server,readiness}.rs` 并新增 `apps/kernel-server/tests/p1_t07_provider_proxy.rs`；无删除文件。
+- **文件：** 新增 `personal/packages/pi-cognitiveos/`（`pi-api.ts` 固定 API 结构镜像、`pin.ts` 兼容 pin、`tool-policy.ts`、`daemon-discovery.ts`、`daemon-client.ts`、`status.ts`、`extension.ts`、`index.ts` 与对应测试）；修改 `pnpm-lock.yaml`（**不得**出现 `@earendil-works/*`）；后续批次修改 `personal/apps/kernel-server/src/personal/{server,readiness}.rs` 并新增 `personal/apps/kernel-server/tests/p1_t07_provider_proxy.rs`；无删除文件。
 - **数据/API/配置/迁移：** 不新增 SQLite 表、不新增迁移。Extension 只读两个既有本地文件（`$XDG_STATE_HOME/cognitiveos/daemon-endpoint.json`、`$XDG_RUNTIME_DIR/cognitiveos/local-bootstrap.secret`），只调用既有 `POST /local/session` 与 `GET /personal/status`。daemon 侧新增 provider proxy 路由必须复用同一 bearer/bounds/错误信封；Pi 配置固定 version/integrity/package path，且 project trust 恒拒绝。
 - **步骤：** (1) Extension 包与默认拒绝的 tool 策略；(2) daemon 只读事实消费与显式失败路径；(3) daemon 侧 provider proxy 路由与生产 `ProviderTransport`（HTTP/TLS 依赖或子进程方案须单独决策并记录）；(4) `readiness.rs` 的 `pi` 组件从硬编码 `not_configured` 翻转为真实检查，**不改动既有聚合规则**（ADR-0023）；(5) 真实 Pi 进程加载证据（依赖 P0-T06 `extension-load`，须 Linux-native 主机）。
 - **验收：** direct `bash`/`write`/`edit` 禁用（且未分级工具不得放行）；无 API Key、无 env key、无 SQLite path；daemon unavailable 时明确失败且不得渲染为 ready；project trust 恒拒绝；Pi 不进入 lockfile；TS pin 与 Rust `PiCompatibilityPin` 无漂移。
@@ -720,7 +720,7 @@ Pi 不可以：
 ### P1-T08 — 可检查 Linux bundle installer 与 user service
 
 - **目标：** 支持 `curl -o install.sh; less; sh`，不是 `curl|sh`。
-- **文件：** 新增 `deploy/linux/install.sh`、manifest、systemd user unit、uninstall skeleton；修改 CI release dry-run。
+- **文件：** 新增 `personal/deploy/linux/install.sh`、manifest、systemd user unit、uninstall skeleton；修改 CI release dry-run。
 - **数据：** staged install state；不迁移用户数据直到 verifier通过。
 - **步骤：** platform check→download manifest/artifacts→digest/attestation→stage→candidate-service liveness→atomic switch→pointer/service confirmation；candidate liveness 只证明 daemon 存活，不证明 product readiness。
 - **bootstrap slice clarification (ADR-0029):** checked-in `install.sh` is an
@@ -741,7 +741,7 @@ Pi 不可以：
 
 - **目标：** 分阶段完成 route implementation、deterministic binary fixture、development smoke、usability learning 和 formal B01；只有最后一项决定 B01 Gate。
 - **依赖：** `implementation_requires`: P1-T08 及现有 Secret/Provider/daemon/Pi contracts；`acceptance_requires`: 当前 route 的真实 pinned Pi Extension load、真实首个响应、native Secret Service smoke 与可复现 runner；`promotion_requires`: formal B01 pass。
-- **文件：** route/fixture 使用现有内部 seam；formal campaign 新增 `tests/e2e/personal/b01-*` 和 evidence schema/runner。公共 DTO/schema/error/transition/vector 缺口走 Lane-CTR。
+- **文件：** route/fixture 使用现有内部 seam；formal campaign 新增 `personal/tests/e2e/personal/b01-*` 和 evidence schema/runner。公共 DTO/schema/error/transition/vector 缺口走 Lane-CTR。
 - **验收：** successor `002` 使用 ADR-0039 的固定 N=6 独立 clean Linux VM outcomes；六个 counted outcomes 均入账，至少 5 次成功，报告全部结果、median/p95 TTFC 与 binomial 95% CI；关键安全失败为 0，并有 affirmative independent-verifier closure。失败不重试/抹除；retained `001` 与 owner-waived transition Attempt 7 保持审计边界。除 API Key 与模型选择外无必选交互（ADR-0026）。TTFC p95 ≤10 min 在 owner 明确升级前保持 advisory。
 - **失败条件：** Key 泄漏、工具未禁用、daemon synthetic ready、模型仅凭 `/models`、漏报 attempt 或 test-root cleanup 失败。B01 只要求 disposable VM/owned test root cleanup；产品 uninstall 归 P7-T02，不构成 B01 循环依赖。
 - **证据：** logs、timestamps、versions、snapshot digests 和全部 attempt outcome，绝不含 Key。fixture/WSL/dev smoke 只推进 implementation evidence，不推进 B01。
@@ -755,10 +755,10 @@ Pi 不可以：
 
 - **优先级/目标/价值：** P2 首任务；把 L3/L4 意图链内核暴露为 L5 产品应用服务：proposal/clarify/preview/admit/control/query 六个操作面构成任务生命周期的唯一产品入口（§6 Task 行差距）。
 - **状态：** 以正式台账为准。
-- **证据/研究：** `crates/cognitive-kernel/src/intent_chain.rs` 已提供 `record_user_intent`、`record_interpretation_candidate`、`admit_interpretation`、`mint_task_contract`、`verify_task_binding_current`、`supersede_task_contract` 与 `GovernanceSeed`/`AcceptanceCommand`/`TaskContractCommand`；`cognitive-store` 已有 `user_intent_records`/`intent_interpretations`/`task_contracts`/`budgets`/`fencing` 表。缺口仅在应用服务与产品 ports（§6：无应用服务、API、queue）。
+- **证据/研究：** `core/crates/cognitive-kernel/src/intent_chain.rs` 已提供 `record_user_intent`、`record_interpretation_candidate`、`admit_interpretation`、`mint_task_contract`、`verify_task_binding_current`、`supersede_task_contract` 与 `GovernanceSeed`/`AcceptanceCommand`/`TaskContractCommand`；`cognitive-store` 已有 `user_intent_records`/`intent_interpretations`/`task_contracts`/`budgets`/`fencing` 表。缺口仅在应用服务与产品 ports（§6：无应用服务、API、queue）。
 - **依赖：** `implementation_requires`: 既有 authority/store/Intent/TaskContract contracts；`acceptance_requires`: P1-T09 route implementation 可集成；`promotion_requires`: B01 pass。`experimental-local-only` 可先行实现，不得把 B01 当作代码开工锁。
 - **不包含：** scheduler（P2-T03）、HTTP/API 路由（P2-T02）、Memory、多 Agent；不得新增平行 Task 类型或第二状态机（DEC-P-07）。
-- **文件：** 修改 `crates/cognitive-management`（task application service 模块与 ports）与 `crates/cognitive-runtime`（组合根接线）；复用 `intent_chain.rs`、TaskContract、budgets，不复制内核逻辑；新增 `crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`（先写失败测试）；无删除文件。
+- **文件：** 修改 `crates/cognitive-management`（task application service 模块与 ports）与 `crates/cognitive-runtime`（组合根接线）；复用 `intent_chain.rs`、TaskContract、budgets，不复制内核逻辑；新增 `personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs`（先写失败测试）；无删除文件。
 - **数据/API/配置/迁移：** 不新增 SQLite 表；若实测需要投影辅助结构，必须经 P1-T01 迁移框架并单独评审。服务操作：proposal（raw intent 持久化）、clarify（`AmbiguityFact`/`InterpretationCandidate`）、preview（TaskContract 摘要 + preview digest）、admit（`AcceptanceCommand` 绑定 digest）、control（supersede/cancel 请求）、query（只读投影）。
 - **步骤：** (1) service trait/DTO 定义，机器合同不足即停走 Lane-CTR，不建平行 DTO 真相源；(2) raw intent 先持久化再解释；(3) preview digest 生成与 admit 绑定校验；(4) 修订经 `supersede_task_contract` 产生新 epoch 并 fence 旧任务；(5) 组合根接线与负例。
 - **验收：** raw intent 先持久化（崩溃后可重放）；preview digest 与 admit 绑定（digest 不匹配拒绝）；修订产生新 epoch 并 fence 旧任务（`verify_task_binding_current` 拒绝旧绑定）；admission preview 是唯一默认人工授权点：批准即覆盖任务范围内 Tier 0 与既有授权下的 Tier 1 动作（ADR-0026）；预算在准入时冻结为硬轨。
@@ -773,7 +773,7 @@ Pi 不可以：
 
 - **目标/价值：** 把 P2-T01 服务经 Personal daemon 暴露为真实 Resource + Task API，替换 canned proposal/attach/detach/cancel/watch routes；用 private versioned Personal projection 统一呈现 Memory/Skill/Tool/Context/Task/Runtime；Pi-hosted Shell 经 pinned sidecar 与 deterministic CLI 调用相同 daemon application services（B02 基础）。
 - **状态：** 以正式台账为准。
-- **证据/研究：** `apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 front door 与 channel bearer（ADR-0022）；`packages/sdk-ts`/`apps/agent-shell` 现消费 M5 HTTP/SSE 面；Pi 表面由 P1-T07 `packages/pi-cognitiveos/` 承载。
+- **证据/研究：** `personal/apps/kernel-server/src/personal/{server,auth,bounds}.rs` 已有有界 front door 与 channel bearer（ADR-0022）；`packages/sdk-ts`/`apps/agent-shell` 现消费 M5 HTTP/SSE 面；Pi 表面由 P1-T07 `personal/packages/pi-cognitiveos/` 承载。
 - **依赖：** `implementation_requires`: P1-T07、P2-T01 与 task/management channel contracts；`acceptance_requires`: real API/watch、CLI/Shell parity 与 sidecar/client channel isolation；与 P2-T03 可并行（§12.1）。
 - **不包含：** scheduler/worker 执行（P2-T03/T04）；独立造类型（`packages/sdk-ts` 合同跟随 Lane-CTR，§12.2）。
 - **文件：** 修改 `apps/kernel-server`（resource/task channel 路由）、`packages/sdk-ts`、`apps/agent-shell`、P1-T07 Pi package/sidecar composition；新增 real API/watch 与 TS parity tests；公共合同变化一律经 Lane-CTR；无删除文件。
@@ -794,7 +794,7 @@ Pi 不可以：
 - **证据/研究：** `cognitive-store` 已有 `faults.rs` 故障注入与 `clock.rs`；lease/epoch fencing 模式可复用 `fencing` 表语义。
 - **依赖：** P1-T01、P2-T01；与 P2-T02 可并行（§12.1）。
 - **不包含：** Temporal/queue server 等外部编排；多 Agent 调度策略（P6-T01）；process supervisor（P2-T06）。
-- **文件：** `crates/cognitive-store` 新增 scheduler repository 模块（按 §12.2 先拆模块再占所有权，避开 `sqlite.rs` 热点）；`crates/cognitive-runtime` 新增 scheduler service；新增 `crates/cognitive-runtime/tests/p2_t03_scheduler_lease_timer.rs`；无删除文件。
+- **文件：** `crates/cognitive-store` 新增 scheduler repository 模块（按 §12.2 先拆模块再占所有权，避开 `sqlite.rs` 热点）；`crates/cognitive-runtime` 新增 scheduler service；新增 `personal/crates/cognitive-runtime/tests/p2_t03_scheduler_lease_timer.rs`；无删除文件。
 - **数据/API/配置/迁移：** 新增 scheduler 持久化：runnable、lease owner/epoch、next eligible、attempt、cancel request；**数据迁移必须由 P1-T01 框架执行**（migration 编号单一分配，§12.2）；配置：poll/timer 间隔、lease TTL、deadline/retry/step/cost ceilings。
 - **步骤：** (1) migration + repository（先失败测试）；(2) lease acquire/renew/expire 与 epoch fence；(3) timer/next-eligible 推进；(4) cancel request 传播；(5) crash/clock 故障注入。
 - **验收：** worker crash 后 lease 到期可被安全接管且旧 epoch 被 fence；duplicate lease 不可能（CAS 负例）；clock shift 不产生双派发或饿死（时钟策略明确记录）；deadline/retry/step/cost ceiling 到达即停并落 authority 事实；loop dispatch durable quiescence、pending Effect closure/quarantine proof 与 worker-side stop integration 不得用 evaluator return value 替代。
@@ -809,10 +809,10 @@ Pi 不可以：
 
 - **目标/价值：** 把 scheduler 拉起的任务接入真实链路：scheduler→TaskContract→Context port→pinned Pi sidecar→candidate→BoundedHarness/LoopDriver，形成 sidecar 仍非 authority 的产品 worker。
 - **状态：** 以正式台账为准。
-- **证据/研究：** `crates/cognitive-kernel/src/harness.rs`（`LoopDriver`）、`crates/cognitive-runtime/src/harness_loop.rs`（`BoundedHarness`）与 `loop_progress_facts` 表已存在。
+- **证据/研究：** `core/crates/cognitive-kernel/src/harness.rs`（`LoopDriver`）、`personal/crates/cognitive-runtime/src/harness_loop.rs`（`BoundedHarness`）与 `loop_progress_facts` 表已存在。
 - **依赖：** P2-T02、P2-T03。
 - **不包含：** durable Memory/Skill（P4）、MCP、dynamic Tool、多 Agent；不允许 Pi Extension 直接管理 daemon。
-- **文件：** `crates/cognitive-runtime` 新增 worker 模块（组装链路，不复制 harness 逻辑）；新增 `crates/cognitive-runtime/tests/p2_t04_worker_harness.rs`；无删除文件。
+- **文件：** `crates/cognitive-runtime` 新增 worker 模块（组装链路，不复制 harness 逻辑）；新增 `personal/crates/cognitive-runtime/tests/p2_t04_worker_harness.rs`；无删除文件。
 - **数据/API/配置/迁移：** 不新增表；progress facts 复用 `loop_progress_facts`；预算绑定取自 TaskContract，准入后为硬轨。
 - **步骤：** (1) worker 拉取 runnable + lease；(2) 每轮重载 contract/governance/lease 并解析真实 Context；(3) 通过 pinned Pi sidecar 请求 candidate；(4) BoundedHarness 判 progress；(5) no-progress/budget/stale-lease/wait-user 停机与恢复。
 - **验收：** 每轮重新加载 contract/governance/lease；Context required fragment fail-closed；sidecar 只能返回 candidate/proposal；模型 self-report 不算 progress；no-progress 触发 switch/block；wait-user 不消耗预算；budget stop 落 authority 事实；stale lease 立即终止且无状态写出。
@@ -827,10 +827,10 @@ Pi 不可以：
 
 - **目标/价值：** 建立 immutable native ToolDescriptor registry 与 Linux 1.0 useful family，使 tool call 只能转成 catalog-bound OperationCandidate：workspace read/search/write/patch、bounded process/check、read-only HTTP fetch。
 - **状态：** 以正式台账为准。
-- **证据/研究：** §6 Tools 现状 L1：`ToolAdapter`、executor ports 存在（`crates/cognitive-kernel/src/{effects,executor,ports}.rs`），无 Registry/real executor。
+- **证据/研究：** §6 Tools 现状 L1：`ToolAdapter`、executor ports 存在（`core/crates/cognitive-kernel/src/{effects,executor,ports}.rs`），无 Registry/real executor。
 - **依赖：** P2-T04。
 - **不包含：** MCP adapter/dynamic marketplace（P5-T03/T04）、unbounded generic Bash、未经 catalog 的任意网络 mutation。
-- **文件：** `crates/cognitive-runtime` 新增 tool_registry 模块；新增 `crates/cognitive-runtime/tests/p2_t05_tool_registry.rs`；无删除文件。
+- **文件：** `crates/cognitive-runtime` 新增 tool_registry 模块；新增 `personal/crates/cognitive-runtime/tests/p2_t05_tool_registry.rs`；无删除文件。
 - **数据/API/配置/迁移：** 建立 immutable descriptor：schema digest、risk、effect class、query/idempotency、sandbox、verification、health、state（enabled/disabled/quarantined），并含 ADR-0026 Tier 分类元数据；如需持久化经 P1-T01 迁移框架。
 - **步骤：** (1) descriptor/version/digest 与不可变性；(2) 注册/启停/隔离；(3) workspace read/search/write/patch；(4) bounded process/check；(5) read-only HTTP fetch；(6) candidate→operation 解析与错误实现自检。
 - **验收：** 未注册、schema drift、disabled/quarantined、伪造 capability 均拒绝且 **dispatch=0**；workspace 写/patch 受 scope/CAS/Intent-Effect；process/check 有 argv/env/cwd/output/time bounds；HTTP 只读、拒绝 redirect/credential/超限；每个可 mutation operation 具 stable idempotency/reconcile。
@@ -845,10 +845,10 @@ Pi 不可以：
 
 - **目标/价值：** 为 P2-T05 Tool family 提供 daemon-owned Tool/process executor 与 supervisor：stable identity、有界 cursor、timeout/stop/restart、fault handling 与 reconcile，使 Effect 协议在真实执行上落地。
 - **状态：** 以正式台账为准。
-- **证据/研究：** `crates/cognitive-kernel/src/{executor,effects}.rs` 的 Effect 协议与 `intents`/`outbox` 表；`crates/cognitive-runtime/src/sandbox.rs`；`cognitive-store/src/faults.rs` 故障注入模式。
+- **证据/研究：** `core/crates/cognitive-kernel/src/{executor,effects}.rs` 的 Effect 协议与 `intents`/`outbox` 表；`personal/crates/cognitive-runtime/src/sandbox.rs`；`cognitive-store/src/faults.rs` 故障注入模式。
 - **依赖：** P2-T05。
 - **不包含：** Linux-native OS sandbox 强化、Pi/sidecar package lifecycle（P5-T01/T02）、并行 executor 池；不新增 public Process domain。
-- **文件：** `crates/cognitive-runtime` 新增 process_supervisor/executor 模块；新增 `crates/cognitive-runtime/tests/p2_t06_process_executor.rs`；无删除文件。
+- **文件：** `crates/cognitive-runtime` 新增 process_supervisor/executor 模块；新增 `personal/crates/cognitive-runtime/tests/p2_t06_process_executor.rs`；无删除文件。
 - **数据/API/配置/迁移：** 新增 stable process/task/attempt/epoch identity、CWD、stdout/stderr cursor、timeout、stop、restart、reconcile 记录；持久化经 P1-T01 框架；配置：timeout、output limit、restart policy。
 - **步骤：** (1) Tool/process identity 与 **persist-before-dispatch**；(2) stdout/stderr/result cursor 与上限；(3) timeout/stop/restart；(4) before/mid/after dispatch fault injection；(5) orphan/outcome-unknown reconcile；(6) 幂等冲突拒绝。
 - **验收：** crash before/mid/after dispatch 三相故障后恢复且无重复副作用（稳定幂等键 + reconcile）；orphan 进程被发现并终止/对账；output limit 截断留证据；secret redaction（env/argv/log）负例通过；same-key/different-input 拒绝；stdout zero exit 只作为 evidence，不得直接判 Effect 成功或 Task 完成。
@@ -863,10 +863,10 @@ Pi 不可以：
 
 - **目标/价值：** 任务闭合证据链：把 checkpoint、effect closure、artifacts、criteria results、verification event 接入 task closure；完成只能由独立 verifier 判定（无假完成）。
 - **状态：** 以正式台账为准。
-- **证据/研究：** `checkpoints` 表与 kernel verification/acceptance 语义已存在（§6 Verification L4 core / Checkpoint L3）；`crates/cognitive-kernel/src/recovery.rs` 恢复协议与 `crates/cognitive-runtime/src/recovery_flow.rs`。
+- **证据/研究：** `checkpoints` 表与 kernel verification/acceptance 语义已存在（§6 Verification L4 core / Checkpoint L3）；`core/crates/cognitive-kernel/src/recovery.rs` 恢复协议与 `personal/crates/cognitive-runtime/src/recovery_flow.rs`。
 - **依赖：** P2-T03、P2-T04、P2-T06。
 - **不包含：** Memory 证据（P4）、性能 campaign（P7-T04）、多 Agent reviewer 编排（P6-T03）。
-- **文件：** `crates/cognitive-runtime` 新增 verifier service 与 closure 组装；新增 `crates/cognitive-runtime/tests/p2_t07_verifier_closure.rs`；无删除文件。
+- **文件：** `crates/cognitive-runtime` 新增 verifier service 与 closure 组装；新增 `personal/crates/cognitive-runtime/tests/p2_t07_verifier_closure.rs`；无删除文件。
 - **数据/API/配置/迁移：** criteria result（criterion、pass/fail/unknown、evidence digest）持久化经 P1-T01 框架；artifact 引用只接 P3-T03 的唯一 filesystem CAS + authority metadata contract，不建平行 store。P3-T03 未实现前用 stable port + failure-first fake，不把 fixture 当 acceptance。
 - **步骤：** (1) verifier port 与执行 agent 分离（独立代码路径与 principal）；(2) criteria evaluation→verification event；(3) effect closure 汇总（存在未闭合 Effect/OUTCOME_UNKNOWN 时拒绝闭合）；(4) partial completion 语义；(5) recovery 顺序严格使用现有 `recovery.rs`，不重排、不复制。
 - **验收：** verifier 与执行 agent 分离；每个 criterion 记录 pass/fail/unknown 与 evidence digest；Partial completion 不得升级为 completed；remote done 和 receipt 不够（须独立证据）；未闭合 Effect 存在时任务不得 completed。
@@ -884,7 +884,7 @@ Pi 不可以：
 - **证据/研究：** §13 B02/B04/B05/B12 规格与 §14 指标；依赖 P2-T01..T07 全链路。正式 Gate 环境不可得时，suite 本身可按 experimental-local-only 推进，Gate 结果保持 `not-run` + blocked 原因（台账解耦注记）。
 - **依赖：** P2-T07。
 - **不包含：** B01（P1-T09）、B03/B06/B07（P3-T06）、性能 campaign（P7-T04）。
-- **文件：** 新增 `tests/e2e/personal/b02|b04|b05|b12-*` 与 evidence schema/runner（复用 P1-T09 runner 骨架）；无删除文件。
+- **文件：** 新增 `personal/tests/e2e/personal/b02|b04|b05|b12-*` 与 evidence schema/runner（复用 P1-T09 runner 骨架）；无删除文件。
 - **数据/API/配置/迁移：** raw evidence 入 ignored `artifacts/evidence/personal/`；summary 带 suite digest 与 non-claim（§13 通则）。
 - **步骤：** (1) suite harness 与 UCR-01-compatible Task trace；(2) projection/watch 与 sidecar channel isolation；(3) Shell/daemon/process 故障和 OUTCOME_UNKNOWN；(4) false completion/盲重试负例；(5) ADR-0018 到期核查；(6) Tier-2 与 evidence redaction。
 - **验收：** 必须覆盖 Shell 关闭、daemon 关闭、OUTCOME_UNKNOWN、不盲重试（不换幂等键，原键可查证）、false completion negative；建议普通重启 authority state recovery=100%；False Completion Rate 在 gate suite 中必须 0/所有故意错误案例；核查 ADR-0018 本机开发例外已到期移除（或已替换为 daemon proxy 并重新批准），例外残留视为 Gate 不通过；B04 证据记录默认路径人工确认次数（目标 ≤1/task，Tier-2 除外），并含 Tier-2 负例：purge 类操作缺显式确认必须失败（ADR-0026）。
@@ -1135,7 +1135,7 @@ Pi 不可以：
 - 只渲染 system/provider/tasks/agents/processes/tokens/tools/memory/evidence projections。
 - 不直接打开数据库、不做授权/完成判定。
 - 不阻塞 RC CLI+Pi release。
-- 设计文档：[Web UI 产品设计](../product/personal/web-ui-design.md)、[Web UI 架构](../architecture/personal/web-ui-architecture.md)、[P7-T05 任务卡](./p7-t05-web-ui-task-card.md)、[route inventory](../architecture/personal/web-ui-route-inventory.json)。任务卡中的 D01-D10 是同一正式任务内的交付切片，不改变本任务的 post-1.0、non-blocking 边界。Owner 2026-08-23 将已关闭的 D01–D07 shell 重开为控制面板跟进；D08/D09 Linux-validated at kernel `881ebe82` / clients `c6b763b`（live key、binding CAS、Task admit、dsh Path B `assistant_ok`；HTTP cancel `not-run`）。Owner 2026-08-24 增补 D10：在 official clients checkout 中以 Apple-inspired 克制视觉完善 Provider shell/list/detail/status/action/loading/empty hierarchy，不改变 daemon API、SecretStore、binding CAS 或 Task 行为。Local clients `07f7513e` 已通过 29 tests、production build 与双 viewport review，但 official `agentkernel/cognitiveos-clients` push 被 GitHub HTTP 403 拒绝，remote branch / Draft PR 不存在；P7-T05 因此外部权限阻塞，恢复入口见 [D10 blocked closure](../checkpoints/20260824-personal-p7-t05-provider-webui-apple-theme-closure.md)。Approved checkout: `D:\cognitiveos-clients` (`pc/web/`)。
+- 设计文档：[Web UI 产品设计](../../personal/docs/product/web-ui-design.md)、[Web UI 架构](../../personal/docs/architecture/web-ui-architecture.md)、[P7-T05 任务卡](p7-t05-web-ui-task-card.md)、[route inventory](../../personal/docs/architecture/web-ui-route-inventory.json)。任务卡中的 D01-D10 是同一正式任务内的交付切片，不改变本任务的 post-1.0、non-blocking 边界。Owner 2026-08-23 将已关闭的 D01–D07 shell 重开为控制面板跟进；D08/D09 Linux-validated at kernel `881ebe82` / clients `c6b763b`（live key、binding CAS、Task admit、dsh Path B `assistant_ok`；HTTP cancel `not-run`）。Owner 2026-08-24 增补 D10：在 official clients checkout 中以 Apple-inspired 克制视觉完善 Provider shell/list/detail/status/action/loading/empty hierarchy，不改变 daemon API、SecretStore、binding CAS 或 Task 行为。Local clients `07f7513e` 已通过 29 tests、production build 与双 viewport review，但 official `agentkernel/cognitiveos-clients` push 被 GitHub HTTP 403 拒绝，remote branch / Draft PR 不存在；P7-T05 因此外部权限阻塞，恢复入口见 [D10 blocked closure](../checkpoints/20260824-personal-p7-t05-provider-webui-apple-theme-closure.md)。Approved checkout: `D:\cognitiveos-clients` (`pc/web/`)。
 
 ### P7-T06 — RC、文档、支持矩阵和B01-B12
 
@@ -1171,7 +1171,7 @@ Pi 不可以：
 
 ### P8-T01 — 文档体系重构与 2.0 设计基线
 
-- documentation-only；不改 specs/conformance。
+- documentation-only；不改 core/specs/conformance。
 - 交付：AXIOMS、白皮书 Personal 对齐章、product/architecture 扩展、ADR-0041+、台账修复。
 - 切片 D01 公理/规则 → D02 设计文档 → D03 收口。
 
@@ -1199,7 +1199,7 @@ Pi 不可以：
 
 ### P8-T07 — 独立双语 handbook 文档系统
 
-- 独立 `handbook/` 根：en 与 zh-CN 平行树，user/developer/reference/AI 四类读者入口；
+- 独立 `personal/handbook/` 根：en 与 zh-CN 平行树，user/developer/reference/AI 四类读者入口；
   informative 派生层，不建第二事实源，动态状态只链接 `PROGRESS.md` 不复制。
 - 机器模型：manifest、frontmatter JSON Schema、source-map、tracked-source coverage
   （全树分类，新文件未分类即失败）、per-page source fingerprint（内容 SHA-256 + 稳定
@@ -1254,8 +1254,8 @@ Pi 不可以：
 
 ### P8-T12 — Resource Manager common envelope
 
-- 为 `docs/product/personal/resource-manager-design.md` 与
-  `docs/architecture/personal/resource-manager-architecture.md` 落地已指定的
+- 为 `personal/docs/product/resource-manager-design.md` 与
+  `personal/docs/architecture/resource-manager-architecture.md` 落地已指定的
   `ResourceApplicationService` 词汇（list/inspect/watch/bind/unbind/enable/disable/revoke）。
 - management HTTP 信封；task 通道与 generic create/install/execute/complete 失败闭合。
 - list/inspect 只投影既有 authority 事实；Skill/Tool 变异接到既有 sinks。
@@ -1328,7 +1328,7 @@ Pi 不可以：
 本节是正式计划的研究级细化，不拥有 current status。`implementation_requires`、
 `acceptance_requires`、`promotion_requires` 的定义以正式计划为准；后两者不是 isolated
 implementation mutex。PERS-PR 映射由
-[personal-trace.yaml](./personal-trace.yaml) 承载。
+[personal-trace.yaml](personal-trace.yaml) 承载。
 
 后续 public contract 只登记 Lane-CTR prerequisites：`skill-manifest`、
 `operation-descriptor`、`agent-adapter-manifest`、TaskContract resource bindings、
@@ -1570,10 +1570,10 @@ full_rc_critical_path:
 
 | 路径 | 冲突风险 |
 |---|---|
-| `crates/cognitive-runtime/src/lib.rs` | Provider、Task、Scheduler、Process、Memory都可能触碰；必须按 phase串行 |
-| `crates/cognitive-store/src/sqlite.rs` | migrations、scheduler、memory；先拆模块再分别所有权 |
-| `apps/kernel-server/src/main.rs` | daemon/auth/routes；Phase 1后禁止并行大改 |
-| `apps/admin-cli/src/main.rs` | init/task/memory/agents/tools；先抽 shared client/service |
+| `personal/crates/cognitive-runtime/src/lib.rs` | Provider、Task、Scheduler、Process、Memory都可能触碰；必须按 phase串行 |
+| `personal/crates/cognitive-store/src/sqlite.rs` | migrations、scheduler、memory；先拆模块再分别所有权 |
+| `personal/apps/kernel-server/src/main.rs` | daemon/auth/routes；Phase 1后禁止并行大改 |
+| `personal/apps/admin-cli/src/main.rs` | init/task/memory/agents/tools；先抽 shared client/service |
 | `packages/sdk-ts` | API contract跟随 Lane-CTR，禁止独立造类型 |
 | `docs/plan/PROGRESS.md` | 后合并者负责 rebase |
 | migration目录 | migration编号必须单一分配，不可并行抢号 |

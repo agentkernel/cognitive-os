@@ -2,7 +2,7 @@
 
 - Campaign: `PERSONAL-PERF-EVAL-002` (owner-directed evaluation campaign,
   [Operating Model §2.5](../governance/DEVELOPMENT-OPERATING-MODEL.md))
-- Execution contract: [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md) v1.1
+- Execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
 - Freeze and per-cell execution record: [20260812-personal-perf-eval-002-preregistration.md](../checkpoints/20260812-personal-perf-eval-002-preregistration.md)
 - Source revisions: phases 1–2
   `4cbec8470bc7a19f23f978e8754ed20133122eb1`; recovered phase-3 `B6`

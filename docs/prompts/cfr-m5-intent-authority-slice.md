@@ -1,7 +1,7 @@
 # Lane-CFR 执行提示词：CFR-M5-INTENT-AUTHORITY-SLICE
 
 > 用法：将本文件全文粘贴到**新** Cursor Agent 会话（工作目录 = 仓库根 `agent-kernel`）。
-> Canonical 计划：[docs/plan/POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md)
+> Canonical 计划：[docs/plan/archive/POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md)
 > 公共前缀内联自 `docs/prompts/common-prefix.md`（修改需同步）。
 
 ---
@@ -13,7 +13,7 @@
 1. 读 `AGENTS.md`（命令速查、目录地图、DoD、红线）。
 2. 读 `docs/plan/PROGRESS.md`（当前里程碑/车道状态与开放 P0）。
 3. 读最近一份 `docs/checkpoints/*-handoff.md`（含 `20260721-post-v01-next-phase-planning-handoff.md`、`20260721-v01-auto-run-l3-handoff.md`、`20260721-v01-rereview.md`），并对照 `docs/plan/PARALLEL-LANES.md` 确认本车道边界与所有权后再动手。
-4. 只读核对：`docs/plan/POST-V01-NEXT-PHASE-PLAN.md`、`specs/registry/requirements.yaml`、`conformance/vectors/intent-supersede-002.json`、`conformance/vectors/intent-acceptance-007.json`、`docs/traceability/matrix.yaml`。
+4. 只读核对：`docs/plan/archive/POST-V01-NEXT-PHASE-PLAN.md`、`core/specs/registry/requirements.yaml`、`core/conformance/vectors/intent-supersede-002.json`、`core/conformance/vectors/intent-acceptance-007.json`、`docs/traceability/matrix.yaml`。
 
 ## 硬纪律（全程有效）
 
@@ -42,10 +42,10 @@
 
 必须先失败测试，再实现。复用已有真实测试作为 oracle：
 
-- supersede：`crates/cognitive-store/tests/m5_intent_chain.rs`，检查 epoch+1、pending effect=`reconcile_before_continue`、旧 epoch dispatch=`INTENT_VERSION_SUPERSEDED`、零 sink dispatch。
+- supersede：`personal/crates/cognitive-store/tests/m5_intent_chain.rs`，检查 epoch+1、pending effect=`reconcile_before_continue`、旧 epoch dispatch=`INTENT_VERSION_SUPERSEDED`、零 sink dispatch。
 - acceptance：现有 task acceptance behavior 与 `remote-completed-not-acceptance` 证据，但**不得**冒充 `INTENT-ACCEPTANCE-007` vector 已执行。
 
-工作包顺序：IA-0 → IA-1 → IA-2 → IA-3 → IA-4（IA-5 可选）；详见 [POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md) §C。
+工作包顺序：IA-0 → IA-1 → IA-2 → IA-3 → IA-4（IA-5 可选）；详见 [POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md) §C。
 
 ## DoD
 

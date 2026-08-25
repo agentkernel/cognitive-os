@@ -1,14 +1,20 @@
-version: "1.0"
+version: "1.1"
 repository_workspace: "d:/agent-kernel"
 repository_role: architecture-reference-plus-single-active-project
+# ADR-0054 subproject directory layout (one repository, one active project):
+subproject_roots:
+  core: cognitiveos-core (contracts/authority substrate; 1.0.0 finalized, core/docs/VERSION-1.0.0.md)
+  personal: cognitiveos-personal (sole active product; 1.0.0 finalized, personal/docs/VERSION-1.0.0.md)
+  enterprise: cognitiveos-enterprise (design-only; enterprise/docs/VERSION-1.0.0.md defines boundary and activation gate)
+  clients: imported cognitiveos-clients subproject (own governance; UI implementation path clients/pc/web)
 architecture_layer:
   id: cognitiveos-architecture
   status: reference-and-contract-foundation
   sources:
-    - docs/architecture/cognitiveos/CognitiveOS-Architecture.md
-    - docs/architecture/cognitiveos/RFC-0001-cognitiveos-governance-context-access.md
-    - specs/
-    - conformance/
+    - core/docs/architecture/CognitiveOS-Architecture.md
+    - core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md
+    - core/specs/
+    - core/conformance/
 active_project:
   id: cognitiveos-personal
   name: CognitiveOS Personal
@@ -16,8 +22,8 @@ active_project:
   formal_plan: docs/plan/PERSONAL-DEVELOPMENT-PLAN.md
   current_snapshot: docs/plan/PROGRESS.md
   lease_ledger: docs/plan/PARALLEL-LANES.md
-  product_design: docs/product/personal/README.md
-  architecture_design: docs/architecture/personal/README.md
+  product_design: personal/docs/product/README.md
+  architecture_design: personal/docs/architecture/README.md
 canonical_sources:
   project_identity: docs/governance/PROJECT-IDENTITY.md
   axioms: docs/governance/AXIOMS.md
@@ -56,7 +62,8 @@ work_policy:
 excluded_from_active_project:
   - personal-blog/
   - History/
-  - independent-client-product-implementation
+  - clients/ (in-repo client subproject with its own governance; not a P*-T* work surface by default)
+  - enterprise/ (design layer; implementation not authorized)
 claim_policy:
   local_fixture_wsl_and_ordinary_ci: non-claim-unless-gate-campaign-declares-them
   profile_implemented: requires-independent-applicable-must-evidence

@@ -11,23 +11,23 @@ This standard registers the governed object family as Draft 2020-12 normative ma
 
 ## 1. Registered v0.1 Draft contracts
 
-The following contracts are registered by the correspondingly named files under `specs/schemas/`:
+The following contracts are registered by the correspondingly named files under `core/specs/schemas/`:
 
 | Contract | Machine schema |
 |---|---|
-| ObjectReference | [object-reference.schema.json](../../specs/schemas/object-reference.schema.json) |
-| GovernedObjectHeader | [governed-object-header.schema.json](../../specs/schemas/governed-object-header.schema.json) |
-| GovernanceDomainContext | [governance-domain-context.schema.json](../../specs/schemas/governance-domain-context.schema.json) |
-| Principal | [principal.schema.json](../../specs/schemas/principal.schema.json) |
-| Membership | [membership.schema.json](../../specs/schemas/membership.schema.json) |
-| ActorChain | [actor-chain.schema.json](../../specs/schemas/actor-chain.schema.json) |
-| AuthorizationDelegation | [authorization-delegation.schema.json](../../specs/schemas/authorization-delegation.schema.json) |
-| ResourceScope | [resource-scope.schema.json](../../specs/schemas/resource-scope.schema.json) |
-| Conversation | [conversation.schema.json](../../specs/schemas/conversation.schema.json) |
-| ConversationBinding | [conversation-binding.schema.json](../../specs/schemas/conversation-binding.schema.json) |
-| AgentExecutionBinding | [agent-execution-binding.schema.json](../../specs/schemas/agent-execution-binding.schema.json) |
-| ExecutionContext | [execution-context.schema.json](../../specs/schemas/execution-context.schema.json) |
-| ActivityContext | [activity-context.schema.json](../../specs/schemas/activity-context.schema.json) |
+| ObjectReference | [object-reference.schema.json](../../core/specs/schemas/object-reference.schema.json) |
+| GovernedObjectHeader | [governed-object-header.schema.json](../../core/specs/schemas/governed-object-header.schema.json) |
+| GovernanceDomainContext | [governance-domain-context.schema.json](../../core/specs/schemas/governance-domain-context.schema.json) |
+| Principal | [principal.schema.json](../../core/specs/schemas/principal.schema.json) |
+| Membership | [membership.schema.json](../../core/specs/schemas/membership.schema.json) |
+| ActorChain | [actor-chain.schema.json](../../core/specs/schemas/actor-chain.schema.json) |
+| AuthorizationDelegation | [authorization-delegation.schema.json](../../core/specs/schemas/authorization-delegation.schema.json) |
+| ResourceScope | [resource-scope.schema.json](../../core/specs/schemas/resource-scope.schema.json) |
+| Conversation | [conversation.schema.json](../../core/specs/schemas/conversation.schema.json) |
+| ConversationBinding | [conversation-binding.schema.json](../../core/specs/schemas/conversation-binding.schema.json) |
+| AgentExecutionBinding | [agent-execution-binding.schema.json](../../core/specs/schemas/agent-execution-binding.schema.json) |
+| ExecutionContext | [execution-context.schema.json](../../core/specs/schemas/execution-context.schema.json) |
+| ActivityContext | [activity-context.schema.json](../../core/specs/schemas/activity-context.schema.json) |
 
 Schema registration does not claim implementation or conformance. A claim MUST pin the schema bundle digest, requirement set, implementation version, and evidence.
 
@@ -60,9 +60,9 @@ it does not waive authorization, policy, CAS, fencing, or purpose checks.
 
 The legacy `common-defs.schema.json#/$defs/strongRef` uses `version` and `digest`; it is not this contract. Migration MUST explicitly map them to `object_version` and `content_digest` and verify the digest.
 
-Migration status: the registered schema suite itself no longer uses the legacy shapes. All `specs/schemas/` contracts that previously referenced `common-defs.schema.json#/$defs/metadata` now carry a `GovernedObjectHeader` under the `header` property, and every `common-defs.schema.json#/$defs/strongRef` reference is replaced by `object-reference.schema.json#/$defs/strongReference`. The legacy `metadata`/`strongRef` definitions remain in `common-defs.schema.json` marked `deprecated`, reachable only through explicit legacy adapters under Section 6; they MUST NOT be referenced by new or migrated contracts.
+Migration status: the registered schema suite itself no longer uses the legacy shapes. All `core/specs/schemas/` contracts that previously referenced `common-defs.schema.json#/$defs/metadata` now carry a `GovernedObjectHeader` under the `header` property, and every `common-defs.schema.json#/$defs/strongRef` reference is replaced by `object-reference.schema.json#/$defs/strongReference`. The legacy `metadata`/`strongRef` definitions remain in `common-defs.schema.json` marked `deprecated`, reachable only through explicit legacy adapters under Section 6; they MUST NOT be referenced by new or migrated contracts.
 
-[REQ-GOBJ-REF-004] Default digest projection: unless an object family registers a more specific projection, `content_digest` is computed over the canonical bytes ([canonical-encoding-and-digest](./canonical-encoding-and-digest.md)) of the schema-valid object with exactly these JSON Pointer paths declared `digest_excluded`: the object's own `content_digest` field (`/metadata/content_digest` for common-defs metadata objects, `/header/content_digest` for GovernedObjectHeader objects) and its own `signature` field if present. No other path is excluded by default. This registration satisfies the canonical standard's requirement that self-referential fields be excluded by a named contract, not by convention; object families whose digest must cover additional derived stores register their own projection with a new version.
+[REQ-GOBJ-REF-004] Default digest projection: unless an object family registers a more specific projection, `content_digest` is computed over the canonical bytes ([canonical-encoding-and-digest](canonical-encoding-and-digest.md)) of the schema-valid object with exactly these JSON Pointer paths declared `digest_excluded`: the object's own `content_digest` field (`/metadata/content_digest` for common-defs metadata objects, `/header/content_digest` for GovernedObjectHeader objects) and its own `signature` field if present. No other path is excluded by default. This registration satisfies the canonical standard's requirement that self-referential fields be excluded by a named contract, not by convention; object families whose digest must cover additional derived stores register their own projection with a new version.
 
 ## 4. Binding consistency
 

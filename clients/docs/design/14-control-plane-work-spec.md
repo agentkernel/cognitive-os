@@ -1,0 +1,106 @@
+# 14 — Work Spec (Task & Run Inventory)
+
+- Phase 2 (design-only)
+- Date: 2026-08-24
+- Contract: `06` §3.2 (Work space), jobs J-K2/J-I1/J-I2, capability reality: **BD-3** (no rich task list; Resource Manager `list?family=task` is envelope-only, limit 64; no objective text, no state field beyond `health:"contracted"`). This spec is therefore written in two honesty tiers: **Tier-1 (ships on today's API)** and **Tier-2 (activates when BD-3 lands)** — same layout, deeper columns. The layout never lies about which tier it is in.
+- Layout: MID (master–inspector–detail) per shell `12` §4.
+
+---
+
+## 1. Master (the inventory)
+
+```text
+┌─────────────────────────────────────────────────────────────────────────┐
+│ Work                                              [+ New task]    ⌘K    │
+│ ┌─ Filter: state ▾ (all) · agent ▾ (all) · ▣ this session only ───────┐ │
+│ │                                                                      │ │
+│ │ ● a3f9c2…  workspace search        running      pi      4m     ›     │ │
+│ │ ○ b71c04…  workspace search        awaiting…    —       12m    ›     │ │
+│ │ ✓ 9e02f1…  workspace search        completed ✓  pi      26m    ›     │ │
+│ │ ■ 77be0a…  workspace search        failed       pi      1h     ›     │ │
+│ │ ■ d455e7…  workspace search        OUTCOME_UNKNOWN pi   41m    ›     │ │
+│ │                                                                      │ │
+│ │ Showing 5 known tasks · inventory is envelope-only (BD-3)            │ │
+│ └──────────────────────────────────────────────────────────────────────┘ │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+### Columns (Tier-1 / Tier-2)
+
+| Column | Tier-1 (today) | Tier-2 (BD-3) |
+|---|---|---|
+| State | from evidence/watch when observed this session; otherwise S7 `unknown` | daemon lifecycle field |
+| Task | short `task_ref` (mono) | + objective text |
+| Type | draft-type label (`workspace search`) | contract type |
+| Agent | when known from session/watch | bound agent |
+| Age | first-observed/updated | created/updated |
+| Evidence | ✓/■/— when evidence loaded this session | verification disposition |
+
+### Filter bar
+
+- State filter: the state-system vocabulary (multi-select chips); Agent filter; "this session only" toggle (default ON in Tier-1 — it is the honest set).
+- Sort: recency default; stable; no playful orderings.
+- The filter bar always shows the active filter as visible chips (recognition over recall).
+
+### The honesty footer (persistent in Tier-1)
+
+"Showing N known tasks · inventory is envelope-only (BD-3)" — one quiet caption line. Tier-2 removes it. This line is the difference between a partial list and a lying one.
+
+## 2. Inspector (selection)
+
+Selecting a row (single action) opens the inspector — the 5-minute layer:
+
+```text
+┌─ Inspector ─────────────────────────────┐
+│ task a3f9c2…                            │
+│ ● running · 4m                          │
+│ agent pi · draft workspace-search       │
+│                                         │
+│ contract  b91e…77  epoch 3              │
+│ admitted  12:41:07  by local/owner      │
+│                                         │
+│ effects   2 executed · 0 unknown        │
+│ evidence  not yet terminal              │
+│ watch     live · cursor 118             │
+│                                         │
+│ [Open detail]        [Copy task ref]    │
+│ Task cancel is not available over HTTP  │
+│ yet — `cognitive …` (BD-1)              │
+└─────────────────────────────────────────┘
+```
+
+- Facts: state+reason, agent, draft type, contract digest/epoch (mono, copyable), admission time/principal, effect rollup counts, evidence disposition, watch state.
+- Actions: Open detail (primary), Copy task ref, Attach/detach watch **[B]**. Class-C block for cancel/pause (DD-08): text + CLI path, not a button.
+- Inspector never edits. Editing happens in governed flows (preview→admit), never inline in a list.
+
+## 3. Detail relationship
+
+- Single action = select (inspector). Double action / `return` / "Open detail" = detail route `#/work/:taskRef` (replaces content region; master state preserved on back).
+- The inspector is the *triage* layer; the detail is the *work* layer. Nothing in the inspector requires the detail to be open; nothing in the detail requires returning to the list.
+
+## 4. New task entry
+
+`+ New task` (primary action, top-right of master) opens the governed creation flow (Flow 6 in `07`): objective → interpretation review (ambiguities first-class) → preview (digest) → admit. This is a full-route flow, not a modal — admission is a consequential act and deserves a route, focus management, and a review step.
+
+## 5. States
+
+| State | Master rendering |
+|---|---|
+| Empty (no tasks ever observed) | "No work observed yet." + primary action "New task" + quiet note that the daemon's list is envelope-only |
+| Loading | stable column skeleton (static bars, no shimmer) |
+| Partial (evidence/envelope mismatch) | row-level S7 on the missing facet only |
+| Stale | "as of <age>" in the footer + refresh affordance |
+| Denied | channel explanation + session gate link |
+| Disconnected | last-good list labeled; no fabrication |
+| Tier transition (BD-3 lands) | footer disappears; columns deepen; no layout shift |
+
+## 6. Behavior rules
+
+1. The list is **stable**: rows never reorder while the pointer hovers; live updates mark rows changed-since-view with a quiet dot, re-sort on next explicit refresh.
+2. Row selection is preserved across refresh by `task_ref`, not by index.
+3. Counts in the filter bar reflect the *loaded* set, labeled as such in Tier-1.
+4. Copy affordances: task_ref, contract digest, evidence digest — one click, mono, with copied confirmation (subtle, inline).
+
+---
+
+*Detail route specified in `15-control-plane-work-detail-spec.md`. The Run reading lives there; the inventory's job is triage, not narration.*

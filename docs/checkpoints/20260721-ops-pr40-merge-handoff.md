@@ -30,7 +30,7 @@
 
 ## 5. 下一步入口
 
-- 建议：按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md) §B P1 → shell channel readiness（RUN authority deny → CFR）。
+- 建议：按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md) §B P1 → shell channel readiness（RUN authority deny → CFR）。
 - 第一个动作：`git fetch origin main && git checkout main && git pull`；新开 `lane/run-shell-channel-authority` 或 CFR discovery 批。
 
 ## 6. 快照

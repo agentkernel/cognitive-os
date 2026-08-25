@@ -2,8 +2,8 @@
 
 ## 1. 本次会话完成
 
-- Canonical 计划：[docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)（A–G）
-- 战役附录：[docs/plan/V01-PERF-CAMPAIGN-PLAN.md](../plan/V01-PERF-CAMPAIGN-PLAN.md)（默认不执行）
+- Canonical 计划：[docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/archive/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)（A–G）
+- 战役附录：[docs/plan/V01-PERF-CAMPAIGN-PLAN.md](../plan/archive/V01-PERF-CAMPAIGN-PLAN.md)（默认不执行）
 - 一键入口：`pnpm run verify:local` → `scripts/v01-auto-run-entry.mjs` → `scripts/v01-auto-run.ps1` / `.sh`
 - Summary 模板：[docs/plan/templates/v01-auto-run-summary.schema.json](../plan/templates/v01-auto-run-summary.schema.json)
 - 提示词：`docs/prompts/v01-auto-{boot-connect,verify-regress,perf-report,orchestrator}.md`

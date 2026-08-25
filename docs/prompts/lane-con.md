@@ -16,7 +16,7 @@
 
 ## 车道范围（当前 = informative 文档例外；实现仍由后端 gate 阻断）
 
-- **所有权**：`apps/cognitiveos-console/`、`docs/platforms/`；DEVELOPMENT-PLAN §2 Console 依赖表。共享治理文件由 Lane-DOC 协作。
+- **所有权**：`clients/legacy/cognitiveos-console/`、`clients/docs/platforms/`；DEVELOPMENT-PLAN §2 Console 依赖表。共享治理文件由 Lane-DOC 协作。
 - **当前任务（激活前）**：
   1. 维护 DEVELOPMENT-PLAN §2 Console 依赖表：九组依赖（源自 PRODUCT-DESIGN §20.3）随 M2/M4/M5/M6/M7 交付逐项打勾并链接证据。
   2. 在批准的窄幅例外内维护 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix 与治理说明。
@@ -34,8 +34,8 @@
 
 ## 相关规范路径
 
-`apps/cognitiveos-console/PRODUCT-DESIGN.md` §17（MVP 与路线图）、§17.1（排除项）、§20.3（后端依赖结论）；`docs/platforms/README.md`（平台实现 gate）；`docs/plan/DEVELOPMENT-PLAN.md` §2 Console 节；`.cursor/rules/11-typescript-clients.mdc`。
+`clients/legacy/cognitiveos-console/PRODUCT-DESIGN.md` §17（MVP 与路线图）、§17.1（排除项）、§20.3（后端依赖结论）；`clients/docs/platforms/README.md`（平台实现 gate）；`docs/plan/archive/DEVELOPMENT-PLAN.md` §2 Console 节；`.cursor/rules/11-typescript-clients.mdc`。
 
 ## 第一个动作
 
-读 DEVELOPMENT-PLAN §2 Console 依赖表、`docs/platforms/README.md` 与 PROGRESS，确认本次任务是依赖台账、批准的 informative 文档范围还是 gate 后实现；若不在三者内，如实记录后结束。
+读 DEVELOPMENT-PLAN §2 Console 依赖表、`clients/docs/platforms/README.md` 与 PROGRESS，确认本次任务是依赖台账、批准的 informative 文档范围还是 gate 后实现；若不在三者内，如实记录后结束。

@@ -25,15 +25,15 @@ reconciliation 和 quarantine；Context 在排序前进行授权和预算过滤�
 
 主要证据包括：
 
-- `crates/cognitive-kernel/src/effects.rs`
-- `crates/cognitive-kernel/src/replay.rs`
-- `crates/cognitive-kernel/src/recovery.rs`
-- `crates/cognitive-kernel/src/context.rs`
-- `apps/kernel-server/src/personal/verification_executor.rs`
-- `crates/cognitive-runtime/src/dynamic_tool_ecosystem.rs`
-- `crates/cognitive-store/tests/m4_effects.rs`
-- `crates/cognitive-store/tests/m4_recovery.rs`
-- `crates/cognitive-store/tests/m4_tracer_bullet.rs`
+- `core/crates/cognitive-kernel/src/effects.rs`
+- `core/crates/cognitive-kernel/src/replay.rs`
+- `core/crates/cognitive-kernel/src/recovery.rs`
+- `core/crates/cognitive-kernel/src/context.rs`
+- `personal/apps/kernel-server/src/personal/verification_executor.rs`
+- `personal/crates/cognitive-runtime/src/dynamic_tool_ecosystem.rs`
+- `personal/crates/cognitive-store/tests/m4_effects.rs`
+- `personal/crates/cognitive-store/tests/m4_recovery.rs`
+- `personal/crates/cognitive-store/tests/m4_tracer_bullet.rs`
 
 DeepSeek Harness 不是空壳 Harness。它拥有 Cordis 组合的模型、工具、Session、Loop、
 Sandbox、Persistence、UI 和 Subagent。Session log 具备事件序列、tool call/result 配对、
@@ -114,7 +114,7 @@ CognitiveOS Governance Kernel
 | Roadmap | 尚未实现的目标 |
 
 CognitiveOS 当前状态以 `docs/plan/PROGRESS.md` 为准；架构合同以
-`docs/governance/AXIOMS.md`、`specs/` 和 accepted ADR 为准。DeepSeek Harness 和 Cordis
+`docs/governance/AXIOMS.md`、`core/specs/` 和 accepted ADR 为准。DeepSeek Harness 和 Cordis
 均使用完整本地 clone、固定 commit，并通过 Git object connectivity 检查。
 
 ### Non-claim / 非声明

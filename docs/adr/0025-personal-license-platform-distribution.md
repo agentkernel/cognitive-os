@@ -7,7 +7,7 @@
   CognitiveOS specification requirement, registry REQ, schema, transition,
   vector, Profile claim, G0 claim, or B01-B12 claim.
 - Supersedes: open items P-1 / partial P-2 in
-  `docs/plan/DEVELOPMENT-PLAN.md` section 6 for Personal scope
+  `docs/plan/archive/DEVELOPMENT-PLAN.md` section 6 for Personal scope
 - Related: P0-T01 baseline, ADR-0018/0020 secret boundary, P0-T06 Pi pin,
   P1-T08 Linux installer, P7-T01 release/SBOM
 - Updated by: ADR-0036. The no-vendoring/no-Node-bundle decision remains in
@@ -111,7 +111,7 @@ fallback remains forbidden.
   silent second license or vendor Pi.
 - P7-T01 must generate SBOM/attestation; this ADR's curated inventory is not a
   substitute SBOM.
-- `docs/plan/DEVELOPMENT-PLAN.md` pending P-1 is closed for Personal; P-2 is
+- `docs/plan/archive/DEVELOPMENT-PLAN.md` pending P-1 is closed for Personal; P-2 is
   partially closed (GitHub Release yes; registry publish still no).
 
 ## Rejected alternatives

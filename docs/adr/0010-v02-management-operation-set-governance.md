@@ -5,7 +5,7 @@
 - Decision owners: repository owner and CognitiveOS maintainers
 - Classification: structural design governance; docs-only; no machine registration
 - Baseline: `origin/main@41fce4dea27c5bfed515d8dcf8b078200eccb901` (PR #50 merge)
-- Decision packet: [V02-CA-OPS-01](../plan/V02-CA-OPS-DESIGN-DECISION.md)
+- Decision packet: [V02-CA-OPS-01](../plan/archive/V02-CA-OPS-DESIGN-DECISION.md)
 
 ## Context
 
@@ -63,7 +63,7 @@ If owner review rejects or materially changes this model, do not register machin
 
 On 2026-07-23 the owner authorized the recommended docs-only NO-GO path after a
 new eligibility audit at `origin/main@54929f1ed8fef1e09ffbb5593633f5d94d5e281e`.
-[V02-CA-OPS-REG-READINESS-01](../plan/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
+[V02-CA-OPS-REG-READINESS-01](../plan/archive/V02-CA-OPS-REGISTRATION-ELIGIBILITY-AUDIT.md)
 confirms that all eight candidates and the generic foundation remain ineligible.
 This is a delivery/readiness record, not a change to the decision, a machine
 registration, or an exception to independent review and CA-0 gates.

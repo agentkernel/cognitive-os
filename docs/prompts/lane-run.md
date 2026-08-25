@@ -16,7 +16,7 @@
 
 ## 车道范围（M4 后启动；M5–M6 主线）
 
-- **所有权**：`crates/cognitive-runtime`、`crates/cognitive-management`、`crates/cognitive-akp`、`apps/kernel-server`、`apps/admin-cli`；`tests/e2e/`。
+- **所有权**：`crates/cognitive-runtime`、`crates/cognitive-management`、`crates/cognitive-akp`、`apps/kernel-server`、`apps/admin-cli`；`personal/tests/e2e/`。
 - **工作分支**：`lane/run`。
 - 任务：
   1. **M5**：Operation 执行器（经 kernel Effect 协议 dispatch）、有界 Harness Loop（进展/停滞判定）、Management API + PrivilegedManagementSession + 确定性 admin CLI（无模型 inspect/stop/revoke/reconcile）、AKP envelope + HTTP JSON + SSE watch（ADR-0003 五条绑定规则）、任务 Shell 服务端语义、R1 聊天内结构化确认（IMP-05 最低集）。
@@ -30,7 +30,7 @@
 
 ## 相关规范路径
 
-`docs/standards/akp-envelope-and-http-profile.md`、`task-loop-verification.md`、`event-audit-watch.md`、`authn-authz-capability.md` §5；`specs/akp/README.md`、`specs/agent-compatibility/README.md`、`specs/core/README.md` §12.1；`specs/schemas/privileged-management-session/management-action-proposal/management-approval-decision/agent-package-manifest/agent-installation`；向量组 `management-*`、`shell-*`、`agent-*`、`harness-*`；`docs/adr/0003`；DEVELOPMENT-PLAN M5/M6 验收清单。
+`docs/standards/akp-envelope-and-http-profile.md`、`task-loop-verification.md`、`event-audit-watch.md`、`authn-authz-capability.md` §5；`core/specs/akp/README.md`、`core/specs/agent-compatibility/README.md`、`core/specs/core/README.md` §12.1；`core/specs/schemas/privileged-management-session/management-action-proposal/management-approval-decision/agent-package-manifest/agent-installation`；向量组 `management-*`、`shell-*`、`agent-*`、`harness-*`；`docs/adr/0003`；DEVELOPMENT-PLAN M5/M6 验收清单。
 
 ## 入口 gate 与验收
 

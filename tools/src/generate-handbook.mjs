@@ -1,18 +1,18 @@
 /**
  * Handbook reference-page generator.
  *
- * Every `generated: true` page in handbook/_meta/manifest.json is produced
+ * Every `generated: true` page in personal/handbook/_meta/manifest.json is produced
  * here from implementation sources and registered machine contracts, in both
  * locales, deterministically (stable ordering, no timestamps). Hand edits to
  * generated pages are rejected by tools/src/check-handbook.mjs (HB010).
  *
  * Extraction is deliberately literal-based and cross-checked against small
- * hand-maintained annotation files under handbook/_meta/annotations/: an
+ * hand-maintained annotation files under personal/handbook/_meta/annotations/: an
  * extracted value without an annotation, or an annotation without a matching
  * literal in the sources, fails generation. Annotations therefore cannot rot.
  *
  * Usage:
- *   node tools/src/generate-handbook.mjs           # write pages into handbook/
+ *   node tools/src/generate-handbook.mjs           # write pages into personal/handbook/
  *   node tools/src/generate-handbook.mjs --check   # fail on any byte difference
  */
 
@@ -83,24 +83,24 @@ function assertBidirectional(extracted, annotated, family) {
 // ---------------------------------------------------------------------------
 
 function buildErrors(readSource) {
-  const source = "specs/registry/errors.yaml";
+  const source = "core/specs/registry/errors.yaml";
   const registry = YAML.parse(readSource(source));
   const rows = [...registry.errors].sort((a, b) => (a.code < b.code ? -1 : 1));
   const table = rows
     .map((e) => `| \`${e.code}\` | ${e.category} | ${e.retryable ? "yes" : "no"} | ${e.description.replaceAll("|", "\\|")} |`)
     .join("\n");
-  const en = `# Registered error codes\n\nAll ${rows.length} registered error codes from [\`specs/registry/errors.yaml\`](../../../specs/registry/errors.yaml). Clients must treat unregistered codes as fail-closed protocol errors; the daemon never invents codes outside this registry.\n\n| Code | Category | Retryable | Description |\n|---|---|---|---|\n${table}\n`;
-  const zh = `# 注册错误码\n\n以下 ${rows.length} 个错误码全部来自 [\`specs/registry/errors.yaml\`](../../../specs/registry/errors.yaml)。客户端必须将未注册的错误码按 fail-closed 协议错误处理；daemon 不会产生此注册表之外的错误码。\n\n| 错误码 | 类别 | 可重试 | 描述 |\n|---|---|---|---|\n${table}\n`;
+  const en = `# Registered error codes\n\nAll ${rows.length} registered error codes from [\`core/specs/registry/errors.yaml\`](../../../../core/specs/registry/errors.yaml). Clients must treat unregistered codes as fail-closed protocol errors; the daemon never invents codes outside this registry.\n\n| Code | Category | Retryable | Description |\n|---|---|---|---|\n${table}\n`;
+  const zh = `# 注册错误码\n\n以下 ${rows.length} 个错误码全部来自 [\`core/specs/registry/errors.yaml\`](../../../../core/specs/registry/errors.yaml)。客户端必须将未注册的错误码按 fail-closed 协议错误处理；daemon 不会产生此注册表之外的错误码。\n\n| 错误码 | 类别 | 可重试 | 描述 |\n|---|---|---|---|\n${table}\n`;
   return { sources: [source], bodies: { en, "zh-CN": zh } };
 }
 
 function buildTransitions(readSource) {
   const domains = ["agent-execution", "effect", "loop", "task", "verification"];
-  const sources = domains.map((d) => `specs/transitions/${d}.transitions.json`);
+  const sources = domains.map((d) => `core/specs/transitions/${d}.transitions.json`);
   const sectionsEn = [];
   const sectionsZh = [];
   for (const domain of domains) {
-    const table = JSON.parse(readSource(`specs/transitions/${domain}.transitions.json`));
+    const table = JSON.parse(readSource(`core/specs/transitions/${domain}.transitions.json`));
     const edges = table.transitions
       .map((t) => `| \`${t.from}\` | \`${t.to}\` | ${t.reason_codes.map((r) => `\`${r}\``).join(", ")} | ${(t.guards ?? []).map((g) => `\`${g}\``).join(", ") || "—"} |`)
       .join("\n");
@@ -110,21 +110,21 @@ function buildTransitions(readSource) {
     sectionsEn.push(head + metaEn);
     sectionsZh.push(head + metaZh);
   }
-  const en = `# Registered state machines\n\nThe five registered execution-lifecycle domains from \`specs/transitions/\` and \`specs/registry/state-domains.yaml\`. Only the Rust daemon commits these transitions, through the central deterministic gate; every edge additionally requires its listed guards and evidence at commit time.\n${sectionsEn.join("")}`;
-  const zh = `# 注册状态机\n\n来自 \`specs/transitions/\` 与 \`specs/registry/state-domains.yaml\` 的五个注册执行生命周期域。只有 Rust daemon 能通过中心确定性门提交这些迁移；每条边在提交时还需满足所列守卫与证据。\n${sectionsZh.join("")}`;
-  return { sources: [...sources, "specs/registry/state-domains.yaml"], bodies: { en, "zh-CN": zh } };
+  const en = `# Registered state machines\n\nThe five registered execution-lifecycle domains from \`core/specs/transitions/\` and \`core/specs/registry/state-domains.yaml\`. Only the Rust daemon commits these transitions, through the central deterministic gate; every edge additionally requires its listed guards and evidence at commit time.\n${sectionsEn.join("")}`;
+  const zh = `# 注册状态机\n\n来自 \`core/specs/transitions/\` 与 \`core/specs/registry/state-domains.yaml\` 的五个注册执行生命周期域。只有 Rust daemon 能通过中心确定性门提交这些迁移；每条边在提交时还需满足所列守卫与证据。\n${sectionsZh.join("")}`;
+  return { sources: [...sources, "core/specs/registry/state-domains.yaml"], bodies: { en, "zh-CN": zh } };
 }
 
 function buildSchemas(readSource, trackedPaths) {
-  const schemaPaths = trackedPaths.filter((p) => p.startsWith("specs/schemas/") && p.endsWith(".json")).sort();
+  const schemaPaths = trackedPaths.filter((p) => p.startsWith("core/specs/schemas/") && p.endsWith(".json")).sort();
   const rows = schemaPaths.map((p) => {
     const doc = JSON.parse(readSource(p));
     const title = (doc.title ?? "").replaceAll("|", "\\|");
-    return `| [\`${doc.$id}\`](../../../${p}) | ${title} |`;
+    return `| [\`${doc.$id}\`](../../../../${p}) | ${title} |`;
   });
-  const en = `# Registered JSON Schemas\n\nAll ${schemaPaths.length} machine schemas under \`specs/schemas/\`. Each schema's \`$id\` equals its file name and relative \`$ref\`s resolve from the containing file. Shape truth lives in the schemas; generated Rust/TypeScript bindings (see \`crates/cognitive-contracts\`) are shape-level projections. Schema additions/removals are caught by regenerating this page (HB010), not by its fingerprint.\n\n| $id | Title |\n|---|---|\n${rows.join("\n")}\n`;
-  const zh = `# 注册 JSON Schema\n\n\`specs/schemas/\` 下全部 ${schemaPaths.length} 个机器 schema。每个 schema 的 \`$id\` 等于其文件名，相对 \`$ref\` 从所在文件解析。形状真相在 schema 本身；生成的 Rust/TypeScript 绑定（见 \`crates/cognitive-contracts\`）只是形状级投影。schema 的增删由本页重生成比对（HB010）捕获，而非指纹。\n\n| $id | 标题 |\n|---|---|\n${rows.join("\n")}\n`;
-  return { sources: ["crates/cognitive-contracts/src/bin/contracts-codegen.rs"], bodies: { en, "zh-CN": zh } };
+  const en = `# Registered JSON Schemas\n\nAll ${schemaPaths.length} machine schemas under \`core/specs/schemas/\`. Each schema's \`$id\` equals its file name and relative \`$ref\`s resolve from the containing file. Shape truth lives in the schemas; generated Rust/TypeScript bindings (see \`crates/cognitive-contracts\`) are shape-level projections. Schema additions/removals are caught by regenerating this page (HB010), not by its fingerprint.\n\n| $id | Title |\n|---|---|\n${rows.join("\n")}\n`;
+  const zh = `# 注册 JSON Schema\n\n\`core/specs/schemas/\` 下全部 ${schemaPaths.length} 个机器 schema。每个 schema 的 \`$id\` 等于其文件名，相对 \`$ref\` 从所在文件解析。形状真相在 schema 本身；生成的 Rust/TypeScript 绑定（见 \`crates/cognitive-contracts\`）只是形状级投影。schema 的增删由本页重生成比对（HB010）捕获，而非指纹。\n\n| $id | 标题 |\n|---|---|\n${rows.join("\n")}\n`;
+  return { sources: ["core/crates/cognitive-contracts/src/bin/contracts-codegen.rs"], bodies: { en, "zh-CN": zh } };
 }
 
 function extractRustStringConst(text, constName) {
@@ -142,7 +142,7 @@ function extractRustStringConst(text, constName) {
 }
 
 function buildCliCognitive(readSource) {
-  const source = "apps/admin-cli/src/personal_cli/mod.rs";
+  const source = "personal/apps/admin-cli/src/personal_cli/mod.rs";
   const usage = extractRustStringConst(readSource(source), "COGNITIVE_USAGE");
   const intro = {
     en: `# \`cognitive\` CLI\n\nThe deterministic Personal product CLI (binary \`cognitive\`, crate \`admin-cli\`). It is a non-authority client: it prepares layout/configuration, launches and observes the daemon, and reads authenticated projections. \`resource list|inspect|bind|unbind|enable|disable|revoke\` call the management Resource Manager; \`resource get|watch\` remain the private six-family projection. \`provider\`, \`agent binding\`, \`usage\`, \`budget\`, \`alerts\`, and \`audit\` call the management Provider Control Plane; keys use \`--api-key-file\` only.\n\nVerbatim usage text from \`COGNITIVE_USAGE\`:\n`,
@@ -153,7 +153,7 @@ function buildCliCognitive(readSource) {
 }
 
 function buildCliAdmin(readSource) {
-  const source = "apps/admin-cli/src/main.rs";
+  const source = "personal/apps/admin-cli/src/main.rs";
   const usage = extractRustStringConst(readSource(source), "USAGE");
   const intro = {
     en: `# \`admin-cli\` CLI\n\nThe deterministic management fallback (no model dependency). Verbs run against the SQLite WAL authority store through the central deterministic gate; every mutation is gated by a privileged management session document. Note: the \`install --mode official\` usage line omits \`--package-id\`, which the implementation requires (a recorded implementation gap).\n\nVerbatim usage text from \`USAGE\`:\n`,
@@ -164,8 +164,8 @@ function buildCliAdmin(readSource) {
 }
 
 function buildToolCatalog(readSource) {
-  const source = "crates/cognitive-kernel/src/tool_registry.rs";
-  const annotationPath = "handbook/_meta/annotations/tool-catalog.json";
+  const source = "core/crates/cognitive-kernel/src/tool_registry.rs";
+  const annotationPath = "personal/handbook/_meta/annotations/tool-catalog.json";
   const text = readSource(source);
   const extracted = [...new Set([...text.matchAll(/"(native\.[a-z-]+\.[a-z-]+)"/g)].map((m) => m[1]))].sort();
   const annotations = JSON.parse(readSource(annotationPath));
@@ -180,22 +180,22 @@ function buildToolCatalog(readSource) {
 }
 
 function buildHttpApi(readSource, trackedPaths) {
-  const annotationPath = "handbook/_meta/annotations/http-routes.json";
+  const annotationPath = "personal/handbook/_meta/annotations/http-routes.json";
   const annotations = JSON.parse(readSource(annotationPath));
   const definitionSources = [
-    "apps/kernel-server/src/personal/task_api.rs",
-    "apps/kernel-server/src/personal/resource_api.rs",
-    "apps/kernel-server/src/personal/resource_manager.rs",
-    "apps/kernel-server/src/personal/provider_control_plane.rs",
+    "personal/apps/kernel-server/src/personal/task_api.rs",
+    "personal/apps/kernel-server/src/personal/resource_api.rs",
+    "personal/apps/kernel-server/src/personal/resource_manager.rs",
+    "personal/apps/kernel-server/src/personal/provider_control_plane.rs",
   ];
   const corpusSources = [
     ...definitionSources,
-    "apps/kernel-server/src/personal/server.rs",
-    "apps/kernel-server/src/personal/pi_runtime.rs",
-    "apps/kernel-server/src/personal/tool_lifecycle.rs",
-    "apps/kernel-server/src/personal/pinned_https.rs",
-    "apps/kernel-server/src/personal/observation.rs",
-    "packages/pi-cognitiveos/src/daemon-client.ts",
+    "personal/apps/kernel-server/src/personal/server.rs",
+    "personal/apps/kernel-server/src/personal/pi_runtime.rs",
+    "personal/apps/kernel-server/src/personal/tool_lifecycle.rs",
+    "personal/apps/kernel-server/src/personal/pinned_https.rs",
+    "personal/apps/kernel-server/src/personal/observation.rs",
+    "personal/packages/pi-cognitiveos/src/daemon-client.ts",
   ];
   // Reverse check: every path-shaped literal in the definition files is annotated.
   const literalPattern = /"(?:GET |POST )?(\/(?:local|personal|provider|resource|task|management|chat)\/[a-z0-9_./-]*[a-z0-9])/g;
@@ -234,11 +234,15 @@ function buildHttpApi(readSource, trackedPaths) {
 }
 
 function buildEnvVars(readSource, trackedPaths) {
-  const annotationPath = "handbook/_meta/annotations/env-vars.json";
+  const annotationPath = "personal/handbook/_meta/annotations/env-vars.json";
   const annotations = JSON.parse(readSource(annotationPath));
   const scanPaths = trackedPaths.filter(
     (p) =>
-      (p.startsWith("apps/") || p.startsWith("packages/") || p.startsWith("crates/")) &&
+      (p.startsWith("core/crates/") ||
+        p.startsWith("core/packages/") ||
+        p.startsWith("personal/crates/") ||
+        p.startsWith("personal/apps/") ||
+        p.startsWith("personal/packages/")) &&
       (p.endsWith(".rs") || p.endsWith(".ts") || p.endsWith(".mjs")) &&
       !p.includes("/tests/") &&
       !p.includes(".test.") &&
@@ -273,7 +277,7 @@ function buildEnvVars(readSource, trackedPaths) {
 }
 
 function buildConfigFiles(readSource) {
-  const annotationPath = "handbook/_meta/annotations/config-files.json";
+  const annotationPath = "personal/handbook/_meta/annotations/config-files.json";
   const annotations = JSON.parse(readSource(annotationPath));
   for (const entry of annotations.files) {
     const text = readSource(entry.declared_in);
@@ -312,7 +316,7 @@ const FAMILY_BUILDERS = {
  */
 export function buildGeneratedPages({ readSource, manifest, trackedPaths = [] }) {
   const output = new Map();
-  const localeRoots = manifest.locale_roots ?? { en: "handbook/en", "zh-CN": "handbook/zh-CN" };
+  const localeRoots = manifest.locale_roots ?? { en: "personal/handbook/en", "zh-CN": "personal/handbook/zh-CN" };
   for (const doc of manifest.documents ?? []) {
     if (!doc.generated) continue;
     const builder = FAMILY_BUILDERS[doc.doc_id];
@@ -334,7 +338,7 @@ export function buildGeneratedPages({ readSource, manifest, trackedPaths = [] })
 function main() {
   const check = process.argv.includes("--check");
   const readSource = (rel) => readFileSync(repoPath(...rel.split("/")), "utf8");
-  const manifest = JSON.parse(readSource("handbook/_meta/manifest.json"));
+  const manifest = JSON.parse(readSource("personal/handbook/_meta/manifest.json"));
   const trackedPaths = execFileSync("git", ["-C", REPO_ROOT, "ls-files"], { encoding: "utf8", maxBuffer: 64 * 1024 * 1024 })
     .split("\n")
     .filter(Boolean);

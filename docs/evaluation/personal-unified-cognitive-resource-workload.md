@@ -5,10 +5,10 @@
 - Project: `cognitiveos-personal`
 - Current-status owner: [PROGRESS.md](../plan/PROGRESS.md) `Current snapshot`
 - Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../plan/PERSONAL-DEVELOPMENT-PLAN.md)
-- Architecture mapping: [Personal system architecture](../architecture/personal/system-architecture.md),
-  [authority and recovery](../architecture/personal/authority-data-and-recovery.md), and
-  [Agent lifecycle](../architecture/personal/agent-shell-and-agent-lifecycle.md)
-- Benefit-claim contract: [Agent Benefit Benchmark Contract](./agent-benefit-benchmark.md)
+- Architecture mapping: [Personal system architecture](../../personal/docs/architecture/system-architecture.md),
+  [authority and recovery](../../personal/docs/architecture/authority-data-and-recovery.md), and
+  [Agent lifecycle](../../personal/docs/architecture/agent-shell-and-agent-lifecycle.md)
+- Benefit-claim contract: [Agent Benefit Benchmark Contract](agent-benefit-benchmark.md)
 
 This document defines the target UCR-01 workload for the unified
 cognitive-resource control plane. It does not report an execution, create a new
@@ -42,7 +42,7 @@ bounded questions:
 The workload can support a scenario-limited UCR-01 statement only. A broader
 claim that CognitiveOS provides significant Agent benefit still requires the
 four-arm, W1/W2, statistical and six-threshold protocol in the
-[Agent Benefit Benchmark Contract](./agent-benefit-benchmark.md).
+[Agent Benefit Benchmark Contract](agent-benefit-benchmark.md).
 
 ## 2. Fixed resource fixture
 
@@ -198,7 +198,7 @@ authorization, Effect, completion, secret or stale-epoch failure.
 
 Any benefit or non-inferiority statement uses the fixed-variable and
 preregistration rules from the
-[Agent Benefit Benchmark Contract](./agent-benefit-benchmark.md).
+[Agent Benefit Benchmark Contract](agent-benefit-benchmark.md).
 For UCR-01 the arms are:
 
 | Arm | UCR-01 realization | Interpretation |
@@ -233,7 +233,7 @@ but passing them does not automatically support a broad Agent-benefit claim.
   confidence intervals, an end-to-end primary endpoint, a qualifying effect
   size, mechanism attribution, no safety regression and no offsetting tail or
   maintenance cost under
-  section 5.2 of the [Agent Benefit Benchmark Contract](./agent-benefit-benchmark.md).
+  section 5.2 of the [Agent Benefit Benchmark Contract](agent-benefit-benchmark.md).
 - If those broader gates are absent or fail, the report uses only `hypothesis`,
   `non_inferiority`, or an explicitly scenario-limited capability statement.
   The UCR-01 `>=20%` repeated-input target alone is not a generalized benefit

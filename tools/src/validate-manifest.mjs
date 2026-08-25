@@ -1,7 +1,7 @@
 /**
  * Validate a profile manifest instance against
- * `specs/schemas/profile-manifest.schema.json` (draft 2020-12, relative $refs
- * resolved from the containing file per conformance/README.md).
+ * `core/specs/schemas/profile-manifest.schema.json` (draft 2020-12, relative $refs
+ * resolved from the containing file per core/conformance/README.md).
  *
  * Usage: node tools/src/validate-manifest.mjs [path-to-manifest.json]
  * Default path: artifacts/evidence/conformance/sample-profile-manifest.json

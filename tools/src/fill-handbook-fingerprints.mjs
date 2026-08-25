@@ -18,7 +18,7 @@ const repoPath = (...segments) => path.join(REPO_ROOT, ...segments);
 const check = process.argv.includes("--check");
 
 const readSource = (rel) => readFileSync(repoPath(...rel.split("/")), "utf8");
-const trackedHandbookPages = execFileSync("git", ["-C", REPO_ROOT, "ls-files", "handbook"], {
+const trackedHandbookPages = execFileSync("git", ["-C", REPO_ROOT, "ls-files", "personal/handbook"], {
   encoding: "utf8",
 })
   .split("\n")

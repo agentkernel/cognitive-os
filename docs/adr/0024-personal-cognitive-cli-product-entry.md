@@ -24,7 +24,7 @@ removed or overloaded with Personal product verbs.
 ## Decision
 
 1. Keep the `admin-cli` package, and add a second binary named `cognitive`.
-2. Implement Personal verbs in `apps/admin-cli/src/personal_cli/` as a library
+2. Implement Personal verbs in `personal/apps/admin-cli/src/personal_cli/` as a library
    module used by the `cognitive` bin and integration tests.
 3. Supported verbs for this batch:
    - `cognitive init`

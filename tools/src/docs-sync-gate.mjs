@@ -1,12 +1,12 @@
 /**
  * Docs-sync gate: enforce documentation-system synchronization before every
  * commit, push, and merge (docs/standards/docs-sync-contract.md §2/§5;
- * handbook/_meta/sync-policy.md).
+ * personal/handbook/_meta/sync-policy.md).
  *
- * The gate routes changed paths through handbook/_meta/source-map.json:
+ * The gate routes changed paths through personal/handbook/_meta/source-map.json:
  *
  * - no documentation-relevant change        -> fast skip (exit 0, no checks);
- * - handbook/** touched                     -> run the handbook check set;
+ * - personal/handbook/** touched                     -> run the handbook check set;
  * - mapped implementation sources changed
  *   WITH handbook changes in the same set   -> run the handbook check set;
  *   WITHOUT any handbook change             -> fail closed, unless the change
@@ -37,7 +37,7 @@ import { compileGlob } from "./handbook-lib.mjs";
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
 /** Paths that count as "the documentation system itself was updated". */
-const DOCS_SURFACE_PREFIXES = ["handbook/"];
+const DOCS_SURFACE_PREFIXES = ["personal/handbook/"];
 const DOCS_SURFACE_FILES = new Set([
   "llms.txt",
   ".cursor/rules/20-cognitiveos-personal-handbook-sync.mdc",
@@ -130,9 +130,9 @@ function main() {
   const mode = argv.find((a) => a === "--staged" || a === "--push" || a === "--range") ?? "--range";
   const explicitRange = mode === "--range" ? argv[argv.indexOf("--range") + 1] : undefined;
 
-  const sourceMapPath = path.join(REPO_ROOT, "handbook", "_meta", "source-map.json");
+  const sourceMapPath = path.join(REPO_ROOT, "personal", "handbook", "_meta", "source-map.json");
   if (!existsSync(sourceMapPath)) {
-    console.log("docs-sync-gate: handbook/_meta/source-map.json not present on this revision; nothing to enforce");
+    console.log("docs-sync-gate: personal/handbook/_meta/source-map.json not present on this revision; nothing to enforce");
     return;
   }
   const sourceMap = JSON.parse(readFileSync(sourceMapPath, "utf8"));
@@ -172,14 +172,14 @@ function main() {
         "",
         "docs-sync-gate: FAILED — mapped implementation sources changed but no handbook update is part of this change set.",
         "Synchronize the documentation system in the same delivery:",
-        "  1. update the mapped pages above in BOTH locales (handbook/en + handbook/zh-CN),",
+        "  1. update the mapped pages above in BOTH locales (personal/handbook/en + personal/handbook/zh-CN),",
         "  2. regenerate generated pages:   node tools/src/generate-handbook.mjs",
         "  3. refresh page fingerprints:    node tools/src/fill-handbook-fingerprints.mjs",
-        "  4. classify any new files in     handbook/_meta/source-coverage.json,",
+        "  4. classify any new files in     personal/handbook/_meta/source-coverage.json,",
         "  5. verify:                       pnpm run check:handbook",
         "If this change genuinely affects no documentation, acknowledge it explicitly:",
         '  DOCS_IMPACT_NONE="<concrete reason>" and record the same reason in the commit/PR description.',
-        "Canonical obligations: docs/standards/docs-sync-contract.md §2; handbook/_meta/sync-policy.md.",
+        "Canonical obligations: docs/standards/docs-sync-contract.md §2; personal/handbook/_meta/sync-policy.md.",
       ].join("\n"),
     );
     process.exit(1);

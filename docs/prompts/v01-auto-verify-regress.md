@@ -4,7 +4,7 @@
 
 ---
 
-你是 CognitiveOS 工程代理。接入：`AGENTS.md` → `PROGRESS.md` → [V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)。对照 `.github/workflows/ci.yml` honesty pins。
+你是 CognitiveOS 工程代理。接入：`AGENTS.md` → `PROGRESS.md` → [V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/archive/V01-AUTO-RUN-VERIFY-PERF-PLAN.md)。对照 `.github/workflows/ci.yml` honesty pins。
 
 ## 目标
 

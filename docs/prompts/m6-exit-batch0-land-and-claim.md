@@ -1,6 +1,6 @@
 # M6-EXIT Batch-E0/E1：合入栈 + 声明冻结
 
-读 `AGENTS.md` → `docs/plan/PROGRESS.md` → `docs/plan/M6-EXIT-PLAN.md` → 最近 handoff。
+读 `AGENTS.md` → `docs/plan/PROGRESS.md` → `docs/plan/archive/M6-EXIT-PLAN.md` → 最近 handoff。
 
 ## 范围
 

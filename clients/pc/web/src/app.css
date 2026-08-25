@@ -1,0 +1,1123 @@
+/*
+ * CognitiveOS Control Plane — application shell + component styles.
+ * Uses only --cp-* tokens (tokens.css). Hairlines over shadows; shadows only
+ * on true floating layers. Density by discipline, not by shrinking type.
+ */
+
+/* ---------- base ---------- */
+
+body {
+  font-family: var(--cp-font-text);
+  font-size: var(--cp-size-body);
+  line-height: var(--cp-leading-body);
+  letter-spacing: 0;
+  background: var(--cp-canvas);
+  color: var(--cp-ink);
+}
+
+.cp-app,
+.cp-app input,
+.cp-app select,
+.cp-app button {
+  font-family: var(--cp-font-text);
+  font-size: var(--cp-size-body);
+  line-height: var(--cp-leading-body);
+  color: var(--cp-ink);
+}
+
+/*
+ * styles.css sets `a { color: var(--accent) }` with the legacy #0071e3, which
+ * measures 4.31:1 on --cp-canvas — below AA. This rule outranks it on
+ * specificity alone, and sits before .cp-nav a / .cp-region-chips a so those
+ * keep their own ink colour.
+ */
+.cp-app a {
+  color: var(--cp-link);
+}
+
+.cp-app :focus-visible {
+  outline: 2px solid var(--cp-focus);
+  outline-offset: 2px;
+  border-radius: var(--cp-radius-sm);
+}
+
+.cp-mono {
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.cp-quiet {
+  color: var(--cp-quiet);
+}
+
+/* ---------- shell frame ---------- */
+
+.cp-shell {
+  display: grid;
+  grid-template-areas: "strip strip" "side main";
+  grid-template-rows: 34px minmax(0, 1fr);
+  grid-template-columns: 232px minmax(0, 1fr);
+  min-height: 100vh;
+}
+
+.cp-strip {
+  grid-area: strip;
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-4);
+  padding: 0 var(--cp-space-4);
+  border-bottom: 1px solid var(--cp-line);
+  background: var(--cp-surface);
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-label);
+  line-height: 1.3;
+  color: var(--cp-quiet);
+  white-space: nowrap;
+  overflow-x: auto;
+}
+
+.cp-strip-cell {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-1);
+  color: inherit;
+  text-decoration: none;
+  background: none;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.cp-strip-cell[aria-disabled="true"] {
+  cursor: default;
+}
+
+.cp-strip-spacer {
+  flex: 1 1 auto;
+}
+
+/* ---------- primary nav ---------- */
+
+.cp-side {
+  grid-area: side;
+  border-right: 1px solid var(--cp-line);
+  background: var(--cp-surface);
+  display: flex;
+  flex-direction: column;
+  padding: var(--cp-space-3) 0;
+  min-width: 0;
+}
+
+.cp-brand {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: center;
+  padding: 0 var(--cp-space-4) var(--cp-space-3);
+  border-bottom: 1px solid var(--cp-line);
+}
+
+.cp-brand-mark {
+  width: 20px;
+  height: 20px;
+  border-radius: var(--cp-radius-md);
+  border: 1.5px solid var(--cp-accent);
+  flex: none;
+}
+
+.cp-brand h1 {
+  margin: 0;
+  font-size: var(--cp-size-headline);
+  font-weight: 600;
+  letter-spacing: var(--cp-track-tight);
+}
+
+.cp-brand p {
+  margin: 2px 0 0;
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+}
+
+.cp-nav {
+  flex: 1 1 auto;
+  margin: var(--cp-space-2) 0 0;
+  padding: 0 var(--cp-space-2);
+  list-style: none;
+}
+
+.cp-nav li {
+  margin: 1px 0;
+}
+
+.cp-nav a {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  padding: 6px var(--cp-space-2);
+  border-radius: var(--cp-radius-md);
+  color: var(--cp-ink);
+  text-decoration: none;
+  font-size: var(--cp-size-body);
+  border-left: 2px solid transparent;
+  transition: background var(--cp-motion-fast);
+}
+
+.cp-nav a:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-nav a[aria-current="page"] {
+  background: var(--cp-accent-soft);
+  border-left-color: var(--cp-accent);
+  font-weight: 600;
+}
+
+.cp-nav-count {
+  margin-left: auto;
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-label);
+  color: var(--cp-attention);
+}
+
+.cp-side-foot {
+  padding: var(--cp-space-3) var(--cp-space-4) 0;
+  border-top: 1px solid var(--cp-line);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+}
+
+/* ---------- main region ---------- */
+
+.cp-main {
+  grid-area: main;
+  padding: var(--cp-space-5) var(--cp-space-6) var(--cp-space-10);
+  min-width: 0;
+  max-width: 1680px;
+}
+
+.cp-page-head {
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-page-head h2 {
+  margin: 0;
+  font-size: var(--cp-size-title1);
+  letter-spacing: var(--cp-track-title);
+  line-height: var(--cp-leading-title);
+  font-weight: 600;
+}
+
+.cp-page-head .cp-lede {
+  margin: var(--cp-space-1) 0 0;
+  color: var(--cp-quiet);
+  max-width: 72ch;
+}
+
+.cp-section-title {
+  margin: var(--cp-space-5) 0 var(--cp-space-2);
+  font-size: var(--cp-size-headline);
+  font-weight: 600;
+  letter-spacing: var(--cp-track-tight);
+}
+
+/* ---------- state system (docs/design/22) ---------- */
+
+.cp-dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  flex: none;
+  border-radius: 50%;
+  border: 1.5px solid transparent;
+  position: relative;
+}
+
+.cp-dot--ready {
+  background: var(--cp-ready);
+}
+
+.cp-dot--active {
+  background: var(--cp-accent);
+  animation: cp-pulse 2.4s ease-in-out infinite;
+}
+
+.cp-dot--waiting {
+  border-color: var(--cp-waiting);
+  background: transparent;
+}
+
+.cp-dot--waiting::after {
+  content: "";
+  position: absolute;
+  inset: 2px;
+  border-radius: 50%;
+  background: var(--cp-waiting);
+}
+
+.cp-dot--attention {
+  border-radius: 2px;
+  transform: rotate(45deg) scale(0.86);
+  background: var(--cp-attention);
+}
+
+.cp-dot--blocked {
+  border-radius: 2px;
+  background: var(--cp-blocked);
+}
+
+.cp-dot--completed {
+  border-color: var(--cp-completed);
+  background: transparent;
+}
+
+.cp-dot--completed::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -5px;
+  font-size: 10px;
+  line-height: 10px;
+  text-align: center;
+  color: var(--cp-completed);
+}
+
+.cp-dot--unknown {
+  border-color: var(--cp-unknown);
+  background: transparent;
+}
+
+@keyframes cp-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.4;
+  }
+}
+
+.cp-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-1);
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-label);
+  letter-spacing: 0.005em;
+  color: var(--cp-ink);
+}
+
+/* Category label text uses measured text-safe variants (≥4.5:1 both themes);
+   ready/active/completed labels stay --cp-ink — hue lives in the dot. */
+.cp-chip[data-category="waiting"] {
+  color: var(--cp-waiting-text);
+}
+
+.cp-chip[data-category="attention"] {
+  color: var(--cp-attention-text);
+}
+
+.cp-chip[data-category="blocked"] {
+  color: var(--cp-blocked-text);
+}
+
+.cp-chip[data-category="unknown"] {
+  color: var(--cp-unknown-text);
+}
+
+.cp-reason {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+}
+
+.cp-honesty {
+  margin: var(--cp-space-2) 0;
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border-left: 2px solid var(--cp-unknown);
+  background: var(--cp-unknown-tint);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+  color: var(--cp-quiet);
+}
+
+.cp-honesty code {
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-label);
+}
+
+/* ---------- components ---------- */
+
+.cp-panel {
+  margin: 0 0 var(--cp-space-4);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-lg);
+}
+
+.cp-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+}
+
+.cp-table caption {
+  text-align: left;
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+  padding-bottom: var(--cp-space-1);
+}
+
+.cp-table th {
+  text-align: left;
+  font-size: var(--cp-size-label);
+  font-weight: 500;
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+  padding: var(--cp-space-1) var(--cp-space-2);
+  border-bottom: 1px solid var(--cp-line-strong);
+}
+
+.cp-table td {
+  padding: 6px var(--cp-space-2);
+  border-bottom: 1px solid var(--cp-line);
+  vertical-align: top;
+}
+
+.cp-table tbody tr {
+  transition: background var(--cp-motion-fast);
+}
+
+.cp-table tbody tr:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-table tbody tr[aria-selected="true"] {
+  background: var(--cp-accent-soft);
+  box-shadow: inset 2px 0 0 var(--cp-accent);
+}
+
+/*
+ * A tint inside a tinted row composites to a third, darker value: the chip's
+ * --cp-unknown-tint over the row's --cp-accent-soft measured #d3ddee, which
+ * dropped the chip label to 4.37:1 and its copy control to 4.26:1. The chip's
+ * fill exists to separate it from a plain surface, so on an already-tinted row
+ * it is dropped rather than stacked. The border still delimits the chip.
+ */
+.cp-table tbody tr:hover .cp-digestchip,
+.cp-table tbody tr[aria-selected="true"] .cp-digestchip {
+  background: transparent;
+}
+
+.cp-factgrid {
+  display: grid;
+  grid-template-columns: minmax(140px, max-content) 1fr;
+  gap: var(--cp-space-1) var(--cp-space-4);
+  margin: 0;
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+}
+
+.cp-factgrid dt {
+  color: var(--cp-quiet);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  margin: 0;
+}
+
+.cp-factgrid dd {
+  margin: 0;
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-row);
+  overflow-wrap: anywhere;
+}
+
+.cp-digestchip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-1);
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-label);
+  background: var(--cp-unknown-tint);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-sm);
+  padding: 1px var(--cp-space-1);
+}
+
+.cp-digestchip button {
+  border: 0;
+  background: none;
+  color: var(--cp-link);
+  cursor: pointer;
+  padding: 0 2px;
+  font-size: var(--cp-size-label);
+}
+
+.cp-inspector {
+  border-left: 1px solid var(--cp-line);
+  background: var(--cp-surface);
+  padding: var(--cp-space-4);
+  min-width: 280px;
+  max-width: 400px;
+}
+
+.cp-inspector h3 {
+  margin: 0 0 var(--cp-space-2);
+  font-size: var(--cp-size-headline);
+  font-weight: 600;
+}
+
+/* state views (empty / error / loading / unavailable) */
+
+.cp-stateview {
+  padding: var(--cp-space-6) var(--cp-space-4);
+  border: 1px dashed var(--cp-line-strong);
+  border-radius: var(--cp-radius-lg);
+  background: var(--cp-surface);
+  max-width: 64ch;
+}
+
+.cp-stateview h3 {
+  margin: 0 0 var(--cp-space-1);
+  font-size: var(--cp-size-headline);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+}
+
+.cp-stateview p {
+  margin: var(--cp-space-1) 0;
+  color: var(--cp-quiet);
+}
+
+.cp-stateview .cp-next {
+  margin-top: var(--cp-space-3);
+}
+
+.cp-receipt {
+  display: flex;
+  align-items: center;
+  gap: var(--cp-space-2);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border-left: 2px solid var(--cp-ready);
+  background: var(--cp-ready-tint);
+}
+
+/* Accent blue measures 4.29:1 on --cp-ready-tint — under AA at row size.
+   Inside a receipt the link carries ink plus an underline instead. */
+.cp-receipt a {
+  color: inherit;
+  text-decoration: underline;
+}
+
+.cp-confirm {
+  border: 1px solid var(--cp-line-strong);
+  border-radius: var(--cp-radius-lg);
+  padding: var(--cp-space-3) var(--cp-space-4);
+  background: var(--cp-surface);
+  max-width: 72ch;
+}
+
+.cp-confirm ul {
+  margin: var(--cp-space-2) 0;
+  padding-left: var(--cp-space-5);
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-row);
+}
+
+/* forms inside the new system (legacy pages keep styles.css forms) */
+
+.cp-field {
+  display: block;
+  margin-bottom: var(--cp-space-3);
+}
+
+.cp-field > span {
+  display: block;
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+  margin-bottom: var(--cp-space-1);
+}
+
+.cp-field input,
+.cp-field select,
+.cp-field textarea {
+  width: 100%;
+  max-width: 420px;
+  padding: 6px var(--cp-space-2);
+  border: 1px solid var(--cp-line-strong);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+}
+
+.cp-field textarea {
+  min-height: 4.5em;
+  font: inherit;
+  resize: vertical;
+}
+
+/* Radio and checkbox fields read as one line, not as a stacked label block. */
+.cp-field:has(> input[type="radio"]),
+.cp-field:has(> input[type="checkbox"]) {
+  display: flex;
+  align-items: baseline;
+  gap: var(--cp-space-1);
+  margin-bottom: var(--cp-space-1);
+}
+
+.cp-field > input[type="radio"],
+.cp-field > input[type="checkbox"] {
+  width: auto;
+  max-width: none;
+  flex: none;
+}
+
+.cp-fieldset {
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-3);
+  margin: 0 0 var(--cp-space-3);
+  max-width: 560px;
+}
+
+.cp-fieldset legend {
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  padding: 0 var(--cp-space-1);
+}
+
+.cp-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: var(--cp-space-4);
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-plain-list {
+  margin: 0 0 var(--cp-space-3);
+  padding-left: var(--cp-space-5);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+}
+
+.cp-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-1);
+  padding: 6px var(--cp-space-3);
+  border-radius: var(--cp-radius-md);
+  border: 1px solid var(--cp-line-strong);
+  background: var(--cp-surface);
+  cursor: pointer;
+  font-size: var(--cp-size-body);
+  transition: background var(--cp-motion-fast);
+}
+
+.cp-button:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-button:active {
+  transform: scale(0.98);
+  transition: transform var(--cp-motion-instant);
+}
+
+.cp-button--primary {
+  background: var(--cp-accent);
+  border-color: var(--cp-accent);
+  color: var(--cp-accent-ink);
+}
+
+/*
+ * `.cp-app, .cp-app button` (0,1,1) and `.cp-app a` (0,1,1) both outrank
+ * `.cp-button--primary` (0,1,0), so a primary control that is not a submit
+ * button lost its accent ink: measured 3.89:1 light / 1.78:1 dark for
+ * ink-on-accent, and 1.28:1 for a button-shaped link painting
+ * accent-as-text on accent-as-fill. These three rules restore the intended
+ * pairing at every specificity the shell can reach.
+ */
+.cp-app a.cp-button {
+  color: var(--cp-ink);
+  text-decoration: none;
+}
+
+.cp-app .cp-button--primary {
+  color: var(--cp-accent-ink);
+}
+
+.cp-app a.cp-button--primary {
+  color: var(--cp-accent-ink);
+}
+
+.cp-button--primary:hover {
+  background: var(--cp-accent);
+  filter: brightness(1.08);
+}
+
+.cp-button--danger {
+  color: var(--cp-blocked);
+  border-color: var(--cp-blocked);
+}
+
+/* W5 work detail — section navigator, header, two-lane run timeline */
+
+.cp-detail-head {
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-detail-title {
+  margin: var(--cp-space-1) 0 var(--cp-space-3);
+  font-size: var(--cp-size-body);
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.cp-sectionnav {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--cp-canvas);
+  border-bottom: 1px solid var(--cp-line);
+  padding: var(--cp-space-2) 0;
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-sectionnav-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-1);
+  list-style: none;
+  margin: 0 0 var(--cp-space-1);
+  padding: 0;
+}
+
+.cp-sectionnav-link {
+  border: 1px solid transparent;
+  background: none;
+  color: var(--cp-ink);
+  border-radius: var(--cp-radius-md);
+  padding: 4px var(--cp-space-2);
+  font-size: var(--cp-size-body);
+  cursor: pointer;
+}
+
+.cp-sectionnav-link:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-sectionnav-link[aria-current="true"] {
+  background: var(--cp-accent-soft);
+  border-color: var(--cp-line-strong);
+  font-weight: 600;
+}
+
+/*
+ * Two lanes, side by side and visually distinct. They are never one list:
+ * an observation rendered as a transition would read as evidence the task
+ * moved, which is the one inference this surface must never allow.
+ */
+.cp-lanes {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--cp-space-4);
+  margin: var(--cp-space-3) 0;
+}
+
+.cp-lane {
+  min-width: 0;
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  padding: var(--cp-space-3);
+  background: var(--cp-surface);
+}
+
+.cp-lane--authority {
+  border-left: 3px solid var(--cp-accent);
+}
+
+.cp-lane--observation {
+  border-left: 3px dashed var(--cp-line-strong);
+  background: var(--cp-canvas);
+}
+
+.cp-lane-title {
+  margin: 0 0 var(--cp-space-2);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  text-transform: uppercase;
+}
+
+.cp-lane-list {
+  list-style: none;
+  margin: var(--cp-space-2) 0 0;
+  padding: 0;
+}
+
+.cp-lane-row {
+  display: flex;
+  gap: var(--cp-space-2);
+  align-items: flex-start;
+  padding: var(--cp-space-2) 0;
+  border-top: 1px solid var(--cp-line);
+  min-width: 0;
+}
+
+.cp-lane-row > div {
+  min-width: 0;
+}
+
+.cp-lane-row:first-child {
+  border-top: 0;
+}
+
+.cp-lane-head {
+  margin: 0 0 2px;
+  font-size: var(--cp-size-row);
+}
+
+.cp-lane-marker {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: 50%;
+  background: var(--cp-accent);
+}
+
+/* A sample is drawn hollow; a transition is drawn solid. */
+.cp-lane-marker--sample {
+  background: transparent;
+  border: 1px solid var(--cp-line-strong);
+}
+
+.cp-lane-marker--gap {
+  background: transparent;
+  border: 1px dashed var(--cp-line-strong);
+}
+
+@media (max-width: 1100px) {
+  .cp-lanes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* W2 providers — master+inspector layout, secondary nav, sections, raw details */
+
+.cp-mi {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--cp-space-4);
+}
+
+.cp-master {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.cp-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-2);
+  margin: 0 0 var(--cp-space-4);
+}
+
+.cp-section {
+  margin-top: var(--cp-space-6);
+  max-width: 960px;
+}
+
+.cp-subblock {
+  margin-top: var(--cp-space-4);
+}
+
+.cp-details {
+  margin: var(--cp-space-3) 0;
+  max-width: 72ch;
+}
+
+.cp-details summary {
+  cursor: pointer;
+  color: var(--cp-quiet);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+}
+
+.cp-details pre {
+  overflow-x: auto;
+  padding: var(--cp-space-2) var(--cp-space-3);
+  background: var(--cp-surface);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  font-size: var(--cp-size-label);
+  line-height: var(--cp-leading-mono);
+}
+
+/* W3 home — attention surface regions and the one queue */
+
+.cp-region {
+  margin-top: var(--cp-space-5);
+  max-width: 1100px;
+}
+
+.cp-region:first-of-type {
+  margin-top: var(--cp-space-3);
+}
+
+.cp-region-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--cp-space-2);
+  margin: 0 0 var(--cp-space-2);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+}
+
+.cp-region-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--cp-space-3);
+  margin: 0 0 var(--cp-space-2);
+  padding: 0;
+  list-style: none;
+}
+
+.cp-region-chips a {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--cp-space-1);
+  color: var(--cp-ink);
+  text-decoration: none;
+  padding: 2px var(--cp-space-1);
+  border-radius: var(--cp-radius-sm);
+}
+
+.cp-region-chips a:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-queue {
+  margin: 0 0 var(--cp-space-2);
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--cp-line);
+}
+
+.cp-queue-row {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) minmax(140px, max-content) minmax(0, 1fr) max-content max-content;
+  align-items: baseline;
+  gap: var(--cp-space-2) var(--cp-space-3);
+  padding: var(--cp-space-2) var(--cp-space-1);
+  border-bottom: 1px solid var(--cp-line);
+  font-size: var(--cp-size-row);
+  line-height: var(--cp-leading-row);
+}
+
+.cp-queue-row:hover {
+  background: var(--cp-accent-soft);
+}
+
+.cp-queue-reason {
+  color: var(--cp-quiet);
+  overflow-wrap: anywhere;
+}
+
+.cp-queue-age {
+  white-space: nowrap;
+}
+
+.cp-queue-group {
+  margin-bottom: var(--cp-space-3);
+}
+
+.cp-queue-group .cp-section-title {
+  margin-top: var(--cp-space-3);
+  font-size: var(--cp-size-body);
+  letter-spacing: var(--cp-track-label);
+  text-transform: none;
+}
+
+@media (max-width: 960px) {
+  .cp-queue-row {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* placeholders (W1) */
+
+.cp-placeholder {
+  max-width: 72ch;
+}
+
+.cp-placeholder .cp-wave {
+  font-family: var(--cp-font-mono);
+  font-size: var(--cp-size-label);
+  color: var(--cp-quiet);
+}
+
+/* session gate keeps legacy class hooks for existing tests, styled by app.css */
+
+.cp-gate {
+  max-width: 72ch;
+}
+
+/* ---------- responsive (desktop-first; narrow = progressive degradation) ---------- */
+
+@media (max-width: 1439px) {
+  .cp-shell {
+    grid-template-columns: 200px minmax(0, 1fr);
+  }
+
+  .cp-inspector {
+    position: fixed;
+    right: 0;
+    top: 34px;
+    bottom: 0;
+    box-shadow: var(--cp-elevation-1);
+    overflow-y: auto;
+    z-index: 20;
+  }
+}
+
+@media (max-width: 960px) {
+  .cp-shell {
+    grid-template-areas: "strip" "side" "main";
+    grid-template-rows: 34px auto minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .cp-side {
+    border-right: 0;
+    border-bottom: 1px solid var(--cp-line);
+    padding: var(--cp-space-2) 0;
+  }
+
+  .cp-brand {
+    border-bottom: 0;
+    padding-bottom: var(--cp-space-1);
+  }
+
+  .cp-nav {
+    display: flex;
+    overflow-x: auto;
+    gap: var(--cp-space-1);
+    margin-top: var(--cp-space-1);
+  }
+
+  .cp-nav a {
+    border-left: 0;
+    border-bottom: 2px solid transparent;
+    border-radius: var(--cp-radius-sm);
+  }
+
+  .cp-nav a[aria-current="page"] {
+    border-bottom-color: var(--cp-accent);
+  }
+
+  .cp-side-foot {
+    display: none;
+  }
+
+  .cp-main {
+    padding: var(--cp-space-4) var(--cp-space-3) var(--cp-space-8);
+  }
+}
+
+/* ---------- reduced motion / transparency ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .cp-dot--active {
+    animation: none;
+  }
+
+  .cp-nav a,
+  .cp-table tbody tr,
+  .cp-button {
+    transition: none;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .cp-honesty,
+  .cp-receipt {
+    background: var(--cp-surface);
+  }
+}
+
+/* ---------- legacy styles.css bridge ----------
+ * styles.css still owns the legacy Tasks page, so it stays imported and its
+ * unprefixed vars plus bare element selectors keep reaching this markup. Until
+ * TasksPage stops depending on it, this side corrects a dark set for the legacy
+ * vars (styles.css declares light values only, so html/#root, legacy panels and
+ * h1-h3 otherwise stay light under a dark system theme) and contains the legacy
+ * element chrome inside .cp-app.
+ */
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #101318;
+    --bg-sidebar: rgba(23, 27, 34, 0.85);
+    --panel: #171b22;
+    --panel-tint: #1e242e;
+    --ink: #e8edf5;
+    --ink-secondary: #c3cddc;
+    --muted: #9aa6b8;
+    --line: rgba(232, 237, 245, 0.1);
+    --line-strong: rgba(232, 237, 245, 0.2);
+    --accent: #7eb6ff;
+    --accent-hover: #9cc7ff;
+    --accent-soft: rgba(126, 182, 255, 0.14);
+    --focus-ring: rgba(126, 182, 255, 0.6);
+    --ok: #4cc38a;
+    --warn: #f0a35e;
+    --bad: #f26d6d;
+  }
+}
+
+/* Legacy card chrome (fill, 18px radius, drop shadow) must not double up on
+   the panels this system already draws; radius ceiling stays 4/6/8. */
+.cp-app form,
+.cp-app table {
+  background: none;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.cp-app form {
+  padding: 0;
+  margin: 0 0 var(--cp-space-3);
+}
+
+.cp-app code {
+  background: none;
+  border-radius: 0;
+  padding: 0;
+}
+
+/* Legacy 980px pill buttons and 10px inputs exceed the 4/6/8 ceiling. */
+.cp-app button,
+.cp-app input,
+.cp-app select {
+  border-radius: var(--cp-radius-md);
+}
+
+.cp-app button[type="submit"] {
+  background: var(--cp-accent);
+  border-color: var(--cp-accent);
+  color: var(--cp-accent-ink);
+}

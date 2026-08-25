@@ -92,11 +92,11 @@ lease、Intent/Effect、fencing、Artifact CAS、Memory/Skill、独立 verifier 
 
 代码结构也反映了这一点：
 
-- `apps/kernel-server/src/personal/task_api.rs` 的 watch 仍以进程生命周期内事件为主；
-- `apps/kernel-server/src/personal/resource_api.rs` 的公共投影还没有完整返回六族真实对象；
-- `apps/kernel-server/src/personal/tool_executor/` 中只有部分 operation family 有 executor；
-- `apps/kernel-server/src/personal/verification_executor.rs` 仍缺生产调用链；
-- `crates/cognitive-runtime/src/resource_sampler.rs` 目前主要服务性能 campaign，而不是
+- `personal/apps/kernel-server/src/personal/task_api.rs` 的 watch 仍以进程生命周期内事件为主；
+- `personal/apps/kernel-server/src/personal/resource_api.rs` 的公共投影还没有完整返回六族真实对象；
+- `personal/apps/kernel-server/src/personal/tool_executor/` 中只有部分 operation family 有 executor；
+- `personal/apps/kernel-server/src/personal/verification_executor.rs` 仍缺生产调用链；
+- `personal/crates/cognitive-runtime/src/resource_sampler.rs` 目前主要服务性能 campaign，而不是
   产品 Task Manager。
 
 ---
@@ -175,10 +175,10 @@ CognitiveOS daemon authority、Intent/Effect 或 verifier。
 
 主要实现面：
 
-- `apps/kernel-server/src/personal/task_api.rs`
-- `apps/kernel-server/src/personal/scheduler_authority/`
-- `crates/cognitive-store/src/scheduler.rs`
-- `crates/cognitive-store/src/sqlite/`
+- `personal/apps/kernel-server/src/personal/task_api.rs`
+- `personal/apps/kernel-server/src/personal/scheduler_authority/`
+- `personal/crates/cognitive-store/src/scheduler.rs`
+- `personal/crates/cognitive-store/src/sqlite/`
 
 ### 为什么优先
 
@@ -254,10 +254,10 @@ CognitiveOS daemon authority、Intent/Effect 或 verifier。
 
 主要实现面：
 
-- `apps/kernel-server/src/personal/tool_executor/`
-- `crates/cognitive-kernel/src/tool_registry.rs`
-- `apps/kernel-server/src/personal/resource_api.rs`
-- `crates/cognitive-store/src/artifact_store.rs`
+- `personal/apps/kernel-server/src/personal/tool_executor/`
+- `core/crates/cognitive-kernel/src/tool_registry.rs`
+- `personal/apps/kernel-server/src/personal/resource_api.rs`
+- `personal/crates/cognitive-store/src/artifact_store.rs`
 
 ---
 
@@ -329,10 +329,10 @@ Context
 
 主要实现面：
 
-- `apps/kernel-server/src/personal/verification_executor.rs`
-- `crates/cognitive-store/src/artifact_store.rs`
-- `crates/cognitive-store/src/sqlite/store.rs`
-- `apps/kernel-server/src/personal/scheduler_authority/`
+- `personal/apps/kernel-server/src/personal/verification_executor.rs`
+- `personal/crates/cognitive-store/src/artifact_store.rs`
+- `personal/crates/cognitive-store/src/sqlite/store.rs`
+- `personal/apps/kernel-server/src/personal/scheduler_authority/`
 
 ---
 
@@ -395,7 +395,7 @@ intent
 
 资源采样可复用：
 
-- `crates/cognitive-runtime/src/resource_sampler.rs`
+- `personal/crates/cognitive-runtime/src/resource_sampler.rs`
 
 但产品化前必须增加：
 
@@ -425,11 +425,11 @@ Agent Shell 对应自然语言：
 
 主要实现面：
 
-- `crates/cognitive-store/src/sqlite/store.rs`
-- `apps/kernel-server/src/personal/task_api.rs`
-- `apps/kernel-server/src/personal/resource_api.rs`
-- `apps/admin-cli/src/personal_cli/`
-- `packages/pi-cognitiveos/`
+- `personal/crates/cognitive-store/src/sqlite/store.rs`
+- `personal/apps/kernel-server/src/personal/task_api.rs`
+- `personal/apps/kernel-server/src/personal/resource_api.rs`
+- `personal/apps/admin-cli/src/personal_cli/`
+- `personal/packages/pi-cognitiveos/`
 
 ---
 
@@ -454,11 +454,11 @@ Task application service。
 
 主要实现面：
 
-- `packages/pi-cognitiveos/`
-- `packages/sdk-ts/src/transport.ts`
-- `packages/sdk-ts/src/watch.ts`
-- `apps/admin-cli/src/personal_cli/`
-- `apps/kernel-server/src/personal/task_api.rs`
+- `personal/packages/pi-cognitiveos/`
+- `personal/packages/sdk-ts/src/transport.ts`
+- `personal/packages/sdk-ts/src/watch.ts`
+- `personal/apps/admin-cli/src/personal_cli/`
+- `personal/apps/kernel-server/src/personal/task_api.rs`
 
 ---
 

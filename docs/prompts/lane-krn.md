@@ -16,10 +16,10 @@
 
 ## 车道范围（M2–M4 主线）
 
-- **所有权**：`crates/cognitive-domain`、`crates/cognitive-store`、`crates/cognitive-kernel`；`tests/faults/`（M4）。
+- **所有权**：`crates/cognitive-domain`、`crates/cognitive-store`、`crates/cognitive-kernel`；`personal/tests/faults/`（M4）。
 - **工作分支**：`lane/krn`。
-- 阶段任务（详细验收 = `docs/plan/DEVELOPMENT-PLAN.md` M2/M3/M4 节 + 对应里程碑提示词）：
-  - **M2**：五状态机执行器（消费 `specs/transitions/*.json`，集中 transition 入口）、GovernedObject SQLite(WAL) 仓储（ADR-0002 五条绑定规则）、CAS、append-only 事件日志 + outbox、预算计量、状态+事件原子提交。
+- 阶段任务（详细验收 = `docs/plan/archive/DEVELOPMENT-PLAN.md` M2/M3/M4 节 + 对应里程碑提示词）：
+  - **M2**：五状态机执行器（消费 `core/specs/transitions/*.json`，集中 transition 入口）、GovernedObject SQLite(WAL) 仓储（ADR-0002 五条绑定规则）、CAS、append-only 事件日志 + outbox、预算计量、状态+事件原子提交。
   - **M3**：治理链（Principal/Membership/ActorChain/Conversation/ResourceScope）、capability 交集/单调衰减/撤销、九阶段 Context Resolution、缓存键治理绑定、确定性渲染（标准：`authn-authz-capability.md`、`context-resolution-and-cache.md`）。
   - **M4**：Intent/Effect/幂等/reconcile/checkpoint/恢复八步 + 故障注入框架 + 全 sink fencing 清单（F-014）+ OperationDescriptor 准入矩阵（F-023）+ tracer bullet 竖切（标准：`intent-effect-idempotency.md`）。
 
@@ -29,12 +29,12 @@ contracts → domain → 端口 trait（kernel 定义）→ 适配器（store）
 
 ## 禁止越界
 
-- 不动 `specs/**`（契约变更找 Lane-CTR）；不动 runner/tools（Lane-CFR）；不动 runtime/management/akp/apps（Lane-RUN）。
+- 不动 `core/specs/**`（契约变更找 Lane-CTR）；不动 runner/tools（Lane-CFR）；不动 runtime/management/akp/apps（Lane-RUN）。
 - 入口 gate 未开不越级：M2 需 M1 出口（生成合同冻结）；M4 tracer bullet 需 F-002~F-010 类全闭合（findings-ledger 为准）。
 
 ## 相关规范路径
 
-`specs/transitions/`（5 表）、`specs/registry/state-domains.yaml`、`docs/standards/state-and-transition-contract.md`、`intent-effect-idempotency.md`、`authn-authz-capability.md`、`context-resolution-and-cache.md`、`event-audit-watch.md`、`docs/adr/0002、0005`；向量组：`state-conflict`、`eff-crash-001..003`、`effect-*`、`context-*`、`tenant-lateral-read-denial`、`capability-attenuation`、`crash-recovery`、`state-store-degradation`。
+`core/specs/transitions/`（5 表）、`core/specs/registry/state-domains.yaml`、`docs/standards/state-and-transition-contract.md`、`intent-effect-idempotency.md`、`authn-authz-capability.md`、`context-resolution-and-cache.md`、`event-audit-watch.md`、`docs/adr/0002、0005`；向量组：`state-conflict`、`eff-crash-001..003`、`effect-*`、`context-*`、`tenant-lateral-read-denial`、`capability-attenuation`、`crash-recovery`、`state-store-degradation`。
 
 ## 入口 gate 与验收
 

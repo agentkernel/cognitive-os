@@ -1,0 +1,708 @@
+//! Contract-layer schema re-verification (F-003 closure evidence, Rust side).
+//!
+//! Proves, without any conformance runner, that:
+//! 1. every schema under `core/specs/schemas/` compiles under draft 2020-12 with
+//!    all relative `$ref`s resolvable (REQ-GOBJ-VALID-001 shape discipline);
+//! 2. the migrated single-track contracts REJECT the legacy
+//!    `common-defs.schema.json#/$defs/{metadata,strongRef}` dual-track shapes
+//!    (REQ-GOBJ-HEADER-001, REQ-GOBJ-REF-001, REQ-GOBJ-MIG-001) — the exact
+//!    instances pinned by the negative vectors
+//!    `core/conformance/vectors/governed-object-legacy-{metadata,strongref}-001.json`;
+//! 3. a migrated positive instance is accepted (the validator is not
+//!    vacuously rejecting).
+//!
+//! This is NOT vector execution: no expected-outcome comparison engine, no
+//! result reporting. Vector result states remain `not-run` until the
+//! Lane-CFR runner executes them (`docs/standards/conformance-evidence.md`).
+
+#![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+
+use jsonschema::{Retrieve, Uri};
+use serde_json::{Value, json};
+use std::collections::HashMap;
+use std::fs;
+use std::path::{Path, PathBuf};
+
+fn repo_root() -> PathBuf {
+    Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")
+}
+
+fn load_schemas() -> HashMap<String, Value> {
+    let dir = repo_root().join("specs").join("schemas");
+    let mut out = HashMap::new();
+    for entry in fs::read_dir(&dir).unwrap_or_else(|e| panic!("read {}: {e}", dir.display())) {
+        let path = entry.unwrap_or_else(|e| panic!("dir entry: {e}")).path();
+        if path.extension().is_some_and(|ext| ext == "json") {
+            let raw = fs::read_to_string(&path)
+                .unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+            let doc: Value = serde_json::from_str(&raw)
+                .unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));
+            let name = path
+                .file_name()
+                .map(|n| n.to_string_lossy().into_owned())
+                .unwrap_or_default();
+            // $id policy (D-001/D-006 closure): $id == file name, so every
+            // relative `$ref` resolves from the containing schema file and
+            // the file name is the retrieval URI.
+            assert_eq!(
+                doc.get("$id").and_then(Value::as_str),
+                Some(name.as_str()),
+                "{name}: schema $id must equal its file name"
+            );
+            out.insert(name, doc);
+        }
+    }
+    assert!(out.len() >= 56, "schema suite shrank: {}", out.len());
+    out
+}
+
+/// Resolves any URI (relative file name, absolute URL, or synthetic base)
+/// to the schema whose file name matches the URI's last path segment.
+/// Matches the repository convention that every relative `$ref` resolves
+/// from the containing schema file (`core/conformance/README.md`).
+struct FileNameRetriever {
+    schemas: HashMap<String, Value>,
+}
+
+impl Retrieve for FileNameRetriever {
+    fn retrieve(
+        &self,
+        uri: &Uri<String>,
+    ) -> Result<Value, Box<dyn std::error::Error + Send + Sync>> {
+        let path = uri.path().as_str();
+        let file_name = path.rsplit('/').next().unwrap_or(path);
+        self.schemas
+            .get(file_name)
+            .cloned()
+            .ok_or_else(|| format!("schema not found for retrieval URI {uri}").into())
+    }
+}
+
+fn validator_for(schemas: &HashMap<String, Value>, name: &str) -> jsonschema::Validator {
+    let schema = schemas
+        .get(name)
+        .unwrap_or_else(|| panic!("schema {name} missing"));
+    jsonschema::options()
+        .with_retriever(FileNameRetriever {
+            schemas: schemas.clone(),
+        })
+        .should_validate_formats(true)
+        .build(schema)
+        .unwrap_or_else(|e| panic!("schema {name} failed to compile: {e}"))
+}
+
+fn vector_object(file: &str) -> Value {
+    let path = repo_root().join("conformance").join("vectors").join(file);
+    let raw = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {}: {e}", path.display()));
+    let vector: Value =
+        serde_json::from_str(&raw).unwrap_or_else(|e| panic!("parse {}: {e}", path.display()));
+    vector
+        .get("input")
+        .and_then(|i| i.get("object"))
+        .cloned()
+        .unwrap_or_else(|| panic!("{file} has no input.object"))
+}
+
+fn strong_reference() -> Value {
+    json!({
+        "kind": "strong",
+        "id": "01890a5d-ac96-774b-bcce-b302099a805d",
+        "object_version": 1,
+        "content_digest": format!("sha256:{}", "a".repeat(64)),
+    })
+}
+
+fn task_contract_fixture(schema_version: &str) -> Value {
+    let strong_reference = strong_reference();
+    json!({
+        "header": {
+            "id": "01890a5d-ac96-774b-bcce-b302099a805d",
+            "type": "TaskContract",
+            "schema_version": schema_version,
+            "object_version": 1,
+            "scope_domain": "platform",
+            "resource_scope_ref": strong_reference,
+            "owner_ref": strong_reference,
+            "authority_ref": strong_reference,
+            "policy_refs": [],
+            "purpose_constraints": ["task_execution"],
+            "sensitivity": "internal",
+            "compartments": [],
+            "retention": {
+                "policy": "test",
+                "expires_at": null,
+                "legal_hold": false
+            },
+            "provenance": {
+                "created_by": "principal://system/test",
+                "source_refs": []
+            },
+            "lineage": {
+                "parents": [],
+                "transform": "test_fixture"
+            },
+            "content_digest": format!("sha256:{}", "b".repeat(64)),
+            "created_at": "2026-08-01T00:00:00Z",
+            "valid_time": {
+                "from": "2026-08-01T00:00:00Z",
+                "until": null
+            }
+        },
+        "task_ref": "task://tenant-a/rollout",
+        "contract_epoch": 1,
+        "intent_acceptance_ref": strong_reference,
+        "intent_interpretation_ref": strong_reference,
+        "user_intent_ref": strong_reference,
+        "objective": "Deploy the bounded rollout.",
+        "scope": {
+            "in_scope": ["service://tenant-a/api"],
+            "out_of_scope": []
+        },
+        "conditions": [{
+            "id": "acceptance",
+            "kind": "acceptance",
+            "description": "The verifier accepts the deployment."
+        }],
+        "budget": {
+            "tool_calls": 1
+        },
+        "max_iterations": 2,
+        "max_retries": 1,
+        "allowed_state_domains": ["loop"],
+        "allowed_tools": []
+    })
+}
+
+#[test]
+fn task_contract_schema_versions_preserve_auditable_v01_and_require_execution_bindings() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "task-contract.schema.json");
+    let legacy_contract = task_contract_fixture("cognitiveos.task-contract/0.1");
+    if let Some(error) = validator.validate(&legacy_contract).err() {
+        panic!("the finite compatibility window must retain historical v0.1 contracts: {error}");
+    }
+
+    let mut mixed_legacy_contract = legacy_contract.clone();
+    mixed_legacy_contract["deadline"] = json!("2026-08-02T00:00:00Z");
+    assert!(
+        !validator.is_valid(&mixed_legacy_contract),
+        "v0.1 contracts must not silently acquire a partial v0.2 execution binding"
+    );
+
+    let mut execution_bound_contract = task_contract_fixture("cognitiveos.task-contract/0.2");
+    execution_bound_contract["deadline"] = json!("2026-08-02T00:00:00Z");
+    execution_bound_contract["loop_object_id"] = json!("01890a5d-ac96-774b-bcce-b302099a805d");
+    execution_bound_contract["budget_id"] = json!("01890a5d-ac96-774b-bcce-b302099a805e");
+    assert!(
+        validator.is_valid(&execution_bound_contract),
+        "v0.2 contracts with all execution bindings must validate"
+    );
+
+    for missing_binding in ["deadline", "loop_object_id", "budget_id"] {
+        let mut incomplete_contract = execution_bound_contract.clone();
+        incomplete_contract
+            .as_object_mut()
+            .expect("TaskContract fixture must be an object")
+            .remove(missing_binding);
+        assert!(
+            !validator.is_valid(&incomplete_contract),
+            "v0.2 contract missing {missing_binding} must fail closed"
+        );
+    }
+
+    let mut worker_authorized_contract = execution_bound_contract.clone();
+    worker_authorized_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.3");
+    worker_authorized_contract["worker_authorization_root_id"] =
+        json!("01890a5d-ac96-774b-bcce-b302099a805f");
+    assert!(
+        validator.is_valid(&worker_authorized_contract),
+        "v0.3 contracts require the daemon-issued worker authorization namespace"
+    );
+
+    let mut missing_worker_root = worker_authorized_contract.clone();
+    missing_worker_root
+        .as_object_mut()
+        .expect("TaskContract fixture must be an object")
+        .remove("worker_authorization_root_id");
+    assert!(
+        !validator.is_valid(&missing_worker_root),
+        "v0.3 contracts missing their worker authorization namespace must fail closed"
+    );
+
+    let mut mixed_v02_contract = execution_bound_contract.clone();
+    mixed_v02_contract["worker_authorization_root_id"] =
+        json!("01890a5d-ac96-774b-bcce-b302099a805f");
+    assert!(
+        !validator.is_valid(&mixed_v02_contract),
+        "v0.2 contracts must not silently claim the later worker authorization namespace"
+    );
+
+    let mut context_bound_contract = worker_authorized_contract.clone();
+    context_bound_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.4");
+    context_bound_contract["context_request_ref"] = json!({
+        "kind": "strong",
+        "id": "01890a5d-ac96-774b-bcce-b302099a8060",
+        "object_version": 1,
+        "content_digest": format!("sha256:{}", "c".repeat(64))
+    });
+    assert!(
+        validator.is_valid(&context_bound_contract),
+        "v0.4 contracts require one immutable ContextRequest reference"
+    );
+
+    let mut missing_context_request = context_bound_contract.clone();
+    missing_context_request
+        .as_object_mut()
+        .expect("TaskContract fixture must be an object")
+        .remove("context_request_ref");
+    assert!(
+        !validator.is_valid(&missing_context_request),
+        "v0.4 contracts missing their ContextRequest reference must fail closed"
+    );
+
+    let mut mixed_v03_contract = worker_authorized_contract.clone();
+    mixed_v03_contract["context_request_ref"] =
+        context_bound_contract["context_request_ref"].clone();
+    assert!(
+        !validator.is_valid(&mixed_v03_contract),
+        "v0.3 contracts must not silently claim the later ContextRequest binding"
+    );
+
+    let mut unknown_version_contract = context_bound_contract;
+    unknown_version_contract["header"]["schema_version"] = json!("cognitiveos.task-contract/0.5");
+    assert!(
+        !validator.is_valid(&unknown_version_contract),
+        "unsupported TaskContract versions must not enter the compatibility window"
+    );
+}
+
+#[test]
+fn every_schema_compiles_with_resolvable_refs() {
+    let schemas = load_schemas();
+    for name in schemas.keys() {
+        let _ = validator_for(&schemas, name);
+    }
+}
+
+#[test]
+fn legacy_metadata_envelope_is_rejected() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "effect.schema.json");
+    let object = vector_object("governed-object-legacy-metadata-001.json");
+    assert!(
+        !validator.is_valid(&object),
+        "legacy common-defs metadata envelope must be rejected by the \
+         single-track Effect contract (REQ-GOBJ-HEADER-001, REQ-GOBJ-MIG-001)"
+    );
+}
+
+#[test]
+fn legacy_strongref_shape_is_rejected() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "effect.schema.json");
+    let object = vector_object("governed-object-legacy-strongref-001.json");
+    assert!(
+        !validator.is_valid(&object),
+        "legacy common-defs strongRef shape must be rejected where an \
+         ObjectReference strong reference is required (REQ-GOBJ-REF-001, REQ-GOBJ-MIG-001)"
+    );
+}
+
+#[test]
+fn migrated_positive_effect_is_accepted() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "effect.schema.json");
+    // The legacy-strongref vector object with the reference migrated to the
+    // ObjectReference strong shape is exactly a valid single-track Effect.
+    let mut object = vector_object("governed-object-legacy-strongref-001.json");
+    object["intent_ref"] = serde_json::json!({
+        "kind": "strong",
+        "id": "01890a5d-ac96-774b-bcce-b302099a805d",
+        "object_version": 1,
+        "content_digest":
+            "sha256:ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff"
+    });
+    if let Some(err) = validator.validate(&object).err() {
+        panic!("migrated Effect instance must validate, got: {err}");
+    }
+}
+
+/// Positive AKP request envelope: the D-013 wire schema must accept the
+/// members the companion describes (core/specs/akp/README.md section 3), so the
+/// negative vectors are not passing vacuously.
+fn positive_request_envelope() -> Value {
+    serde_json::json!({
+        "message_id": "01890a5d-ac96-774b-bcce-b302099a8070",
+        "operation": "shell.submit",
+        "protocol_version": "cognitiveos.akp/0.2",
+        "schema_digest":
+            "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "sender": "principal://tenant-a/user-alice",
+        "audience": "kernel://task-gateway",
+        "correlation_id": "conv://tenant-a/session-1/turn-9",
+        "causation_id": "01890a5d-ac96-774b-bcce-b302099a806f",
+        "deadline": "2026-07-20T00:05:00Z",
+        "idempotency_key": "idem-shell-submit-0001",
+        "authorization_ref": "cap://tenant-a/lease-77",
+        "budget": { "wall_time_ms": 60000 },
+        "payload": { "proposal_ref": "proposal://tenant-a/sap-0001" },
+        "payload_digest":
+            "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "extensions": [ { "id": "x-trace", "critical": false } ]
+    })
+}
+
+#[test]
+fn akp_request_envelope_accepts_described_members_and_rejects_vector_negatives() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "akp-request-envelope.schema.json");
+    if let Some(err) = validator.validate(&positive_request_envelope()).err() {
+        panic!("described request envelope must validate, got: {err}");
+    }
+    // Management members ride the same envelope (AKP section 10.1) but the
+    // session ref never travels alone.
+    let mut management = positive_request_envelope();
+    management["management_session_ref"] = serde_json::json!("session://tenant-a/pms-1");
+    assert!(
+        !validator.is_valid(&management),
+        "management_session_ref without actor_chain_digest/activity_context_ref must be rejected"
+    );
+    management["actor_chain_digest"] = serde_json::json!(format!("sha256:{}", "d".repeat(64)));
+    management["activity_context_ref"] = serde_json::json!("activity://tenant-a/act-1");
+    if let Some(err) = validator.validate(&management).err() {
+        panic!("management-bound request envelope must validate, got: {err}");
+    }
+    // The exact instances pinned by the negative vectors are rejected.
+    for vector in [
+        "akp-envelope-no-schema-pin-001.json",
+        "akp-envelope-ambiguous-payload-002.json",
+    ] {
+        assert!(
+            !validator.is_valid(&vector_object(vector)),
+            "{vector} object must be rejected (REQ-AKP-ENV-001/002)"
+        );
+    }
+}
+
+#[test]
+fn akp_result_envelope_requires_machine_error_and_continuation() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "akp-result-envelope.schema.json");
+    let ok = serde_json::json!({
+        "in_reply_to": "01890a5d-ac96-774b-bcce-b302099a8070",
+        "correlation_id": "conv://tenant-a/session-1/turn-9",
+        "protocol_version": "cognitiveos.akp/0.2",
+        "status": "ok",
+        "result": { "accepted_ref": "task://tenant-a/tsk-0007" },
+        "observed_versions": { "task": 4 },
+        "cost": { "wall_time_ms": 12 },
+        "audit_ref": "audit://tenant-a/rec-1"
+    });
+    if let Some(err) = validator.validate(&ok).err() {
+        panic!("ok result envelope must validate, got: {err}");
+    }
+    let error_result = serde_json::json!({
+        "in_reply_to": "01890a5d-ac96-774b-bcce-b302099a8070",
+        "correlation_id": "conv://tenant-a/session-1/turn-9",
+        "protocol_version": "cognitiveos.akp/0.2",
+        "status": "error",
+        "error": {
+            "code": "STATE_CONFLICT",
+            "category": "state",
+            "stage": "authorization",
+            "retryable": true
+        }
+    });
+    if let Some(err) = validator.validate(&error_result).err() {
+        panic!("error result with registered machine error must validate, got: {err}");
+    }
+    assert!(
+        !validator.is_valid(&vector_object(
+            "akp-result-error-without-machine-code-003.json"
+        )),
+        "error status without the machine error envelope must be rejected (REQ-ERR-001)"
+    );
+    let mut partial = ok.clone();
+    partial["status"] = serde_json::json!("partial");
+    assert!(
+        !validator.is_valid(&partial),
+        "partial without continuation must be rejected (AKP section 5)"
+    );
+    partial["continuation"] = serde_json::json!({ "high_watermark": 7 });
+    if let Some(err) = validator.validate(&partial).err() {
+        panic!("partial with continuation must validate, got: {err}");
+    }
+}
+
+#[test]
+fn akp_stream_frame_kinds_carry_their_required_members() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "akp-stream-frame.schema.json");
+    let snapshot = serde_json::json!({
+        "stream_id": "watch://tenant-a/wsub-1",
+        "sequence": 0,
+        "kind": "snapshot",
+        "snapshot_version": 4,
+        "payload": { "view": "initial" },
+        "final": false,
+        "cost": { "context_bytes": 2048 }
+    });
+    if let Some(err) = validator.validate(&snapshot).err() {
+        panic!("snapshot frame must validate, got: {err}");
+    }
+    let error_frame = serde_json::json!({
+        "stream_id": "watch://tenant-a/wsub-1",
+        "sequence": 9,
+        "kind": "error",
+        "error": {
+            "code": "WATCH_CURSOR_STALE",
+            "category": "watch",
+            "stage": "resume",
+            "retryable": true
+        },
+        "final": true
+    });
+    if let Some(err) = validator.validate(&error_frame).err() {
+        panic!("machine-coded error frame must validate, got: {err}");
+    }
+    let mut unversioned_snapshot = snapshot.clone();
+    unversioned_snapshot
+        .as_object_mut()
+        .map(|o| o.remove("snapshot_version"));
+    assert!(
+        !validator.is_valid(&unversioned_snapshot),
+        "snapshot frame without snapshot_version must be rejected"
+    );
+    assert!(
+        !validator.is_valid(&vector_object("akp-stream-frame-unsequenced-004.json")),
+        "frame without stream identity/sequence must be rejected (REQ-AKP-STR-001)"
+    );
+}
+
+#[test]
+fn shell_control_request_is_cancel_with_target_and_reason() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "shell-control-request.schema.json");
+    let cancel = serde_json::json!({
+        "schema_version": "cognitiveos.shell-control-request/0.1",
+        "control": "cancel",
+        "target_ref": "task://tenant-a/tsk-0007",
+        "reason": "user requested stop from the shell"
+    });
+    if let Some(err) = validator.validate(&cancel).err() {
+        panic!("cancel control request must validate, got: {err}");
+    }
+    assert!(
+        !validator.is_valid(&vector_object("shell-control-unreasoned-cancel-001.json")),
+        "cancel without reason must be rejected (REQ-AKP-CAN-001)"
+    );
+}
+
+/// Positive R1 approval request (F-011 registration): the described
+/// challenge members validate, so the tier negatives below are not passing
+/// vacuously.
+fn positive_r1_approval_request() -> Value {
+    serde_json::json!({
+        "schema_version": "cognitiveos.management-approval-request/0.1",
+        "request_id": "mar_r1-net-cfg-0001",
+        "proposal_ref": "proposal://tenant-a/map_cfg-network-42",
+        "proposal_digest": format!("sha256:{}", "a".repeat(64)),
+        "risk_class": "R1",
+        "confirmation_surface": "chat_structured",
+        "human_principal": "principal://tenant-a/user-alice",
+        "proposer_principal": "principal://tenant-a/agent-worker-7",
+        "proposer_actor_chain_digest": format!("sha256:{}", "b".repeat(64)),
+        "channel_identity": "channel://os/approval-bot-1",
+        "challenge_digest": format!("sha256:{}", "c".repeat(64)),
+        "method": "digest_shortcode_match",
+        "single_use": true,
+        "aggregation_key": "system.configure/network",
+        "requested_at": "2026-07-20T00:00:00Z",
+        "expires_at": "2026-07-20T00:05:00Z"
+    })
+}
+
+#[test]
+fn approval_request_tiers_fail_closed_by_risk_class() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "management-approval-request.schema.json");
+    if let Some(err) = validator.validate(&positive_r1_approval_request()).err() {
+        panic!("R1 chat-structured approval request must validate, got: {err}");
+    }
+    // Chat is never a completion surface above R1 (whitepaper 12.12 matrix).
+    let mut r2_chat = positive_r1_approval_request();
+    r2_chat["risk_class"] = serde_json::json!("R2");
+    r2_chat["session_ref"] = serde_json::json!("session://tenant-a/pms-1");
+    assert!(
+        !validator.is_valid(&r2_chat),
+        "R2 with chat_structured completion surface must be rejected"
+    );
+    r2_chat["confirmation_surface"] = serde_json::json!("trusted_surface");
+    if let Some(err) = validator.validate(&r2_chat).err() {
+        panic!("R2 trusted-surface request must validate, got: {err}");
+    }
+    // R2/R3 bind a persistent management session.
+    let mut r2_sessionless = r2_chat.clone();
+    r2_sessionless
+        .as_object_mut()
+        .map(|o| o.remove("session_ref"));
+    assert!(
+        !validator.is_valid(&r2_sessionless),
+        "R2 without session_ref must be rejected"
+    );
+    // R3 requires the dual-independent surface.
+    let mut r3 = r2_chat.clone();
+    r3["risk_class"] = serde_json::json!("R3");
+    assert!(
+        !validator.is_valid(&r3),
+        "R3 on a non-dual surface must be rejected"
+    );
+    r3["confirmation_surface"] = serde_json::json!("dual_independent");
+    if let Some(err) = validator.validate(&r3).err() {
+        panic!("R3 dual-independent request must validate, got: {err}");
+    }
+    // Auto-approval is an R0-only surface; R1+ must confirm.
+    let mut r1_auto = positive_r1_approval_request();
+    r1_auto["confirmation_surface"] = serde_json::json!("policy_auto");
+    assert!(
+        !validator.is_valid(&r1_auto),
+        "R1 with policy_auto must be rejected"
+    );
+    // The challenge is single-use by contract (REQ-AKP-MGMT-002).
+    let mut reusable = positive_r1_approval_request();
+    reusable["single_use"] = serde_json::json!(false);
+    assert!(
+        !validator.is_valid(&reusable),
+        "a reusable approval request must be rejected"
+    );
+}
+
+#[test]
+fn approval_decision_r1_conditional_binds_request_and_single_use() {
+    let schemas = load_schemas();
+    let validator = validator_for(&schemas, "management-approval-decision.schema.json");
+    let base = serde_json::json!({
+        "schema_version": "cognitiveos.management-approval-decision/0.1",
+        "decision_id": "mad_r1-net-cfg-0001",
+        "object_version": 1,
+        "proposal_ref": "proposal://tenant-a/map_cfg-network-42",
+        "proposal_digest": format!("sha256:{}", "a".repeat(64)),
+        "session_ref": "approval://tenant-a/one-shot/mar_r1-net-cfg-0001",
+        "decision": "approve",
+        "deciding_authority": "authority://platform/management-session",
+        "approver_principal": "principal://tenant-a/user-alice",
+        "approver_actor_chain_digest": format!("sha256:{}", "d".repeat(64)),
+        "policy_version": 3,
+        "risk_class": "R1",
+        "challenge_digest": format!("sha256:{}", "c".repeat(64)),
+        "decided_at": "2026-07-20T00:01:00Z",
+        "expires_at": "2026-07-20T00:05:00Z",
+        "decision_digest": format!("sha256:{}", "e".repeat(64)),
+        "authority_signature": "sig-0123456789abcdef"
+    });
+    // R1 approve without the request binding / single-use pledge is rejected
+    // (hardened conditional, F-011).
+    assert!(
+        !validator.is_valid(&base),
+        "R1 approve without request_ref/single_use must be rejected"
+    );
+    let mut bound = base.clone();
+    bound["request_ref"] = serde_json::json!("approval-request://tenant-a/mar_r1-net-cfg-0001");
+    bound["single_use"] = serde_json::json!(true);
+    if let Some(err) = validator.validate(&bound).err() {
+        panic!("bound single-use R1 approval must validate, got: {err}");
+    }
+    let mut reusable = bound.clone();
+    reusable["single_use"] = serde_json::json!(false);
+    assert!(
+        !validator.is_valid(&reusable),
+        "reusable R1 approval must be rejected"
+    );
+    // Pre-existing shapes stay valid: an R2 independent approval without the
+    // new members is untouched by the hardening (non-breaking proof).
+    let mut r2 = base.clone();
+    r2["risk_class"] = serde_json::json!("R2");
+    r2["independent_from_proposer"] = serde_json::json!(true);
+    r2["step_up_method"] = serde_json::json!("fido2_sign");
+    if let Some(err) = validator.validate(&r2).err() {
+        panic!("existing R2 approval shape must stay valid, got: {err}");
+    }
+}
+
+#[test]
+fn legacy_defs_stay_deprecated_and_unreferenced() {
+    // Decision record for F-003 remaining condition (legacy `$defs`): the
+    // shapes stay in common-defs.schema.json, marked deprecated, referenced
+    // by ZERO schemas (adapter-only per governed-object-contract section 6).
+    let schemas = load_schemas();
+    let common = &schemas["common-defs.schema.json"];
+    for def in ["metadata", "strongRef"] {
+        assert_eq!(
+            common["$defs"][def]["deprecated"],
+            Value::Bool(true),
+            "common-defs $defs/{def} must stay marked deprecated"
+        );
+    }
+    for (name, doc) in &schemas {
+        if name == "common-defs.schema.json" {
+            continue;
+        }
+        let raw = doc.to_string();
+        for banned in [
+            "common-defs.schema.json#/$defs/metadata",
+            "common-defs.schema.json#/$defs/strongRef",
+        ] {
+            assert!(
+                !raw.contains(banned),
+                "{name} references legacy shape {banned} (dual-track ban, F-003)"
+            );
+        }
+    }
+}
+
+#[test]
+fn m5_codegen_consumer_schemas_enforce_key_constraints() {
+    let schemas = load_schemas();
+    let interpretation_validator = validator_for(&schemas, "intent-interpretation.schema.json");
+    let mut interpretation = serde_json::json!({
+        "header": vector_object("governed-object-legacy-strongref-001.json")["header"].clone(),
+        "intent_ref": {"kind":"strong","id":"01890a5d-ac96-774b-bcce-b302099a805d","object_version":1,"content_digest":format!("sha256:{}", "a".repeat(64))},
+        "status":"candidate","objectives":["resolve target"],"constraints":[],"forbidden":[],"assumptions":[],
+        "ambiguities":[{"id":"amb-1","material":true,"question":"which target?"}],"information_gaps":[],
+        "interpretation_digest":format!("sha256:{}", "b".repeat(64))
+    });
+    assert!(!interpretation_validator.is_valid(&interpretation));
+    interpretation["status"] = serde_json::json!("clarification_required");
+    assert!(interpretation_validator.is_valid(&interpretation));
+
+    let session_validator = validator_for(&schemas, "privileged-management-session.schema.json");
+    let session = serde_json::json!({
+        "schema_version":"cognitiveos.privileged-management-session/0.1","session_id":"pms_session-0001","object_version":1,
+        "management_domain":"cognitiveos.management.runtime","session_authority":"authority://platform/management","human_principal":"principal://tenant-a/alice",
+        "actor_chain_digest":format!("sha256:{}", "c".repeat(64)),"authentication_context_ref":"authn://tenant-a/context-1","activity_context_ref":"activity://tenant-a/activity-1",
+        "scope":{"domains":["cognitiveos.management.runtime"],"actions":["task.stop"],"resources":["task://tenant-a/task-1"]},
+        "risk_ceiling":"R2","policy_version":1,"revocation_epoch":0,"issued_at":"2026-07-21T00:00:00Z","last_activity_at":"2026-07-21T00:00:00Z",
+        "idle_timeout_seconds":300,"absolute_expires_at":"2026-07-21T01:00:00Z","state":"active","session_digest":format!("sha256:{}", "d".repeat(64)),
+        "authority_signature":"sig-0123456789abcdef"
+    });
+    assert!(session_validator.is_valid(&session));
+    let mut bad_session = session;
+    bad_session["risk_ceiling"] = serde_json::json!("R4");
+    assert!(!session_validator.is_valid(&bad_session));
+
+    let proposal_validator = validator_for(&schemas, "management-action-proposal.schema.json");
+    let proposal = serde_json::json!({
+        "schema_version":"cognitiveos.management-action-proposal/0.1","proposal_id":"map_proposal-0001","object_version":1,"session_ref":"session://tenant-a/pms-1",
+        "management_domain":"cognitiveos.management.runtime","action":"task.stop","target_refs":["task://tenant-a/task-1"],"parameters_digest":format!("sha256:{}", "e".repeat(64)),
+        "expected_versions":{"task://tenant-a/task-1":7},"idempotency_key":"management-action-0001","risk_class":"R1","actor_chain_digest":format!("sha256:{}", "f".repeat(64)),
+        "activity_context_ref":"activity://tenant-a/activity-1","policy_version":1,"created_at":"2026-07-21T00:00:00Z","expires_at":"2026-07-21T00:05:00Z",
+        "proposal_digest":format!("sha256:{}", "1".repeat(64)),"revocation_epoch":0,"step_up_required":true,"independent_approval_required":false
+    });
+    assert!(proposal_validator.is_valid(&proposal));
+    let mut missing = proposal.clone();
+    missing.as_object_mut().unwrap().remove("idempotency_key");
+    assert!(!proposal_validator.is_valid(&missing));
+    let mut unknown = proposal;
+    unknown["model_decision"] = serde_json::json!(true);
+    assert!(!proposal_validator.is_valid(&unknown));
+}

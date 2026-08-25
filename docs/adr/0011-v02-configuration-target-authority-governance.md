@@ -5,7 +5,7 @@
 - Decision owners: repository owner, TARGET consumer owners, security reviewer, and audit reviewer
 - Classification: structural docs-only design; no machine registration
 - Baseline: `origin/main@88d5374430263c52c7b67e3178dcd752ad984dbc` (PR #51 merge)
-- Decision packet: [V02-CA-TARGET-01](../plan/V02-CA-TARGET-DESIGN-DECISION.md)
+- Decision packet: [V02-CA-TARGET-01](../plan/archive/V02-CA-TARGET-DESIGN-DECISION.md)
 
 ## Context
 

@@ -9,7 +9,7 @@
 
 ## Context
 
-56 JSON Schemas (draft 2020-12) under `specs/schemas/` are the machine
+56 JSON Schemas (draft 2020-12) under `core/specs/schemas/` are the machine
 truth for governed objects. Hand-written Rust structs and TypeScript
 interfaces would drift from schemas silently — exactly the dual-track
 failure mode F-003 documented at the schema layer. The repository needs one
@@ -76,7 +76,7 @@ generation header in hand-edited hunks is part of code review
 ## Delivery record (M1, Lane-CTR)
 
 The generator is the committed custom binary
-`crates/cognitive-contracts/src/bin/contracts-codegen.rs` (single source for
+`core/crates/cognitive-contracts/src/bin/contracts-codegen.rs` (single source for
 both target languages; the typify / json-schema-to-typescript candidates were
 rejected because neither covers both languages and neither pins deterministic
 committed output with digest headers). Facts of the delivered pipeline:
@@ -86,8 +86,8 @@ committed output with digest headers). Facts of the delivered pipeline:
    (19 files; the closure adds actor-chain and conversation-binding). A.1
    objects without a same-named document schema map to their closest
    registered machine surface (mapping table in the generator header).
-2. Output: `crates/cognitive-contracts/src/generated/` and
-   `packages/contracts-ts/src/generated/`, one module per schema, namespaced
+2. Output: `core/crates/cognitive-contracts/src/generated/` and
+   `core/packages/contracts-ts/src/generated/`, one module per schema, namespaced
    re-exports. Every file header carries source path + canonical schema
    content digest (domain `schema-bundle/0.1`, identical to the
    schema-bundle manifest per-asset digest) + generator version.
@@ -100,7 +100,7 @@ committed output with digest headers). Facts of the delivered pipeline:
    `cargo run -p cognitive-contracts --bin contracts-codegen && cargo fmt --all`.
    CI runs exactly this and fails on a dirty diff.
 5. Header digests are additionally verified without regeneration by
-   `crates/cognitive-contracts/tests/generated_types.rs`
+   `core/crates/cognitive-contracts/tests/generated_types.rs`
    (`generated_headers_pin_current_schema_digests`).
 6. Remaining object families follow their consuming milestones (unchanged
    from the Consequences section).
@@ -116,7 +116,7 @@ Extension driven by the Lane-TSC client families
    AKP wire schemas registered by D-013/D-014/D-015 (akp-request-envelope,
    akp-result-envelope, akp-stream-frame, shell-control-request) — 28
    schema modules per language.
-2. New input kind: `specs/registry/errors.yaml` generates the registered
+2. New input kind: `core/specs/registry/errors.yaml` generates the registered
    error binding (`error_registry.rs` / `error-registry.ts`): exhaustive
    code enum/union, table with category/retryable/description consuming the
    generated common-defs `ErrorCategory`, fail-closed parse. Its header and

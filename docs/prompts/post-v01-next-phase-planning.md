@@ -23,9 +23,9 @@
    - `docs/checkpoints/20260721-v01-rereview.md`（v0.1：**GO-with-explicit-non-claim**）
    - `docs/plan/PARALLEL-LANES.md`
 4. 对齐只读计划（勿另起炉灶改写真相源）：
-   - `docs/plan/DEVELOPMENT-PLAN.md`
-   - `docs/plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md`（编排已落地；L3 non-claim 已有）
-   - `docs/plan/V01-PERF-CAMPAIGN-PLAN.md`（**附录；默认不触发**）
+   - `docs/plan/archive/DEVELOPMENT-PLAN.md`
+   - `docs/plan/archive/V01-AUTO-RUN-VERIFY-PERF-PLAN.md`（编排已落地；L3 non-claim 已有）
+   - `docs/plan/archive/V01-PERF-CAMPAIGN-PLAN.md`（**附录；默认不触发**）
    - `docs/traceability/findings-ledger.md`（D-018 / F-017 / deferred 项）
    - 风格参考：`docs/prompts/common-prefix.md`
 

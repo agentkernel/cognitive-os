@@ -1,9 +1,9 @@
 # CognitiveOS Personal performance assessment — 2026-08-17 (EVAL-004 full-OS re-freeze)
 
 - Campaign: `PERSONAL-PERF-EVAL-004` (owner-directed, Operating Model §2.5)
-- Execution contract: [personal-performance-benchmark-execution-plan.md](./personal-performance-benchmark-execution-plan.md) v1.1
-- Scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](./personal-performance-benchmark-full-os-only-addendum.md)
-- C1/C2 addendum: [personal-c1-c2-benchmark-execution-plan.md](./personal-c1-c2-benchmark-execution-plan.md)
+- Execution contract: [personal-performance-benchmark-execution-plan.md](personal-performance-benchmark-execution-plan.md) v1.1
+- Scope amendment: [personal-performance-benchmark-full-os-only-addendum.md](personal-performance-benchmark-full-os-only-addendum.md)
+- C1/C2 addendum: [personal-c1-c2-benchmark-execution-plan.md](personal-c1-c2-benchmark-execution-plan.md)
 - Running record: [20260816-personal-perf-eval-004-refreeze-preregistration.md](../checkpoints/20260816-personal-perf-eval-004-refreeze-preregistration.md)
 - Frozen product: `origin/main@1e71344a7b2c4a443fd0581e7fd33f21e970efbd` (P2-T21..P2-T28 / BR-01..BR-08)
 - Target: `B01-Desktop-Linux-002` (`hal9001@192.168.123.160`), campaign root

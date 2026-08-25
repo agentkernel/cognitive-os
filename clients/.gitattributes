@@ -1,0 +1,8 @@
+# Normalize all text to LF on checkout and in the repository.
+# Kept byte-identical to the agent-kernel rules this tree was split from, so
+# doc content hashes stay stable across Windows and Linux checkouts.
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.gif binary
+*.webp binary

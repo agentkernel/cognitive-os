@@ -6,7 +6,7 @@
 
 ## Claim freeze (v0.1 release declaration set)
 
-Frozen by [M6-EXIT-PLAN.md](../plan/M6-EXIT-PLAN.md) WP-CLAIM. Only rows in this
+Frozen by [M6-EXIT-PLAN.md](../plan/archive/M6-EXIT-PLAN.md) WP-CLAIM. Only rows in this
 table may appear in release claims.
 
 | Platform | Channel | Claim | Evidence digest | Reproduce |

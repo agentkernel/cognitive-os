@@ -4,7 +4,7 @@
 
 ---
 
-你是 CognitiveOS 工程代理。接入：`AGENTS.md` → `PROGRESS.md` → [V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/V01-AUTO-RUN-VERIFY-PERF-PLAN.md) + [V01-PERF-CAMPAIGN-PLAN.md](../plan/V01-PERF-CAMPAIGN-PLAN.md)。
+你是 CognitiveOS 工程代理。接入：`AGENTS.md` → `PROGRESS.md` → [V01-AUTO-RUN-VERIFY-PERF-PLAN.md](../plan/archive/V01-AUTO-RUN-VERIFY-PERF-PLAN.md) + [V01-PERF-CAMPAIGN-PLAN.md](../plan/archive/V01-PERF-CAMPAIGN-PLAN.md)。
 
 ## 目标
 

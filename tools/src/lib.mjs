@@ -10,8 +10,12 @@ import YAML from "yaml";
 
 export const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
 
-/** Directories the scanners may enter. History/ and build outputs are excluded by design. */
-const SCAN_ROOTS = ["specs", "conformance", "docs", "crates", "packages", "apps", "tests", "tools"];
+/**
+ * Directories the scanners may enter (ADR-0054 subproject roots). History/,
+ * build outputs, the imported clients/ project (own governance), and the
+ * handbook (own checker) are excluded by design.
+ */
+const SCAN_ROOTS = ["core", "personal", "enterprise", "docs", "tools"];
 const EXCLUDED_DIR_NAMES = new Set([
   "History",
   "node_modules",
@@ -19,6 +23,7 @@ const EXCLUDED_DIR_NAMES = new Set([
   "dist",
   ".git",
   "artifacts",
+  "handbook",
 ]);
 
 export function repoPath(...segments) {
@@ -83,9 +88,9 @@ export function listMarkdownFiles() {
 
 /** Load the registries once. */
 export function loadRegistries() {
-  const requirements = readYaml(repoPath("specs", "registry", "requirements.yaml"));
-  const errors = readYaml(repoPath("specs", "registry", "errors.yaml"));
-  const stateDomains = readYaml(repoPath("specs", "registry", "state-domains.yaml"));
+  const requirements = readYaml(repoPath("core", "specs", "registry", "requirements.yaml"));
+  const errors = readYaml(repoPath("core", "specs", "registry", "errors.yaml"));
+  const stateDomains = readYaml(repoPath("core", "specs", "registry", "state-domains.yaml"));
   return {
     requirements,
     errors,
@@ -97,7 +102,7 @@ export function loadRegistries() {
 
 /** Load every conformance vector with its repo-relative path. */
 export function loadVectors() {
-  return listFiles("conformance/vectors", (name) => name.endsWith(".json")).map((abs) => ({
+  return listFiles("core/conformance/vectors", (name) => name.endsWith(".json")).map((abs) => ({
     path: toRepoRelative(abs),
     abs,
     doc: readJson(abs),
@@ -106,7 +111,7 @@ export function loadVectors() {
 
 /** Load every schema with its repo-relative path. */
 export function loadSchemas() {
-  return listFiles("specs/schemas", (name) => name.endsWith(".json")).map((abs) => ({
+  return listFiles("core/specs/schemas", (name) => name.endsWith(".json")).map((abs) => ({
     path: toRepoRelative(abs),
     abs,
     name: path.basename(abs),

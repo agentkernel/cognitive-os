@@ -34,7 +34,7 @@
 
 ## 5. 下一步入口
 
-- 按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md) 选下一 defer 族或 P2（D-018 / TSC HTTP），勿批量清 not-run。
+- 按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md) 选下一 defer 族或 P2（D-018 / TSC HTTP），勿批量清 not-run。
 
 ## 6. 快照
 

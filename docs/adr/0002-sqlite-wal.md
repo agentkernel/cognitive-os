@@ -10,7 +10,7 @@
 
 ## Context
 
-The v0.1 target is single-node R0/R1 (`docs/plan/DEVELOPMENT-PLAN.md`). The
+The v0.1 target is single-node R0/R1 (`docs/plan/archive/DEVELOPMENT-PLAN.md`). The
 store must provide: atomic commit of state change + event append in one
 transaction (`state-and-transition-contract.md`), compare-and-swap on
 object versions (`STATE_CONFLICT`), an append-only event log, an outbox for

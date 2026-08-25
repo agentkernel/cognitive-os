@@ -98,7 +98,7 @@ jobs:
         run: |
           cargo run --locked -q -p cognitive-contracts --bin contracts-codegen
           cargo fmt --all
-          git diff --exit-code -- crates/cognitive-contracts/src/generated packages/contracts-ts/src/generated
+          git diff --exit-code -- core/crates/cognitive-contracts/src/generated core/packages/contracts-ts/src/generated
 
       # Static consistency (registry <-> schema <-> vector <-> docs) ---------
       - name: Consistency check (orphans, links, matrix, ledger)
@@ -108,7 +108,7 @@ jobs:
         run: node tools/src/gen-matrix.mjs --check
 
       # Handbook drift gate (manifest, locale pairing, links, fingerprints,
-      # coverage, generated-page byte equality; see handbook/_meta) ----------
+      # coverage, generated-page byte equality; see personal/handbook/_meta) ----------
       - name: Handbook consistency and generated-page drift
         run: |
           node tools/src/check-handbook.mjs
@@ -184,7 +184,7 @@ jobs:
         run: |
           mkdir -p artifacts/evidence/golden
           cargo run --locked -q -p cognitive-contracts --example emit_golden > artifacts/evidence/golden/rust-digests.json
-          node packages/contracts-ts/dist/emit-golden.js > artifacts/evidence/golden/ts-digests.json
+          node core/packages/contracts-ts/dist/emit-golden.js > artifacts/evidence/golden/ts-digests.json
           node -e "
             const fs = require('fs');
             const rust = fs.readFileSync('artifacts/evidence/golden/rust-digests.json', 'utf-8');

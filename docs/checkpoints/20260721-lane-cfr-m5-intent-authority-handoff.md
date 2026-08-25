@@ -38,7 +38,7 @@
 
 ## 5. 下一步入口
 
-- 建议：按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/POST-V01-NEXT-PHASE-PLAN.md) §B P1 选壳 channel/target 或工具链债；勿批量清 not-run。
+- 建议：按 [POST-V01-NEXT-PHASE-PLAN.md](../plan/archive/POST-V01-NEXT-PHASE-PLAN.md) §B P1 选壳 channel/target 或工具链债；勿批量清 not-run。
 - 工作分支：`lane/cfr-m5-intent-authority-slice`（待 PR → main）。
 - 第一个动作：CI 绿后合并；下一战役先 `git status` 保护 dirty。
 
