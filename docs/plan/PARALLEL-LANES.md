@@ -85,8 +85,9 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P7-T05/d14-rendered-review` | `P7-T05/D15` Control Plane W6 Agents dossier (same task lease after D14 close) | Lane-TSC | `personal/P7-T05-d14-rendered-review` | `clients/pc/web/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260825-personal-p7-t05-d14-w5-rendered-review-report.md` | owner-directed session 2026-08-25 | 2026-08-25 / 2026-08-25 | active |
 
-No active leases. Writing to any path requires claiming a new row first.
+Only the row above is active. Writing to any other path requires claiming a new row first.
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
