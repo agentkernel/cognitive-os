@@ -16,9 +16,11 @@ claim ceilings.
 
 1. Read the `Owner-directed campaign` row in `docs/plan/PROGRESS.md` Current
    snapshot.
-2. If it names an **active** campaign (currently `PERSONAL-PERF-EVAL-002`),
-   this adapter applies: development-backlog continuation is suspended and the
-   session's objective is the campaign itself.
+2. If it names an **active** campaign, this adapter applies:
+ development-backlog continuation is suspended and the session's objective is
+ the campaign itself. (As of 2026-08-25 all campaigns through
+ `PERSONAL-PERF-EVAL-015` are **closed** and evaluation routing is OFF; this
+ adapter is dormant until the owner registers a new active campaign row.)
 3. If no such row is active, this adapter is dormant. Do not invent an
    evaluation mode from chat history.
 

@@ -64,7 +64,7 @@ flowchart LR
 
 2026-07-20 批准一个窄幅、可审计例外：后端 gate 通过前，Lane-CON 可维护 `clients/**`（客户端项目根，ADR-0007：PC/mobile/shared/Agent Hub 文档、治理件、计划与提示词，含 `clients/agent-hub/{docs,plan,prompts}/`）以及兼容 stub `apps/cognitiveos-console/`、`docs/platforms/`、`docs/clients/` 下的 informative 平台研究、产品设计、产品要求/决策、README、roadmap、index、parity matrix、治理说明和已登记漂移的事实修正。
 
-2026-07-26 所有者将客户端文档域整体迁出至独立仓库 [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)（保留 subtree 历史；外部仓根对应原 `clients/`）。上述 2026-07-20 批准记录作为史实保留不变；自该日起，在**本仓库内**该例外仅覆盖余下兼容 stub（`apps/cognitiveos-console/`、`docs/platforms/`、`docs/clients/`），`clients/**` 不得在本仓重建，客户端文档树的维护改由外部仓自身流程承担。
+2026-07-26 所有者将客户端文档域整体迁出至独立仓库 [cognitiveos-clients](https://github.com/agentkernel/cognitiveos-clients)（保留 subtree 历史；外部仓根对应原 `clients/`）。2026-08-25 所有者依 [ADR-0054](../adr/0054-repository-subproject-structure-and-1.0.0-finalization.md) 将该仓库以 subtree 并回本仓 [clients/](../../clients/README.md)（历史保留；外部仓库转为 archived 兼容入口）。上述两次决定的记录均作为史实保留；自 2026-08-25 起，本例外覆盖 `clients/**` 文档域（含并回的兼容 stub `clients/legacy/cognitiveos-console/`、`clients/docs/platforms/` 与本仓 `docs/clients/` 指针），仍不激活 Console/客户端实现车道。
 
 该例外不激活 Console 实现车道，不允许组件、脚手架、mock server、helper、安装器或其他实现代码，不允许修改 registry/schema/transition/vector 等 normative 机器资产，也不允许声称实现已提供、测试已执行或 Profile 已符合。实现 gate 以 [平台文档入口](https://github.com/agentkernel/cognitiveos-clients/blob/main/governance/readiness-gates.md#console-实现-gate) 为准；Agent Hub 另加 Paseo/AGPL 与第三方组件义务的独立法务 gate。
 
@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P0-T08/subproject-restructure` | P0-T08 owner-directed repository restructure into `core/`/`personal/`/`enterprise/`/`clients/` subproject directories with 1.0.0 boundary finalization (structural; ADR-0054) | Lane-DOC (+ CTR/CFR path migration) | `structural/subprojects-and-1.0.0` | Repository-wide path moves (`git mv` only, no semantic change) plus the path-literal rewrites they force: root manifests, `.github/`, `tools/src/`, `handbook/_meta/`, `.cursor/rules/`, `AGENTS.md`, `docs/**` index/link updates, new `core/ personal/ enterprise/ clients/` trees, `docs/adr/0054-*`, `docs/plan/{PROGRESS,PARALLEL-LANES,PERSONAL-DEVELOPMENT-PLAN}.md` | owner-directed session 2026-08-25 | 2026-08-25 / 2026-08-25 | active |
+| `lease/personal/P0-T08/subproject-restructure` | `P0-T08/D01` owner-directed repository restructure into `core/`/`personal/`/`enterprise/`/`clients/` subproject directories with 1.0.0 boundary finalization (structural; ADR-0054) | Lane-DOC (+ CTR/CFR path migration) | `structural/subprojects-and-1.0.0` | Repository-wide path moves (`git mv` only, no semantic change) plus the path-literal rewrites they force: root manifests, `.github/`, `tools/src/`, `handbook/_meta/`, `.cursor/rules/`, `AGENTS.md`, `docs/**` index/link updates, new `core/ personal/ enterprise/ clients/` trees, `docs/adr/0054-*`, `docs/plan/{PROGRESS,PARALLEL-LANES,PERSONAL-DEVELOPMENT-PLAN}.md` | owner-directed session 2026-08-25 | 2026-08-25 / 2026-08-25 | active |
 
 Only the row above is active. Writing to any other path requires claiming a
 new row first.

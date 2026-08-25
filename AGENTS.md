@@ -1,7 +1,10 @@
 # AGENTS.md — CognitiveOS Personal 开发代理入口
 
 本仓库的唯一活动实现项目是 **`cognitiveos-personal`（CognitiveOS Personal）**。
-原 CognitiveOS 设计、白皮书、规范和通用内核是架构参考与合同基础，不是第二个待交付
+仓库按 [ADR-0054](docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md)
+组织为 `core/`（合同与权威基底，1.0.0 已定稿）、`personal/`（唯一活动产品，1.0.0
+已定稿）、`enterprise/`（设计层，未激活）、`clients/`（并入的客户端子项目）四个
+子项目目录加共享 `docs/` 治理层；core 是架构参考与合同基础，不是第二个待交付
 项目。完整边界见 [PROJECT-IDENTITY.md](docs/governance/PROJECT-IDENTITY.md)；本文件只
 保留代理必须立即知道的操作规则，通用治理正文见
 [DEVELOPMENT-OPERATING-MODEL.md](docs/governance/DEVELOPMENT-OPERATING-MODEL.md)。
@@ -244,14 +247,14 @@ user-systemd、Rust/Node、exact Pi `0.81.1` 和可清理目录；`pi` 不在 PA
 SSH 仅使用非交互、无 secret 探针，例如：
 `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
 
-### Registered B01 campaign route
+### Registered B01 campaign route（历史登记；evaluation campaigns 已全部 closed）
 
-For the active `PERSONAL-PERF-EVAL-004` campaign, the verified target route is
-host `wuz@192.168.1.2` (libvirt host `hal9000`) followed by ProxyJump to
-`hal9001@192.168.123.160` (`B01-Desktop-Linux-002`). Use the explicit system
-libvirt URI on the host: `virsh -c qemu:///system`. This route is limited to
-the preregistered B01 campaign lease; it does not authorize access to or
-changes on `B01-Clean-Linux-001`.
+历史 evaluation campaigns（含 `PERSONAL-PERF-EVAL-004` 至 `-015`）已全部关闭，
+evaluation routing OFF。为未来预注册 campaign 保留的已验证路由：host
+`wuz@192.168.1.2`（libvirt host `hal9000`）经 ProxyJump 到
+`hal9001@192.168.123.160`（`B01-Desktop-Linux-002`），host 上使用显式
+`virsh -c qemu:///system`。该路由仅限预注册 B01 campaign lease 使用；不授权访问或
+改变 `B01-Clean-Linux-001`。
 
 ### Standing operator authorization
 
@@ -278,13 +281,23 @@ revision 同步到该主机的可清理 Git worktree，再在该 exact revision 
 宿主上任务声明的可清理目录；user-service 修改、最小权限提权、approved Secret Store 使用
 或外部 Provider 操作按 Standing operator authorization 自主执行。
 
-## 目录和变更边界
+## 目录和变更边界（ADR-0054 子项目结构）
 
-- `core/specs/`、`core/conformance/`：架构合同和符合性资产；不得为实现改写。
-- `crates/`、`apps/`、`packages/`、`tests/`、`tools/`：Personal 实现及其验证工作面。
-- `docs/governance/`、`docs/plan/`、`docs/checkpoints/`：治理、正式计划、快照和移交。
-- `clients/legacy/cognitiveos-console/`、独立客户端和其他 deferred 能力：默认只维护设计/台账，
-  不启动独立实现。
+- `core/`（cognitiveos-core，1.0.0 已定稿）：`core/specs/`、`core/conformance/`、
+  `core/crates/`（contracts/domain/kernel/akp）、`core/packages/contracts-ts/`、
+  `core/tests/golden/`、`core/docs/`。架构合同和符合性资产；不得为实现改写；
+  语义变更走 Lane-CTR。
+- `personal/`（cognitiveos-personal，唯一活动实现项目，1.0.0 已定稿）：
+  `personal/crates/`、`personal/apps/`、`personal/packages/`、`personal/deploy/`、
+  `personal/handbook/`、`personal/tests/`、`personal/docs/`。Personal 实现及其
+  验证/文档工作面；`tools/` 为共享检查工具面。
+- `enterprise/`：设计层（`enterprise/docs/`）；未经 owner 按
+  [VERSION-1.0.0.md](enterprise/docs/VERSION-1.0.0.md) §4 激活不得实现。
+- `clients/`：并入的客户端子项目（自有治理；Web UI 唯一实现路径
+  `clients/pc/web/`）；`clients/legacy/cognitiveos-console/` 等 stub 只维护
+  设计/台账，不启动独立实现车道。
+- `docs/governance/`、`docs/plan/`、`docs/checkpoints/`：共享治理、正式计划、
+  快照和移交。
 - `personal-blog/` 是独立仓库，禁止推入本仓库；禁止在其他路径建立平行副本。
 
 变更必须声明 `implementation-only`、`corrective`、`product-semantic`、

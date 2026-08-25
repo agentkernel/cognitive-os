@@ -10,7 +10,7 @@ sources:
   - path: docs/governance/DEVELOPMENT-OPERATING-MODEL.md
     symbols: ["TASK-ATOMIC-DELIVERY-01", "Sources of truth"]
   - path: docs/standards/normative-source-and-versioning.md
-fingerprint: "sha256:335bea9ed7eda0f0cebdbd2746f78b74235842cd4e007c0bb62065b0b5e51e3e"
+fingerprint: "sha256:e93c9f7bb7d8a3b9532fe76f71918c5df1288643b77eb50c75547acf2f396298"
 non_claims:
   - This page routes to canonical owners; it never replaces or restates their current content.
 ---

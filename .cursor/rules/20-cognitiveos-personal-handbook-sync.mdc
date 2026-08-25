@@ -5,10 +5,12 @@ consistent with the tree. It adds no workflow, axiom, or status semantics; the
 policy is owned by `personal/handbook/_meta/sync-policy.md` and canonical governance
 sources always win over handbook content.
 
-1. Before finishing any change under `crates/`, `apps/`, `packages/`, `core/specs/`,
-   `core/conformance/`, `tests/`, `tools/`, `personal/deploy/`, `.github/`, or root manifests,
-   match the changed paths against `personal/handbook/_meta/source-map.json` and update
-   the mapped handbook documents in the same formal task and PR.
+1. Before finishing any change under `core/crates/`, `core/packages/`, `core/specs/`,
+   `core/conformance/`, `core/tests/`, `personal/crates/`, `personal/apps/`,
+   `personal/packages/`, `personal/tests/`, `tools/`, `personal/deploy/`, `.github/`,
+   or root manifests, match the changed paths against
+   `personal/handbook/_meta/source-map.json` and update the mapped handbook
+   documents in the same formal task and PR.
 2. User-visible behavior changes (CLI verbs/flags, configuration files, errors,
    security boundaries, installation, recovery) must update both locales of the
    affected `personal/handbook/*/user/**` and `personal/handbook/*/reference/**` pages.
