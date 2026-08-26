@@ -267,6 +267,75 @@ test("evaluation lease rejects product paths and unregistered campaigns", () => 
   );
 });
 
+function injectGovernanceLease(leaseRow, { registerDelivery = true } = {}) {
+  const base = injectEvaluationLease(leaseRow);
+  if (!registerDelivery) {
+    return base;
+  }
+  const leaseId = leaseRow.match(/`(lease\/personal\/[^`]+)`/)?.[1];
+  const deliveryId = leaseId?.match(/^lease\/personal\/(GOV-[^/]+)\//)?.[1];
+  assert.ok(deliveryId, "governance lease row must carry a lease/personal/GOV-<id>/... id");
+  return {
+    ...base,
+    "docs/plan/PROGRESS.md": (source) => {
+      const withLeaseReference = base["docs/plan/PROGRESS.md"](source);
+      const activeLeaseRow = withLeaseReference
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| Active task lease |"));
+      assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
+      // The checker strips the lease-reference row and the snapshot heading
+      // before looking for the delivery registration, so the fixture must
+      // register the delivery in an ordinary snapshot table row.
+      const registrationRow = `| ${deliveryId} governance delivery fixture | fixture registration for the injected governance lease | governance/documentation only | fixture |`;
+      return withLeaseReference.replace(activeLeaseRow, `${activeLeaseRow}\n${registrationRow}`);
+    },
+  };
+}
+
+test("owner-directed governance lease is accepted without a formal task slice", () => {
+  const result = runConsistencyFailureInjection(
+    injectGovernanceLease(
+      // The fixture delivery id must never collide with a real live lease:
+      // injectEvaluationLease asserts its lease-reference rewrite changed the
+      // live Active task lease row, which a real-id collision would violate.
+      "| `lease/personal/GOV-FIXTURE01/credential-import-boundary` | `GOV-FIXTURE01` owner-directed governance delivery fixture; no formal task/slice | Lane-DOC | `personal/gov-fixture01-fixture` | `docs/governance/AXIOMS.md`; `docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md`; `docs/plan/PROGRESS.md`; `tools/src/check-consistency.mjs`; `tools/test/check.test.mjs`; `personal/handbook/en/developer/conformance-and-testing.md` | governance session fixture | 2026-08-26 / 2026-08-26 | active |",
+    ),
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /check-consistency: OK/);
+});
+
+test("governance lease rejects unregistered deliveries and product paths", () => {
+  const result = runConsistencyFailureInjection(
+    injectGovernanceLease(
+      "| `lease/personal/GOV-ZZZ9/rogue` | `GOV-ZZZ9` unregistered governance fixture | Lane-DOC | `personal/gov-zzz9-fixture` | `personal/crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md` | governance session fixture | 2026-08-26 / 2026-08-26 | active |",
+      { registerDelivery: false },
+    ),
+  );
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /GOV_LEASE_UNREGISTERED: governance delivery GOV-ZZZ9/);
+  assert.match(
+    result.stderr,
+    /GOV_LEASE_PATH_FORBIDDEN: governance lease lease\/personal\/GOV-ZZZ9\/rogue .* not personal\/crates\/cognitive-runtime\/src\/lib\.rs/,
+  );
+});
+
+test("governance lease rejects id/description delivery mismatch", () => {
+  const result = runConsistencyFailureInjection(
+    injectGovernanceLease(
+      "| `lease/personal/GOV-A5/mismatched` | owner-directed governance fixture without a delivery token | Lane-DOC | `personal/gov-a5-fixture` | `docs/plan/PROGRESS.md` | governance session fixture | 2026-08-26 / 2026-08-26 | active |",
+    ),
+  );
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(
+    result.stderr,
+    /GOV_LEASE_MALFORMED: governance lease lease\/personal\/GOV-A5\/mismatched/,
+  );
+});
+
 test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {
   const result = runConsistencyFailureInjection({
     "docs/plan/PROGRESS.md": (source) =>

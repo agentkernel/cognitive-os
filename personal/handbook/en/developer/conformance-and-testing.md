@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:aa1fa9e241bb271661d6202b3a96e749ba55a0979e56be0d14e2b48db5351c51"
+fingerprint: "sha256:cc5db37091afc917cb1d11f1259e29fb01679739c083aabb2e56bfcd690bc63c"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -72,7 +72,13 @@ validity (draft 2020-12), registry↔schema↔vector bidirectional references,
 Markdown link resolution, Personal plan/lease/slice/Gate bookkeeping shape
 (including the `lease/personal/EVAL-<id>/…` owner-directed evaluation-campaign
 lease class, which must name a snapshot-registered campaign and may own only
-`docs/evaluation/`, `docs/checkpoints/`, and `docs/plan/PROGRESS.md`),
+`docs/evaluation/`, `docs/checkpoints/`, and `docs/plan/PROGRESS.md`, and the
+`lease/personal/GOV-<id>/…` owner-directed governance-delivery lease class
+(ADR-0055), whose description must name the same snapshot-registered
+`GOV-<id>` and which may own only `docs/governance/`, `docs/adr/`,
+`docs/plan/PROGRESS.md`, the lease-grammar checker surface
+(`tools/src/check-consistency.mjs`, `tools/test/check.test.mjs`), and mapped
+handbook pages under `personal/handbook/`),
 command/environment routing text, checkpoint-delivery and task-atomic wording,
 and more. `tools/src/gen-matrix.mjs --check` keeps
 `docs/traceability/matrix.yaml` fresh. Both run in CI and locally
