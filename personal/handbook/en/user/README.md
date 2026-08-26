@@ -22,7 +22,7 @@ Start here:
 3. [Install and reach the first conversation](install-and-first-conversation.md)
 4. [CLI basics](cli-basics.md) — `cognitive init | status | doctor | daemon | pi | resource | task`
 5. [Provider and secrets](provider-and-secrets.md)
-6. [Provider Control Plane](provider-control-plane.md) — named accounts, keys, bindings, usage (CLI/daemon only; no Web panel)
+6. [Provider Control Plane](provider-control-plane.md) — named accounts, keys, bindings, usage (CLI and same-origin `GET /ui/`; not in the Linux RC claim)
 7. [The Pi shell](pi-shell.md)
 
 Understand the model:
@@ -36,6 +36,7 @@ Operate it:
 11. [Operations and recovery](operations-and-recovery.md)
 12. [Security boundaries](security-boundaries.md)
 13. [Known limitations](known-limitations.md)
+14. [Linux RC operator map](rc-and-support.md) — install/init/provider/Pi/task/recovery/update/uninstall index
 
 Exact command, route, error, and file references live in the
 [reference section](../reference/README.md). Current project status is owned by

@@ -14,7 +14,9 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:e37b2e33dbf7cea107326de5e0b85408bd63b065132e438275a0889a460a897e"
+  - path: tools/src/personal-rc-gate.mjs
+    symbols: ["buildPersonalRcDeclarationReport"]
+fingerprint: "sha256:2cd15b384f7f131864d44aaa5014aba98c92e80e8ddd74896d4fcdc7ff239a53"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -41,6 +43,7 @@ pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-com
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
 node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 路由清单；不是 Gate 结果
+node --test tools/test/personal-rc-gate.test.mjs         # P7-T06 RC 合成器；不设置 Gate 状态
 # SPA（本仓 clients/pc/web）：pnpm test；pnpm build
 # 产品源是 daemon GET /ui（将 dist/ 复制到 data_dir()/ui）。Vite preview 不是产品源。
 # linux-002 部署 Control Plane / dsh 后，owner 在本机 Windows 经 SSH 转发查看：
@@ -106,6 +109,9 @@ Gate 或 release 结果。daemon Origin/Referer 与 `GET /ui`
 静态服务测试在 `personal/apps/kernel-server/src/personal/server.rs`（外来/null Origin、
 缺失 bundle 的 `not_available`、路径穿越）；需要受支持的 Rust 链接
 （CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 / DEV-LINUX-NATIVE-01）。
+P7-T06 Personal Linux RC 合成器是
+`tools/test/personal-rc-gate.test.mjs`（不完整 observation、Profile 键、启用 P6、
+生产发布 fail closed）。它不设置 Gate 状态。
 P7-T05/D08 binding CAS 是 `POST /management/agent-bindings` 上的
 `expected_revision`，不匹配时 409 `PROVIDER_BINDING_REVISION_STALE`
 （`personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs`；仅 Linux/CI）。

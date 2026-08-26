@@ -109,5 +109,5 @@ cognitive restore --archive <目录>
 preflight。恢复后重新运行 `cognitive status` 与 `cognitive doctor`；如果 secret store
 中没有 key，再运行 `cognitive init`。
 
-排障请看[运维与恢复](operations-and-recovery.md)、[Provider 与 secret](provider-and-secrets.md)
-和[已知限制](known-limitations.md)。
+排障请看[运维与恢复](operations-and-recovery.md)、[Provider 与 secret](provider-and-secrets.md)、
+[已知限制](known-limitations.md) 和 [Linux RC 操作地图](rc-and-support.md)。

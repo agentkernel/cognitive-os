@@ -11,10 +11,11 @@ sources:
   - path: personal/crates/cognitive-store/src/personal_backup.rs
   - path: personal/apps/admin-cli/src/personal_cli/mod.rs
   - path: docs/adr/0053-personal-web-ui-stack.md
+  - path: docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:a39b605e88bfe3e231a8fdff16237948630bea7237e61052a8ab112d05f05da0"
+fingerprint: "sha256:365c0d149b89dce64020796d904d6faadff9c0f34edaa3d36e2e6e42b60bd964"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -33,15 +34,16 @@ non_claims:
 - **备份/恢复排除 secret 与 authority SQLite**；`cognitive backup` / `restore` 与
   management HTTP 路由写入 digest 绑定归档，并在预检后覆盖 live 文件。Provider
   key 留在 Secret Store，换机后需重新录入。managed Pi recover 尚未接在这条路径上。
-- **本仓库无 Web UI SPA**：[ADR-0053](../../../../docs/adr/0053-personal-web-ui-stack.md)
-  已接受 React + TypeScript + Vite 与 daemon 同源 `GET /ui` 静态服务。daemon
-  现已执行 loopback Origin/Referer 允许列表；当 `data_dir()/ui/index.html`
-  不存在时返回 `503` `not_available`。SPA 位于官方 checkout
-  `D:\cognitiveos-clients\pc\web\`，产品路径是复制到 `data_dir()/ui`。本仓库仍不得
-  出现 `clients/**`。无 Windows/macOS
-  安装产品，也无多 agent 编排。Pi shell 尚无资源/任务浏览 UX。本阶段 Provider
-  Control Plane 只有 daemon API 与 CLI——见
-  [Provider Control Plane](provider-control-plane.md)。
+- **Control Plane Web UI 不在 Linux RC 声明内**：
+  [ADR-0053](../../../../docs/adr/0053-personal-web-ui-stack.md) 已接受 React +
+  TypeScript + Vite 与 daemon 同源 `GET /ui` 静态服务。
+  [ADR-0054](../../../../docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md)
+  之后 SPA 位于本仓库 `clients/pc/web/`，产品路径是复制到 `data_dir()/ui`。daemon
+  执行 loopback Origin/Referer 允许列表；当 `data_dir()/ui/index.html` 不存在时返回
+  `503` `not_available`。HTTP cancel 与 class-C Agent 生命周期仍为 `not-run`。无
+  Windows/macOS 安装产品，也无多 agent 编排。Pi shell 尚无资源/任务浏览 UX。操作步骤见
+  [Provider Control Plane](provider-control-plane.md)。Linux RC 声明集见
+  [Linux RC 操作地图](rc-and-support.md)。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
   query` 与 `cognitive audit query` 无过滤器；用量 JSON 只有 `event_id` /

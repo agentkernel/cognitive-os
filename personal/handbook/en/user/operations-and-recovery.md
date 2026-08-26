@@ -23,7 +23,7 @@ sources:
     symbols: ["launch"]
   - path: personal/apps/admin-cli/src/personal_cli/provider.rs
   - path: personal/crates/cognitive-store/src/personal_backup.rs
-    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
+    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive", "plan_personal_lifecycle"]
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
   - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -189,6 +189,27 @@ send optional `expected_revision`; a mismatch is HTTP 409
 `PROVIDER_BINDING_REVISION_STALE`. Operator steps, worked commands, and common
 failures:
 [Provider Control Plane](provider-control-plane.md).
+
+## Update, rollback, and uninstall — `partial`
+
+There is no public `cognitive update` or `cognitive uninstall`. The Linux
+product path is:
+
+- **Update:** re-run the inspected signed `install.sh` from a newer bundle. The
+  previous version stays on disk until the new activation succeeds. Failure
+  compensates (previous version, unit, and `active-version` pointer restored; no
+  success receipt).
+- **Stop / disable the user unit:** `cognitive daemon stop`, then
+  `systemctl --user disable --now cognitiveos-personal.service`. That does not
+  delete Secret Store items, `authority.sqlite`, or XDG data.
+- **Authority-path plan:** `plan_personal_lifecycle` records Update/Rollback/
+  Uninstall intent. Uninstall refuses a Secret target and refuses Data unless
+  deletion is explicitly confirmed. Committing the plan still does not delete
+  host files.
+- **Managed Pi uninstall** remains the `admin-cli` lifecycle listed under
+  backup/restore below.
+
+The step index is [Linux RC operator map](rc-and-support.md).
 
 ## Backup and restore — `partial`
 

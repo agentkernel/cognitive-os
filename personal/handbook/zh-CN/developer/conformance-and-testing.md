@@ -16,13 +16,16 @@ sources:
     symbols: ["validateUjCapabilityTruthMatrix"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
+  - path: tools/src/personal-rc-gate.mjs
+    symbols: ["buildPersonalRcDeclarationReport"]
 tests:
   - tools/test/check.test.mjs
   - tools/test/p2_t28_capability_truth.test.mjs
   - tools/test/c1_c2_paired_p_arm.test.mjs
   - tools/test/p7_t05_web_ui_inventory.test.mjs
+  - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:e23bba35fef1f0eb0036f6f98e3d4e8bb7c178b2cc61523e725282fea18cd48b"
+fingerprint: "sha256:aa1fa9e241bb271661d6202b3a96e749ba55a0979e56be0d14e2b48db5351c51"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -92,6 +95,13 @@ revision 的 `DEV-LINUX-NATIVE-01` 上执行；Windows GNU 对该 Rust 矩阵记
 浏览器直连 SQLite/SecretStore/文件系统/Provider 都会 fail closed。缺失的 typed
 HTTP（Task cancel、Agent pause/resume/stop/restart/quarantine）必须记
 `unavailable`/`not-run`。该清单不是 SPA 实现、浏览器旅程、Gate 或 release 结果。
+
+## Personal Linux RC 声明合成器
+
+`tools/src/personal-rc-gate.mjs` 把既有 MVP Gate 结论与可运维性证据绑定成 digest
+绑定的 Personal Linux RC 声明。不完整 observation、缺失 digest、Profile 键、启用
+P6、RC 范围关键风险非 0、以及生产 GitHub Release 声明都会 fail closed。求值器不设置
+Gate 或 Profile 状态。聚焦测试：`tools/test/personal-rc-gate.test.mjs`。
 
 ## CI 矩阵
 

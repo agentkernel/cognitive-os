@@ -64,8 +64,10 @@ owner 于 2026-08-25 定稿 `cognitiveos-personal` 1.0.0：**1.0.0 版本开发�
 
 - 各 Gate 按其 ADR 登记的 **MVP 固定 denominator** 语义通过；定稿不把 MVP
   证据升级为完整统计 campaign、Profile 或 release-distribution 声明。
-- P7-T06（RC、clean VM suite、支持矩阵与声明范围内 B01–B12 发行证据）仍
-  `not-started`，是 1.0.x 发行工程的唯一归宿；本定稿不替代它。
+- P7-T06（RC、clean VM suite、支持矩阵与声明范围内 B01–B12 发行证据）于
+  2026-08-26 交付 digest 绑定声明包（claim freeze + bilingual runbooks +
+  composition report）。该包不设置 Gate 状态，不替代生产 GitHub Release / 生产
+  签名仪式，不把 Personal Linux RC 升格为 Profile。
 - P7-T05 Web UI 于 2026-08-25 由 owner 决定在 D14 未完成 rendered review 的
   状态下强制合并收口（见 PARALLEL-LANES 关闭记录与 W5 pause handoff）；其
   后续 wave 属 post-1.0。
@@ -76,7 +78,7 @@ owner 于 2026-08-25 定稿 `cognitiveos-personal` 1.0.0：**1.0.0 版本开发�
 |---|---|---|
 | Multi-Agent（默认关闭；NO-GO 合法） | P6-T01..T04 / B11 | not-started |
 | Control Plane Web UI 后续 wave（W6+、legacy 收尾、rendered review 补全） | P7-T05 续（需新 lease） | paused by owner |
-| RC / 发行证据 | P7-T06 | not-started |
+| RC / 发行证据 | P7-T06 | in-progress（D01–D03 已写；D04 待 required CI / merge） |
 | Windows 安装面 | P7-T07 / B01-W | blocked（B01-W 前置） |
 | Embedding/vector/graph、MCP marketplace、非 Pi Agent qualification | P4 后续 / P5B / P8 模式 | 设计/能力列车 |
 | 混合 crate core/personal 内部拆分 | ADR-0054 登记的结构重构 | not-started |

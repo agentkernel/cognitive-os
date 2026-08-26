@@ -1139,10 +1139,16 @@ Pi 不可以：
 
 ### P7-T06 — RC、文档、支持矩阵和B01-B12
 
-- clean Linux VM执行完整 suite；所有 release claims指向 evidence digest。
-- `implemented` 仍只能按适用 MUST证据计算，Personal release不得冒充 Profile。
-- 发布 install/init/provider/Pi/task/recovery/update/uninstall runbooks。
-- 所有 open critical risks为0，或明确NO-GO。
+- **目标/价值：** 为 Linux 1.0 发行工程冻结声明范围、digest 绑定证据与双语
+  runbook；不新跑 B01 guest，不冒充 Profile，不发布生产 GitHub Release。
+- **依赖：** P7-T08、P7-T04、P5-T05（均已 done）。
+- **验收：** clean-VM suite 合成为 B01 successor `002` + P7-T01/T02 权威路径；所有
+  release claims 指向 evidence digest；`implemented` 仍只按适用 MUST 计；发布
+  install/init/provider/Pi/task/recovery/update/uninstall runbooks（无发明公开动词）；
+  本 RC 范围 open critical risks = 0；P6 对本 RC 为明确 disabled-NO-GO。
+- **切片：** D01 claim freeze + binder；D02 双语 runbook；D03 合成报告；D04 收口。
+- **非声明：** 不设置 Gate 状态；不声称 Profile、Windows B01-W、生产签名仪式、
+  B10/MCP、Web UI 或 Multi-Agent 启用。
 
 ### P7-T07 — Windows 安装面：credential 后端、installer/service 与 B01-W Gate
 

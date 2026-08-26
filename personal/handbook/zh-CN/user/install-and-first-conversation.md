@@ -58,9 +58,11 @@ secret 文件：`provider.json`（含不透明 `SecretRef`）与 `selected-model
 fail-closed——没有明文回退。
 
 命名账户、密钥轮换、固定 agent binding 与用量查询是 daemon 运行之后的独立操作员面：
-[Provider Control Plane](provider-control-plane.md)。该面是 CLI 与 daemon 对话；本阶
-段没有 Web 或桌面控制面板。在设置 control-plane binding 之前，`cognitive init` 仍是
-首次对话路径（`provider.json` / `selected-model.json`）。
+[Provider Control Plane](provider-control-plane.md)。该面是 CLI 加上同源 `GET /ui/`；
+密钥仍只经 management key POST 或 `--api-key-file` 进入 SecretStore。Web UI 不在
+Linux RC 声明内。步骤索引见 [Linux RC 操作地图](rc-and-support.md)。
+在设置 control-plane binding 之前，`cognitive init` 仍是首次对话路径
+（`provider.json` / `selected-model.json`）。
 
 ## 3. 启动并检查 daemon
 

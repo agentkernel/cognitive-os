@@ -38,7 +38,8 @@ not part of the 1.0 support claim.
 
 | Agent | Linux 1.0 support policy |
 |---|---|
-| Pi `0.81.1` + pinned per-Agent sidecar | **only planned product-qualified Agent integration**; Pi also hosts the Shell under a separate client identity; exact Agent/sidecar package, protocol, adapter, instance and process pins require B09 and release-manifest inclusion |
+| Pi `0.81.1` + pinned per-Agent sidecar | **only Linux 1.0 RC product-qualified Agent integration**; Pi also hosts the Shell under a separate client identity; exact Agent/sidecar package, protocol, adapter, instance and process pins require B09 and release-manifest inclusion |
+| DeepSeek Harness (dsh) Path B | implemented on a later post-1.0 train; **not** in the Linux 1.0 RC Agent claim; does not inherit Pi/B09 evidence |
 | OpenClaw, Hermes, Codex, WorkBuddy, others | not supported by Linux 1.0; each requires exact Agent/sidecar package/protocol/adapter pins, independent campaigns and explicit release inclusion |
 
 Installing several Agent packages does not imply Multi-Agent orchestration.
@@ -61,17 +62,17 @@ authority writer or daemon bootstrap/management authority.
 | Capability | Policy |
 |---|---|
 | Embedding, semantic retrieval, vector or graph stores | post-1.0; SQLite FTS5 + metadata filtering is the supported baseline |
-| MCP and dynamic Tool marketplace/ecosystem | post-1.0 B10 capability train; native Tool operations remain in 1.0 |
-| Multi-Agent | post-1.0 B11, disabled by default; NO-GO is valid |
-| Web UI | post-1.0 and subject to the separate client readiness boundary |
+| MCP and dynamic Tool marketplace/ecosystem | post-1.0 B10 capability train; native Tool operations remain in 1.0; B10 MVP evidence exists but is **not** in the Linux RC claim |
+| Multi-Agent | **disabled-NO-GO for this RC**; post-1.0 `P6-T01`..`T04` / B11 stay not-started and are not claimed |
+| Web UI / Control Plane | delivered as a non-blocking post-1.0 surface (`clients/pc/web`); **not** in the Linux RC claim |
 | Windows installer/service | post-Linux-1.0 P7-T07/B01-W; no install parity before independent evidence |
-| non-Pi Agents | independent Agent + sidecar qualification and release inclusion required |
+| non-Pi Agents | independent Agent + sidecar qualification and release inclusion required; dsh Path B is in this row, not in the Pi 1.0 claim |
 
 ## 6. Distribution and acquisition
 
 | Surface | Decision |
 |---|---|
-| CognitiveOS product | public, verifiable Linux x86_64 artifacts through GitHub Releases after `GMVP-LINUX` |
+| CognitiveOS product | verifiable Linux x86_64 bundle shape after `GMVP-LINUX`; a production GitHub Release and production signing ceremony remain owner-operated and are **not** claimed by the P7-T06 evidence package |
 | Pi in product archive | **No**; Pi is not vendored or redistributed in the CognitiveOS bundle |
 | Pi default acquisition | Personal fetches exact `@earendil-works/pi-coding-agent@0.81.1` from the fixed official npm origin after user preview, verifies identity/SRI/digests and commits a production-signed acquisition lock |
 | Node in product archive | **No**; a compatible user/system Node is an explicit prerequisite |
@@ -89,12 +90,13 @@ authorship.
   production trust, native service, desktop/headless secret-backend evidence,
   lifecycle, backup/restore and doctor evidence.
 - B06/B07 benefit, B10/MCP/dynamic Tool, B11/Multi-Agent, embedding/vector/graph,
-  non-Pi Agents, Web UI and Windows B01-W do not block Linux 1.0 and cannot
-  appear in its release claim without their own executed evidence.
+  non-Pi Agents, dsh Path B, Web UI and Windows B01-W do not block Linux 1.0 and
+  must not appear in this RC claim. P6 is recorded `disabled-nogo` for this RC.
 - Ordinary Ubuntu/Windows CI, WSL, fake-systemd fixtures and
   `personal-linux-native-01` provide only their registered implementation
   evidence unless a formal campaign explicitly includes them.
-- Product release does not imply CognitiveOS Core Profile `implemented`.
+- A Personal Linux RC declaration does not imply CognitiveOS Core Profile
+  `implemented`. `implemented` counts only applicable MUST evidence.
 
 ## 8. References
 
