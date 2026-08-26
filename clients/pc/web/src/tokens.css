@@ -1,6 +1,6 @@
 /*
  * CognitiveOS Control Plane design tokens — docs/design/11-control-plane-design-system.md
- * Namespace: --cp-* (legacy styles.css owns its own unprefixed vars until W2 retires it).
+ * Namespace: --cp-* only. Control Plane markup does not import a second stylesheet.
  * Themes: system-following light/dark. Contrast and reduced-motion variants included.
  */
 

@@ -3,28 +3,32 @@ import { NotFound } from "./shell/NotFound";
 import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
 import { HomePage } from "./views/home/HomePage";
-import { TasksPage } from "./views/legacy/legacyPages";
 import { ProviderDetailPage } from "./views/providers/ProviderDetailPage";
 import { ProvidersPage } from "./views/providers/ProvidersPage";
 import { NewTaskPage } from "./views/work/NewTaskPage";
 import { WorkPage } from "./views/work/WorkPage";
 import { WorkDetailPage } from "./views/work/detail/WorkDetailPage";
-import {
-  ActivityPage,
-  AgentsPage,
-  ResourcesPage,
-  SystemPage,
-} from "./views/placeholders";
+import { AgentsPage } from "./views/agents/AgentsPage";
+import { AgentDetailPage } from "./views/agents/AgentDetailPage";
+import { ResourcesPage } from "./views/resources/ResourcesPage";
+import { MemoryPage } from "./views/resources/MemoryPage";
+import { SkillsPage } from "./views/resources/SkillsPage";
+import { ToolsPage } from "./views/resources/ToolsPage";
+import { ActivityPage } from "./views/activity/ActivityPage";
+import { SystemPage } from "./views/system/SystemPage";
 
 /**
  * Route map — docs/design/06. Seven frozen spaces + session (utility) +
  * designed 404. Home is the W3 attention surface; Providers is the W2
  * redesign (accounts master + five-section detail); Bindings folded into
  * Providers (DD-04) and redirects there. Work is the W4 inventory plus the
- * governed creation flow, and /work/:taskRef is the W5 detail view. The static
- * /work/new segment is matched ahead of the dynamic one. The legacy
- * governed-task page stays reachable at /tasks until its watch/observation
- * diagnostics are migrated.
+ * governed creation flow, and /work/:taskRef is the W5 detail view. Agents is
+ * the W6 inventory plus dossier. Resources is the W7 family hub plus the
+ * Memory, Skills and Tools family pages. Activity is the W8 evidence stream.
+ * System is the W9 readiness/doctor/stewardship/session/about surface.
+ * ⌘K is the W10 command layer (chrome, not a space).
+ * The static /work/new segment is matched ahead of the dynamic one. Retired
+ * hashes redirect: /bindings → /providers, /tasks → /work.
  */
 export function AppRoutes() {
   return (
@@ -74,7 +78,7 @@ export function AppRoutes() {
         path="/agents/:id"
         element={
           <SessionGate channel="management" title="Agent detail">
-            <AgentsPage />
+            <AgentDetailPage />
           </SessionGate>
         }
       />
@@ -95,19 +99,36 @@ export function AppRoutes() {
         }
       />
       <Route path="/bindings" element={<Navigate to="/providers" replace />} />
-      <Route
-        path="/tasks"
-        element={
-          <SessionGate channel="task" title="Tasks">
-            <TasksPage />
-          </SessionGate>
-        }
-      />
+      <Route path="/tasks" element={<Navigate to="/work" replace />} />
       <Route
         path="/activity"
         element={
           <SessionGate channel="management" title="Activity">
             <ActivityPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/resources/memory"
+        element={
+          <SessionGate channel="management" title="Memory">
+            <MemoryPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/resources/skill"
+        element={
+          <SessionGate channel="management" title="Skills">
+            <SkillsPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/resources/tool"
+        element={
+          <SessionGate channel="management" title="Tools">
+            <ToolsPage />
           </SessionGate>
         }
       />

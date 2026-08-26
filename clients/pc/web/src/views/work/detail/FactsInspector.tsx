@@ -8,6 +8,8 @@ import {
   type TaskEvidenceDetail,
 } from "../../../data/projections/workDetail";
 import { HonestyNote } from "../../../state/HonestyNote";
+import type { WatchSessionSnapshot } from "../../../watchStream";
+import { WatchBar } from "./WatchBar";
 
 /**
  * Facts inspector — docs/design/15 §1.2. The refs and digests an operator
@@ -20,12 +22,20 @@ export function FactsInspector({
   effects,
   completion,
   chain,
+  watch,
+  onAttach,
+  onDetach,
+  onReconnect,
 }: {
   taskRef: string;
   evidence?: TaskEvidenceDetail;
   effects?: EffectHistoryView;
   completion: CompletionReading;
   chain?: SessionTaskChain;
+  watch: WatchSessionSnapshot;
+  onAttach: () => void;
+  onDetach: () => void;
+  onReconnect: () => void;
 }) {
   return (
     <Inspector title="Facts" label={`Task facts for ${taskRef}`}>
@@ -104,6 +114,13 @@ export function FactsInspector({
             ),
           },
         ]}
+      />
+      <WatchBar
+        snapshot={watch}
+        onAttach={onAttach}
+        onDetach={onDetach}
+        onReconnect={onReconnect}
+        variant="facts"
       />
       <HonestyNote>
         Copy any ref or digest and check it against the daemon directly. Nothing in this panel is

@@ -8,6 +8,14 @@ export function truncateMiddle(value: string, keep = 6): string {
   return `${value.slice(0, keep)}…${value.slice(-keep)}`;
 }
 
+/** Clipboard write that never becomes an uncaught rejection. */
+export function copyValue(value: string): Promise<boolean> {
+  if (!navigator.clipboard?.writeText) {
+    return Promise.resolve(false);
+  }
+  return navigator.clipboard.writeText(value).then(() => true).catch(() => false);
+}
+
 /**
  * DigestChip — mono digest/ref chip with a copy affordance. Copies the full
  * value, displays the truncated one. No secret-shaped value may ever be
@@ -23,7 +31,10 @@ export function DigestChip({ value, label }: { value: string; label?: string }) 
         type="button"
         aria-label={`copy ${label ?? "digest"}`}
         onClick={() => {
-          void navigator.clipboard.writeText(value).then(() => {
+          void copyValue(value).then((ok) => {
+            if (!ok) {
+              return;
+            }
             setCopied(true);
             setTimeout(() => setCopied(false), 1200);
           });

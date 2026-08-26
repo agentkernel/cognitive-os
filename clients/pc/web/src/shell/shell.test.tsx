@@ -86,4 +86,32 @@ describe("shell accessibility and structure (W1)", () => {
     act(() => root.unmount());
     host.remove();
   });
+
+  it("g then w jumps to the Work space", () => {
+    const { host, root } = renderApp("#/session");
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "g", bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "w", bubbles: true }));
+    });
+    expect(window.location.hash).toBe("#/work");
+    expect(host.textContent).toContain("Work");
+    act(() => root.unmount());
+    host.remove();
+  });
+
+  it("slash opens the command palette, and does not while typing", () => {
+    const { host, root } = renderApp("#/session");
+    const input = host.querySelector("input");
+    expect(input).not.toBeNull();
+    act(() => {
+      input?.dispatchEvent(new KeyboardEvent("keydown", { key: "/", bubbles: true }));
+    });
+    expect(host.querySelector('[role="dialog"]')).toBeNull();
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "/", bubbles: true }));
+    });
+    expect(host.querySelector('[role="dialog"]')).not.toBeNull();
+    act(() => root.unmount());
+    host.remove();
+  });
 });

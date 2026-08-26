@@ -187,6 +187,48 @@ expand this isolation boundary. The retired `B01-Clean-Linux-001` guest remains
 historical qualification evidence only and must not be restored as a B01 or
 ordinary development target.
 
+### Owner viewing from `DEV-WIN-GNU-01` (default after guest deploy)
+
+When an agent deploys or validates Control Plane / dsh on **linux-002**, the
+default owner review path is **local Windows browser via SSH port forward**,
+not guest-desktop Firefox alone.
+
+**Route:** `wuz@192.168.1.2` (libvirt host `hal9000`) → ProxyJump →
+`hal9001@192.168.123.160` (`B01-Desktop-Linux-002`).
+
+**Typical owner-ops loopback ports** (confirm on guest before forwarding):
+
+| Surface | Guest loopback | Product path |
+|---|---|---|
+| Personal daemon + Control Plane | `127.0.0.1:48681` | `http://127.0.0.1:48681/ui/` |
+| Native dsh harness panel | `127.0.0.1:3080` | `http://127.0.0.1:3080/` |
+
+Default product daemon bind is `127.0.0.1:48181`; long-running owner-ops
+runtimes on linux-002 often use **`48681`** — always forward the port the
+active `cognitive daemon status` reports.
+
+**PowerShell on the owner Windows machine (`COMMAND-SHELL-PS51`):**
+
+```powershell
+ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+```
+
+Keep the session open. Open locally:
+
+- `http://127.0.0.1:48681/ui/` — Control Plane (management-session gate:
+  bootstrap secret from guest runtime, not Provider API key)
+- `http://127.0.0.1:3080/` — native dsh panel (Path B via daemon proxy)
+
+After guest **daemon restart** or kernel-server replace, agents must restart
+`cognitive dsh web` or run `cognitive dsh apply` on that runtime before owner
+dsh review. A stale Path B `DAEMON_BEARER` after daemon restart is an
+operator recovery step, not a Control Plane code defect.
+
+Agents should record the forwarded ports and exact Git revision deployed when
+handing off UI review. **After each guest debug session, remind the owner** with
+the SSH forward command and local URLs — do not omit this handoff. Vite preview
+or a separate clients dev server is not the product Control Plane origin.
+
 ## 8. `BUILD-LINUX-EXPERIMENTAL-01` — protected experimental builder
 
 - **Trigger/runner:** manual workflow dispatch on `ubuntu-latest` with GitHub

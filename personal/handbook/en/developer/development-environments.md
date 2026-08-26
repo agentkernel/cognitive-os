@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:1c5068ea096bb1288835261f5cd5024575d7015596eb5ad176271d27dfddd698"
+fingerprint: "sha256:661a5e80265cf94dedb761063496a1e59c98e659b8013e7f19b3354e24a8cb80"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -45,6 +45,23 @@ Cloud Agent pods and fresh Linux clones bootstrap with
 `bash scripts/setup-dev-env.sh` (dependencies, pinned toolchain, docs-sync
 hooks). A Cloud Agent pushes as `cursor[bot]`, whose token only covers the
 repositories listed in that run's environment.
+
+When an agent deploys Control Plane or dsh on `B01-Desktop-Linux-002`
+(linux-002), the default owner review path is the **local Windows browser via
+SSH port forward**, not guest-desktop Firefox alone. Confirm the daemon bind
+with `cognitive daemon status` on the guest, then on `DEV-WIN-GNU-01`:
+
+```powershell
+ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+```
+
+Keep that session open and open `http://127.0.0.1:48681/ui/` (Control Plane;
+paste the runtime management bootstrap secret, never a Provider API key) and
+`http://127.0.0.1:3080/` (native dsh panel). After a guest daemon restart or
+kernel-server replace, restart `cognitive dsh web` or run `cognitive dsh apply`
+on that runtime before expecting dsh chat. Vite preview is not the product
+origin. The environments registry owns the full port table and isolation
+rules; this page only routes.
 
 Command cheat sheet: see [AI validation commands](../ai/validation-commands.md) —
 identical content, maintained once.

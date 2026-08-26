@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DigestChip } from "../../../components/DigestChip";
+import { DigestChip, copyValue } from "../../../components/DigestChip";
 import { FactGrid } from "../../../components/FactGrid";
 import { UNSUPPORTED_TASK_OPERATIONS, factOrUnknown } from "../../../data/projections/work";
 import {
@@ -9,6 +9,8 @@ import {
 import { HonestyNote } from "../../../state/HonestyNote";
 import { StateChip } from "../../../state/StateChip";
 import { readDomainState } from "../../../state/stateMap";
+import type { WatchSessionSnapshot } from "../../../watchStream";
+import { WatchBar } from "./WatchBar";
 
 /**
  * Detail header — docs/design/15 §1. The task's identity and its verbatim
@@ -21,11 +23,19 @@ export function WorkHeader({
   evidence,
   completion,
   evidenceReadable,
+  watch,
+  onAttach,
+  onDetach,
+  onReconnect,
 }: {
   taskRef: string;
   evidence?: TaskEvidenceDetail;
   completion: CompletionReading;
   evidenceReadable: boolean;
+  watch: WatchSessionSnapshot;
+  onAttach: () => void;
+  onDetach: () => void;
+  onReconnect: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const lifecycle = evidence?.currentState;
@@ -80,7 +90,10 @@ export function WorkHeader({
           type="button"
           className="cp-button"
           onClick={() => {
-            void navigator.clipboard.writeText(taskRef).then(() => {
+            void copyValue(taskRef).then((ok) => {
+              if (!ok) {
+                return;
+              }
               setCopied(true);
               setTimeout(() => setCopied(false), 1200);
             });
@@ -89,16 +102,22 @@ export function WorkHeader({
           Copy task ref
         </button>{" "}
         {copied ? <span className="cp-quiet">copied</span> : null}
-        {evidence?.acceptance?.terminalTransitionDigest ? (
-          <>
-            {" "}
-            <DigestChip
-              value={evidence.acceptance.terminalTransitionDigest}
-              label="terminal transition digest"
-            />
-          </>
-        ) : null}
       </p>
+      <WatchBar
+        snapshot={watch}
+        onAttach={onAttach}
+        onDetach={onDetach}
+        onReconnect={onReconnect}
+        variant="header"
+      />
+      {evidence?.acceptance?.terminalTransitionDigest ? (
+        <p className="cp-next">
+          <DigestChip
+            value={evidence.acceptance.terminalTransitionDigest}
+            label="terminal transition digest"
+          />
+        </p>
+      ) : null}
       <h3 className="cp-section-title">Not available over HTTP</h3>
       <ul className="cp-plain-list">
         {UNSUPPORTED_TASK_OPERATIONS.map((entry) => (

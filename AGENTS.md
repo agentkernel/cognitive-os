@@ -247,6 +247,24 @@ user-systemd、Rust/Node、exact Pi `0.81.1` 和可清理目录；`pi` 不在 PA
 SSH 仅使用非交互、无 secret 探针，例如：
 `ssh -o BatchMode=yes -o ConnectTimeout=10 "wuz@192.168.1.2" "<redacted command>"`。
 
+### 本机 Windows 查看 linux-002 上的 UI（默认）
+
+在 guest 完成 Control Plane / dsh 部署或验证后，**默认让 owner 在本机浏览器查看**，
+不要只依赖 VM 桌面或聊天摘要。经 jump host 做 SSH 端口转发（PowerShell）：
+
+```powershell
+ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+```
+
+保持会话不退出，在本机打开 `http://127.0.0.1:48681/ui/`（Control Plane）与
+`http://127.0.0.1:3080/`（dsh 原生面板）。**每次在 guest 上完成调试或验证后，代理须在回合
+末尾重复给出上述转发命令与本地 URL**，不要假设 owner 已记住或只会用 VM 桌面查看。若 runtime 的
+daemon 端口不是 `48681`，以 guest 上 `cognitive daemon status` 为准并改 `-L` 映射。Control
+Plane 门禁粘贴 runtime 的 bootstrap secret（不是 Provider key）。daemon 重启后需刷新 dsh
+web/apply。完整说明见
+[`PERSONAL-TEST-ENVIRONMENTS.md`](docs/plan/PERSONAL-TEST-ENVIRONMENTS.md) §7 与
+`.cursor/rules/10-autonomous-personal-development.mdc`。
+
 ### Registered B01 campaign route（历史登记；evaluation campaigns 已全部 closed）
 
 历史 evaluation campaigns（含 `PERSONAL-PERF-EVAL-004` 至 `-015`）已全部关闭，

@@ -16,6 +16,7 @@ import {
   completionReading,
   composeAuthorityLane,
   composeObservationLane,
+  composeWatchObservation,
   detailConsumptionKey,
   detailEffectsKey,
   detailEvidenceKey,
@@ -34,6 +35,7 @@ import {
 import { appProjections } from "../../../data/store";
 import { useProjection, useProjections } from "../../../data/useProjection";
 import { HonestyNote } from "../../../state/HonestyNote";
+import { WATCH_POLL_INTERVAL_MS } from "../../../watchStream";
 import { ContextSection } from "./ContextSection";
 import { EffectsSection } from "./EffectsSection";
 import { EvidenceSection } from "./EvidenceSection";
@@ -42,6 +44,7 @@ import { IntentContractSection } from "./IntentContractSection";
 import { OverviewSection } from "./OverviewSection";
 import { RunTimeline } from "./RunTimeline";
 import { SectionNavigator } from "./SectionNavigator";
+import { useTaskWatch } from "./useTaskWatch";
 import { WorkHeader } from "./WorkHeader";
 
 const WORK_DETAIL_LIST_KEY = "detail:task-list";
@@ -85,6 +88,7 @@ export function WorkDetailPage() {
   const envelopes = useProjection<TaskEnvelopeView[]>(WORK_DETAIL_LIST_KEY);
   const observedProjection = useProjection<ObservedTask[]>(OBSERVED_TASKS_KEY);
   const chainProjection = useProjection<SessionTaskChain[]>(WORK_CHAIN_KEY);
+  const watch = useTaskWatch(taskRef);
 
   const chains = chainProjection.data ?? NO_CHAINS;
   const observed = observedProjection.data ?? NO_OBSERVED;
@@ -145,7 +149,7 @@ export function WorkDetailPage() {
       const next = new URLSearchParams(query);
       next.set("section", section);
       setQuery(next, { replace: true });
-      document.getElementById(`section-${section}`)?.scrollIntoView({ block: "start" });
+      document.getElementById(`section-${section}`)?.scrollIntoView?.({ block: "start" });
     },
     [query, setQuery],
   );
@@ -159,9 +163,12 @@ export function WorkDetailPage() {
         intentRefs: [],
         effectRefs: [],
       });
-  const observationLane = composeObservationLane(
-    observations.map((projection) => projection.data).filter((view): view is ObservationView => view != null),
-  );
+  const observationLane = [
+    ...composeObservationLane(
+      observations.map((projection) => projection.data).filter((view): view is ObservationView => view != null),
+    ),
+    ...composeWatchObservation(watch.snapshot.events, taskRef),
+  ];
 
   /*
    * "Known" means a real source names this ref: the daemon envelope list, this
@@ -200,7 +207,9 @@ export function WorkDetailPage() {
           Refresh
         </button>{" "}
         <span className="cp-quiet">
-          Nothing on this page polls the daemon, and nothing here streams.
+          {watch.snapshot.phase === "attached"
+            ? `Watch is attached: this page reads GET /task/watch, then a ${WATCH_POLL_INTERVAL_MS / 1000} s bounded poll while the snapshot stream is inert. Nothing else polls.`
+            : "Nothing on this page polls the daemon until you attach a watch, and nothing here streams on its own."}
         </span>
       </p>
 
@@ -209,6 +218,12 @@ export function WorkDetailPage() {
         evidence={evidence.data}
         completion={completion}
         evidenceReadable={evidenceAnswered}
+        watch={watch.snapshot}
+        onAttach={() => void watch.attach()}
+        onDetach={() => {
+          watch.detach();
+        }}
+        onReconnect={() => void watch.reconnect()}
       />
 
       <SectionNavigator active={active} onSelect={select} />
@@ -219,12 +234,19 @@ export function WorkDetailPage() {
             evidence={evidence.data}
             completion={completion}
             objective={chain?.preview.objective ?? observedEntry?.objective}
+            watchLabel={watch.snapshot.label}
           />
           <RunTimeline
             authority={authorityLane}
             observation={observationLane}
             evidenceProjection={evidence}
             observationProjections={observations}
+            watch={watch.snapshot}
+            onAttach={() => void watch.attach()}
+            onDetach={() => {
+              watch.detach();
+            }}
+            onReconnect={() => void watch.reconnect()}
           />
           <EffectsSection view={effects.data} projection={effects} />
           <EvidenceSection
@@ -241,17 +263,24 @@ export function WorkDetailPage() {
           effects={effects.data}
           completion={completion}
           chain={chain}
+          watch={watch.snapshot}
+          onAttach={() => void watch.attach()}
+          onDetach={() => {
+            watch.detach();
+          }}
+          onReconnect={() => void watch.reconnect()}
         />
       </div>
 
       <HonestyNote>
-        This page reads exactly six daemon routes: the task envelope list,{" "}
+        This page reads the task envelope list,{" "}
         <code>/task/evidence</code>, <code>/task/effects</code>, bounded{" "}
         <code>/task/observation</code> for {DETAIL_OBSERVATION_FAMILIES.join(" and ")}, and{" "}
-        <code>/task/resource/v1/consumption</code>. There is no task detail route, no run route and
-        no control route on this daemon, so everything above is composed from those reads and from
-        this session&apos;s own memory of the chain it ran. All {DETAIL_SECTIONS.length} sections
-        are always rendered; nothing is hidden behind a tab.
+        <code>/task/resource/v1/consumption</code>. <code>GET /task/watch</code> is opened only
+        after you attach — it is a process-local ring, not a task-exclusive feed. There is no task
+        detail route, no run route and no control route on this daemon, so everything above is
+        composed from those reads and from this session&apos;s own memory of the chain it ran. All{" "}
+        {DETAIL_SECTIONS.length} sections are always rendered; nothing is hidden behind a tab.
       </HonestyNote>
     </>
   );

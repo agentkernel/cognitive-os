@@ -28,6 +28,7 @@ import { sessionHasChannel } from "../../session";
 import { HonestyNote } from "../../state/HonestyNote";
 import { StateChip } from "../../state/StateChip";
 import { readDomainState } from "../../state/stateMap";
+import { useInspectorClear } from "../../shell/useInspectorClear";
 import { WorkFilters } from "./WorkFilters";
 import { WorkInspector } from "./WorkInspector";
 import { WorkInventory, type InventorySource } from "./WorkInventory";
@@ -179,6 +180,8 @@ export function WorkPage() {
     },
     [writeListState],
   );
+  const clearInspector = useCallback(() => select(undefined), [select]);
+  useInspectorClear(activeRef, clearInspector);
 
   const changeOrigin = useCallback(
     (next: WorkOriginFilter) => {
@@ -317,9 +320,8 @@ export function WorkPage() {
         <code>/task/evidence</code> and <code>/task/effects</code>. There is no task search, no
         task-list-with-state route and no cross-task stream, so this page can only ever account for
         refs it already knows. Opening a row composes per-task detail from the same reads plus
-        bounded observation and consumption — there is no task detail route on this daemon. The
-        legacy governed-task page stays reachable at <Link to="/tasks">/tasks</Link> with its watch
-        and observation diagnostics until they are migrated.
+        bounded observation and consumption — there is no task detail route on this daemon. Watch
+        attach lives on the Work detail Run section.
       </HonestyNote>
     </>
   );

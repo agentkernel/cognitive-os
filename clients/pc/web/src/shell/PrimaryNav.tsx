@@ -16,7 +16,13 @@ export const PRIMARY_NAV = [
   ["/system", "System"],
 ] as const;
 
-export function PrimaryNav() {
+export function PrimaryNav({
+  onOpenPalette,
+  paletteOpen = false,
+}: {
+  onOpenPalette?: () => void;
+  paletteOpen?: boolean;
+}) {
   return (
     <div className="cp-side">
       <div className="cp-brand">
@@ -37,7 +43,22 @@ export function PrimaryNav() {
           ))}
         </ul>
       </nav>
-      <p className="cp-side-foot">Unknown is a value. Nothing here is inferred.</p>
+      <div className="cp-side-foot">
+        <p>
+          <button
+            type="button"
+            className="cp-button"
+            aria-label="Open command palette"
+            aria-haspopup="dialog"
+            aria-expanded={paletteOpen}
+            aria-keyshortcuts="Control+K Meta+K Slash"
+            onClick={() => onOpenPalette?.()}
+          >
+            ⌘K
+          </button>
+        </p>
+        <p>Unknown is a value. Nothing here is inferred.</p>
+      </div>
     </div>
   );
 }

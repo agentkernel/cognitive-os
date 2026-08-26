@@ -107,6 +107,55 @@ prompts, and historical handoffs cannot override canonical repository facts.
   authorized cases; never place secret material in Git, chat, logs, or
   evidence.
 
+# Owner local viewing on `DEV-WIN-GNU-01` (linux-002)
+
+When development or validation deploys to **`B01-Desktop-Linux-002`**
+(`hal9001@192.168.123.160` via ProxyJump `wuz@192.168.1.2`), **default to
+letting the owner review UI results on the local Windows machine** after
+supported checks pass — not only on the guest desktop or in chat summaries.
+
+Canonical routing and port facts live in
+[`PERSONAL-TEST-ENVIRONMENTS.md`](../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)
+§7 (`DEV-LINUX-NATIVE-01` owner viewing). Typical owner-ops runtime ports on
+the guest (loopback only):
+
+| Surface | Guest URL | Local URL after forward |
+|---|---|---|
+| Control Plane (`/ui/`) | `http://127.0.0.1:48681/ui/` | `http://127.0.0.1:48681/ui/` |
+| Native dsh panel | `http://127.0.0.1:3080/` | `http://127.0.0.1:3080/` |
+
+If the active runtime uses a different daemon bind, forward that port instead
+(record the exact port from `cognitive daemon status` or `ss` on the guest).
+
+**Default end-of-slice handoff to the owner (PowerShell on `DEV-WIN-GNU-01`):**
+
+```powershell
+ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+```
+
+Keep that session open; then open in the **local** browser:
+
+- Control Plane: `http://127.0.0.1:48681/ui/`
+- dsh harness panel: `http://127.0.0.1:3080/`
+
+**Agent obligations after guest deploy, debug, or daemon replace:**
+
+1. Confirm guest services listen on the forwarded ports before telling the
+   owner to connect.
+2. **After every guest debug or validation session that touches UI/runtime,**
+   end the turn with the SSH forward command and **local** browser URLs above;
+   do not assume VM console, guest Firefox, or prior chat history.
+3. Control Plane first entry needs the runtime **management bootstrap secret**
+   (from the guest `local-bootstrap.secret` file — paste in the UI gate, never
+   a Provider API key, never in chat/logs).
+4. After `cognitive daemon stop/start` or kernel-server replace on the guest,
+   restart `cognitive dsh web` or run `cognitive dsh apply` on that runtime
+   before expecting dsh chat to work (see
+   [`docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md`](../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)).
+
+Do not substitute Vite preview or a separate clients dev server as the product
+origin; daemon-served `/ui/` on loopback is the Control Plane product surface.
+
 # Forbidden stop conditions
 
 Do **not** end a continuous-delivery turn solely because of any of the
