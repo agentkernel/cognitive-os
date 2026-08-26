@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；Profile / Windows B01-W 未声明）**
+> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P7-T06 RC `in-progress`；P0-T08 仓库子项目化重构 `done`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-26**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -165,10 +165,10 @@
 | Phase 4 - Memory 与 Skill | 6 | 6 | 0 | 0 | 0 | G4 / B08 |
 | Phase 5 - Agent sidecar 与 Tool 生态 | 5 | 5 | 0 | 0 | 0 | G5 / B09、B10 |
 | Phase 6 - post-1.0 Multi-Agent | 4 | 0 | 0 | 0 | 4 | G6 / B11 |
-| Phase 7 - 产品化与发布 | 8 | 6 | 0 | 1 | 1 | GMVP-LINUX / G7 / RC |
+| Phase 7 - 产品化与发布 | 8 | 6 | 1 | 1 | 0 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **111** | **105** | **0** | **1** | **5** | — |
+| **合计** | **111** | **105** | **1** | **1** | **4** | — |
 
 ## 2. 产品边界与不变量
 
@@ -755,6 +755,10 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | `P7-T08/D02` | P7-T08 | execute ADR-0048 B08 matrix on exact native Linux + Clippy, produce non-claim report, and record B08 MVP disposition under §2.3 | `P7-T08/D01` harness and ADR-0048 | exact native Linux focused store/server tests + Clippy; non-claim report; required CI; B08 MVP disposition; no GMVP-LINUX/release/Profile claim |
 | `P7-T08/D03` | P7-T08 | GMVP-LINUX composition binder: UCR-01 fixed-scenario assertion checklist + six-resource/release/doctor/backup/SecretStore/Pi pin evidence rollup as non-claim composition report | `P7-T08/D02` B08 MVP; completed B01/B02/B03/B04/B05/B09/B12 | failure-first incomplete composition and authority-shaped claim negatives; tools tests; required CI; GMVP remains `not-run` until D04 |
 | `P7-T08/D04` | P7-T08 | formal GMVP-LINUX disposition over D01–D03 composition evidence plus final task acceptance, checkpoint, PR, lease, and branch closure | `P7-T08/D01-D03` | preregistered composition evidence; §2.3 ADR-0040-class disposition when complete; required CI; no Profile claim |
+| `P7-T06/D01` | P7-T06 | freeze the Personal Linux RC claim set: digest-bound composition binder with failure-first incomplete/Profile/P6-enabled negatives; P6 explicit disabled-NO-GO; support-matrix honesty; RC-scope critical-risk inventory = 0 | completed P7-T08, P7-T04, P5-T05; existing B01–B12 MVP dispositions | tools Node tests for `personal-rc-gate`; consistency; required Ubuntu/Windows CI; evaluator does not set Gate/Profile state |
+| `P7-T06/D02` | P7-T06 | publish bilingual install/init/provider/Pi/task/recovery/update/uninstall runbooks that point each step at existing handbook pages and refuse invented public verbs | `P7-T06/D01` claim freeze | `check-handbook` + generator `--check` + fingerprints; no production GitHub Release or Profile claim |
+| `P7-T06/D03` | P7-T06 | bind declared-scope B01–B12, CI/SBOM/attestation/lifecycle, clean-VM suite (B01 successor `002` plus P7-T02/P7-T01 authority-path evidence), and D02 runbooks into one digest-bound RC declaration report | `P7-T06/D01-D02` | binder report with every evidence observation digested; required CI; no new B01 campaign guest mutation |
+| `P7-T06/D04` | P7-T06 | final task acceptance over D01–D03, VERSION/plan/PROGRESS/trace closure, required CI, ready/merge/lease/branch/main | `P7-T06/D01-D03` | exact acceptance mapping; required CI; no Profile, Windows B01-W, production publication, or P6 enablement claim |
 
 ### Phase 5 - Agent sidecar 与 post-1.0 Tool 生态
 
@@ -957,7 +961,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P6-T01 | Post-1.0 Multi-Agent policy 与 scheduler 扩展 | P5-T05 | 默认关闭、budget/lease/isolation 正确 | not-started | — |
 | P6-T02 | Post-1.0 mailbox 与 append-only findings | P6-T01 | 消息不可作为 authority；replay 可处理；默认关闭 | not-started | — |
 | P6-T03 | Post-1.0 Reviewer/Verifier/Integrator 编排 | P6-T02 | child success 不可绕过 verifier；默认关闭 | not-started | — |
-| P6-T04 | Post-1.0 B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用；NO-GO 并保持默认关闭是合法结果，不阻塞 GMVP-LINUX/RC | not-started | — |
+| P6-T04 | Post-1.0 B11 收益 Gate | P6-T03 | 仅在质量或速度收益达标时启用；NO-GO 并保持默认关闭是合法结果，不阻塞 GMVP-LINUX/RC | not-started | P7-T06 对本 RC 记录 `disabled-nogo`；本任务仍 not-started，不取消 Phase 6 |
 
 ### Phase 7 - 产品化与发布
 
@@ -968,7 +972,7 @@ SQLite、证据或 CI；Pi、CLI、SDK、UI 不得成为 authority；状态迁�
 | P7-T03 | 六资源 doctor、headless vault、sidecar/process/effect support | P1-T05, P2-T08, P7-T02 | 六类 health；desktop Secret Service 与 headless encrypted-vault locked/TTY/unattended paths；sidecar drift、process/effect/reconcile、migration；仅 redacted facts；stable error code 与可操作恢复路径 | done | 2026-08-11；`lease/personal/P7-T03/six-resource-doctor` on `personal/P7-T03-six-resource-doctor` / PR #186. D01–D04 closed. Linux through `749a0c3`; required CI `31451402260` on `a8db5cf`. Closure: `docs/checkpoints/20260811-personal-p7-t03-six-resource-doctor-closure.md`. No Gate/release/Profile claim. |
 | P7-T04 | 完整性能 campaign 与回归地板 | P3-T06, P4-T05（原列 P5-T05 依赖仅约束 D03 之后的 sidecar 阶段计时；D01-D05 实际依赖已按 slice register 拆分，D05 经 owner 预注册批准执行） | 模块级确定性 benchmark、阶段级真实治理耗时、B06/B07 non-claim raw observation、固定环境 A/B 非劣化、性能回归地板与可审计阈值；不把 B06/B07 升级为 Linux 1.0 硬门禁 | done | 2026-08-10；closure checkpoint `20260810-personal-p7-t04-performance-governance-closure.md`; D01-D05 complete on PR #179 with fixed-native governance A/B report digest `sha256:b90b8452e5d7b833ada423fb6d9d8e6ae5db92830c22ebd2363d435e4fc4aad9`. B06/B07, Gate, release, Profile, and GMVP-LINUX remain non-claims. |
 | P7-T05 | 非阻塞 Web UI | P2-T08, P7-T03 | 通过 clients gate；localhost 控制面板可设置 LLM API（含密钥进入 SecretStore）、绑定 Agent 的固定 account+provider+model，并经已有 Task preview/admit/watch 启动与观察 Agent 工作；Control Plane redesign waves（clients/docs/design）为 owner-directed 后续范围 | done | 2026-08-26 merged PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) at `main@5996afbb`. Required CI [32942980183](https://github.com/agentkernel/cognitive-os/actions/runs/32942980183) **SUCCESS** at `b147711a`. D01–D26 accepted. Closure: [P7-T05 closure](../checkpoints/20260826-personal-p7-t05-control-plane-redesign-closure.md). Web UI path is this repo `clients/pc/web`. HTTP cancel / class-C Agent lifecycle `not-run`. Non-blocking for Linux 1.0；No Gate/release/Profile claim。 |
-| P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | not-started | — |
+| P7-T06 | RC、文档、支持矩阵与声明范围内 B01-B12 | P7-T08, P7-T04, P5-T05 | clean VM suite 与 release claim evidence；P6 可为明确 NO-GO/disabled，不阻塞 RC | in-progress | 2026-08-26；`lease/personal/P7-T06/rc-docs-support-matrix` on `personal/P7-T06-rc-docs-support-matrix`. D01–D03 done: claim freeze, bilingual runbooks, composition `report_digest` `sha256:2c36e4594c4318fa64bfd7017299b7cd858f1e3e33c8f57ae3d99d601acc62c3`. D04 required CI / merge. P6-T01..T04 stay not-started. No Profile / Windows B01-W / production GitHub Release claim. |
 | P7-T07 | Windows 安装面：credential 后端、installer/service 与 B01-W Gate | P1-T02, P7-T01, P7-T02 | Windows credential store 后端（同 fail-closed 边界，无明文 fallback）、可检查 installer/service、专门 B01-W Gate 编写并执行；不阻塞 Linux RC；未执行前不得声称 Windows install parity（ADR-0025） | blocked | 2026-08-12：D01-D03 complete under ADR-0052 on `personal/P7-T07-windows-install-surface` (Draft PR #200): Windows Credential Manager backend + failure-first negatives (real roundtrip on Windows CI), inspectable installer/scheduled-task templates + behavioral fail-closed negatives, and the authored B01-W gate with preregistration and `B01-W-DESKTOP-001` requirement registration. Required CI `31570126985` passed at `13e772a`. **Blocked on B01-W execution prerequisites**: Windows release artifacts (release-pipeline scope), `B01-W-DESKTOP-001` provisioning, operator for graphical hidden-input credential entry. Blocked-closure record `docs/checkpoints/20260812-personal-p7-t07-windows-install-closure.md`; lease released, branch/PR retained. No install parity, B01-W, Gate, release, or Profile claim. |
 | P7-T08 | Public Linux 1.0 Gate（`GMVP-LINUX`） | P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03 | 汇合 Runtime Spine、Resource Value、Product Operability；promotion exact benchmarks 为 B01/B02/B03/B04/B05/B08/B09/B12；六类最小真实 slice、UCR-01 fixed-scenario assertions、desktop/headless SecretStore、Pi+sidecar 与 release operability 均有 evidence；B06/B07/B10/B11 不阻塞；不构成 Profile | done | 2026-08-11；`lease/personal/P7-T08/gmvp-linux` / PR #194. D01–D04 closed under ADR-0048/0049. B08 MVP `pass` at `65a736c` + CI `31479512940`; GMVP-LINUX MVP `pass` at `b3f4b88` + CI `31480604511`. Closure: `docs/checkpoints/20260811-personal-p7-t08-gmvp-linux-closure.md`. No Profile/Windows B01-W claim. |
 

@@ -11,10 +11,11 @@ sources:
   - path: personal/crates/cognitive-store/src/personal_backup.rs
   - path: personal/apps/admin-cli/src/personal_cli/mod.rs
   - path: docs/adr/0053-personal-web-ui-stack.md
+  - path: docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:a39b605e88bfe3e231a8fdff16237948630bea7237e61052a8ab112d05f05da0"
+fingerprint: "sha256:365c0d149b89dce64020796d904d6faadff9c0f34edaa3d36e2e6e42b60bd964"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -39,17 +40,18 @@ current fact of the code.
   overlay live files after preflight. Provider keys stay in the Secret Store
   and must be re-entered after a machine move. Managed Pi recover is not yet
   wired on this path.
-- **No Web UI SPA in this repository**: [ADR-0053](../../../../docs/adr/0053-personal-web-ui-stack.md)
-  accepted React + TypeScript + Vite and same-origin daemon `GET /ui` serving.
-  The daemon now enforces the loopback Origin/Referer allowlist and returns
-  `503` `not_available` when `data_dir()/ui/index.html` is absent. The SPA
-  lives in the official `cognitiveos-clients` checkout at
-  `D:\cognitiveos-clients\pc\web\` and is copied into `data_dir()/ui` for
-  product serving. This kernel tree still must not contain `clients/**`.
-  There is no Windows/macOS installation product and no multi-agent
-  orchestration. The Pi shell has no resource/task browsing UX yet. Provider
-  Control Plane in this phase is daemon API + CLI only — see
-  [Provider Control Plane](provider-control-plane.md).
+- **Control Plane Web UI is not in the Linux RC claim**:
+  [ADR-0053](../../../../docs/adr/0053-personal-web-ui-stack.md) accepted React +
+  TypeScript + Vite and same-origin daemon `GET /ui` serving. After
+  [ADR-0054](../../../../docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md)
+  the SPA lives in this repository at `clients/pc/web/` and is copied into
+  `data_dir()/ui` for product serving. The daemon enforces the loopback
+  Origin/Referer allowlist and returns `503` `not_available` when
+  `data_dir()/ui/index.html` is absent. HTTP cancel and class-C Agent lifecycle
+  remain `not-run`. There is no Windows/macOS installation product and no
+  multi-agent orchestration. The Pi shell has no resource/task browsing UX yet.
+  Operator steps: [Provider Control Plane](provider-control-plane.md). Linux RC
+  claim set: [Linux RC operator map](rc-and-support.md).
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no

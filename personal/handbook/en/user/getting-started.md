@@ -118,4 +118,5 @@ status` and `cognitive doctor`; if the secret store no longer has the key, run
 `cognitive init` again.
 
 For troubleshooting, see [Operations and recovery](operations-and-recovery.md),
-[Provider and secrets](provider-and-secrets.md), and [Known limitations](known-limitations.md).
+[Provider and secrets](provider-and-secrets.md), [Known limitations](known-limitations.md),
+and the [Linux RC operator map](rc-and-support.md).

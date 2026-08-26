@@ -65,7 +65,7 @@
     {
       "id": "agent-lifecycle-installer",
       "sources": ["personal/crates/cognitive-runtime/src/installer.rs", "personal/crates/cognitive-runtime/src/agent_registration.rs", "personal/crates/cognitive-runtime/src/linux_bundle*.rs", "personal/crates/cognitive-runtime/src/bin/linux_bundle*.rs", "personal/deploy/**"],
-      "docs": ["user.install-first-conversation", "user.getting-started", "dev.installer-service", "dev.agent-pi-lifecycle"],
+      "docs": ["user.install-first-conversation", "user.getting-started", "user.rc-and-support", "dev.installer-service", "dev.agent-pi-lifecycle"],
       "note": "bundle verify/stage/activate, single-service transaction, Pi acquisition/registration"
     },
     {

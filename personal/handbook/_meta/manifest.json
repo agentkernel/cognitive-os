@@ -21,6 +21,7 @@
     { "doc_id": "user.operations-recovery", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/operations-and-recovery.md" },
     { "doc_id": "user.security-boundaries", "kind": "concept", "audience": ["user"], "generated": false, "rel_path": "user/security-boundaries.md" },
     { "doc_id": "user.limitations", "kind": "reference", "audience": ["user"], "generated": false, "rel_path": "user/known-limitations.md" },
+    { "doc_id": "user.rc-and-support", "kind": "guide", "audience": ["user"], "generated": false, "rel_path": "user/rc-and-support.md" },
 
     { "doc_id": "dev.index", "kind": "navigation", "audience": ["developer"], "generated": false, "rel_path": "developer/README.md" },
     { "doc_id": "dev.repo-map", "kind": "reference", "audience": ["developer", "ai"], "generated": false, "rel_path": "developer/repository-map.md" },

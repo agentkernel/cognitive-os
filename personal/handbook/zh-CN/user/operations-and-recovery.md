@@ -23,7 +23,7 @@ sources:
     symbols: ["launch"]
   - path: personal/apps/admin-cli/src/personal_cli/provider.rs
   - path: personal/crates/cognitive-store/src/personal_backup.rs
-    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
+    symbols: ["write_personal_backup_archive", "restore_personal_backup_archive", "plan_personal_lifecycle"]
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
   - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -159,6 +159,22 @@ SecretStore，永不进入 SQLite、argv 或浏览器存储。没有桌面控制
 `expected_revision`；不匹配时 HTTP 409 `PROVIDER_BINDING_REVISION_STALE`。操作
 步骤、可执行命令与常见失败见
 [Provider Control Plane](provider-control-plane.md)。
+
+## 更新、回滚与卸载 —— `partial`
+
+没有公开的 `cognitive update` 或 `cognitive uninstall`。Linux 产品路径是：
+
+- **更新：** 对更新的 bundle 重新运行经检查的已签名 `install.sh`。新激活成功前，旧版本
+  留在磁盘上。失败会补偿（恢复旧版本、unit 与 `active-version` 指针，不发成功收据）。
+- **停止 / 禁用 user unit：** `cognitive daemon stop`，然后
+  `systemctl --user disable --now cognitiveos-personal.service`。这不删除 Secret
+  Store 条目、`authority.sqlite` 或 XDG 数据。
+- **权威路径 plan：** `plan_personal_lifecycle` 记录 Update/Rollback/Uninstall
+  意图。Uninstall 拒绝 Secret 目标；Data 必须显式确认删除。提交该 plan 仍不会删除
+  主机文件。
+- **managed Pi 卸载** 仍走下方备份/恢复中的 `admin-cli` 生命周期。
+
+步骤索引见 [Linux RC 操作地图](rc-and-support.md)。
 
 ## 备份与恢复 —— `partial`
 

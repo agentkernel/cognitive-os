@@ -16,13 +16,16 @@ sources:
     symbols: ["validateUjCapabilityTruthMatrix"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
+  - path: tools/src/personal-rc-gate.mjs
+    symbols: ["buildPersonalRcDeclarationReport"]
 tests:
   - tools/test/check.test.mjs
   - tools/test/p2_t28_capability_truth.test.mjs
   - tools/test/c1_c2_paired_p_arm.test.mjs
   - tools/test/p7_t05_web_ui_inventory.test.mjs
+  - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:e23bba35fef1f0eb0036f6f98e3d4e8bb7c178b2cc61523e725282fea18cd48b"
+fingerprint: "sha256:aa1fa9e241bb271661d6202b3a96e749ba55a0979e56be0d14e2b48db5351c51"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -101,6 +104,15 @@ secret-bearing writes, and browser-direct SQLite/SecretStore/filesystem/Provider
 access fail closed. Missing typed HTTP (Task cancel; Agent
 pause/resume/stop/restart/quarantine) must stay `unavailable`/`not-run`. The
 inventory is not a SPA implementation, browser journey, Gate, or release result.
+
+## Personal Linux RC declaration binder
+
+`tools/src/personal-rc-gate.mjs` binds existing MVP Gate dispositions and
+operability evidence into a digest-bound Personal Linux RC declaration. Incomplete
+observations, missing digests, Profile keys, an enabled P6, non-zero RC-scope
+critical risks, and a production GitHub Release claim fail closed. The evaluator
+does not set Gate or Profile state. Focused tests:
+`tools/test/personal-rc-gate.test.mjs`.
 
 ## CI matrix
 

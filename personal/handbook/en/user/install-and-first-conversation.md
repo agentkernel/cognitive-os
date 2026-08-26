@@ -66,8 +66,10 @@ closed — there is no plaintext fallback.
 
 Named accounts, key rotation, fixed agent bindings, and usage queries are a
 separate operator surface after the daemon is running:
-[Provider Control Plane](provider-control-plane.md). That surface is CLI talking
-to the daemon only; there is no Web or desktop control panel in this phase.
+[Provider Control Plane](provider-control-plane.md). That surface is CLI plus
+same-origin `GET /ui/`; keys still enter SecretStore only through the management
+key POST or `--api-key-file`. The Web UI is not in the Linux RC claim. The
+step index is [Linux RC operator map](rc-and-support.md).
 `cognitive init` remains the first-conversation path (`provider.json` /
 `selected-model.json`) until you set a control-plane binding.
 

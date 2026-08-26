@@ -85,8 +85,9 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P7-T06/rc-docs-support-matrix` | `P7-T06/D04` final acceptance / required CI / ready-merge | Lane-DOC | `personal/P7-T06-rc-docs-support-matrix` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/plan.md`; `docs/plan/personal-trace.yaml`; `docs/plan/PERSONAL-SUPPORT-MATRIX.md`; `docs/checkpoints/`; `personal/docs/VERSION-1.0.0.md`; `personal/handbook/`; `tools/src/personal-rc-gate.mjs`; `tools/test/personal-rc-gate.test.mjs`; `tools/package.json` | `cursor-agent/P7-T06` | 2026-08-26 / 2026-08-26 | active |
 
-No active lease rows. Writing to any path requires claiming a new row first.
+Writing to any other path requires claiming a new row first.
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

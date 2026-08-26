@@ -14,7 +14,9 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:e37b2e33dbf7cea107326de5e0b85408bd63b065132e438275a0889a460a897e"
+  - path: tools/src/personal-rc-gate.mjs
+    symbols: ["buildPersonalRcDeclarationReport"]
+fingerprint: "sha256:2cd15b384f7f131864d44aaa5014aba98c92e80e8ddd74896d4fcdc7ff239a53"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -41,6 +43,7 @@ pnpm run hooks:install              # once per clone: registers .githooks pre-co
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
 node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 route inventory; not a Gate result
+node --test tools/test/personal-rc-gate.test.mjs         # P7-T06 RC binder; does not set Gate state
 # SPA (this repo clients/pc/web): pnpm test; pnpm build
 # Product origin is daemon GET /ui after copying dist/ into data_dir()/ui. Vite preview is not the product origin.
 # After linux-002 Control Plane / dsh deploy, owner viewing is local Windows via:
@@ -111,6 +114,9 @@ and `GET /ui` serving tests live in
 `personal/apps/kernel-server/src/personal/server.rs` (foreign/null Origin,
 missing-bundle `not_available`, path traversal); they require supported
 Rust linking (CI-UBUNTU-01 / CI-WINDOWS-MSVC-01 / DEV-LINUX-NATIVE-01).
+P7-T06 Personal Linux RC binder is
+`tools/test/personal-rc-gate.test.mjs` (incomplete observation, Profile keys,
+enabled P6, and production publication fail closed). It does not set Gate state.
 P7-T05/D08 binding CAS is `expected_revision` on
 `POST /management/agent-bindings` with 409 `PROVIDER_BINDING_REVISION_STALE`
 (`personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs`; Linux/CI only).
