@@ -1,6 +1,6 @@
 # dsh Path B「API key 无效」与 daemon 重启后 stale `DAEMON_BEARER`
 
-- **状态**: 已复现；产品修复在 `P8-T16`（`cognitive dsh web` helper 检测 401 后重签发 management bearer）
+- **状态**: 已修复（`P8-T16`；`cognitive dsh web` helper 检测 401 后重签发 management bearer）
 - **环境**: `B01-Desktop-Linux-002`（`hal9001@192.168.123.160`），runtime `/home/hal9001/p8t13-owner-ops/runtime`
 - **相关任务/能力**: P8-T10 / P8-T15 / P8-T16，dsh Path B，`cognitive dsh web`
 - **发现日期**: 2026-08-26
@@ -172,4 +172,4 @@ $BINDIR/cognitive dsh status --runtime-root "$RUNTIME"
 - dsh 绑定：`agent://personal/dsh` → `LongCat-2.0`，revision 17。
 - daemon 重启后：旧 bearer → `401 LOCAL_SESSION_UNAUTHORIZED`；dsh **CRASHED**。
 - `cognitive dsh web` 重启后：新 `sess-...` 写入 `.credentials.yaml`；Path B 返回 `model: LongCat-2.0` 正常 completion。
-- 产品修复：`P8-T16` helper 在仍运行时对 401 重签发 bearer（linux-002 自动刷新验证见任务报告）。
+- 产品修复：`P8-T16` helper 在仍运行时对 401 重签发 bearer。linux-002 at adapter `68355417`: helper pid 不变，daemon 替换后 2 s 内 remint，Path B 再次 **200** `LongCat-2.0`，无需操作员再跑 `dsh web` / `dsh apply`。
