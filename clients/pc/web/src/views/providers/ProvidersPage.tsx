@@ -13,6 +13,7 @@ import {
 } from "../../data/projections/providers";
 import { appProjections } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
+import { useInspectorClear } from "../../shell/useInspectorClear";
 import { StateChip } from "../../state/StateChip";
 import { readDomainState } from "../../state/stateMap";
 import { AccountCreateFlow } from "./AccountCreateFlow";
@@ -48,6 +49,8 @@ export function ProvidersPage() {
 
   const rows = triageAccounts(projection.data ?? []);
   const selected = rows.find((row) => row.id === selectedId);
+  const clearInspector = useCallback(() => setSelectedId(undefined), []);
+  useInspectorClear(selectedId, clearInspector);
 
   const columns: MasterColumn<ProviderAccount>[] = [
     {

@@ -51,7 +51,7 @@ export function PrimaryNav({
             aria-label="Open command palette"
             aria-haspopup="dialog"
             aria-expanded={paletteOpen}
-            aria-keyshortcuts="Control+K Meta+K"
+            aria-keyshortcuts="Control+K Meta+K Slash"
             onClick={() => onOpenPalette?.()}
           >
             ⌘K

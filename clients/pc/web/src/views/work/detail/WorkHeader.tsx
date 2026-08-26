@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DigestChip } from "../../../components/DigestChip";
+import { DigestChip, copyValue } from "../../../components/DigestChip";
 import { FactGrid } from "../../../components/FactGrid";
 import { UNSUPPORTED_TASK_OPERATIONS, factOrUnknown } from "../../../data/projections/work";
 import {
@@ -90,7 +90,10 @@ export function WorkHeader({
           type="button"
           className="cp-button"
           onClick={() => {
-            void navigator.clipboard.writeText(taskRef).then(() => {
+            void copyValue(taskRef).then((ok) => {
+              if (!ok) {
+                return;
+              }
               setCopied(true);
               setTimeout(() => setCopied(false), 1200);
             });

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { DigestChip } from "../../components/DigestChip";
+import { DigestChip, copyValue } from "../../components/DigestChip";
 import { FactGrid } from "../../components/FactGrid";
 import { Inspector } from "../../components/Inspector";
 import {
@@ -119,7 +119,10 @@ export function WorkInspector({
           type="button"
           className="cp-button"
           onClick={() => {
-            void navigator.clipboard.writeText(row.taskRef).then(() => {
+            void copyValue(row.taskRef).then((ok) => {
+              if (!ok) {
+                return;
+              }
               setCopied(true);
               setTimeout(() => setCopied(false), 1200);
             });

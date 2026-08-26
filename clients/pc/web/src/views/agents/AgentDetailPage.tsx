@@ -145,7 +145,7 @@ export function AgentDetailPage() {
       const next = new URLSearchParams(query);
       next.set("section", section);
       setQuery(next, { replace: true });
-      document.getElementById(`section-${section}`)?.scrollIntoView({ block: "start" });
+      document.getElementById(`section-${section}`)?.scrollIntoView?.({ block: "start" });
     },
     [query, setQuery],
   );

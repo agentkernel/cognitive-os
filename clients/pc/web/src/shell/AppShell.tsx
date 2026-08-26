@@ -1,8 +1,9 @@
 import type { ReactNode } from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { CommandPalette } from "../components/CommandPalette";
 import { PrimaryNav } from "./PrimaryNav";
 import { StatusStrip } from "./StatusStrip";
+import { useShellKeyboard } from "./useShellKeyboard";
 
 /**
  * App shell — docs/design/12. Status strip (top, full width) + primary nav
@@ -11,6 +12,8 @@ import { StatusStrip } from "./StatusStrip";
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const openPalette = useCallback(() => setPaletteOpen(true), []);
+  useShellKeyboard({ paletteOpen, onOpenPalette: openPalette });
 
   useEffect(() => {
     function onKey(event: KeyboardEvent) {

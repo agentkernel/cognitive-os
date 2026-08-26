@@ -54,6 +54,7 @@ import {
 import { appProjections } from "../../data/store";
 import { useLastGood, useProjection, useProjections } from "../../data/useProjection";
 import { sessionHasChannel } from "../../session";
+import { useInspectorClear } from "../../shell/useInspectorClear";
 import { HonestyNote } from "../../state/HonestyNote";
 import { StateDot } from "../../state/StateDot";
 import { ProjectionState } from "../providers/ProjectionState";
@@ -74,6 +75,8 @@ export function ActivityPage() {
   const [selectedId, setSelectedId] = useState<string | undefined>();
   const [receipt, setReceipt] = useState<string | undefined>();
   const [message, setMessage] = useState<string | undefined>();
+  const clearInspector = useCallback(() => setSelectedId(undefined), []);
+  useInspectorClear(selectedId, clearInspector);
 
   const alerts = useProjection<ProviderAlertView[]>(ACTIVITY_ALERTS_KEY);
   const audit = useProjection<AuditEventView[]>(ACTIVITY_AUDIT_KEY);
@@ -391,6 +394,7 @@ function ActivityRowItem({
   return (
     <li
       className="cp-queue-row"
+      data-row-key={row.id}
       data-kind={row.kind}
       data-object={row.objectType}
       aria-selected={selected}

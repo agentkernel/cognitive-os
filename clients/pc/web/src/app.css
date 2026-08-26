@@ -1044,7 +1044,7 @@ body {
   }
 }
 
-@media (max-width: 960px) {
+@media (max-width: 1279px) {
   .cp-shell {
     grid-template-areas: "strip" "side" "main";
     grid-template-rows: 34px auto minmax(0, 1fr);
@@ -1211,6 +1211,20 @@ body {
   .cp-honesty,
   .cp-receipt {
     background: var(--cp-surface);
+  }
+}
+
+/* Design-25 §5: coarse-pointer targets are at least 44 px. Fine pointers
+ * keep the compact density; this media query is the narrow/touch degradation. */
+@media (pointer: coarse) {
+  .cp-button,
+  .cp-nav a,
+  .cp-sectionnav-link,
+  .cp-digestchip button,
+  .cp-queue-action a,
+  .cp-queue-action button {
+    min-height: 44px;
+    min-width: 44px;
   }
 }
 

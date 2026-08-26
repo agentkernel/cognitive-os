@@ -930,4 +930,26 @@ describe("Work detail structure and routing", () => {
     }
     unmount(host, root);
   });
+
+  it("bracket keys walk the section navigator to Evidence", async () => {
+    installFetch(detailRoutes());
+    const { host, root } = renderAppAt(detailHash(TASK_A));
+    await flush();
+    expect(
+      (host.querySelector('.cp-sectionnav-link[aria-current="true"]')?.textContent ?? "").trim(),
+    ).toBe("Overview");
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "]", bubbles: true }));
+    });
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "]", bubbles: true }));
+    });
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "]", bubbles: true }));
+    });
+    expect(
+      (host.querySelector('.cp-sectionnav-link[aria-current="true"]')?.textContent ?? "").trim(),
+    ).toBe("Evidence");
+    unmount(host, root);
+  });
 });

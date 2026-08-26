@@ -34,6 +34,7 @@ import {
 } from "../../data/projections/resources";
 import { appProjections, type Projection } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
+import { useInspectorClear } from "../../shell/useInspectorClear";
 import { HonestyNote } from "../../state/HonestyNote";
 import { ProjectionState } from "../providers/ProjectionState";
 
@@ -62,6 +63,8 @@ export function MemoryPage() {
   const list = useProjection<ResourceListView>(resourceListKey("memory"));
   const rows = list.data?.resources ?? [];
   const selected = rows.find((row) => row.id === selectedId);
+  const clearInspector = useCallback(() => setSelectedId(undefined), []);
+  useInspectorClear(selectedId, clearInspector);
 
   useEffect(() => {
     if (selectedId && !rows.some((row) => row.id === selectedId) && list.status === "ready") {

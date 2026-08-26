@@ -28,6 +28,7 @@ import { sessionHasChannel } from "../../session";
 import { HonestyNote } from "../../state/HonestyNote";
 import { StateChip } from "../../state/StateChip";
 import { readDomainState } from "../../state/stateMap";
+import { useInspectorClear } from "../../shell/useInspectorClear";
 import { WorkFilters } from "./WorkFilters";
 import { WorkInspector } from "./WorkInspector";
 import { WorkInventory, type InventorySource } from "./WorkInventory";
@@ -179,6 +180,8 @@ export function WorkPage() {
     },
     [writeListState],
   );
+  const clearInspector = useCallback(() => select(undefined), [select]);
+  useInspectorClear(activeRef, clearInspector);
 
   const changeOrigin = useCallback(
     (next: WorkOriginFilter) => {

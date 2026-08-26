@@ -19,6 +19,7 @@ import {
 } from "../../data/projections/providers";
 import { appProjections } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
+import { useInspectorClear } from "../../shell/useInspectorClear";
 import { HonestyNote } from "../../state/HonestyNote";
 import { BINDINGS_KEY } from "../providers/BindingsSection";
 import { PROVIDER_ACCOUNTS_KEY } from "../providers/ProvidersPage";
@@ -86,6 +87,8 @@ export function AgentsPage() {
     [bindings.data, accounts.data, runtime.data],
   );
   const selected = rows.find((row) => row.id === selectedId);
+  const clearInspector = useCallback(() => setSelectedId(undefined), []);
+  useInspectorClear(selectedId, clearInspector);
   const inventorySource =
     bindings.status === "loading" ? "pending" : "answered";
 
