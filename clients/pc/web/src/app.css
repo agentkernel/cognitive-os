@@ -1073,10 +1073,115 @@ body {
   }
 }
 
+/* ---------- command palette (floating layer) ---------- */
+
+.cp-palette-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: rgba(16, 19, 24, 0.28);
+}
+
+.cp-palette {
+  position: fixed;
+  top: 12vh;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 41;
+  width: min(40rem, calc(100vw - 2rem));
+  max-height: min(32rem, 72vh);
+  display: flex;
+  flex-direction: column;
+  gap: var(--cp-space-2);
+  padding: var(--cp-space-4);
+  background: var(--cp-raised);
+  color: var(--cp-ink);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-lg);
+  box-shadow: var(--cp-elevation-1);
+  animation: cp-palette-enter var(--cp-motion-enter);
+}
+
+@keyframes cp-palette-enter {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.cp-palette-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border: 1px solid var(--cp-line);
+  border-radius: var(--cp-radius-md);
+  background: var(--cp-surface);
+  color: var(--cp-ink);
+}
+
+.cp-palette-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  overflow-y: auto;
+  min-height: 4rem;
+}
+
+.cp-palette-group {
+  margin: var(--cp-space-2) 0 0;
+  padding: var(--cp-space-1) var(--cp-space-3);
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+}
+
+.cp-palette-row {
+  display: grid;
+  grid-template-columns: 5.5rem minmax(0, 1fr);
+  grid-template-rows: auto auto;
+  column-gap: var(--cp-space-3);
+  padding: var(--cp-space-2) var(--cp-space-3);
+  border-radius: var(--cp-radius-md);
+  cursor: pointer;
+  min-height: 24px;
+}
+
+.cp-palette-row.is-active {
+  background: var(--cp-accent-soft);
+}
+
+.cp-palette-kind {
+  grid-row: 1 / span 2;
+  align-self: center;
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+  text-transform: lowercase;
+}
+
+.cp-palette-label {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.cp-palette-row .cp-quiet {
+  grid-column: 2;
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
 /* ---------- reduced motion / transparency ---------- */
 
 @media (prefers-reduced-motion: reduce) {
   .cp-dot--active {
+    animation: none;
+  }
+
+  .cp-palette {
     animation: none;
   }
 

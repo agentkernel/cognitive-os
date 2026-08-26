@@ -27,6 +27,7 @@ import { SystemPage } from "./views/system/SystemPage";
  * the W6 inventory plus dossier. Resources is the W7 family hub plus the
  * Memory, Skills and Tools family pages. Activity is the W8 evidence stream.
  * System is the W9 readiness/doctor/stewardship/session/about surface.
+ * ⌘K is the W10 command layer (chrome, not a space).
  * The static /work/new segment is matched ahead of the dynamic one. The legacy
  * governed-task page stays reachable at /tasks until its watch/observation
  * diagnostics are migrated.
