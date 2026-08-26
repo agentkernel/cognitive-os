@@ -34,7 +34,7 @@ product-qualify 官方 npm 获取并受管的 exact Pi + per-Agent sidecar。
 - **明确不在 1.0.0**：embedding/vector/graph 检索、MCP 与 dynamic Tool
   marketplace（P5-T03/T04 为 post-1.0 能力列车，虽已实现）、Multi-Agent
   （P6，默认关闭）、Web UI（P7-T05）、Windows 安装面（P7-T07/B01-W）、
-  clean-VM RC 发行证据（P7-T06）。
+  clean-VM RC 发行证据包（P7-T06，digest 绑定声明；不设 Gate 状态）。
 
 ## 3. 验收标准与达成证据
 
@@ -78,7 +78,7 @@ owner 于 2026-08-25 定稿 `cognitiveos-personal` 1.0.0：**1.0.0 版本开发�
 |---|---|---|
 | Multi-Agent（默认关闭；NO-GO 合法） | P6-T01..T04 / B11 | not-started |
 | Control Plane Web UI 后续 wave（W6+、legacy 收尾、rendered review 补全） | P7-T05 续（需新 lease） | paused by owner |
-| RC / 发行证据 | P7-T06 | in-progress（D01–D03 已写；D04 待 required CI / merge） |
+| RC / 发行证据 | P7-T06 | done（PR [#276](https://github.com/agentkernel/cognitive-os/pull/276) @ `main@712a517d`；不设 Gate 状态；非生产 GitHub Release） |
 | Windows 安装面 | P7-T07 / B01-W | blocked（B01-W 前置） |
 | Embedding/vector/graph、MCP marketplace、非 Pi Agent qualification | P4 后续 / P5B / P8 模式 | 设计/能力列车 |
 | 混合 crate core/personal 内部拆分 | ADR-0054 登记的结构重构 | not-started |
