@@ -3,7 +3,6 @@ import { NotFound } from "./shell/NotFound";
 import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
 import { HomePage } from "./views/home/HomePage";
-import { TasksPage } from "./views/legacy/legacyPages";
 import { ProviderDetailPage } from "./views/providers/ProviderDetailPage";
 import { ProvidersPage } from "./views/providers/ProvidersPage";
 import { NewTaskPage } from "./views/work/NewTaskPage";
@@ -28,9 +27,8 @@ import { SystemPage } from "./views/system/SystemPage";
  * Memory, Skills and Tools family pages. Activity is the W8 evidence stream.
  * System is the W9 readiness/doctor/stewardship/session/about surface.
  * ⌘K is the W10 command layer (chrome, not a space).
- * The static /work/new segment is matched ahead of the dynamic one. The legacy
- * governed-task page stays reachable at /tasks until its watch/observation
- * diagnostics are migrated.
+ * The static /work/new segment is matched ahead of the dynamic one. Retired
+ * hashes redirect: /bindings → /providers, /tasks → /work.
  */
 export function AppRoutes() {
   return (
@@ -101,14 +99,7 @@ export function AppRoutes() {
         }
       />
       <Route path="/bindings" element={<Navigate to="/providers" replace />} />
-      <Route
-        path="/tasks"
-        element={
-          <SessionGate channel="task" title="Tasks">
-            <TasksPage />
-          </SessionGate>
-        }
-      />
+      <Route path="/tasks" element={<Navigate to="/work" replace />} />
       <Route
         path="/activity"
         element={

@@ -6,6 +6,19 @@
 
 /* ---------- base ---------- */
 
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  margin: 0;
+  min-height: 100%;
+}
+
 body {
   font-family: var(--cp-font-text);
   font-size: var(--cp-size-body);
@@ -26,10 +39,8 @@ body {
 }
 
 /*
- * styles.css sets `a { color: var(--accent) }` with the legacy #0071e3, which
- * measures 4.31:1 on --cp-canvas — below AA. This rule outranks it on
- * specificity alone, and sits before .cp-nav a / .cp-region-chips a so those
- * keep their own ink colour.
+ * Text links use --cp-link (accent-as-text), not --cp-accent fill. Nav and
+ * chip links keep their own ink.
  */
 .cp-app a {
   color: var(--cp-link);
@@ -536,7 +547,7 @@ body {
   font-size: var(--cp-size-row);
 }
 
-/* forms inside the new system (legacy pages keep styles.css forms) */
+/* forms in the Control Plane composition */
 
 .cp-field {
   display: block;
@@ -1020,10 +1031,36 @@ body {
   color: var(--cp-quiet);
 }
 
-/* session gate keeps legacy class hooks for existing tests, styled by app.css */
+/* session gate — destination title stays visible; form uses cp-field / cp-button */
+
+.skip {
+  position: absolute;
+  left: -999px;
+}
+
+.skip:focus {
+  left: 1rem;
+  top: 1rem;
+  background: var(--cp-surface);
+  color: var(--cp-link);
+  padding: 0.5rem 0.85rem;
+  z-index: 4;
+}
 
 .cp-gate {
   max-width: 72ch;
+}
+
+.cp-warn {
+  color: var(--cp-attention-text);
+}
+
+.cp-session-form {
+  max-width: 32rem;
+}
+
+.cp-session-form .cp-button + .cp-button {
+  margin-left: var(--cp-space-2);
 }
 
 /* ---------- responsive (desktop-first; narrow = progressive degradation) ---------- */
@@ -1228,38 +1265,8 @@ body {
   }
 }
 
-/* ---------- legacy styles.css bridge ----------
- * styles.css still owns the legacy Tasks page, so it stays imported and its
- * unprefixed vars plus bare element selectors keep reaching this markup. Until
- * TasksPage stops depending on it, this side corrects a dark set for the legacy
- * vars (styles.css declares light values only, so html/#root, legacy panels and
- * h1-h3 otherwise stay light under a dark system theme) and contains the legacy
- * element chrome inside .cp-app.
- */
+/* Shared form/table/code reset: no card chrome, 4/6/8 radius ceiling. */
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #101318;
-    --bg-sidebar: rgba(23, 27, 34, 0.85);
-    --panel: #171b22;
-    --panel-tint: #1e242e;
-    --ink: #e8edf5;
-    --ink-secondary: #c3cddc;
-    --muted: #9aa6b8;
-    --line: rgba(232, 237, 245, 0.1);
-    --line-strong: rgba(232, 237, 245, 0.2);
-    --accent: #7eb6ff;
-    --accent-hover: #9cc7ff;
-    --accent-soft: rgba(126, 182, 255, 0.14);
-    --focus-ring: rgba(126, 182, 255, 0.6);
-    --ok: #4cc38a;
-    --warn: #f0a35e;
-    --bad: #f26d6d;
-  }
-}
-
-/* Legacy card chrome (fill, 18px radius, drop shadow) must not double up on
-   the panels this system already draws; radius ceiling stays 4/6/8. */
 .cp-app form,
 .cp-app table {
   background: none;
@@ -1274,12 +1281,10 @@ body {
 }
 
 .cp-app code {
-  background: none;
-  border-radius: 0;
-  padding: 0;
+  font-family: var(--cp-font-mono);
+  font-size: 0.92em;
 }
 
-/* Legacy 980px pill buttons and 10px inputs exceed the 4/6/8 ceiling. */
 .cp-app button,
 .cp-app input,
 .cp-app select {

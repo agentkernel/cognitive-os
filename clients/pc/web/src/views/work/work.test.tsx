@@ -1042,3 +1042,20 @@ describe("Governed task creation", () => {
     unmount(host, root);
   });
 });
+
+describe("legacy Tasks retirement", () => {
+  it("redirects #/tasks to Work and does not mount the retired diagnostics page", async () => {
+    installFetch({
+      "GET /management/resource/v1/list": { status: 200, body: { status: "ok", resources: [] } },
+    });
+    const { host, root } = renderAppAt("#/tasks");
+    await flush();
+    expect(window.location.hash).toBe("#/work");
+    expect(host.querySelector("h2")?.textContent).toBe("Work");
+    expect(text(host)).not.toContain("Tasks, Effects, Evidence");
+    expect(text(host)).not.toContain("Watch poll");
+    expect(text(host)).not.toContain("Simulate cursor gap");
+    expect(host.querySelector('a[href="#/tasks"]')).toBeNull();
+    unmount(host, root);
+  });
+});

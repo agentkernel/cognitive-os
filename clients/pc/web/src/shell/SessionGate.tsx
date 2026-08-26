@@ -36,12 +36,12 @@ export function SessionForm() {
   }
 
   return (
-    <form onSubmit={(event) => void issue(event)}>
-      <label>
+    <form className="cp-session-form" onSubmit={(event) => void issue(event)}>
+      <label className="cp-field">
         Principal
         <input value={principal} onChange={(event) => setPrincipal(event.target.value)} />
       </label>
-      <label>
+      <label className="cp-field">
         Daemon bootstrap secret
         <input
           type="password"
@@ -50,13 +50,16 @@ export function SessionForm() {
           onChange={(event) => setSecret(event.target.value)}
         />
       </label>
-      <p className="muted">
+      <p className="cp-quiet">
         File <code>local-bootstrap.secret</code> on this daemon. Not a Provider LLM API key and
         not a SecretRef. The browser cannot read the file. Sessions stay in memory only.
       </p>
-      <button type="submit">Issue management and Task sessions</button>
+      <button type="submit" className="cp-button cp-button--primary">
+        Issue management and Task sessions
+      </button>
       <button
         type="button"
+        className="cp-button"
         onClick={() => {
           clearSession();
           setMessage("Session cleared.");
@@ -95,7 +98,7 @@ export function SessionGate({
             This page needs a {channel} session. Sidebar navigation still changes the view.
           </p>
         </header>
-        <p className="warn" role="status">
+        <p className="cp-warn" role="status">
           Paste this daemon&apos;s bootstrap secret — not a Provider LLM API key.
         </p>
         <SessionForm />
