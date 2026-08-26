@@ -85,7 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-| `lease/personal/P7-T05/d14-rendered-review` | `P7-T05/D23` Control Plane W11 watch streaming (same task lease after D22 close) | Lane-TSC | `personal/P7-T05-d14-rendered-review` | `clients/pc/web/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260826-personal-p7-t05-d22-w10-command-rendered-review-report.md` | owner-directed session 2026-08-26 | 2026-08-25 / 2026-08-26 | active |
+| `lease/personal/P7-T05/d14-rendered-review` | `P7-T05/D24` Control Plane W12 accessibility / QA gate (same task lease after D23 close) | Lane-TSC | `personal/P7-T05-d14-rendered-review` | `clients/pc/web/`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/checkpoints/20260826-personal-p7-t05-d23-w11-watch-rendered-review-report.md` | owner-directed session 2026-08-26 | 2026-08-25 / 2026-08-26 | active |
 
 Only the row above is active. Writing to any other path requires claiming a new row first.
 
