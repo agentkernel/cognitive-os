@@ -221,8 +221,8 @@ Keep the session open. Open locally:
 
 After guest **daemon restart** or kernel-server replace, agents must restart
 `cognitive dsh web` or run `cognitive dsh apply` on that runtime before owner
-dsh review; see
-[`docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md`](../bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md).
+dsh review. A stale Path B `DAEMON_BEARER` after daemon restart is an
+operator recovery step, not a Control Plane code defect.
 
 Agents should record the forwarded ports and exact Git revision deployed when
 handing off UI review. **After each guest debug session, remind the owner** with
