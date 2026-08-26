@@ -33,6 +33,7 @@ sources:
     symbols: ["configure", "launch", "status"]
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
+    symbols: ["classifyPathBManagementProbe", "pathBWatchAction", "pathBShouldRefreshAfterChildExit", "pathBWebCredentialsYaml"]
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
@@ -46,7 +47,8 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:76426030242c92706bc01d4113c62584434e6345185c645e58a48ecf76cbe896"
+  - personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.test.mjs
+fingerprint: "sha256:c818c0db2592a2b7090d7be576c5e86d6638e60a71b58b58ebd47cd1bf316284"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -150,6 +152,12 @@ WorkspaceRead/Search/Write Task，再由真实 dsh 进程以 plugin `startupEven
 Personal `/ui/`。Web Path B 会写入 `$DSH_HOME/settings.yaml`，让 `llm-deepseek`
 保持 `POST /provider/v1/dsh/chat/completions`，并把官方 Models 目录的密钥引用别名到
 daemon management bearer — 不把 SecretStore 材料复制进 dsh，也不写 `.env`。
+`cognitive dsh web` 仍在运行时，daemon 重启丢掉内存中的 management session 会表现为
+401 `LOCAL_SESSION_UNAUTHORIZED`；helper 会用 `local-bootstrap.secret` 重新签发
+management session、重写 `$DSH_HOME/.credentials.yaml` 并重载 Cos。该 401 是失效的
+loopback bearer，不是缺失的 Provider API key，也不会被当成 dsh 已解绑。
+若 Cos 在 helper 仍运行时退出，且 management 探测为 stale 或 unreachable，helper
+会重签发而不是自行退出。
 原生 Models 是当前 dsh 绑定账户目录（不是 Cos/DeepSeek 残留 id）。binding 的
 set/remove 与 `op: apply` 会重写该覆盖层；Cos 安装的 web 会重载。
 `cognitive dsh status` 读取 `GET /personal/dsh/runtime`。

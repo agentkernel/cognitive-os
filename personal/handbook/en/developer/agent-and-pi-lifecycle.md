@@ -33,6 +33,7 @@ sources:
     symbols: ["configure", "launch", "status"]
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
+    symbols: ["classifyPathBManagementProbe", "pathBWatchAction", "pathBShouldRefreshAfterChildExit", "pathBWebCredentialsYaml"]
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
@@ -46,7 +47,8 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:76426030242c92706bc01d4113c62584434e6345185c645e58a48ecf76cbe896"
+  - personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.test.mjs
+fingerprint: "sha256:c818c0db2592a2b7090d7be576c5e86d6638e60a71b58b58ebd47cd1bf316284"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -178,7 +180,14 @@ starts the native panel (`dsh --profile web --no-open`, default
 is not Personal `/ui/`. Web Path B writes `$DSH_HOME/settings.yaml` so
 `llm-deepseek` stays on `POST /provider/v1/dsh/chat/completions` and aliases the
 official Models catalog ref to the daemon management bearer — not a SecretStore
-copy and not a dsh `.env` key. Native Models is the current dsh-bound account
+copy and not a dsh `.env` key. While `cognitive dsh web` stays running, a daemon
+restart that drops in-memory management sessions is detected as 401
+`LOCAL_SESSION_UNAUTHORIZED`; the helper re-issues a management session from
+`local-bootstrap.secret`, rewrites `$DSH_HOME/.credentials.yaml`, and reloads
+Cos. That 401 is a stale loopback bearer, not a missing Provider API key, and
+it is not treated as an unbound dsh overlay. If Cos exits while the helper is
+still running and the management probe is stale or unreachable, the helper
+remints instead of shutting down. Native Models is the current dsh-bound account
 catalog (not leftover Cos/DeepSeek ids). Binding set/remove and `op: apply`
 rewrite that overlay; Cos-installed web reloads it. `cognitive dsh status`
 reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: apply`

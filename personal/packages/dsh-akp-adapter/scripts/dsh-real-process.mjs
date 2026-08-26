@@ -30,10 +30,18 @@ import {
   listenUrl,
   llmDeepseekPatchLines,
   overlayStamp,
+  classifyPathBManagementProbe,
+  createPathBStaleSessionError,
+  pathBBindingsAreStale,
+  pathBShouldRefreshAfterChildExit,
+  pathBWatchAction,
   pathBWebChildExtras,
   pathBWebCredentialsYaml,
   pathBWebCatalogModels,
   pathBWebSettingsYaml,
+  PATH_B_PROBE_UNREACHABLE,
+  PATH_B_STALE_SESSION_CODE,
+  PATH_B_WATCH_REFRESH_BEARER,
   readDshWebControlPlaneOverlay,
   writeDshWebControlPlaneOverlayApplied,
 } from "./dsh-web-preflight.mjs";
@@ -162,6 +170,9 @@ async function loadCosDshOverlay(origin, managementToken) {
   }
   try {
     const bindings = await httpJson(origin, "GET", "/management/agent-bindings", managementToken);
+    if (pathBBindingsAreStale(bindings.status, bindings.json)) {
+      throw createPathBStaleSessionError();
+    }
     const rows = Array.isArray(bindings.json?.bindings) ? bindings.json.bindings : [];
     const dsh = rows.find(
       (row) => row && row.agent === "agent://personal/dsh" && row.status === "active",
@@ -175,6 +186,9 @@ async function loadCosDshOverlay(origin, managementToken) {
       `/management/providers/models?account_id=${encodeURIComponent(dsh.account_id)}`,
       managementToken,
     );
+    if (pathBBindingsAreStale(listed.status, listed.json)) {
+      throw createPathBStaleSessionError();
+    }
     const catalog = Array.isArray(listed.json?.models) ? listed.json.models : [];
     const model = String(dsh.model_id ?? "").trim();
     return {
@@ -183,29 +197,78 @@ async function loadCosDshOverlay(origin, managementToken) {
       catalog: pathBWebCatalogModels(catalog, model),
       written_at_ms: 0,
     };
-  } catch {
+  } catch (error) {
+    if (error && error.code === PATH_B_STALE_SESSION_CODE) {
+      throw error;
+    }
     return { bound: false, model: "", catalog: [], written_at_ms: 0 };
   }
 }
 
-function waitForChildOrOverlayChange(child, stamp) {
+function terminateChild(child) {
+  return new Promise((resolve) => {
+    if (child.exitCode !== null || child.signalCode !== null) {
+      resolve();
+      return;
+    }
+    child.once("close", resolve);
+    child.kill("SIGTERM");
+  });
+}
+
+function waitForChildOrOverlayChange(child, stamp, probeSession) {
   return new Promise((resolve, reject) => {
+    let settled = false;
+    let probing = false;
+    const finish = (result) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
+      cleanup();
+      resolve(result);
+    };
     const onError = (error) => {
+      if (settled) {
+        return;
+      }
+      settled = true;
       cleanup();
       reject(error);
     };
     const onClose = (code) => {
-      cleanup();
-      resolve({ reason: "exit", code });
+      finish({ reason: "exit", code });
     };
     child.once("error", onError);
     child.once("close", onClose);
     const timer = setInterval(() => {
+      if (settled || probing) {
+        return;
+      }
       const next = overlayStamp(readDshWebControlPlaneOverlay(dshHome));
       if (next && next !== stamp) {
-        cleanup();
-        resolve({ reason: "overlay", code: null });
+        finish({ reason: "overlay", code: null });
+        return;
       }
+      probing = true;
+      Promise.resolve(probeSession())
+        .then((probe) => {
+          probing = false;
+          if (settled) {
+            return;
+          }
+          const action = pathBWatchAction({
+            childExited: false,
+            overlayChanged: false,
+            probe,
+          });
+          if (action === PATH_B_WATCH_REFRESH_BEARER) {
+            finish({ reason: "stale_bearer", code: null });
+          }
+        })
+        .catch(() => {
+          probing = false;
+        });
     }, 400);
     function cleanup() {
       clearInterval(timer);
@@ -244,21 +307,62 @@ async function runWebPathB() {
   if (!existsSync(pluginPath)) {
     throw new Error(`plugin.bundle.cjs is missing at ${pluginPath}`);
   }
-  const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
-  const taskToken = await issueToken(origin, bootstrap, "task");
-  const managementToken = await issueToken(origin, bootstrap, "management");
-  writeFileSync(bearerFile, `${taskToken}\n`, { encoding: "utf8", mode: 0o600 });
-  chmodSync(bearerFile, 0o600);
-  writeFileSync(join(dshHome, ".credentials.yaml"), pathBWebCredentialsYaml(managementToken), {
-    encoding: "utf8",
-    mode: 0o600,
-  });
-  chmodSync(join(dshHome, ".credentials.yaml"), 0o600);
+  async function mintPathBTokens() {
+    const bootstrap = readFileSync(bootstrapPath, "utf8").trim();
+    const nextTaskToken = await issueToken(origin, bootstrap, "task");
+    const nextManagementToken = await issueToken(origin, bootstrap, "management");
+    writeFileSync(bearerFile, `${nextTaskToken}\n`, { encoding: "utf8", mode: 0o600 });
+    chmodSync(bearerFile, 0o600);
+    const credentialsPath = join(dshHome, ".credentials.yaml");
+    writeFileSync(credentialsPath, pathBWebCredentialsYaml(nextManagementToken), {
+      encoding: "utf8",
+      mode: 0o600,
+    });
+    chmodSync(credentialsPath, 0o600);
+    return { taskToken: nextTaskToken, managementToken: nextManagementToken };
+  }
+  async function mintPathBTokensWithRetry() {
+    const deadline = Date.now() + 30_000;
+    let lastError;
+    while (Date.now() < deadline) {
+      try {
+        return await mintPathBTokens();
+      } catch (error) {
+        lastError = error;
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+    }
+    throw lastError;
+  }
+  async function probePathBSession(token) {
+    try {
+      const result = await httpJson(origin, "GET", "/personal/dsh/runtime", token);
+      return classifyPathBManagementProbe(result.status, result.json);
+    } catch {
+      return PATH_B_PROBE_UNREACHABLE;
+    }
+  }
+  async function refreshStalePathBBearer() {
+    process.stderr.write(
+      "cognitive dsh web refreshing Path B daemon bearer after stale management session\n",
+    );
+    return mintPathBTokensWithRetry();
+  }
+  let { managementToken } = await mintPathBTokensWithRetry();
   const providerBase = `${origin}/provider/v1/dsh`;
   let exitCode = 0;
   try {
     while (true) {
-      const overlay = await loadCosDshOverlay(origin, managementToken);
+      let overlay;
+      try {
+        overlay = await loadCosDshOverlay(origin, managementToken);
+      } catch (error) {
+        if (error && error.code === PATH_B_STALE_SESSION_CODE) {
+          ({ managementToken } = await refreshStalePathBBearer());
+          continue;
+        }
+        throw error;
+      }
       const stamp = overlayStamp(overlay) || overlayStamp(readDshWebControlPlaneOverlay(dshHome));
       const settingsPath = join(dshHome, "settings.yaml");
       const existingSettings = existsSync(settingsPath) ? readFileSync(settingsPath, "utf8") : "";
@@ -311,16 +415,19 @@ async function runWebPathB() {
       process.stderr.write(
         `cognitive dsh web listening at ${listenUrl(boundHost, boundPort)} dist=${distIndex} selected_model=${overlay.model || "unset"}\n`,
       );
-      const waited = await waitForChildOrOverlayChange(child, stamp);
-      if (waited.reason === "overlay") {
-        await new Promise((resolve) => {
-          if (child.exitCode !== null || child.signalCode !== null) {
-            resolve();
-            return;
-          }
-          child.once("close", resolve);
-          child.kill("SIGTERM");
-        });
+      const waited = await waitForChildOrOverlayChange(child, stamp, () =>
+        probePathBSession(managementToken),
+      );
+      if (waited.reason === "overlay" || waited.reason === "stale_bearer") {
+        await terminateChild(child);
+        if (waited.reason === "stale_bearer") {
+          ({ managementToken } = await refreshStalePathBBearer());
+        }
+        continue;
+      }
+      const probeAfterExit = await probePathBSession(managementToken);
+      if (pathBShouldRefreshAfterChildExit(probeAfterExit)) {
+        ({ managementToken } = await refreshStalePathBBearer());
         continue;
       }
       exitCode = waited.code;
