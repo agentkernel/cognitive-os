@@ -1,12 +1,12 @@
 # P7-T05 Non-blocking Web UI — Control Plane redesign closure
 
 - Task: `P7-T05` / slices `P7-T05/D01`–`D26`
-- Status: `done` for acceptance mapping and required CI; merge/lease/branch/main remainder of this session
-- Branch: `personal/P7-T05-d14-rendered-review`
-- PR: [#274](https://github.com/agentkernel/cognitive-os/pull/274)
-- Content head: `b147711a` (`docs(P7-T05): sync handbook owner-viewing after environments registry change`)
-- Product SPA head: `872074bf` (`feat(P7-T05): retire styles.css and the #/tasks diagnostics page`)
-- Lease: `lease/personal/P7-T05/d14-rendered-review` (close with this PR)
+- Status: `done`
+- Branch: `personal/P7-T05-d14-rendered-review` (deleted after merge)
+- PR: [#274](https://github.com/agentkernel/cognitive-os/pull/274) **merged** at `main@5996afbb`
+- Content head: `26e7ae47` (D26 acceptance mapping); product SPA head `872074bf`
+- Required-CI content head: `b147711a`
+- Lease: closed `lease/personal/P7-T05/d14-rendered-review`
 - Change class: implementation + handbook + plan closure
 - Claim ceiling: `hypothesis`
 - Non-claims: no Gate, release, Profile, B01, EVAL, or Agent-benefit promotion. Local rendered reviews are browser observations, not a product Gate. Web UI remains non-blocking for Linux 1.0.
@@ -22,7 +22,7 @@
 | Control Plane redesign waves W1–W12 | D11–D24 exclusive Chrome reviews (W5 63/63 through W12 15/15, 107/107); D25 retirement 15/15, 115/115 |
 | HTTP cancel / class-C Agent lifecycle | **`not-run`** (no typed HTTP); UI does not invent routes |
 | Live linux-002 `/ui/` re-drive of D25 | **`not-run`** (fixture review only at `872074bf`) |
-| Draft PR → required CI → merge | PR #274; required CI run [32942980183](https://github.com/agentkernel/cognitive-os/actions/runs/32942980183) at `b147711a` |
+| Draft PR → required CI → merge | PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) merged at `main@5996afbb`; required CI run [32942980183](https://github.com/agentkernel/cognitive-os/actions/runs/32942980183) **SUCCESS** at `b147711a` |
 
 ## Redesign slice evidence (D14–D25 on PR #274)
 
@@ -60,4 +60,4 @@ D25 bundle SHA-256: JS `0eafc04968c8aa8ee4522fb8e7fc89cd2f1b1a52e58a5e01aecf1c37
 
 ## Unique next action
 
-Required CI run [32942980183](https://github.com/agentkernel/cognitive-os/actions/runs/32942980183) is **SUCCESS** at `b147711a`. Flip PR #274 ready, merge (no force push), close the task lease, delete the local and remote task branch, check out `main` and fast-forward. Then claim **P7-T06** (RC / docs / support matrix). **P7-T07** stays `blocked` on owner: Windows release artifacts, `B01-W-DESKTOP-001` provisioning, operator for graphical hidden-input credential entry. Do not auto-claim P6.
+Merged PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) at `main@5996afbb`. Local and remote task branches deleted; local `main` matches `origin/main`. Claim **P7-T06** (RC / docs / support matrix). **P7-T07** stays `blocked` on owner: Windows release artifacts, `B01-W-DESKTOP-001` provisioning, operator for graphical hidden-input credential entry. Do not auto-claim P6.
