@@ -79,6 +79,13 @@ non_claims:
   Path B 仍走 daemon Provider 代理与 SecretStore；Models 页不应再索要第二把
   DeepSeek 密钥。不要把 SecretStore 材料写入 dsh `.env`。
   面板会话绝不是 Task 完成。SSH guest 上保持 `--no-open`（产品默认）。
+  helper 仍在运行时，daemon 重启丢掉内存中的 management session 会在 Path B 上表现为
+  HTTP 401 `LOCAL_SESSION_UNAUTHORIZED`；helper 会用 `local-bootstrap.secret`
+  重新签发 management bearer、重写 `$DSH_HOME/.credentials.yaml` 并重载 Cos。该 401
+  是失效的 loopback bearer，不是缺失的 LongCat Provider 密钥，也不表示 dsh 已解绑。
+  若 Cos 在 helper 仍运行时退出，且 management 探测为 stale 或 unreachable，helper
+  会重签发而不是自行退出。
+  若 helper 本身已退出，再执行一次 `cognitive dsh web`。
 - `cognitive dsh apply` 把 Cos dsh Agent binding 发布为 Path B selected-model
   （`POST /personal/dsh/runtime` `op=apply`），并按该绑定账户目录写入原生 Models
   覆盖层。Cos 安装的 web 会重载，使对话与 Models 与控制面一致；解绑 dsh 会去掉

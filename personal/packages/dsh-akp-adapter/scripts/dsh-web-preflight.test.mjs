@@ -8,6 +8,15 @@ import {
   DEFAULT_WEB_PORT,
   PATH_B_WEB_DAEMON_KEY_REF,
   PATH_B_WEB_OFFICIAL_KEY_REF,
+  PATH_B_PROBE_OK,
+  PATH_B_PROBE_OTHER,
+  PATH_B_PROBE_STALE,
+  PATH_B_PROBE_UNREACHABLE,
+  PATH_B_STALE_SESSION_CODE,
+  PATH_B_WATCH_EXIT,
+  PATH_B_WATCH_REFRESH_BEARER,
+  PATH_B_WATCH_RELOAD_OVERLAY,
+  PATH_B_WATCH_WAIT,
   INTERACTIVE_COMPLETION_BUDGET_TOKENS,
   PROBE_COMPLETION_BUDGET_TOKENS,
   DSH_WEB_OVERLAY_FILE,
@@ -15,10 +24,15 @@ import {
   assertLoopbackHost,
   assertPathBProviderBase,
   assertWebPort,
+  classifyPathBManagementProbe,
+  createPathBStaleSessionError,
   frontendDistIndex,
   listenUrl,
   llmDeepseekPatchLines,
   overlayStamp,
+  pathBBindingsAreStale,
+  pathBShouldRefreshAfterChildExit,
+  pathBWatchAction,
   pathBWebChildExtras,
   pathBWebCatalogModels,
   pathBWebCredentialsYaml,
@@ -163,4 +177,52 @@ test("control-plane overlay drops grok when dsh is unbound", () => {
   assert.notEqual(overlayStamp(bound), overlayStamp(unbound));
   writeDshWebControlPlaneOverlayApplied(root, 101, 3080);
   rmSync(root, { recursive: true, force: true });
+});
+
+test("a 401 management probe after daemon restart is a stale Path B bearer, not an unbound overlay", () => {
+  const unauthorized = {
+    error: { code: "LOCAL_SESSION_UNAUTHORIZED", message: "authorization bearer required" },
+  };
+  const expired = {
+    error: { code: "LOCAL_SESSION_EXPIRED", message: "local session expired" },
+  };
+  assert.equal(classifyPathBManagementProbe(200, { state: "ACTIVE" }), PATH_B_PROBE_OK);
+  assert.equal(classifyPathBManagementProbe(401, unauthorized), PATH_B_PROBE_STALE);
+  assert.equal(classifyPathBManagementProbe(401, expired), PATH_B_PROBE_STALE);
+  assert.equal(pathBBindingsAreStale(401, unauthorized), true);
+  assert.equal(pathBBindingsAreStale(200, { bindings: [] }), false);
+  assert.equal(classifyPathBManagementProbe(0, undefined), PATH_B_PROBE_UNREACHABLE);
+  assert.equal(
+    classifyPathBManagementProbe(403, { error: { code: "SHELL_CHANNEL_BINDING_MISMATCH" } }),
+    PATH_B_PROBE_OTHER,
+  );
+  assert.equal(createPathBStaleSessionError().code, PATH_B_STALE_SESSION_CODE);
+  assert.equal(
+    pathBWatchAction({ childExited: false, overlayChanged: false, probe: PATH_B_PROBE_STALE }),
+    PATH_B_WATCH_REFRESH_BEARER,
+  );
+  assert.equal(
+    pathBWatchAction({
+      childExited: false,
+      overlayChanged: false,
+      probe: PATH_B_PROBE_UNREACHABLE,
+    }),
+    PATH_B_WATCH_WAIT,
+  );
+  assert.equal(
+    pathBWatchAction({ childExited: false, overlayChanged: true, probe: PATH_B_PROBE_STALE }),
+    PATH_B_WATCH_RELOAD_OVERLAY,
+  );
+  assert.equal(
+    pathBWatchAction({ childExited: true, overlayChanged: false, probe: PATH_B_PROBE_STALE }),
+    PATH_B_WATCH_EXIT,
+  );
+  assert.equal(
+    pathBWatchAction({ childExited: false, overlayChanged: false, probe: PATH_B_PROBE_OK }),
+    PATH_B_WATCH_WAIT,
+  );
+  assert.equal(pathBShouldRefreshAfterChildExit(PATH_B_PROBE_STALE), true);
+  assert.equal(pathBShouldRefreshAfterChildExit(PATH_B_PROBE_UNREACHABLE), true);
+  assert.equal(pathBShouldRefreshAfterChildExit(PATH_B_PROBE_OK), false);
+  assert.equal(pathBShouldRefreshAfterChildExit(PATH_B_PROBE_OTHER), false);
 });

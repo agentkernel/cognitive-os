@@ -79,6 +79,76 @@ export function listenUrl(host, port) {
 
 /** Runtime Path B credential ref used by the `--patch` llm-deepseek overlay. */
 export const PATH_B_WEB_DAEMON_KEY_REF = "DAEMON_BEARER";
+/** Management-channel probe used by native web Path B while Cos is running. */
+export const PATH_B_PROBE_OK = "ok";
+export const PATH_B_PROBE_STALE = "stale_session";
+export const PATH_B_PROBE_UNREACHABLE = "unreachable";
+export const PATH_B_PROBE_OTHER = "other";
+export const PATH_B_WATCH_EXIT = "exit";
+export const PATH_B_WATCH_RELOAD_OVERLAY = "reload_overlay";
+export const PATH_B_WATCH_REFRESH_BEARER = "refresh_bearer";
+export const PATH_B_WATCH_WAIT = "wait";
+export const PATH_B_STALE_SESSION_CODE = "stale_session";
+
+/**
+ * Classify a management HTTP probe. Never logs or returns token material.
+ * 401 LOCAL_SESSION_UNAUTHORIZED / LOCAL_SESSION_EXPIRED means the in-memory
+ * daemon session died (typical after `cognitive daemon stop` / start).
+ */
+export function classifyPathBManagementProbe(status, json) {
+  if (status === 0 || status == null) {
+    return PATH_B_PROBE_UNREACHABLE;
+  }
+  if (status === 200) {
+    return PATH_B_PROBE_OK;
+  }
+  const code = json && typeof json === "object" ? json.error?.code : undefined;
+  if (
+    Number(status) === 401 &&
+    (code === "LOCAL_SESSION_UNAUTHORIZED" || code === "LOCAL_SESSION_EXPIRED")
+  ) {
+    return PATH_B_PROBE_STALE;
+  }
+  return PATH_B_PROBE_OTHER;
+}
+
+export function pathBBindingsAreStale(status, json) {
+  return classifyPathBManagementProbe(status, json) === PATH_B_PROBE_STALE;
+}
+
+export function createPathBStaleSessionError() {
+  const error = new Error("Path B management session is stale");
+  error.code = PATH_B_STALE_SESSION_CODE;
+  return error;
+}
+
+/**
+ * Decide the native-web watch loop's next action. Overlay reload stays
+ * independent of bearer refresh. An unreachable daemon is waited out; the
+ * subsequent 401 after it returns is what triggers a remint.
+ */
+export function pathBWatchAction({ childExited, overlayChanged, probe }) {
+  if (childExited) {
+    return PATH_B_WATCH_EXIT;
+  }
+  if (overlayChanged) {
+    return PATH_B_WATCH_RELOAD_OVERLAY;
+  }
+  if (probe === PATH_B_PROBE_STALE) {
+    return PATH_B_WATCH_REFRESH_BEARER;
+  }
+  return PATH_B_WATCH_WAIT;
+}
+
+/**
+ * Cos may exit (CRASHED) while the helper is still running: daemon restart
+ * drops loopback sessions, Path B 401s, and the panel maps that to an invalid
+ * API key. Remint rather than treating the child exit as helper shutdown.
+ * Unreachable is included because the daemon is often mid-restart when Cos dies.
+ */
+export function pathBShouldRefreshAfterChildExit(probe) {
+  return probe === PATH_B_PROBE_STALE || probe === PATH_B_PROBE_UNREACHABLE;
+}
 /** Daemon-written Cos Models overlay; native web reloads when this file changes. */
 export const DSH_WEB_OVERLAY_FILE = "control-plane-overlay.json";
 export const DSH_WEB_OVERLAY_APPLIED_FILE = "control-plane-overlay.applied.json";

@@ -80,6 +80,7 @@
     { "glob": "docs/clients/**", "category": "legacy-docs", "reason": "deprecated stub pointing at external clients repository" },
     { "glob": "clients/docs/platforms/**", "category": "legacy-docs", "reason": "deprecated stub pointing at external clients repository" },
     { "glob": "docs/research/**", "category": "legacy-docs", "reason": "documentation-only research reviews" },
+    { "glob": "docs/bug/**", "category": "legacy-docs", "reason": "operator defect notes; not a second task or Gate status source" },
     { "glob": "docs/README.md", "category": "legacy-docs", "reason": "legacy documentation map" },
 
     { "glob": "AGENTS.md", "category": "legacy-docs", "reason": "agent entry document; handbook adds one pointer only" },

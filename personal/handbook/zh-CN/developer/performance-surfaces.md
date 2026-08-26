@@ -20,10 +20,11 @@ sources:
     symbols: ["applyDshAkpCordisPlugin"]
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
+    symbols: ["classifyPathBManagementProbe", "pathBWatchAction", "pathBShouldRefreshAfterChildExit"]
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
 tests:
   - personal/crates/cognitive-runtime/src/bin/p7_t04_module_benchmark.rs
-fingerprint: "sha256:896f148962ebdde4aef4d9d3616604565371b326d9116b90081d3981513214d6"
+fingerprint: "sha256:fb662eb184499ab00bf54d427377e84f46c45fb871750553a569a03e9fa8cebb"
 non_claims:
   - 此处所有表面只产 hypothesis 级 non-claim 观察；这些代码不产生任何收益、Gate、release 或 Profile 结论，campaign 执行结果由正式计划的证据记录拥有。
 ---
@@ -75,6 +76,8 @@ stdout（TTFT hook）：Path B 经 daemon Provider SSE 代理
 `POST /provider/v1/dsh/chat/completions`，Path A 直连 Flash。原生 web Path B
 还会按当前 dsh 绑定账户目录写入 settings 覆盖层，并把官方目录的密钥引用别名到
 daemon bearer，避免 Models 页再要一把 dsh 本地密钥。binding 变更会重载该覆盖层。
+helper 仍在运行时，daemon 重启丢掉内存中的 session 会重签发该 bearer 并重载 Cos；
+这是 Path B 正确性路径，不是计时样本。
 helper 在存在 `build:lib` 产物时优先用编译后的 `apps/cli/lib/bin.js`；在 2 vCPU
 guest 上从 tsx 源码启动此前大约要 10 s 的 harness 引导。
 `scripts/provider-raw-probe.mjs` 在同一主机上不经 dsh 测量；`scripts/paired-path.mjs`

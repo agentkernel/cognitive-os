@@ -87,6 +87,15 @@ non_claims:
   proxy and SecretStore; the Models page should not ask for a second DeepSeek
   key. Do not copy SecretStore material into dsh `.env`. A panel session is
   never Task completion. On SSH guests pass `--no-open` (already the product default).
+  While the helper stays running, a daemon restart that drops in-memory
+  management sessions is detected as HTTP 401 `LOCAL_SESSION_UNAUTHORIZED` on
+  Path B; the helper re-issues the management bearer from
+  `local-bootstrap.secret`, rewrites `$DSH_HOME/.credentials.yaml`, and reloads
+  Cos. That 401 is a stale loopback bearer — not a missing LongCat Provider key
+  and not an unbound dsh overlay. If Cos exits while the helper is still running
+  and the management probe is stale or unreachable, the helper remints instead
+  of shutting down. If the helper itself has exited, start
+  `cognitive dsh web` again.
 - `cognitive dsh apply` publishes the Cos dsh Agent binding as Path B
   selected-model (`POST /personal/dsh/runtime` `op=apply`) and writes the native
   Models overlay from that bound account catalog. Cos-installed web reloads so

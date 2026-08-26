@@ -320,7 +320,7 @@ personal_requirements:
     classification: product-only
     statement: Post-1.0 Personal adapts mainstream Agents through a Universal AKP Adapter Contract with independent B09-style qualification; multi-agent orchestration is design-mainline with fail-closed default and does not transfer Pi evidence.
     direct_registry_requirements: []
-    tasks: [P8-T01, P8-T02, P8-T03, P8-T09, P8-T10, P8-T11, P8-T15]
+    tasks: [P8-T01, P8-T02, P8-T03, P8-T09, P8-T10, P8-T11, P8-T15, P8-T16]
     gates: [B09]
     evidence_status: not-run
 

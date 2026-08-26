@@ -85,8 +85,9 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
+| `lease/personal/P8-T16/dsh-stale-bearer` | `P8-T16/D02` refresh dsh Path B `DAEMON_BEARER` after daemon restart | Lane-RUN | `personal/P8-T16-dsh-stale-bearer` | `personal/packages/dsh-akp-adapter/`; `personal/handbook/en/developer/agent-and-pi-lifecycle.md`; `personal/handbook/zh-CN/developer/agent-and-pi-lifecycle.md`; `personal/handbook/en/developer/performance-surfaces.md`; `personal/handbook/zh-CN/developer/performance-surfaces.md`; `personal/handbook/en/user/operations-and-recovery.md`; `personal/handbook/zh-CN/user/operations-and-recovery.md`; `personal/handbook/en/user/cli-basics.md`; `personal/handbook/zh-CN/user/cli-basics.md`; `personal/handbook/_meta/source-coverage.json`; `personal/handbook/_meta/source-set.json`; `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `docs/plan/personal-trace.yaml`; `docs/bug/`; `docs/checkpoints/20260826-personal-p8-t16-dsh-stale-bearer-report.md` | owner-directed session 2026-08-26 | 2026-08-26 / 2026-08-26 | active |
 
-No active leases. Writing to any path requires claiming a new row first.
+Only the row above is active. Writing to any other path requires claiming a new row first.
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no
