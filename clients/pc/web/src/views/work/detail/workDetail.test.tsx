@@ -9,6 +9,7 @@ import {
   completionReading,
   composeAuthorityLane,
   composeObservationLane,
+  composeWatchObservation,
   consumptionRefusal,
   effectNeedsAttention,
   projectEffectHistory,
@@ -21,13 +22,15 @@ import { clearSession, rememberBearer } from "../../../session";
 
 /* ---------- harness ---------- */
 
-type RouteResponse = { status: number; body: unknown };
+type RouteResponse = { status: number; body: unknown; contentType?: string };
 type RouteHandler = RouteResponse | ((call: { url: URL }) => RouteResponse);
 
 interface RecordedCall {
   method: string;
   path: string;
   query: URLSearchParams;
+  authorization: string | null;
+  accept: string | null;
 }
 
 const TASK_A = "task://personal/web-ui/0193c100-0000-7000-8000-000000000001";
@@ -35,6 +38,13 @@ const TASK_MISSING = "task://personal/web-ui/0193cfff-0000-7000-8000-00000000fff
 const REPORT_DIGEST = `sha256:${"f".repeat(64)}`;
 const INTERPRETATION_DIGEST = `sha256:${"b".repeat(64)}`;
 const PREVIEW_DIGEST = `sha256:${"c".repeat(64)}`;
+
+function watchSse(taskRef = TASK_A): string {
+  return [
+    `event: snapshot\ndata: {"kind":"snapshot","latest_sequence":2,"tasks":[]}\n\n`,
+    `id: 2\nevent: delta\ndata: {"kind":"delta","sequence":2,"event":{"kind":"task.admitted","body":{"task_ref":${JSON.stringify(taskRef)},"contract_epoch":3}}}\n\n`,
+  ].join("");
+}
 
 function envelope(taskRef: string, epoch: number): Record<string, unknown> {
   return {
@@ -220,6 +230,11 @@ function detailRoutes(overrides: Record<string, RouteHandler> = {}): Record<stri
       body: observationBody(url.searchParams.get("family") ?? "o4"),
     }),
     "GET /task/resource/v1/consumption": { status: 200, body: consumptionBody() },
+    "GET /task/watch": {
+      status: 200,
+      contentType: "text/event-stream",
+      body: watchSse(),
+    },
     ...overrides,
   };
 }
@@ -239,13 +254,22 @@ function installFetch(routes: Record<string, RouteHandler>): RecordedCall[] {
   const fetchMock = vi.fn(async (input: unknown, init?: RequestInit) => {
     const url = new URL(String(input), "http://localhost");
     const method = (init?.method ?? "GET").toUpperCase();
-    calls.push({ method, path: url.pathname, query: url.searchParams });
+    const headers = new Headers(init?.headers);
+    calls.push({
+      method,
+      path: url.pathname,
+      query: url.searchParams,
+      authorization: headers.get("Authorization"),
+      accept: headers.get("accept") ?? headers.get("Accept"),
+    });
     const handler = routes[`${method} ${url.pathname}`];
     const resolved =
       typeof handler === "function" ? handler({ url }) : (handler ?? defaultRoute(url.pathname));
-    return new Response(JSON.stringify(resolved.body), {
+    const isStream =
+      resolved.contentType?.includes("event-stream") === true || typeof resolved.body === "string";
+    return new Response(isStream ? String(resolved.body) : JSON.stringify(resolved.body), {
       status: resolved.status,
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": resolved.contentType ?? "application/json" },
     });
   });
   vi.stubGlobal("fetch", fetchMock);
@@ -280,6 +304,16 @@ function unmount(host: HTMLDivElement, root: ReturnType<typeof createRoot>) {
 
 function text(host: HTMLElement): string {
   return (host.textContent ?? "").replace(/\s+/g, " ");
+}
+
+function clickNamed(host: HTMLElement, label: string): void {
+  const match = [...host.querySelectorAll("button")].find(
+    (el) => (el.textContent ?? "").trim() === label,
+  );
+  expect(match).toBeTruthy();
+  act(() => {
+    (match as HTMLButtonElement).click();
+  });
 }
 
 function detailHash(taskRef: string, search = ""): string {
@@ -396,16 +430,79 @@ describe("Run timeline lanes", () => {
     ).toBe("no_budget_stop_sample");
   });
 
-  it("never claims streaming and never implies detach is a control", async () => {
-    installFetch(detailRoutes());
+  it("never claims an unattached watch is live and never implies detach is a control", async () => {
+    const calls = installFetch(detailRoutes());
     const { host, root } = renderAppAt(detailHash(TASK_A));
     await flush();
     const body = text(host);
     expect(body).toContain("not attached");
-    expect(body).toContain("live delivery arrives with W11");
     expect(body).toContain("never cancelled a Task or stopped an Agent");
-    expect(body).not.toContain("streaming live");
+    expect(body).not.toContain("live delivery arrives with W11");
+    expect(body).not.toMatch(/Watch is live/);
+    expect(calls.some((call) => call.path === "/task/watch")).toBe(false);
     unmount(host, root);
+  });
+
+  it("attach opens the task watch stream and puts deltas only on the observation lane", async () => {
+    const calls = installFetch(detailRoutes());
+    const { host, root } = renderAppAt(detailHash(TASK_A));
+    await flush();
+    clickNamed(host, "Attach watch");
+    await flush();
+    const watchCalls = calls.filter((call) => call.path === "/task/watch");
+    expect(watchCalls.length).toBeGreaterThan(0);
+    expect(watchCalls[0]?.authorization).toBe("Bearer task-token");
+    expect(watchCalls[0]?.accept).toMatch(/event-stream/i);
+    expect(watchCalls[0]?.query.get("resume_from")).toBeNull();
+
+    const body = text(host);
+    expect(body).toContain("Watch is live");
+    expect(body).toContain("15 s bounded poll");
+    const observation = host.querySelector(".cp-lane--observation") as HTMLElement;
+    const authority = host.querySelector(".cp-lane--authority") as HTMLElement;
+    expect(text(observation)).toContain("task.admitted");
+    expect(text(observation)).toContain("obs");
+    expect(text(authority)).not.toContain("task.admitted");
+    expect(text(authority)).toContain("task.transition");
+    expect(body).toContain("never cancelled a Task or stopped an Agent");
+    unmount(host, root);
+  });
+
+  it("detach is observation-only and a stale resume is a gap, not completion", async () => {
+    installFetch(
+      detailRoutes({
+        "GET /task/watch": { status: 409, body: { code: "TASK_WATCH_RESUME_STALE" } },
+      }),
+    );
+    const { host, root } = renderAppAt(detailHash(TASK_A));
+    await flush();
+    clickNamed(host, "Attach watch");
+    await flush();
+    expect(text(host)).toContain("stale");
+    expect(text(host)).toContain("TASK_WATCH_RESUME_STALE");
+    expect(text(host)).toContain("Completion stays unknown");
+    expect(dispositionLabel(host)).not.toBe("stale");
+    clickNamed(host, "Detach watch");
+    await flush();
+    expect(text(host)).toContain("disconnected");
+    expect(text(host)).toContain("never cancelled a Task or stopped an Agent");
+    unmount(host, root);
+  });
+
+  it("composes watch deltas as observation rows that are never transitions", () => {
+    const rows = composeWatchObservation(
+      [{ cursor: "2", kind: "task.admitted", detail: "task.admitted · task://x", taskRef: "task://x" }],
+      "task://x",
+    );
+    expect(rows).toEqual([
+      {
+        kind: "watch",
+        sequence: "2",
+        eventKind: "task.admitted",
+        detail: "task.admitted · task://x",
+        scopedToPageTask: true,
+      },
+    ]);
   });
 });
 

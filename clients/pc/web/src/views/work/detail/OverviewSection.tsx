@@ -16,10 +16,12 @@ export function OverviewSection({
   evidence,
   completion,
   objective,
+  watchLabel,
 }: {
   evidence?: TaskEvidenceDetail;
   completion: CompletionReading;
   objective?: string;
+  watchLabel: string;
 }) {
   return (
     <section className="cp-region" id="section-overview" aria-labelledby="overview-title">
@@ -64,7 +66,10 @@ export function OverviewSection({
 
       <h4 className="cp-section-title">Watch</h4>
       <p className="cp-reason" role="status">
-        Watch is <strong>{WATCH_NOT_ATTACHED.state}</strong>. {WATCH_NOT_ATTACHED.detail}
+        Watch is <strong>{watchLabel}</strong>.{" "}
+        {watchLabel === "not attached"
+          ? WATCH_NOT_ATTACHED.detail
+          : "A live watch is an observation of the process-local ring, not a claim that this task is progressing. Detaching never cancelled a Task or stopped an Agent."}
       </p>
 
       <h4 className="cp-section-title">Not exposed over HTTP</h4>

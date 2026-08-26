@@ -263,7 +263,7 @@ function decodeRest(value: string): string {
 
 /**
  * Route-derived class-A landings and class-B copies. Watch attach/detach is
- * not executed here: W11 owns the stream, and the palette only lands on Run.
+ * not executed here: the palette only lands on Run, where the stream lives.
  */
 export function contextActions(pathname: string): CommandItem[] {
   const path = pathname.split("?")[0] ?? pathname;

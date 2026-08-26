@@ -198,10 +198,9 @@ export function WorkInspector({
 
       <h4 className="cp-section-title">Watch</h4>
       <p className="cp-quiet">
-        No watch stream is attached from this space, and none is attached from the detail view
-        either — live delivery arrives with W11. The composed run timeline, per-effect detail and
-        consumption pins are in the detail view; detaching a watch has never cancelled a task, and
-        an unattached watch says nothing about progress.
+        No watch stream is attached from this inventory. Attach and detach live on the task
+        detail Run. Detaching a watch has never cancelled a task, and an unattached watch says
+        nothing about progress.
       </p>
 
       <h4 className="cp-section-title">Not available</h4>

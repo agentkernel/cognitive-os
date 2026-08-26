@@ -9,6 +9,8 @@ import {
 import { HonestyNote } from "../../../state/HonestyNote";
 import { StateChip } from "../../../state/StateChip";
 import { readDomainState } from "../../../state/stateMap";
+import type { WatchSessionSnapshot } from "../../../watchStream";
+import { WatchBar } from "./WatchBar";
 
 /**
  * Detail header — docs/design/15 §1. The task's identity and its verbatim
@@ -21,11 +23,19 @@ export function WorkHeader({
   evidence,
   completion,
   evidenceReadable,
+  watch,
+  onAttach,
+  onDetach,
+  onReconnect,
 }: {
   taskRef: string;
   evidence?: TaskEvidenceDetail;
   completion: CompletionReading;
   evidenceReadable: boolean;
+  watch: WatchSessionSnapshot;
+  onAttach: () => void;
+  onDetach: () => void;
+  onReconnect: () => void;
 }) {
   const [copied, setCopied] = useState(false);
   const lifecycle = evidence?.currentState;
@@ -89,16 +99,22 @@ export function WorkHeader({
           Copy task ref
         </button>{" "}
         {copied ? <span className="cp-quiet">copied</span> : null}
-        {evidence?.acceptance?.terminalTransitionDigest ? (
-          <>
-            {" "}
-            <DigestChip
-              value={evidence.acceptance.terminalTransitionDigest}
-              label="terminal transition digest"
-            />
-          </>
-        ) : null}
       </p>
+      <WatchBar
+        snapshot={watch}
+        onAttach={onAttach}
+        onDetach={onDetach}
+        onReconnect={onReconnect}
+        variant="header"
+      />
+      {evidence?.acceptance?.terminalTransitionDigest ? (
+        <p className="cp-next">
+          <DigestChip
+            value={evidence.acceptance.terminalTransitionDigest}
+            label="terminal transition digest"
+          />
+        </p>
+      ) : null}
       <h3 className="cp-section-title">Not available over HTTP</h3>
       <ul className="cp-plain-list">
         {UNSUPPORTED_TASK_OPERATIONS.map((entry) => (

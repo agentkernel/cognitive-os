@@ -8,26 +8,37 @@ import type { Projection } from "../../../data/store";
 import { HonestyNote } from "../../../state/HonestyNote";
 import { StateChip } from "../../../state/StateChip";
 import { readDomainState } from "../../../state/stateMap";
+import type { WatchSessionSnapshot } from "../../../watchStream";
+import { WatchBar } from "./WatchBar";
 
 /**
  * Run — docs/design/15 §3.2. Two lanes, drawn as two lanes.
  *
  * The authority lane is what the daemon durably recorded as a state change.
- * The observation lane is bounded sampling. They are never interleaved into
- * one list, because an observation that looked like a transition would be the
- * single most misleading thing this product could render: it would let a
- * sampled counter read as evidence that the task moved.
+ * The observation lane is bounded sampling plus watch deltas. They are never
+ * interleaved into one list, because an observation that looked like a
+ * transition would be the single most misleading thing this product could
+ * render: it would let a sampled counter or a watch frame read as evidence
+ * that the task moved.
  */
 export function RunTimeline({
   authority,
   observation,
   evidenceProjection,
   observationProjections,
+  watch,
+  onAttach,
+  onDetach,
+  onReconnect,
 }: {
   authority: AuthorityLaneRow[];
   observation: ObservationLaneRow[];
   evidenceProjection?: Projection<unknown>;
   observationProjections: Projection<unknown>[];
+  watch: WatchSessionSnapshot;
+  onAttach: () => void;
+  onDetach: () => void;
+  onReconnect: () => void;
 }) {
   const observationFailures = observationProjections.filter(
     (projection) => projection.data === undefined && projection.status !== "loading",
@@ -40,9 +51,17 @@ export function RunTimeline({
       </h3>
       <p className="cp-quiet">
         Two independent lanes. The authority lane is the daemon&apos;s durable record of state
-        changes; the observation lane is bounded sampling. Nothing in the observation lane is a
-        state transition, and no row in either lane is live.
+        changes; the observation lane is bounded sampling plus watch deltas. Nothing in the
+        observation lane is a state transition.
       </p>
+
+      <WatchBar
+        snapshot={watch}
+        onAttach={onAttach}
+        onDetach={onDetach}
+        onReconnect={onReconnect}
+        variant="run"
+      />
 
       <div className="cp-lanes">
         <div className="cp-lane cp-lane--authority" aria-labelledby="lane-authority">
@@ -114,10 +133,10 @@ export function RunTimeline({
 
         <div className="cp-lane cp-lane--observation" aria-labelledby="lane-observation">
           <h4 className="cp-lane-title" id="lane-observation">
-            Observation lane · bounded <code>/task/observation</code> samples
+            Observation lane · bounded <code>/task/observation</code> samples and watch deltas
           </h4>
           <p className="cp-quiet">
-            Samples and named zeros. An entry here never means the task moved.
+            Samples, named zeros, and watch frames. An entry here never means the task moved.
           </p>
           {observationFailures.length > 0 ? (
             <p className="cp-reason" role="status">
@@ -164,6 +183,28 @@ export function RunTimeline({
                   </li>
                 );
               }
+              if (row.kind === "watch") {
+                return (
+                  <li key={`w-${row.sequence}-${index}`} className="cp-lane-row">
+                    <span className="cp-lane-marker cp-lane-marker--sample" aria-hidden="true" />
+                    <div>
+                      <p className="cp-lane-head">
+                        <span className="cp-quiet">obs</span>{" "}
+                        <code className="cp-mono">{row.eventKind}</code>
+                        {row.scopedToPageTask ? null : (
+                          <span className="cp-quiet">
+                            {" "}
+                            · process-local ring, not this task exclusively
+                          </span>
+                        )}
+                      </p>
+                      <p className="cp-quiet">
+                        cursor <code className="cp-mono">{row.sequence}</code> · {row.detail}
+                      </p>
+                    </div>
+                  </li>
+                );
+              }
               return (
                 <li key={`o-${row.kind}-${index}`} className="cp-lane-row cp-lane-row--note">
                   <span className="cp-lane-marker cp-lane-marker--gap" aria-hidden="true" />
@@ -179,11 +220,18 @@ export function RunTimeline({
       </div>
 
       <HonestyNote>
-        There is no streaming here. This view attaches no watch stream — watch is{" "}
-        <strong>{WATCH_NOT_ATTACHED.state}</strong> — so every row is a read taken when you loaded
-        or refreshed this page, and live delivery arrives with W11. An unattached watch says
-        nothing about whether work is progressing, and detaching one has never cancelled a Task or
-        stopped an Agent.
+        {watch.phase === "unattached" ? (
+          <>
+            Watch is <strong>{WATCH_NOT_ATTACHED.state}</strong>. {WATCH_NOT_ATTACHED.detail} Authority
+            rows still come only from <code>/task/evidence</code>; a watch delta cannot move a task.
+          </>
+        ) : (
+          <>
+            Watch is <strong>{watch.label}</strong>. Deltas append to the observation lane only.
+            Stream close is not Task completion, and detaching never cancelled a Task or stopped an
+            Agent.
+          </>
+        )}
       </HonestyNote>
     </section>
   );

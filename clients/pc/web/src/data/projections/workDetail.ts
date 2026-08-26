@@ -312,6 +312,7 @@ export function projectObservation(body: unknown): ObservationView {
 export type ObservationLaneRow =
   | { kind: "counter"; counter: ObservationCounter }
   | { kind: "sample"; label: string; detail: string }
+  | { kind: "watch"; sequence: string; eventKind: string; detail: string; scopedToPageTask: boolean }
   | { kind: "empty"; note: string }
   | { kind: "bounded"; note: string };
 
@@ -341,7 +342,9 @@ export function composeObservationLane(views: ObservationView[]): ObservationLan
       });
     }
   }
-  const hasFacts = rows.some((row) => row.kind === "counter" || row.kind === "sample");
+  const hasFacts = rows.some(
+    (row) => row.kind === "counter" || row.kind === "sample" || row.kind === "watch",
+  );
   if (!hasFacts) {
     const empty: ObservationLaneRow = {
       kind: "empty",
@@ -353,15 +356,28 @@ export function composeObservationLane(views: ObservationView[]): ObservationLan
 }
 
 /**
- * Watch is not attached from this view. W11 owns streaming; until then the
- * page must not imply live delivery, and detaching has never been a control
- * over the Task or the Agent.
+ * Watch deltas belong on the observation lane only. They are process-local
+ * ring facts, never lifecycle transitions. Unattached copy stays unknown
+ * rather than live.
  */
 export const WATCH_NOT_ATTACHED = {
   state: "not attached",
   detail:
-    "This view attaches no watch stream, so there is no live delivery here and progress is unknown rather than idle. Attaching, detaching or losing a watch has never cancelled a Task or stopped an Agent.",
+    "Watch is not attached. This page does not stream on its own, so progress is unknown rather than idle or live. Attaching, detaching or losing a watch has never cancelled a Task or stopped an Agent.",
 } as const;
+
+export function composeWatchObservation(
+  events: { cursor: string; kind?: string; detail?: string; taskRef?: string }[],
+  pageTaskRef: string,
+): ObservationLaneRow[] {
+  return events.map((event) => ({
+    kind: "watch",
+    sequence: event.cursor,
+    eventKind: event.kind ?? "delta",
+    detail: event.detail ?? event.kind ?? "watch delta",
+    scopedToPageTask: event.taskRef === pageTaskRef,
+  }));
+}
 
 /* ---------- effects: GET /task/effects ---------- */
 

@@ -808,6 +808,21 @@ body {
   border: 1px dashed var(--cp-line-strong);
 }
 
+.cp-watch {
+  margin: 0 0 var(--cp-space-3);
+  min-width: 0;
+}
+
+.cp-watch-status {
+  margin: 0 0 var(--cp-space-2);
+}
+
+.cp-watch[data-variant="facts"] {
+  margin-top: var(--cp-space-3);
+  padding-top: var(--cp-space-3);
+  border-top: 1px solid var(--cp-line);
+}
+
 @media (max-width: 1100px) {
   .cp-lanes {
     grid-template-columns: minmax(0, 1fr);

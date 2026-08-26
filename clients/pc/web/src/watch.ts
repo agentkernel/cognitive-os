@@ -5,6 +5,9 @@ export type WatchEvent = {
   cursor: string;
   kind?: string;
   state?: string;
+  /** Present when the ring event names a task; the ring itself is not per-task. */
+  taskRef?: string;
+  detail?: string;
 };
 
 export type WatchController = {
