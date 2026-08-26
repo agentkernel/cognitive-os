@@ -14,7 +14,7 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:e1995c2a419ec2b794c4d433dcc5a99465d7497ff0660c467daa7605c4f35ee2"
+fingerprint: "sha256:e37b2e33dbf7cea107326de5e0b85408bd63b065132e438275a0889a460a897e"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -41,8 +41,11 @@ pnpm run hooks:install              # once per clone: registers .githooks pre-co
 cargo fmt --all -- --check          # formatting only; no linking
 git diff --check
 node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 route inventory; not a Gate result
-# SPA (approved checkout D:\cognitiveos-clients\pc\web): pnpm test && pnpm build
+# SPA (this repo clients/pc/web): pnpm test; pnpm build
 # Product origin is daemon GET /ui after copying dist/ into data_dir()/ui. Vite preview is not the product origin.
+# After linux-002 Control Plane / dsh deploy, owner viewing is local Windows via:
+#   ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+# then http://127.0.0.1:48681/ui/ and http://127.0.0.1:3080/. After daemon restart, refresh dsh web/apply.
 ```
 
 ## Requires supported CI (Ubuntu / Windows MSVC) or exact-revision native Linux

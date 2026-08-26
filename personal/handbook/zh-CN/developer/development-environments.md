@@ -10,7 +10,7 @@ sources:
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:1c5068ea096bb1288835261f5cd5024575d7015596eb5ad176271d27dfddd698"
+fingerprint: "sha256:661a5e80265cf94dedb761063496a1e59c98e659b8013e7f19b3354e24a8cb80"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -43,5 +43,21 @@ non_claims:
 Cloud Agent pod 和全新 Linux clone 用 `bash scripts/setup-dev-env.sh` 引导
 （依赖、钉住的工具链、docs-sync hooks）。Cloud Agent 以 `cursor[bot]` 身份推送，
 其 token 只覆盖该 run 的 environment 中登记的仓库。
+
+当代理在 `B01-Desktop-Linux-002`（linux-002）上部署 Control Plane 或 dsh 后，
+默认让 owner 在 **本机 Windows 浏览器经 SSH 端口转发** 查看，不要只依赖 guest
+桌面 Firefox。先在 guest 上用 `cognitive daemon status` 确认 daemon 绑定端口，
+再在 `DEV-WIN-GNU-01` 上：
+
+```powershell
+ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+```
+
+保持该会话不退出，然后打开 `http://127.0.0.1:48681/ui/`（Control Plane；粘贴
+runtime 的 management bootstrap secret，绝不是 Provider API key）和
+`http://127.0.0.1:3080/`（原生 dsh 面板）。guest 上 daemon 重启或替换
+kernel-server 之后，须在该 runtime 上重启 `cognitive dsh web` 或执行
+`cognitive dsh apply`，再期望 dsh 对话可用。Vite preview 不是产品源。完整端口表
+与隔离规则由环境注册表拥有；本页只做路由。
 
 命令速查：见 [AI 验证命令](../ai/validation-commands.md)——内容一致，只维护一份。

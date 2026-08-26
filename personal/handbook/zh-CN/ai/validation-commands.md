@@ -14,7 +14,7 @@ sources:
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
-fingerprint: "sha256:e1995c2a419ec2b794c4d433dcc5a99465d7497ff0660c467daa7605c4f35ee2"
+fingerprint: "sha256:e37b2e33dbf7cea107326de5e0b85408bd63b065132e438275a0889a460a897e"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -41,8 +41,11 @@ pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-com
 cargo fmt --all -- --check          # 仅格式化；不触发链接
 git diff --check
 node --test tools/test/p7_t05_web_ui_inventory.test.mjs  # P7-T05 路由清单；不是 Gate 结果
-# SPA（approved checkout D:\cognitiveos-clients\pc\web）：pnpm test；pnpm build
+# SPA（本仓 clients/pc/web）：pnpm test；pnpm build
 # 产品源是 daemon GET /ui（将 dist/ 复制到 data_dir()/ui）。Vite preview 不是产品源。
+# linux-002 部署 Control Plane / dsh 后，owner 在本机 Windows 经 SSH 转发查看：
+#   ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
+# 然后打开 http://127.0.0.1:48681/ui/ 与 http://127.0.0.1:3080/。daemon 重启后须刷新 dsh web/apply。
 ```
 
 ## 必须走受支持 CI（Ubuntu / Windows MSVC）或 exact-revision native Linux
