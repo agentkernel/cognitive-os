@@ -9,7 +9,7 @@ sources:
   - path: docs/governance/AXIOMS.md
     symbols: ["A1", "A8"]
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:0b0b2e725a6c7bc2726a6f29ab1cc8430d8228527ca4856047c22c9194d1965f"
+fingerprint: "sha256:2df0f823a66ee077a76bf5cafe7c26eb851d3efcc7fb7d3121c856e52a8c0736"
 non_claims:
   - This page summarizes for orientation only; the linked governance documents own the binding wording.
 ---
@@ -24,8 +24,10 @@ non_claims:
   dispatch, with idempotency keys and fencing.
 - A4 — Task completion requires independent verification; process exit, Provider
   response, or `agent_end` is never completion.
-- A5 — secrets enter approved Secret Stores only; never argv, config, SQLite, logs,
-  CI, tests, or evidence.
+- A5 — secrets enter approved Secret Stores and approved non-logging input paths
+  only (including the user-directed, daemon-owned credential-import boundary of
+  ADR-0055); never argv, env, config written by CognitiveOS, SQLite, logs, CI,
+  tests, evidence, or chat.
 - A6 — contracts and negative vectors are never rewritten to fit an implementation
   (contract change goes through Lane-CTR).
 - A7 — local/fixture/WSL/ordinary-CI evidence never becomes a Gate, release, or

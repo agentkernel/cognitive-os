@@ -1293,6 +1293,14 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
       const evaluationLeaseIdMatch = leaseId.match(/^lease\/personal\/(EVAL-[A-Za-z0-9._-]+)\//);
       const evaluationCampaignMatch = taskDescription.match(/\b(PERSONAL-[A-Z0-9]+-EVAL-\d{3})\b/);
       const isEvaluationLease = Boolean(evaluationLeaseIdMatch || evaluationCampaignMatch);
+      // ADR-0055: owner-directed governance deliveries (axiom/ADR revisions)
+      // use a documentation-only lease class without a formal slice. The
+      // delivery must be registered in the Current snapshot outside the
+      // lease-reference row and heading, and the class may own only
+      // governance surfaces plus the lease-grammar checker surface itself.
+      const governanceLeaseIdMatch = leaseId.match(/^lease\/personal\/(GOV-[A-Za-z0-9._-]+)\//);
+      const governanceDeliveryMatch = taskDescription.match(/\b(GOV-[A-Za-z0-9._-]+)\b/);
+      const isGovernanceLease = Boolean(governanceLeaseIdMatch || governanceDeliveryMatch);
       let leaseTaskSlice;
       if (isEvaluationLease) {
         if (!evaluationLeaseIdMatch || !evaluationCampaignMatch) {
@@ -1321,6 +1329,52 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
             fail(
               "docs/plan/PARALLEL-LANES.md",
               `EVAL_LEASE_PATH_FORBIDDEN: evaluation lease ${leaseId} may own only docs/evaluation/, docs/checkpoints/, and docs/plan/PROGRESS.md, not ${normalizedEvaluationPath}`,
+            );
+          }
+        }
+      } else if (isGovernanceLease) {
+        const snapshotOutsideLeaseReference = currentSnapshot
+          .split(/\r?\n/)
+          .filter(
+            (line) =>
+              !line.startsWith("| Active task lease |") &&
+              !line.startsWith("## Current snapshot"),
+          )
+          .join("\n");
+        if (
+          !governanceLeaseIdMatch ||
+          !governanceDeliveryMatch ||
+          governanceLeaseIdMatch[1] !== governanceDeliveryMatch[1]
+        ) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `GOV_LEASE_MALFORMED: governance lease ${leaseId} must use lease/personal/GOV-<id>/<purpose> and name the same GOV-<id> delivery in its task description`,
+          );
+        } else if (!snapshotOutsideLeaseReference.includes(governanceDeliveryMatch[1])) {
+          fail(
+            "docs/plan/PROGRESS.md",
+            `GOV_LEASE_UNREGISTERED: governance delivery ${governanceDeliveryMatch[1]} is not registered in the Current snapshot`,
+          );
+        }
+        for (const writablePath of writablePaths) {
+          const normalizedGovernancePath = writablePath
+            .replace(/\/\*\*$/, "")
+            .replaceAll("\\", "/")
+            .replace(/\/$/, "");
+          const governancePathAllowed =
+            normalizedGovernancePath === "docs/plan/PROGRESS.md" ||
+            normalizedGovernancePath === "tools/src/check-consistency.mjs" ||
+            normalizedGovernancePath === "tools/test/check.test.mjs" ||
+            normalizedGovernancePath === "docs/governance" ||
+            normalizedGovernancePath.startsWith("docs/governance/") ||
+            normalizedGovernancePath === "docs/adr" ||
+            normalizedGovernancePath.startsWith("docs/adr/") ||
+            normalizedGovernancePath === "personal/handbook" ||
+            normalizedGovernancePath.startsWith("personal/handbook/");
+          if (!governancePathAllowed) {
+            fail(
+              "docs/plan/PARALLEL-LANES.md",
+              `GOV_LEASE_PATH_FORBIDDEN: governance lease ${leaseId} may own only docs/governance/, docs/adr/, docs/plan/PROGRESS.md, the lease-grammar checker surface (tools/src/check-consistency.mjs, tools/test/check.test.mjs), and mapped handbook pages under personal/handbook/, not ${normalizedGovernancePath}`,
             );
           }
         }

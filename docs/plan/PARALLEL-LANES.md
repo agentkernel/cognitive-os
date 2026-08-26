@@ -85,8 +85,7 @@ Owner-directed 评测 campaign（如 `PERSONAL-PERF-EVAL-002`）使用
 
 | Lease ID | Task / slice | Primary lane | Branch | Writable paths | Owner/session | Claimed / heartbeat | Status |
 |---|---|---|---|---|---|---|---|
-
-No active lease rows. Writing to any path requires claiming a new row first.
+| `lease/personal/GOV-A5/credential-import-boundary` | `GOV-A5` owner-directed governance delivery: ADR-0055 user-directed credential-import boundary and axiom A5 revision; no formal task/slice | Lane-DOC | `personal/gov-a5-credential-import` | `docs/governance/AXIOMS.md`; `docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md`; `docs/plan/PROGRESS.md`; `tools/src/check-consistency.mjs`; `tools/test/check.test.mjs`; `personal/handbook/en/developer/conformance-and-testing.md`; `personal/handbook/zh-CN/developer/conformance-and-testing.md`; `personal/handbook/en/ai/safe-editing.md`; `personal/handbook/zh-CN/ai/safe-editing.md`; `personal/handbook/en/user/security-boundaries.md`; `personal/handbook/zh-CN/user/security-boundaries.md` | Cursor governance-delivery session | 2026-08-26 / 2026-08-26 | active |
 
 Closed historical leases are archived in
 [PARALLEL-LANES-CLOSED.md](PARALLEL-LANES-CLOSED.md). That archive grants no

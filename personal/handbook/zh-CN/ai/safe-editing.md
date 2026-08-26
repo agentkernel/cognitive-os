@@ -9,7 +9,7 @@ sources:
   - path: docs/governance/AXIOMS.md
     symbols: ["A1", "A8"]
   - path: docs/standards/docs-sync-contract.md
-fingerprint: "sha256:0b0b2e725a6c7bc2726a6f29ab1cc8430d8228527ca4856047c22c9194d1965f"
+fingerprint: "sha256:2df0f823a66ee077a76bf5cafe7c26eb851d3efcc7fb7d3121c856e52a8c0736"
 non_claims:
   - 本页仅为导引摘要；具约束力的措辞由所链接的治理文档拥有。
 ---
@@ -22,8 +22,9 @@ non_claims:
   agent 只产 candidate 与 observation。
 - A3 —— 一切外部或不可逆变更先持久化 Intent/Effect 再派发，带幂等键与 fencing。
 - A4 —— Task 完成需要独立验证；进程退出、Provider 响应或 `agent_end` 都不是完成。
-- A5 —— secret 只进批准的 Secret Store；绝不进 argv、配置、SQLite、日志、CI、测试
-  或证据。
+- A5 —— secret 只经批准的 Secret Store 与批准的非日志输入路径进入（含 ADR-0055
+  的用户发起、daemon 所有的凭据导入边界）；绝不进 argv、环境变量、CognitiveOS
+  写入的配置、SQLite、日志、CI、测试、证据或聊天。
 - A6 —— 合同与负例向量绝不为迎合实现而改写（合同变更走 Lane-CTR）。
 - A7 —— 本地/fixture/WSL/普通 CI 证据绝不升格为 Gate、release 或 Profile 声明。
 - A8 —— 未知工作树改动受保护：绝不覆盖、回退、暂存或混入；绝不使用 `git add -A`。

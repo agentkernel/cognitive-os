@@ -103,15 +103,32 @@ exist, and must remain out-of-band from the actor's writable surface.
 ### A5 — Secret isolation
 
 **Motivation.** Secrets in argv, config, SQLite, logs, CI, tests, or evidence
-create irreversible leakage and false trust in redacted artifacts.
+create irreversible leakage and false trust in redacted artifacts. A distinct
+risk class is credential material that already exists on the owner's machine
+in third-party locations (browser profiles, Agent CLI credential files,
+hand-edited configuration); refusing to import it does not remove it from
+disk — it only forces insecure manual copying and blocks the product's
+account-hub experience.
 
-**Judgable statement.** Provider and user secrets enter only approved Secret
-Stores and approved non-logging input paths. They must never appear in argv,
-ordinary configuration, SQLite, logs, CI output, test output, or evidence.
+**Judgable statement.** Provider and user secrets enter CognitiveOS only
+through approved Secret Stores and approved non-logging input paths, which
+include the user-directed credential-import boundary defined by
+[ADR-0055](../adr/0055-personal-credential-import-boundary-and-a5-revision.md).
+They must never appear in argv, environment variables, ordinary configuration
+written by CognitiveOS, SQLite, logs, CI output, test output, evidence, or
+chat. An import must never create a new plaintext copy outside the read source
+and the target Secret Store.
 
 **Allowed freedom.** Opaque `SecretRef` handles and daemon-mediated Provider
-proxying are permitted. Explicit, time-bounded development exceptions require an
-ADR expiry and cannot enter CI/release.
+proxying are permitted. A user-directed credential import under ADR-0055 may
+read owner-designated existing credential material — browser cookie/profile
+stores, third-party Agent CLI credential files, or user-pointed configuration
+files — solely through a daemon-owned, audited, non-logging import boundary,
+and solely to store it in an approved Secret Store; retention or secure
+deletion of the source is an explicit per-import user choice, defaulting to
+retention. Agents, sidecars, and UI clients still never receive raw secret
+material. Explicit, time-bounded development exceptions require an ADR expiry
+and cannot enter CI/release.
 
 ### A6 — Contracts and negatives are not implementation-shaped
 
