@@ -433,3 +433,110 @@ Agent-benefit result.
   `DEV-WIN-GNU-01`.
 - Claim boundary: local documentation/static evidence only.
 - Next unit: checkpoint commit, push, one Draft PR, and required CI.
+
+### R25 — Coherent documentation checkpoint commit
+
+- Completed: 2026-08-27
+- Instrument: pre-commit docs-sync hook and Git commit
+- Outcome: `pass`
+- Commit:
+  `33a35f9f` (`docs(P11-T01): rebaseline Personal 2.0 around Windows OPC`)
+- Scope: 157 files, 10,435 insertions, 6,902 deletions; only declared
+  documentation/design/governance paths. Pre-commit docs-sync repeated
+  handbook 58 × 2 and generated 18-page checks successfully.
+- Worktree after commit: only owner-owned `.cursor/skills/**` plus this
+  append-only report continuation; no unknown tracked overlap.
+- Next unit: push exact checkpoint and create the single Draft PR.
+
+### R26 — Checkpoint push and Draft PR
+
+- Completed: 2026-08-27
+- Instrument: pre-push docs-sync hook, `git push -u origin HEAD`, and
+  `gh pr create --draft`
+- Outcome: `pass`
+- Pushed revision: `33a35f9f` to
+  `origin/personal/DOC-PERSONAL-2.0-OPC-rebaseline`; local branch now tracks
+  that upstream.
+- Draft PR: [#280](https://github.com/agentkernel/cognitive-os/pull/280)
+- Pre-push validation: handbook 58 × 2 and generated 18-page checks passed.
+  The hook printed the expected initial "no upstream configured" probe before
+  push established tracking; its fallback ran successfully and push completed.
+- Required CI: started/pending on the pushed revision; no result inferred.
+- Next unit: commit the append-only report/closure preparation, push the same
+  PR, and wait for required checks on the final candidate head.
+
+### R27 — Initial required-CI observation
+
+- Completed: 2026-08-27
+- Instrument: `gh pr view 280 --json ...statusCheckRollup`
+- Revision/run: `33a35f9fdc81625911efb279490e5b1e42baf826` /
+  [CI 33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115)
+- Outcome: `partial`
+- Results: `resolve validation route` passed; Ubuntu and Windows verify jobs
+  were in progress. `required-ci` had not yet produced a result.
+- Disposition: keep PR Draft; no CI pass or task-completion claim.
+
+### R28 — Content-head required CI
+
+- Completed: 2026-08-27
+- Instrument: `gh run watch 33085916115 --exit-status` and
+  `gh run view 33085916115 --json ...`
+- Revision:
+  `33a35f9fdc81625911efb279490e5b1e42baf826`
+- Outcome: `pass`
+- Run: [CI 33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115)
+- Jobs: validation-route resolver, Ubuntu verify, Windows MSVC verify, and
+  `required-ci` all completed successfully.
+- Evidence boundary: required PR CI for the documentation content head; not
+  Windows native host/DSH/connector/B01-W/product acceptance, Gate, release, or
+  Profile evidence.
+- Disposition: documentation acceptance is satisfied. Prepare the final status/
+  handoff closure commit, rerun required CI on that final head, then ready and
+  merge normally.
+
+### R29 — Initial closure-head local gate
+
+- Completed: 2026-08-27
+- Instrument: consistency -> handbook -> generator -> docs-sync staged
+- Outcome: `fail` at docs-sync after earlier checks passed
+- Results: consistency, handbook 58 × 2, and generated 18-page checks passed.
+  Docs-sync correctly rejected the closure-only formal-plan/status update
+  because no handbook page changed relative to the content commit.
+- Disposition: this delta changes only task/PR/CI closure status and adds the
+  handoff; it does not change product/architecture/handbook semantics. Re-run
+  docs-sync with
+  `DOCS_IMPACT_NONE="Closure-only task/PR/CI status; OPC handbook content and mapped source semantics are unchanged"`
+  and record the same reason in the commit and PR.
+
+### R30 — Closure-only docs-impact validation
+
+- Completed: 2026-08-27
+- Instrument: docs-sync `--staged` with the exact closure-only reason, nested
+  handbook/generator checks, and staged diff check
+- Outcome: `pass`
+- Reason:
+  `Closure-only task/PR/CI status; OPC handbook content and mapped source semantics are unchanged`
+- Results: docs-impact acknowledgement accepted; handbook 58 × 2 passed; 18
+  generated pages byte-identical; staged diff clean.
+- Next unit: commit/push final closure head and require its CI.
+
+### R31 — First closure commit attempt
+
+- Completed: 2026-08-27
+- Instrument: PowerShell here-string passed to `git commit -m`
+- Outcome: `fail` before commit creation
+- Result: unquoted PowerShell variable expansion split the multiword message
+  into pathspec arguments. Git created no commit and changed no tracked
+  content.
+- Disposition: retain staged closure files, quote the here-string variable as
+  one `-m` argument, and create a new commit (never amend).
+
+### R32 — Second closure commit attempt
+
+- Completed: 2026-08-27
+- Instrument: quoted PowerShell here-string variable passed to `git commit -m`
+- Outcome: `fail` before commit creation
+- Result: the persisted shell/native-command boundary still split the
+  multiline message into pathspec arguments. Git created no commit.
+- Disposition: pass the here-string through standard input to
+  `git commit -F -`, which preserves one message without a temporary file.
