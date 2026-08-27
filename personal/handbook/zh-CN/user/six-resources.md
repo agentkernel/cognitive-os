@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:a859d135e542d2b2f482ef92c44e87f9a610d0ec5dabfb10a74c6b3680290318"
+fingerprint: "sha256:682ff5a399ebd646b4a38156a2f3259e40ca38cf84cf26a9486f2a801c56c834"
 non_claims:
   - 资源族在权威存储中的存在不等于完整的用户工作流；各族缺口见下文与已知限制页。
 ---
@@ -49,15 +49,15 @@ Linux 1.0 与当前 API 分别治理六个资源族。它们有意**不**共享�
 2. **先过滤后排序。** Memory 与 Context 候选先经授权、scope、tombstone、新鲜度过滤，
    任何排序才能看到它们；被拒内容连排序都无法影响。
 
-从 Linux 1.0 推迟：embedding/向量/图谱 Memory、skill 市场、Personal 2.0 必须交付的 MCP 资源族
-（已交付的 post-1.0 MCP Tool transport/dynamic-Tool MVP 不等于该资源族）、多 Agent
-编排、联邦同步与完整 Personal 2.0 产品组合。
+从 Linux 1.0 推迟：embedding/向量/图谱 Memory、skill 市场、Personal MCP 资源族
+（已交付的 post-1.0 MCP Tool transport/dynamic-Tool MVP 不等于该资源族）与通用联邦。
 
-## Personal 2.0 必须交付的第七族（`Requires-backend`）
+## Advanced Personal 第七族（`Requires-backend`，deferred）
 
-Personal 2.0 已采纳 **MCP** 为第七个用户可见资源族。这不改变当前六族 Resource
-Manager API，也不会把 MCP 内容自动变成原生 Tool。ADR-0058 把第七族放在
-Personal-private envelope 上；旧客户端仍然只看到六族投影。
+ADR-0057 保留 **MCP** 为 advanced Personal 第七族。ADR-0059 将其从 Windows OPC
+P0 deferred；它不阻塞 Project、employee、Conversation、Routine、Provider、UI 或 X
+acceptance。这不改变当前 six-family Resource Manager API，也不会把 MCP 内容自动
+变成 native Tool。ADR-0058 保持 Personal-private；旧客户端只看到六族。
 
 目标资源族拥有彼此分离的 server、package、connection、advertised capability、
 binding、health、update 与 quarantine 身份。**联邦资源**投影保留来源身份、
@@ -77,6 +77,6 @@ persist-before-dispatch Intent/Effect、fencing、budget 与独立验证。
 - `Governed`：daemon 准入、授权、变更与 Effect 对账；
 - `Verified`：只有当前独立验证加 daemon acceptance。
 
-它们不是自动成熟度阶梯，`Verified` 也不是 release 或资格化声明。MCP 资源族与通用
-联邦能力是 Personal 2.0 完整版本 release blocker，仍为 `Requires-backend`；仅连接不
-授予 Tool、Context、workspace、model 或 host-session 权威。
+它们不是自动成熟度阶梯，`Verified` 也不是 release 或 qualification。MCP/federation
+为 future advanced successor 的 `Requires-backend`。DSH native MCP/base tools 继续
+禁用；仅连接不授予 Tool、Context、workspace、model 或 host-session authority。

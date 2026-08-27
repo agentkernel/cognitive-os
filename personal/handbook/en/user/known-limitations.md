@@ -15,10 +15,11 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:37b2cc30e7351f03636fc42f69fb478b7c3553d740fdc75bcea1b053b7335aea"
+fingerprint: "sha256:2f61c80f426c2e0c03d40cca9eecdb2723d5f5f870921b5ee6dc2c5e4ce26070"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -57,21 +58,19 @@ current fact of the code.
   current SPA.
   Operator steps: [Provider Control Plane](provider-control-plane.md). Linux RC
   claim set: [Linux RC operator map](rc-and-support.md).
-- **Personal 2.0 full-version capabilities are not current product
-  capabilities**: the current resource model and Resource Manager remain
-  six-family; the seventh MCP family, federated synchronization, unified
-  Activity, Global Agent Shell, and preserved-attempt controls are
-  `Requires-backend`. Account Hub has no browser-profile, Agent credential-file,
-  subscription, or OAuth import mechanism. The complete Goal -> Plan revision
-  -> Task -> Attempt path, embedded vendor conversations, and multi-Agent
-  supervision do not exist. Pi remains the only currently qualified Agent;
-  DeepSeek Harness Developer Preview and supported-platform Codex desktop are
-  independently qualified Personal 2.0 targets. No Linux Codex desktop is
-  implied.
-- **AI-window acceptance is not user or release evidence**: the fixed target is
-  8/8 simulated product scenarios. It does not prove human desirability,
-  usability, adoption, willingness to pay, problem-solution fit, release/Gate
-  readiness, or Agent benefit.
+- **Personal 2.0 OPC capabilities are not current**: Windows host/tray/
+  background, Project/Role/Employee/Routine/Attempt authority, Personal
+  Conversation archive/Vault/retrieval, Pi-backed Assistant, managed DSH
+  artifact/child/sandbox, Inbox, binding/budget enforcement, OPC UI and X
+  connector are `Requires-backend`/`Requires-environment`.
+- **Installed Agent target is narrow**: DSH is the only 2.0 runtime
+  qualification target. Existing dsh Path B does not prove the Windows managed
+  artifact; Pi remains a hidden Assistant target, and Hermes/Codex/Cursor are
+  future candidates. No native DSH UI/conversation synchronization is planned.
+- **Fixed acceptance is not user or release evidence**: future Phase 11 uses
+  N=15 Windows OPC scenarios. None has run. Canvas/ordinary CI cannot prove
+  human desirability, usability, adoption, willingness to pay, support,
+  release/Gate readiness, or Agent benefit.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no
@@ -114,9 +113,11 @@ current fact of the code.
 
 - Product platform: Linux x86_64 with user systemd; desktop needs a Secret Service
   keyring. WSL2 is an engineering environment, not a product target.
-- Personal 2.0 commits to independently qualified Windows, macOS, and Linux
-  local product paths. That target does not make either non-Linux path current
-  or transfer evidence across platforms or Agents.
+- Personal 2.0 is Windows-first, but the qualified native Windows development
+  environment and B01-W do not exist. Linux, WSL, ordinary CI, Canvas, and
+  Windows GNU evidence do not transfer.
+- Native mobile/device pairing/E2E relay remote is deferred to Personal 2.1 and
+  remains host-online only; no secret downlink is planned.
 - Headless encrypted-vault operation is designed but not selectable today.
 - Windows: daemon/CLI compile in CI and a Credential Manager backend plus
   installer/scheduled-task templates exist, but the B01-W install campaign has

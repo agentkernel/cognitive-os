@@ -18,13 +18,17 @@ sources:
   - path: personal/docs/architecture/README.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/product/opc-product-model.md
+  - path: personal/docs/product/knowledge-memory-vault.md
+  - path: personal/docs/product/long-running-operations.md
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
 tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:3c59b37164d2ed5a8600646b27aad8dc34356286cdaf623ec8d805c63f640422"
+fingerprint: "sha256:20b04d11f41cdf795d18632af8d8c430259353d08649abb94da87ca657ac9493"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -33,12 +37,11 @@ non_claims:
 
 # System overview
 
-CognitiveOS Personal is a cross-platform local, single-owner stewardship
-product for Agents, accounts, cognitive resources, and governed work. It gives
-an Agent a governed place to remember information, load skills, use tools,
-assemble context, accept tasks, and run a managed process. The product is a
-Rust daemon plus clients: the daemon owns authority state and clients such as
-`cognitive`, Pi, and SDKs request or propose operations.
+CognitiveOS Personal is a local, single-owner system for governed Agent work.
+The current Linux 1.0 product manages six cognitive-resource families. The
+Personal 2.0 target adds a Windows-first OPC business console where the Owner
+operates Projects and digital employees. The Rust daemon owns authority; every
+UI, Assistant, engine, adapter and connector requests, proposes or observes.
 
 ## The model in one picture
 
@@ -68,35 +71,35 @@ independent, current verification result.
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence, and Event are
 cross-cutting objects. They do not form a seventh universal resource table.
 
-## Full Personal 2.0 target (`Requires-backend`)
+## Personal 2.0 Windows OPC target (`Requires-backend`)
 
-Personal 2.0 keeps the daemon-only authority boundary and makes the following
-full-version commitments:
+The target keeps one daemon and organizes:
 
-- Windows, macOS, and Linux are independently qualified local product paths;
-- the exact initial Agent set is Pi, DeepSeek Harness Developer Preview, and
-  the Codex experience in the current official ChatGPT desktop app only on
-  officially supported and independently qualified platforms;
-- target navigation is Home, Agents, Work, Library, Activity, and Settings;
-  Providers and System live under Settings, and `Work` is a navigation label
-  rather than a new Task/Run authority domain;
-- Account Hub manages Provider accounts and subscriptions and offers
-  user-initiated, per-source credential import through the daemon;
-- MCP becomes a seventh resource family for source-identified federated
-  capabilities; it is not an alias for the current native Tool catalog;
-- vendor-specific conversation adapters connect installed Agents to the Agent
-  Shell without qualifying them by association with Pi;
-- embedded native conversations enter governed work only through
-  **Manage with Personal**;
-- durable Goal -> Plan revision -> Task -> Attempt organizes work, preserves
-  attempts, and supports daemon-owned multi-Agent handoffs;
-- unified Activity separates Native, Observed, Governed, and Verified facts
-  with declared coverage.
+```text
+Owner
+  -> Project -> Charter / Goal / Plan / Routine -> Task -> Attempt
+  -> Role Blueprint -> Assignment -> Digital Employee
+       -> managed DSH runtime
+       -> Personal-owned Conversation and Memory
+```
 
-These additions remain target-only. `Requires-backend` means the product must
-not show them as working; `Requires-core` additionally marks work that needs
-approved contract/authority semantics. Platform, Agent, CLI, Provider, model,
-account, bridge, and MCP evidence never transfers across claim boundaries.
+The UI is Today / Projects / Team / Knowledge / Inbox, bottom Settings, and a
+right Personal Assistant. Pi is the hidden candidate-only Assistant engine.
+DSH is the preinstalled managed Installed Agent and default employee runtime,
+using an exact audited artifact, isolated child, stdio broker and daemon
+Provider proxy. Personal owns Conversation, archive/index/retrieval, Memory,
+Task, Effect and completion.
+
+Knowledge separates Owner-shared sources, Project Markdown Vault and employee-
+private Memory. Routines use manual/schedule/qualified-event triggers with no
+overlap, queue-latest and visible missed work. Provider binding resolves global
+to Project to employee to Task; Project/member/Task budgets and actual usage
+remain distinct from Provider quota.
+
+All of this remains target-only. `Requires-backend`/`Requires-environment`
+means it must not be shown as working. MCP stays an advanced deferred seventh
+family; native mobile/E2E relay remote is 2.1; future Agents need independent
+qualification.
 
 ## How a normal interaction flows
 

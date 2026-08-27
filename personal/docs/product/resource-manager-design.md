@@ -1,143 +1,90 @@
-# Resource Manager — product design
+# Resource Manager product design
 
-- Status: current six-family envelope plus adopted Personal 2.0 direction
-- Change class: product-semantic companion; no new public contract
+- Status: current six-family envelope plus adopted OPC composition
 - Architecture pair:
   [resource-manager-architecture.md](../architecture/resource-manager-architecture.md)
+- Current task evidence: formal plan `P8-T12`
 - Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md)
-- Current task evidence owner:
-  [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
-  `P8-T12`
 
-The Resource Manager gives clients one versioned way to perform shared
-inspection and governance operations without collapsing family semantics. Each
-mutation resolves to a typed family workflow. The Rust daemon remains the sole
-authority writer.
+## 1. Current implementation (Now)
 
-## 1. Reality ledger
+The current private six-family projection and management envelope support
+bounded list, inspect, watch, bind, unbind, enable, disable, and revoke where
+the selected family defines the operation. Context and Runtime may be
+projection-only or empty. Generic create/install/execute/complete are refused.
 
-| Boundary | Resource Manager truth |
-|---|---|
-| **Current implementation (Now)** | A private six-family projection and management envelope support bounded list, inspect, watch, bind, unbind, enable, disable, and revoke where a family defines the operation. Context and Runtime inventory can be empty/projection-only. |
-| **Adopted Personal 2.0 target** | Seven-family navigation and federation: vendor-native resources are adapter-mapped, origin-owned, and governed/bound by Personal. MCP joins as a family through its own lifecycle. |
-| **Requires-backend** | Authority-backed Context/Runtime inventory, general native-resource change detection, bidirectional synchronization, conflict handling, and MCP management are absent today. |
-| **Requires-core (conditional)** | P10-T02/Lane-CTR is required only if MCP or federation adds/changes a public machine surface. A Personal-private projection may not require core changes. |
+The envelope is a read/command projection, not a universal Resource aggregate.
+Every mutation resolves to a typed family workflow under daemon authority.
+Unknown, unavailable, stale, not-backed, and empty remain different states.
 
-## 2. Why the common envelope exists
+## 2. OPC product composition
 
-Memory, Skill, Tool, Context, Task, Runtime/Process, and target MCP have
-different identities, storage, transitions, and retention. Clients still need
-a predictable read envelope and a small common governance vocabulary.
+Personal 2.0 business surfaces compose resource facts around Projects:
 
-The envelope is a projection, not a universal resource object. It cannot be
-written back as a generic aggregate, and it never authorizes a family-specific
-operation merely because two families use the same verb.
+- Project briefing links Tasks, Context, artifacts, evidence, and cost;
+- employee detail links Runtime, effective Tool/Skill/Memory bindings, and
+  current Context;
+- Knowledge links source archive/Vault to derived index and admitted Memory;
+- Settings Advanced links MCP, Tool/Skill details, and family governance.
 
-## 3. Current common operations
+Project, Role, Employee, Routine, Attempt, Conversation, Vault, Provider, and
+Budget are not added to the Resource Manager family allowlist. The Resource
+Manager does not become the Project repository.
 
-| Operation | Operator meaning | Not this operation |
+## 3. Common operation vocabulary
+
+| Operation | Shared meaning | Explicit exclusion |
 |---|---|---|
-| `list` | bounded family page at a declared projection version | full-table dump, content search, or ranking |
-| `inspect` | one stable identity and current projected version | generic edit form |
-| `watch` | resume the existing family watch cursor | a second or fabricated live stream |
-| `bind` | typed relationship under expected-version guards | generic create |
-| `unbind` | remove a typed relationship under guards | delete or purge domain history |
-| `enable` | admit eligibility according to family semantics | execute |
-| `disable` | stop new use without fabricating completion | uninstall |
-| `revoke` | invalidate a grant, binding, or usable revision | Memory forget or source deletion |
+| list | bounded page for one declared family/version | unbounded dump or cross-family search |
+| inspect | stable identity and available projected facts | generic edit |
+| watch | resume the family cursor with honest coverage | fabricated unified live feed |
+| bind/unbind | typed guarded relationship | create/delete domain history |
+| enable/disable | change eligibility under family policy | execute/install/uninstall |
+| revoke | invalidate a grant/binding/revision | Memory forget or source deletion |
 
-Generic `create`, `install`, `execute`, and `complete` remain refused by the
-common envelope. Acquisition, import, admission, execution, reconciliation,
-retention, update, uninstall, and purge stay typed family or Task workflows.
-MCP server install/update is therefore not created by reusing a generic
-Resource Manager verb.
+Acquisition, import, Memory admission, Tool execution, MCP lifecycle,
+Intent/Effect reconciliation, Project activation, and permanent deletion stay
+family/domain-specific.
 
-## 4. Read projection and inspector
+## 4. Knowledge and retrieval boundary
 
-Current list/inspect projections expose only available authority facts, such as:
+Archive/Vault indexing is derived. A Resource projection may show provenance,
+index freshness, conflict, and the admitted Memory/Skill/Tool object reached
+from a source, but it cannot treat an index row as authority.
 
-- stable identity and family;
-- origin/authority source;
-- revision digest or explicit absence;
-- owner and scope;
-- health or availability;
-- typed bindings;
-- blocked reason;
-- currently allowed common actions;
-- object and projection versions.
+Retrieval applies scope and policy before ranking. A source edit that appears
+to change Project configuration becomes a candidate. Missing index or parse
+failure does not authorize an Agent cache as fallback truth.
 
-Unknown, unavailable, not-backed, and stale remain explicit. The UI must not
-turn an empty Context or Runtime projection into a claimed inventory.
+## 5. Origin and conflict behavior
 
-Personal 2.0 adds target inspector concepts—native origin, adapter,
-capability mapping, sync freshness, conflict, and projected clients—but those
-facts are shown only when a backend projection exists.
+Origin-owned native content and Personal-owned admission remain separate:
 
-## 5. Federated-resource behavior
+1. read/change detection is limited to an explicit observation scope;
+2. Personal records source/version/freshness;
+3. write-back is a daemon Intent/Effect operation;
+4. unchanged low-risk policy may allow automatic admitted work;
+5. new, broader, destructive, or conflicted scope requires preview;
+6. conflicts fail closed—no timestamp/model last-writer-wins.
 
-### Adopted Personal 2.0 target
+The Personal Assistant can explain the conflict but cannot resolve or write it.
 
-1. A vendor adapter maps native resources into the appropriate Personal family
-   without copying authority from the Agent.
-2. The origin side owns native content and native lifecycle.
-3. Personal owns admitted governance, bindings, permission, sync intent, and
-   authority receipts.
-4. Agent connection establishes an explicit observation scope. Authorized read
-   and change detection may be automatic only inside it; there is no
-   speculative/global scan or surprise per-session enrollment.
-5. Every Personal-to-native write-back uses daemon-owned Intent/Effect,
-   dispatch, and reconciliation. It may run automatically inside an unchanged
-   exact daemon grant/risk policy; new, broader, destructive, or conflicted
-   scope requires preview and confirmation.
-6. Conflicts fail closed. The global Agent Shell explains the conflict and
-   requests a daemon-backed family-specific resolution.
-7. Bidirectional synchronization never means last-writer-wins by default and
-   never auto-promotes Native or Observed content into Governed state.
+## 6. Advanced MCP boundary
 
-This behavior is **Requires-backend**. A shared public synchronization contract
-conditionally requires P10-T02/Lane-CTR; a Personal-private projection may not.
+MCP is a separately managed advanced family under ADR-0057/0058, not a Tool
+alias or DSH native/base-tool grant. Server/package/connection/capability/
+binding/health/quarantine stay distinct. Capabilities pass Tool, Context, or
+Skill admission before use.
 
-## 6. MCP relationship
+The MCP family manager and client projection are **Requires-backend** and
+deferred from the 2.0 OPC success path.
 
-MCP is the adopted seventh family, not a Tool alias and not an Agent. The
-Resource Manager may eventually list and inspect an MCP family projection, but
-server installation, health, permission, update, and client projection remain
-family-specific workflows.
+## 7. Channels and non-claims
 
-P5-T03/P5-T04's current MCP Tool transport and bounded dynamic-Tool path remain
-Tool-family implementation. They are not an MCP-family projection or lifecycle.
+Management mutations use the management channel; Task use stays Task-scoped.
+The deterministic CLI, UI, Personal Assistant, DSH, Pi, and adapters are
+clients. Partial watch coverage is never shown as complete.
 
-An MCP server can expose candidate capabilities. Those capabilities become
-eligible Tool or Context inputs only through separate mapping and
-authorization. Connection or client configuration grants no host-session
-control.
-
-MCP implementation remains **Requires-backend**. Only a new or changed public
-MCP machine surface conditionally requires P10-T02/Lane-CTR; a
-Personal-private projection may not. See [MCP resource family](mcp-resource-family.md).
-
-## 7. Product navigation
-
-### Current implementation (Now)
-
-The current `/ui/` Resources hub covers Memory, Skills, Tools, and a Context
-link into Work. Runtime is shown in Agents.
-
-### Adopted Personal 2.0 target
-
-**Library** contains Memory, Skills, Tools, and MCP. **Work** owns Context and
-Task. **Agents** owns Runtime/Process. Navigation placement does not alter
-family ownership or the common envelope.
-
-## 8. Channels and fixed boundaries
-
-- Current Resource Manager mutations use the management channel; Task-channel
-  misuse fails closed.
-- The deterministic CLI remains a client of daemon authority.
-- Watch is not duplicated, and partial watch coverage is never presented as a
-  unified live feed.
-- The global Agent Shell may request list/inspect and propose actions but cannot
-  write the envelope or exercise authority.
-
-This design creates no public contract, universal `Resource` table, Gate,
-release, Profile, performance, containment, or Agent-benefit claim.
+This design changes no private/public envelope, Core schema, family allowlist,
+route, store, or transition. It makes no Project, MCP, synchronization, support,
+Gate, release, Profile, performance, or Agent-benefit claim.

@@ -1,30 +1,61 @@
-# Context Evolution (design)
+# Context evolution for OPC archive and Vault retrieval
 
-- Status: informative Personal architecture design
-- Related: AXIOMS P1, [ADR-0042](../../../docs/adr/0042-personal-three-pillar-engineering.md),
-  P3-T02/P3-T04, P8-T05
+- Status: current Context foundation plus Personal 2.0 target
+- Related: AXIOMS P1,
+  [Conversation/Memory/Vault](conversation-memory-vault.md), P3-T02/P3-T04,
+  and P8-T05
 
-## 1. Current baseline (already shipped design/impl path)
+## 1. Current baseline
 
-Authorize-before-rank, required fail-closed budgets, explicit loss, digest-bound
-source traces, stable-prefix/delta **metadata** reuse with full revalidation, and
-B03 correctness as the Gate signal (benefit observations non-blocking).
+Personal already requires authorization before ranking, required-source
+fail-closed behavior, explicit loss, digest-bound source traces, stable-prefix/
+delta metadata reuse with full revalidation, and independent Context
+correctness evidence. Benefit observations remain non-blocking.
 
-## 2. Planned evolution (P8-T05)
+## 2. OPC source expansion
 
-1. **Compaction:** daemon-owned summarization of session/Context material into
-   digest-bound compact artifacts with explicit loss records.
-2. **Adaptive budgets:** adjust fragment budgets from durable loop telemetry
-   without skipping body reauthorization.
-3. **Benefit observation:** UCR-01-compatible raw measurements; never Gate
-   authority from the runner.
+Personal 2.0 may source Context from Project charter/plan/Task facts, admitted
+Memory/Skill, Tool summaries, Project Vault, Owner-shared knowledge, scoped
+Conversation archive, artifacts/evidence, connector readback, and explicit
+Owner inputs.
 
-## 3. Hard constraints
+Source expansion preserves:
 
-- Compaction output is a Context source candidate, not Task completion.
-- Stale/revoked material never re-enters via cache or compact reuse.
-- Model-written summaries cannot self-authorize inclusion.
+1. Owner/Project/employee/Task/purpose authorization;
+2. secret/PII exclusion;
+3. provenance, freshness, conflict, retention, and tombstone;
+4. ranking only after filtering;
+5. bounded fragment/token budget;
+6. explicit omitted/truncated/stale/unavailable loss;
+7. untrusted-observation labels for external/conversation content.
 
-## 4. Non-claims
+All conversations may be eligible sources, but no request receives the full
+archive automatically.
 
-Design only until P8-T05 acceptance. No B06/B07/Gate promotion from this file.
+## 3. Progressive disclosure and compaction
+
+Business surfaces show concise source/basis/scope. Inspectors reveal selected
+fragments, omissions, provenance, versions, and policy. DSH/Pi receive only the
+resolved Context view.
+
+Daemon-owned compaction may produce a digest-bound Context candidate with
+explicit loss. It cannot self-authorize, become semantic Memory, or prove
+completion. Adaptive budgets use durable telemetry without skipping body
+reauthorization.
+
+Codex provides informative separation patterns for history, compaction, and
+memory; it does not own Personal Context or Memory.
+
+## 4. Prompt-injection and stale-data boundary
+
+Vault, Conversation, external source, MCP, and connector content remains
+untrusted. Embedded instructions cannot invoke Tools, alter policy, expand
+scope, import capabilities, or change Project authority. Stale/revoked/
+forgotten material cannot re-enter through cache, index, compaction, or engine
+checkpoint.
+
+## 5. Non-claims
+
+Archive/Vault retrieval and OPC Context composition are **Requires-backend**.
+This chapter creates no retrieval-quality, performance, B06/B07, Gate, release,
+Profile, or Agent-benefit claim.

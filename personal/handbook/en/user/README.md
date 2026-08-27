@@ -8,21 +8,17 @@ generated: false
 
 # User guide
 
-CognitiveOS Personal is a cross-platform local, single-owner stewardship
-product for Agents, accounts, cognitive resources, and governed work. One Rust
-daemon governs what your Agents know (Memory), may reuse (Skills), may do
-(Tools), see (Context), work on (Tasks), and run as (Runtime/Process). Those are
-the six current Linux 1.0/API families. This guide labels current behavior from
-code, contracts, and tests (`implemented`, `partial`, `designed`,
-`unavailable`) separately from the full Personal 2.0 commitment that still
-needs backend or core work (`Requires-backend`, `Requires-core`).
+CognitiveOS Personal is a local, single-owner system for governed Agent work.
+One Rust daemon owns authority. Memory, Skill, Tool, Context, Task, and
+Runtime/Process are the six current Linux 1.0/API families. This guide separates
+current behavior from the Windows-first OPC target (`Requires-backend`,
+`Requires-environment`, or deferred).
 
-Personal 2.0 requires independently qualified Windows, macOS, and Linux local
-paths; exact Pi, DeepSeek Harness Developer Preview, and supported-platform
-Codex desktop paths; embedded Agent conversations; Account Hub; MCP as a
-seventh family; Goal/Plan/Task/Attempt and multi-Agent supervision; unified
-Activity; and federated resources. The current same-origin `/ui/` client is
-real at `clients/pc/web/`; those target additions are not implemented.
+Personal 2.0 targets Today/Projects/Team/Knowledge/Inbox; Projects, roles,
+digital employees, Routines and preserved Attempts; Personal-owned
+Conversations/Vault/Memory; a Pi-backed Personal Assistant; preinstalled
+managed DSH; Provider/budget hierarchy; and one fixed Windows acceptance path.
+The current same-origin `/ui/` is real, but those OPC additions are not.
 
 Start here:
 

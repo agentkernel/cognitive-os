@@ -8,21 +8,19 @@ generated: false
 
 # CognitiveOS Personal Handbook (English)
 
-A cross-platform local, single-owner stewardship product for Agents, accounts,
-cognitive resources, and governed work: one Rust daemon governs what Agents
-know, may reuse, may do, see, work on, and run as. This handbook separates
-current implementation truth from the full Personal 2.0 product-version
-commitment; target-only behavior is always marked `Requires-backend` or
-`Requires-core`.
+A local, single-owner system for auditable, budgeted, recoverable Agent work.
+This handbook separates the current finalized Linux 1.0/API from the adopted
+Windows-first Personal 2.0 OPC target. Target-only behavior is marked
+`Requires-backend`, `Requires-environment`, or deferred.
 
 **Status boundary:** Linux 1.0 and the current APIs remain six-family and Pi is
 the only qualified Agent. The current same-origin `/ui/` SPA exists at
-`clients/pc/web/`. Personal 2.0 requires independently qualified Windows,
-macOS, and Linux local product paths; exact Pi, DeepSeek Harness Developer
-Preview, and supported-platform Codex desktop paths; embedded conversations;
-Goal/Plan/Task/Attempt and multi-Agent supervision; Account Hub; a seventh MCP
-family; unified Activity; and federated resources. These are full-version
-release blockers and remain `Requires-backend`, not current implementation.
+`clients/pc/web/`. Personal 2.0 targets Today/Projects/Team/Knowledge/Inbox,
+Project/Role/Employee/Routine/Attempt authority, Personal-owned Conversations/
+Vault/Memory, Pi-backed Personal Assistant, preinstalled managed DSH,
+global→Project→employee→Task Provider/budgets, and a fixed Windows acceptance
+path. MCP is advanced/deferred; native mobile/E2E relay remote is 2.1. None is
+current implementation or Windows/DSH support.
 
 - **[User guide](user/README.md)** — install, first conversation, CLI, secrets,
   Provider Control Plane, the Pi shell, the resource model, operations, security,

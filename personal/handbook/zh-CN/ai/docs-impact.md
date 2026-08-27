@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:894db3102b8099c13368a4b3659b1c4231eb88fb04def0a7ccad99779703918d"
+fingerprint: "sha256:1b4f62292d6513d322310dc11d1886fec3544a2456df34af425f024d44f9e245"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -51,11 +51,16 @@ source map 有意让已采纳目标无法静默变化：
   多 Agent/recovery/learning 架构；
 - `personal-2-mcp-family` 路由 ADR-0037/0057 以及双语 MCP 资源族、认知资源与 Resource
   Manager 来源。
+- `personal-2-opc-rebaseline` 路由 ADR-0059、Phase 11 formal/support/environment、
+  focused Project/Conversation/Windows/Routine 产品与架构章，以及 current client OPC
+  design corpus。
 
-每次命中都必须保留两列显式事实：**当前 Linux 1.0/当前 API**（六族、Pi 已资格化、
-当前 `/ui/` 位于 `clients/pc/web/`）与**已采纳 Personal 2.0 目标**
-（`Requires-backend` 或 `Requires-core`）。绝不能从设计采纳推断 Account Hub 导入、
-目标桌面重设计、MCP 第七族/联邦、厂商对话适配器、Goal/Plan 或多 Agent 监督已实现。
+每次命中都必须保留：**当前 Linux 1.0/当前 API**、**已采纳 Windows OPC target**、
+**Requires-backend** 与 **Requires-environment/deferred**。绝不能从 design adoption、
+Canvas、ordinary CI、Linux、WSL 或 Windows GNU evidence 推断 Project/Employee、
+Personal Conversation/Vault/Memory、Pi Assistant、managed DSH、Routine/Inbox、
+binding/budget、OPC UI、X connector 或 fixed N=15 acceptance 已实现。MCP 是 advanced
+deferred target；native mobile/E2E relay remote 属于 2.1。
 
 本地化 canonical 设计文件路由到相同的双语 handbook `doc_id`。必须同步两个 locale。
 只有在全部映射源存在后才刷新手写页指纹；不得为掩盖指纹漂移而手改或重生成无关生成页。

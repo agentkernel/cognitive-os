@@ -11,7 +11,9 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
   - path: personal/docs/product/linux-1.0-scope.md
-fingerprint: "sha256:3acadef5dd987a8db65469aec58a7cdb34edccb6b2d1dd7351c2517e48cf2882"
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
+fingerprint: "sha256:3133c39510f40757e4b03f7e1a2ff8c608bd6bf51e2ec43074e9c9130dc3d0ab"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---
@@ -24,11 +26,13 @@ Linux x86_64 + 用户 systemd（开机启动需 lingering）。桌面会话需�
 密钥环（GNOME Keyring）。headless 运行已设计（加密 vault）但尚不可选。WSL2 与
 Windows 原生主机被 Pi 启动准入路径显式拒绝。
 
-Personal 2.0 另外承诺 Windows、macOS、Linux 本地产品路径。每个平台与 Agent 都需独立
-的能力、生命周期、恢复、负例与 release 资格；当前 Linux 证据不转移。初始目标 Agent
-集是精确 Pi、DeepSeek Harness Developer Preview，以及只进入官方支持且经 Personal
-独立资格化平台的当前官方 ChatGPT desktop app 内 Codex experience；不暗示 Linux
-Codex desktop。这些目标仍为 `Requires-backend`。
+Personal 2.0 是 Windows-first，仍为 `Requires-backend` +
+`Requires-environment`。qualified native Windows OPC dev environment 与 B01-W
+均未 provision。目标 runtime 是 preinstalled managed DSH；Pi 是 hidden Personal
+Assistant engine。Existing Linux Pi/dsh、WSL、ordinary CI、Canvas、CLI、Provider、
+model、account、adapter 或 Windows GNU evidence 都不转移 Windows support/DSH
+qualification。Hermes、Codex、Cursor 等是 future candidates。native mobile/E2E
+relay remote 属于 Personal 2.1。
 
 ## 钉住版本
 

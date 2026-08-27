@@ -18,10 +18,13 @@ sources:
   - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
   - path: personal/docs/architecture/multi-agent-orchestration.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/project-role-employee.md
+  - path: personal/docs/architecture/routine-trigger-missed-run.md
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:d9567ec3f232b3c65dab013c45228056dd8e05e70cd4b095187d4119b731e110"
+fingerprint: "sha256:3b4a8ccb40131ee075242be4e0cb88ace0270332173b56e00dbad379844c99cd"
 non_claims:
   - Admission still does not consume the worker authorization or acquire a scheduler lease on the same pass; a later tick does. No Gate, release, Profile, or EVAL promotion.
 ---
@@ -82,36 +85,29 @@ So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).
 
-## Personal 2.0 governed-work commitment (`Requires-backend`)
+## Personal 2.0 Project work (`Requires-backend`)
 
-The current durable work object is still **Task**. There is no Goal or Plan API,
-no persisted Plan-revision lifecycle, and no multi-Agent supervisor in the
-current daemon.
+The current durable work object is still **Task**. The OPC target adds a
+Project above it:
 
-The full-version target adds:
+`Project -> Charter/Goal/Plan revision -> Routine -> Task -> Attempt`.
 
-- **Goal**: an owner-authored durable outcome above one or more Tasks;
-- **Plan revision**: an immutable candidate decomposition of that Goal. An
-  Agent may propose one, but only a daemon-issued preview and admission may
-  make a revision current;
-- **Attempt**: one preserved execution or recovery branch under exactly one
-  Task. Retry or fork creates a new attempt and never erases the prior one;
-- **multi-Agent supervision**: independently qualified Agents contribute
-  bounded candidates through vendor-specific adapters. The daemon assigns,
-  fences, budgets, arbitrates Effects, and verifies; Agents never transfer
-  authority to one another;
-- **federated resources**: a Plan may reference MCP-family resources by exact
-  source identity and revision/freshness, but discovery or mention grants no
-  permission.
+Project setup remains a draft until the Owner confirms the daemon-issued
+charter/team/permission/budget/trigger preview. Every active Project has one
+current manager. The manager may adjust approved subgoals, Tasks, order,
+frequency and responsibility inside the approved envelope; primary goal, team,
+budget, Provider, Tool, permission or external-rule changes require a new
+Owner-confirmed revision.
 
-These concepts do not rename today's Task rows or infer implementation from the
-existing Pi/dsh paths. Pi remains the only currently qualified Agent. Personal
-2.0 requires independently qualified exact Pi, DeepSeek Harness Developer
-Preview, and supported-platform Codex desktop paths; no CLI, Provider, model,
-account, bridge, or platform evidence transfers. Goal/Plan/Task/Attempt,
-multi-Agent, unified Activity, control, and federation behavior are all release
-blockers and remain `Requires-backend` (or `Requires-core` where public
-authority contracts must change).
+Each retry/fork creates a new Attempt and preserves the prior failure/evidence.
+Routine triggers may be manual, scheduled or qualified events; the same Routine
+does not overlap, keeps only the latest pending occurrence, records coalesced/
+missed work and asks for consequential catch-up after offline time.
+
+Digital employees coordinate through daemon-owned Tasks, artifacts and
+handoffs. DSH is the target default runtime, but process output and engine
+checkpoints remain observations. These Project/Routine/Employee capabilities
+are not current APIs and do not rename current Task rows.
 
 ## What can never happen, by construction
 

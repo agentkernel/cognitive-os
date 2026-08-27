@@ -25,7 +25,9 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
-fingerprint: "sha256:d2844dc4dbafcad98c8a5bd1c9181981c03fcd14f62295454a350e217267e2f0"
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/windows-host-background.md
+fingerprint: "sha256:dedde65bf37ac7ad7bf82c71bd3593c345aeee169b71b7ea8c8279db6ead7c17"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -35,8 +37,8 @@ non_claims:
 Legend: `implemented` (real path + tests), `partial` (works with named gaps),
 `designed` (contract/design only), `unavailable` (no usable path),
 `Requires-backend` (adopted target but no required daemon/API implementation),
-and `Requires-core` (adopted target also needing approved core
-contract/authority work).
+`Requires-environment` (qualified native/campaign environment absent), and
+`Requires-core` (adopted target also needing approved core contract/authority).
 
 Rows without a Personal 2.0 qualifier describe the current Linux/current-API
 baseline: six resource families and Pi as the only qualified Agent. The
@@ -73,17 +75,25 @@ and Agent requires independent qualification.
 | Current six-family resource projection/watch | implemented | management+task channels only; this is not the adopted MCP seventh family |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |
 | Non-Pi agents | designed | Codex fixture qualification only |
-| Personal 2.0 cross-platform local product | Requires-backend | Windows, macOS, and Linux are exact independent target paths; current release evidence remains Linux 1.0 and does not transfer |
-| Personal 2.0 initial Agent set | Requires-backend | exact Pi, `deepseek-ai/deepseek-harness` Developer Preview, and the Codex experience in the current official ChatGPT desktop app only on officially supported platforms; no Linux Codex desktop; CLI/Provider/model/account/bridge/platform evidence does not transfer |
-| Vendor-specific Agent conversation adapters | Requires-backend | current Pi/dsh routes do not provide a generic desktop conversation-adapter layer; Pi alone is qualified |
+| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Team/Knowledge/Inbox, Project work loop and native Windows host are target-only; Linux/WSL/CI/Canvas evidence does not transfer |
+| Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority is reusable, but Project activation, manager envelope, Routine/missed ledger and complete hierarchy do not exist |
+| Role Blueprint/Assignment/Digital Employee | Requires-backend | no complete authority/projection; employee identity must remain separate from runtime/process |
+| Pi-backed Personal Assistant | Requires-backend | Pi is the hidden candidate-only target engine; current Pi Shell/Linux qualification does not establish the OPC Assistant |
+| Preinstalled managed DSH Installed Agent | Requires-backend + Requires-environment | existing dsh Path B is not the exact Windows artifact/isolated child/sandbox/update/rollback qualification; no native DSH UI/conversation target |
+| Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive and single composer are absent; ADR-0058 `conversation-projection/0.1` must not be reinterpreted |
+| Knowledge/Markdown Vault/episodic retrieval | Requires-backend | no OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion product path |
+| Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget exists, but Conversation/Vault extraction/retrieval integration and privacy matrix do not |
+| Routine/Trigger/Inbox/offline-missed recovery | Requires-backend | scheduler/Effect/preview foundations exist; no full no-overlap/queue-latest/missed/approval product path |
+| Provider global→Project→employee→Task binding and hard budgets | Requires-backend | current fixed Agent binding and advisory budgets remain partial; DSH/Pi raw-secret-free daemon proxy is required |
+| X/Twitter qualified connector scenario | Requires-backend + Requires-environment | no connector/platform qualification or business outcome is claimed; evasion is forbidden |
 | Existing MCP Tool transport + bounded dynamic-Tool MVP | implemented for its accepted P5-T03/P5-T04 scope | interop produces Tool candidates; it has no Personal 2.0 server/package/connection/binding/health/quarantine family lifecycle |
-| Personal 2.0 MCP seventh family + federated resources | Requires-backend | adopted by ADR-0057; ADR-0058 keeps the family and conversation projection Personal-private (no public Core schema, no `family=mcp` on the 1.0 six-family projection); no current family API, persistence, trust policy, federation projection, or target UI |
-| Goal + immutable Plan revisions + Task-owned preserved Attempts + multi-Agent supervision | Requires-backend / Requires-core | full-version target only; current durable work object remains Task and the complete hierarchy, controls, unified Activity, and supervisor do not exist |
-| Frozen AI-window product acceptance | Requires-backend | eight fixed N=1 scenarios; full pass requires 8/8, and S3 (Codex desktop) is platform-conditional (owner decision 2026-08-27: recorded `not-run (platform-conditional)` while no supported platform is in execution scope, Linux-mainline closes at seven platform-eligible passes plus that disposition); no execution result is claimed and any future pass remains simulated product evaluation, not human or release/Gate evidence |
+| Personal MCP seventh family | deferred / Requires-backend | ADR-0057/0058 retained advanced private target; not OPC P0, no current family API, and DSH native MCP/base tools remain disabled |
+| Windows OPC fixed-denominator acceptance | Requires-environment / not-run | future N=15 at one qualified Windows revision; required CI/Canvas does not execute it; signing/B01-W/release remain separate |
 | Management fallback verbs | implemented | R0/R2/R3 approval flows partial |
 | Backup/restore command | partial | secrets/bearer/provider-config/authority SQLite excluded; Memory/Skill as digest-bound sidecar; public `admin-cli` covers Pi install→recover |
-| Current Web UI / Console | partial | same-origin daemon-served `/ui/` exists at `clients/pc/web/`; HTTP Task/Agent controls remain absent and the Personal 2.0 desktop-first redesign is not implemented |
-| Current Windows/macOS product | unavailable | Linux x86_64 only; Windows installer templates + credential backend are authored and CI-validated but the B01-W install campaign has not run; Personal 2.0 adoption does not make either platform current |
+| Current Web UI / Console | partial | same-origin daemon-served `/ui/` exists at `clients/pc/web/`; OPC IA/Project/Conversation/Agent/background target is not implemented |
+| Current Windows product | unavailable | installer/credential fragments and ordinary CI are not Windows OPC host/DSH/UI support; qualified native environment and B01-W do not exist |
+| Personal 2.1 native mobile/E2E relay remote | deferred | host-online only; device-bound keys/revocation/short sessions/preview/audit/no secret downlink remain future controls |
 | Performance campaign tooling | implemented | results are non-claim records in the plan |
 | UJ1–UJ6 capability-truth register | implemented | frozen public-caller/oracle/cleanup/evidence rows; Web UI/Multi-Agent scope-excluded and cannot block the required arm; linux-002 named oracles are product evidence, not EVAL/Gate |
 

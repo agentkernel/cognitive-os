@@ -30,7 +30,7 @@ tests:
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:d812b0e2331c2720221bd076bebbd84fe1e223bace4c718f2c0f4eae1a374971"
+fingerprint: "sha256:07b1d59f5ddb470c720be24ce10e80fab520e206853cce246148ebf6a055c3f8"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and current localhost Web UI path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, the Personal 2.0 desktop redesign/Account Hub import, or Agent-benefit.
 ---

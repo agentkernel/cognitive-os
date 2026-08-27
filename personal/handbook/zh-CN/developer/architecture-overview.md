@@ -20,11 +20,16 @@ sources:
   - path: personal/docs/architecture/multi-agent-orchestration.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/project-role-employee.md
+  - path: personal/docs/architecture/conversation-memory-vault.md
+  - path: personal/docs/architecture/windows-host-background.md
+  - path: personal/docs/architecture/routine-trigger-missed-run.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:0eb16b585d7bb33d1d419b6b0d7a8d11f1be0e23e390f6b2cd1ae772844c1fc0"
+fingerprint: "sha256:66a15772056b5c20b1471cee626b3e6125906cd821896289418df9e6616a8291"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -62,30 +67,35 @@ digest 钉住转移表与 `cognitive-contracts` 的 canonical digest 校验。
 - **平台端口**：SQLite WAL（双库）、文件系统 artifact CAS、Linux Secret Service、
   systemd 用户服务。`implemented`。
 
-## Personal 2.0 完整组合——不是当前实现
+## Personal 2.0 Windows OPC 组合——不是当前实现
 
-Personal 2.0 保留上述不变量，同时承诺以下产品边界：
+目标 dependency direction 为 Windows UI/Assistant/engine/connector -> daemon
+application port -> daemon-owned Project/execution/memory/provider domain。Windows
+host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
 
-- Windows、macOS、Linux 是各自独立资格化的本地产品路径，平台与 Agent 证据都不转移；
-- 初始精确 Agent 集是 Pi、DeepSeek Harness Developer Preview，以及受官方平台限制的
-  Codex desktop；CLI、Provider、model、account、adapter 或 bridge 证据不能资格化另
-  一个产品；
-- Account Hub 凭据导入是 ADR-0055 下 daemon 独占的来源到 SecretStore 操作。UI 只
-  提供精确来源选择与同意，绝不读取或拿到导入材料；
-- MCP 成为带联邦来源身份、trust、availability 与 policy 的第七个用户可见资源族。
-  当前 Resource Manager 与权威服务在 1.0 投影上仍保持六族；ADR-0058 把 MCP 放在独立
-  Personal-private envelope 上，直到 `P10-T03` 实现该 envelope；
-- 厂商专用对话适配器保留每个 Agent 的协议与身份。Pi 仍是唯一已资格化 Agent；dsh
-  实现证据与通用适配器合同都不转移资格；
-- 嵌入式原生对话只有经显式 admission 才进入受治理工作；
-- Goal -> 不可变 Plan revision -> Task -> 保留 Attempt 组合受治理工作；daemon-owned
-  多 Agent 监督负责分配、fencing、budget、对账与验证；
-- 统一 Activity 以声明的覆盖范围区分 Native、Observed、Governed、Verified provenance。
+- Project 拥有 Charter、Goal、Plan revision、manager Assignment 与 employee identity；
+  Task/Attempt/Effect/verification 仍由 daemon 治理。
+- Pi 是 hidden、candidate-only 的 Personal Assistant engine。
+- DSH 是可见的 preinstalled managed Installed Agent 与默认员工 runtime：exact audited
+  artifact、isolated child、bounded stdio broker、daemon Provider proxy 以及
+  update/rollback。没有 native DSH UI/conversation、raw secret、MCP/base tool、HMR
+  或 home patch。
+- Personal 拥有 scoped Conversation archive/index/retrieval、Project Markdown Vault
+  integration 与 semantic Memory admission/correct/forget。
+- Routine/Trigger 使用 daemon-owned no-overlap、queue-latest、missed/coalesced fact 与
+  risk-based resume。Engine checkpoint 不是 authority。
+- Provider binding 按 global→Project→employee→Task；subscription、account、
+  billing/quota、budget 与 actual usage 分离。
+- UI 是 Today/Projects/Team/Knowledge/Inbox、底部 Settings 与一个 active
+  Assistant/employee composer。
 
-这些缺失能力仍为 `Requires-backend`。公开权威或合同增量仍需日后 Lane-CTR 裁定；
-ADR-0058 已将 MCP family 与对话投影保持为 Personal-private。完整
-版本承诺与固定 8/8 AI-window 模拟验收都不构成实现、人类 usability、release 或 Gate
-证据。
+ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh
+first-conversation-slice 角色，`conversation-projection/0.1` 不重解释。MCP 从 OPC P0
+deferred 为 advanced。
+
+全部缺失能力仍为 `Requires-backend`；Windows host/DSH/connector validation 还
+`Requires-environment`。native mobile/E2E relay remote 属于 2.1。future fixed
+denominator 是 N=15，在 qualified Windows revision 执行前不构成任何证据。
 
 ## 解释"意外"的设计决策
 

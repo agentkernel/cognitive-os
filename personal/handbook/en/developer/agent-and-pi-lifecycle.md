@@ -40,6 +40,8 @@ sources:
   - path: personal/docs/architecture/agent-adapter-contract.md
   - path: personal/docs/architecture/multi-agent-orchestration.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/windows-host-background.md
 tests:
   - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - personal/crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -52,7 +54,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:016d6b7accdbfa72ac5b8180ffbdf63bce8365832b85ab5e4a72f2f9d53d1d9d"
+fingerprint: "sha256:cb8594a08131428377de90989cc26a6fb02d7deb20a35338069eeec5b353d3b3"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -144,31 +146,28 @@ qualification (OpenAI Codex CLI) is a fixture-scoped identity/lifecycle matrix
 proving independence from Pi evidence — explicitly not a network or binary
 integration.
 
-### Personal 2.0 Agent conversation and supervision target
+### Personal 2.0 OPC managed-Agent target
 
-`Requires-backend`: the full-version initial Agent set is the exact Pi path,
-DeepSeek Harness Developer Preview from
-[`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness),
-and the Codex experience in the current official ChatGPT desktop app only on
-officially supported and independently qualified platforms. Windows, macOS,
-and Linux Personal paths are qualified separately. There is no Linux Codex
-desktop claim. Codex CLI, web, IDE, account, Provider, model, adapter, bridge,
-or another platform transfers no desktop qualification.
+`Requires-backend + Requires-environment`: DSH is the preinstalled managed
+Installed Agent and default digital-employee runtime. Product form is an exact
+audited official artifact in an immutable installation slot, run as a
+Personal-managed isolated child through a bounded stdio broker and daemon
+Provider proxy. Settings exposes source/version/digest, health, Windows
+sandbox qualification, employee/Task bindings, update and rollback.
 
-The Global Agent Shell presents vendor-specific conversation adapters rather
-than pretending every Agent has one generic chat protocol. Each adapter must
-preserve the vendor's conversation/session identity, supported controls,
-capability gaps, and recovery semantics while translating only bounded
-candidates and observations. A generic adapter manifest or a working dsh
-bridge does not establish conversation parity or qualification.
+DSH is not linked in-process or vendored. It owns no Personal Conversation,
+archive, Memory, Task, Effect or completion. Its native UI/conversation is not
+embedded or synchronized. Environment/plaintext credentials, native MCP/base
+tools, HMR and home patch remain denied.
 
-Goal and immutable Plan revisions are also target authority objects above
-current Tasks. Multi-Agent supervision remains daemon-owned: independently
-qualified Agents may contribute candidates, but the daemon assigns work,
-issues continuation authority, fences epochs, enforces budgets, reconciles
-Effects, and obtains independent verification. There is no current Goal/Plan
-or multi-Agent supervision capability. Pi remains the only currently qualified
-Agent; every missing target above is a Personal 2.0 release blocker.
+Pi separately powers the user-visible Personal Assistant as a hidden,
+candidate-only, default-deny engine. Pi is not an ordinary Installed Agent in
+the OPC target and owns no authority, Secret, archive or Memory.
+
+Project Manager and employee collaboration remains daemon-owned through
+Project/Plan/Task/Attempt/artifact/handoff facts. Hermes, Codex, Cursor and
+other products are future independently qualified candidates; DSH/Pi/Linux
+evidence does not transfer.
 
 DeepSeek Harness is explicitly a **Developer Preview** Agent product, not a
 DeepSeek model or Provider. The current bridge is a candidate-only adapter. The Rust side pins

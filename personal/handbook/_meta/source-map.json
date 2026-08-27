@@ -171,6 +171,26 @@
       "note": "adopted seventh MCP family and federated-resource semantics; current Linux 1.0 and current Resource Manager APIs remain six-family"
     },
     {
+      "id": "personal-2-opc-rebaseline",
+      "sources": [
+        "docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md",
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        "docs/plan/PERSONAL-SUPPORT-MATRIX.md",
+        "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md",
+        "personal/docs/product/opc-product-model.md",
+        "personal/docs/product/knowledge-memory-vault.md",
+        "personal/docs/product/long-running-operations.md",
+        "personal/docs/product/oss-reference-matrix.md",
+        "personal/docs/architecture/project-role-employee.md",
+        "personal/docs/architecture/conversation-memory-vault.md",
+        "personal/docs/architecture/windows-host-background.md",
+        "personal/docs/architecture/routine-trigger-missed-run.md",
+        "clients/docs/design/opc-2.0/**"
+      ],
+      "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.resources-model", "user.tasks-and-execution", "user.provider-and-secrets", "user.provider-control-plane", "user.security-boundaries", "user.limitations", "dev.index", "dev.architecture-overview", "dev.agent-pi-lifecycle", "dev.dev-environments", "ref.capability-status", "ref.compatibility", "ai.docs-impact", "ai.validation-commands"],
+      "note": "Windows-first OPC target, Project/Role/Employee, Personal Conversation/Vault/Memory, Pi Assistant, preinstalled managed DSH, Routine/Inbox, provider budgets, UI and fixed-denominator validation; design/Requires-backend is not implementation or support"
+    },
+    {
       "id": "dsh-recovery-docs",
       "sources": [
         "docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md",

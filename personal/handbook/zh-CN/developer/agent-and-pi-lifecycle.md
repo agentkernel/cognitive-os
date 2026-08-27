@@ -40,6 +40,8 @@ sources:
   - path: personal/docs/architecture/agent-adapter-contract.md
   - path: personal/docs/architecture/multi-agent-orchestration.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/windows-host-background.md
 tests:
   - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - personal/crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -52,7 +54,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:016d6b7accdbfa72ac5b8180ffbdf63bce8365832b85ab5e4a72f2f9d53d1d9d"
+fingerprint: "sha256:cb8594a08131428377de90989cc26a6fb02d7deb20a35338069eeec5b353d3b3"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -125,25 +127,25 @@ Universal Agent Adapter Contract（`agent_adapter_manifest`）注册讲 AKP 的�
 Pi 资格化（OpenAI Codex CLI）是 fixture 范围的身份/生命周期矩阵，证明证据独立于
 Pi——明确不是网络或二进制集成。
 
-### Personal 2.0 Agent 对话与监督目标
+### Personal 2.0 OPC managed-Agent 目标
 
-`Requires-backend`：完整版本初始 Agent 集是精确 Pi 路径、
-[`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness) 的
-DeepSeek Harness Developer Preview，以及只进入官方支持且经 Personal 独立资格化平台的
-当前官方 ChatGPT desktop app 内 Codex experience。Windows、macOS、Linux Personal 路
-径各自独立资格化；不声明 Linux Codex desktop。Codex CLI、web、IDE、account、
-Provider、model、adapter、bridge 或其他平台证据都不转移桌面产品资格。
+`Requires-backend + Requires-environment`：DSH 是 preinstalled managed Installed
+Agent 与默认 Digital Employee runtime。产品形态是 immutable installation slot 中的
+exact audited official artifact，由 Personal-managed isolated child 运行，经 bounded
+stdio broker 与 daemon Provider proxy 通信。Settings 显示 source/version/digest、
+health、Windows sandbox qualification、employee/Task binding、update 与 rollback。
 
-Global Agent Shell 的目标是呈现厂商专用对话适配器，而不是假装所有 Agent 共用一种通用
-聊天协议。每个适配器必须保留厂商的 conversation/session 身份、支持的控制、能力缺口
-与恢复语义，同时只翻译有界 candidate 与 observation。通用 adapter manifest 或可工作
-的 dsh bridge 都不构成对话对等或资格化。
+DSH 不 in-process、不 vendored，也不拥有 Personal Conversation、archive、Memory、
+Task、Effect 或 completion。产品不嵌入或同步其 native UI/conversation。env/plaintext
+credential、native MCP/base tools、HMR 与 home patch 继续被拒。
 
-Goal 与不可变 Plan revision 也是位于当前 Task 之上的目标权威对象。多 Agent 监督仍由
-daemon 拥有：各自独立资格化的 Agent 可以贡献 candidate，但 daemon 分配工作、签发
-continuation authority、fence epoch、强制预算、对账 Effect 并取得独立验证。当前没有
-Goal/Plan 或多 Agent 监督能力。Pi 仍是当前唯一已资格化 Agent；上述每个缺失目标都是
-Personal 2.0 release blocker。
+Pi 另行作为 hidden、candidate-only、default-deny engine 支撑用户看到的 Personal
+Assistant。OPC target 中 Pi 不进入 ordinary Installed Agent，也不拥有 authority、
+Secret、archive 或 Memory。
+
+Project Manager 与 employee 通过 daemon-owned Project/Plan/Task/Attempt/artifact/
+handoff fact 协作。Hermes、Codex、Cursor 等是 future independently qualified
+candidates；DSH/Pi/Linux evidence 不转移。
 
 DeepSeek Harness 明确是 **Developer Preview** Agent 产品，不是 DeepSeek model 或
 Provider。当前 bridge 是仅 candidate 的适配器。Rust 侧钉住精确 dsh git revision 与 AKP

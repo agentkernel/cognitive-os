@@ -15,10 +15,11 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:37b2cc30e7351f03636fc42f69fb478b7c3553d740fdc75bcea1b053b7335aea"
+fingerprint: "sha256:2f61c80f426c2e0c03d40cca9eecdb2723d5f5f870921b5ee6dc2c5e4ce26070"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -48,16 +49,17 @@ non_claims:
   的 Personal 2.0 桌面优先重设计尚未应用到这个当前 SPA。操作步骤见
   [Provider Control Plane](provider-control-plane.md)。Linux RC 声明集见
   [Linux RC 操作地图](rc-and-support.md)。
-- **Personal 2.0 完整版本能力不是当前产品能力**：当前资源模型与 Resource Manager
-  仍为六族；第七 MCP 族、联邦同步、统一 Activity、Global Agent Shell 与保留 attempt
-  的控制都是 `Requires-backend`。Account Hub 没有浏览器 profile、Agent 凭据文件、订
-  阅或 OAuth 导入机制。完整 Goal -> Plan revision -> Task -> Attempt、嵌入式厂商对话
-  与多 Agent 监督均不存在。Pi 仍是当前唯一已资格化 Agent；DeepSeek Harness Developer
-  Preview 与受官方平台限制的 Codex desktop 是各自独立资格化的 Personal 2.0 目标，不
-  暗示 Linux 上存在 Codex desktop。
-- **AI-window 验收不是用户或 release 证据**：固定目标是 8/8 模拟产品场景，不证明人
-  类 desirability、usability、adoption、WTP、problem-solution fit、release/Gate 就绪或
-  Agent benefit。
+- **Personal 2.0 OPC 能力不是 current**：Windows host/tray/background、
+  Project/Role/Employee/Routine/Attempt authority、Personal Conversation
+  archive/Vault/retrieval、Pi-backed Assistant、managed DSH artifact/child/sandbox、
+  Inbox、binding/budget enforcement、OPC UI 与 X connector 都是
+  `Requires-backend`/`Requires-environment`。
+- **Installed Agent target 很窄**：DSH 是唯一 2.0 runtime qualification target。
+  Existing dsh Path B 不证明 Windows managed artifact；Pi 是 hidden Assistant target；
+  Hermes/Codex/Cursor 是 future candidates。产品不做 native DSH UI/conversation sync。
+- **固定验收不是用户或 release evidence**：future Phase 11 使用 N=15 Windows OPC
+  scenarios，目前一个也未执行。Canvas/ordinary CI 不证明 human desirability、
+  usability、adoption、WTP、support、release/Gate readiness 或 Agent benefit。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
   query` 与 `cognitive audit query` 无过滤器；用量 JSON 只有 `event_id` /
@@ -93,8 +95,10 @@ non_claims:
 
 - 产品平台：Linux x86_64 + user systemd；桌面需要 Secret Service 密钥环。WSL2 是工
   程环境，不是产品目标。
-- Personal 2.0 承诺对 Windows、macOS、Linux 本地产品路径分别独立资格化。该目标不让
-  非 Linux 路径成为当前事实，也不在平台或 Agent 间转移证据。
+- Personal 2.0 是 Windows-first，但 qualified native Windows dev environment 与
+  B01-W 都不存在。Linux、WSL、ordinary CI、Canvas 与 Windows GNU evidence 不转移。
+- native mobile/device pairing/E2E relay remote deferred 到 Personal 2.1，且仅
+  host-online；不下发 Secret 原文。
 - headless 加密 vault 运行已设计但今天不可选。
 - Windows：daemon/CLI 在 CI 可编译，Credential Manager 后端与安装器/scheduled-task
   模板已存在，但 B01-W 安装战役未执行——没有可安装的 Windows 产品，本地文件也无

@@ -1,182 +1,120 @@
-# CognitiveOS Personal Architecture
+# CognitiveOS Personal architecture
 
-- Status: informative current/target alignment
-- Change class: owner-approved `product-semantic + structural` documentation
+- Status: informative current/target composition
+- Change class: owner-approved `product-semantic` architecture follow-through
 - Project: `cognitiveos-personal`
-- Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md) `Current snapshot`
-- Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
-- Normative contracts: [`core/specs/`](../../../core/specs) and applicable
-  [standards](../../../docs/standards)
-- Product direction:
-  [Personal 2.0 scope](../product/personal-2.0-scope.md),
-  [Agent integration and conversations](../product/agent-integration-and-conversations.md),
-  [Account Hub](../product/account-hub.md), and
-  [MCP resource family](../product/mcp-resource-family.md)
-- Adopted decisions:
-  [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
-  [ADR-0043](../../../docs/adr/0043-personal-universal-agent-adapter.md),
-  [ADR-0044](../../../docs/adr/0044-personal-multi-agent-mainline.md),
-  [ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md),
-  [ADR-0054](../../../docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md),
-  [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md),
-  [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md), and
-  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md), and
-  [ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
+- Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md)
+- Task/Gate owner:
+  [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
+- Normative machine contracts: [`core/specs/`](../../../core/specs)
+- Current product decision:
+  [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 
-This directory explains how Personal composes accepted contracts and product
-decisions. It does not create public DTOs, routes, errors, state machines,
-current task status, Gate evidence, release claims, or Profile conformance.
+This directory explains composition. It creates no public DTO, route, error,
+transition, current status, support statement, or Gate result.
 
-## Status vocabulary
-
-Architecture chapters use these labels:
+## Architecture status vocabulary
 
 | Label | Meaning |
 |---|---|
-| **Now** | Implemented current behavior confirmed by the canonical current-status source; not automatically a release or Gate claim |
-| **2.0 target** | Adopted Personal product direction that must not be presented as current capability |
-| **Requires-backend** | Needs a future daemon/client implementation task before a product surface may offer it |
-| **Requires-core (conditional)** | ADR-0058 kept Personal 2.0 MCP family and conversation projection Personal-private. A later public machine surface needs a new Lane-CTR decision. |
+| **Now** | repository-established implementation within its exact recorded platform and evidence boundary |
+| **2.0 target** | adopted Windows OPC composition; not implemented or supported by documentation |
+| **Requires-backend** | future daemon/client/adapter/host/data implementation needed |
+| **Requires-environment** | qualified Windows-native or campaign environment absent |
+| **Deferred** | explicitly outside the 2.0 success path |
 
-`Requires-backend` and conditional `Requires-core` can both apply when a target
-also changes a public machine surface. Unknown capability is never upgraded to
-either supported or unavailable by architecture prose alone.
-
-## Product architecture statement
+## Current and target systems
 
 ### Now
 
-Linux Personal 1.0 remains a six-family cognitive-resource system:
-
-1. Memory;
-2. Skill;
-3. Tool;
-4. Context;
-5. Task;
-6. Runtime/Process.
-
-The daemon is the sole authority writer. The delivered Resource Manager,
-Provider Control Plane, learning admission path, adapter registration boundary,
-and daemon-served Control Plane all remain clients or deterministic daemon
-services under that rule. The desktop client implementation lives at
-[`clients/pc/web/`](../../../clients/pc/web) and is served same-origin by the
-daemon under `/ui/`. Native `cognitive dsh web` is a separate Agent surface.
-
-Pi is still the only Agent qualified by the Linux 1.0 claim. The delivered
-general adapter registration/lifecycle machinery and fixture-based non-Pi work
-do not transfer Pi qualification or create a current multi-Agent runtime.
+Linux Personal 1.0 remains six-family and Pi-qualified. The Rust daemon is the
+sole authority writer. Current Resource Manager, Provider Control Plane,
+Task/Effect/verification, learning admission, adapter registration, dsh Path B,
+and daemon-served `/ui/` retain their implemented boundaries. Native dsh web is
+a separate current surface. None establishes Windows OPC support.
 
 ### Personal 2.0 target
 
-Personal 2.0 adds **MCP as a seventh user-visible family** without changing the
-Linux 1.0 six-family claim. The delivered P5 MCP Tool transport/dynamic-Tool
-work remains valid for its bounded scope but is not the seventh-family
-implementation. MCP server, package, connection, capability, binding, health,
-and quarantine identities remain distinct. Advertised tools, protocol
-resources, and prompts are untrusted candidates into the existing Tool,
-Context, and Skill domains respectively; connection or installation alone
-grants no authority.
+```mermaid
+flowchart TB
+  ui["Today · Projects · Team · Knowledge · Inbox\nSettings + right Personal Assistant"]
+  daemon["Personal Rust daemon\nsole authority writer"]
+  project["Project authority\nCharter · Goal · Plan · Role · Employee"]
+  work["Work authority\nRoutine · Trigger · Task · Attempt · Effect · Evidence"]
+  memory["Personal data plane\nConversation archive · Vault · index · Memory admission"]
+  runtime["Managed execution\nDSH child/stdio broker · Pi Assistant engine"]
+  provider["Secret/Provider plane\nSecretStore · daemon proxy · binding · budget/usage"]
+  windows["Windows host\napp/data · tray/background · sleep/missed · restore"]
+  external["Qualified connectors\nX first scenario"]
 
-The Desktop Control Plane remains a same-origin daemon client and adopts six
-product spaces: **Home, Agents, Work, Library, Activity, and Settings**.
-Library contains Memory, Skills, Tools, and MCP; Work owns Context and Task;
-Agents owns Runtime/Process. Providers, Account Hub, System stewardship, and
-sessions are Settings sections. Activity is the provenance-preserving merged
-timeline, not another authority or resource family. The global Agent Shell is
-likewise a candidate-producing assistant, never an authority or a replacement
-for typed Control Plane state.
+  ui -->|"candidate/query/preview request"| daemon
+  daemon --> project
+  daemon --> work
+  daemon --> memory
+  daemon --> runtime
+  daemon --> provider
+  daemon --> windows
+  work --> external
+  external -->|"receipt/observation"| daemon
+```
 
-Vendor-specific Agent adapters use the strongest safe native protocol available
-for conversation/session control. They project only a minimal common capability
-and conversation model, with adapter-specific render slots for native detail.
-ACP conformance is not required. MCP plus rules can be a cooperative fallback
-for candidate/tool exchange, but cannot impersonate native session control.
+Project/Role/Employee/Routine/Attempt/Conversation/Vault are not a new generic
+Resource family. Engine checkpoints are recovery inputs, not authority.
 
-Native conversations remain origin-owned observations. An explicit admission
-request and owner confirmation let the daemon create the Goal, revisioned Plan,
-and governed Tasks. The daemon alone admits and owns the multi-Agent graph,
-assignment and handoff state, budgets, Intent/Effect, reconciliation,
-verification, and acceptance.
+## Stable boundaries
 
-## Stable composition rules
+- UI, Personal Assistant, Pi, DSH, employees, adapters, MCP, and connectors are
+  clients, candidates, observations, or bounded executors.
+- External mutation persists Intent/Effect before dispatch and reconciles
+  unknown outcomes under fencing.
+- Completion requires current independent evidence and daemon acceptance.
+- DSH is the preinstalled managed Installed Agent: exact audited artifact,
+  isolated child, bounded stdio broker, daemon Provider proxy, update/rollback.
+  It is not in-process, vendored, a native UI, or conversation authority.
+- Pi is hidden behind the Personal Assistant and owns no authority, Secret,
+  archive, Memory, or completion.
+- Personal owns Conversations, archive/index/retrieval, admitted Memory, Project
+  state, and employee identity.
+- Secrets remain in approved Secret Stores. DSH/Pi never receive raw material.
+- Public contract changes still require Lane-CTR; architecture does not invent
+  the machine shape.
 
-- Experience surfaces, Shells, native Agents, adapters, and MCP servers are
-  clients or candidate producers; none is authority.
-- A common projection may unify reading and navigation, but never collapses
-  family-specific identity, lifecycle, retention, or policy.
-- Origin-owned content and Personal-owned policy/binding remain separate.
-  Agent connection establishes an explicit observation scope; observation may
-  be automatic only inside it, with no speculative/global scan or surprise
-  per-session enrollment. Every writeback uses daemon-owned Intent/Effect and
-  may run automatically only inside an unchanged exact grant/risk policy.
-  New, broader, destructive, or conflicted scope requires preview and
-  confirmation; conflict resolution fails closed without last-write-wins.
-- Provider and user secrets enter through approved non-logging daemon paths,
-  stay in an approved `SecretStore`, and are consumed through daemon proxy
-  profiles. Raw material never crosses an Agent/adapter conversation wire.
-- External configuration projection is an external mutation: capture the
-  preimage, persist Intent/Effect before dispatch, compare the expected
-  revision, verify the result, and retain rollback/reconciliation evidence.
-- Native output, process state, an adapter event, or an MCP result is never
-  Task completion. Independent verification remains required.
-- Public contract changes use the normative contract process. Architecture
-  does not pre-empt that process with parallel machine shapes.
+## Chapters
 
-## Documents
-
-| Document | Current/target responsibility |
+| Chapter | Responsibility |
 |---|---|
-| [System architecture](system-architecture.md) | **Now:** six-family daemon composition. **2.0:** Desktop Control Plane, native adapter fabric, Goal/Plan admission, seventh MCP family |
-| [Web UI architecture](web-ui-architecture.md) | **Now:** delivered same-origin client. **2.0:** six-space Desktop Control Plane, conceptual state projections, capability-honest gaps |
-| [Agent Shell and Agent lifecycle](agent-shell-and-agent-lifecycle.md) | Shell role, native-session observation, explicit admission, strict identities, and recovery verb distinctions |
-| [Agent adapter architecture](agent-adapter-contract.md) | delivered P8 registration boundary plus the vendor-specific 2.0 capability/conversation projection |
-| [Multi-agent orchestration](multi-agent-orchestration.md) | daemon-owned Goal -> Plan revision -> Task -> Attempt graph, assignments, handoffs, budgets, verification, and default-off current boundary |
-| [Resource Manager](resource-manager-architecture.md) | delivered six-family common projection plus federated resource policy and target MCP family |
-| [MCP and conversation private envelopes](mcp-conversation-private-projection.md) | ADR-0058 Personal-private envelope identifiers and older-client fail-closed rules; not a Core public contract |
-| [Provider Control Plane](provider-control-plane.md) | delivered provider governance plus target Account Hub import, proxy profiles, and scoped switching |
-| [Authority, data and recovery](authority-data-and-recovery.md) | authority placement, progress provenance, external writeback, restart/reconcile ordering, and compensating undo |
-| [Learning loop](learning-loop.md) | delivered candidate/admission loop plus native-session and federated-origin learning inputs |
-| [Context evolution](context-evolution.md) | compaction and adaptive budgets |
-| [Async event evolution](async-event-evolution.md) | measured async migration decision gate |
-| [Performance architecture](performance-architecture.md) | floors, stage timing, and structure-debt candidates |
-| [Headroom: IoT and multi-tenancy](headroom-iot-and-multitenancy.md) | reserved bridges; not current Personal implementation scope |
-| [Web UI route inventory](web-ui-route-inventory.json) | frozen P7-T05/D01 input with stale pre-ADR-0054 checkout metadata; not a current exhaustive route inventory and not a 2.0 contract |
+| [System architecture](system-architecture.md) | containers, dependency direction, data ownership, and current/target boundary |
+| [Web UI architecture](web-ui-architecture.md) | daemon-served OPC client, projections, state, and single-composer boundary |
+| [Project, Role, and Employee](project-role-employee.md) | Project aggregate, manager, Blueprint/Assignment/Employee identities |
+| [Agent Shell and lifecycle](agent-shell-and-agent-lifecycle.md) | Pi Personal Assistant engine, managed DSH child, strict runtime identities |
+| [Agent adapter](agent-adapter-contract.md) | delivered adapter foundation and future qualification boundary |
+| [Multi-agent orchestration](multi-agent-orchestration.md) | manager/member Tasks, artifacts, handoffs, and verification |
+| [Conversation, Memory, and Vault](conversation-memory-vault.md) | Personal archive/index/retrieval, Vault, admission, privacy/forget |
+| [Routine, Trigger, and missed run](routine-trigger-missed-run.md) | no-overlap, queue-latest, offline/missed, risk-based resume |
+| [Windows host and background](windows-host-background.md) | app/data, tray/background, sandbox/process, restore/export |
+| [Authority, data, and recovery](authority-data-and-recovery.md) | ownership, Intent/Effect, checkpoint non-authority, restart order |
+| [Provider Control Plane](provider-control-plane.md) | daemon proxy, global/Project/employee/Task binding, budget/usage |
+| [Learning loop](learning-loop.md) | reflection/retrieval candidates and deterministic admission |
+| [Context evolution](context-evolution.md) | scoped archive/Vault retrieval, compaction, progressive disclosure |
+| [Resource Manager](resource-manager-architecture.md) | six-family current facts, domain separation, advanced MCP |
+| [MCP/conversation private envelopes](mcp-conversation-private-projection.md) | retained ADR-0058 MCP/fail-closed boundary and superseded first slice |
+| [Async event evolution](async-event-evolution.md) | unchanged measurement-first async decision |
+| [Performance architecture](performance-architecture.md) | unchanged evidence floors and non-claims |
+| [Headroom](headroom-iot-and-multitenancy.md) | non-current future boundaries |
 
-## Contract decisions resolved by ADR-0058
+The route inventory remains a frozen P7-T05 input; it is not an OPC contract.
 
-[ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
-is the Lane-CTR compatibility decision for MCP family and common conversation
-projection:
+## ADR-0058 preservation
 
-1. the common Agent conversation projection reuses or references existing Core
-   `Conversation` and `ConversationBinding`; vendor-native IDs remain opaque
-   origin bindings; additional projection is the Personal-private envelope
-   `cognitiveos.personal.conversation-projection/0.1`;
-2. MCP server, package, connection, capability, binding, health, and quarantine
-   stay Personal-private as `cognitiveos.personal.mcp-family/0.1`;
-3. P5 MCP Tool/adapter-era records do not auto-migrate into seventh-family
-   identities;
-4. older clients fail closed on the 1.0 six-family projection and Core
-   `ConversationBinding`; unknown envelope identifiers are refused, not
-   down-converted.
-
-Goal -> Plan revision -> Task -> Attempt, execution-flow, Harness, and
-cross-Agent handoff public contracts remain undecided here and stay
-`Requires-backend` for `P10-T06` and `P10-T13`. Provider-profile override and
-federated synchronization shapes likewise remain private/product concepts until
-a later contract decision selects a public surface.
+MCP remains `cognitiveos.personal.mcp-family/0.1`; Core and the 1.0 six-family
+projection remain unchanged/fail-closed; P5 records do not auto-migrate.
+ADR-0059 supersedes only dsh Path B as the first common-conversation slice.
+`cognitiveos.personal.conversation-projection/0.1` is not reinterpreted; the
+Personal-owned archive shape needs a new private version or future Lane-CTR.
 
 ## Source ownership and non-claims
 
-When these documents disagree with another source:
-
-1. machine shape and registered transitions come from `core/specs/`;
-2. behavioral semantics come from applicable normative companions and
-   `docs/standards/`;
-3. Personal product decisions come from accepted Personal ADRs;
-4. formal tasks and Gates come from the Personal development plan;
-5. current facts come only from `PROGRESS.md` Current snapshot;
-6. these architecture chapters are corrected to match those sources.
-
-Architecture presence is not implementation evidence. Implementation presence
-is not by itself a Gate, release, Profile, or Agent-benefit result.
+Machine contracts come from Core specs; behavior from applicable standards;
+product decisions from accepted ADRs; tasks from the formal plan; current facts
+from `PROGRESS.md`. Architecture presence is not implementation, support,
+qualification, Gate, release, Profile, performance, or Agent-benefit evidence.

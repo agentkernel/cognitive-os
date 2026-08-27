@@ -12,12 +12,12 @@ generated: false
 明缺少哪段接线。
 
 阅读任何 Personal 2.0 陈述时都要对照当前边界：当前 Linux/API 组合为六族、只有 Pi
-资格化，且已有位于 `clients/pc/web/` 的同源 `/ui/` SPA。Personal 2.0 是完整产品版本
-承诺：各自独立资格化的 Windows、macOS、Linux 本地路径；精确 Pi、DeepSeek Harness
-Developer Preview 与受官方平台限制的 Codex desktop 路径；Account Hub、第七 MCP 族、
-嵌入式对话、Goal/Plan/Task/Attempt 与多 Agent 监督、统一 Activity、控制与联邦资源。
-每个缺失项都是标为 `Requires-backend`/`Requires-core` 的 release blocker，不是实现
-事实。
+资格化，且已有位于 `clients/pc/web/` 的同源 `/ui/` SPA。Personal 2.0 是
+Windows-first OPC target，包含 Project/Role/Employee/Routine/Attempt authority、
+Personal-owned Conversation/Vault/Memory、hidden Pi Assistant engine、preinstalled
+managed DSH child、Provider/budget hierarchy 与 OPC UI。每个缺失项都是
+`Requires-backend`/`Requires-environment`，不是实现事实。MCP advanced/deferred；
+native mobile/E2E relay remote 属于 2.1。
 
 导引：
 

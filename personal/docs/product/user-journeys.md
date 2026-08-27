@@ -1,568 +1,207 @@
-# CognitiveOS Personal user journeys
+# CognitiveOS Personal 2.0 user journeys
 
-- Status: current journeys plus full Personal 2.0 product-version target
-- Change class: product-semantic
-- Product intent and acceptance: [Product design](product-design.md)
-- Current release boundary: [Linux 1.0 scope](linux-1.0-scope.md)
-- Exact target inclusion and capability status:
-  [Personal 2.0 scope](personal-2.0-scope.md)
-- Resource semantics: [Cognitive resource model](cognitive-resource-model.md)
+- Status: adopted target journeys; not usability or implementation evidence
+- Product intent: [Product design](product-design.md)
+- Product model: [OPC product model](opc-product-model.md)
+- Scope: [Personal 2.0](personal-2.0-scope.md)
 
-Every journey separates visible interaction from authority facts. Agents,
-adapters, native panels, MCP servers, and the global Agent Shell may explain,
-translate, propose, or observe. The Rust daemon alone resolves identity,
-authorizes, persists Intent/Effect, dispatches, reconciles, and accepts.
+Every journey separates candidate explanation from daemon authority. The
+Personal Assistant, manager, employee, Pi, DSH, UI, and connector may propose,
+observe, or execute admitted bounded work. Only the daemon authorizes and
+accepts; independent verification, not Agent self-report, closes work.
 
-These journeys serve the unified resource-stewardship outcome owned by
-[Product design §2](product-design.md#2-product-definition-icp-trigger-and-outcome).
-They are product hypotheses because there is no external human research. Their
-ordered behavior and AI-window scenarios do not establish human desirability,
-usability, adoption, willingness to pay, or problem-solution fit.
+## 1. Create and activate the first Project
 
-## 0. Reality ledger
+1. From Today or Projects empty state, choose **Create Project**.
+2. A resumable conversation captures the business situation and optional
+   source-backed research.
+3. The Owner and Personal Assistant refine charter, goals, metrics, team,
+   first plan, permissions, budgets, and triggers.
+4. The daemon produces a structured diff with sources, unknowns, risk,
+   requested capability, and cost boundary.
+5. The Owner edits, rejects, or confirms the exact revision.
+6. Creation ends on the active Project briefing and durable receipt.
 
-| Boundary | Journey truth |
+Required setup states:
+
+| State | Treatment |
 |---|---|
-| **Current implementation (Now)** | Linux 1.0 provides the Pi-qualified six-family path. `/ui/` provides Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel is separate. |
-| **Personal 2.0 full-version target** | Cross-platform local stewardship of exact Pi, DeepSeek Harness Developer Preview, supported-platform Codex desktop, accounts, seven resource families, native conversations, Goal -> Plan revision -> Task -> Attempt work, multi-Agent handoffs, unified Activity, controls, and recovery. |
-| **Requires-backend** | Cross-platform and Agent qualification, embedded conversations, onboarding/catalog, Goal -> Plan revision -> Task -> Attempt, controls, multi-Agent orchestration, federated sync, account import/runtime methods, Global Agent Shell, unified Activity, and MCP management. |
-| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. Only a new/changed public MCP, conversation extension, Goal, Plan, Run, Harness, or attempt machine surface requires P10-T02/Lane-CTR. |
-
-## 1. Connect an exact Agent and reach first chat
-
-**Personal 2.0 full-version target**
-
-1. The user opens Home or Agents and chooses **Add Agent**.
-2. Step 1 offers the exact qualified Pi path, DeepSeek Harness Developer
-   Preview from
-   [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness),
-   or the Codex experience in the current official ChatGPT desktop app on an
-   officially supported and independently qualified platform. The user may
-   choose a signed upstream record or **Connect existing**.
-3. The product shows source, product identity, version, platform, signature or
-   trust facts, license, adapter compatibility, capability coverage, and
-   qualification boundary before installation or connection.
-4. The next step is one review for Provider/profile, Standard Workspace,
-   observation scope, and requested permissions. Optional configuration is
-   deferred.
-5. That review establishes the exact observation scope; no speculative/global
-   session scan or surprise per-session enrollment occurs.
-6. The final step opens the Agent's embedded native conversation. The setup is
-   not labelled ready until a real model response arrives.
-7. The conversation remains Native. The next milestone is
-   **Manage with Personal** and one governed and verified Task.
-
-Agent and platform evidence stays independent:
-
-- Pi evidence qualifies only the exact Pi path and platform named by that
-  evidence;
-- DeepSeek Harness remains labelled **Developer Preview** and is not a
-  DeepSeek Provider or model qualification;
-- Codex desktop is distinct from Codex CLI, web, IDE, ChatGPT account,
-  Provider, and model evidence; no Linux Codex desktop is implied.
-
-If time-to-first-response or onboarding-step results are reported, the record
-declares the start event, prerequisites, eligible denominator, platform,
-Agent, environment, and not-run cases.
-
-**Failure and recovery**
-
-- Missing or locked SecretStore links to Account Hub without discarding Agent
-  selection.
-- Provider/model failure retains the review and names whether reachability,
-  credential, model, or native adapter is at fault.
-- Permission denial preserves a narrower or native-only path when safe.
-- Installation or connection failure preserves source and review state and
-  offers retry only when the daemon says retry is safe.
-- An unsupported Agent/platform pair remains explicitly unavailable. It is not
-  substituted with CLI, Provider, model, bridge, or another platform's
-  qualification.
-
-**Current implementation (Now)**
-
-The current Control Plane can inspect bounded Agent facts and manage current
-Provider bindings, but cannot run this onboarding or embed a conversation. The
-qualified Pi conversation path and separate native dsh panel remain available.
-
-**Dependency:** cross-platform and Agent qualification, onboarding/catalog,
-embedded conversation, and full lifecycle stewardship are
-**Requires-backend**. This journey invents no route or schema.
-
-## 2. First governed and verified success
-
-**Personal 2.0 full-version target**
-
-1. In a useful Native Conversation, the user chooses **Manage with Personal**.
-2. The global Agent Shell explains that native conversation and Agent plan are
-   not yet governed and proposes the smallest durable outcome.
-3. The daemon previews admission of a persistent Goal, initial daemon-owned
-   Plan revision, bounded Task, Agent, workspace, Context sources, permissions,
-   budget, external effects, and acceptance criteria.
-4. The user confirms the consequential preview once.
-5. The daemon admits the Goal, initial Plan revision, and Task, then starts
-   attempt 1 under that Task.
-6. Work shows one execution flow with Native, Observed, and Governed events
-   clearly separated.
-7. Agent text, Tool output, and process exit remain observations. Effects are
-   reconciled and an independent verifier evaluates the fixed criteria.
-8. The milestone is reached only when the Task has current Verified evidence
-   and daemon acceptance. The success state links to the Goal, durable receipt,
-   affected resources, and next action.
-
-**Failure and recovery**
-
-- Changed scope or stale versions require a new daemon preview.
-- Missing Context or permission fails closed and preserves the Goal draft.
-- Unknown external outcome moves to reconciliation; it is never silently
-  retried.
-- Failed verification preserves attempt 1 and offers a bounded correction,
-  retry, or checkpoint fork only when supported.
-
-**Current implementation (Now)**
-
-Current `/ui/` implements the governed intent/interpret/preview/admit chain and
-Task evidence reading. It has no persistent Goal or daemon-owned Plan API and
-no common native-conversation projection or retry/fork control. Existing Core
-Conversation/ConversationBinding contracts are reused but are not a Control
-Plane implementation. The current Task path can demonstrate governed,
-independently verified success without claiming the Personal 2.0 wrapper.
-
-**Dependency:** Goal -> Plan revision -> Task -> Attempt and target controls are
-**Requires-backend**; only new public machine semantics conditionally require
-P10-T02/Lane-CTR.
-
-## 3. Daily Goal → Plan → Tasks execution
-
-**Personal 2.0 full-version target**
-
-1. Home resumes the most relevant active Goal with current Plan revision,
-   blockers, last verified outcome, and next action.
-2. In Work, the user reviews a plain-language Plan. The inspector shows exact
-   revision, authority, Context, budgets, and dependencies.
-3. The hierarchy is Goal -> Plan revision -> Task -> Attempt. The daemon
-   decomposes the admitted Plan into one or more Tasks. If multiple
-   Agents are useful, it owns the graph and issues explicit handoffs; Agents do
-   not transfer authority to each other.
-4. Each Task starts an attempt bound to its Agent runtime engine, Context, and
-   epoch. Native Agent plans and conversations remain source-labelled.
-5. The execution flow shows what is Native, Observed, Governed, and Verified.
-   Counts appear only with a declared denominator; no fake percentage or ETA is
-   inferred from model narration.
-6. A Plan revision preserves prior revisions and explains why Tasks changed.
-   Consequential scope changes receive a fresh daemon preview and one
-   confirmation.
-7. Completion rolls up only from independently verified Tasks with reconciled
-   Effects. A Goal can remain open even after one Task completes.
-
-**Recovery**
-
-- A failed Agent handoff blocks downstream governed work rather than cascading.
-- A stale Plan or Context revision requires reload and review.
-- Returning tomorrow resumes from durable Goal/Task facts, not browser memory.
-- Switching Agent or Provider for current work is explicit and preserves the
-  previous attempt.
-
-**Current implementation (Now)**
-
-The current UI has Task inventory/detail and a composed execution reading. It
-has no Goal, Plan, first-class Run, Harness, Conversation, multi-Agent graph, or
-attempt API.
-
-**Dependency:** the target journey is **Requires-backend**. New public concepts
-conditionally require P10-T02/Lane-CTR; Personal-private projections may not.
-
-## 4. Use the Library without collapsing resource boundaries
-
-**Current implementation (Now)**
-
-1. The user may remember or forget admitted Memory. Candidate, admission,
-   provenance, version, expiry, conflict, and tombstone remain distinct.
-2. The user may import, inspect, bind, and revoke immutable Skill revisions.
-   Skill content grants no execution permission.
-3. The user may inspect and govern registered Tools. Unknown, drifted,
-   disabled, quarantined, or revoked operations cannot dispatch.
-4. Context is inspected with its Task in Work; Runtime is inspected with its
-   Agent. Neither belongs in the Library navigation.
-
-**Personal 2.0 full-version target**
-
-Library contains Memory, Skills, Tools, and MCP. Vendor-native resources are
-mapped through adapters with origin and sync state. Personal owns governance
-and bindings, not the native content. A Skill script still executes only
-through an independently registered and authorized Tool. An MCP server
-connection still grants neither Tool nor Context permission.
-
-**Dependency:** federated mapping and bidirectional sync are
-**Requires-backend**. MCP implementation is **Requires-backend**; only a
-new/changed public MCP machine surface conditionally requires P10-T02/Lane-CTR.
-
-## 5. Import an existing account credential
-
-**Personal 2.0 full-version target**
-
-1. In Settings → Account Hub, the user chooses a Provider preset or custom
-   OpenAI-compatible endpoint and selects **Import existing credential**.
-2. The daemon names the exact source and target SecretStore before reading.
-   The user consents per source; there is no background scan.
-3. The user reviews redacted source kind, target profile, Provider endpoint,
-   and source-retention choice. Retention is the default; secure deletion is a
-   separate per-import choice.
-4. The daemon reads the owner-designated source through the ADR-0055
-   non-logging boundary and writes directly to the approved SecretStore. No new
-   plaintext copy is created.
-5. A bounded probe reports reachability, credential, model, and capability
-   facts separately. Failure preserves the source and entered configuration.
-6. The user selects whether the profile is a global default, Agent override, or
-   conversation override. Any current session rebind/restart is explicit.
-7. The receipt contains redacted metadata and audit identity only.
-
-**Failure and permission**
-
-- A locked source or SecretStore does not expose material and offers unlock or
-  another account method.
-- Unsupported source format stays unavailable; it is not guessed.
-- Import success does not imply Provider reachability or model availability.
-- Secret material never enters browser storage, Agent config, logs, evidence,
-  SQLite, argv, environment, or chat.
-
-**Current implementation (Now)**
-
-Current Provider management supports API-key handoff to SecretStore, model
-catalog, custom OpenAI-compatible accounts/endpoints, fixed Agent binding,
-usage, budgets, alerts, and audit. ADR-0055 authorizes the import boundary but
-explicitly does not implement it.
-
-**Dependency:** credential import, subscription/OAuth, expanded presets, and
-override hierarchy are **Requires-backend**.
-
-## 6. Install and project an MCP server
-
-**Personal 2.0 full-version target**
-
-1. In Library → MCP, the user chooses a server source and reviews identity,
-   version, trust/provenance facts, requested permissions, compatible Agent
-   clients, and update behavior.
-2. The daemon previews installation and any external mutation. Connection alone
-   grants no Tool, Context, workspace, model, or host-session authority.
-3. After confirmation, the daemon installs/registers the server through the
-   family-specific workflow and reports health separately from permission.
-4. The user selects compatible Agent clients. Vendor-native session APIs are
-   preferred for projection.
-5. Where no native API exists, MCP plus vendor rules may cooperatively update
-   configuration. It cannot control the host Agent session.
-6. After the first explicit authorization, an admin-preauthorized configuration
-   may be applied automatically only within that exact scope. Permission
-   expansion always receives a new preview and confirmation.
-7. Library shows server health, permissions, update state, projected clients,
-   and conflicts. Exposed capabilities become eligible Tools or Context inputs
-   only through their own mapping and authorization.
-
-**Failure and recovery**
-
-- Unhealthy server and denied permission are separate states.
-- Partial client projection lists each successful and failed target.
-- A host Agent may require explicit restart/reload; Personal does not claim to
-  control it through MCP.
-- Update failure preserves the last known usable version when the underlying
-  lifecycle supports that outcome; otherwise the state remains explicit.
-
-**Current implementation (Now)**
-
-MCP is outside the six-family Linux 1.0 model and no Personal MCP family manager
-exists.
-
-**Dependency:** MCP family implementation is **Requires-backend**. A new or
-changed public machine surface conditionally requires P10-T02/Lane-CTR; a
-Personal-private projection may not.
-
-## 7. Detect and resolve a federated-resource conflict
-
-**Personal 2.0 full-version target**
-
-1. An authorized adapter detects that a vendor-native Skill, Memory, Tool
-   description, MCP configuration, or related binding changed at its origin.
-2. Personal records the observation and compares it with the last admitted
-   binding/sync fact. Read and change detection may be automatic only inside
-   the explicit observation scope established when the Agent was connected.
-3. If there is no conflict, the origin-owned content remains native and
-   Personal refreshes its governed projection.
-4. If native and Personal-side changes conflict, synchronization fails closed.
-   No side wins by timestamp or model judgment alone.
-5. The global Agent Shell explains the origin, changed facts, affected Agents
-   and work, and the family-specific resolution choices available from the
-   daemon.
-6. Every write-back retains daemon Intent/Effect. Because this journey is
-   conflicted, the daemon previews the exact target/consequence and the user
-   confirms once. Unconflicted writes may run automatically only inside an
-   unchanged exact daemon grant/risk policy.
-7. Activity records Native/Observed/Governed facts separately. Verification is
-   attached only when an independent check exists.
-
-**Current implementation (Now)**
-
-Current Personal resource operations do not provide general bidirectional
-vendor-resource synchronization.
-
-**Dependency:** adapter change detection, sync state, guarded write-back, and
-conflict resolution are **Requires-backend**. Public sync contracts, if needed,
-conditionally require P10-T02/Lane-CTR.
-
-## 8. Disconnect or uninstall an Agent
-
-**Personal 2.0 full-version target**
-
-1. From an Agent inspector, the user chooses Remove.
-2. The product asks a required first question:
-   - **Disconnect** Personal management and preserve the native installation;
-   - **Uninstall** the Personal-managed installation after an impact preview.
-3. The daemon shows affected conversations, Goals, Plan revisions, Tasks,
-   Task-owned attempts, bindings, runtime engines, pending Effects, and retained
-   data without conflating them.
-4. Disconnect revokes Personal bindings and observation according to the exact
-   preview; it does not claim to delete vendor-native data.
-5. Uninstall follows the daemon-owned lifecycle, fences new work, reconciles or
-   exposes pending Effects, and preserves governed history unless a separately
-   confirmed retention action applies.
-6. The receipt states what was removed, retained, unknown, or incomplete.
-
-**Current implementation (Now)**
-
-The Control Plane has no full Agent lifecycle HTTP surface. Current lifecycle
-operations remain outside this UI and must not be represented as working
-buttons.
-
-**Dependency:** disconnect/uninstall projection and typed controls are
-**Requires-backend**.
-
-## 9. Recover work without erasing attempts
-
-**Personal 2.0 full-version target**
-
-1. Work states exactly what failed: conversation transport, Agent runtime
-   engine, Task, Effect, Context source, Provider, MCP server, or watch.
-2. The global Agent Shell explains available controls without exercising them.
-3. The user chooses among the controls the daemon genuinely supports:
-   - **Interrupt** the current interaction;
-   - **Pause/Resume request** for governed work;
-   - **Cancel** the Task;
-   - **Detach** observation only;
-   - **Retry** or **Fork from checkpoint** into a new attempt;
-   - **Restart/Recover** the Agent runtime engine;
-   - **Compensate** an external effect only when a defined compensation exists.
-4. The daemon previews consequential scope, pending/unknown Effects, checkpoint
-   compatibility, and what cannot be undone.
-5. Recovery reloads durable facts, fences stale work, reconciles unknown
-   Effects, reauthorizes current policy, and rebuilds Context before dispatch.
-6. A retry/fork preserves the failed attempt and its evidence. Current and
-   prior attempts remain inspectable under their Task in the same Goal
-   timeline.
-7. The outcome is Verified only after current independent verification.
-
-**Current implementation (Now)**
-
-Current `/ui/` can attach/detach bounded Task observation; detach does not
-cancel or stop anything. It has no Task pause/cancel/retry controls and no full
-Agent restart/recover API. Killing a process is not pause, cancellation,
-recovery, or completion.
-
-**Dependency:** the target controls and attempt model are
-**Requires-backend**. New public control/attempt semantics conditionally require
-P10-T02/Lane-CTR.
-
-## 10. Current deterministic stewardship
-
-These are **Current implementation (Now)** Linux/daemon journeys and remain
-available as the Personal 2.0 UI evolves:
-
-- Agent/package upgrade uses exact source and digest, stages immutable bytes,
-  validates compatibility, preserves the prior complete binding for rollback,
-  and exposes incomplete rollback honestly. Pi evidence qualifies only Pi.
-- Product upgrade, rollback, and uninstall use the same signed artifact,
-  daemon, and application services across desktop, headless, and foreground
-  modes. No mode creates a second authority writer.
-- Backup/restore excludes secrets, verifies integrity and compatibility, and
-  requires secrets to be rebound through an approved SecretStore.
-- Deleting user data, changing external state, or removing a managed
-  installation receives a daemon preview and retains durable receipts.
-
-The current Control Plane exposes bounded system stewardship such as
-backup/restore, but full Agent lifecycle remains outside its HTTP surface.
-Personal 2.0 may regroup these journeys under Settings; regrouping does not
-change their authority semantics.
-
-## 11. Empty, loading, error, permission, and stale journeys
-
-These states apply to Home, Agents, Work, Library, Activity, Settings, the
-global Agent Shell, and every onboarding/import flow.
-
-| State | User sees | Recovery |
-|---|---|---|
-| **Empty** | why no Agent, conversation, Goal, resource, account, MCP server, or activity exists | one concrete create/connect/import action; filter-empty also offers clear filters |
-| **Loading** | the exact source being read or mutation awaiting authority; stable content remains in place | leave/detach when safe; no fake progress bar |
-| **Partial** | available facets plus the missing source and coverage boundary | continue with safe facts or repair the missing source |
-| **Error** | what failed, where, whether input/work was preserved, and whether retry is safe | retry, edit, choose alternate path, copy redacted details, or open support |
-| **Permission** | exact requested scope, reason, consequence, and current narrower capability | deny, grant the bounded scope, or select a narrower/native-only path |
-| **Stale** | last known fact, age/freshness, and actions unsafe until refresh | refresh/re-authenticate; never infer current progress or completion |
-| **Disconnected** | which watch, adapter, Agent, server, or daemon link was lost | reconnect or remain detached; work state stays unknown unless authority says otherwise |
-| **Success** | durable receipt, affected object, source/authority badge, and next valuable action | continue conversation, open Goal, inspect evidence, or return to the previous list |
-
-Long-running setup, import, installation, synchronization, and execution must
-also define cancel/detach/retry/resume honestly. If the backend lacks a control,
-the state explains that absence instead of drawing a fake control.
-
-## 12. Diagnosis and fixed boundaries
-
-`cognitive doctor --bundle` and System gather redacted platform, service,
-database, SecretStore state, Provider, workspace, Agent, Tool, Context, Task,
-Process, Effect, and recovery facts. Support output distinguishes known,
-unknown, stale, and not-run without prompts, raw Provider traffic, key
-material, resolvable SecretRefs, or sensitive content.
-
-Personal 2.0 does not install a kernel module, eBPF control plane, device
-scheduler, or distributed authority. It remains owner-local. Hardware or
-native integration cannot bypass daemon authorization, CAS/epoch, budget,
-Intent/Effect, reconciliation, or independent acceptance.
-
-No journey here is a Gate, release, Profile, performance, containment, or
-Agent-benefit claim.
-
-## 13. Frozen AI-window simulated product acceptance
-
-The product-acceptance manifest is fixed at eight scenarios. Each scenario has
-`N=1`. A scenario enters the numerator only when every expected product-visible
-result is present and no forbidden claim appears. Full pass requires **8/8**.
-Failed, partial, and not-run scenarios remain in the denominator and cannot be
-replaced. S3 is platform-conditional under
-[product design §12](product-design.md#12-measurement-simulated-acceptance-and-non-claims)
-(owner decision 2026-08-27): while no officially supported Codex desktop
-platform is inside the active execution scope, S3 is recorded as
-`not-run (platform-conditional)`; Linux-mainline acceptance closes at seven
-platform-eligible passes plus that explicit S3 disposition, and the full 8/8
-result remains the full-version requirement.
-
-The AI window receives product-visible facts only. A human may review its
-record, but the result remains simulated product evaluation. It is not human
-research, usability evidence, adoption evidence, willingness-to-pay evidence,
-problem-solution-fit evidence, or release/Gate technical validation.
-
-### S1 — Pi stewardship (`N=1`)
-
-- **Setup:** one exact Pi package/sidecar/platform fixture whose qualification
-  boundary is declared; one valid account and Standard Workspace.
-- **Action:** connect or inspect Pi, receive one real native response, inspect
-  current health, then choose Disconnect.
-- **Expected visible result:** exact Pi source, version, platform, capability
-  coverage, health, Native conversation state, observation scope, and retained
-  native installation after Disconnect.
-- **Forbidden claim:** Pi evidence qualifies DeepSeek Harness, Codex desktop,
-  another platform, or the complete Personal 2.0 release.
-
-### S2 — DeepSeek Harness Developer Preview stewardship (`N=1`)
-
-- **Setup:** one exact revision and profile from
-  [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness)
-  on one declared Personal platform.
-- **Action:** connect the native Harness session, receive a real response,
-  inspect session/trajectory state, and exercise one supported resume or fork.
-- **Expected visible result:** exact upstream identity, revision, profile,
-  platform, capability coverage, current session state, preserved prior
-  trajectory, and explicit **Developer Preview** status.
-- **Forbidden claim:** a DeepSeek model or Provider is the Agent product;
-  Developer Preview is stable release qualification; or evidence transfers to
-  Pi, Codex desktop, or another platform.
-
-### S3 — Codex desktop stewardship (`N=1`)
-
-- **Setup:** one exact official ChatGPT desktop app build with the Codex
-  experience on an officially supported and independently declared platform.
-- **Action:** connect an existing Codex project/session, receive a real
-  response, inspect current project/session work, and exercise one supported
-  continuation or recovery action.
-- **Expected visible result:** exact official product/build, platform,
-  project/session identity, capability coverage, current state, and explicit
-  distinction from Codex CLI, web, IDE, ChatGPT account, Provider, and model.
-- **Forbidden claim:** Codex desktop exists on Linux; CLI or Provider evidence
-  qualifies desktop; or one supported desktop platform qualifies another.
-
-### S4 — Native conversation to governed work (`N=1`)
-
-- **Setup:** one useful Native Conversation on an independently declared Agent
-  path, with bounded workspace, Context, permission, budget, and acceptance
-  criteria.
-- **Action:** choose **Manage with Personal**, review the daemon preview, and
-  confirm once.
-- **Expected visible result:** the native conversation remains source-labelled;
-  the daemon admits one persistent Goal, current Plan revision, bounded Task,
-  and attempt 1; completion appears only after current independent verification
-  and daemon acceptance.
-- **Forbidden claim:** observation, fluent Agent text, Provider response, Tool
-  result, harness success, or process exit creates authority or completion.
-
-### S5 — Multi-Agent handoff and unified Activity (`N=1`)
-
-- **Setup:** one admitted Goal with at least two independently declared Agent
-  products, bounded Tasks, explicit handoff criteria, and declared Activity
-  sources.
-- **Action:** complete one source Task, issue one daemon-owned handoff, and
-  inspect the downstream Task and merged Activity.
-- **Expected visible result:** source, target, bounded work, authority,
-  readiness/blocker, and Native/Observed/Governed/Verified facts remain
-  distinct; missing source coverage is explicit.
-- **Forbidden claim:** Agents transfer authority to each other; Activity is a
-  confidence/progress percentage; or the scenario proves multi-Agent benefit.
-
-### S6 — Recovery and attempt preservation (`N=1`)
-
-- **Setup:** one governed Task whose first attempt has a declared failure or
-  unknown Effect and whose current daemon capability names the supported
-  controls.
-- **Action:** inspect the failure, then detach, retry/fork, or recover through
-  one genuinely supported control.
-- **Expected visible result:** detach changes observation only; the first
-  attempt and evidence remain; an unknown Effect enters reconciliation; a new
-  attempt receives a distinct identity; current verification is required
-  before completion.
-- **Forbidden claim:** detach is cancel; process exit is recovery; unknown work
-  may be blindly redispatched; or compensation is rollback.
-
-### S7 — Account, resource, and secret boundaries (`N=1`)
-
-- **Setup:** one declared account/profile and at least one object from each
-  currently available family, with source, permission, and observation scope.
-- **Action:** connect or select the account, inspect resource state, and change
-  or revoke one bounded binding.
-- **Expected visible result:** Agent, account, Provider, model, resource,
-  installation, and session identities stay separate; source, authority,
-  current/unknown state, and next action are explicit; no secret material is
-  product-visible.
-- **Forbidden claim:** account import proves Provider reachability; connection
-  grants permission; or secret material may enter an Agent, browser storage,
-  ordinary config, SQLite, argv, environment, logs, evidence, or chat.
-
-### S8 — MCP and federated-resource conflict (`N=1`)
-
-- **Setup:** one exact MCP server target and one origin-owned native resource
-  with a staged Personal/native conflict inside a declared observation scope.
-- **Action:** connect/project the MCP server, inspect health and permission
-  separately, detect the conflict, and request a conflicting write-back.
-- **Expected visible result:** MCP remains the seventh family; connection grants
-  no Tool/Context/workspace/model/host-session authority; origin and sync
-  coverage remain explicit; conflict fails closed; the daemon issues the exact
-  preview before any write-back.
-- **Forbidden claim:** MCP connectivity qualifies an Agent, Tool, server, or
-  host session; timestamp or model judgment resolves conflict; or the scenario
-  proves human adoption or broad MCP ecosystem support.
-
-### Aggregate disposition
-
-```text
-simulated product acceptance
-  = passed frozen scenarios / 8
-  = 8 / 8 required
-```
-
-The report records each scenario as `pass`, `fail`, `partial`, or `not-run`.
-An S3 `not-run` caused by the platform-conditional rule records the reason
-`platform-conditional` and follows product design §12. No count, percentage,
-timing, or ETA is published without its declared denominator, setup, and
-evidence boundary.
+| `local-draft` | browser/client draft is preserved but not authority |
+| `daemon-draft` | draft has a daemon identity and version; still inactive |
+| `researching` | sources, coverage, cancellation, and partial findings are visible |
+| `waiting` | names the exact Owner input or permission needed |
+| `re-preview` | an earlier preview is stale; diff and user edits are preserved |
+| `creating` | durable operation and safe-leave behavior are visible |
+| `failed` | names the failed stage, retained draft, and retry/edit path |
+| `active-receipt` | charter revision, Project id, first plan, team, and next action |
+
+The Project is not active before confirmation. A research result or assistant
+message cannot activate it.
+
+## 2. Use Today without a KPI wall
+
+The returning Owner opens Today and sees a short priority narrative:
+
+1. what is planned today;
+2. what needs the Owner;
+3. which Project or employee changed state;
+4. which work was missed or is stale;
+5. the latest verified result and actual/unknown cost;
+6. one next action per item.
+
+Project health uses goals, current plan, responsibility, state, freshness, and
+evidence—not decorative metrics. A Project card opens its briefing while
+preserving the Today filter and scroll position.
+
+## 3. Read a Project briefing and revise its plan
+
+The briefing answers goal, current phase, manager summary, today's work, team
+state, Inbox items, latest artifacts/evidence, and spend basis. The Owner may
+talk to the manager or inspect Goal -> Plan revision -> Routine/Task ->
+Attempt -> Effect/Evidence.
+
+A manager can autonomously reorder approved Tasks or change a member's bounded
+responsibility. A primary-goal, team, budget, Provider, tool, permission, or
+external-rule change creates a revision candidate and daemon preview. Rejection
+keeps the draft and current plan; confirmation produces a new revision and
+receipt without erasing prior plans or Attempts.
+
+## 4. Add a role and converse with an employee
+
+1. Team shows the base Project Manager and current employees.
+2. The Owner asks the Personal Assistant for a new business role.
+3. The assistant proposes a Role Blueprint and Project Assignment with
+   capability, permission, budget, and collaboration expectations.
+4. The daemon previews creation; the Owner confirms.
+5. The employee card shows responsibility, state, next work, latest verified
+   result, cost, memory scope, and DSH runtime health.
+6. Opening its Conversation changes the active composer from Personal
+   Assistant to employee; the assistant draft is retained.
+
+Only one composer may submit at a time. Switching contexts preserves both
+drafts and visibly names the active recipient. Conversation text does not
+change Project authority until admitted.
+
+## 5. Import knowledge and retrieve bounded context
+
+1. Knowledge offers Owner-shared knowledge or a selected Project Vault.
+2. The Owner imports files, directories, links, images, or video metadata.
+3. Personal copies permitted source material into the selected archive,
+   preserves source/provenance, detects duplicates and credentials, and shows
+   parsing/OCR/index progress.
+4. Parse failure preserves the original and permits retry, exclusion, or manual
+   classification.
+5. Ordinary knowledge edits reindex. A goal/role/permission/workflow-like edit
+   becomes a candidate and cannot silently mutate authority.
+6. Retrieval shows scope, source, freshness, redaction, and why a fragment was
+   selected.
+
+Conversation archives can participate, but Personal injects only relevant,
+bounded, redacted, provenance-bearing, untrusted observations. Semantic Memory
+requires admission and supports view, correction, and forget.
+
+## 6. Approve or recover work from Inbox
+
+Inbox is a priority queue for approvals, requested input, permissions,
+execution blocks, unknown Effects, missed runs, and budget warnings.
+
+An item answers: Project/employee, reason, consequence, affected targets,
+reversibility, source/freshness, deadline or age, and next safe actions.
+Approval shows the exact structured diff and does not rely on chat alone.
+Narrow/deny/edit are first-class choices. Unknown external outcomes expose
+reconcile status; retry is absent until daemon policy says it is safe.
+
+After an error, typed input and draft work remain. A successful action ends in
+a receipt linked to the affected Project object.
+
+## 7. Schedule, miss, and resume a Routine
+
+1. A Routine revision defines bounded work, trigger, no-overlap policy,
+   budget, and risk class.
+2. Manual, schedule, or qualified platform event creates a run request.
+3. If one is active, only the latest pending occurrence is queued; superseded
+   occurrences remain in the ledger.
+4. Sleep/offline pauses dispatch and produces missed facts.
+5. On return, Personal shows what was missed and why.
+6. Low-risk internal work may resume under policy; publishing,
+   communication, spending, permission expansion, or other consequential work
+   returns to Inbox for fresh review.
+
+Closing the window asks **Continue eligible work in background** or **Pause**.
+The choice is explicit and remembered only as a policy revision. Host shutdown
+never implies 24/7 work.
+
+## 8. Inspect Installed Agents, Providers, and usage
+
+Settings > Installed Agents shows DSH as **Preinstalled / Managed by Personal**
+with source, exact artifact, version, health, capability boundary, sandbox
+status, update, and rollback. Everyday employee pages show DSH only as the
+execution engine. There is no native DSH UI or conversation synchronization.
+
+Settings > Providers keeps subscription, account/authentication, API billing/
+quota, model, binding, budget, and usage separate. Effective binding is
+global -> Project -> employee -> Task. Pi and DSH receive Provider traffic
+through the daemon proxy and never receive raw credentials.
+
+Unknown quota or cost is not zero. An update, rotation, or binding change shows
+affected Projects/employees/Tasks and whether a runtime restart is required.
+
+## 9. Run the X/Twitter content-operation acceptance scenario
+
+1. Owner and manager confirm account position, audience, allowed content
+   forms, cadence, metrics, source-rights rules, and budget.
+2. Employees research with provenance, plan, draft original content, and
+   produce a publication package.
+3. Only Owner-owned, licensed, open-license, or public-domain material may be
+   copied. Other sources support analysis, attribution, and new creation.
+4. Publishing through an independently qualified connector receives an exact
+   target/content/cost preview and Owner approval.
+5. Dispatch is an Intent/Effect operation. CAPTCHA, anti-abuse, account lock,
+   or UI drift fails closed; no fingerprint or policy evasion occurs.
+6. Receipt and later metric readback remain separate. Completion follows the
+   scenario oracle and independent evidence, not the employee's claim.
+
+The Project model remains generic; this scenario is the first important
+acceptance case, not a hard-coded success path or business-result promise.
+
+## 10. Archive, restore, export, or delete a Project
+
+Archive stops new triggers and preserves Project history. A same-disk local
+restore point can reverse eligible local changes but is labelled **not a
+disaster backup**. Manual export identifies included data and excludes secrets
+by default.
+
+Permanent deletion is a separate impact-preview action after archive. It names
+Project authority, files, Vault, conversations, Memory, artifacts, restore
+points, bindings, pending Effects, and what cannot be recovered. A second
+confirmation is required.
+
+## 11. Surface state contract
+
+Every Today, Projects, Team, Knowledge, Inbox, Settings, setup, Conversation,
+and inspector surface defines all applicable states:
+
+| State | Required answer |
+|---|---|
+| empty | why no object exists and the first value action |
+| loading | exact source/work, stable content, and safe-leave behavior |
+| partial | missing source/facet and what still works |
+| stale | last-known fact, age, unsafe actions, and refresh path |
+| permission | exact scope, reason, deny/narrow/grant paths |
+| error | failed stage, preserved work, safe retry/edit/escalation |
+| unknown | what cannot be concluded; never rendered as healthy/zero/success |
+| offline | host/network dependency, retained work, reconnect behavior |
+| missed | missed/coalesced work, risk class, resume/approval choice |
+| long-running | plan, current step, artifacts, real controls, blocked reason |
+| success | changed object, receipt/evidence, next valuable action |
+| archived | read/export/restore/delete options and trigger state |
+
+An unavailable backend is labelled **Requires-backend** and rendered as
+explanation/navigation, not an active-looking button.
+
+## 12. Evidence boundary
+
+These journeys are specifications. A prototype walkthrough may show coverage,
+but it is not human usability evidence or backend execution. Formal acceptance
+requires the fixed Phase 11 denominator, supported exact revision, and honest
+pass/fail/partial/not-run accounting.

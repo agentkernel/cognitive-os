@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:86f0192f3b32b0e73b067a18334c961a046c5e39def202dc2ace9a1015e56450"
+fingerprint: "sha256:1682148e6989f91e6a02af05fb3fe97710c682d904b249c1be207f80d36573c6"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -26,6 +26,13 @@ non_claims:
 
 Environment routing is a precondition, owned by
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
+
+Personal 2.0 Phase 11 adds a Windows OPC route: ordinary
+`CI-WINDOWS-MSVC-01` plus future qualified `DEV-WINDOWS-NATIVE-OPC-01` for
+host/DSH/Vault/UI/connector execution, then a preregistered N=15 acceptance at
+one qualified Windows revision. The native environment and B01-W are not
+provisioned. Local Windows GNU, WSL, Linux, ordinary CI and Canvas cannot
+substitute; record native cells `not-run` until available.
 
 ## Safe on every platform (including the Windows GNU host)
 

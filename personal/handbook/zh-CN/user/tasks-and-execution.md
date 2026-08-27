@@ -18,10 +18,13 @@ sources:
   - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
   - path: personal/docs/architecture/multi-agent-orchestration.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/project-role-employee.md
+  - path: personal/docs/architecture/routine-trigger-missed-run.md
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:d9567ec3f232b3c65dab013c45228056dd8e05e70cd4b095187d4119b731e110"
+fingerprint: "sha256:3b4a8ccb40131ee075242be4e0cb88ace0270332173b56e00dbad379844c99cd"
 non_claims:
   - 准入同一趟仍不消费 worker 授权、也不获取调度 lease；那是后续 tick 的事。不作 Gate、release、Profile 或 EVAL 升格。
 ---
@@ -66,29 +69,26 @@ report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。Regist
 Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 
-## Personal 2.0 受治理工作承诺（`Requires-backend`）
+## Personal 2.0 Project 工作（`Requires-backend`）
 
-当前持久工作对象仍是 **Task**。当前 daemon 没有 Goal 或 Plan API、没有持久 Plan
-revision 生命周期，也没有多 Agent supervisor。
+当前持久工作对象仍是 **Task**。OPC 目标在其上增加：
 
-完整版本目标新增：
+`Project -> Charter/Goal/Plan revision -> Routine -> Task -> Attempt`。
 
-- **Goal**：位于一个或多个 Task 之上的、由 owner 编写的持久结果；
-- **Plan revision**：对该 Goal 的不可变候选拆解。Agent 可以提出，但只有 daemon 签发
-  的 preview 与 admission 才能让某修订成为当前版本；
-- **Attempt**：恰好属于一个 Task 的保留执行或恢复分支；retry/fork 创建新 attempt，绝
-  不抹去旧 attempt；
-- **多 Agent 监督**：各自独立资格化的 Agent 经厂商专用适配器贡献有界 candidate。
-  daemon 负责分配、fencing、budget、Effect 仲裁与验证；Agent 之间绝不转交权威；
-- **联邦资源**：Plan 可按精确来源身份及 revision/freshness 引用 MCP 族资源，但发现或
-  提及不授予权限。
+Project setup 在 Owner 确认 daemon 签发的 charter/team/permission/budget/trigger
+preview 前保持 draft。每个 active Project 有一个 current manager。管理员可在批准
+envelope 内调整 subgoal、Task、顺序、频率和 responsibility；primary goal、team、
+budget、Provider、Tool、permission 或 external rule 变化必须形成新的 Owner-confirmed
+revision。
 
-这些概念不会重命名今天的 Task 行，也不能从现有 Pi/dsh 路径推断已实现。Pi 仍是当前
-唯一已资格化 Agent。Personal 2.0 要求精确 Pi、DeepSeek Harness Developer Preview 与
-受官方平台限制的 Codex desktop 路径各自独立资格化；CLI、Provider、model、account、
-bridge 或平台证据都不转移。Goal/Plan/Task/Attempt、多 Agent、统一 Activity、控制与联
-邦行为全是 release blocker，仍为 `Requires-backend`（需公开权威合同变化时为
-`Requires-core`）。
+每次 retry/fork 创建新的 Attempt，并保留旧 failure/evidence。Routine Trigger 可为
+manual、scheduled 或 qualified event；同一 Routine 不 overlap，只保留 latest pending
+occurrence，记录 coalesced/missed work，并在 offline 后对 consequential catch-up 再次
+询问。
+
+Digital Employee 通过 daemon-owned Task、artifact 与 handoff 协作。DSH 是目标默认
+runtime，但 process output 与 engine checkpoint 仍只是 observation。这些
+Project/Routine/Employee capability 当前不存在，也不重命名现有 Task row。
 
 ## 构造上绝不可能发生的事
 

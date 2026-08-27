@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:86f0192f3b32b0e73b067a18334c961a046c5e39def202dc2ace9a1015e56450"
+fingerprint: "sha256:1682148e6989f91e6a02af05fb3fe97710c682d904b249c1be207f80d36573c6"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -26,6 +26,13 @@ non_claims:
 
 环境路由是前置条件，由
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md) 拥有。
+
+Personal 2.0 Phase 11 新增 Windows OPC 路由：ordinary
+`CI-WINDOWS-MSVC-01` 加 future qualified `DEV-WINDOWS-NATIVE-OPC-01`，用于
+host/DSH/Vault/UI/connector execution；随后在同一 qualified Windows revision 上执行
+preregistered N=15 acceptance。native environment 与 B01-W 尚未 provision。本地
+Windows GNU、WSL、Linux、ordinary CI 与 Canvas 都不能替代；可用前 native cell 记
+`not-run`。
 
 ## 全平台安全（含 Windows GNU 主机）
 
