@@ -4,9 +4,10 @@
 - Current slice: `P10-T02/D03`
 - Change class: `normative-semantic Lane-CTR compatibility` (no public machine-contract change)
 - Branch: `personal/P10-T02-lane-ctr-compatibility`
-- Content revision (final head before this record): `c726ab11a789780462d8d0ef1161b99669518c92`
-- Pull request: [#279](https://github.com/agentkernel/cognitive-os/pull/279) (Draft at this record)
-- Status at this checkpoint: **acceptance recorded** — required CI green on the content head; merge, lease close, and branch deletion follow in the same task delivery
+- Content revision (final head): `f7b6223ae0f7f6aa1434acce635eeaa0de4b0645`
+- Merge revision: `main@6991b27ad4cbd0de3c58bfd0ac15d9ee24dc8516`
+- Pull request: [#279](https://github.com/agentkernel/cognitive-os/pull/279) (merged 2026-08-27)
+- Status at this checkpoint: **closed** — merged, lease closed, task and remote branches deleted, local `main` fast-forwarded
 
 ## Outcome
 
@@ -44,6 +45,7 @@ No MCP family store, conversation store, HTTP route, or UI was implemented. That
 | `git diff --cached --check` | **pass** |
 | `pnpm --filter @cognitiveos/repo-tools test` | **pass** — 106/106, including five P10-T02 cases |
 | Required CI [33048210670](https://github.com/agentkernel/cognitive-os/actions/runs/33048210670) on content revision `c726ab11` | **pass** — resolver 3s, Ubuntu 3m32s, Windows 11m33s, `required-ci` |
+| Required CI [33049261834](https://github.com/agentkernel/cognitive-os/actions/runs/33049261834) on final head `f7b6223a` | **pass** — resolver 2s, Ubuntu 3m24s, Windows 10m10s, `required-ci` |
 
 Rust linking was **not-run** on `DEV-WIN-GNU-01` (`RUST-LINK-DEV-WIN-GNU-01`). This batch did not change schema, so Lane-CTR generated-binding CI was not required beyond the ordinary Ubuntu/Windows verify jobs.
 
@@ -57,3 +59,11 @@ Rust linking was **not-run** on `DEV-WIN-GNU-01` (`RUST-LINK-DEV-WIN-GNU-01`). T
 - no Gate, release, Profile, B01, performance, containment, Provider-quality, marketplace-safety, or Agent-benefit promotion.
 
 `P10-T02` done does not mean MCP family authority is implemented. That is `P10-T03`.
+
+## Deterministic closure (completed)
+
+1. content head `c726ab11` and acceptance record `f7b6223a` pushed on 2026-08-27;
+2. required CI [33049261834](https://github.com/agentkernel/cognitive-os/actions/runs/33049261834) on `f7b6223a` passed resolver, Ubuntu, Windows, and `required-ci`;
+3. PR [#279](https://github.com/agentkernel/cognitive-os/pull/279) marked ready and merged as `main@6991b27a` on 2026-08-27;
+4. `P10-T02/D03` and `P10-T02` marked done; lease `lease/personal/P10-T02/lane-ctr-compatibility` moved to closed; local and remote task branches deleted; local `main` matches `origin/main`.
+5. Owner directed this session to stop after current-task closure. Do not auto-claim `P10-T03` or any other Personal 2.0 task until a fresh owner delivery instruction.
