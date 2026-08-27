@@ -8,20 +8,21 @@ generated: false
 
 # User guide
 
-CognitiveOS Personal is a local, single-owner **operating system for cognitive
-resources**: one Rust daemon governs what your AI agents know (Memory), may reuse
-(Skills), may do (Tools), see (Context), work on (Tasks), and run as
-(Runtime/Process). Those are the six current Linux 1.0/API families. This guide
-labels current behavior from code, contracts, and tests (`implemented`,
-`partial`, `designed`, `unavailable`) separately from adopted Personal 2.0
-behavior that still needs daemon/API or core work (`Requires-backend`,
-`Requires-core`).
+CognitiveOS Personal is a cross-platform local, single-owner stewardship
+product for Agents, accounts, cognitive resources, and governed work. One Rust
+daemon governs what your Agents know (Memory), may reuse (Skills), may do
+(Tools), see (Context), work on (Tasks), and run as (Runtime/Process). Those are
+the six current Linux 1.0/API families. This guide labels current behavior from
+code, contracts, and tests (`implemented`, `partial`, `designed`,
+`unavailable`) separately from the full Personal 2.0 commitment that still
+needs backend or core work (`Requires-backend`, `Requires-core`).
 
-Personal 2.0 targets a desktop-first Control Plane, Account Hub, MCP as a
-seventh resource family, vendor-specific Agent conversation adapters,
-Goal/Plan and multi-Agent supervision, and federated resources. The current
-same-origin `/ui/` client is real at `clients/pc/web/`; that target redesign and
-the other 2.0 additions are not implemented.
+Personal 2.0 requires independently qualified Windows, macOS, and Linux local
+paths; exact Pi, DeepSeek Harness Developer Preview, and supported-platform
+Codex desktop paths; embedded Agent conversations; Account Hub; MCP as a
+seventh family; Goal/Plan/Task/Attempt and multi-Agent supervision; unified
+Activity; and federated resources. The current same-origin `/ui/` client is
+real at `clients/pc/web/`; those target additions are not implemented.
 
 Start here:
 

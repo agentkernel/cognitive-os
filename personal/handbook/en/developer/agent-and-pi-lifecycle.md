@@ -146,22 +146,32 @@ integration.
 
 ### Personal 2.0 Agent conversation and supervision target
 
-`Requires-backend`: the desktop Agent Shell is intended to present
-vendor-specific conversation adapters rather than pretending every Agent has
-one generic chat protocol. Each adapter must preserve the vendor's
-conversation/session identity, supported controls, capability gaps, and
-recovery semantics while translating only bounded candidates and observations.
-A generic adapter manifest or a working dsh bridge does not establish
-conversation parity or qualification.
+`Requires-backend`: the full-version initial Agent set is the exact Pi path,
+DeepSeek Harness Developer Preview from
+[`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness),
+and the Codex experience in the current official ChatGPT desktop app only on
+officially supported and independently qualified platforms. Windows, macOS,
+and Linux Personal paths are qualified separately. There is no Linux Codex
+desktop claim. Codex CLI, web, IDE, account, Provider, model, adapter, bridge,
+or another platform transfers no desktop qualification.
+
+The Global Agent Shell presents vendor-specific conversation adapters rather
+than pretending every Agent has one generic chat protocol. Each adapter must
+preserve the vendor's conversation/session identity, supported controls,
+capability gaps, and recovery semantics while translating only bounded
+candidates and observations. A generic adapter manifest or a working dsh
+bridge does not establish conversation parity or qualification.
 
 Goal and immutable Plan revisions are also target authority objects above
 current Tasks. Multi-Agent supervision remains daemon-owned: independently
 qualified Agents may contribute candidates, but the daemon assigns work,
 issues continuation authority, fences epochs, enforces budgets, reconciles
 Effects, and obtains independent verification. There is no current Goal/Plan
-or multi-Agent supervision API. Pi remains the only qualified Agent.
+or multi-Agent supervision capability. Pi remains the only currently qualified
+Agent; every missing target above is a Personal 2.0 release blocker.
 
-The DeepSeek Harness bridge is a candidate-only adapter. The Rust side pins
+DeepSeek Harness is explicitly a **Developer Preview** Agent product, not a
+DeepSeek model or Provider. The current bridge is a candidate-only adapter. The Rust side pins
 the exact dsh git revision and the AKP request-envelope schema digest, fences
 a process-local session, enforces monotonic sequences, and rejects
 authority-shaped and secret-shaped payloads. `POST /task/akp/dsh` must be

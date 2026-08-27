@@ -24,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:d716173c7d0320d28c16db03dfe208dc9717a310fbee5c1262c3403bfcad7690"
+fingerprint: "sha256:1a32a17a44666535b098c1c67342eccfbfedd6d668b716e756f598c474024d0b"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -67,13 +67,16 @@ What exists today:
 - **Platform ports**: SQLite WAL (two databases), filesystem artifact CAS, Linux
   Secret Service, systemd user service. `implemented`.
 
-## Adopted Personal 2.0 composition — not current implementation
+## Full Personal 2.0 composition — not current implementation
 
-Personal 2.0 preserves the invariant above while adopting these target layers:
+Personal 2.0 preserves the invariant above while committing to these product
+boundaries:
 
-- the existing daemon-served `/ui/` bundle from `clients/pc/web/` is the
-  current client; a desktop-first Control Plane/Agent Shell redesign is
-  `Requires-backend`, not a second authority plane;
+- Windows, macOS, and Linux are independently qualified local product paths;
+  no platform or Agent evidence transfers;
+- the exact initial Agent set is Pi, DeepSeek Harness Developer Preview, and
+  supported-platform Codex desktop. CLI, Provider, model, account, adapter, or
+  bridge evidence does not qualify another product;
 - Account Hub credential import is a daemon-owned source-to-SecretStore
   operation under ADR-0055. The UI supplies exact source selection and consent,
   but never reads or receives imported material;
@@ -83,12 +86,17 @@ Personal 2.0 preserves the invariant above while adopting these target layers:
 - vendor-specific conversation adapters preserve each Agent's protocol and
   identity. Pi remains the only qualified Agent; dsh implementation evidence
   and generic adapter contracts do not transfer qualification;
-- Goal and immutable Plan revisions compose current Tasks, while daemon-owned
-  multi-Agent supervision assigns, fences, budgets, reconciles, and verifies.
+- embedded native conversations enter governed work only by explicit admission;
+- Goal -> immutable Plan revision -> Task -> preserved Attempt composes
+  governed work, while daemon-owned multi-Agent supervision assigns, fences,
+  budgets, reconciles, and verifies;
+- unified Activity keeps Native, Observed, Governed, and Verified provenance
+  separate with declared coverage.
 
-No Goal/Plan/MCP-family/federation/import/supervision API or target UI redesign
-exists today. Public authority or contract additions are `Requires-core`;
-daemon projection, persistence, and route additions are `Requires-backend`.
+These missing capabilities remain `Requires-backend`; public authority or
+contract additions remain `Requires-core`. The full-version commitment and
+fixed 8/8 AI-window simulated acceptance do not establish implementation,
+human usability, release, or Gate evidence.
 
 ## Design decisions that explain surprises
 

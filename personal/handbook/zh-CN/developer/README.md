@@ -12,9 +12,12 @@ generated: false
 明缺少哪段接线。
 
 阅读任何 Personal 2.0 陈述时都要对照当前边界：当前 Linux/API 组合为六族、只有 Pi
-资格化，且已有位于 `clients/pc/web/` 的同源 `/ui/` SPA。桌面优先重设计、Account Hub
-导入、第七 MCP 族、厂商对话适配器、Goal/Plan 与多 Agent 监督、联邦资源都是标为
-`Requires-backend`/`Requires-core` 的已采纳目标，不是实现事实。
+资格化，且已有位于 `clients/pc/web/` 的同源 `/ui/` SPA。Personal 2.0 是完整产品版本
+承诺：各自独立资格化的 Windows、macOS、Linux 本地路径；精确 Pi、DeepSeek Harness
+Developer Preview 与受官方平台限制的 Codex desktop 路径；Account Hub、第七 MCP 族、
+嵌入式对话、Goal/Plan/Task/Attempt 与多 Agent 监督、统一 Activity、控制与联邦资源。
+每个缺失项都是标为 `Requires-backend`/`Requires-core` 的 release blocker，不是实现
+事实。
 
 导引：
 

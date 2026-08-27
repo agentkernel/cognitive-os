@@ -52,21 +52,23 @@ Two rules explain most behavior you will see:
    content cannot even influence ordering.
 
 Deferred from Linux 1.0: embeddings/vector/graph Memory, skill marketplaces,
-the adopted MCP resource family (the delivered post-1.0 MCP Tool
-transport/dynamic-Tool MVP is not that family), multi-Agent orchestration, and
-the desktop-first UI redesign.
+the required Personal 2.0 MCP resource family (the delivered post-1.0 MCP Tool
+transport/dynamic-Tool MVP is not that family), federated synchronization,
+multi-Agent orchestration, and the complete Personal 2.0 product composition.
 
-## Personal 2.0 seventh family (`Requires-backend`)
+## Personal 2.0 required seventh family (`Requires-backend`)
 
 Personal 2.0 adopts **MCP** as a seventh user-visible resource family. This does
 not change the current six-family Resource Manager API and does not turn MCP
 content into native Tools.
 
 The target family owns distinct server, package, connection, advertised
-capability, binding, health, and quarantine identities. A **federated
+capability, binding, health, update, and quarantine identities. A **federated
 resource** projection keeps source identity, provenance, revision/freshness,
 trust, availability, and allowed actions without copying external authority
-into Personal.
+into Personal. Origin owns native content; Personal owns admitted bindings,
+permissions, synchronization intent, and authority records. Conflicts fail
+closed and require an exact daemon preview before write-back.
 
 Advertised MCP items still enter the existing families through their own
 admission paths: tools are version-bound Tool candidates, protocol resources
@@ -76,13 +78,14 @@ policy must still authorize use; mutations still require
 persist-before-dispatch Intent/Effect, fencing, budget, and independent
 verification.
 
-Target views keep these labels distinct:
+Unified Activity keeps these labels distinct:
 
-- `Native`: Personal-owned local capability/resource;
-- `Observed`: discovered read-only fact;
-- `Governed`: daemon-authorized, bounded, and auditable use;
-- `Verified`: independently verified outcome or current fact.
+- `Native`: originated in a native Agent application or session;
+- `Observed`: seen by an adapter or daemon but not admitted as authority;
+- `Governed`: daemon admission, authorization, mutation, and Effect reconciliation;
+- `Verified`: current independent verification and daemon acceptance only.
 
 They are not an automatic maturity ladder and `Verified` is not a release or
-qualification claim. The MCP family, federation APIs, persistence, trust
-policy, and UI are not implemented.
+qualification claim. The MCP family and general federation capability are full
+Personal 2.0 release blockers and remain `Requires-backend`; connection alone
+grants no Tool, Context, workspace, model, or host-session authority.

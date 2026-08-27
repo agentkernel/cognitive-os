@@ -8,16 +8,17 @@ generated: false
 
 # 用户指南
 
-CognitiveOS Personal 是本地单用户的**认知资源操作系统**：一个 Rust daemon 统一治理你
-的 AI agent 知道什么（Memory）、可复用什么（Skill）、可做什么（Tool）、看到什么
-（Context）、在做什么（Task）、以什么身份运行（Runtime/Process）。这是当前 Linux
-1.0/API 的六族模型。本指南把代码、合同与测试共同支持的当前行为（`implemented`、
-`partial`、`designed`、`unavailable`）与仍需 daemon/API 或 core 工作的已采纳 Personal
-2.0 行为（`Requires-backend`、`Requires-core`）分开标示。
+CognitiveOS Personal 是跨平台本地、单一 owner 的 Agent、账户、认知资源与受治理工作
+管理产品。一个 Rust daemon 统一治理 Agent 知道什么（Memory）、可复用什么（Skill）、
+可做什么（Tool）、看到什么（Context）、在做什么（Task）、以什么身份运行
+（Runtime/Process）。这是当前 Linux 1.0/API 的六族模型。本指南把代码、合同与测试共同
+支持的当前行为（`implemented`、`partial`、`designed`、`unavailable`）与仍需 backend
+或 core 工作的 Personal 2.0 完整版本承诺（`Requires-backend`、`Requires-core`）分开。
 
-Personal 2.0 的目标包括桌面优先 Control Plane、Account Hub、作为第七资源族的 MCP、
-厂商专用 Agent 对话适配器、Goal/Plan 与多 Agent 监督，以及联邦资源。当前同源 `/ui/`
-客户端真实存在于 `clients/pc/web/`；该目标重设计与其余 2.0 增量尚未实现。
+Personal 2.0 要求各自独立资格化的 Windows、macOS、Linux 本地路径；精确 Pi、DeepSeek
+Harness Developer Preview 与受官方平台限制的 Codex desktop 路径；嵌入式 Agent 对话；
+Account Hub；MCP 第七族；Goal/Plan/Task/Attempt 与多 Agent 监督；统一 Activity 与联邦
+资源。当前同源 `/ui/` 客户端真实存在于 `clients/pc/web/`；这些目标增量尚未实现。
 
 从这里开始：
 

@@ -25,7 +25,7 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
-fingerprint: "sha256:b6528d3add7eb3a54cdcbb14b2567282e3b0c81584d1048aaf78511ee17a37d6"
+fingerprint: "sha256:3fb668d478fd009e488b469a947daa643eb815f6a8e78f7662e3d017512d33dc"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -41,7 +41,9 @@ contract/authority work).
 Rows without a Personal 2.0 qualifier describe the current Linux/current-API
 baseline: six resource families and Pi as the only qualified Agent. The
 same-origin `/ui/` exists at `clients/pc/web/`; its adopted desktop-first
-redesign is a separate, unimplemented target.
+redesign is a separate, unimplemented target. Personal 2.0 is a full-version
+commitment, but every missing row remains `Requires-backend` and each platform
+and Agent requires independent qualification.
 
 | Capability | Status | The gap, if any |
 |---|---|---|
@@ -71,14 +73,17 @@ redesign is a separate, unimplemented target.
 | Current six-family resource projection/watch | implemented | management+task channels only; this is not the adopted MCP seventh family |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |
 | Non-Pi agents | designed | Codex fixture qualification only |
+| Personal 2.0 cross-platform local product | Requires-backend | Windows, macOS, and Linux are exact independent target paths; current release evidence remains Linux 1.0 and does not transfer |
+| Personal 2.0 initial Agent set | Requires-backend | exact Pi, `deepseek-ai/deepseek-harness` Developer Preview, and the Codex experience in the current official ChatGPT desktop app only on officially supported platforms; no Linux Codex desktop; CLI/Provider/model/account/bridge/platform evidence does not transfer |
 | Vendor-specific Agent conversation adapters | Requires-backend | current Pi/dsh routes do not provide a generic desktop conversation-adapter layer; Pi alone is qualified |
 | Existing MCP Tool transport + bounded dynamic-Tool MVP | implemented for its accepted P5-T03/P5-T04 scope | interop produces Tool candidates; it has no Personal 2.0 server/package/connection/binding/health/quarantine family lifecycle |
 | Personal 2.0 MCP seventh family + federated resources | Requires-backend / Requires-core | adopted by ADR-0057; no current family API, persistence, trust policy, federation projection, or target UI |
-| Goal + immutable Plan revisions + multi-Agent supervision | Requires-backend / Requires-core | adopted target only; current durable work object remains Task and no Goal/Plan/supervisor API exists |
+| Goal + immutable Plan revisions + Task-owned preserved Attempts + multi-Agent supervision | Requires-backend / Requires-core | full-version target only; current durable work object remains Task and the complete hierarchy, controls, unified Activity, and supervisor do not exist |
+| Frozen AI-window product acceptance | Requires-backend | eight fixed N=1 scenarios require 8/8; no execution result is claimed and any future pass remains simulated product evaluation, not human or release/Gate evidence |
 | Management fallback verbs | implemented | R0/R2/R3 approval flows partial |
 | Backup/restore command | partial | secrets/bearer/provider-config/authority SQLite excluded; Memory/Skill as digest-bound sidecar; public `admin-cli` covers Pi install→recover |
 | Current Web UI / Console | partial | same-origin daemon-served `/ui/` exists at `clients/pc/web/`; HTTP Task/Agent controls remain absent and the Personal 2.0 desktop-first redesign is not implemented |
-| Windows/macOS product | unavailable | Linux x86_64 only; Windows installer templates + credential backend are authored and CI-validated but the B01-W install campaign has not run |
+| Current Windows/macOS product | unavailable | Linux x86_64 only; Windows installer templates + credential backend are authored and CI-validated but the B01-W install campaign has not run; Personal 2.0 adoption does not make either platform current |
 | Performance campaign tooling | implemented | results are non-claim records in the plan |
 | UJ1–UJ6 capability-truth register | implemented | frozen public-caller/oracle/cleanup/evidence rows; Web UI/Multi-Agent scope-excluded and cannot block the required arm; linux-002 named oracles are product evidence, not EVAL/Gate |
 

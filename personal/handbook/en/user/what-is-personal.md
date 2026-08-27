@@ -15,7 +15,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:17492e3ebdab7f7cd7d73121927fbfe47e3f1466a258ecc0d966f61dbceb9edf"
+fingerprint: "sha256:4d212cb31d178b022cf903aa5a33bc0fed560d4a1d242bb8e27930c442d3132e"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -24,7 +24,10 @@ non_claims:
 
 ## What it is
 
-A local daemon plus deterministic clients that make agent work **auditable,
+A cross-platform local stewardship product for one owner's Agents, accounts,
+resources, and governed work. Its current release is Linux 1.0; its full
+Personal 2.0 target independently qualifies Windows, macOS, and Linux paths.
+A local daemon plus deterministic clients make Agent work **auditable,
 budgeted, recoverable, and never falsely completed**:
 
 - One Rust daemon (`kernel-server --personal`) binds loopback only and is the sole
@@ -47,7 +50,8 @@ budgeted, recoverable, and never falsely completed**:
   (the pinned Pi package) with its sidecar; other agents require independent
   qualification.
 - Not a Linux kernel replacement, driver framework, or eBPF control plane.
-- Not Windows-installable today: the product target for 1.0 is Linux x86_64 only.
+- Not Windows- or macOS-qualified today: the current product target for 1.0 is
+  Linux x86_64 only.
   A Windows install surface (Credential Manager secret backend, inspectable
   installer and scheduled-task templates) exists in the tree and passes CI, but
   its end-to-end install campaign (B01-W) has not been executed, so Windows
@@ -63,7 +67,7 @@ independent verification wired end-to-end) is not yet connected — see
 by [`personal/docs/product/`](../../../docs/product/README.md); this page
 tracks what the code does today.
 
-## Current product and adopted Personal 2.0 target
+## Current product and full Personal 2.0 commitment
 
 Keep these two baselines separate:
 
@@ -71,12 +75,14 @@ Keep these two baselines separate:
   qualified Agent; the daemon, CLI, Pi paths, Provider Control Plane, and the
   same-origin `/ui/` SPA at `clients/pc/web/` are current implementation. The
   Web UI is not part of the Linux 1.0 release claim.
-- **Adopted Personal 2.0 target — `Requires-backend`:** a desktop-first Control
-  Plane redesign; Account Hub with user-consented credential import; MCP as a
-  seventh family; vendor-specific Agent conversation adapters; durable Goals
-  and Plan revisions; multi-Agent supervision; and federated resources.
+- **Full Personal 2.0 target — `Requires-backend`:** independently qualified
+  Windows, macOS, and Linux local product paths; exact Pi, DeepSeek Harness
+  Developer Preview, and supported-platform Codex desktop paths; Account Hub;
+  MCP as a seventh family; embedded conversations; durable Goal -> Plan
+  revision -> Task -> Attempt work; multi-Agent supervision; unified Activity;
+  controls; and federated resources.
 
-Adoption makes those items product direction, not implementation evidence.
-There is no current Goal/Plan API, MCP-family API, Account Hub import API, or
-multi-Agent supervision path, and the existing `/ui/` has not received the
-target redesign.
+The complete version commitment makes every item a release blocker, but remains
+separate from implementation evidence. The fixed 8/8 AI-window scenarios are
+simulated product acceptance only and prove no human desirability, usability,
+adoption, willingness to pay, or release/Gate technical readiness.

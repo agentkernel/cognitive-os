@@ -13,10 +13,13 @@ Capability labels are honest: `partial` pages say exactly which wiring is missin
 
 Read every Personal 2.0 statement against the current boundary: current
 Linux/API composition is six-family, Pi-only qualified, with the existing
-same-origin `/ui/` SPA at `clients/pc/web/`. The desktop-first redesign,
-Account Hub import, seventh MCP family, vendor conversation adapters,
-Goal/Plan and multi-Agent supervision, and federated resources are adopted
-targets marked `Requires-backend`/`Requires-core`, not implementation.
+same-origin `/ui/` SPA at `clients/pc/web/`. Personal 2.0 is a full
+product-version commitment to independently qualified Windows, macOS, and
+Linux local paths; exact Pi, DeepSeek Harness Developer Preview, and
+supported-platform Codex desktop paths; Account Hub; the seventh MCP family;
+embedded conversations; Goal/Plan/Task/Attempt and multi-Agent supervision;
+unified Activity; controls; and federated resources. Every missing item is a
+release blocker marked `Requires-backend`/`Requires-core`, not implementation.
 
 Orientation:
 

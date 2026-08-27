@@ -66,24 +66,29 @@ report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。Regist
 Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
 
-## Personal 2.0 Goal、Plan 与监督目标（`Requires-backend`）
+## Personal 2.0 受治理工作承诺（`Requires-backend`）
 
 当前持久工作对象仍是 **Task**。当前 daemon 没有 Goal 或 Plan API、没有持久 Plan
 revision 生命周期，也没有多 Agent supervisor。
 
-已采纳目标新增：
+完整版本目标新增：
 
 - **Goal**：位于一个或多个 Task 之上的、由 owner 编写的持久结果；
 - **Plan revision**：对该 Goal 的不可变候选拆解。Agent 可以提出，但只有 daemon 签发
   的 preview 与 admission 才能让某修订成为当前版本；
+- **Attempt**：恰好属于一个 Task 的保留执行或恢复分支；retry/fork 创建新 attempt，绝
+  不抹去旧 attempt；
 - **多 Agent 监督**：各自独立资格化的 Agent 经厂商专用适配器贡献有界 candidate。
   daemon 负责分配、fencing、budget、Effect 仲裁与验证；Agent 之间绝不转交权威；
 - **联邦资源**：Plan 可按精确来源身份及 revision/freshness 引用 MCP 族资源，但发现或
   提及不授予权限。
 
-这些概念不会重命名今天的 Task 行，也不能从现有 Pi/dsh 路径推断已实现。Pi 仍是唯一
-已资格化 Agent；全部 Goal/Plan/多 Agent/联邦目标行为都是 `Requires-backend`
-（若需公开权威合同变化则为 `Requires-core`）。
+这些概念不会重命名今天的 Task 行，也不能从现有 Pi/dsh 路径推断已实现。Pi 仍是当前
+唯一已资格化 Agent。Personal 2.0 要求精确 Pi、DeepSeek Harness Developer Preview 与
+受官方平台限制的 Codex desktop 路径各自独立资格化；CLI、Provider、model、account、
+bridge 或平台证据都不转移。Goal/Plan/Task/Attempt、多 Agent、统一 Activity、控制与联
+邦行为全是 release blocker，仍为 `Requires-backend`（需公开权威合同变化时为
+`Requires-core`）。
 
 ## 构造上绝不可能发生的事
 

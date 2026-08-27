@@ -31,12 +31,18 @@ handbook's consistent translation（中文列是手册统一译法；代码与�
 | Skill binding | 技能绑定 | scope-bound pin of an imported skill revision |
 | current six-family model | 当前六族模型 | Linux 1.0/current API taxonomy: Memory, Skill, Tool, Context, Task, Runtime/Process |
 | native Tool | 原生工具 | one of the current seven static governed Tool operations; not the Personal 2.0 MCP resource family |
-| MCP family | MCP 资源族 | adopted Personal 2.0 seventh family for MCP integration identities and federated capabilities; `Requires-backend`/`Requires-core`, not a current Linux 1.0/API claim |
+| full product-version commitment | 完整产品版本承诺 | adopted release inclusion whose P0 outcomes are all required, while implementation, Gate and release status remain separately capability-gated |
+| cross-platform local | 跨平台本地产品 | independently qualified Windows, macOS and Linux Personal paths, each retaining one owner-local daemon authority; no evidence transfer or distributed authority |
+| unified stewardship completion rate | 统一治理完成率 | passed eligible Agent/account/resource/governed-work stewardship cases divided by every case in the frozen manifest |
+| MCP family | MCP 资源族 | required Personal 2.0 seventh family for MCP integration identities and federated capabilities; `Requires-backend`/`Requires-core`, not a current Linux 1.0/API claim |
 | federated resource | 联邦资源 | source-owned capability or data projected with stable source identity, provenance, trust and availability; discovery does not copy authority or grant use |
 | Native / Observed / Governed / Verified | 原生 / 已观测 / 受治理 / 已验证 | distinct relationship/evidence labels: Personal-owned; discovered read-only; daemon-authorized and auditable; independently verified — not an automatic maturity ladder or release claim |
 | Account Hub | 账户中心 | adopted Personal 2.0 desktop target for Provider accounts, subscriptions and user-consented credential import; concrete import mechanisms are `Requires-backend` |
 | Goal | 目标 | adopted Personal 2.0 durable owner outcome above one or more Tasks; no current Goal API |
 | Plan revision | 计划修订 | immutable candidate decomposition of a Goal that requires daemon preview/admission before authority use; no current Plan API |
+| DeepSeek Harness Developer Preview | DeepSeek Harness 开发者预览版 | exact `deepseek-ai/deepseek-harness` Agent product target; not a DeepSeek model or Provider qualification |
+| Codex desktop | Codex 桌面产品 | Codex experience in the current official ChatGPT desktop app on officially supported and independently qualified platforms; not Codex CLI, web, IDE, account or Provider |
+| AI-window simulated acceptance | AI 窗口模拟验收 | fixed product-visible scenario evaluation; not human research, usability, adoption, WTP, problem-solution fit or release/Gate technical evidence |
 | Agent Shell | Agent 交互壳 | user-facing conversation/command client; it is not an Agent instance, sidecar, Task, or authority writer |
 | Requires-backend | 需要后端 | adopted product behavior whose daemon route, projection, persistence or policy implementation does not yet exist |
 | Requires-core | 需要核心合同 | adopted behavior that additionally needs approved core contract/authority semantics before implementation |

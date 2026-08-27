@@ -127,17 +127,26 @@ Pi——明确不是网络或二进制集成。
 
 ### Personal 2.0 Agent 对话与监督目标
 
-`Requires-backend`：桌面 Agent Shell 的目标是呈现厂商专用对话适配器，而不是假装
-所有 Agent 共用一种通用聊天协议。每个适配器必须保留厂商的 conversation/session
-身份、支持的控制、能力缺口与恢复语义，同时只翻译有界 candidate 与 observation。
-通用 adapter manifest 或可工作的 dsh bridge 都不构成对话对等或资格化。
+`Requires-backend`：完整版本初始 Agent 集是精确 Pi 路径、
+[`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness) 的
+DeepSeek Harness Developer Preview，以及只进入官方支持且经 Personal 独立资格化平台的
+当前官方 ChatGPT desktop app 内 Codex experience。Windows、macOS、Linux Personal 路
+径各自独立资格化；不声明 Linux Codex desktop。Codex CLI、web、IDE、account、
+Provider、model、adapter、bridge 或其他平台证据都不转移桌面产品资格。
+
+Global Agent Shell 的目标是呈现厂商专用对话适配器，而不是假装所有 Agent 共用一种通用
+聊天协议。每个适配器必须保留厂商的 conversation/session 身份、支持的控制、能力缺口
+与恢复语义，同时只翻译有界 candidate 与 observation。通用 adapter manifest 或可工作
+的 dsh bridge 都不构成对话对等或资格化。
 
 Goal 与不可变 Plan revision 也是位于当前 Task 之上的目标权威对象。多 Agent 监督仍由
 daemon 拥有：各自独立资格化的 Agent 可以贡献 candidate，但 daemon 分配工作、签发
 continuation authority、fence epoch、强制预算、对账 Effect 并取得独立验证。当前没有
-Goal/Plan 或多 Agent 监督 API。Pi 仍是唯一已资格化 Agent。
+Goal/Plan 或多 Agent 监督能力。Pi 仍是当前唯一已资格化 Agent；上述每个缺失目标都是
+Personal 2.0 release blocker。
 
-DeepSeek Harness 桥接是仅 candidate 的适配器。Rust 侧钉住精确 dsh git revision 与 AKP
+DeepSeek Harness 明确是 **Developer Preview** Agent 产品，不是 DeepSeek model 或
+Provider。当前 bridge 是仅 candidate 的适配器。Rust 侧钉住精确 dsh git revision 与 AKP
 request-envelope schema digest，对进程内 session 做 fencing，强制单调 sequence，并拒绝
 authority-shaped 与 secret-shaped payload。`POST /task/akp/dsh` 必须在 daemon 启动后显式
 激活；重启会清空会话表并失败闭合。Workspace* candidate 映射到既有 public candidate

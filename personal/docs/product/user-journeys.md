@@ -1,41 +1,69 @@
 # CognitiveOS Personal user journeys
 
-- Status: current journeys plus adopted Personal 2.0 target
+- Status: current journeys plus full Personal 2.0 product-version target
+- Change class: product-semantic
+- Product intent and acceptance: [Product design](product-design.md)
 - Current release boundary: [Linux 1.0 scope](linux-1.0-scope.md)
-- Target boundary: [Personal 2.0 scope](personal-2.0-scope.md)
+- Exact target inclusion and capability status:
+  [Personal 2.0 scope](personal-2.0-scope.md)
 - Resource semantics: [Cognitive resource model](cognitive-resource-model.md)
-- Authority behavior: [Personal architecture](../architecture/README.md)
 
 Every journey separates visible interaction from authority facts. Agents,
 adapters, native panels, MCP servers, and the global Agent Shell may explain,
 translate, propose, or observe. The Rust daemon alone resolves identity,
 authorizes, persists Intent/Effect, dispatches, reconciles, and accepts.
 
+These journeys serve the unified resource-stewardship outcome owned by
+[Product design §2](product-design.md#2-product-definition-icp-trigger-and-outcome).
+They are product hypotheses because there is no external human research. Their
+ordered behavior and AI-window scenarios do not establish human desirability,
+usability, adoption, willingness to pay, or problem-solution fit.
+
 ## 0. Reality ledger
 
 | Boundary | Journey truth |
 |---|---|
 | **Current implementation (Now)** | Linux 1.0 provides the Pi-qualified six-family path. `/ui/` provides Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel is separate. |
-| **Adopted Personal 2.0 target** | Five-minute first chat, then an optional owner request/confirmation followed by daemon admission into Goal -> Plan revision -> Task -> Attempt work across Agents, with Account Hub, federated Library, merged Activity, and MCP. |
-| **Requires-backend** | Embedded conversations, onboarding/catalog, Goal -> Plan revision -> Task -> Attempt, controls, multi-Agent orchestration, federated sync, account import/runtime methods, and MCP management. |
+| **Personal 2.0 full-version target** | Cross-platform local stewardship of exact Pi, DeepSeek Harness Developer Preview, supported-platform Codex desktop, accounts, seven resource families, native conversations, Goal -> Plan revision -> Task -> Attempt work, multi-Agent handoffs, unified Activity, controls, and recovery. |
+| **Requires-backend** | Cross-platform and Agent qualification, embedded conversations, onboarding/catalog, Goal -> Plan revision -> Task -> Attempt, controls, multi-Agent orchestration, federated sync, account import/runtime methods, Global Agent Shell, unified Activity, and MCP management. |
 | **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. Only a new/changed public MCP, conversation extension, Goal, Plan, Run, Harness, or attempt machine surface requires P10-T02/Lane-CTR. |
 
-## 1. Five-minute first chat
+## 1. Connect an exact Agent and reach first chat
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. The user opens Home or Agents and chooses **Add Agent**.
-2. Step 1 offers a signed upstream catalog or **Connect existing**. A catalog
-   record shows source, version, digest, signature, license, and adapter
-   compatibility before installation.
-3. Step 2 is one review for Provider/profile, Standard Workspace, and requested
-   permissions. Optional configuration is deferred.
-4. That connection review establishes the exact observation scope; no
-   speculative/global session scan or surprise per-session enrollment occurs.
-5. Step 3 opens the Agent's embedded native conversation. The setup is not
-   labelled ready until a real model response arrives.
-6. The conversation remains Native. The UI points to the next milestone:
-   **Manage with Personal** and complete the first governed and verified Task.
+2. Step 1 offers the exact qualified Pi path, DeepSeek Harness Developer
+   Preview from
+   [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness),
+   or the Codex experience in the current official ChatGPT desktop app on an
+   officially supported and independently qualified platform. The user may
+   choose a signed upstream record or **Connect existing**.
+3. The product shows source, product identity, version, platform, signature or
+   trust facts, license, adapter compatibility, capability coverage, and
+   qualification boundary before installation or connection.
+4. The next step is one review for Provider/profile, Standard Workspace,
+   observation scope, and requested permissions. Optional configuration is
+   deferred.
+5. That review establishes the exact observation scope; no speculative/global
+   session scan or surprise per-session enrollment occurs.
+6. The final step opens the Agent's embedded native conversation. The setup is
+   not labelled ready until a real model response arrives.
+7. The conversation remains Native. The next milestone is
+   **Manage with Personal** and one governed and verified Task.
+
+Agent and platform evidence stays independent:
+
+- Pi evidence qualifies only the exact Pi path and platform named by that
+  evidence;
+- DeepSeek Harness remains labelled **Developer Preview** and is not a
+  DeepSeek Provider or model qualification;
+- Codex desktop is distinct from Codex CLI, web, IDE, ChatGPT account,
+  Provider, and model evidence; no Linux Codex desktop is implied.
+
+If time-to-first-response or onboarding-step results are reported, the record
+declares the start event, prerequisites, eligible denominator, platform,
+Agent, environment, and not-run cases.
 
 **Failure and recovery**
 
@@ -46,6 +74,9 @@ authorizes, persists Intent/Effect, dispatches, reconciles, and accepts.
 - Permission denial preserves a narrower or native-only path when safe.
 - Installation or connection failure preserves source and review state and
   offers retry only when the daemon says retry is safe.
+- An unsupported Agent/platform pair remains explicitly unavailable. It is not
+  substituted with CLI, Provider, model, bridge, or another platform's
+  qualification.
 
 **Current implementation (Now)**
 
@@ -53,12 +84,13 @@ The current Control Plane can inspect bounded Agent facts and manage current
 Provider bindings, but cannot run this onboarding or embed a conversation. The
 qualified Pi conversation path and separate native dsh panel remain available.
 
-**Dependency:** onboarding/catalog and embedded conversation are
+**Dependency:** cross-platform and Agent qualification, onboarding/catalog,
+embedded conversation, and full lifecycle stewardship are
 **Requires-backend**. This journey invents no route or schema.
 
 ## 2. First governed and verified success
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. In a useful Native Conversation, the user chooses **Manage with Personal**.
 2. The global Agent Shell explains that native conversation and Agent plan are
@@ -101,7 +133,7 @@ P10-T02/Lane-CTR.
 
 ## 3. Daily Goal → Plan → Tasks execution
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. Home resumes the most relevant active Goal with current Plan revision,
    blockers, last verified outcome, and next action.
@@ -152,7 +184,7 @@ conditionally require P10-T02/Lane-CTR; Personal-private projections may not.
 4. Context is inspected with its Task in Work; Runtime is inspected with its
    Agent. Neither belongs in the Library navigation.
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 Library contains Memory, Skills, Tools, and MCP. Vendor-native resources are
 mapped through adapters with origin and sync state. Personal owns governance
@@ -166,7 +198,7 @@ new/changed public MCP machine surface conditionally requires P10-T02/Lane-CTR.
 
 ## 5. Import an existing account credential
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. In Settings → Account Hub, the user chooses a Provider preset or custom
    OpenAI-compatible endpoint and selects **Import existing credential**.
@@ -205,7 +237,7 @@ override hierarchy are **Requires-backend**.
 
 ## 6. Install and project an MCP server
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. In Library → MCP, the user chooses a server source and reviews identity,
    version, trust/provenance facts, requested permissions, compatible Agent
@@ -245,7 +277,7 @@ Personal-private projection may not.
 
 ## 7. Detect and resolve a federated-resource conflict
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. An authorized adapter detects that a vendor-native Skill, Memory, Tool
    description, MCP configuration, or related binding changed at its origin.
@@ -277,7 +309,7 @@ conditionally require P10-T02/Lane-CTR.
 
 ## 8. Disconnect or uninstall an Agent
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. From an Agent inspector, the user chooses Remove.
 2. The product asks a required first question:
@@ -304,7 +336,7 @@ buttons.
 
 ## 9. Recover work without erasing attempts
 
-**Adopted Personal 2.0 target**
+**Personal 2.0 full-version target**
 
 1. Work states exactly what failed: conversation transport, Agent runtime
    engine, Task, Effect, Context source, Provider, MCP server, or watch.
@@ -393,3 +425,136 @@ Intent/Effect, reconciliation, or independent acceptance.
 
 No journey here is a Gate, release, Profile, performance, containment, or
 Agent-benefit claim.
+
+## 13. Frozen AI-window simulated product acceptance
+
+The product-acceptance manifest is fixed at eight scenarios. Each scenario has
+`N=1`. A scenario enters the numerator only when every expected product-visible
+result is present and no forbidden claim appears. Pass requires **8/8**.
+Failed, partial, and not-run scenarios remain in the denominator and cannot be
+replaced.
+
+The AI window receives product-visible facts only. A human may review its
+record, but the result remains simulated product evaluation. It is not human
+research, usability evidence, adoption evidence, willingness-to-pay evidence,
+problem-solution-fit evidence, or release/Gate technical validation.
+
+### S1 — Pi stewardship (`N=1`)
+
+- **Setup:** one exact Pi package/sidecar/platform fixture whose qualification
+  boundary is declared; one valid account and Standard Workspace.
+- **Action:** connect or inspect Pi, receive one real native response, inspect
+  current health, then choose Disconnect.
+- **Expected visible result:** exact Pi source, version, platform, capability
+  coverage, health, Native conversation state, observation scope, and retained
+  native installation after Disconnect.
+- **Forbidden claim:** Pi evidence qualifies DeepSeek Harness, Codex desktop,
+  another platform, or the complete Personal 2.0 release.
+
+### S2 — DeepSeek Harness Developer Preview stewardship (`N=1`)
+
+- **Setup:** one exact revision and profile from
+  [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness)
+  on one declared Personal platform.
+- **Action:** connect the native Harness session, receive a real response,
+  inspect session/trajectory state, and exercise one supported resume or fork.
+- **Expected visible result:** exact upstream identity, revision, profile,
+  platform, capability coverage, current session state, preserved prior
+  trajectory, and explicit **Developer Preview** status.
+- **Forbidden claim:** a DeepSeek model or Provider is the Agent product;
+  Developer Preview is stable release qualification; or evidence transfers to
+  Pi, Codex desktop, or another platform.
+
+### S3 — Codex desktop stewardship (`N=1`)
+
+- **Setup:** one exact official ChatGPT desktop app build with the Codex
+  experience on an officially supported and independently declared platform.
+- **Action:** connect an existing Codex project/session, receive a real
+  response, inspect current project/session work, and exercise one supported
+  continuation or recovery action.
+- **Expected visible result:** exact official product/build, platform,
+  project/session identity, capability coverage, current state, and explicit
+  distinction from Codex CLI, web, IDE, ChatGPT account, Provider, and model.
+- **Forbidden claim:** Codex desktop exists on Linux; CLI or Provider evidence
+  qualifies desktop; or one supported desktop platform qualifies another.
+
+### S4 — Native conversation to governed work (`N=1`)
+
+- **Setup:** one useful Native Conversation on an independently declared Agent
+  path, with bounded workspace, Context, permission, budget, and acceptance
+  criteria.
+- **Action:** choose **Manage with Personal**, review the daemon preview, and
+  confirm once.
+- **Expected visible result:** the native conversation remains source-labelled;
+  the daemon admits one persistent Goal, current Plan revision, bounded Task,
+  and attempt 1; completion appears only after current independent verification
+  and daemon acceptance.
+- **Forbidden claim:** observation, fluent Agent text, Provider response, Tool
+  result, harness success, or process exit creates authority or completion.
+
+### S5 — Multi-Agent handoff and unified Activity (`N=1`)
+
+- **Setup:** one admitted Goal with at least two independently declared Agent
+  products, bounded Tasks, explicit handoff criteria, and declared Activity
+  sources.
+- **Action:** complete one source Task, issue one daemon-owned handoff, and
+  inspect the downstream Task and merged Activity.
+- **Expected visible result:** source, target, bounded work, authority,
+  readiness/blocker, and Native/Observed/Governed/Verified facts remain
+  distinct; missing source coverage is explicit.
+- **Forbidden claim:** Agents transfer authority to each other; Activity is a
+  confidence/progress percentage; or the scenario proves multi-Agent benefit.
+
+### S6 — Recovery and attempt preservation (`N=1`)
+
+- **Setup:** one governed Task whose first attempt has a declared failure or
+  unknown Effect and whose current daemon capability names the supported
+  controls.
+- **Action:** inspect the failure, then detach, retry/fork, or recover through
+  one genuinely supported control.
+- **Expected visible result:** detach changes observation only; the first
+  attempt and evidence remain; an unknown Effect enters reconciliation; a new
+  attempt receives a distinct identity; current verification is required
+  before completion.
+- **Forbidden claim:** detach is cancel; process exit is recovery; unknown work
+  may be blindly redispatched; or compensation is rollback.
+
+### S7 — Account, resource, and secret boundaries (`N=1`)
+
+- **Setup:** one declared account/profile and at least one object from each
+  currently available family, with source, permission, and observation scope.
+- **Action:** connect or select the account, inspect resource state, and change
+  or revoke one bounded binding.
+- **Expected visible result:** Agent, account, Provider, model, resource,
+  installation, and session identities stay separate; source, authority,
+  current/unknown state, and next action are explicit; no secret material is
+  product-visible.
+- **Forbidden claim:** account import proves Provider reachability; connection
+  grants permission; or secret material may enter an Agent, browser storage,
+  ordinary config, SQLite, argv, environment, logs, evidence, or chat.
+
+### S8 — MCP and federated-resource conflict (`N=1`)
+
+- **Setup:** one exact MCP server target and one origin-owned native resource
+  with a staged Personal/native conflict inside a declared observation scope.
+- **Action:** connect/project the MCP server, inspect health and permission
+  separately, detect the conflict, and request a conflicting write-back.
+- **Expected visible result:** MCP remains the seventh family; connection grants
+  no Tool/Context/workspace/model/host-session authority; origin and sync
+  coverage remain explicit; conflict fails closed; the daemon issues the exact
+  preview before any write-back.
+- **Forbidden claim:** MCP connectivity qualifies an Agent, Tool, server, or
+  host session; timestamp or model judgment resolves conflict; or the scenario
+  proves human adoption or broad MCP ecosystem support.
+
+### Aggregate disposition
+
+```text
+simulated product acceptance
+  = passed frozen scenarios / 8
+  = 8 / 8 required
+```
+
+The report records each scenario as `pass`, `fail`, `partial`, or `not-run`.
+No count, percentage, timing, or ETA is published without its declared
+denominator, setup, and evidence boundary.

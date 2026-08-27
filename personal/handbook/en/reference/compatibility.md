@@ -11,19 +11,27 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
   - path: personal/docs/product/linux-1.0-scope.md
-fingerprint: "sha256:52ce0b9bdc6a3cc1782415f9e6471b03799ee66f76d6f6d6e96fe40c58e69e2d"
+fingerprint: "sha256:3acadef5dd987a8db65469aec58a7cdb34edccb6b2d1dd7351c2517e48cf2882"
 non_claims:
   - Compilation on a platform is not product support; only the listed product target carries installation and service paths.
 ---
 
 # Compatibility
 
-## Product target
+## Current product target
 
 Linux x86_64 with user systemd (lingering enabled for boot start). Desktop
 sessions need a Secret Service keyring (GNOME Keyring). Headless operation is
 designed (encrypted vault) but not selectable yet. WSL2 and Windows-native hosts
 are explicitly refused by the Pi launch admission path.
+
+Personal 2.0 separately commits to local Windows, macOS, and Linux product
+paths. Each platform and Agent needs its own capability, lifecycle, recovery,
+negative, and release qualification; current Linux evidence does not transfer.
+The initial target Agent set is exact Pi, DeepSeek Harness Developer Preview,
+and the Codex experience in the current official ChatGPT desktop app only on
+officially supported and independently qualified platforms. No Linux Codex
+desktop is implied. These targets remain `Requires-backend`.
 
 ## Pinned versions
 

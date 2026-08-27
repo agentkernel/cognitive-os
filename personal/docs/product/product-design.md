@@ -1,358 +1,447 @@
 # CognitiveOS Personal product design
 
-- Status: canonical stable product intent
+- Status: canonical Personal 2.0 product intent and product acceptance
+- Change class: product-semantic
 - Current release boundary: [Linux 1.0 scope](linux-1.0-scope.md)
-- Adopted target: [Personal 2.0 scope](personal-2.0-scope.md)
-- Architecture: [Personal architecture](../architecture/README.md)
-- Decisions:
-  [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
-  [ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md),
-  [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md), and
-  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
+- Exact Personal 2.0 inclusion and capability status:
+  [Personal 2.0 scope](personal-2.0-scope.md)
+- Ordered behavior and simulated acceptance:
+  [User journeys](user-journeys.md)
 
-## 1. Product statement and reality boundary
+## 1. Document authority and evidence boundary
 
-CognitiveOS Personal is the owner-local operating system for cognitive
-resources and the desktop supervisor for the owner's Agents. It lets a
-beginner reach a real conversation quickly, then adds governance when the user
-chooses to manage an outcome with Personal.
+This document owns Personal product intent, concepts, outcomes, information
+architecture, and product acceptance. The Personal 2.0 scope owns exact
+release inclusion and capability status. User journeys own ordered interaction,
+failure, and recovery behavior. These documents link to one another instead of
+maintaining parallel reality ledgers.
+
+Personal 2.0 is a **full product-version commitment**. That commitment is not
+implementation, Gate, release, Profile, performance, containment, market,
+usability, adoption, or Agent-benefit evidence. Every adopted target remains
+capability-gated and **Requires-backend** until its exact capability exists.
+This document defines no schema, route, API, database, or implementation
+architecture.
+
+The product has no external human research evidence for frequency, intensity,
+existing workarounds, willingness to pay, adoption, retention, or usability.
+The jobs, JTBD, Forces of Progress, and Opportunity Solution Tree in this
+document are hypotheses. No validation score or numerical RICE score is
+claimed.
+
+AI-window evaluation may establish simulated product understanding and
+scenario acceptance for visible state, recovery, provenance, authority, and
+non-claims. It cannot establish human desirability, usability, adoption,
+willingness to pay, problem-solution fit, or release/Gate technical evidence.
+
+The Rust daemon remains the sole authority writer. Agents, adapters, the global
+Agent Shell, UI, CLI, sidecars, native applications, and MCP servers may
+propose, explain, or observe; they do not authorize, commit Effects, reconcile
+outcomes, or accept completion.
+
+## 2. Product definition, ICP, trigger, and outcome
+
+CognitiveOS Personal 2.0 is the cross-platform local stewardship layer for one
+owner's Agents, accounts, cognitive resources, and governed work. It targets
+Windows, macOS, and Linux as independently qualified local product platforms.
+It is not a distributed authority, remote public administration service,
+multi-user system, or launcher that trusts every Agent independently.
+
+The initial user hypothesis is one owner who operates or is onboarding multiple
+local Agent products, Provider accounts, reusable cognitive resources, and
+consequential governed work. The initial Agent set is:
+
+1. the exact qualified Pi path;
+2. DeepSeek Harness Developer Preview from
+   [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness);
+3. the Codex experience in the current official ChatGPT desktop app, only on
+   its officially supported platforms.
+
+The trigger hypothesis is the point at which native Agent work, accounts,
+resources, permissions, or recovery state can no longer be managed honestly as
+one isolated conversation or application session.
+
+### Primary outcome — unified resource stewardship
+
+For one declared owner-local inventory, Personal lets the owner identify,
+connect, inspect, govern, recover, or explicitly disposition every eligible
+Agent, account, resource binding, and governed-work item without confusing
+native output with daemon authority.
+
+```text
+unified stewardship completion rate
+  = passed eligible stewardship cases
+  / all eligible stewardship cases in the frozen evaluation manifest
+```
+
+A case passes only when the product-visible result states the exact object
+identity, current or explicitly unknown/stale state, provenance and authority
+boundary, and one valid next action or explicit unavailable reason.
+Consequential history and prior attempts remain preserved. The fixed simulated
+product-acceptance denominator is eight scenarios; the target is **8/8**. A
+partial, failed, or not-run scenario does not enter the numerator.
+
+## 3. Reality and release boundary
 
 | Boundary | Product truth |
 |---|---|
-| **Current implementation (Now)** | Linux 1.0 is six-family and Pi-qualified. P7-T05 delivered daemon-served `/ui/` with Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel remains separate. |
-| **Adopted Personal 2.0 target** | Desktop Control Plane is the primary entry and supervisor. It embeds adapter-backed native conversations, introduces persistent Goal and daemon-owned Plan views, orchestrates admitted multi-Agent work, federates native resources, and recognizes MCP as the seventh family. |
-| **Requires-backend** | Conversation/history projections, Goal -> Plan revision -> Task -> Attempt orchestration, full Task and Agent controls, unified Activity, authority-backed Context/Runtime inventory, federated sync, and MCP management are not complete daemon capabilities today. |
-| **Requires-core (conditional)** | P10-T02/Lane-CTR is required only for a new or changed public MCP/Goal/Plan/Run/Harness/conversation surface. Personal-private projections may not require core changes; this document defines no schema or route. |
+| **Current implementation (Now)** | Linux 1.0 is six-family and Pi-qualified. Its daemon-served Control Plane is additive; Activity is a bounded composition and the native dsh panel remains separate. |
+| **Personal 2.0 full-version target** | Cross-platform local stewardship on independently qualified Windows, macOS, and Linux product paths; exact Pi, DeepSeek Harness Developer Preview, and supported-platform Codex desktop paths; embedded conversations; Goal -> Plan revision -> Task -> Attempt; multi-Agent work; Account Hub; federated resources; unified Activity; and seven families including MCP. |
+| **Requires-backend** | Agent/account lifecycle, common conversation/history, Goal/Plan/Attempt orchestration, controls, multi-Agent handoffs, authority-backed Context/Runtime inventory, unified Activity, federated synchronization, broader Account Hub methods, Global Agent Shell, and MCP family management are not complete Personal capabilities today. |
+| **Requires-core (conditional)** | A new or changed public machine surface requires the separately governed contract decision. Personal-private product projections may not. No public shape is implied here. |
 
-The Rust daemon remains the sole authority writer. Agents, adapters, the global
-Agent Shell, UI, CLI, sidecars, and MCP servers may propose or observe; they do
-not authorize, commit Effects, reconcile outcomes, or accept completion.
+Each platform and Agent has an independent capability and qualification
+statement. Connection, an adapter, a Provider account, a model, a CLI, an MCP
+bridge, or evidence from another platform transfers no qualification.
 
-Personal is an operating layer above Linux. It is not a replacement kernel,
-driver framework, distributed control plane, remote administration service, or
-launcher that trusts every Agent independently.
+The exact inclusion matrix, platform boundary, and capability truth live in
+[Personal 2.0 scope](personal-2.0-scope.md). Current task, Gate, release, and
+environment status remain owned by `PROGRESS.md` and the formal plan.
 
-## 2. User and jobs
+## 4. JTBD and working-mode hypotheses
 
-The primary user is one owner who may be new to governed Agents. The product is
-**beginner-first by default**: plain labels, safe defaults, and one visible
-next action. Stable IDs, digests, epochs, permissions, raw projections, and
-audit detail remain available in inspectors. There is no Basic/Expert mode and
-no separate product personality for technical users.
+### Primary JTBD hypothesis
 
-The same owner moves among three working modes without changing authority:
+> When I operate several native Agents, accounts, reusable resources, and
+> consequential outcomes, I want one owner-local stewardship layer to show
+> what exists, what is authoritative, what changed, and what I can safely do
+> next, so I can continue, supervise, recover, and accept work without losing
+> native ownership or mistaking Agent output for completion.
 
-- **conversation:** start or continue useful work in an Agent's native model;
-- **supervision:** understand status, conflicts, costs, evidence, and next
-  actions across Agents;
-- **stewardship:** manage accounts, permissions, resources, runtime engines,
-  backup, recovery, and updates.
+The owner moves among three working modes without changing authority:
 
-Primary jobs:
+- **conversation:** create or continue native work and request governance when
+  the outcome must become durable or consequential;
+- **supervision:** follow Goals, Plan revisions, Tasks, attempts, handoffs,
+  Activity, evidence, cost, conflicts, and next actions;
+- **stewardship:** manage Agent identity and lifecycle, accounts, permissions,
+  resources, MCP, synchronization, workspace, backup, recovery, and updates.
 
-1. Reach a real first Agent response within five minutes when prerequisites are
-   available.
-2. Connect an installed Agent or install one from a signed upstream catalog in
-   no more than three onboarding steps.
-3. Continue a native conversation, then choose **Manage with Personal** when
-   the outcome needs durable Goal, Plan, Task, Context, Effect, and verification
-   governance.
-4. Supervise one Goal across sessions and Agents without confusing native plans
-   or Agent output with daemon authority.
-5. Understand what changed through one source-labelled timeline and recover
-   without losing prior attempts.
-6. Use native Memory, Skills, Tools, Context, Runtime resources, and MCP servers
-   through vendor adapters while preserving origin ownership.
-7. Configure subscriptions, API keys, imported credentials, custom endpoints,
-   models, routing scope, usage, and cost without exposing secret material to
-   Agents or the browser.
-8. Diagnose and restore service even when a model, Provider, Agent, sidecar,
-   native panel, MCP server, or watch stream is unavailable.
+Conversation and supervision are working modes inside the unified stewardship
+outcome. Stewardship owns continuity across them; none creates a second
+authority writer or a separate product personality.
 
-## 3. Resource and authority model
+The candidate task outcomes remain hypotheses:
 
-### Current implementation (Now)
+1. reach one real native Agent response with declared prerequisites and timing
+   basis;
+2. connect or install an exact Agent through a bounded onboarding path;
+3. move useful native work into governed and independently verified work;
+4. supervise one Goal across sessions and Agents;
+5. explain change and recover without erasing attempts;
+6. steward native and Personal resources without losing origin ownership;
+7. manage accounts, routing, usage, and cost without exposing secrets;
+8. diagnose and restore service when an Agent, Provider, resource, MCP server,
+   native surface, or observation source is unavailable.
 
-Linux 1.0 has six user-visible families:
+No frequency, intensity, workaround, or willingness-to-pay score exists for
+these hypotheses. The hypothesized adoption forces are fragmented native state
+and uncertain completion as Push; unified local stewardship as Pull; permission,
+secret, migration, and reliability risk as Anxiety; and independently usable
+native applications as Habit.
+
+## 5. P0 release outcomes and product acceptance
+
+All five outcomes are Personal 2.0 release blockers. Dependency order does not
+make any outcome optional.
+
+### P0-1 — Qualified Agent and account stewardship
+
+Personal stewards the exact initial Agent set and its accounts without merging
+Agent, Provider, account, model, installation, instance, session, or process
+identity.
+
+Acceptance signals:
+
+- Pi, DeepSeek Harness, and Codex desktop each show exact source, product,
+  version, platform, capability coverage, health, and qualification boundary;
+- each supported Agent can complete its declared connect/install, first real
+  response, inspect, recovery, and lifecycle disposition path;
+- Account Hub separates subscription/OAuth, API key, approved credential
+  import, custom endpoint, Provider reachability, model availability, usage,
+  quota, and cost;
+- global, Agent, and conversation routing scopes are explicit; a current
+  session changes only through an explicit rebind or restart;
+- removal distinguishes **Disconnect** from **Uninstall** and states what is
+  retained, removed, unknown, or incomplete.
+
+### P0-2 — Conversation-to-governed work
+
+Personal embeds adapter-backed native conversations and admits selected work
+into the durable hierarchy:
+
+```text
+Native Conversation -> Goal -> Plan revision -> Task -> Attempt
+```
+
+Acceptance signals:
+
+- a native conversation remains Native until the owner chooses
+  **Manage with Personal** and confirms the exact daemon preview;
+- admission creates one persistent Goal, a daemon-owned Plan revision, one or
+  more bounded Tasks, and a first attempt under each started Task;
+- Agent-authored plans remain Native candidates until admitted;
+- retry or fork creates a new attempt and never erases prior failure or
+  evidence;
+- only current independent verification and daemon acceptance produce Verified
+  completion.
+
+### P0-3 — Multi-Agent supervision and unified Activity
+
+Personal supervises daemon-admitted multi-Agent work through explicit handoffs
+and one source-labelled Activity reading.
+
+Acceptance signals:
+
+- one Goal may use multiple independently qualified Agents without allowing an
+  Agent to transfer authority to another;
+- each handoff states source, target, bounded work, current authority, and
+  blocked or ready disposition;
+- Activity separates **Native / Observed / Governed / Verified** facts and
+  declares source coverage;
+- missing or disconnected sources produce partial, stale, unknown, or not-run
+  facts rather than inferred progress;
+- the Global Agent Shell explains and proposes but never holds authority,
+  dispatches ambient tools, or accepts completion.
+
+### P0-4 — Seven-family and federated resource stewardship
+
+Personal 2.0 stewards seven independent families: Memory, Skill, Tool, Context,
+Task, Runtime/Process, and MCP.
+
+Acceptance signals:
+
+- each family retains its own identity, lifecycle, retention, permission, and
+  failure semantics;
+- MCP manages server source, installation, health, permission, update, and
+  compatible-client projection without becoming a Tool alias;
+- MCP connection grants no Tool, Context, workspace, model, or host-session
+  authority;
+- vendor-native content remains origin-owned while Personal owns admitted
+  bindings, permissions, synchronization intent, and authority records;
+- synchronization declares origin and coverage, and every conflict fails closed
+  until the owner confirms an exact daemon preview.
+
+### P0-5 — Recovery, controls, and continuity
+
+Personal preserves work and authority truth across interruption, failure,
+restart, stale observation, and recovery.
+
+Acceptance signals:
+
+- the product exposes only controls the current daemon capability genuinely
+  supports: interrupt, pause/resume request, cancel, detach, retry/fork,
+  runtime restart/recover, or a defined compensation;
+- detach changes observation only; process exit is not cancellation, recovery,
+  or completion;
+- an unknown Effect enters reconciliation and is never blindly redispatched;
+- retry/fork preserves every started attempt, evidence, and failure;
+- irreversible work never promises rollback, and a compensation is shown only
+  when the daemon defines one.
+
+## 6. Agent and account scope
+
+### Initial Agent claim set
+
+| Agent product | Exact Personal 2.0 target identity | Independent claim boundary |
+|---|---|---|
+| **Pi** | the exact acquired Pi package and Personal sidecar path | Linux 1.0 evidence qualifies only its exact Pi path; Personal 2.0 capabilities and every additional platform remain independently qualified |
+| **DeepSeek Harness** | [`deepseek-ai/deepseek-harness`](https://github.com/deepseek-ai/deepseek-harness), explicitly labelled **Developer Preview** | exact source revision, profile, session, capability, lifecycle, recovery, negatives, and platform; not a DeepSeek model or Provider qualification |
+| **Codex desktop** | the Codex experience in the current official ChatGPT desktop app | only officially supported desktop platforms enter exact scope; Codex CLI, web, IDE, account, model, or Provider evidence does not qualify the desktop product; no Linux Codex desktop is implied |
+
+Windows, macOS, and Linux are Personal 2.0 target platforms, but support is
+declared per platform and per Agent. Cross-platform local means each supported
+installation keeps local owner authority; it does not imply cloud authority,
+public remote administration, or one platform's evidence covering another.
+
+Agent connection establishes one explicit observation scope. There is no
+speculative global scan or surprise per-session enrollment. Native applications
+remain independently usable. Onboarding retains the target path:
+
+1. choose an exact signed upstream record or **Connect existing**;
+2. review Provider, workspace, observation, and permission scope once;
+3. open the native conversation; ready means one real response arrived.
+
+Any timing, count, or onboarding-step result reports its start event,
+prerequisites, eligible denominator, environment, and not-run cases.
+
+### Account Hub
+
+Account Hub is the Personal 2.0 target for Provider presets, custom
+OpenAI-compatible endpoints, subscriptions/OAuth, API keys, approved
+user-directed credential import, routing scopes, current-session rebind,
+usage, quota, cost, and recovery. Current custom OpenAI-compatible
+account/endpoint support does not imply the broader target is complete.
+
+Secret material stays in approved Secret Stores and daemon-mediated proxy
+profiles. It never appears in Agent configuration, ordinary config, SQLite,
+argv, environment, logs, Context, Memory, evidence, browser storage, or chat.
+
+Non-normative product-behavior reference:
+[`jlcodes99/cockpit-tools`](https://github.com/jlcodes99/cockpit-tools) is a
+cross-platform local AI-application account manager whose published behavior
+includes account rosters, account switching, quota/reset visibility, explicit
+application paths, and isolated multi-account application instances. It is not
+a requirements source, implementation dependency, authority model, credential
+boundary, or qualification source for Personal.
+
+## 7. Resource and authority model
+
+### Family model
 
 | Family | Product responsibility |
 |---|---|
 | Memory | admitted durable knowledge with scope, provenance, versions, conflicts, expiry, forget, and tombstone |
-| Skill | immutable instructions/resources/scripts packages with revision and enablement policy |
+| Skill | immutable instruction/resource/script packages with revision and enablement policy |
 | Tool | registered governed operations with explicit availability |
-| Context | authorized, budgeted Task input and explicit losses/deltas |
+| Context | authorized and budgeted Task input with explicit omissions, losses, and deltas |
 | Task | raw intent, preview, admission, bounded execution, checkpoint, Effect, and verification |
-| Runtime/Process | Agent package-through-execution identities and daemon-owned process observation |
+| Runtime/Process | separate package-through-execution identities and daemon-owned process observation |
+| MCP | server source, installation, connection, health, permission, update, quarantine, and compatible-client projection |
 
-### Adopted Personal 2.0 target
+Linux 1.0 remains six-family; MCP is a Personal 2.0 target and
+**Requires-backend**. Budget, Permission, Model, Artifact, Intent/Effect,
+Evidence, and Event remain cross-cutting objects rather than additional
+families.
 
-MCP becomes the true seventh family: installed servers, health, permissions,
-updates, and projections into compatible Agent clients. The family layout in
-the desktop product is task-oriented:
+Content and connection never imply permission. Installing an Agent, enabling a
+Skill, selecting a model, discovering a native resource, or connecting an MCP
+server grants no runtime capability. Workspace, process, network, Memory,
+model, MCP, and write-back scopes remain separate and revocable.
 
-- **Library:** Memory, Skills, Tools, MCP;
-- **Work:** Task and Context;
-- **Agents:** Runtime/Process.
+Origin owns native content; Personal owns admitted governance. Automatic
+observation is limited to the exact connection scope. Every write-back is a
+daemon-owned Intent/Effect mutation. New, broader, destructive, or conflicted
+scope requires preview and confirmation. A conflict never resolves by
+timestamp or model judgment alone.
 
-This navigation does not merge domains. Each family keeps its own identities,
-storage, transitions, retention, and failure semantics. Budget, Permission,
-Model, Artifact, Intent/Effect, Evidence, and Event remain cross-cutting
-objects rather than additional families.
+Standard Workspace and bounded Extended Home remain established boundaries. A
+Goal may span workspaces only through explicit bounded entries. Federated
+resources never widen filesystem or network scope.
 
-MCP is the adopted seventh product family and its implementation is
-**Requires-backend**. A new or changed public MCP machine surface conditionally
-requires P10-T02/Lane-CTR; a Personal-private projection may not. Linux 1.0
-remains six families and does not inherit this target retroactively.
+## 8. Conversation and governed-work model
 
-`CognitiveResourceManifest` remains an ActivityContext-filtered discovery
-manifest. It is not the family catalog and grants neither read nor action.
+Native behavior survives integration. Vendor-specific adapters preserve the
+native harness, expose capability coverage, and retain vendor extension facts.
+Vendor-native conversation identifiers remain opaque origin bindings.
 
-## 4. Product principles
+**Manage with Personal** is the consequential boundary. The daemon previews the
+exact Goal, Plan revision, Tasks, Agent assignments, Context, workspace,
+permissions, budget, external Effects, and acceptance criteria. The owner
+confirms that preview once; broader or changed scope receives a new preview.
 
-### Conversation first; governance by admission
+The daemon owns Plan revisions, Task authority, attempts, and multi-Agent
+handoffs. A Goal may span sessions, Agents, and Tasks. A Task is the bounded
+authority unit. Each attempt belongs to one Task. A composed **execution flow**
+is a product reading and does not by itself create a new authority object.
 
-A Native Conversation is the interaction source. It remains native until the
-user chooses **Manage with Personal**, requests governance, and confirms the
-daemon preview. The daemon then admits a persistent Goal, a Plan revision, and
-one or more Tasks; each preserved attempt belongs to one Task. An Agent-authored
-plan remains Native until the daemon admits it; fluent text never becomes
-authority by presentation.
-
-### Native behavior survives integration
-
-Vendor adapters preserve each Agent's native harness and project a common core
-plus a capability matrix and vendor extension slots. The native application
-remains usable. Agent connection establishes an explicit observation scope;
-automatic observation is limited to that scope, with no speculative/global
-scan or surprise per-session enrollment. The owner may request governance and
-confirm a daemon preview, but only the daemon admits authority.
-
-The common/native conversation projection reuses or references existing Core
-`Conversation` and `ConversationBinding` identities where applicable.
-Vendor-native conversation IDs remain opaque origin bindings. Any additional
-projection is Personal-private until P10-T02 decides otherwise.
-
-### Preview once at the consequential boundary
-
-The global Agent Shell may explain state, conflicts, and proposed recovery. For
-a consequential action, the daemon creates the exact preview, the user confirms
-that preview once, and the daemon executes. The Shell never receives authority,
-and the product does not ask for repeated micro-approvals inside an unchanged
-admitted scope.
-
-### Content and connection never imply permission
-
-Installing an Agent, enabling a Skill, selecting a model, discovering a native
-resource, or connecting an MCP server grants no runtime capability. Workspace,
-process, network, Memory, model, MCP, and write-back scopes remain separate and
-revocable.
-
-### Origin owns content; Personal owns governance
-
-Vendor-native resources remain owned by their origin. Personal owns admitted
-bindings, permissions, policy, synchronization intent, and authority records.
-Adapters detect readable changes automatically only inside the explicit
-observation scope established at Agent connection. Every write-back is a
-daemon-owned Intent/Effect mutation. It may run automatically inside an
-unchanged exact daemon grant/risk policy; new, broader, destructive, or
-conflicted scope requires preview and confirmation. Conflicts fail closed and
-invoke the Agent Shell for an explained resolution.
-
-### Completion and progress stay honest
-
-One merged timeline uses **Native / Observed / Governed / Verified** source
-badges. These are provenance and authority labels, not confidence scores.
-Effect reconciliation remains Governed; Verified is reserved for independent
-verification and daemon acceptance.
 Agent final text, Tool result, Provider response, native harness success, or
-process exit is not completion. Percentages, counts, and ETAs appear only when
-their denominator or basis is declared.
+process exit remains an observation. Fluent text never becomes authority by
+presentation.
 
-### Local and secret-safe by default
+## 9. Activity, controls, and recovery
 
-The daemon binds loopback. Provider and user secrets stay in approved Secret
-Stores and daemon-mediated proxy profiles. ADR-0055 permits only user-directed,
-per-source, daemon-owned, audited, non-logging credential import. Secret
-material never appears in Agent configuration, ordinary config, SQLite, argv,
-environment, logs, Context, Memory, evidence, or chat.
+Unified Activity is the target source-labelled reading:
 
-## 5. Workspace model
+| Label | Meaning |
+|---|---|
+| **Native** | originated in a native Agent application or session |
+| **Observed** | seen by an adapter or daemon but not admitted as authority |
+| **Governed** | daemon admission, authorization, mutation, and Effect reconciliation |
+| **Verified** | current independent verification and daemon acceptance only |
 
-### Current implementation (Now)
+These labels describe provenance and authority, not confidence or linear
+progress. Counts, percentages, rates, and ETAs appear only with a declared
+denominator and basis.
 
-The Standard Workspace and bounded Extended Home rules below are established
-Personal boundaries.
+The Global Agent Shell may explain current state, conflicts, missing
+capability, and recovery choices; propose one next action; and request the
+authoritative daemon preview. It never holds authority or silently widens
+scope.
 
-### Standard Workspace
+Empty, loading, partial, stale, permission, disconnected, error, success, and
+long-running states are first-class product truths. If a control is absent, the
+product states that absence rather than presenting a fake capability.
 
-A Task selects a Standard Workspace as its default file boundary. Within that
-boundary, policy may allow low-friction read/search and reversible write/patch
-through registered Tools. Writes retain a recoverable journal and explicit
-change projection.
+Recovery reloads durable facts, fences stale work, reconciles unknown Effects,
+reauthorizes current policy, and rebuilds current Context before dispatch.
+Support facts are redacted and distinguish known, unknown, stale, and not-run.
 
-### Bounded Extended Home
+## 10. Hypothesis Opportunity Solution Tree and IA trace
 
-Extended Home is an explicit set of additional document/project roots,
-purposes and allowed operations. It may also enable ordinary outbound network
-access. It is previewed, remembered only by explicit choice and revocable.
-Selecting one path does not grant its siblings or the full home directory. A
-sidecar sees only the resolved paths and network policy admitted for its
-current execution.
+The desired outcome is the unified stewardship completion rate defined in §2.
+The tree is a hypothesis tree because there is no external human research.
 
-Extended Home hard-denies Secret Store contents, SSH/GPG keys, browser
-credential/profile stores, CognitiveOS authority/bootstrap data, Docker and
-system sockets, system directories, privilege elevation, service management
-and package management. Publication, repository push, irreversible deletion
-and other remote mutations remain exact typed operations with confirmation
-where required.
-
-### Adopted Personal 2.0 target
-
-Agent onboarding presents the workspace choice together with Provider and
-permission review. A Goal may span workspaces only through explicit bounded
-entries. Federated native resources do not widen filesystem scope.
-
-Broader workspace management and cross-session synchronization are
-**Requires-backend**. A new public scope or permission form conditionally
-requires P10-T02/Lane-CTR; a Personal-private projection may not.
-
-## 6. Agent integration and conversations
-
-### Current implementation (Now)
-
-Pi is the Linux 1.0 qualified Agent/sidecar combination. Package,
-installation, registration, instance, sidecar, execution, process, Shell
-session, and native conversation remain distinct. The Control Plane can inspect
-bounded Runtime and dsh projections, but has no full Agent lifecycle HTTP
-surface and no embedded conversation/history surface. The native dsh panel is
-separate.
-
-### Adopted Personal 2.0 target
-
-The **Agents** space is both the Agent roster and the place for adapter-backed
-native conversations and history. Onboarding is at most three steps:
-
-1. choose a signed upstream catalog record or **Connect existing**;
-2. review Provider, workspace, and permissions once;
-3. open the conversation; ready means the first real response arrived.
-
-Catalog records expose source, version, digest, signature, license, and adapter
-compatibility. Activation has two milestones: **first chat** and **first
-governed/verified Task**. Removal always asks **Disconnect** or **Uninstall**.
-
-The common adapter core, embedded conversations, catalog flow, native-session
-observation/daemon admission, and lifecycle controls are **Requires-backend**.
-The projection reuses Core Conversation/ConversationBinding; only a new public
-extension conditionally requires P10-T02/Lane-CTR. See
-[Agent integration and conversations](agent-integration-and-conversations.md).
-
-## 7. Work model
-
-### Current implementation (Now)
-
-The current UI creates and inspects governed Tasks. Its Run is a presentation
-composition from Task transitions, Effects, observations, evidence, and watch
-facts; there is no first-class Run API. There are no Goal, Plan, Harness, or
-common native-conversation projection APIs and no Task pause/cancel/retry HTTP
-controls. Existing Core Conversation/ConversationBinding contracts are not a
-Control Plane implementation.
-
-### Adopted Personal 2.0 target
-
-- **Native Conversation** is the interaction source.
-- **Goal** is the durable outcome requested through **Manage with Personal**,
-  confirmed by the owner, and admitted by the daemon. It may span sessions,
-  Agents, and Tasks.
-- **Plan** is daemon-owned and revisioned. Agent plans remain Native candidates
-  until admission.
-- **Task** is the bounded authority unit.
-- **Attempt** belongs to one Task and preserves each execution or recovery
-  branch. Retry or fork never erases the prior attempt.
-- The daemon orchestrates a multi-Agent graph and explicit handoffs.
-- The UI calls the operational reading an **execution flow** and an Agent's
-  managed host an **Agent runtime engine**. Contract terms remain visible in
-  inspectors.
-
-Goal/Plan orchestration, attempt controls, multi-Agent graphs, and their public
-projections are **Requires-backend**. New public machine semantics
-conditionally require P10-T02/Lane-CTR; Personal-private projections may not.
-
-## 8. Surfaces and local modes
-
-| Surface | Current implementation (Now) | Adopted Personal 2.0 target |
+| Hypothesized opportunity | Adopted solution branches | Simulated evidence only |
 |---|---|---|
-| Control Plane `/ui/` | daemon-served desktop browser; current seven top-level spaces | primary desktop entry and supervisor with six target spaces |
-| Global Agent Shell | no cross-Agent Control Plane Shell | persistent explainer and proposal layer; never authority |
-| Native Agent app | remains independently usable | remains usable; explicit observation/admission only |
-| Native dsh panel | separate `cognitive dsh web` surface | remains a native surface even when dsh conversations are adapter-projected |
-| `cognitive` CLI | deterministic management and recovery | deterministic fallback to the same daemon authority |
-| doctor/support | redacted facts and digests | linked recovery evidence, never secret-bearing |
+| **O1 — fragmented Agent, account, and lifecycle identity** | qualified Agent roster; Account Hub; readiness and recovery disposition | Agent and account scenarios |
+| **O2 — native work loses authority and recovery continuity** | embedded conversation; Goal -> Plan revision -> Task -> Attempt; multi-Agent handoffs; unified Activity; controls | governed-work and recovery scenarios |
+| **O3 — reusable resources lose origin, permission, or conflict truth** | seven-family inventory; MCP management; federated synchronization; fail-closed conflict resolution | resource, secret, MCP, and conflict scenarios |
 
-Desktop, headless, and foreground modes use one daemon authority and application
-services. UI attachment may differ; no mode gets a second writer.
+The target information architecture traces to those opportunities:
 
-## 9. Target information architecture
-
-| Space | Primary job | Important contents | Dependency |
-|---|---|---|---|
-| **Home** | understand readiness, attention, and next action | first chat/goal entry, active Goals, blockers, stale state, recent verified outcomes | current basis exists; richer Goal/Agent composition Requires-backend |
-| **Agents** | converse with and supervise Agents | roster, signed source, capability matrix, native conversations/history, Runtime, health, permissions, current handoffs | conversations and lifecycle Require-backend |
-| **Work** | manage outcomes | Goal -> Plan revision -> Task -> Attempt hierarchy, Context, execution flows, Effects, evidence | hierarchy/control/inventory Require-backend; new public semantics conditionally require P10-T02 |
-| **Library** | curate reusable resources for work | Memory, Skills, Tools, MCP | current resources exist; MCP implementation Requires-backend; public shape is conditional on P10-T02 |
-| **Activity** | explain what happened | merged Native/Observed/Governed/Verified timeline with coverage | unified feed Requires-backend |
-| **Settings** | configure Personal | Account Hub, Provider routes, System, workspace, permissions, backup/recovery | current custom OpenAI-compatible accounts/endpoints and Providers/System exist; OAuth/import/override hierarchy Require-backend |
-
-Providers and System are nested in Settings. Context is inspected in Work;
-Runtime is inspected in Agents. Neither becomes a Library family. Stable object
-links and inspectors preserve cross-space navigation.
-
-## 10. Controls and recovery
-
-The adopted target control vocabulary is:
-
-- interrupt current interaction;
-- request Task pause/resume;
-- cancel Task;
-- detach observation without changing work;
-- retry or fork from a checkpoint while preserving attempts;
-- restart or recover the Agent runtime engine;
-- offer compensating undo only when the daemon has a defined compensating
-  operation. The UI never promises rollback of an irreversible action.
-
-All controls are **Requires-backend** today. Until a typed daemon capability
-exists, the UI shows an unavailable explanation rather than a disabled or fake
-control. The global Agent Shell can explain and propose; only the daemon
-previews and executes.
-
-## 11. Capability-gap categories
-
-| Category | Current gap | Product treatment |
+| Space | Outcome responsibility | Opportunity trace |
 |---|---|---|
-| **Backend absent** | embedded conversation/history projection; Goal -> Plan revision -> Task -> Attempt and multi-Agent orchestration; Task controls; full Agent lifecycle HTTP; authority-backed Context/Runtime inventory; unified Activity; federated sync; MCP management | no affordance that implies availability; show the reason and dependency |
-| **API or native surface exists, UI-dark/partial** | native dsh conversation surface is separate; Context authorization facts are not a complete Work inspector; several current projections cover only bounded facets | compose only declared facts, label source and coverage, and do not infer missing state |
-| **Conditional contract/core gap** | only a new or changed public MCP/Goal/Plan/Run/Harness/conversation extension | use P10-T02/Lane-CTR; Personal-private projections may not require core changes and must reuse existing Core Conversation/ConversationBinding |
+| **Home** | readiness, attention, active stewardship cases, blockers, and next valid action | O1, O2 |
+| **Agents** | Agent identity, conversation, Runtime/Process, health, permissions, handoffs, and lifecycle | O1, O2 |
+| **Work** | Goal, Plan revision, Task, Attempt, Context, Effects, execution flows, and evidence | O2 |
+| **Library** | Memory, Skills, Tools, MCP, origin, permission, and synchronization state | O3 |
+| **Activity** | merged provenance, declared coverage, conflict, and recovery evidence | O2, O3 |
+| **Settings** | Account Hub, Provider routes, workspace, permissions, system, backup, and recovery | O1, O3 |
 
-Existing Provider, resource, Task-evidence, backup/restore, and readiness
-capabilities may be regrouped into the target IA without pretending that the
-missing target capabilities already exist.
+Providers and System are nested in Settings. Context belongs to Work;
+Runtime/Process belongs to Agents. The Global Agent Shell is a cross-space
+explainer, not a seventh space and never an authority writer.
 
-## 12. Linux 1.0 preservation and non-claims
+## 11. Capability and dependency ledger
+
+| Release-blocking target | Current product truth | Dependency order |
+|---|---|---:|
+| exact cross-platform and three-Agent qualification | Linux 1.0 qualifies only its exact Pi path; other platform/Agent facts are bounded or target-only | D0 |
+| Agent lifecycle and Account Hub | current capabilities cover bounded Pi/dsh facts, custom OpenAI-compatible accounts/endpoints, and fixed bindings; the full target is absent | D1 |
+| embedded conversation/history | native dsh remains separate; there is no common embedded product path | D2 |
+| Goal -> Plan revision -> Task -> Attempt | current governed Task capability does not provide the full hierarchy or attempt controls | D2 |
+| recovery controls and preserved attempts | current detach is observation-only; the full control vocabulary is absent | D2 |
+| authority-backed Context/Runtime inventory | current projections cover bounded facets only | D2 |
+| MCP seventh-family management | current MCP Tool transport does not provide server-family lifecycle | D2 |
+| federated synchronization and conflict handling | no general bidirectional native-resource synchronization exists | D3 |
+| multi-Agent graph and handoffs | adopted target, not a complete current runtime capability | D3 |
+| unified Activity | current Activity is a bounded composition with partial watch coverage | D3 |
+| Global Agent Shell | no cross-Agent Control Plane Shell exists | D3 |
+| frozen AI-window product acceptance | no execution result is claimed by this document | D4 |
+
+All rows are Personal 2.0 release blockers. The order is a product dependency
+sequence, not a RICE ranking or delivery estimate. RICE is **N/A** because no
+real Reach window or person-week effort exists. Evidence confidence is high for
+the documented authority and current/target boundary, but low for human demand,
+adoption, and usability.
+
+## 12. Measurement, simulated acceptance, and non-claims
+
+The frozen AI-window set contains eight scenarios, each with `N=1`: Pi,
+DeepSeek Harness, Codex desktop, conversation-to-governance, multi-Agent
+handoff, recovery/attempt preservation, account/resource/secret boundaries,
+and MCP/federated conflict. The exact setup, action, expected visible result,
+forbidden claim, and denominator live in
+[User journeys §13](user-journeys.md#13-frozen-ai-window-simulated-product-acceptance).
+
+Passing **8/8** establishes simulated product acceptance only. It does not
+establish human desirability, usability, adoption, retention, willingness to
+pay, problem-solution fit, performance, containment, release readiness,
+Profile conformance, or Agent benefit. Every started or required scenario is
+retained as pass, fail, partial, or not-run; no scenario is replaced to improve
+the denominator.
 
 Linux 1.0 remains a six-family, Pi-qualified product with Standard Workspace,
 bounded Extended Home, one canonical local service, and the exact qualified Pi
-adapter path. The current Control Plane is additive and non-blocking; the
-native dsh panel remains separate. MCP, embedded conversations, non-Pi
-qualification, and multi-Agent orchestration do not enter the 1.0 claim.
+path. Its current Control Plane is additive and the native dsh panel remains
+separate. DeepSeek Harness, Codex desktop, Windows/macOS Personal 2.0 platform
+claims, MCP, embedded conversations, federated synchronization, Account Hub
+expansion, and multi-Agent orchestration do not enter or revise the Linux 1.0
+claim.
 
-Personal continues to stabilize bounded Linux service, filesystem, process,
-secret, package, and network ports. It does not include a kernel module, eBPF
-control plane, device scheduler, custom kernel, or distributed authority.
-
-Product outcomes should measure time to first real response, time to first
-governed/verified success, recovery, conflict resolution, secret isolation,
-and false-completion avoidance. A count, percentage, rate, or ETA is valid only
-with a declared denominator and evidence boundary.
-
-Formal thresholds, current task/Gate status, release evidence, and environment
-qualification remain owned by the formal plan, preregistered campaigns, and
-`PROGRESS.md`. See [Linux 1.0 scope](linux-1.0-scope.md).
+Personal does not include a kernel module, eBPF control plane, device
+scheduler, custom kernel, distributed authority, enterprise tenancy, HA, cloud
+authority, or public remote administration. Formal thresholds, current
+task/Gate status, release evidence, and environment qualification remain owned
+by the formal plan, preregistered campaigns, and `PROGRESS.md`.

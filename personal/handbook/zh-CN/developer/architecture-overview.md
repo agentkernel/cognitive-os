@@ -24,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:d716173c7d0320d28c16db03dfe208dc9717a310fbee5c1262c3403bfcad7690"
+fingerprint: "sha256:1a32a17a44666535b098c1c67342eccfbfedd6d668b716e756f598c474024d0b"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -62,24 +62,28 @@ digest 钉住转移表与 `cognitive-contracts` 的 canonical digest 校验。
 - **平台端口**：SQLite WAL（双库）、文件系统 artifact CAS、Linux Secret Service、
   systemd 用户服务。`implemented`。
 
-## 已采纳的 Personal 2.0 组合——不是当前实现
+## Personal 2.0 完整组合——不是当前实现
 
-Personal 2.0 保留上述不变量，同时采纳以下目标层次：
+Personal 2.0 保留上述不变量，同时承诺以下产品边界：
 
-- 当前客户端是 daemon 提供、来自 `clients/pc/web/` 的 `/ui/` bundle；桌面优先
-  Control Plane/Agent Shell 重设计是 `Requires-backend`，不是第二权威平面；
+- Windows、macOS、Linux 是各自独立资格化的本地产品路径，平台与 Agent 证据都不转移；
+- 初始精确 Agent 集是 Pi、DeepSeek Harness Developer Preview，以及受官方平台限制的
+  Codex desktop；CLI、Provider、model、account、adapter 或 bridge 证据不能资格化另
+  一个产品；
 - Account Hub 凭据导入是 ADR-0055 下 daemon 独占的来源到 SecretStore 操作。UI 只
   提供精确来源选择与同意，绝不读取或拿到导入材料；
 - MCP 成为带联邦来源身份、trust、availability 与 policy 的第七个用户可见资源族。
   当前 Resource Manager 与权威服务仍保持六族，直到类型化 backend/core 工作落地；
 - 厂商专用对话适配器保留每个 Agent 的协议与身份。Pi 仍是唯一已资格化 Agent；dsh
   实现证据与通用适配器合同都不转移资格；
-- Goal 与不可变 Plan revision 组合当前 Task；daemon-owned 多 Agent 监督负责分配、
-  fencing、budget、对账与验证。
+- 嵌入式原生对话只有经显式 admission 才进入受治理工作；
+- Goal -> 不可变 Plan revision -> Task -> 保留 Attempt 组合受治理工作；daemon-owned
+  多 Agent 监督负责分配、fencing、budget、对账与验证；
+- 统一 Activity 以声明的覆盖范围区分 Native、Observed、Governed、Verified provenance。
 
-今天没有 Goal/Plan/MCP 资源族/联邦/导入/监督 API，也没有目标 UI 重设计。公开权威或
-合同增量标为 `Requires-core`；daemon 投影、持久化与路由增量标为
-`Requires-backend`。
+这些缺失能力仍为 `Requires-backend`；公开权威或合同增量仍为 `Requires-core`。完整
+版本承诺与固定 8/8 AI-window 模拟验收都不构成实现、人类 usability、release 或 Gate
+证据。
 
 ## 解释"意外"的设计决策
 

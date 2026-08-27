@@ -25,7 +25,7 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
-fingerprint: "sha256:b6528d3add7eb3a54cdcbb14b2567282e3b0c81584d1048aaf78511ee17a37d6"
+fingerprint: "sha256:3fb668d478fd009e488b469a947daa643eb815f6a8e78f7662e3d017512d33dc"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -39,7 +39,8 @@ non_claims:
 
 未带 Personal 2.0 限定的行描述当前 Linux/当前 API 基线：六个资源族，Pi 是唯一已
 资格化 Agent。同源 `/ui/` 已存在于 `clients/pc/web/`；已采纳的桌面优先重设计是另一
-个尚未实现的目标。
+个尚未实现的目标。Personal 2.0 是完整版本承诺，但每个缺失行仍为 `Requires-backend`，
+且每个平台与 Agent 都需独立资格化。
 
 | 能力 | 状态 | 缺口（如有） |
 |---|---|---|
@@ -69,14 +70,17 @@ non_claims:
 | 当前六族资源投影/watch | implemented | 仅 management+task 通道；不是已采纳的 MCP 第七族 |
 | Agent 生命周期（Pi 获取→sidecar） | implemented | — |
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
+| Personal 2.0 跨平台本地产品 | Requires-backend | Windows、macOS、Linux 是精确且各自独立的目标路径；当前 release 证据仍属于 Linux 1.0，不转移 |
+| Personal 2.0 初始 Agent 集 | Requires-backend | 精确 Pi、`deepseek-ai/deepseek-harness` Developer Preview，以及只进入官方支持平台的当前官方 ChatGPT desktop app 内 Codex experience；不声明 Linux Codex desktop；CLI/Provider/model/account/bridge/平台证据都不转移 |
 | 厂商专用 Agent 对话适配器 | Requires-backend | 当前 Pi/dsh 路径不提供通用桌面对话适配层；只有 Pi 已资格化 |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |
 | Personal 2.0 MCP 第七族 + 联邦资源 | Requires-backend / Requires-core | ADR-0057 已采纳；当前没有资源族 API、持久化、trust policy、联邦投影或目标 UI |
-| Goal + 不可变 Plan revision + 多 Agent 监督 | Requires-backend / Requires-core | 仅已采纳目标；当前持久工作对象仍是 Task，且没有 Goal/Plan/supervisor API |
+| Goal + 不可变 Plan revision + Task 所属保留 Attempt + 多 Agent 监督 | Requires-backend / Requires-core | 仅完整版本目标；当前持久工作对象仍是 Task，完整层级、控制、统一 Activity 与 supervisor 不存在 |
+| 固定 AI-window 产品验收 | Requires-backend | 八个固定 N=1 场景要求 8/8；当前不声明执行结果，未来 pass 仍只是模拟产品评估，不是人类或 release/Gate 证据 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
 | 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
 | 当前 Web UI / Console | partial | daemon 同源提供的 `/ui/` 已存在于 `clients/pc/web/`；HTTP Task/Agent 控制仍缺失，Personal 2.0 桌面优先重设计未实现 |
-| Windows/macOS 产品 | unavailable | 仅 Linux x86_64；Windows 安装模板与凭据后端已成稿并过 CI，但 B01-W 安装战役未执行 |
+| 当前 Windows/macOS 产品 | unavailable | 仅 Linux x86_64；Windows 安装模板与凭据后端已成稿并过 CI，但 B01-W 安装战役未执行；Personal 2.0 采纳不让任一平台成为当前事实 |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |
 | UJ1–UJ6 capability-truth 登记 | implemented | 冻结 public-caller/oracle/cleanup/evidence 行；Web UI/Multi-Agent 为 scope-excluded，不得阻塞 required arm；linux-002 命名 oracle 是产品证据，不是 EVAL/Gate |
 

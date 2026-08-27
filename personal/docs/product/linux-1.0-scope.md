@@ -17,7 +17,7 @@ and every Gate status remain exclusively in
 | Label | Linux 1.0 meaning |
 |---|---|
 | **Current implementation (Now)** | Personal has the six-family Linux product, the independently qualified Pi path, and the additive P7-T05 daemon-served `/ui/`. The current UI has Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel is separate. |
-| **Adopted Personal 2.0 target** | Seven families including MCP; desktop-primary Agent conversations; Goal -> Plan revision -> Task -> Attempt orchestration; federated resources; Account Hub; target IA Home/Agents/Work/Library/Activity/Settings. |
+| **Adopted Personal 2.0 target** | A separately qualified cross-platform local product for Windows, macOS, and Linux; exact Pi, DeepSeek Harness Developer Preview, and supported-platform Codex desktop paths; seven families including MCP; embedded Agent conversations; Goal -> Plan revision -> Task -> Attempt; multi-Agent work; federated resources; Account Hub; unified Activity; and target IA Home/Agents/Work/Library/Activity/Settings. |
 | **Requires-backend** | Personal 2.0 projections, controls, orchestration, synchronization, and MCP management do not enter the Linux 1.0 definition. |
 | **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding remains unchanged. Only a new/changed public MCP, conversation extension, Goal, Plan, Run, Harness, or attempt machine surface requires P10-T02/Lane-CTR and does not revise this release retroactively. |
 
@@ -178,10 +178,13 @@ Linux 1.0 must bind exact Pi package, installation, registration, sidecar,
 instance and execution identities and qualify drift, channel separation,
 permission, lifecycle, recovery and out-of-band mutation negatives.
 
-OpenClaw, Hermes, Codex, WorkBuddy and other Agents require independent
-package/protocol/sidecar identity, capability, sandbox, lifecycle, recovery,
-negative campaign and release inclusion decisions. MCP integration does not
-inherit Tool or Agent support merely because a bridge can connect.
+DeepSeek Harness, Codex desktop, OpenClaw, Hermes, WorkBuddy and other Agents
+require independent product/package, platform, protocol/sidecar identity,
+capability, sandbox, lifecycle, recovery, negative campaign and release
+inclusion decisions. Codex desktop is not claimed on Linux merely because
+Codex CLI, a Provider, model, account, bridge, or another platform is
+available. MCP integration does not inherit Tool or Agent support merely
+because a bridge can connect.
 
 ## 7. Explicitly outside the Linux 1.0 claim
 
@@ -189,13 +192,15 @@ inherit Tool or Agent support merely because a bridge can connect.
 - Skill marketplace, chaining, automatic download and autonomous dependencies;
 - learned/complex Context ranking and advanced B06/B07 optimization claims;
 - broad dynamic Tool catalogs and general MCP ecosystem qualification;
-- OpenClaw, Hermes, Codex, WorkBuddy and every non-Pi Agent qualification;
+- DeepSeek Harness, Codex desktop, OpenClaw, Hermes, WorkBuddy and every
+  non-Pi Agent qualification;
 - Multi-Agent delegation/orchestration;
 - the current additive Web UI as a release requirement, plus Personal 2.0
   embedded conversations, Goal -> Plan revision -> Task -> Attempt flows, federated resources,
   Account Hub methods, and target IA;
 - Windows installer, service and credential-store parity;
-- Linux aarch64, macOS, mobile and WSL2 as product platforms;
+- Linux aarch64, macOS, Windows, mobile and WSL2 as Linux 1.0 product
+  platforms; later Personal 2.0 platform targets do not revise this claim;
 - enterprise approval chains, multi-tenancy, HA and cloud sync.
 
 Some of these capabilities now exist as additive post-baseline work, including

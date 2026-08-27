@@ -8,19 +8,21 @@ generated: false
 
 # CognitiveOS Personal Handbook (English)
 
-A local, single-owner operating system for cognitive resources: one Rust daemon
-governs what AI agents know, may reuse, may do, see, work on, and run as. This
-handbook separates current implementation truth from the adopted Personal 2.0
-target; target-only behavior is always marked `Requires-backend` or
+A cross-platform local, single-owner stewardship product for Agents, accounts,
+cognitive resources, and governed work: one Rust daemon governs what Agents
+know, may reuse, may do, see, work on, and run as. This handbook separates
+current implementation truth from the full Personal 2.0 product-version
+commitment; target-only behavior is always marked `Requires-backend` or
 `Requires-core`.
 
 **Status boundary:** Linux 1.0 and the current APIs remain six-family and Pi is
 the only qualified Agent. The current same-origin `/ui/` SPA exists at
-`clients/pc/web/`. Personal 2.0 adopts a desktop-first redesign, a seventh MCP
-family, Account Hub credential import, vendor-specific Agent conversation
-adapters, Goal/Plan and multi-Agent supervision, and federated resources. Those
-target additions — including the redesign of the existing UI — are not
-implemented.
+`clients/pc/web/`. Personal 2.0 requires independently qualified Windows,
+macOS, and Linux local product paths; exact Pi, DeepSeek Harness Developer
+Preview, and supported-platform Codex desktop paths; embedded conversations;
+Goal/Plan/Task/Attempt and multi-Agent supervision; Account Hub; a seventh MCP
+family; unified Activity; and federated resources. These are full-version
+release blockers and remain `Requires-backend`, not current implementation.
 
 - **[User guide](user/README.md)** — install, first conversation, CLI, secrets,
   Provider Control Plane, the Pi shell, the resource model, operations, security,

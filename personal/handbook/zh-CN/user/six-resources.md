@@ -49,30 +49,33 @@ Linux 1.0 与当前 API 分别治理六个资源族。它们有意**不**共享�
 2. **先过滤后排序。** Memory 与 Context 候选先经授权、scope、tombstone、新鲜度过滤，
    任何排序才能看到它们；被拒内容连排序都无法影响。
 
-从 Linux 1.0 推迟：embedding/向量/图谱 Memory、skill 市场、已采纳的 MCP 资源族
+从 Linux 1.0 推迟：embedding/向量/图谱 Memory、skill 市场、Personal 2.0 必须交付的 MCP 资源族
 （已交付的 post-1.0 MCP Tool transport/dynamic-Tool MVP 不等于该资源族）、多 Agent
-编排与桌面优先 UI 重设计。
+编排、联邦同步与完整 Personal 2.0 产品组合。
 
-## Personal 2.0 第七族（`Requires-backend`）
+## Personal 2.0 必须交付的第七族（`Requires-backend`）
 
 Personal 2.0 已采纳 **MCP** 为第七个用户可见资源族。这不改变当前六族 Resource
 Manager API，也不会把 MCP 内容自动变成原生 Tool。
 
 目标资源族拥有彼此分离的 server、package、connection、advertised capability、
-binding、health 与 quarantine 身份。**联邦资源**投影保留来源身份、provenance、
-revision/freshness、trust、availability 与允许动作，而不把外部权威复制进 Personal。
+binding、health、update 与 quarantine 身份。**联邦资源**投影保留来源身份、
+provenance、revision/freshness、trust、availability 与允许动作，而不把外部权威复制
+进 Personal。origin 拥有原生内容；Personal 拥有已准入 binding、权限、同步 intent 与
+权威记录。冲突失败闭合，write-back 前必须取得精确 daemon preview。
 
 MCP 广告对象仍经各自准入路径进入既有资源族：tool 是带版本绑定的 Tool candidate，
 protocol resource 是 Context candidate，prompt/可复用指令是 Skill candidate。仅发现不
 授予读取或派发权限。daemon policy 仍须授权每次使用；变更仍须遵守
 persist-before-dispatch Intent/Effect、fencing、budget 与独立验证。
 
-目标视图严格区分：
+统一 Activity 严格区分：
 
-- `Native`：Personal 拥有的本地能力/资源；
-- `Observed`：只读发现的事实；
-- `Governed`：经 daemon 授权、界定且可审计的使用；
-- `Verified`：经独立验证的结果或当前事实。
+- `Native`：源自原生 Agent 应用或 session；
+- `Observed`：adapter 或 daemon 已看见、但尚未接纳为权威；
+- `Governed`：daemon 准入、授权、变更与 Effect 对账；
+- `Verified`：只有当前独立验证加 daemon acceptance。
 
-它们不是自动成熟度阶梯，`Verified` 也不是 release 或资格化声明。MCP 资源族、联邦
-API、持久化、trust policy 与 UI 均尚未实现。
+它们不是自动成熟度阶梯，`Verified` 也不是 release 或资格化声明。MCP 资源族与通用
+联邦能力是 Personal 2.0 完整版本 release blocker，仍为 `Requires-backend`；仅连接不
+授予 Tool、Context、workspace、model 或 host-session 权威。

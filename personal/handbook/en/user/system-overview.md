@@ -24,7 +24,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:9d2765dd3f966220dfb96fc5ff3e3357b8b22acfcde178b0cb60946da6b9ce07"
+fingerprint: "sha256:74f6954d2ff14cb31bbb32b4b637ec1b1d373e6e0034056ec0d454deb9c8c714"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -33,11 +33,12 @@ non_claims:
 
 # System overview
 
-CognitiveOS Personal is a local, single-owner operating system for cognitive
-resources. It gives an agent a governed place to remember information, load
-skills, use tools, assemble context, accept tasks, and run a managed process.
-The product is a Rust daemon plus clients: the daemon owns authority state and
-clients such as `cognitive`, Pi, and SDKs request or propose operations.
+CognitiveOS Personal is a cross-platform local, single-owner stewardship
+product for Agents, accounts, cognitive resources, and governed work. It gives
+an Agent a governed place to remember information, load skills, use tools,
+assemble context, accept tasks, and run a managed process. The product is a
+Rust daemon plus clients: the daemon owns authority state and clients such as
+`cognitive`, Pi, and SDKs request or propose operations.
 
 ## The model in one picture
 
@@ -67,14 +68,15 @@ independent, current verification result.
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence, and Event are
 cross-cutting objects. They do not form a seventh universal resource table.
 
-## Adopted Personal 2.0 target (`Requires-backend`)
+## Full Personal 2.0 target (`Requires-backend`)
 
-Personal 2.0 keeps the daemon-only authority boundary but changes the intended
-product composition:
+Personal 2.0 keeps the daemon-only authority boundary and makes the following
+full-version commitments:
 
-- the existing same-origin `/ui/` SPA at `clients/pc/web/` becomes a
-  desktop-first Control Plane only after a target redesign that is not
-  implemented;
+- Windows, macOS, and Linux are independently qualified local product paths;
+- the exact initial Agent set is Pi, DeepSeek Harness Developer Preview, and
+  the Codex experience in the current official ChatGPT desktop app only on
+  officially supported and independently qualified platforms;
 - target navigation is Home, Agents, Work, Library, Activity, and Settings;
   Providers and System live under Settings, and `Work` is a navigation label
   rather than a new Task/Run authority domain;
@@ -84,13 +86,17 @@ product composition:
   capabilities; it is not an alias for the current native Tool catalog;
 - vendor-specific conversation adapters connect installed Agents to the Agent
   Shell without qualifying them by association with Pi;
-- durable Goal and Plan revisions organize work above current Tasks, while the
-  daemon supervises independently qualified Agents and remains the only
-  authority writer.
+- embedded native conversations enter governed work only through
+  **Manage with Personal**;
+- durable Goal -> Plan revision -> Task -> Attempt organizes work, preserves
+  attempts, and supports daemon-owned multi-Agent handoffs;
+- unified Activity separates Native, Observed, Governed, and Verified facts
+  with declared coverage.
 
-There are no current APIs for these target additions. `Requires-backend` means
-the adopted design must not be shown as a working feature; `Requires-core`
-additionally marks work that needs approved contract/authority semantics.
+These additions remain target-only. `Requires-backend` means the product must
+not show them as working; `Requires-core` additionally marks work that needs
+approved contract/authority semantics. Platform, Agent, CLI, Provider, model,
+account, bridge, and MCP evidence never transfers across claim boundaries.
 
 ## How a normal interaction flows
 

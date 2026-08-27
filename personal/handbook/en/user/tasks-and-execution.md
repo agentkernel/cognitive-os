@@ -82,18 +82,20 @@ So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).
 
-## Personal 2.0 Goal, Plan, and supervision target (`Requires-backend`)
+## Personal 2.0 governed-work commitment (`Requires-backend`)
 
 The current durable work object is still **Task**. There is no Goal or Plan API,
 no persisted Plan-revision lifecycle, and no multi-Agent supervisor in the
 current daemon.
 
-The adopted target adds:
+The full-version target adds:
 
 - **Goal**: an owner-authored durable outcome above one or more Tasks;
 - **Plan revision**: an immutable candidate decomposition of that Goal. An
   Agent may propose one, but only a daemon-issued preview and admission may
   make a revision current;
+- **Attempt**: one preserved execution or recovery branch under exactly one
+  Task. Retry or fork creates a new attempt and never erases the prior one;
 - **multi-Agent supervision**: independently qualified Agents contribute
   bounded candidates through vendor-specific adapters. The daemon assigns,
   fences, budgets, arbitrates Effects, and verifies; Agents never transfer
@@ -103,9 +105,13 @@ The adopted target adds:
   permission.
 
 These concepts do not rename today's Task rows or infer implementation from the
-existing Pi/dsh paths. Pi remains the only qualified Agent, and all target
-Goal/Plan/multi-Agent/federation behavior is `Requires-backend` (or
-`Requires-core` where public authority contracts must change).
+existing Pi/dsh paths. Pi remains the only currently qualified Agent. Personal
+2.0 requires independently qualified exact Pi, DeepSeek Harness Developer
+Preview, and supported-platform Codex desktop paths; no CLI, Provider, model,
+account, bridge, or platform evidence transfers. Goal/Plan/Task/Attempt,
+multi-Agent, unified Activity, control, and federation behavior are all release
+blockers and remain `Requires-backend` (or `Requires-core` where public
+authority contracts must change).
 
 ## What can never happen, by construction
 

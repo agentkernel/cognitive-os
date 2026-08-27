@@ -24,7 +24,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:9d2765dd3f966220dfb96fc5ff3e3357b8b22acfcde178b0cb60946da6b9ce07"
+fingerprint: "sha256:74f6954d2ff14cb31bbb32b4b637ec1b1d373e6e0034056ec0d454deb9c8c714"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -33,9 +33,9 @@ non_claims:
 
 # 系统总览
 
-CognitiveOS Personal 是本地、单一 owner 的认知资源操作系统：为 agent
-提供一个受治理的地方来保存记忆、加载 Skill、使用 Tool、组装 Context、
-接纳 Task，并运行受管理的进程。产品由 Rust daemon 与客户端组成；daemon
+CognitiveOS Personal 是跨平台本地、单一 owner 的 Agent、账户、认知资源与受治理工作
+管理产品：为 Agent 提供一个受治理的地方来保存记忆、加载 Skill、使用 Tool、组装
+Context、接纳 Task，并运行受管理的进程。产品由 Rust daemon 与客户端组成；daemon
 拥有权威状态，`cognitive`、Pi 和 SDK 等客户端只能请求或提出操作。
 
 ## 一张图理解
@@ -65,12 +65,13 @@ daemon 是唯一的权威写入者。客户端响应、Provider 响应、Pi `age
 预算、Permission、Model、Artifact、Intent/Effect、Evidence 和 Event 是横切对象，
 不是第七类通用 Resource 表。
 
-## 已采纳的 Personal 2.0 目标（`Requires-backend`）
+## Personal 2.0 完整目标（`Requires-backend`）
 
-Personal 2.0 保留 daemon-only 权威边界，但改变目标产品组合：
+Personal 2.0 保留 daemon-only 权威边界，并作出以下完整版本承诺：
 
-- 当前位于 `clients/pc/web/` 的同源 `/ui/` SPA 只有在完成尚未实现的目标重设计后，
-  才成为桌面优先 Control Plane；
+- Windows、macOS、Linux 是各自独立资格化的本地产品路径；
+- 初始精确 Agent 集是 Pi、DeepSeek Harness Developer Preview，以及只进入官方支持且
+  经 Personal 独立资格化平台的当前官方 ChatGPT desktop app 内 Codex experience；
 - 目标导航为 Home、Agents、Work、Library、Activity、Settings；Providers 与 System
   位于 Settings 下，`Work` 只是导航标签，不新增 Task/Run 权威域；
 - Account Hub 管理 Provider 账户与订阅，并经 daemon 提供用户发起、逐来源同意的凭据
@@ -78,11 +79,14 @@ Personal 2.0 保留 daemon-only 权威边界，但改变目标产品组合：
 - MCP 成为承载带来源身份联邦能力的第七资源族，不是当前原生 Tool 目录的别名；
 - 厂商专用对话适配器把已安装 Agent 接到 Agent Shell，任何 Agent 都不会因 Pi 的证据
   自动获得资格；
-- 持久 Goal 与 Plan revision 在当前 Task 之上组织工作；daemon 监督各自独立资格化的
-  Agent，仍是唯一权威写入者。
+- 嵌入式原生对话只有经 **Manage with Personal** 才进入受治理工作；
+- 持久 Goal -> Plan revision -> Task -> Attempt 组织工作、保留 attempt，并支持
+  daemon-owned 多 Agent handoff；
+- 统一 Activity 以声明的覆盖范围区分 Native、Observed、Governed、Verified。
 
-这些目标增量当前没有 API。`Requires-backend` 表示已采纳设计不得展示为可用功能；
-`Requires-core` 还表示实现前需要批准的合同/权威语义。
+这些增量仍只是目标。`Requires-backend` 表示产品不得把它们展示为可用功能；
+`Requires-core` 还表示实现前需要批准的合同/权威语义。平台、Agent、CLI、Provider、
+model、account、bridge 与 MCP 证据都不跨声明边界转移。
 
 ## 一次交互如何流动
 

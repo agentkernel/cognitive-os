@@ -57,13 +57,21 @@ current fact of the code.
   current SPA.
   Operator steps: [Provider Control Plane](provider-control-plane.md). Linux RC
   claim set: [Linux RC operator map](rc-and-support.md).
-- **Personal 2.0 target capabilities are not current APIs**: the current
-  resource model and Resource Manager remain six-family; the seventh MCP family
-  and federated resources are `Requires-backend`. Account Hub has no
-  browser-profile, Agent credential-file, subscription, or OAuth import
-  mechanism. Goal/Plan revision APIs, vendor-specific Agent conversation
-  adapters, and multi-Agent supervision do not exist. Pi remains the only
-  qualified Agent.
+- **Personal 2.0 full-version capabilities are not current product
+  capabilities**: the current resource model and Resource Manager remain
+  six-family; the seventh MCP family, federated synchronization, unified
+  Activity, Global Agent Shell, and preserved-attempt controls are
+  `Requires-backend`. Account Hub has no browser-profile, Agent credential-file,
+  subscription, or OAuth import mechanism. The complete Goal -> Plan revision
+  -> Task -> Attempt path, embedded vendor conversations, and multi-Agent
+  supervision do not exist. Pi remains the only currently qualified Agent;
+  DeepSeek Harness Developer Preview and supported-platform Codex desktop are
+  independently qualified Personal 2.0 targets. No Linux Codex desktop is
+  implied.
+- **AI-window acceptance is not user or release evidence**: the fixed target is
+  8/8 simulated product scenarios. It does not prove human desirability,
+  usability, adoption, willingness to pay, problem-solution fit, release/Gate
+  readiness, or Agent benefit.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no
@@ -106,6 +114,9 @@ current fact of the code.
 
 - Product platform: Linux x86_64 with user systemd; desktop needs a Secret Service
   keyring. WSL2 is an engineering environment, not a product target.
+- Personal 2.0 commits to independently qualified Windows, macOS, and Linux
+  local product paths. That target does not make either non-Linux path current
+  or transfer evidence across platforms or Agents.
 - Headless encrypted-vault operation is designed but not selectable today.
 - Windows: daemon/CLI compile in CI and a Credential Manager backend plus
   installer/scheduled-task templates exist, but the B01-W install campaign has
