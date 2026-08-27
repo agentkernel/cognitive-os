@@ -197,9 +197,15 @@ This is not a RICE ranking, schedule, delivery estimate, or permission to omit
 later rows. RICE remains **N/A** because no real Reach window, human evidence,
 or person-week effort is available.
 
-The fixed simulated product-acceptance denominator is eight scenarios. A pass
-requires 8/8. A failed, partial, or not-run scenario remains in the denominator.
-The exact scenarios live in
+The fixed simulated product-acceptance denominator is eight scenarios. A full
+pass requires 8/8. A failed, partial, or not-run scenario remains in the
+denominator. S3 (Codex desktop) is platform-conditional per
+[product design §12](product-design.md#12-measurement-simulated-acceptance-and-non-claims)
+(owner decision 2026-08-27): while no supported Codex desktop platform is in
+the active execution scope it is recorded `not-run (platform-conditional)`,
+Linux-mainline acceptance closes at seven platform-eligible passes plus that
+disposition, and full 8/8 remains the full-version requirement. The exact
+scenarios live in
 [User journeys §13](user-journeys.md#13-frozen-ai-window-simulated-product-acceptance).
 
 ## 8. Explicit exclusions and non-claims

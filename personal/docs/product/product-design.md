@@ -78,8 +78,9 @@ A case passes only when the product-visible result states the exact object
 identity, current or explicitly unknown/stale state, provenance and authority
 boundary, and one valid next action or explicit unavailable reason.
 Consequential history and prior attempts remain preserved. The fixed simulated
-product-acceptance denominator is eight scenarios; the target is **8/8**. A
-partial, failed, or not-run scenario does not enter the numerator.
+product-acceptance denominator is eight scenarios; the target is **8/8**,
+counted under the platform-conditional rule in §12. A partial, failed, or
+not-run scenario does not enter the numerator.
 
 ## 3. Reality and release boundary
 
@@ -424,6 +425,21 @@ handoff, recovery/attempt preservation, account/resource/secret boundaries,
 and MCP/federated conflict. The exact setup, action, expected visible result,
 forbidden claim, and denominator live in
 [User journeys §13](user-journeys.md#13-frozen-ai-window-simulated-product-acceptance).
+
+**Platform-conditional scenario counting** (product-semantic revision; owner
+decision 2026-08-27): S3, Codex desktop stewardship, is executable only on an
+officially supported Codex desktop platform, and no Linux Codex desktop
+exists. While the owner's platform disposition keeps macOS shelved and the
+Windows code-signing route deferred, no platform inside the active execution
+scope can run S3. The denominator stays eight and S3 is never removed,
+replaced, or weakened; the acceptance matrix instead counts each scenario
+against the platforms actually in execution scope. **Linux-mainline simulated
+product acceptance** therefore closes when all seven platform-eligible
+scenarios pass and S3 is recorded as `not-run (platform-conditional)` with
+that exact reason. The full **8/8** result remains the full-version target and
+may be claimed only after a supported platform route actually executes S3.
+This rule reports platform reality; it claims no Codex desktop capability and
+removes none of S3's product intent, oracle, or forbidden claims.
 
 Passing **8/8** establishes simulated product acceptance only. It does not
 establish human desirability, usability, adoption, retention, willingness to

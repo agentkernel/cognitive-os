@@ -25,7 +25,7 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
-fingerprint: "sha256:3fb668d478fd009e488b469a947daa643eb815f6a8e78f7662e3d017512d33dc"
+fingerprint: "sha256:948eaaa6acc01125193057d95577efebc3b45929e09216a5cf01b71451a18962"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -76,7 +76,7 @@ non_claims:
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |
 | Personal 2.0 MCP 第七族 + 联邦资源 | Requires-backend / Requires-core | ADR-0057 已采纳；当前没有资源族 API、持久化、trust policy、联邦投影或目标 UI |
 | Goal + 不可变 Plan revision + Task 所属保留 Attempt + 多 Agent 监督 | Requires-backend / Requires-core | 仅完整版本目标；当前持久工作对象仍是 Task，完整层级、控制、统一 Activity 与 supervisor 不存在 |
-| 固定 AI-window 产品验收 | Requires-backend | 八个固定 N=1 场景要求 8/8；当前不声明执行结果，未来 pass 仍只是模拟产品评估，不是人类或 release/Gate 证据 |
+| 固定 AI-window 产品验收 | Requires-backend | 八个固定 N=1 场景；完整通过要求 8/8，其中 S3（Codex desktop）为平台受限场景（owner 决策 2026-08-27：活动执行范围内无受支持平台期间记 `not-run (platform-conditional)`，Linux 主线以七个平台可执行场景全过加该处置收口）；当前不声明执行结果，未来 pass 仍只是模拟产品评估，不是人类或 release/Gate 证据 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
 | 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
 | 当前 Web UI / Console | partial | daemon 同源提供的 `/ui/` 已存在于 `clients/pc/web/`；HTTP Task/Agent 控制仍缺失，Personal 2.0 桌面优先重设计未实现 |

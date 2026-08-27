@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:956c4925f41014c422282492cc33cf8d7dba7a659dae22d09d4046606bc31789"
+fingerprint: "sha256:2385144a588f8e78dd131d95d2859a593bc05ef79d258adf9b8ba67035b7d6ff"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -29,7 +29,7 @@ owns what each environment may claim. Practical routing:
 | `CLOUD-AGENT-LINUX-01` (Cursor Cloud Agent pod) | full bash-shell Rust + TS iteration before pushing; bootstrapped by `.cursor/environment.json` | native systemd/Secret Service behavior, timing baselines, Gate/release/Profile |
 | Local Windows GNU host | pnpm builds/tests, `cargo fmt`, Node checkers, docs work | any workspace `cargo build/test/clippy/run` — registered linker exit 121 |
 | WSL2 | historical engineering evidence | product-path claims (product target is native Linux) |
-| `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures | ordinary development, deployment, or testing |
+| `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures; since 2026-08-27 also the owner-authorized Personal 2.0 development-validation host (exact-revision disposable worktrees and task-declared cleanable roots only; frozen while a B01 campaign is active) | guest-baseline, snapshot, or credential changes outside a preregistered B01 campaign lease |
 | `B01-W-DESKTOP-001` | registered-but-not-provisioned Windows Gate guest (B01-W) | anything until provisioned per its preregistration |
 
 Toolchain pins: Rust 1.97.1 (`rust-toolchain.toml`), pnpm 10.33.2 + Node ≥22

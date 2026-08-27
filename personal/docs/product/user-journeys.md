@@ -430,9 +430,15 @@ Agent-benefit claim.
 
 The product-acceptance manifest is fixed at eight scenarios. Each scenario has
 `N=1`. A scenario enters the numerator only when every expected product-visible
-result is present and no forbidden claim appears. Pass requires **8/8**.
+result is present and no forbidden claim appears. Full pass requires **8/8**.
 Failed, partial, and not-run scenarios remain in the denominator and cannot be
-replaced.
+replaced. S3 is platform-conditional under
+[product design §12](product-design.md#12-measurement-simulated-acceptance-and-non-claims)
+(owner decision 2026-08-27): while no officially supported Codex desktop
+platform is inside the active execution scope, S3 is recorded as
+`not-run (platform-conditional)`; Linux-mainline acceptance closes at seven
+platform-eligible passes plus that explicit S3 disposition, and the full 8/8
+result remains the full-version requirement.
 
 The AI window receives product-visible facts only. A human may review its
 record, but the result remains simulated product evaluation. It is not human
@@ -556,5 +562,7 @@ simulated product acceptance
 ```
 
 The report records each scenario as `pass`, `fail`, `partial`, or `not-run`.
-No count, percentage, timing, or ETA is published without its declared
-denominator, setup, and evidence boundary.
+An S3 `not-run` caused by the platform-conditional rule records the reason
+`platform-conditional` and follows product design §12. No count, percentage,
+timing, or ETA is published without its declared denominator, setup, and
+evidence boundary.

@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T06、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；P10-T01 documentation-only semantic adoption `in-progress`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
+> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T06、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；P10-T01 documentation-only semantic adoption `done`（PR #278）；P10-T05..P10-T18 已于 2026-08-27 登记为 `not-started`、无人领取；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-27**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -14,7 +14,7 @@
 > 定义边界与激活门槛（[enterprise/docs/VERSION-1.0.0.md](../../enterprise/docs/VERSION-1.0.0.md)），
 > 不激活实现。该 **structural** 修订只移动路径并同步工具链/文档索引，不改变任何任务
 > 验收、Gate 结论、evidence 或 claim scope；1.0.0 定稿逐字保留各 Gate 的 MVP 声明上限。
-> **计划追踪 ID：** `P0-T01` 至 `P10-T04`（含后续登记的 `P2-T09..P2-T38`、`P8-T12`、`P8-T13`、`P8-T14`、`P8-T15` 与 `P9-T05..P9-T12`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **计划追踪 ID：** `P0-T01` 至 `P10-T18`（含后续登记的 `P2-T09..P2-T38`、`P8-T12`、`P8-T13`、`P8-T14`、`P8-T15`、`P9-T05..P9-T12` 与 `P10-T05..P10-T18`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** [`docs/plan/plan.md`](plan.md)；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`docs/plan/plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
@@ -103,6 +103,19 @@
 > Gate；P10-T01 为 documentation-only，未修改代码、合同、负例或任何 Gate/release/Profile
 > 结论。
 >
+> **Personal 2.0 计划落地登记（2026-08-27，P10-T05..P10-T18）：** owner 确认
+> `artifacts/personal-2.0-plan-2026-08-27/` 计划草案后，本批把 14 个新任务
+> `P10-T05..P10-T18` 登记为 `not-started`、无人领取；P10-T02..T04 沿用既有登记不重复。
+> 平台取舍（owner 指令，记录于草案 05-platform-decisions.md）：Linux x86_64 为主线；
+> macOS `shelved`（不排期、不领任务、不声明能力）；Windows code-signing/cert 环节
+> `deferred`（P10-T18 登记免签名开发路径与补证顺序，P7-T07 保持 blocked 不重开）；
+> Codex desktop（P10-T16）只在 Windows deferred 轨之上执行。同批完成两项调和：
+> (a) **product-semantic** 修订 `personal/docs/product/product-design.md` §12 的
+> S3/8-场景分母语义（S3 平台受限场景，验收矩阵按平台如实计；owner 决策 2026-08-27）；
+> (b) `PERSONAL-TEST-ENVIRONMENTS.md` linux-002 登记文本按 owner 指令补记 2.0 开发
+> 验证用途（不削弱 B01 快照/凭据边界）。本批不领取任何任务、不创建任务分支或 PR、
+> 不新增 Gate，也不改变任何既有任务状态、attempt、evidence、Gate 结论或 claim scope。
+>
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
 > 落地 Personal 低摩擦授权模型（DEC-P-20）：交互分层 Tier 0/1/2、任务准入预览为
@@ -182,8 +195,8 @@
 | Phase 7 - 产品化与发布 | 8 | 7 | 0 | 1 | 0 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| Phase 10 - Personal 2.0 desktop 与 MCP | 4 | 0 | 1 | 0 | 3 | 无新 Gate；先决策、再 Lane-CTR/实现 |
-| **合计** | **115** | **106** | **1** | **1** | **7** | — |
+| Phase 10 - Personal 2.0 desktop 与 MCP | 18 | 1 | 0 | 0 | 17 | 无新 Gate；先决策、再 Lane-CTR/实现 |
+| **合计** | **129** | **107** | **0** | **1** | **21** | — |
 
 ## 2. 产品边界与不变量
 
@@ -252,7 +265,7 @@
 | P5B | post-1.0 MCP/dynamic Tool ecosystem | P2 native Tool/Effect 闭环 | B10 | 自动市场发现或未资格化 MCP |
 | P6 | post-1.0 Multi-Agent 可选实验 | 单 Agent benchmark 与明确并行假设 | B11 GO 或合法 NO-GO/disabled | 默认开启 Multi-Agent |
 | P7 | Linux 1.0 Product Operability 与后续 RC | 对应 P1/P2/P3/P4/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
-| P10 | Personal 2.0 desktop Control Plane 与 MCP family | P10-T01 semantic adoption；随后按 typed dependency 进入 Lane-CTR 与实现 | P10-T01..T04 各自 acceptance；**无新 Gate** | 把 docs/既有 P5/B10/P7 UI evidence 写成 seventh-family 或 desktop support |
+| P10 | Personal 2.0 desktop Control Plane 与 MCP family | P10-T01 semantic adoption；随后按 typed dependency 进入 Lane-CTR 与实现 | P10-T01..T18 各自 acceptance；**无新 Gate** | 把 docs/既有 P5/B10/P7 UI evidence 写成 seventh-family 或 desktop support；把 Linux 主线证据写成 Windows/macOS 或 Codex desktop 支持 |
 
 ### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
@@ -337,7 +350,21 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P10-T01 | owner-accepted 2026-08-27 scope；ADR-0037/0043/0055 与 finalized Personal 1.0 baseline | ADR-0056/0057 accepted；ADR-0037 partial-supersession backlink；formal plan/trace/support/version/current snapshot 与 stable product docs 同步；import 能力诚实标 `Requires-backend`；documentation-only validation | 无；不创建 Gate |
 | P10-T02 | P10-T01 | Lane-CTR decision 覆盖 MCP family 与 common conversation projection 的 public/private boundary、identity/version compatibility、capability digest、binding、health/quarantine、P5-era migration、older-client fail-closed；若改变 machine contract，schema/generated binding/negative 同批 | 无；task `done` 不构成 support/release/Profile |
 | P10-T03 | P10-T02、P5-T03、P5-T04、P8-T12 | daemon-owned MCP server/package/connection/capability/binding/health/quarantine lifecycle；advertised tools 走 Tool candidate/admission；resources/prompts 走 Context/Skill admission；SecretStore、Intent/Effect、fencing/reconcile negatives | 无；任何后续 support/promotion 需独立正式决策 |
-| P10-T04 | P10-T02、P10-T03、P7-T05、P8-T13 | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor conversation adapters + honest capability matrix；native Agent apps usable；缺 import backend 显示 `Requires-backend` | 无；不从现有 Web UI/Agent evidence 推导 2.0 support |
+| P10-T04 | P10-T02、P10-T03、P7-T05、P8-T13（UI-W1..W6 复检为无后端依赖，见 Phase 10 表 P10-T04 行注记） | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor conversation adapters + honest capability matrix；native Agent apps usable；缺 import backend 显示 `Requires-backend` | 无；不从现有 Web UI/Agent evidence 推导 2.0 support |
+| P10-T05 | P10-T02（若裁定公共面则先行；Personal-private 路线可并行但不得提前冻结公共 shape）、P8-T09..T11 | daemon-owned Personal-private conversation/session 持久投影 + dsh Path B adapter-backed 转录 + 历史读取 HTTP + watch 事件；opaque origin binding；daemon 侧 redaction；跨通道/超界 resume/origin 伪造/secret-shape focused negatives | 无；不构成 support/release/Profile |
+| P10-T06 | P10-T05、P2-T01、P2-T02 | 新 authority 对象（新表/迁移，禁止改装既有 Task 行）：Goal、Plan revision、Task 归属、attempt 身份与保留；Manage with Personal 预览一次确认；retry/fork 新 attempt 决不抹除既有 attempt/evidence；仅 current independent verification + daemon acceptance 产生 Verified；attempt 抹除/未验证完成/preview digest 漂移/跨 workspace negatives | 无 |
+| P10-T07 | P2-T02（无新依赖，可并行） | 带状态 task 清单投影 + watch 可续接有界增量；长连接/async 先做测量驱动决策（P9-T01 conservative-no-migration 为 hypothesis），测量不支持则交付持久 cursor + 有界轮询并如实记录；stale cursor 409 保留、ring 溢出诚实上报、清单不虚构 lifecycle | 无 |
+| P10-T08 | P10-T06、P10-T07 | 仅暴露 daemon 真实支持的控制动词（interrupt/pause-resume request/cancel/retry-fork/runtime restart-recover），全部经 Intent/Effect persist-before-dispatch，unknown Effect 只入 reconcile；detach 保持 observation-only；跨通道控制/重派 unknown Effect/process exit 语义/不支持动词 fail-closed negatives | 无 |
+| P10-T09 | P2-T27、P8-T10 | Pi 与 dsh 双路径产品级 lifecycle HTTP 面：connect/install、inspect 全字段、restart/recover、Disconnect 与 Uninstall 分离并陈述 retained/removed/unknown；first-real-response 作为 Native 事实；agent 名册由 daemon 投影驱动；uninstall 不删 origin-owned 内容等 negatives | 无 |
+| P10-T10 | P8-T13、ADR-0055 | user-initiated、per-source consented、daemon-owned、audited、non-logging 凭据导入进 approved SecretStore（源保留默认 + 每次导入的安全删除选择）；global/Agent/conversation 三级路由域显式化；current session 只经显式 rebind/restart 改变；导入内容不入 log/evidence/argv/env/SQLite 明文等 negatives | 无 |
+| P10-T11 | P10-T10 | subscription/OAuth 账户观察与状态投影（reachability/quota/usage 按声明分母）、Provider 预设扩展；OAuth token 生命周期只经 SecretStore/daemon proxy；外部 vendor 面允许按 provider 逐个 `not-run` 记账而不虚构 | 无 |
+| P10-T12 | P10-T05、P10-T07 | daemon 侧有界 authority-event 读取面 + 多源 Activity 组合投影：Native/Observed/Governed/Verified 四 provenance 带、每源覆盖/新鲜度声明、缺源 = partial/stale/not-run；跨源总序只在契约可证明时，否则分带渲染 | 无 |
+| P10-T13 | P10-T06、P10-T09 | daemon-owned handoff 对象（source/target/bounded work/current authority/blocked-or-ready）；一个 Goal 可用多个独立资格化 Agent，Agent 间决不转移 authority；handoff 经 Intent/Effect + fencing；自发 handoff/authority 转移/跨 Goal negatives | 无 |
+| P10-T14 | P10-T03、P8-T12 | scoped change detection、guarded write-back（每次写回 = daemon Intent/Effect + 精确预览确认）、fail-closed 冲突（no-LWW；时间戳/模型判断决不解决冲突）；同步 shape Personal-private；首个垂直切片选一个真实 origin；冲突静默覆盖/scope 外观察/origin 所有权改写 negatives | 无 |
+| P10-T15 | P10-T12 | Global Agent Shell 组合解释的后端支撑面；若前端 composed 模式已足够则收窄为解释源覆盖声明 API 并如实记账；自由文本生成/跨投影推理保持 `Requires-backend`；Shell 永不持有 authority（ADR-0056 candidate-only） | 无 |
+| P10-T16 | P10-T18、P10-T05、P10-T09 | 官方 ChatGPT desktop Codex 体验适配（observation-first）：exact 官方产品/build 识别、project/session 只读观察 scope、connect existing、first-response 里程碑、与 CLI/web/IDE/账户/Provider 显式区分；无 Linux Codex desktop，仅 Windows 免签名开发路径之上执行 | 无；不声明 Codex desktop 支持 |
+| P10-T17 | P10-T03..T06、P10-T08..T10、P10-T12..T14（全部 P0 后端任务）+ P10-T04 | 按 user-journeys §13 冻结清单执行 S1–S8（各 N=1）：预注册 manifest/oracle/记录格式→执行→逐场景 pass/fail/partial/not-run 如实记账；分母固定为 8 不可替换；S3 按 product-design §12 平台受限规则记账 | 无；结果只构成 simulated product acceptance |
+| P10-T18 | 无（文档 + CI 配置核对为主） | Windows 免签名开发顺序成立：CI-WINDOWS-MSVC-01 持续绿；unsigned installer 开发路径可在开发机运行（复用 P7-T07 D02 交付物）；补证路径成文（production signing、B01-W campaign、独立平台资格化全部 deferred，不声明能力） | 无；unsigned 产物不分发不进 release |
 
 #### Context MVP authorization scope
 
@@ -1067,13 +1094,35 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 
 Phase 10 按“先语义、再合同兼容、再 authority integration、最后 desktop experience”
 推进。它不新增 Gate，不改变 finalized Personal 1.0 六 family 或任何既有 evidence。
+P10-T05..P10-T18 于 2026-08-27 依 owner 确认的计划草案
+`artifacts/personal-2.0-plan-2026-08-27/01-development-plan.md`（草案含源码行号证据；
+artifacts 为 git-ignored 只读引用）登记；平台取舍见同目录 `05-platform-decisions.md`：
+Linux 主线，macOS `shelved`（不排期不声明能力），Windows code-signing/cert
+`deferred`（补证路径见该文件 §2）。
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P10-T01 | Personal 2.0 desktop + MCP semantic adoption | owner-accepted scope；ADR-0037/0043/0055 | 接受 ADR-0056/0057；ADR-0037 partial backlink；desktop IA / candidate-only global Shell / vendor conversation capability matrix / native Agent app coexistence / MCP seventh-family routing / ADR-0055 `Requires-backend` 在 canonical product、plan、trace、support、version 与 current snapshot 一致；documentation-only，不改 machine contract | in-progress | `P10-T01/D01` 与 `D02` done；`P10-T01/D03` validation/docs-sync/acceptance closure active on `personal/P10-T01-desktop-mcp-semantics` with `lease/personal/P10-T01/desktop-mcp-semantics`。无 implementation/Gate/release/Profile claim |
-| P10-T02 | Lane-CTR contract and compatibility decision | P10-T01 | 决定 MCP family 与 common conversation projection 的 public/private contract boundary、identity/version/capability/binding/health/quarantine compatibility、P5-era migration 与 older-client fail-closed；需要的 schema/generated bindings/negatives 只在 Lane-CTR 决策后同批交付 | not-started | unclaimed；不创建 Gate |
-| P10-T03 | MCP family authority and product integration | P10-T02, P5-T03, P5-T04, P8-T12 | daemon-only seventh-family identities/lifecycle；Tool candidate、Context/Skill admission、SecretStore、Intent/Effect、fencing、quarantine/requalification/reconcile 与 focused negatives；不得建立 generic Resource authority | not-started | unclaimed；既有 P5/B10 evidence 不等于本任务实现 |
-| P10-T04 | Desktop Control Plane experience | P10-T02, P10-T03, P7-T05, P8-T13 | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor-specific conversation adapters behind honest common capability matrix；native Agent apps 可用；缺 backend/import 显示 `Requires-backend` | not-started | unclaimed；现有 Web UI/Agent evidence 不自动构成 Personal 2.0 support |
+| P10-T01 | Personal 2.0 desktop + MCP semantic adoption | owner-accepted scope；ADR-0037/0043/0055 | 接受 ADR-0056/0057；ADR-0037 partial backlink；desktop IA / candidate-only global Shell / vendor conversation capability matrix / native Agent app coexistence / MCP seventh-family routing / ADR-0055 `Requires-backend` 在 canonical product、plan、trace、support、version 与 current snapshot 一致；documentation-only，不改 machine contract | done | 2026-08-27；merged PR [#278](https://github.com/agentkernel/cognitive-os/pull/278) at `main@aa7ab42e`；required CI `33028175298` SUCCESS at `a52815b9`。Closure：[20260827-personal-p10-t01-desktop-mcp-semantics-closure.md](../checkpoints/20260827-personal-p10-t01-desktop-mcp-semantics-closure.md)。无 implementation/Gate/release/Profile claim |
+| P10-T02 | Lane-CTR contract and compatibility decision | P10-T01 | 决定 MCP family 与 common conversation projection 的 public/private contract boundary、identity/version/capability/binding/health/quarantine compatibility、P5-era migration 与 older-client fail-closed；需要的 schema/generated bindings/negatives 只在 Lane-CTR 决策后同批交付 | not-started | unclaimed；不创建 Gate。验证路由：文档/决策走本机 Node 门；若动 schema 则 CI-UBUNTU-01 + CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T03 | MCP family authority and product integration | P10-T02, P5-T03, P5-T04, P8-T12 | daemon-only seventh-family identities/lifecycle；Tool candidate、Context/Skill admission、SecretStore、Intent/Effect、fencing、quarantine/requalification/reconcile 与 focused negatives；不得建立 generic Resource authority | not-started | unclaimed；既有 P5/B10 evidence 不等于本任务实现。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision 真机 E2E + CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T04 | Desktop Control Plane experience | P10-T02, P10-T03, P7-T05, P8-T13 | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor-specific conversation adapters behind honest common capability matrix；native Agent apps 可用；缺 backend/import 显示 `Requires-backend` | not-started | unclaimed；现有 Web UI/Agent evidence 不自动构成 Personal 2.0 support。依赖注记（2026-08-27 登记）：UI-W1..W6 六波经复检无后端依赖（`artifacts/ui-ux-review-2026-08-27/02-refactoring-proposal.md` R8），D01..D06 不受 P10-T02/T03 阻塞；MCP/对话数据接线波保持原依赖。验证路由：本机 `pnpm -r build ; pnpm -r test` + 渲染评审（沿用 P7-T05 方法）+ linux-002 daemon-served `/ui/` 真机 + required CI。平台：Linux 主线 |
+| P10-T05 | 对话观察与嵌入历史投影（P2-BD-A） | P10-T02（公共面裁定先行；Personal-private 路线可并行但不冻结公共 shape）, P8-T09..T11 | daemon-owned Personal-private conversation/session 持久投影（installations 库新迁移）；复用 Core ConversationBinding 身份；首个垂直切片 = dsh Path B 会话 adapter-backed 转录投影 + 历史读取 HTTP（management/task 双通道只读）+ 对话族 watch 事件；vendor 对话标识保持 opaque origin binding；对话内容 daemon 侧 redaction；negatives：跨通道读取拒绝、超界 resume、origin 伪造、secret-shape 内容不入投影 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（真实 dsh 会话转录 E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T06 | Goal → Plan revision → Task → Attempt 层级（P2-BD-C） | P10-T05, P2-T01, P2-T02 | 新 authority 对象（新表/迁移，禁止改装既有 Task 行）：持久 Goal、daemon-owned Plan revision、Task 归属、attempt 身份与保留；Manage with Personal 从对话/意图入口产生 daemon 预览，一次确认 = 一 Goal + Plan revision + 有界 Task + attempt 1；retry/fork 产生新 attempt、决不抹除既有 attempt/evidence；只有 current independent verification + daemon acceptance 产生 Verified；negatives：attempt 抹除尝试、未验证完成、preview digest 漂移、Goal 跨 workspace 越界 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（admit→attempt→verify E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T07 | Task 清单投影与 watch 增量升级（BD-3/BD-4） | 无新依赖（P2-T02 done 基底）；可与关键链并行 | (a) daemon 提供带状态 task 清单投影；(b) watch 升级为可续接的有界增量流——长连接/async 迁移须先做测量驱动决策（P9-T01 conservative-no-migration 结论为 hypothesis），测量不支持则交付持久 cursor + 有界轮询增量保守形态并如实记录；negatives：stale cursor 409 语义保留、ring 溢出诚实上报、清单不虚构 lifecycle | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（重启后 resume E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T08 | Task/Agent 控制动词（BD-1/BD-2/P0-5） | P10-T06, P10-T07 | 仅暴露 daemon 真实支持的控制：interrupt、pause/resume request、cancel、retry/fork、runtime restart/recover；全部经 Intent/Effect persist-before-dispatch，unknown Effect 先入 reconcile 决不盲目重派；detach 保持 observation-only；每个动词管理/任务通道边界明确；negatives：跨通道控制拒绝、unknown Effect 重派拒绝、process exit ≠ cancel/complete、不支持动词 fail-closed | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（真实 cancel/retry E2E + 崩溃恢复）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T09 | Agent 生命周期与 onboarding stewardship（P0-1） | P2-T27, P8-T10；与 P10-T05..T08 无 lease 重叠可并行 | Pi 与 dsh 双路径产品级 lifecycle HTTP 面：connect/install（复用 P5-T01 acquisition-lock、P8-T10 dsh configure）、inspect 全字段（source/version/platform/capability/health/qualification boundary）、restart/recover、Disconnect 与 Uninstall 分离并陈述 retained/removed/unknown；first-real-response 里程碑作为 Native 事实；agent 名册去硬编码改由 daemon 投影驱动；negatives：uninstall 不删除 origin-owned 内容、disconnect 后原生应用独立可用性事实保留、lifecycle 动作全走 management 通道 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（真实 Pi/dsh install→respond→disconnect→uninstall E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T10 | Account Hub：批准的凭据导入 + 路由域（P2-BD-K 部分） | P8-T13, ADR-0055 | ADR-0055 边界实现：user-initiated、per-source consented、daemon-owned、audited、non-logging 凭据导入进 approved SecretStore（源保留默认 + 每次导入的安全删除选择）；global/Agent/conversation 三级路由域显式化；current session 只经显式 rebind/restart 改变；negatives：导入内容决不入 log/evidence/argv/env/SQLite 明文、未同意源拒绝、路由域越级拒绝 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（真实 Secret Service 导入回环 + 泄漏负例）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T11 | Account Hub：订阅/OAuth 观察 + 更广预设（P2-BD-L/M/N） | P10-T10 | subscription/OAuth 账户观察与状态投影（reachability/quota/usage 按声明分母）、Provider 预设扩展；OAuth token 生命周期只经 SecretStore/daemon proxy；外部依赖高（各 vendor OAuth 面），验收允许按 provider 逐个 `not-run` 记账而不虚构 | not-started | unclaimed。验证路由：同 P10-T10。平台：Linux 主线 |
+| P10-T12 | 统一 Activity 组合（P2-BD-J） | P10-T05, P10-T07 | daemon 侧有界 authority-event 读取面 + 前端可组合多源 Activity 投影：Native/Observed/Governed/Verified 四 provenance 带、每源覆盖/新鲜度声明、缺源 = partial/stale/not-run 而非推断；跨源总序只在 Lane-CTR 契约可证明时，否则分带渲染；现有 Activity 有界组合升级为声明式覆盖而非"完整事件日志"声明 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision + CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T13 | 多 Agent handoff（P0-3） | P10-T06, P10-T09 | daemon-owned handoff 对象：source/target/bounded work/current authority/blocked-or-ready 五要素；一个 Goal 可用多个独立资格化 Agent，Agent 间决不转移 authority；handoff 经 Intent/Effect + fencing；negatives：Agent 自发 handoff 拒绝、authority 转移尝试拒绝、跨 Goal handoff 拒绝 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（Pi→dsh 真实 handoff E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T14 | 联邦资源同步 MVP（P2-BD-H/I） | P10-T03, P8-T12 | scoped change detection（显式 observation scope 内）、guarded write-back（每次写回 = daemon Intent/Effect + 精确预览确认）、fail-closed 冲突（no-LWW；时间戳/模型判断决不解决冲突）；同步 shape 保持 Personal-private；首个垂直切片选一个真实 origin（建议 MCP resources 或 dsh 会话工件）；negatives：冲突静默覆盖拒绝、scope 外观察拒绝、origin 所有权改写拒绝 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（真实冲突注入 E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T15 | Global Agent Shell 组合解释投影 | P10-T12；排序最后（可裁剪项） | Shell 的"基于已加载投影的结构化解释"后端支撑面；若前端 composed 模式已足够则本任务收窄为解释源覆盖声明 API 并如实记账；自由文本生成/跨投影推理/提案自动构造保持 `Requires-backend`；Shell 永不持有 authority（ADR-0056 candidate-only） | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ CI-WINDOWS-MSVC-01；linux-002 视切片声明。平台：Linux 主线 |
+| P10-T16 | Codex desktop 适配与资格化 | P10-T18, P10-T05, P10-T09 | 官方 ChatGPT desktop 的 Codex 体验适配（observation-first）：exact 官方产品/build 识别、project/session 只读观察 scope、connect existing、first-response 里程碑、与 CLI/web/IDE/账户/Provider 显式区分；无 Linux Codex desktop——只能在 Windows 免签名开发路径（P10-T18）之上执行，macOS 路线 shelved | not-started | unclaimed；**Windows-deferred 轨**（不排 Linux 主线期、不声明 Codex desktop 能力）。S3 场景分母语义见 product-design.md §12（owner 决策 2026-08-27） |
+| P10-T17 | 8 场景 AI-window 模拟产品验收执行（D4） | P10-T03..T06、P10-T08..T10、P10-T12..T14（全部 P0 后端任务）+ P10-T04 | 按 user-journeys.md §13 冻结清单执行 S1–S8（各 N=1）：预注册 manifest/oracle/记录格式 → 执行 → 每场景 pass/fail/partial/not-run 如实记账；分母固定为 8 不可替换；S3（Codex desktop）按 product-design.md §12 平台受限规则记账（Linux 主线期预计 `not-run (platform-conditional)`，Linux-mainline 验收按 §12 收口，完整 8/8 待受支持平台路径执行 S3）；结果只构成 simulated product acceptance | not-started | unclaimed。验证路由：AI-window 执行记录 + linux-002 真机产品面（场景所需）。平台：Linux 主线（S3 平台受限例外见左） |
+| P10-T18 | Windows 免签名开发路径 | 无（文档 + CI 配置核对为主） | 跳过 code-signing/cert 的 Windows 开发顺序成立：CI-WINDOWS-MSVC-01 对 2.0 各任务 Rust/TS 检查持续绿；unsigned installer 开发路径可在开发机运行（复用 P7-T07 D02 已交付的 inspectable bootstrap installer 与 Credential Manager 后端）；补证路径成文：正式 Windows 平台声明前需 production signing（P7-T01 类）、B01-W campaign（P7-T07 D04，现 blocked）与独立平台资格化——三者全部 deferred，不声明能力（补证顺序见 `artifacts/personal-2.0-plan-2026-08-27/05-platform-decisions.md` §2） | not-started | unclaimed；**Windows-deferred 轨**（不阻塞 Linux 主线；unsigned 产物不分发不进 release；P7-T07 保持 blocked 不重开） |
+
+macOS 在本计划期为 `shelved`：不登记任务、不排期、不声明任何 macOS 能力或时间；
+产品文档仅保留 macOS 作为 Personal 2.0 采纳目标的产品语义。
 
 Phase 10 只使用上述 task acceptance；**不登记 G10、B13 或任何新 Gate**。
 

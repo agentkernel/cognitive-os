@@ -180,12 +180,20 @@ check as `not-run` or blocked; do not silently fall back to Windows and label
 the result Linux-native.
 
 The host's `B01-Desktop-Linux-002` libvirt guest is the **sole active formal
-B01 campaign environment**. Ordinary development must not start, stop,
-reset, deploy to, or delete that guest outside a preregistered B01 campaign
-procedure and active campaign lease. Standing operator authorization does not
-expand this isolation boundary. The retired `B01-Clean-Linux-001` guest remains
-historical qualification evidence only and must not be restored as a B01 or
-ordinary development target.
+B01 campaign environment** and, per the 2026-08-27 owner instruction, is also
+registered for **owner-authorized Personal 2.0 development validation**. The
+B01 boundary is unchanged and takes precedence: only a preregistered B01
+campaign lease may change the guest baseline, snapshots, product installation
+baseline, or credential state, and standing operator authorization does not
+expand that boundary. Owner-authorized 2.0 development validation on this
+guest is limited to exact-revision disposable Git worktrees and task-declared
+cleanable directories/data roots; it must not alter the guest baseline,
+snapshot set, or credential state, must clean up as each slice declares, and
+ends each debug/validation session with the SSH port-forward owner review
+path in the "Owner viewing" subsection below. During an active preregistered
+B01 campaign, development use of the guest is frozen. The retired `B01-Clean-Linux-001` guest remains historical
+qualification evidence only and must not be restored as a B01 or ordinary
+development target.
 
 ### Owner viewing from `DEV-WIN-GNU-01` (default after guest deploy)
 
@@ -280,6 +288,12 @@ or a separate clients dev server is not the product Control Plane origin.
 - **Evidence:** [attempt ledger](../checkpoints/20260801-personal-p1-t09-b01-attempt-ledger.md),
   [ADR-0039](../adr/0039-personal-b01-six-attempt-campaign-policy.md), and the
   PROGRESS.md Current snapshot B01 row.
+- **Registered dual use (2026-08-27 owner instruction):** also the primary
+  real-machine validation host for Personal 2.0 development slices under the
+  §7 isolation paragraph — exact-revision disposable worktrees and
+  task-declared cleanable roots only; no guest-baseline, snapshot, or
+  credential change outside a preregistered B01 campaign lease; development
+  use is frozen while such a campaign is active.
 
 ## 11. `B01-W-DESKTOP-001` — required Windows B01-W campaign environment (not provisioned)
 

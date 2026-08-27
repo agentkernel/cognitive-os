@@ -15,7 +15,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:4d212cb31d178b022cf903aa5a33bc0fed560d4a1d242bb8e27930c442d3132e"
+fingerprint: "sha256:539cbd20fa414530f63e5eff6852b751a6f2f90f379ee77307fb8853619a89e0"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -68,6 +68,8 @@ non_claims:
   Goal -> Plan revision -> Task -> Attempt；多 Agent 监督；统一 Activity、控制与联邦
   资源。
 
-完整版本承诺使每项都成为 release blocker，但仍不构成实现证据。固定 8/8 AI-window
-场景只构成模拟产品验收，不证明人类 desirability、usability、adoption、WTP 或 release/
-Gate 技术就绪。
+完整版本承诺使每项都成为 release blocker，但仍不构成实现证据。固定 AI-window 分母
+保持八个场景；Codex desktop 场景为平台受限场景（owner 决策 2026-08-27）——在活动执行
+范围内没有受支持的 Codex desktop 平台期间记 `not-run (platform-conditional)`，
+Linux 主线验收以七个平台可执行场景全过加该处置收口。即使完整 8/8 通过也只构成模拟
+产品验收，不证明人类 desirability、usability、adoption、WTP 或 release/Gate 技术就绪。

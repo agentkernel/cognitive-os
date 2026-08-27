@@ -15,7 +15,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:4d212cb31d178b022cf903aa5a33bc0fed560d4a1d242bb8e27930c442d3132e"
+fingerprint: "sha256:539cbd20fa414530f63e5eff6852b751a6f2f90f379ee77307fb8853619a89e0"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -83,6 +83,11 @@ Keep these two baselines separate:
   controls; and federated resources.
 
 The complete version commitment makes every item a release blocker, but remains
-separate from implementation evidence. The fixed 8/8 AI-window scenarios are
-simulated product acceptance only and prove no human desirability, usability,
-adoption, willingness to pay, or release/Gate technical readiness.
+separate from implementation evidence. The fixed AI-window denominator stays
+eight scenarios; the Codex desktop scenario is platform-conditional (owner
+decision 2026-08-27) and is recorded `not-run (platform-conditional)` while no
+supported Codex desktop platform is in the active execution scope, so
+Linux-mainline acceptance closes at seven platform-eligible passes plus that
+disposition. Even a full 8/8 pass is simulated product acceptance only and
+proves no human desirability, usability, adoption, willingness to pay, or
+release/Gate technical readiness.

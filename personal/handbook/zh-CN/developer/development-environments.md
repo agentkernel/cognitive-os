@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:956c4925f41014c422282492cc33cf8d7dba7a659dae22d09d4046606bc31789"
+fingerprint: "sha256:2385144a588f8e78dd131d95d2859a593bc05ef79d258adf9b8ba67035b7d6ff"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -29,7 +29,7 @@ non_claims:
 | `CLOUD-AGENT-LINUX-01`（Cursor Cloud Agent pod） | 推送前的完整 bash shell Rust + TS 迭代；由 `.cursor/environment.json` 引导 | native systemd/Secret Service 行为、timing 基线、Gate/release/Profile |
 | 本地 Windows GNU 主机 | pnpm 构建/测试、`cargo fmt`、Node 检查器、文档工作 | 任何 workspace `cargo build/test/clippy/run`——已登记 linker exit 121 |
 | WSL2 | 历史工程证据 | 产品路径声明（产品目标是 native Linux） |
-| `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest | 普通开发、部署或测试 |
+| `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest；自 2026-08-27 起同时为 owner 授权的 Personal 2.0 开发验证主机（仅限 exact-revision 一次性 worktree 与任务声明的可清理目录；B01 campaign 活动期间冻结开发用途） | 在预注册 B01 campaign lease 之外改变 guest 基线、快照或凭据 |
 | `B01-W-DESKTOP-001` | 已注册但未供给的 Windows Gate guest（B01-W） | 按其预注册供给前的一切用途 |
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22
