@@ -1,14 +1,15 @@
 # DOC-PERSONAL-2.0-OPC closure handoff
 
-- Status at handoff: acceptance satisfied; final Git closure in progress
+- Status at handoff: complete and merged; post-merge lease/task closure
 - Formal anchor: `P11-T01/D01` documentation-only
 - Branch: `personal/DOC-PERSONAL-2.0-OPC-rebaseline`
 - Content revision: `33a35f9fdc81625911efb279490e5b1e42baf826`
 - Upstream: `origin/personal/DOC-PERSONAL-2.0-OPC-rebaseline`
 - Pull request: [#280](https://github.com/agentkernel/cognitive-os/pull/280)
-  (Draft at this handoff)
-- Lease: `lease/personal/P11-T01/opc-doc-rebaseline` (active until merge
-  closure)
+  (`MERGED`, merge commit
+  `f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`)
+- Lease: `lease/personal/P11-T01/opc-doc-rebaseline` (closed)
+- Branches: local and remote task branches deleted without force
 - Change class: `product-semantic` with architecture/planning follow-through
 - Claim ceiling: `non-claim`
 
@@ -57,7 +58,7 @@
 | support/environment honesty | support matrix and `DEV-WINDOWS-NATIVE-OPC-01` not-provisioned route; B01-W separate |
 | handbook/docs sync | 58 × 2 handbook pass; 18 generated locale pages byte-identical; new OPC source-map/coverage routes |
 | local documentation validation | running report R12–R24 |
-| required CI | [run 33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115) SUCCESS on content revision `33a35f9f` |
+| required CI | [run 33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115) SUCCESS on content revision `33a35f9f`; [run 33087566480](https://github.com/agentkernel/cognitive-os/actions/runs/33087566480) attempt 2 SUCCESS on final branch head `b7fb3a14` after retained Windows A7 timing failure on attempt 1 |
 
 ## Validation
 
@@ -71,7 +72,9 @@
 - `git diff --cached --check`: pass
 - IDE diagnostics: no errors
 - Canvas TypeScript check: no errors
-- Required Ubuntu/Windows CI: pass on content revision
+- Required Ubuntu/Windows CI: pass on content revision and final branch head;
+  final-head attempt 1 failed one A7 timing assertion, exact-revision failed
+  jobs passed on attempt 2 without code/test change
 - Local Rust build/test/Clippy/link: not-run by policy on `DEV-WIN-GNU-01`
 
 Full incremental results, including the retained initial consistency failure,
@@ -87,13 +90,12 @@ implemented or qualified. No support, Gate, release, Profile, B01-W,
 containment, market, usability, performance, 24/7, business-outcome, or
 Agent-benefit claim follows.
 
-## Remaining deterministic Git closure
+## Deterministic Git closure
 
-1. commit and push this closure update on the same branch/PR;
-2. require final-head Ubuntu/Windows CI;
-3. change PR #280 from Draft to ready and merge normally;
-4. on merged `main`, close the lease and mark P11-T01/D01/task done;
-5. delete the safely deletable remote/local branch, fast-forward local `main`,
-   and verify only owner-owned untracked `.cursor/skills/**` remains.
+PR #280 was readied and merged normally. Local `main` was fast-forwarded to
+the merge commit while preserving the append-only report, the active lease was
+closed, P11-T01/D01/task were marked done, and both task branches were deleted
+without force. The final post-merge governance commit records those facts on
+`main`; only owner-owned untracked `.cursor/skills/**` remains.
 
-No P11 implementation task may be claimed as part of that closure.
+No P11 implementation task was claimed.

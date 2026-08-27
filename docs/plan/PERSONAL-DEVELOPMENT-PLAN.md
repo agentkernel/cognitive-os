@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01 documentation-only OPC rebaseline acceptance 已满足且保持 `in-progress` 直到 PR/lease/branch/main Git closure；P11-T02..T15 均 `not-started`/unclaimed；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01 documentation-only OPC rebaseline `done`；P11-T02..T15 均 `not-started`/unclaimed；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-27**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -210,8 +210,8 @@
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
-| Phase 11 - Windows OPC 2.0 | 15 | 0 | 1 | 0 | 14 | P11-T15 fixed-denominator acceptance；不自动形成 release |
-| **合计** | **144** | **108** | **1** | **1** | **18** | 另有 16 cancelled；无新 Gate pass |
+| Phase 11 - Windows OPC 2.0 | 15 | 1 | 0 | 0 | 14 | P11-T15 fixed-denominator acceptance；不自动形成 release |
+| **合计** | **144** | **109** | **0** | **1** | **18** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -1191,7 +1191,7 @@ Phase 11 是 ADR-0059 的 current successor plan。`P11-T01` 是当前 docs-only
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P11-T01 | OPC docs/ADR closure | owner-approved OPC baseline；P10-T01/T02 done；finalized Linux 1.0 | ADR-0059；OPC current + legacy frozen product/design；interactive Canvas；architecture；P10 disposition/P11 typed plan/task cards/trace/support/environment；双语 handbook/source-map/fingerprint/generated check；required CI 与 deterministic closure；只含 docs/design/prototype | in-progress | acceptance satisfied；content head `33a35f9f` required CI [33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115) SUCCESS；Draft PR [#280](https://github.com/agentkernel/cognitive-os/pull/280)；final closure head still needs CI/ready/merge/lease/branch/main closure；无 implementation/support/Gate/release/Profile claim |
+| P11-T01 | OPC docs/ADR closure | owner-approved OPC baseline；P10-T01/T02 done；finalized Linux 1.0 | ADR-0059；OPC current + legacy frozen product/design；interactive Canvas；architecture；P10 disposition/P11 typed plan/task cards/trace/support/environment；双语 handbook/source-map/fingerprint/generated check；required CI 与 deterministic closure；只含 docs/design/prototype | done | merged PR [#280](https://github.com/agentkernel/cognitive-os/pull/280) at `main@f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`；content CI [33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115) SUCCESS；final head `b7fb3a14` CI [33087566480](https://github.com/agentkernel/cognitive-os/actions/runs/33087566480) attempt 2 SUCCESS after retained A7 timing failure on attempt 1；lease/branches closed；无 implementation/support/Gate/release/Profile claim |
 | P11-T02 | Windows host/tray/background baseline | P11-T01；ADR-0052/P7-T07 current fragments | Windows app/data、installer/daemon/tray、close background-or-pause、sleep/offline/missed、SecretStore/process/ACL、update/rollback/restore；supported CI + qualified native Windows negatives | not-started | unclaimed；`CI-WINDOWS-MSVC-01` 仅 implementation evidence；B01-W 未 provision |
 | P11-T03 | Project/Charter/Goal/Plan/Attempt authority | P11-T01；current Task/Intent/Effect/evidence/verifier services | guided draft→structured daemon preview→confirm→active Project；Goal/Metric/Plan/Task/Attempt revisions、manager autonomy envelope、Effects/evidence/independent acceptance；stale/cross-project/false-completion negatives | not-started | unclaimed；public shape 如需走 Lane-CTR |
 | P11-T04 | Role Blueprint/Assignment/Digital Employee | P11-T03；current adapter identities | versioned Blueprint→Project Assignment→Employee；only built-in manager base、one current manager、specialization/opt-in、employee≠runtime、Task/artifact/handoff；authority-transfer negatives | not-started | unclaimed |

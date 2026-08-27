@@ -540,3 +540,145 @@ Agent-benefit result.
   multiline message into pathspec arguments. Git created no commit.
 - Disposition: pass the here-string through standard input to
   `git commit -F -`, which preserves one message without a temporary file.
+
+### R33 — Final branch closure commit
+
+- Completed: 2026-08-27
+- Instrument: PowerShell here-string piped to `git commit -F -` with the
+  closure-only docs-impact reason
+- Outcome: `pass`
+- Commit:
+  `b7fb3a14` (`docs(P11-T01): record OPC documentation acceptance`)
+- Scope: four closure/status files, including the final handoff; no handbook
+  semantic change. Pre-commit docs-sync acknowledged the exact reason and
+  nested handbook/generated checks passed.
+- Next unit: push final branch head and require final-head CI.
+
+### R34 — Final branch-head push
+
+- Completed: 2026-08-27
+- Instrument: pre-push docs-sync hook and `git push`
+- Outcome: `pass`
+- Revision: `b7fb3a14` pushed to the existing PR #280 branch.
+- Docs impact: closure-only reason accepted; handbook 58 × 2 and generated 18
+  checks passed.
+- Required CI: pending on final branch head; PR remains Draft.
+
+### R35 — Final-head required-CI observation
+
+- Completed: 2026-08-27
+- Instrument: `gh pr view 280 --json ...statusCheckRollup`
+- Revision/run: `b7fb3a14ea42335a00fe967de2e74cd4e2648f00` /
+  [CI 33087566480](https://github.com/agentkernel/cognitive-os/actions/runs/33087566480)
+- Outcome: `partial`
+- Results: validation-route resolver passed; Ubuntu and Windows verify were in
+  progress; `required-ci` had no result.
+- Disposition: keep Draft and wait; do not infer final acceptance/merge.
+
+### R36 — Final-head required CI attempt 1
+
+- Completed: 2026-08-27
+- Instrument: `gh run watch/view` plus failed-job log
+- Revision/run: `b7fb3a14ea42335a00fe967de2e74cd4e2648f00` /
+  [CI 33087566480](https://github.com/agentkernel/cognitive-os/actions/runs/33087566480)
+- Outcome: `fail`
+- Results: resolver and Ubuntu verify passed. Windows workspace tests reported
+  352 passed / 1 failed:
+  `post_dispatch_fault_points_reconcile_without_redispatch_or_task_acceptance`;
+  expected injected crash but observed `Indeterminate` at
+  `p2_t17_a7_failure_first.rs:310`. Later Windows steps were skipped and
+  `required-ci` failed.
+- Diagnosis: no product/test code changed between the passing content head and
+  this docs-only closure head; this registered A7 fault-injection test has a
+  prior Windows timing-flake history. The failure is retained, not bypassed.
+- Disposition: rerun the failed jobs on the exact revision. Do not edit product
+  or test code in this docs-only task; keep PR Draft unless the rerun passes.
+
+### R37 — Final-head required CI attempt 2
+
+- Completed: 2026-08-27
+- Instrument: `gh run rerun --failed`, `gh run watch`, and final run view
+- Revision/run attempt:
+  `b7fb3a14ea42335a00fe967de2e74cd4e2648f00` /
+  [CI 33087566480 attempt 2](https://github.com/agentkernel/cognitive-os/actions/runs/33087566480)
+- Outcome: `pass`
+- Results: the exact same Windows workspace test set passed on rerun; resolver,
+  Ubuntu verify, Windows verify, and `required-ci` all succeeded. No product or
+  test file changed and no failing check was bypassed.
+- Disposition: update PR evidence, mark ready, and merge normally; retain the
+  attempt-1 failure in this report.
+
+### R38 — First merge command
+
+- Completed: 2026-08-27
+- Instrument: `gh pr merge 280 --merge --delete-branch`
+- Outcome: `fail` at local checkout/branch cleanup boundary
+- Result: the command refused to switch branches because this append-only
+  running-report continuation would be overwritten. No local file was lost,
+  stashed, reverted, or overwritten.
+- Disposition: query remote PR state, then complete merge without automatic
+  local checkout if still open; preserve this report for the post-merge
+  lease/task closure commit.
+
+### R39 — Remote PR merge confirmation
+
+- Completed: 2026-08-27
+- Instrument: `gh pr view 280 --json ...`
+- Outcome: `pass`
+- Result: PR [#280](https://github.com/agentkernel/cognitive-os/pull/280) is
+  `MERGED` at `2026-08-27T15:48:40Z`; merge commit
+  `f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`.
+- Interpretation: the prior command's failure occurred after the remote merge,
+  during local branch checkout/cleanup only. No second merge is required.
+- Next unit: fast-forward local `main` without overwriting this report, close
+  lease/task status, commit/push final main closure, and clean branches.
+
+### R40 — First post-merge fetch
+
+- Completed: 2026-08-27
+- Instrument: `git fetch --prune origin`
+- Outcome: `fail`
+- Result: transient Windows Schannel TLS handshake failure before refs changed;
+  no branch, index, or worktree mutation occurred.
+- Disposition: retry the same safe fetch/fast-forward sequence.
+
+### R41 — Post-merge main reconciliation
+
+- Completed: 2026-08-27
+- Instrument: successful fetch/prune, ancestor guard, fast-forward local
+  `main` ref to `origin/main`, and branch switch
+- Outcome: `pass`
+- Result: local `main` and `origin/main` both point to PR merge commit
+  `f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`; this append-only report
+  continuation was preserved. No stash, reset, overwrite, or history rewrite.
+- Worktree: only this task-owned report continuation and the original
+  owner-owned untracked `.cursor/skills/**`.
+- Next unit: close task/lease status and publish the post-merge governance
+  closure on main.
+
+### R42 — Merged branch cleanup
+
+- Completed: 2026-08-27
+- Instrument: normal remote branch delete and `git branch -d`
+- Outcome: `pass`
+- Result: merged remote and local branch
+  `personal/DOC-PERSONAL-2.0-OPC-rebaseline` were deleted without force.
+  Pre-push docs-sync found no change in scope.
+- Next unit: close the active lease and final task/current status on main.
+
+### R43 — Post-merge task and lease closure validation
+
+- Completed: 2026-08-27
+- Instrument: final consistency/handbook/generator/docs-sync/diff suite on
+  `main`
+- Outcome: `pass`
+- State: active lease removed and archived; P11-T01/D01/task marked done;
+  Layer 1 is 144 total / 109 done / 0 in-progress / 1 blocked / 18 not-started
+  / 35 remaining (including 16 cancelled under Total-minus-Done); P11-T02..T15
+  remain unclaimed and implementation paused.
+- Results: consistency passed; handbook 58 × 2 passed; 18 generated pages
+  byte-identical; staged diff clean.
+- Docs-impact reason:
+  `Post-merge lease/task/branch status closure; OPC handbook content and mapped source semantics are unchanged`.
+- Next unit: commit and push the final main closure, then verify HEAD/upstream,
+  PR/branches/lease, and owner-only untracked state.
