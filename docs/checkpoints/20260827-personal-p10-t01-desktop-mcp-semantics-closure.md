@@ -4,10 +4,11 @@
 - Current slice: `P10-T01/D03`
 - Change class: `product-semantic + structural documentation`
 - Branch: `personal/P10-T01-desktop-mcp-semantics`
-- Content revision: `bebe668011fa7cd2f387b01e9adf925d4c9ee7be`
-- Pull request: [#278](https://github.com/agentkernel/cognitive-os/pull/278)
-- Status at this checkpoint: acceptance complete; merge and deterministic
-  branch/lease reconciliation remain
+- Content revision (final head): `a52815b9004c40d920696e7fd287962d7f2f7e77`
+- Merge revision: `main@aa7ab42ebc84b59e3b3ab2e3278cf1c11dd6fd25`
+- Pull request: [#278](https://github.com/agentkernel/cognitive-os/pull/278) (merged 2026-08-27)
+- Status at this checkpoint: **closed** — merged, lease closed, task and
+  remote branches deleted, local `main` fast-forwarded
 
 ## Outcome
 
@@ -53,6 +54,7 @@ No implementation or public machine contract changed.
 | IDE documentation diagnostics | **pass** — no findings |
 | Independent staged-document reviews | **pass after correction** — governance, product/architecture, complete client corpus, handbook/security |
 | Required CI [33026909626](https://github.com/agentkernel/cognitive-os/actions/runs/33026909626) on content revision `bebe6680` | **pass** — resolver, Ubuntu, Windows, and `required-ci` |
+| Required CI [33028175298](https://github.com/agentkernel/cognitive-os/actions/runs/33028175298) on final head `a52815b9` | **pass** — resolver 4s, Ubuntu 3m16s, Windows 19m5s, `required-ci` |
 
 The CI annotations only report GitHub Actions' Node 20 action-runtime
 deprecation; no repository check failed.
@@ -69,10 +71,12 @@ deprecation; no repository check failed.
 - no Gate, release, Profile, B01, performance, containment, Provider-quality,
   marketplace-safety, or Agent-benefit promotion.
 
-## Remaining deterministic closure
+## Deterministic closure (completed)
 
-1. commit and push this acceptance record;
-2. confirm required CI on the resulting exact PR head;
-3. mark PR #278 ready and merge normally;
-4. on merged `main`, mark `P10-T01/D03` and `P10-T01` done, close the lease,
-   record the merge revision, and remove the task branch.
+1. acceptance record committed as `a52815b9` and pushed on 2026-08-27;
+2. required CI [33028175298](https://github.com/agentkernel/cognitive-os/actions/runs/33028175298) on `a52815b9` passed resolver, Ubuntu, Windows, and `required-ci`;
+3. PR [#278](https://github.com/agentkernel/cognitive-os/pull/278) marked ready and merged as `main@aa7ab42e` on 2026-08-27;
+4. `P10-T01/D03` and `P10-T01` marked done; lease
+   `lease/personal/P10-T01/desktop-mcp-semantics` moved to
+   `PARALLEL-LANES.md` §3.1; local and remote task branches deleted;
+   local `main` fast-forwarded to `aa7ab42e` and matches `origin/main`.
