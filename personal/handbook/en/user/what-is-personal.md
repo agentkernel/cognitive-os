@@ -7,12 +7,15 @@ status: partial
 generated: false
 sources:
   - path: personal/docs/product/product-design.md
+  - path: personal/docs/product/personal-2.0-scope.md
   - path: personal/apps/kernel-server/src/personal/server.rs
     symbols: ["serve_personal_loopback"]
   - path: personal/docs/product/linux-1.0-scope.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:e6a88761a70a397baaf92ed549ec43667edfb79429763cd795e72c22dd8cff3a"
+fingerprint: "sha256:17492e3ebdab7f7cd7d73121927fbfe47e3f1466a258ecc0d966f61dbceb9edf"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -59,3 +62,21 @@ independent verification wired end-to-end) is not yet connected — see
 [Tasks and execution](tasks-and-execution.md). The stable product intent is owned
 by [`personal/docs/product/`](../../../docs/product/README.md); this page
 tracks what the code does today.
+
+## Current product and adopted Personal 2.0 target
+
+Keep these two baselines separate:
+
+- **Current Linux 1.0/current API:** six resource families; Pi is the only
+  qualified Agent; the daemon, CLI, Pi paths, Provider Control Plane, and the
+  same-origin `/ui/` SPA at `clients/pc/web/` are current implementation. The
+  Web UI is not part of the Linux 1.0 release claim.
+- **Adopted Personal 2.0 target — `Requires-backend`:** a desktop-first Control
+  Plane redesign; Account Hub with user-consented credential import; MCP as a
+  seventh family; vendor-specific Agent conversation adapters; durable Goals
+  and Plan revisions; multi-Agent supervision; and federated resources.
+
+Adoption makes those items product direction, not implementation evidence.
+There is no current Goal/Plan API, MCP-family API, Account Hub import API, or
+multi-Agent supervision path, and the existing `/ui/` has not received the
+target redesign.

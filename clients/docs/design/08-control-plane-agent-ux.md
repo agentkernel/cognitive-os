@@ -1,10 +1,111 @@
 # 08 — Control Plane Agent UX
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 Agent UX; historical framework analysis retained
+- Updated: 2026-08-27
 - Method: `ai-agent-ux` (AUTONOMY framework, autonomy dial, trust ramp, undo architecture), `ai-trust-transparency` (GLASS, calibrated trust, explanation layering), `ai-error-resilience` (RECOVER, error taxonomy, blast radius). Applied to the supervision reality of CognitiveOS: **the daemon governs; agents act; the owner supervises.** CognitiveOS reality overrides the frameworks where they conflict (e.g. these frameworks assume the UI can stop the agent; here the honest answer is class-C).
 
+## Personal 2.0 Agent UX
+
+### Global Agent Shell
+
+The desktop always offers a candidate-only global Agent Shell. It explains
+current daemon/adapter facts, compares sources, proposes a next action, asks the
+daemon for an authoritative preview, and returns focus to the affected object.
+It is not the vendor-native conversation surface and does not flatten Agents
+into one generic chatbot.
+
+The **Agents** workspace owns each embedded native conversation, composer,
+attachments, history, and Manage with Personal entry. Each Adapter supplies:
+
+- a common conversation/history projection;
+- capability flags with source and freshness;
+- declared native slots for display-safe vendor metadata and artifacts;
+- explicit unsupported states rather than emulation.
+
+Adapter-specific render slots are display/artifact renderers only. They cannot
+inject actions, buttons, executable markup or scripts, credentials, or
+authority-shaped state. Every vendor-specific action uses a Control Plane-owned
+control whose behavior is backed by typed capability semantics. If that action
+is not delivered, the Control Plane renders `Requires-backend` explanatory
+content rather than asking a render slot to simulate it.
+
+### Capability matrix dimensions
+
+The matrix keeps three independent axes:
+
+| Axis | Allowed values | Meaning |
+|---|---|---|
+| Runtime condition | `Supported` / `Unsupported` / `Unavailable` / `Unknown` | what the current adapter/runtime can establish now |
+| Delivery status | `Now` / `Requires-backend` | whether Personal currently delivers the projection or action |
+| Support path | `vendor-native` / `managed-adapter` / `MCP-cooperative` / `observable-only` / `unqualified` | how the capability is supplied and what claim ceiling applies |
+
+`Requires-core` may annotate a future public contract dependency, but it never
+replaces delivery status. `Unsupported` is not a synonym for
+`Requires-backend`; `Unavailable` is a runtime blockage, not a roadmap status;
+and `unqualified` never exposes an action.
+
+The Agent workspace labels the active Agent and account/model route. Switching
+Agents never merges histories or credentials. Native history remains
+source-owned and retains provenance. The global Shell may explain that state,
+but it neither sends a native turn nor owns the conversation.
+
+### Native conversation versus Manage with Personal
+
+Native conversation is the default low-friction path. **Manage with Personal is
+explicit** and is required before a conversation becomes daemon-governed work.
+Its daemon preview identifies the proposed Goal, Plan inputs, Context, resource
+permissions, participating Agents, budget and known losses. The daemon—not the
+Agent or client—creates durable Goal/Plan/Task authority. This target boundary
+is `Requires-core + Requires-backend` where public machine semantics are
+needed.
+
+### Multi-Agent supervision
+
+For managed work, the owner sees:
+
+1. daemon-issued participant roles and authority bounds;
+2. source-preserving candidate contributions;
+3. explicit handoffs and dependencies;
+4. disagreements as alternatives, never hidden synthesis;
+5. Tasks/attempts and Effects under their real state machines;
+6. independent verification and acceptance.
+
+Agents never transfer leases, credentials, host-session control, or completion
+authority to one another. A failure in an upstream attempt blocks or
+re-evaluates dependents through daemon state; the UI does not infer cascading
+progress.
+
+### Intervention and trust
+
+- Current-backed preview, confirmation, revoke, rebind, disable and detach
+  actions use their real daemon semantics.
+- Target-only pause/cancel/lifecycle/orchestration controls are
+  `Requires-backend` explanatory slots, not active or disabled-looking buttons.
+- Progress is a recorded plan/task/attempt state or unknown. Spinners communicate
+  loading only; they never imply the Agent is advancing.
+- Explanations telescope from beginner summary to full inspector. They show
+  source, evidence, limits and alternatives—not hidden chain-of-thought.
+- The one timeline marks `Native`, `Observed`, `Governed`, and `Verified`.
+- Disconnect and uninstall are distinct. Uninstall requires a retained-data and
+  blast-radius preview; disconnect preserves the installation unless the
+  source's typed semantics say otherwise.
+
+### Federated-resource assistance
+
+The Shell may explain a conflict and propose a resolution. It cannot directly
+write Personal or Agent-native resource state. A real writeback follows daemon
+preview -> owner confirmation where required -> persisted Intent/Effect ->
+dispatch -> verification. MCP capabilities do not grant control of the host
+Agent session.
+
+The current P7-T05 SPA has no embedded conversation, Goal/Plan, multi-Agent, or
+federated-writeback projection. Those target elements remain
+`Requires-backend`; current agent dossiers continue to display only the
+evidence recorded in [Agent Reality Map](31-agent-reality-map.md).
+
 ---
+
+## Historical 2026-08-24 framework application
 
 ## 1. The inversion, stated for this product
 

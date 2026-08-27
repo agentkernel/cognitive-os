@@ -11,9 +11,17 @@ generated: false
 CognitiveOS Personal is a local, single-owner **operating system for cognitive
 resources**: one Rust daemon governs what your AI agents know (Memory), may reuse
 (Skills), may do (Tools), see (Context), work on (Tasks), and run as
-(Runtime/Process). This guide documents only behavior supported by code, contracts,
-and tests together; capability labels (`implemented`, `partial`, `designed`,
-`unavailable`) appear on every page.
+(Runtime/Process). Those are the six current Linux 1.0/API families. This guide
+labels current behavior from code, contracts, and tests (`implemented`,
+`partial`, `designed`, `unavailable`) separately from adopted Personal 2.0
+behavior that still needs daemon/API or core work (`Requires-backend`,
+`Requires-core`).
+
+Personal 2.0 targets a desktop-first Control Plane, Account Hub, MCP as a
+seventh resource family, vendor-specific Agent conversation adapters,
+Goal/Plan and multi-Agent supervision, and federated resources. The current
+same-origin `/ui/` client is real at `clients/pc/web/`; that target redesign and
+the other 2.0 additions are not implemented.
 
 Start here:
 
@@ -22,13 +30,13 @@ Start here:
 3. [Install and reach the first conversation](install-and-first-conversation.md)
 4. [CLI basics](cli-basics.md) — `cognitive init | status | doctor | daemon | pi | resource | task`
 5. [Provider and secrets](provider-and-secrets.md)
-6. [Provider Control Plane](provider-control-plane.md) — named accounts, keys, bindings, usage (CLI and same-origin `GET /ui/`; not in the Linux RC claim)
+6. [Provider Control Plane](provider-control-plane.md) — current named accounts, keys, bindings, usage, and same-origin `/ui/`; adopted Account Hub target
 7. [The Pi shell](pi-shell.md)
 
 Understand the model:
 
 8. [System overview](system-overview.md)
-9. [The six resource families](six-resources.md)
+9. [Current six families and the target seventh MCP family](six-resources.md)
 10. [Tasks and execution](tasks-and-execution.md)
 
 Operate it:

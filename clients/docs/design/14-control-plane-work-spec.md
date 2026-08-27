@@ -1,9 +1,59 @@
 # 14 — Work Spec (Task & Run Inventory)
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 Work target; historical Task/Run spec retained
+- Updated: 2026-08-27
 - Contract: `06` §3.2 (Work space), jobs J-K2/J-I1/J-I2, capability reality: **BD-3** (no rich task list; Resource Manager `list?family=task` is envelope-only, limit 64; no objective text, no state field beyond `health:"contracted"`). This spec is therefore written in two honesty tiers: **Tier-1 (ships on today's API)** and **Tier-2 (activates when BD-3 lands)** — same layout, deeper columns. The layout never lies about which tier it is in.
 - Layout: MID (master–inspector–detail) per shell `12` §4.
+
+## Personal 2.0 Work model
+
+Work is not a task inventory alone. It is the explicit managed-work projection:
+
+`Goal -> Plan revision -> Task -> attempt -> Effect -> Verification/Acceptance`
+
+Context belongs here because it explains what managed work received. One or
+more Agents may participate only under daemon orchestration.
+
+### Master hierarchy
+
+- **Goal groups** are the top scan unit: objective, current Plan revision,
+  attention state, participating Agents, and latest verified outcome.
+- Expanding a Goal shows immutable **Plan revisions** with reason for revision.
+- Each revision groups **Tasks**, and each Task groups its **attempts**.
+- Filters operate on Goal state, Agent, provenance, attention, and recency.
+- Stable IDs and exact daemon labels remain available in the inspector.
+
+The current backend has no Goal, Plan-revision or first-class attempt projection
+and only an envelope task list. Therefore:
+
+- current Task rows may render in a clearly labeled "Current implementation"
+  view using real P7-T05 facts;
+- Goal/Plan/attempt grouping, orchestration, rich inventory and revision controls
+  are `Requires-backend`;
+- the UI never synthesizes Goal or Plan from conversation text;
+- partial task inventory never claims completeness.
+
+### Manage with Personal entry
+
+Manage with Personal begins from an Agent conversation. The target flow reviews
+the proposed Goal, Plan inputs, Context, resources, participating Agents,
+budget, side effects and known losses before any durable admission. Abandoning
+before admission leaves native conversation unchanged. Successful admission
+returns stable refs and opens Work. This target flow is
+`Requires-core + Requires-backend` where Goal/Plan/attempt public semantics are
+needed, beyond the current Task record/interpret/preview/admit chain.
+
+### Progress and control
+
+Progress means recorded Goal/Plan/Task/attempt state, not elapsed animation,
+token stream or an Agent narrative. If no bounded denominator exists, show
+phase/state and last recorded fact rather than a percentage. Pause, cancel,
+retry, re-plan and orchestration actions are active only when a typed daemon
+service and allowed-action fact exist; otherwise their target slots say
+`Requires-backend` without button styling.
+
+The Tier-1/Tier-2 task honesty mechanics below remain applicable inside the
+Current implementation view, but no longer define the target Work IA.
 
 ---
 

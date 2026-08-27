@@ -20,23 +20,29 @@ sources:
     symbols: ["TrustedEndpoint", "ProviderKind"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
     symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS"]
+  - path: personal/docs/product/provider-control-plane.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
 tests:
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:75c5451c416435defc5fe95943c73b362defa6b034d7a0ebc746fa99f402bbfa"
+fingerprint: "sha256:d812b0e2331c2720221bd076bebbd84fe1e223bace4c718f2c0f4eae1a374971"
 non_claims:
-  - This page documents the shipped daemon API, cognitive CLI, and localhost Web UI client path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, desktop panel, or Agent-benefit.
+  - This page documents the shipped daemon API, cognitive CLI, and current localhost Web UI path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, the Personal 2.0 desktop redesign/Account Hub import, or Agent-benefit.
 ---
 
 # Provider Control Plane
 
 `partial`: the daemon management API and the `cognitive` CLI callers below are
-implemented and covered by focused tests. A localhost-only Web UI (external
-clients checkout, served same-origin from `GET /ui/`) is a daemon client for
-the same management routes: named accounts, SecretStore key handoff, bounded
-probe, and fixed Agent bindings. There is **no desktop control panel**. The
+implemented and covered by focused tests. A localhost-only Web UI in this
+repository at `clients/pc/web/`, served same-origin from `GET /ui/`, is a
+daemon client for the same management routes: named accounts, SecretStore key
+handoff, bounded probe, and fixed Agent bindings. The adopted desktop-first
+Personal 2.0 redesign is **not implemented**. The
 native dsh control panel (`cognitive dsh web`, default `http://127.0.0.1:3080`)
 is a separate dsh-owned UI, not this Provider Control Plane surface and not
 Personal `/ui/`. Live
@@ -70,11 +76,30 @@ that pair. Once you set a control-plane binding for `pi` or `dsh`, that
 binding is the only allowed account+model for that agent — `provider.json` is
 not a fallback.
 
-Out of scope (refused or simply not shipped): OAuth, browser login to a
-Provider, automatic routing or load balancing, hard budget blocking,
-third-party Anthropic-compatible endpoints, background model refresh, and any
-desktop control panel. The Web UI does not invent Task cancel or Agent
-pause/resume/stop/restart/quarantine HTTP.
+Not shipped by the current API: OAuth, browser/Agent credential import,
+automatic routing or load balancing, hard budget blocking, third-party
+Anthropic-compatible endpoints, background model refresh, and the adopted
+desktop-first Account Hub redesign. The first two and the redesign are
+Personal 2.0 targets marked `Requires-backend`, not current features. The Web
+UI does not invent Task cancel or Agent pause/resume/stop/restart/quarantine
+HTTP.
+
+## Personal 2.0 Account Hub target (`Requires-backend`)
+
+The target Account Hub broadens the current named API-key accounts into one
+desktop place for Provider accounts, subscriptions, model access, and
+installed-Agent bindings. Vendor-specific conversation adapters are intended
+to connect each Agent's supported conversation behavior; the current API still
+binds only the shipped `pi` and `dsh` identities and qualifies only Pi.
+
+Credential import follows ADR-0055 exactly: the user initiates and consents to
+one exact source before it is read; the daemon alone reads that source and
+writes an approved SecretStore; source retention is the default and secure
+deletion is an explicit per-import choice. Raw material never returns to the UI
+or an Agent and never enters argv, environment, CognitiveOS ordinary config,
+SQLite, logs, evidence, support output, or chat. Browser-profile, Agent
+credential-file, subscription, and OAuth import mechanisms do not exist yet.
+See [Provider and secrets](provider-and-secrets.md).
 
 ## Prerequisites
 
@@ -351,6 +376,7 @@ thresholds as it reads. Acknowledge takes `--alert-id`.
 | `PROVIDER_ENDPOINT_HTTP_REQUIRES_GRANT` / `PROVIDER_ENDPOINT_PRIVATE_REQUIRES_GRANT` | Pass the matching `--allow-*` flag at create or update (with `--reconfirm` when required). |
 | `cost_status: cost_unavailable` | Set prices on custom/manual models. Do not treat missing cost as `$0`. |
 | Official Anthropic + `stream:true` | Not supported on the bound path. Pi stays unary regardless. |
+| dsh panel reports "API key invalid" after a daemon restart while the account/binding shows persisted `active` state | The new daemon reports dsh `INACTIVE`, so `cognitive dsh apply` is rejected and cannot recover the stale session. Do not extract or probe the bearer. Restart `cognitive dsh web`, then check `cognitive dsh status`. `apply` is only for supported binding/model overlay synchronization when the runtime is already `ACTIVE` and the daemon has not restarted. Persisted account `active` does not prove current SecretStore resolution; live resolution occurs during discovery/proxy use, so a locked or changed store remains a separate possible cause. See the [tracked defect](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md). |
 
 ## Worked sequence (official OpenAI, then bind Pi)
 

@@ -1,213 +1,288 @@
 # Personal Agent Shell and Agent Lifecycle
 
-- Status: informative target/design
+- Status: informative current/target alignment
 - Change class: owner-approved `product-semantic + structural` documentation
-- Decision source: [ADR-0035](../../../docs/adr/0035-personal-pi-shell-and-managed-agent-role-separation.md)
-- Acquisition source: [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
+- Linux 1.0 decisions:
+  [ADR-0035](../../../docs/adr/0035-personal-pi-shell-and-managed-agent-role-separation.md) and
+  [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
+- Adapter decision:
+  [ADR-0043](../../../docs/adr/0043-personal-universal-agent-adapter.md)
+- Personal 2.0 companion:
+  [Agent adapter architecture](agent-adapter-contract.md)
 
-## 1. Agent Shell role and route
+## 1. Current boundary
 
-The Agent Shell is the default interaction model, not an authority service and
-not synonymous with Pi. Linux 1.0 uses Pi as the Shell host because Pi provides
-the conversational terminal, model interaction and Extension surface. Pi is
-also the only Agent adapter targeted for Linux 1.0 qualification; no other
-adapter inherits that qualification.
+### Now
 
-The Pi-hosted Shell reaches the daemon through the daemon-supervised Pi sidecar
-route and then the Task or Resource application service. The Shell never owns
-the daemon bootstrap credential, sidecar management authority, installation
-authority or an ambient management bearer. The deterministic `cognitive` CLI
-uses the same application services through its own authenticated client route.
+The Agent Shell is a client and candidate producer, not an authority service.
+Linux 1.0 uses Pi both as the Shell host and as the only qualified Agent
+adapter. Those are independent roles even when one process hosts both.
 
-The Shell supports two modes:
+The delivered P8 adapter registration/lifecycle boundary generalizes exact
+identity, digest, channel, and candidate-only checks. P8's Codex work is a
+fixture qualification, not a live production qualification and not transferred
+Pi evidence. The delivered dsh integration supplies a separate native Agent
+path and native web surface; it does not merge dsh sessions with Control Plane,
+Shell, Task, or Agent authority identities.
 
-- **natural language** produces an interpretation candidate and structured
-  proposal;
-- **deterministic commands** select the same application-service operation
-  without model interpretation.
+The current Control Plane can observe and govern the services it actually has,
+but it does not have a common native-conversation projection service or typed
+browser controls for Task and Agent lifecycle. Existing Core
+Conversation/ConversationBinding contracts do not make that product surface
+implemented. Architecture must not imply otherwise.
 
-Both modes converge before authorization. A model or Pi outage degrades to the
-deterministic CLI; it must not disable recovery or hide authority state.
+## 2. Global Agent Shell role
 
-## 2. Pi dual-role and sidecar model
+### 2.0 target
 
-```mermaid
-flowchart TB
-  piRuntime["Pi runtime"] --> shellRole["Shell host role"]
-  piRuntime --> adapterRole["Qualified Pi adapter role"]
-  shellRole --> shellSession["Shell session"]
-  shellSession --> sidecarRoute["Daemon-supervised private sidecar route"]
-  adapterRole --> sidecarRoute
-  sidecarRoute --> taskApplication["TaskApplicationService"]
-  sidecarRoute --> resourceApplication["ResourceApplicationService"]
-  sidecarRoute --> agentInstance["AgentInstance binding"]
-  agentInstance --> agentExecution["Epoch-fenced AgentExecution"]
-  agentExecution --> taskLoop["Task and Loop reference"]
-  shellSession -. "does not authorize" .-> agentInstance
-```
+The Shell is a global assistant available across Personal experiences. It may:
 
-The roles can be co-located by an implementation, but they cannot share a
-logical identity or authority. The daemon may restart the sidecar/Agent runtime
-without ending a Shell watch, or replace a Shell/Pi session without changing
-the Agent instance. A Pi session ID cannot stand in for a Shell session,
-sidecar, instance, execution or Task ID.
+- interpret owner language into candidates;
+- explain daemon projections, provenance, policy, blockers, and evidence;
+- navigate to exact Personal objects and native conversations;
+- prepare a Goal -> Plan revision -> Task -> Attempt admission candidate;
+- suggest resource bindings, assignments, handoffs, and recovery choices; and
+- invoke deterministic read operations available to its authenticated channel.
 
-## 3. Strict runtime identity model
+The Shell may not:
 
-| Identity | Stable binding | Lifecycle owner | Must not be treated as |
-|---|---|---|---|
-| Agent package | source, package version, bytes digest, declared adapter/protocol requirements | acquisition verification | installation, permission or process |
-| Agent installation | verified immutable package plus acquisition lock and compatibility result | installation domain | registration, activation or permission |
-| Agent registration | installation, adapter digest and Personal policy defaults | Agent domain | running instance or granted capability |
-| Agent instance | registration, owner/scope and durable lifecycle identity | Agent domain | sidecar session, process, Task or completion |
-| Sidecar session | one current logical daemon-supervised adapter session for an active instance, bound to protocol digest and epoch | daemon supervisor | authority service, installation or AgentExecution |
-| OS process | PID/handle and parent/transport relationship | daemon process supervisor | stable Agent identity or logical success |
-| AgentExecution | exact Task, Loop, Agent instance, sidecar and execution epoch binding | scheduler/runtime authority | Task identity or authority to complete it |
-| Shell session | user-experience conversation/watch identity and bounded client channel | daemon session service | Pi session, management authority or AgentExecution |
-| Pi session | Pi runtime/model conversation identity | Pi adapter observation boundary | Shell authority, Agent instance, execution or Task |
-| Task | admitted goal, contract, budget and acceptance lifecycle | Task authority | Agent, process or session identity |
+- mutate authority from conversation text;
+- claim a native conversation operation that the vendor adapter does not
+  support;
+- turn a native plan into the daemon Plan without explicit admission;
+- authorize Tool/MCP use, external writeback, or Provider selection;
+- receive raw Provider/user secrets; or
+- present Agent/native success as Effect closure or Task acceptance.
 
-`ProcessAttempt` is an implementation-private daemon observation that correlates
-one supervised spawn/attach attempt with bounded output, exit and reconcile
-facts. It is not another public identity domain, not a resource family, and not
-proof that an `AgentExecution`, Effect or Task succeeded.
+Natural language and deterministic commands converge at the daemon policy
+boundary. If the Shell host or model is unavailable, deterministic inspection
+and recovery remain available.
 
-## 4. Per-Agent sidecar session
+## 3. Strict identities
 
-Each active `AgentInstance` has exactly one current logical sidecar session.
-Linux 1.0 may implement it as one separate OS process. The daemon creates the
-session, launches the process, and connects framed AKP over private stdio or a
-socketpair. There is no public sidecar listener, TLS PKI, service discovery or
-service mesh.
+Personal keeps these identities separate even when a vendor runtime collapses
+them internally:
 
-The sidecar is limited to:
+| Identity | Owner | Must not be treated as |
+|---|---|---|
+| Agent package | acquisition source plus verified immutable identity | installation, permission, or running process |
+| Agent installation | Personal installation authority | registration, qualification, or capability |
+| Agent registration | Personal policy plus exact adapter binding | active instance or native login |
+| Agent instance | Personal Runtime authority | process, conversation, Task, or completion |
+| Adapter/sidecar session | daemon-supervised integration boundary | native conversation, authority service, or Agent instance |
+| Native runtime | vendor process/service identity | Personal instance or admitted work |
+| Native account/login | origin-owned authentication state referenced by an opaque handle | Provider secret, Personal principal, or capability |
+| Vendor-native conversation ID | opaque origin identity and lineage bound by the adapter | a new public Conversation, Shell session, Goal, Plan, Task, or execution |
+| Core Conversation / ConversationBinding | existing governed interaction scope and fixed history/working-scope binding, reused or referenced where applicable | vendor-native session ID or Personal-private extension state |
+| Native turn | origin-owned unit of conversation activity | Personal Task step or Effect |
+| Native plan | origin-owned plan observation | daemon-owned revisioned Plan |
+| Runtime attachment | current adapter link to a native runtime/conversation | durable registration or authorization |
+| Agent execution | daemon scheduling binding between governed work and an Agent instance | native turn, OS process, or Task identity |
+| OS process attempt | bounded host observation | stable runtime identity or success |
+| Shell session | assistant interaction and client channel | native conversation, management authority, or execution |
+| Control Plane session | browser client authentication/channel state | Shell/native session or daemon authority |
+| Goal | daemon-owned durable outcome | Plan, Task, Attempt, Agent, or conversation |
+| Plan revision | daemon-owned decomposition under one Goal | Agent-native plan or Task |
+| Task | daemon-owned bounded work under one Plan revision | Attempt or process |
+| Governed attempt | preserved execution/recovery branch under one Task | OS process attempt, native conversation fork, or rewritten prior evidence |
 
-- exact package/adapter/protocol handshake;
-- Agent protocol translation;
-- lifecycle and health observations;
-- Context and Skill reference delivery;
-- Memory and Tool candidate return;
-- progress, artifact/CAS references and bounded streams.
+Goal/Plan/Attempt and the native/common projection are **2.0 target** and
+**Requires-backend**. The projection reuses existing Core
+Conversation/ConversationBinding. Only a new or changed public extension
+conditionally requires P10-T02/Lane-CTR; Personal-private projection state may
+not require core changes.
 
-It cannot authorize itself, grant capability, alter a Task or budget, commit an
-Effect, reconcile a mutation or accept completion. The daemon validates every
-control-plane identity/digest/epoch and every data-plane reference.
+## 4. Pi and other native Agents
 
-On daemon restart the old private transport closes, or parent-death supervision
-terminates the old sidecar. After durable reload and fencing, the daemon starts
-a new sidecar session under a higher epoch. An orphan or stale session is never
-adopted because it is still alive. Stale epoch, package/adapter digest drift or
-AKP protocol digest drift fails closed.
+Pi retains two independent current roles:
 
-## 5. Natural-language resource and Task protocol
+1. Linux 1.0 Shell host; and
+2. Linux 1.0 qualified managed Agent adapter.
 
-Every natural-language request follows the same logical stages:
+No later adapter inherits either role. A vendor-specific adapter may use a
+native application server, RPC protocol, host integration, or another
+vendor-supported control surface. ACP is optional and is not a Personal
+qualification prerequisite.
 
-1. **record**: daemon persists the user's raw request before interpretation;
-2. **interpret**: Pi/model emits only a candidate operation and target set;
-3. **resolve**: daemon resolves exact IDs, digests and versions across the six
-   resource families;
-4. **classify**: daemon reads catalog risk, capability, channel and budget
-   policy;
-5. **preview**: daemon returns canonical action, targets, versions, permission
-   changes, side effects, budget impact and rollback expectation;
-6. **admit**: the client submits the exact preview digest and idempotency key;
-7. **execute**: daemon schedules or runs the typed governed workflow;
-8. **watch**: Shell renders only authority projections and evidence state.
+MCP plus Agent rules/instructions may provide cooperative candidate and tool
+exchange when no stronger native interface exists. That fallback is not
+session control: it cannot prove login state, list complete conversations,
+preserve lineage, steer or interrupt a turn, fork or close a conversation,
+retrieve full history, or attach to the correct runtime unless the native
+integration independently supports those facts.
 
-Ambiguous language never selects a destructive target by guess. The common
-`ResourceApplicationService` only provides versioned list/inspect/watch and
-bind/unbind/enable/disable/revoke projection/commands. Domain-specific acquire,
-install, execute, reconcile and purge workflows do not become generic resource
-transitions.
+## 5. Adapter and sidecar boundary
 
-## 6. Channel isolation
+### Now
 
-| Channel | Operations | Credential rule | Projection rule |
-|---|---|---|---|
-| Task | intent, clarify, preview, admit, attach, watch, detach, cancel | Task-only bearer/session, bound retry IDs | Task, Loop and execution projections only |
-| Management | resource list/inspect/watch/bind/unbind/enable/disable/revoke plus typed lifecycle workflows | management-only bearer/session | six-family resource and lifecycle projections only |
-| Sidecar control | handshake, pinned identities/digests, lifecycle, epoch, bounded budget/capability view | daemon-created private session; no bootstrap or ambient bearer | current instance/execution only |
-| Sidecar data | governed refs, candidates, progress, artifacts and bounded streams | scoped to the control-plane binding | no direct authority projections or writes |
+The delivered adapter manifest and private AKP path bind exact package,
+adapter, protocol, channel, and candidate-only declarations. A daemon-supervised
+sidecar can translate Agent-native behavior into bounded candidates and
+observations. It cannot authorize itself, broaden capability, write authority
+storage, commit an Effect, reconcile a mutation, or accept work.
 
-A Shell implementation may concurrently render Task and management views, but
-it must keep credentials, retry contexts, caches, watch cursors and operation
-sets separate. Ordinary conversation wording cannot upgrade a Task session to
-management. Tier 2 operations require explicit confirmation on the management
-path.
+### 2.0 target
 
-## 7. Agent lifecycle operations
+The vendor adapter additionally projects:
 
-### 7.1 Acquire, install and register
+- initialization and exact adapter/native identity;
+- capability conditions;
+- auth status and an opaque login handle;
+- conversation list/create/load/resume/fork/close capability;
+- turn submit/steer/interrupt capability;
+- sequenced native events;
+- tool approval, native plan, history, attachment, and MCP-binding capability;
+- runtime launch/attach capability; and
+- bounded vendor-specific render slots.
 
-Acquisition verifies an exact package and immutable digest. Installation commits
-verified bytes and the acquisition lock. Registration binds that installation,
-an exact adapter/protocol digest and Personal policy defaults. None of these
-steps grants Tool, workspace, network, model, Memory or secret capability.
+This is a conceptual product contract, not a public machine shape. Its detailed
+semantics live in
+[Agent adapter architecture](agent-adapter-contract.md).
 
-For the Linux 1.0 target, acquisition uses the exact official Pi npm package
-and production trust material. A legacy user path may be inspected for migration
-but cannot silently become a qualified installation.
+No raw secret crosses the adapter conversation wire. Native login may occur
+through a vendor-owned secure flow or a daemon-mediated approved boundary, but
+the common projection carries only redacted status and an opaque handle.
 
-### 7.2 Activate and supervise
+## 6. Native conversation and explicit admission
 
-Activation checks installation health, package/adapter/protocol digests, Node
-compatibility, policy and capability, then commits a new instance epoch before
-creating its one logical sidecar session. A subsequent `AgentExecution` binds a
-Task/Loop epoch to that instance and sidecar. Supervision reports process and
-health facts; `exit 0` remains only an observation.
+### 2.0 target
 
-### 7.3 Pause, resume and stop
+A native conversation is useful before it becomes governed work. Connecting an
+Agent establishes an explicit observation scope. Personal may observe
+automatically only inside that scope; there is no speculative/global session
+scan or surprise per-session enrollment. Observation does not:
 
-- **pause/suspend execution** prevents new dispatch, fences stale work, reaches
-  a safe checkpoint and reconciles Effects or exposes why it cannot;
-- **resume execution** follows recovery order: reload, fence, reconcile,
-  reauthorize, rebuild Context, restart sidecar, then resume or quarantine;
-- **disable/stop instance** quiesces new execution and terminates the sidecar
-  only after pending Effects are closed or quarantined;
-- **cancel Task** requests Task/Loop closure and is not equivalent to killing a
-  sidecar or OS process.
+- copy the conversation into authority by default;
+- create a Goal, Plan, or Task;
+- grant Context, Tool, MCP, workspace, network, or Provider capability; or
+- make Personal responsible for origin-native completion claims.
 
-### 7.4 Upgrade and rollback
+Owner request/confirmation followed by daemon admission creates the governance
+bridge:
 
-Upgrade acquires a second immutable package, verifies the new adapter/protocol
-digests and checks compatibility before superseding the registration binding.
-Running executions stay bound to their recorded epoch or migrate through the
-ordered recovery protocol. Failed activation restores the prior complete
-binding; incomplete rollback is a durable visible failure.
+1. the adapter supplies exact native identity, lineage, bounded content
+   references, native-plan observation, capability conditions, and sequence
+   coverage;
+2. the daemon records provenance and unresolved gaps;
+3. the Shell or Control Plane prepares an exact candidate Goal and Plan;
+4. the daemon issues the exact preview and the owner confirms it; and
+5. the daemon admits the Goal and Plan revision, creates governed Tasks and
+   Task-owned attempts, then owns assignments, handoffs, Effects,
+   reconciliation, verification, and acceptance.
 
-### 7.5 Revoke and uninstall
+Later native events remain observations linked to the admitted work. They do
+not silently revise the daemon Plan.
 
-Revocation fences the exact binding or capability and projects affected Tasks,
-executions and blockers. Uninstall previews instances, sidecars, Tasks, pending
-Effects, retained data and capability leases; stops new dispatch; reconciles or
-quarantines Effects; removes package bytes; and marks the installation removed.
-Audit/evidence and user data remain unless separately retained or purged under
-an explicitly confirmed policy.
+## 7. Lifecycle responsibility
 
-## 8. Mutating Tool boundary
+Agent package, installation, registration, instance, adapter session, native
+runtime, native conversation, execution, and process each have their own
+owner. Personal may expose lifecycle actions only through a typed capability
+owned by the relevant layer.
 
-A sidecar may return a Tool candidate but cannot dispatch from that candidate.
-The daemon validates the exact descriptor, capability, budget and epoch,
-persists Intent and Effect with the original idempotency key, commits the
-dispatch fact, and only then issues an Effect-bound permit to the executor. A
-receipt sent through the sidecar is not Effect commit, reconciliation,
-Verification or Task completion.
+| Operation concept | Owning meaning |
+|---|---|
+| acquire/install/register | establish verified Personal package and policy identities; grants no runtime capability |
+| launch/attach | start or connect to a vendor runtime under exact adapter identity |
+| create/load/resume/fork/close conversation | change origin-owned native conversation state |
+| submit/steer/interrupt turn | request native turn behavior when the adapter supports it |
+| assign/handoff | change daemon-owned governed work graph |
+| pause/resume execution | reach a safe governed point, fence stale work, and reauthorize before continuation |
+| stop/restart runtime | quiesce or replace runtime machinery; not Task cancellation or completion |
+| cancel Task | request governed Task closure; not process kill or conversation close |
+| upgrade/rollback/uninstall | change Personal package/registration binding while preserving recovery and audit |
 
-## 9. Future adapters and product boundary
+`unsupported`, `unavailable`, and `unknown` are distinct:
 
-OpenClaw, Hermes, Codex, WorkBuddy and other Agents may use the same package,
-registration, sidecar and execution boundaries, but they are not Linux 1.0
-qualified Agents. Each requires exact identity/digests, compatibility and
-degradation reports, declared host/Tool/secret boundaries, lifecycle and
-recovery negatives, and its own campaign/release decision.
+- **unsupported** means the adapter declares no such operation;
+- **unavailable** means the operation exists but current auth, runtime,
+  connection, policy, or dependency blocks it;
+- **unknown** means Personal lacks enough current observation to decide.
 
-Multiple installed Agents do not enable Multi-Agent orchestration. A future
-container, VM, cgroup, eBPF, device or hardware placement implementation cannot
-move authorization, CAS, budget, Effect or acceptance authority out of the
-daemon.
+## 8. Recovery verb distinctions
 
-This entire document remains target/design. It does not claim that the sidecar,
-managed Pi lifecycle, any non-Pi adapter, B09, `GMVP-LINUX`, a release or a
-Profile is implemented or passed. Current facts remain in
-[PROGRESS.md](../../../docs/plan/PROGRESS.md).
+- **detach** stops one client or adapter observation attachment. Native work
+  may continue.
+- **interrupt** asks the current native turn to yield. It does not close the
+  conversation, cancel a Task, or reconcile an Effect.
+- **cancel** is a daemon-owned Task decision and must account for open Effects.
+- **pause** fences new governed dispatch and seeks a safe checkpoint.
+- **restart** replaces a runtime or adapter session under a fresh epoch; it is
+  not resume by itself.
+- **native fork** creates a new origin-native conversation lineage. The fork is
+  not a new Goal -> Plan revision -> Task -> Attempt branch until the owner
+  confirms and the daemon admits it.
+- **retry/fork from checkpoint** creates a new daemon-owned governed attempt and
+  preserves the prior attempt, failure, evidence, and Effect facts.
+- **close** ends an origin-native conversation according to the adapter. It
+  does not erase Personal history.
+- **undo** is a compensating daemon-governed mutation with new
+  Intent/Effect/evidence. It never deletes the original fact.
+
+The current browser does not expose typed Task or Agent controls. Those
+controls and common native conversation operations are **Requires-backend**.
+
+## 9. Provider, Tool, and MCP boundaries
+
+An Agent receives a daemon-mediated Provider proxy binding, never raw Provider
+credentials. Global, Agent, or conversation-level Provider selection becomes
+effective for current governed work only after explicit daemon rebind.
+
+A native tool request or MCP-advertised tool is a candidate. The daemon still
+validates exact Tool identity, current capability, scope, budget, and epoch and
+persists Intent/Effect before external mutation. Native approval is not
+Personal authorization. A receipt is not reconciliation or verification.
+
+MCP installation and connection grant no Tool capability. Personal MCP policy,
+bindings, and external config projection are described in
+[Resource Manager architecture](resource-manager-architecture.md).
+
+## 10. Agent onboarding and removal
+
+### 2.0 target
+
+Agent onboarding preserves native behavior while establishing exact Personal
+identity:
+
+1. choose a signed upstream catalog record or **Connect existing**;
+2. review Provider/proxy profile, Standard Workspace, and requested
+   permissions together; and
+3. open the native conversation.
+
+A catalog record exposes source, version, digest, signature, license, and
+adapter compatibility. Listing or installing it grants no permission and
+transfers no qualification.
+
+Activation has two separate milestones:
+
+- **first chat** — the first real native response; and
+- **first governed and verified Task** — daemon-admitted work whose Effects are
+  Governed/reconciled and whose outcome has current independent verification
+  and daemon acceptance.
+
+Removal distinguishes:
+
+- **disconnect** — remove Personal observation/management bindings while
+  preserving the native installation and native data; and
+- **uninstall** — remove a Personal-managed installation only after impact,
+  pending Effect, retained-data, and recovery review.
+
+Catalog onboarding, connect-existing composition, embedded conversation, and
+the target disconnect/uninstall experience are **Requires-backend**.
+
+## 11. Current/target boundary
+
+| Capability | Status |
+|---|---|
+| Pi Shell host and Pi-only Linux 1.0 qualification | **Now** |
+| Delivered P8 adapter registration/lifecycle boundary | **Now** |
+| Codex fixture qualification and dsh integration path | **Now**, with their recorded non-claims |
+| Vendor-native common conversation/capability projection | **Requires-backend** |
+| Goal, revisioned Plan, and Task-owned attempt admission | **Requires-backend**; P10-T02/Lane-CTR only for new public semantics |
+| Typed browser Task/Agent lifecycle controls | **Requires-backend** |
+| MCP as seventh family | **Requires-backend**; P10-T02/Lane-CTR only for a new/changed public machine surface |
+| Non-Pi Linux 1.0 qualification transfer | **Not permitted** |
+
+Current facts remain in
+[PROGRESS.md](../../../docs/plan/PROGRESS.md). This architecture creates no
+Gate, release, Profile, or Agent-benefit claim.

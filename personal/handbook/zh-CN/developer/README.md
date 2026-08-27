@@ -11,6 +11,11 @@ generated: false
 实现的真实运作方式，逐文件映射到源码与测试。能力标签是诚实的：`partial` 页面会精确说
 明缺少哪段接线。
 
+阅读任何 Personal 2.0 陈述时都要对照当前边界：当前 Linux/API 组合为六族、只有 Pi
+资格化，且已有位于 `clients/pc/web/` 的同源 `/ui/` SPA。桌面优先重设计、Account Hub
+导入、第七 MCP 族、厂商对话适配器、Goal/Plan 与多 Agent 监督、联邦资源都是标为
+`Requires-backend`/`Requires-core` 的已采纳目标，不是实现事实。
+
 导引：
 
 1. [仓库地图](repository-map.md)

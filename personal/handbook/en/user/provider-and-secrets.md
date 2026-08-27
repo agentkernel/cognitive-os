@@ -17,6 +17,12 @@ sources:
   - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
     symbols: ["TrustedEndpoint", "ProviderKind"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/crates/cognitive-secret/tests/p1_t02_provider_secret.rs
   - personal/crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
@@ -24,9 +30,10 @@ tests:
   - personal/apps/kernel-server/tests/p9_t07_route_observation.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:9b73f66320870e89724075e035ee78d26ac3461644252a027567befed378360b"
+fingerprint: "sha256:c1144234892f49dea6e3209262a6b13ad2def8768c603417e5f9e32d1ac351a6"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
+  - Account Hub credential import is an adopted Personal 2.0 target; no concrete browser-profile, Agent credential-file, subscription, or OAuth import mechanism is implemented.
 ---
 
 # Provider and secrets
@@ -52,6 +59,36 @@ key on argv. Full operator steps (accounts, trust flags, bindings, usage,
 observe-only budgets) are in
 [Provider Control Plane](provider-control-plane.md). The localhost Web UI is a
 daemon client for those same management routes; there is no desktop panel.
+
+## Account Hub credential-import target (`Requires-backend`)
+
+ADR-0055 permits a future user-directed import path, but authorizes no concrete
+import mechanism:
+
+1. The user initiates each import, sees the **exact source** and target approved
+   SecretStore before any read, and consents separately for that source. There
+   is no background, speculative, or bulk credential scan.
+2. The Rust daemon alone reads the named source and writes the target
+   SecretStore. Material exists only in daemon process memory between those
+   operations. The UI and every Agent/sidecar receive no raw material.
+3. Raw material never enters argv, environment variables, ordinary
+   configuration written by CognitiveOS, SQLite, UI output, Agent Context,
+   logs, CI/test output, evidence, support data, or chat. Audit records contain
+   only redacted source kind, target store, time, and outcome.
+4. Keeping the source is the default. Secure source deletion occurs only when
+   the user explicitly chooses it for that import.
+
+Browser-cookie/profile decryption, third-party Agent credential-file parsing,
+subscription-token import, and OAuth capture are all `Requires-backend`.
+Current `cognitive init`, `--api-key-file`, and the existing `/ui/` manual key
+handoff remain separate current API behavior; none proves that Account Hub
+source import exists.
+
+The adopted MCP seventh-family target uses the same isolation: connection
+credentials stay in an approved SecretStore and raw material never reaches the
+Control Plane, Agent, sidecar, package metadata, ordinary configuration,
+SQLite, Context, logs, evidence, or chat. The family backend remains
+`Requires-backend`/`Requires-core`.
 
 ## How Provider traffic flows
 

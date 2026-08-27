@@ -14,10 +14,14 @@ sources:
     symbols: ["record_user_intent", "mint_schedulable_task_contract"]
   - path: personal/apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick"]
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/architecture/multi-agent-orchestration.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:4d5da7fad11014cc66879490ff44e68c1a668e51e03db5f36e3bff1b8b716811"
+fingerprint: "sha256:28c3e6df2f619bc4adc12e38404fd43afed8b95b4402cdc24260fafceacc8740"
 non_claims:
   - 准入同一趟仍不消费 worker 授权、也不获取调度 lease；那是后续 tick 的事。不作 Gate、release、Profile 或 EVAL 升格。
 ---
@@ -61,6 +65,25 @@ report 与缺失 CAS 负例已写入；stale fixed post-state 仍开放。Regist
 加独立 verification 之后完成。因此已接纳
 Task 在权威状态中持久、可观察且 runnable；自主执行仍为 `partial`。开发者细节见
 [执行链状态](../developer/execution-chain-status.md)。
+
+## Personal 2.0 Goal、Plan 与监督目标（`Requires-backend`）
+
+当前持久工作对象仍是 **Task**。当前 daemon 没有 Goal 或 Plan API、没有持久 Plan
+revision 生命周期，也没有多 Agent supervisor。
+
+已采纳目标新增：
+
+- **Goal**：位于一个或多个 Task 之上的、由 owner 编写的持久结果；
+- **Plan revision**：对该 Goal 的不可变候选拆解。Agent 可以提出，但只有 daemon 签发
+  的 preview 与 admission 才能让某修订成为当前版本；
+- **多 Agent 监督**：各自独立资格化的 Agent 经厂商专用适配器贡献有界 candidate。
+  daemon 负责分配、fencing、budget、Effect 仲裁与验证；Agent 之间绝不转交权威；
+- **联邦资源**：Plan 可按精确来源身份及 revision/freshness 引用 MCP 族资源，但发现或
+  提及不授予权限。
+
+这些概念不会重命名今天的 Task 行，也不能从现有 Pi/dsh 路径推断已实现。Pi 仍是唯一
+已资格化 Agent；全部 Goal/Plan/多 Agent/联邦目标行为都是 `Requires-backend`
+（若需公开权威合同变化则为 `Requires-core`）。
 
 ## 构造上绝不可能发生的事
 

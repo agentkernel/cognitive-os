@@ -1,9 +1,57 @@
 # 05 — Control Plane IA Options
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 IA outcome; historical options retained
+- Updated: 2026-08-27
 - Method: stark `ux-design` (route topology, navigation model matrix, IA object rules), `desktop-app-archetypes`, `usability-pattern-matrix`; evaluated against the product model (`01`), JTBD (`02`), capability model (`03`), conceptual model (`04`), and the audited current state. Apple fit is judged by the `apple-design` principles (clarity, hierarchy, restraint, direct manipulation, wayfinding), not by styling.
 - Framing rule from the brief: nothing is first-level "because it is today". Every first-level candidate must answer: **why first-level? why not second-level? why not a contextual action? why not a command?**
+
+## Adopted IA outcome (Personal 2.0)
+
+The option analysis below is retained as the 2026-08-24 reasoning record, but
+its seven-space recommendation is superseded. The adopted desktop IA is:
+
+`Home / Agents / Work / Library / Activity / Settings`
+
+| Destination | Why first-level | What moved beneath it |
+|---|---|---|
+| Home | resume and attention are the primary entry job | readiness summaries, recent conversations, current managed work |
+| Agents | conversation and trust begin with an actor | Runtime, install/connect, Adapter capability matrix, native history, display/artifact slots |
+| Work | durable Goals/Plans/Tasks are the governable work | Context, attempts, Effects, verification, multi-Agent orchestration |
+| Library | recurring resource discovery and curation needs a stable home | Memory, Skills, Tools, MCP; the other target families stay in Work/Agents |
+| Activity | cross-object investigation is a distinct repeated job | one provenance timeline: Native/Observed/Governed/Verified |
+| Settings | low-frequency account/system configuration should not compete with daily work | Account Hub/Providers, System/readiness detail, appearance, accessibility, diagnostics |
+
+### Why the former peers moved
+
+- **Providers -> Settings / Account Hub:** account acquisition, credentials,
+  models, quotas and cost are configuration and stewardship. Provider state may
+  surface contextually on Home, Agents, Work and Library.
+- **System -> Settings / System:** readiness remains globally visible, but deep
+  diagnostics and stewardship are low-frequency.
+- **Resources -> Library:** "Library" expresses the owner job and holds Memory,
+  Skills, Tools, and MCP without implying one generic Resource object. The
+  seven-family product count is preserved across the IA: Context/Task live in
+  Work and Runtime/Process lives in Agents.
+- **Tasks -> Work:** Work includes Goal, Plan revisions, Tasks, attempts and
+  Context; it is not merely a task table.
+- **Runtime -> Agents; Context -> Work:** both are contextual identities, not
+  Library families in the target IA.
+
+### Layers, not destinations
+
+- The **global Agent Shell** persists across destinations and returns to the
+  selected Agent/conversation.
+- **Manage with Personal** is an explicit mode transition from conversation
+  into Work.
+- The **command palette** accelerates destinations, known objects and
+  current-backed actions.
+- **Search** is scoped to known projections and declares coverage; it does not
+  imply backend-global search.
+
+The P7-T05 current implementation still has seven current routes
+Home/Work/Agents/Providers/Resources/Activity/System. Those are evidence, not
+the target navigation. Migration must preserve working deep links or provide
+honest redirects; it must not label a target-only page as implemented.
 
 ---
 

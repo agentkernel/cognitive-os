@@ -7,6 +7,9 @@ status: partial
 generated: false
 sources:
   - path: personal/docs/product/cognitive-resource-model.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: personal/crates/cognitive-store/src/memory_store.rs
   - path: personal/crates/cognitive-store/src/skill_store.rs
   - path: core/crates/cognitive-kernel/src/tool_registry.rs
@@ -16,15 +19,16 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:995450ccc23dc262e665ea304db2c8da5d9e66cff58b47d4f47fafeb5e207437"
+fingerprint: "sha256:3d105a259aa8c0437805c6a0b44008b912510b5ac9b69acaab196041f2aaaa5f"
 non_claims:
   - 资源族在权威存储中的存在不等于完整的用户工作流；各族缺口见下文与已知限制页。
 ---
 
-# 六类资源
+# 当前六类资源
 
-Personal 分别治理六个资源族。它们有意**不**共享一张表、一套生命周期或一台状态机。今
-天每个族都有真实的权威存储与 daemon 服务；用户可及面参差不齐，诚实标签为 `partial`。
+Linux 1.0 与当前 API 分别治理六个资源族。它们有意**不**共享一张表、一套生命周期或
+一台状态机。今天每个族都有真实的权威存储与 daemon 服务；用户可及面参差不齐，诚实
+标签为 `partial`。
 
 | 族 | 是什么 | 今天的用户可及面 |
 |---|---|---|
@@ -45,5 +49,30 @@ Personal 分别治理六个资源族。它们有意**不**共享一张表、一�
 2. **先过滤后排序。** Memory 与 Context 候选先经授权、scope、tombstone、新鲜度过滤，
    任何排序才能看到它们；被拒内容连排序都无法影响。
 
-按设计推迟（Linux 1.0 范围）：embedding/向量/图谱 Memory、skill 市场、动态工具生态
-（MCP 适配器仅为 post-1.0 fixture 资格化）、多 agent 编排与 Web UI。
+从 Linux 1.0 推迟：embedding/向量/图谱 Memory、skill 市场、已采纳的 MCP 资源族
+（已交付的 post-1.0 MCP Tool transport/dynamic-Tool MVP 不等于该资源族）、多 Agent
+编排与桌面优先 UI 重设计。
+
+## Personal 2.0 第七族（`Requires-backend`）
+
+Personal 2.0 已采纳 **MCP** 为第七个用户可见资源族。这不改变当前六族 Resource
+Manager API，也不会把 MCP 内容自动变成原生 Tool。
+
+目标资源族拥有彼此分离的 server、package、connection、advertised capability、
+binding、health 与 quarantine 身份。**联邦资源**投影保留来源身份、provenance、
+revision/freshness、trust、availability 与允许动作，而不把外部权威复制进 Personal。
+
+MCP 广告对象仍经各自准入路径进入既有资源族：tool 是带版本绑定的 Tool candidate，
+protocol resource 是 Context candidate，prompt/可复用指令是 Skill candidate。仅发现不
+授予读取或派发权限。daemon policy 仍须授权每次使用；变更仍须遵守
+persist-before-dispatch Intent/Effect、fencing、budget 与独立验证。
+
+目标视图严格区分：
+
+- `Native`：Personal 拥有的本地能力/资源；
+- `Observed`：只读发现的事实；
+- `Governed`：经 daemon 授权、界定且可审计的使用；
+- `Verified`：经独立验证的结果或当前事实。
+
+它们不是自动成熟度阶梯，`Verified` 也不是 release 或资格化声明。MCP 资源族、联邦
+API、持久化、trust policy 与 UI 均尚未实现。

@@ -1,11 +1,95 @@
 # 04 — Control Plane Conceptual Model
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 conceptual model; historical P7-T05 model retained
+- Updated: 2026-08-27
 - Purpose: define the object grammar every IA option and user flow must speak — Agent, Task, Run, Event, Resource and their relations — as a **conceptual model**, not page sketches. Sources: canonical product model (`cognitive-resource-model.md`, `product-design.md`, `user-journeys.md`), the audited daemon/API reality, and the shipped SPA.
 - Honesty rule: concepts are marked **(authority)** = persisted daemon truth, **(projection)** = derived view, **(product concept)** = documented product language without a dedicated persisted object today. The UI may compose projections freely; it may never present a projection as authority.
 
+## Personal 2.0 conceptual model
+
+The following target grammar supersedes the earlier six-family and
+conversation-excluded model where they differ:
+
+| Concept | Target meaning | Truth class today |
+|---|---|---|
+| **Agent** | installed/connected actor represented through an Adapter capability matrix, common conversation projection, display/artifact slots, and Runtime dossier | partial projection; lifecycle/conversation target Requires-backend |
+| **Conversation** | Agent-native message/history stream shown through the common projection; remains owned by its source and is not authority work | target projection; Requires-backend in Control Plane |
+| **Goal** | owner-approved durable objective created only by explicit Manage with Personal | target authority concept; Requires-core + Requires-backend |
+| **Plan revision** | daemon-owned, versioned decomposition of a Goal; an Agent proposes, the daemon records/adopts | target authority concept; Requires-core + Requires-backend |
+| **Task / attempt** | bounded admitted work and each execution attempt; current Task evidence remains authoritative | Task current-backed; attempt projection/Goal linkage Requires-backend |
+| **Timeline item** | one event rendered with provenance `Native`, `Observed`, `Governed`, or `Verified` | partial current composition; unified feed Requires-backend |
+| **Library family placement** | Memory, Skills, Tools, MCP | four of the seven target families; current API depth varies |
+| **Context** | the authorized input view for managed Work | current partial per-task fact; belongs in Work, not Library |
+| **Runtime** | package/installation/registration/instance/sidecar/execution/process facts for an Agent | current partial projection; belongs in Agents |
+| **Account** | an owner-visible Provider/subscription/gateway identity whose credentials remain daemon-custodied | API-key accounts current; other acquisition tiers Requires-backend |
+| **Federated resource** | a resource observed from Personal and/or an Agent-native source, with source identity, revision and conflict state | target projection; observation/writeback Requires-backend unless typed |
+| **MCP integration** | family owning server, package, connection, capability, binding, health, and quarantine identities | target product concept; Requires-core + Requires-backend |
+
+### Target relationship graph
+
+```text
+Owner
+  ├─ converses in Agents ──> Agent ──Adapter──> Native history
+  │                               └──── Runtime dossier
+  ├─ uses Global Agent Shell to explain / compare / propose
+  └─ chooses Manage with Personal
+       └─> daemon Goal ──> Plan revision ──> Task ──> attempt
+                                      │          ├─ Context
+                                      │          ├─ Effects
+                                      │          └─ Verification/acceptance
+                                      └─ orchestrates one or more Agents
+
+Library (Memory · Skills · Tools · MCP)
+  └─ is observed/bound/consumed by Work through daemon policy
+
+Seven target families overall =
+  Memory · Skill · Tool · Context · Task · Runtime/Process · MCP
+  (Context/Task in Work; Runtime/Process in Agents)
+
+Account Hub (Settings)
+  └─ Account/credential ──daemon proxy──> Model route ──> Agent/Work
+
+Activity
+  └─ one ordered reading with Native / Observed / Governed / Verified provenance
+```
+
+### Relational rules
+
+1. Conversation is not Goal, Plan, Task, attempt, Effect, or Evidence.
+2. Manage with Personal is an explicit boundary; no implicit chat-to-task
+   conversion.
+3. Agent-native data retains source identity even when normalized.
+4. A common projection exposes the intersection; native slots render bounded
+   display metadata/artifacts only. They cannot inject actions, executable
+   markup/scripts, credentials, or authority-shaped state.
+5. Multi-Agent handoffs are daemon-issued and visible; Agents never transfer
+   authority to each other.
+6. Federated observation does not authorize writeback. Writeback requires a
+   daemon preview, confirmation where required, persisted Effect, and receipt.
+7. MCP plus rules does not control the host Agent session.
+8. The current six-family authority substrate remains factual. The
+   seven-family Personal 2.0 taxonomy is task-oriented across Library, Work, and
+   Agents, not a claim that one universal backend record or lifecycle already
+   exists.
+
+### MCP family ownership and candidate routing
+
+The MCP family owns exactly the managed integration identities: server,
+package, connection, capability revision/digest, binding, health, and
+quarantine. Protocol advertisements do not become MCP-family child resources:
+
+- advertised tools are untrusted, version-bound candidates into Tool;
+- advertised resources/content are candidates into Context;
+- advertised prompts/instructions are candidates into Skill.
+
+Each candidate follows the destination family's admission, permission,
+versioning, lifecycle, and evidence rules. A successful MCP response remains an
+observation and cannot grant Tool authority, mutate Context/Skill, control a
+host Agent session, or complete a Task.
+
 ---
+
+## Historical 2026-08-24 conceptual model
 
 ## 1. The objects
 

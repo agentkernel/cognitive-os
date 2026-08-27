@@ -5,6 +5,23 @@
 - Evidence: `27` (architecture map), `34` (per-page audit), `35` (traceability). Evaluation axes: coupling, state management, router, API abstraction, component reuse, test coverage, design-system compatibility, migration risk. **"Rewrite" is rejected as a default; every verdict is argued from evidence.**
 - Verdicts: KEEP (use as-is) · REFACTOR (same code, improved structure) · REPLACE (new implementation of the same responsibility) · REWRITE (discard subsystem, rebuild its responsibility from scratch) · NEW (does not exist).
 
+## Current implementation (frozen planning baseline)
+
+The subsystem verdicts below remain valid evidence about P7-T05 code at the
+audited revision: preserve tested security/policy logic and treat the old view
+layer separately. They are not an authorization to edit `clients/pc/web`.
+
+## Personal 2.0 target delta / supersession
+
+The target is materially broader than the earlier seven-space view refactor:
+global Agent Shell, Adapter conversation, Goal/Plan/attempt Work,
+seven-family task-oriented placement with MCP in Library, Account Hub tiers,
+provenance Activity and federated writeback.
+The old wave recommendation is therefore superseded as an implementation plan.
+Reuse decisions must be re-evaluated against
+[Target Traceability](35-design-to-code-traceability.md); every absent capability
+remains `Requires-backend`, not an excuse to invent client behavior.
+
 ---
 
 ## 1. Verdict matrix

@@ -5,6 +5,39 @@
 - Method: BD-1..BD-9 were registered in Phase 1 (`03` §5). Here each is **re-verified against actual code** — not copied from Phase-1 assumptions. Status values: **CONFIRMED GAP** (verified absent) · **PARTIAL** (exists with material restriction) · **RESOLVED** (actually exists — Phase-1 assumption was wrong) · **NEW** (found by this audit).
 - For each: what exists today (evidence) · what the design needs · what backend work would close it (contract lane implications) · which Phase-2 surface is gated.
 
+## Current implementation (frozen BD-1..BD-10 baseline)
+
+The verified dependencies below remain the P7-T05 as-of register. Their code
+citations and statuses are preserved. Target design does not change an absent
+handler into an API.
+
+## Personal 2.0 target gap register
+
+These rows identify semantic gaps only. They intentionally define no route,
+DTO, storage schema, lifecycle state or implementation schedule.
+
+| Gap | Target outcome gated | Current evidence | Required disposition |
+|---|---|---|---|
+| P2-BD-A Adapter conversation projection | embedded native conversation/history and first real chat | no Control Plane transcript/send projection | Requires-backend; define source identity, ordering, freshness, errors, three-axis capability matrix, and display-only render-slot boundary |
+| P2-BD-B Agent catalog/install/connect | signed catalog and ≤3-step setup | lifecycle is CLI/library only; runtime envelopes partial | Requires-backend; separate install, connect, disconnect and uninstall semantics |
+| P2-BD-C Goal/Plan/attempt | explicit Manage with Personal and Work hierarchy | current Task chain only | Requires-core + Requires-backend for durable authority, revisions, linkage and evidence semantics |
+| P2-BD-D Multi-Agent orchestration | roles, handoffs, disagreement and dependency supervision | architecture target only | Requires-backend; daemon remains sole scheduler/authority |
+| P2-BD-E Rich Work inventory | Goal/Plan/Task/attempt list and attention | envelope-only task list | Requires-backend; no synthesized completeness |
+| P2-BD-F MCP family | first-class MCP identity, discovery, policy, binding and observation | Tool/MCP fixture/design evidence; no operator family surface | Requires-core + Requires-backend; candidate routing, support-path preference, exact-grant reconciliation and re-confirmation triggers required; MCP cannot control host Agent session |
+| P2-BD-G Seven-family placement depth | Memory/Skill/Tool/Context/Task/Runtime/MCP family facts in Library/Work/Agents | current six-family depth varies; MCP family absent | Requires-backend where facts/actions are absent; MCP also Requires-core |
+| P2-BD-H Federated observation | Personal and Agent-native revisions/conflicts | no general cross-source projection | Requires-backend; preserve source/provenance/freshness |
+| P2-BD-I Governed writeback | Shell suggestion -> daemon preview/confirm/Effect -> verified receipt | no general typed path | Requires-backend; no optimistic client mutation |
+| P2-BD-J Native/unified Activity | one four-provenance timeline | provider audit + bounded per-task sources | Requires-backend; ordering/coverage contract required |
+| P2-BD-K OAuth/subscription accounts | supported consent and credential lifecycle | absent in P7-T05 | Requires-backend; daemon custody only |
+| P2-BD-L Credential import | ADR-0055 exact-source import and redacted receipt | governance authorization only | Requires-backend per source; consent and source disposition mandatory |
+| P2-BD-M Custom gateways | supported gateway account lifecycle | openai-compatible subset only | Requires-backend for every unsupported gateway |
+| P2-BD-N Model capability/quota/cost | honest normalized model, quota and spend facts | models/usage/advisory budgets partial | Requires-backend for missing sources; unknown never zero/free |
+| P2-BD-O Target controls/progress | pause/cancel/re-plan/retry/orchestration and real progress | existing BD-1/2/3/4 gaps | Requires-backend; no active-looking control or fabricated percentage |
+
+Existing BD-1..BD-10 still apply where they overlap these broader gaps. A future
+delivery must reconcile names rather than treating the P2 rows as duplicate API
+requests. Until then, every gated target surface uses `Requires-backend`.
+
 ---
 
 ## BD-1 — Task control over HTTP (cancel/pause/resume/retry)

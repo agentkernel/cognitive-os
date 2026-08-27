@@ -4,6 +4,25 @@
 - Date: 2026-08-24
 - Question (brief §13/§14): what event/audit/effect/intent/verification/acceptance records actually exist, where they live, and what the frontend can reach. Rule enforced: **logs are not merged with authority events** — they are separate sources, labeled separately.
 
+## Current implementation (frozen audit baseline)
+
+The event-source and evidence-chain observations below remain P7-T05 facts.
+They preserve the crucial boundary that logs/observations are not authority and
+that the HTTP surface was not unified.
+The accepted current Activity route is still a labeled partial composition; it
+is not the Personal 2.0 unified provenance target.
+
+## Personal 2.0 target delta
+
+Activity targets one timeline with `Native`, `Observed`, `Governed`, and
+`Verified` provenance. The current sources below cover only part of
+Observed/Governed/Verified and no general Adapter-native history. Unified
+cross-domain ordering, native events, Goal/Plan/attempt events, federated
+writeback receipts and complete audit remain `Requires-backend`. The target may
+align partial sources visually only with an explicit coverage/order note; it
+must not claim one authoritative global feed. See
+[Activity Spec](19-control-plane-activity-spec.md).
+
 ---
 
 ## 1. The durable authority event log (the spine)

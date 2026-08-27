@@ -12,10 +12,13 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/mod.rs
   - path: docs/adr/0053-personal-web-ui-stack.md
   - path: docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:365c0d149b89dce64020796d904d6faadff9c0f34edaa3d36e2e6e42b60bd964"
+fingerprint: "sha256:3044376c1a9ce03ea6e36107c9764bb0a2d80141bbdc30249add9687ab09b4ef"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -41,9 +44,14 @@ non_claims:
   之后 SPA 位于本仓库 `clients/pc/web/`，产品路径是复制到 `data_dir()/ui`。daemon
   执行 loopback Origin/Referer 允许列表；当 `data_dir()/ui/index.html` 不存在时返回
   `503` `not_available`。HTTP cancel 与 class-C Agent 生命周期仍为 `not-run`。无
-  Windows/macOS 安装产品，也无多 agent 编排。Pi shell 尚无资源/任务浏览 UX。操作步骤见
+  Windows/macOS 安装产品，也无多 agent 编排。Pi shell 尚无资源/任务浏览 UX。已采纳
+  的 Personal 2.0 桌面优先重设计尚未应用到这个当前 SPA。操作步骤见
   [Provider Control Plane](provider-control-plane.md)。Linux RC 声明集见
   [Linux RC 操作地图](rc-and-support.md)。
+- **Personal 2.0 目标能力不是当前 API**：当前资源模型与 Resource Manager 仍为六族；
+  第七 MCP 族与联邦资源是 `Requires-backend`。Account Hub 没有浏览器 profile、
+  Agent 凭据文件、订阅或 OAuth 导入机制。Goal/Plan revision API、厂商专用 Agent
+  对话适配器与多 Agent 监督均不存在。Pi 仍是唯一已资格化 Agent。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
   query` 与 `cognitive audit query` 无过滤器；用量 JSON 只有 `event_id` /
@@ -63,6 +71,14 @@ non_claims:
   `cognitive daemon start` 把 kernel-server stdio 留在 `state/cognitiveos/daemon.log`，
   不再丢到 `/dev/null`。
 - Provider key 过期时 readiness 仍可能显示 `ready`（无实时探测）。
+- 重启/替换 daemon 会使 dsh Path B 的进程内 management session 失效。新 daemon
+  将 dsh 投影为 `INACTIVE`，所以 `cognitive dsh apply` 会被拒绝，不能恢复 stale
+  bearer。不要提取 bearer 做直接探测；必须重启 `cognitive dsh web`，再检查
+  `cognitive dsh status`。`apply` 只用于 daemon 未重启且 runtime 已为 `ACTIVE` 时所
+  支持的 binding/model overlay 同步。持久化账户 `active` 不是实时 SecretStore 解析
+  结果；discovery/proxy 使用时才实时解析，锁定或变化的 store 仍是独立可能原因。这是
+  带运维恢复、尚无产品代码修复的
+  [open 正式登记缺陷](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)。
 - `state/backups/` 下的迁移备份只增不清。
 - 迁移中崩溃可能留下过期 `migration.lock`，需人工移除。
 - `pnpm run verify:local` 钉住过期符合性计数（过期的开发者入口）。

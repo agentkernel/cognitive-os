@@ -5,6 +5,23 @@
 - Method: every cell rated against **implementation-verified** surfaces (`28` route map + `32` security map + store-level audit where cited). Ratings: **API** = reachable over daemon HTTP (the SPA's only backend) · **CLI** = `cognitive`/admin-cli only · **LIB** = runtime library only · **NONE** = does not exist · **FORBIDDEN** = deliberately refused by design.
 - This matrix supersedes nothing in Phase 1 (`control-plane-capability-inventory.md`); it re-keys the same reality to the Phase-3 question: *where can each capability actually be reached?*
 
+## Current implementation (frozen audit baseline)
+
+The matrix below remains the P7-T05 capability evidence at 2026-08-24. Its
+API/CLI/LIB/NONE/FORBIDDEN ratings must not be upgraded from target design.
+The accepted current SPA presents its implemented subset under seven routes:
+Home / Work / Agents / Providers / Resources / Activity / System.
+
+## Personal 2.0 target delta
+
+The target adds product placement and target-only capabilities without changing
+these ratings: Providers/System move under Settings; Library holds
+Memory/Skills/Tools/MCP; conversation/history and Runtime/Process live under
+Agents; Goal/Plan/attempt/Task/Context live under Work; Activity adds four
+provenance classes. Unsupported Agent, MCP, Account Hub, orchestration and
+writeback features remain `Requires-backend`. The current target gap map is
+[Backend Dependency Matrix](37-backend-dependency-matrix.md).
+
 ---
 
 ## 1. System / readiness

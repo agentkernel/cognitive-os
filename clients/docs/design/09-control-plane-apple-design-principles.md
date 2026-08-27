@@ -1,9 +1,62 @@
 # 09 — Control Plane Apple Design Principles
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 visual/interaction principles
+- Updated: 2026-08-27
 - Authority: `apple-design` skill is the PRIMARY DESIGN AUTHORITY in this stack; this document translates it into binding principles for the Control Plane, then runs the Apple Design Review over the recommended IA (`06`). It also inherits the already-accepted visual direction of `web-ui-design.md` §5 (Apple-inspired, system-like; no purple "AI" gradients, no card walls, no ornamental dashboard strips) — that direction stands; this document sharpens it.
 - **Non-negotiable framing:** Apple design here ≠ glassmorphism, Liquid Glass everywhere, blur, giant gradients, oversized rounded cards, marketing landing pages, or empty whitespace. Target feel: **Calm, Dense, Precise, Professional.**
+
+## Personal 2.0 visual and interaction amendment
+
+The adopted desktop is a **brand-new system**, not a reskin of the P7-T05 dark
+SPA and not a simulation of macOS glass. Its recognizable character comes from
+source-aware operational typography, stable three-region geometry, a restrained
+provenance grammar, and exact response—not from decorative materials.
+
+### Three-region desktop composition
+
+1. **Navigation region:** six first-level destinations, stable width, selected
+   state, global status and Agent identity.
+2. **Primary workspace:** conversation, master/detail, timeline or settings
+   content; one clear subject and one primary action.
+3. **Inspector region:** beginner-first summary that can expand to full
+   identities, digests, provenance, coverage and backend gaps.
+
+The global Agent Shell is part of this system. It docks without covering the
+current object, preserves focus and conversation, and expands/collapses along a
+spatially consistent path. On narrower desktop widths, detail and inspector
+become separate routes/sheets while current location stays visible.
+
+### Calm, dense, precise, professional
+
+- Calm means stable geometry and a quiet neutral field—not hiding failures.
+- Dense means list/master-detail/inspector efficiency—not tiny type or nested
+  cards.
+- Precise means exact names, aligned data, visible provenance and honest
+  unknowns.
+- Professional means no giant gradients, oversized cards, marketing spacing,
+  sparkle motifs, decorative charts, fake progress or anthropomorphic thinking
+  animation.
+
+Solid surfaces are the default. Translucency is reserved for a true floating
+palette or temporary overlay and disappears under reduced transparency.
+Hairlines, tonal steps and typography carry depth. Radius is modest; pills are
+reserved for compact state/filter tokens.
+
+### Interaction discipline
+
+- Pointer and keyboard response is immediate; authority mutation still waits
+  for daemon preview/confirmation.
+- Motion orients selection, inspector and shell changes. It never conveys
+  authority progress.
+- `prefers-reduced-motion`, reduced transparency, high contrast, text scaling,
+  full keyboard operation and visible focus are first-class variants.
+- The command palette is an accelerator over the IA, not a feature drawer.
+- States use text + shape + restrained semantic color. Provenance uses
+  `Native / Observed / Governed / Verified`, never color alone.
+
+The old material, seven-space and "Control Plane excludes chat" statements
+below are superseded where they conflict with this amendment. Their restraint,
+identity discipline and evidence-first principles remain adopted.
 
 ---
 

@@ -4,6 +4,22 @@
 - Date: 2026-08-24
 - Method: the brief's ten named challenges, each checked against implementation-verified reality (`28`/`29`/`32`; store-level audit cross-cited where landed). Verdicts: **KEEP DESIGN** · **REFINE DESIGN** · **BLOCK DESIGN** · **REQUIRES BACKEND**. No silent redesign: every refinement cites where the Phase-1/2 document already anticipated the issue (or says so if it did not).
 
+## Current implementation (frozen challenge record)
+
+The C1–C11 findings below remain the 2026-08-24 review of the earlier design
+against P7-T05 implementation.
+
+## Personal 2.0 target delta / supersession
+
+The closing claim below that "no Phase-1/2 design element is contradicted" does
+not assess the adopted Personal 2.0 target. The new target deliberately adds
+conversation, Adapter capability projection, Goal/Plan/attempt, multi-Agent,
+MCP, Account Hub tiers, federated writeback and provenance Activity. Their
+gaps are registered in
+[Backend Dependency Matrix](37-backend-dependency-matrix.md) and all remain
+`Requires-backend`. The historical challenge outcomes are preserved but cannot
+be cited as target implementation readiness.
+
 ---
 
 ## C1. Work may be ahead of backend capability

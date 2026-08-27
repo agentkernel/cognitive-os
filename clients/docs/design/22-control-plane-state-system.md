@@ -1,9 +1,66 @@
 # 22 — Control Plane State System
 
-- Phase 2 (UX / Interaction / Visual design — no implementation)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 state-system specification; no implementation claim
+- Updated: 2026-08-27
 - Contract inputs: `03-control-plane-capability-model.md` §3 (verified state vocabularies + honesty rules), `04` (observation ≠ authority), `08` (trust calibration), `09` (color never alone). This document defines the **one display grammar** every surface uses for status. It is the first component the visual phase must implement, ahead of pages.
 - Hard rule (inherited + hardened): the UI never mints authority states. It maps daemon vocabularies onto a small set of **display categories**; the exact domain word is always rendered as text next to the category signal.
+
+## Personal 2.0 state-system amendment
+
+Every rendered fact has three orthogonal dimensions:
+
+`domain state x provenance x freshness`
+
+- **Domain state** is the exact daemon or source label mapped to the display
+  categories below.
+- **Provenance** is `Native`, `Observed`, `Governed`, or `Verified`.
+- **Freshness** is current, stale with age/cursor, disconnected/last-known, or
+  unknown.
+
+Capability rows add three separate dimensions:
+
+- runtime condition: `Supported|Unsupported|Unavailable|Unknown`;
+- delivery status: `Now|Requires-backend`;
+- support path:
+  `vendor-native|managed-adapter|MCP-cooperative|observable-only|unqualified`.
+
+Direct versus composed is source/coverage metadata, not delivery status.
+`Forbidden` is an action-policy class, not runtime condition or delivery
+status. These dimensions never collapse. `Native completed` is not `Verified`;
+a composed ready summary does not become authority; a `Requires-backend` target
+has no runtime state.
+
+### Requires-backend
+
+`Requires-backend` is not S7 authority state and not a disabled control. It is
+a delivery-status treatment with:
+
+- target outcome;
+- missing typed projection/action;
+- affected scope;
+- current alternative when one exists;
+- no pressed, hover-action or progress styling.
+
+### Progress honesty
+
+- Determinate progress requires a real denominator and source.
+- Otherwise show recorded phase/state, last fact and age.
+- A spinner means request loading only.
+- Streaming text, elapsed time, Agent narration or message count never implies
+  governed progress.
+- Completion always requires the relevant Verified/acceptance evidence.
+
+### Additional target state families
+
+Agent connection/install, conversation sync, Goal/Plan revision, attempt,
+federated-resource conflict and account acquisition may be displayed only when
+their source supplies an exact label. Unknown source labels map to S7 +
+verbatim label; the client never invents a lifecycle. Conflict is a condition
+with both source revisions visible, not a generic failure color.
+
+The seven display categories below remain adopted for `Now` domain states.
+Provenance, freshness, and capability-matrix fields are additional
+labels/shapes, not extra authority categories.
 
 ---
 

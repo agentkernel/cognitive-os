@@ -4,6 +4,39 @@
 - Date: 2026-08-24
 - Evidence base: six read-only audits this phase + Phase-1/2 design contract. Audits: WebUI code (`pc/web` @ `0320c1a`/`db56374`), daemon HTTP surface (`apps/kernel-server/src/personal/`), store/domain/runtime internals (`crates/cognitive-store|domain|runtime|kernel`, `specs/transitions/`), TS layer (`packages/{contracts-ts,sdk-ts,pi-cognitiveos,dsh-akp-adapter}` + clients repo outside `pc/web`), product/plan docs, governance/lease state.
 
+## Current implementation (frozen readiness assessment)
+
+The body remains the 2026-08-24 readiness assessment for the earlier design and
+P7-T05 revisions. Its evidence, gaps and non-claims are preserved.
+
+## Personal 2.0 target delta / supersession
+
+The old final status "READY FOR PHASE 3 IMPLEMENTATION" is **not the readiness
+status of the adopted Personal 2.0 target**. The target adds multiple
+implementation-absent semantics:
+
+- Adapter-backed embedded conversation/history and first-chat success;
+- signed catalog install/connect and disconnect/uninstall;
+- Goal/Plan revisions/Tasks/attempts and multi-Agent orchestration;
+- seven-family task-oriented placement, with first-class MCP in Library;
+- Account Hub OAuth/subscription/import/custom-gateway tiers;
+- federated observation and governed writeback;
+- Native/Observed/Governed/Verified unified Activity.
+
+Current target disposition:
+
+- design corpus: aligned;
+- current P7-T05 evidence: retained;
+- frontend implementation: not authorized by this document;
+- target backend capability: partial, with gaps in `37`;
+- target UX/accessibility validation: not run.
+
+Unsupported target controls remain `Requires-backend`; no route, API or progress
+behavior is inferred. Use the target sections in `01`–`25`,
+[Traceability](35-design-to-code-traceability.md), and
+[Backend Dependencies](37-backend-dependency-matrix.md). The historical
+readiness conclusion below remains true only for its stated scope and date.
+
 ---
 
 ## 1. Repository Reality

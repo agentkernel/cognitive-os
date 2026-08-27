@@ -12,10 +12,13 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/mod.rs
   - path: docs/adr/0053-personal-web-ui-stack.md
   - path: docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:365c0d149b89dce64020796d904d6faadff9c0f34edaa3d36e2e6e42b60bd964"
+fingerprint: "sha256:3044376c1a9ce03ea6e36107c9764bb0a2d80141bbdc30249add9687ab09b4ef"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -50,8 +53,17 @@ current fact of the code.
   `data_dir()/ui/index.html` is absent. HTTP cancel and class-C Agent lifecycle
   remain `not-run`. There is no Windows/macOS installation product and no
   multi-agent orchestration. The Pi shell has no resource/task browsing UX yet.
+  The adopted Personal 2.0 desktop-first redesign has not been applied to this
+  current SPA.
   Operator steps: [Provider Control Plane](provider-control-plane.md). Linux RC
   claim set: [Linux RC operator map](rc-and-support.md).
+- **Personal 2.0 target capabilities are not current APIs**: the current
+  resource model and Resource Manager remain six-family; the seventh MCP family
+  and federated resources are `Requires-backend`. Account Hub has no
+  browser-profile, Agent credential-file, subscription, or OAuth import
+  mechanism. Goal/Plan revision APIs, vendor-specific Agent conversation
+  adapters, and multi-Agent supervision do not exist. Pi remains the only
+  qualified Agent.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no
@@ -74,6 +86,17 @@ current fact of the code.
   acquires a lease. CLI `cognitive daemon start` retains kernel-server stdio in
   `state/cognitiveos/daemon.log` rather than `/dev/null`.
 - Readiness can say `ready` while your Provider key is stale (no live probe).
+- Restarting/replacing the daemon invalidates dsh Path B's process-local
+  management session. The new daemon projects dsh as `INACTIVE`, so
+  `cognitive dsh apply` is rejected and cannot recover the stale bearer.
+  Do not extract the bearer for a direct probe; restart `cognitive dsh web`,
+  then check `cognitive dsh status`. Reserve `apply` for supported
+  binding/model overlay synchronization when the daemon has not restarted and
+  the runtime is already `ACTIVE`. Persisted account `active` is not a live
+  SecretStore-resolution result; discovery/proxy use performs live resolution,
+  so a locked or changed store remains a separate possible cause. This is an
+  [open tracked defect](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)
+  with an operational recovery, not a product-code fix.
 - Migration-backup files under `state/backups/` accumulate without pruning.
 - A crashed migration can leave a stale `migration.lock` requiring manual removal.
 - `pnpm run verify:local` pins outdated conformance counts (stale developer

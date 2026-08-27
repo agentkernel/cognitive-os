@@ -4,6 +4,26 @@
 - Date: 2026-08-24
 - Selection criteria from the brief: vertically useful · real backend support · no fake APIs · no broad architecture rewrite · demonstrates the new Apple Control Plane design · establishes reusable design primitives.
 
+## Current implementation (frozen planning record)
+
+The "Foundation + Providers" slice below was a recommendation for the earlier
+seven-space design. It was not implemented or authorized by this document.
+
+## Personal 2.0 target delta / supersession
+
+This first-slice recommendation is superseded. Providers now belongs under
+Settings / Account Hub, and placeholder peers would misrepresent the adopted
+desktop entry. A future first slice must be reselected against the target job:
+reach a **real first Agent conversation**, preserve the explicit Manage with
+Personal boundary, and show unsupported Agent/catalog/conversation semantics
+as `Requires-backend`.
+
+Until Adapter conversation and install/connect capability are defined, no
+replacement implementation slice is claimed here. Current Provider logic
+remains valuable reusable evidence, but "Foundation + Providers" must not be
+presented as Personal 2.0 delivery order. See
+[Target Traceability](35-design-to-code-traceability.md).
+
 ---
 
 ## 1. The slice

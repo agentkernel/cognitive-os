@@ -9,11 +9,22 @@ sources:
   - path: personal/docs/architecture/system-architecture.md
   - path: personal/docs/architecture/resource-manager-architecture.md
   - path: personal/docs/product/resource-manager-design.md
+  - path: personal/docs/product/personal-2.0-scope.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
+  - path: personal/docs/architecture/web-ui-architecture.md
+  - path: personal/docs/architecture/multi-agent-orchestration.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:7d4c85a3d00f411981de256ba6b5df6d3da16e7c3e158765cdaae9b4ef20555b"
+fingerprint: "sha256:d716173c7d0320d28c16db03dfe208dc9717a310fbee5c1262c3403bfcad7690"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -56,6 +67,29 @@ What exists today:
 - **Platform ports**: SQLite WAL (two databases), filesystem artifact CAS, Linux
   Secret Service, systemd user service. `implemented`.
 
+## Adopted Personal 2.0 composition — not current implementation
+
+Personal 2.0 preserves the invariant above while adopting these target layers:
+
+- the existing daemon-served `/ui/` bundle from `clients/pc/web/` is the
+  current client; a desktop-first Control Plane/Agent Shell redesign is
+  `Requires-backend`, not a second authority plane;
+- Account Hub credential import is a daemon-owned source-to-SecretStore
+  operation under ADR-0055. The UI supplies exact source selection and consent,
+  but never reads or receives imported material;
+- MCP becomes a seventh user-visible family with federated source identity,
+  trust, availability, and policy. The current Resource Manager and authority
+  services stay six-family until typed backend/core work lands;
+- vendor-specific conversation adapters preserve each Agent's protocol and
+  identity. Pi remains the only qualified Agent; dsh implementation evidence
+  and generic adapter contracts do not transfer qualification;
+- Goal and immutable Plan revisions compose current Tasks, while daemon-owned
+  multi-Agent supervision assigns, fences, budgets, reconciles, and verifies.
+
+No Goal/Plan/MCP-family/federation/import/supervision API or target UI redesign
+exists today. Public authority or contract additions are `Requires-core`;
+daemon projection, persistence, and route additions are `Requires-backend`.
+
 ## Design decisions that explain surprises
 
 - One canonical service + fixed loopback port 48181 (ADR-0034) — earlier UDS and
@@ -63,7 +97,9 @@ What exists today:
   superseded for the product path.
 - Pi is deliberately two roles: shell host (client) and managed agent (governed
   runtime). Identities never merge (ADR-0035).
-- Six families, no universal `Resource` table (ADR-0037); per-agent sidecar as the
-  integration boundary (ADR-0038).
+- Current Linux 1.0/API: six families and no universal `Resource` table
+  (ADR-0037). ADR-0057 adopts MCP as the seventh Personal 2.0 family without
+  collapsing family authority; per-Agent sidecar remains the integration
+  boundary (ADR-0038).
 - MVP-first authorization: owner-local, single-principal, task-scoped; RBAC and
   approval chains are explicitly deferred.

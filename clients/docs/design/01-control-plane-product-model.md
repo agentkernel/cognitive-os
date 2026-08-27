@@ -1,11 +1,86 @@
 # 01 — Control Plane Product Model
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 product model; historical 2026-08-24 analysis retained
+- Updated: 2026-08-27
 - Method: product-skills stack (problem-validation lens, JTBD, opportunity mapping, scope cutting); stark `ux-design` product-type matching; `ai-agent-ux` supervision model. CognitiveOS reality (audited) outranks every framework on conflict.
 - Inputs: [Current State Map](control-plane-current-state.md), [Capability Inventory](control-plane-capability-inventory.md), canonical `docs/product/personal/*`.
 
+## Adopted Personal 2.0 target
+
+This revision supersedes the earlier product-model boundaries in this file where
+they differ. The analysis below remains useful rationale, but the adopted target
+is no longer a read-only governance console separated from conversation.
+Decision carriers:
+[ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md) and
+[ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md).
+
+**Product model:** the Personal desktop is the owner's primary entry into a
+local cognitive operating environment. It combines a global **Agent Shell**
+with a precise Control Plane. Conversation stays native to each Agent by
+default; the owner chooses **Manage with Personal** when a conversation becomes
+governed work. Manage with Personal projects the daemon's durable
+`Goal -> Plan revision -> Task -> attempt`
+chain without turning chat text, Agent reasoning, or process output into
+authority.
+
+The stable first-level IA is:
+
+`Home / Agents / Work / Library / Activity / Settings`
+
+- **Home** resumes the owner: recent conversations, work needing attention,
+  readiness, and evidence-backed outcomes.
+- **Agents** installs/connects Agents, hosts Adapter-backed embedded
+  conversation/history, and exposes Runtime facts in beginner-first dossiers.
+- **Work** contains Goals, Plan revisions, Tasks/attempts, Context, Effects,
+  verification, and multi-Agent orchestration projected by the daemon.
+- **Library** groups Memory, Skills, Tools, and MCP by operator task. Personal
+  2.0 has seven real families overall: Memory, Skill, Tool, Context, Task,
+  Runtime/Process, and MCP. Context and Task belong in Work;
+  Runtime/Process belongs in Agents. Model, Permission, Artifact, Budget,
+  Evidence, and Event remain cross-cutting objects, not families.
+- **Activity** is one provenance-aware timeline spanning `Native`, `Observed`,
+  `Governed`, and `Verified` facts.
+- **Settings** owns Account Hub (Providers/models/credentials/quotas/cost),
+  System, appearance, accessibility, and diagnostics. Providers and System are
+  not first-level destinations.
+
+The desktop shell is three-region and desktop-primary: navigation, primary
+workspace, and contextual inspector. The global Agent Shell is reachable
+without leaving the selected object. A command palette accelerates known
+destinations and real actions; it does not compensate for unclear IA.
+
+Agent integration is Adapter-based. Vendor-native conversation/history appears
+behind a common internal projection and capability matrix, with explicit native
+slots for bounded display metadata/artifacts where an Agent supports more.
+Slots cannot inject actions, executable markup/scripts, credentials, or
+authority-shaped state; vendor actions use Control Plane-owned typed controls.
+Installing or connecting an Agent should take no more than three understandable
+steps and end at a real first chat. Disconnect and uninstall remain distinct
+choices.
+
+Account Hub supports target acquisition tiers—OAuth/subscription, API key,
+user-directed import under
+[ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md),
+and custom gateway—while preserving daemon-only SecretStore/proxy custody.
+Only today's API-key/provider path is current implementation. OAuth,
+subscription import, credential import, quotas, and any unsupported cost/model
+projection are **Requires-backend**, never implied by an active control.
+
+Resources may be federated observations and, where a typed daemon workflow
+exists, governed bidirectional writeback. The Agent Shell may suggest a conflict
+resolution; only the daemon may issue preview, collect confirmation, persist
+Intent/Effect, dispatch, and verify. MCP is a first-class target family, but
+MCP plus rules does not control host Agent sessions.
+
+Current implementation remains the P7-T05 seven-route SPA documented in
+[Current State Map](control-plane-current-state.md): Home / Work / Agents /
+Providers / Resources / Activity / System, with its recorded API limits. Target
+screens must label unsupported controls **Requires-backend** and must not show
+fake buttons, fake progress, or inferred completion.
+
 ---
+
+## Historical 2026-08-24 product-model analysis
 
 ## 1. Why a Control Plane exists at all
 

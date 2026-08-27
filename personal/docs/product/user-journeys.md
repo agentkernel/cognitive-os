@@ -1,317 +1,395 @@
-# CognitiveOS Personal User Journeys
+# CognitiveOS Personal user journeys
 
-- Status: target Linux 1.0 journeys
-- Product boundary: [Linux 1.0 scope](linux-1.0-scope.md)
+- Status: current journeys plus adopted Personal 2.0 target
+- Current release boundary: [Linux 1.0 scope](linux-1.0-scope.md)
+- Target boundary: [Personal 2.0 scope](personal-2.0-scope.md)
 - Resource semantics: [Cognitive resource model](cognitive-resource-model.md)
 - Authority behavior: [Personal architecture](../architecture/README.md)
 
-Each journey separates visible interaction from daemon authority facts. The
-Shell and per-Agent sidecar may explain, translate, propose or observe. The
-Rust daemon alone resolves identities, authorizes, persists, dispatches,
-reconciles and accepts.
+Every journey separates visible interaction from authority facts. Agents,
+adapters, native panels, MCP servers, and the global Agent Shell may explain,
+translate, propose, or observe. The Rust daemon alone resolves identity,
+authorizes, persists Intent/Effect, dispatches, reconciles, and accepts.
 
-## 1. Install Personal and reach first conversation
+## 0. Reality ledger
 
-1. User verifies and runs the Linux installer.
-2. Rust verifies the signed bundle, stages immutable bytes, installs the one
-   `cognitiveos-personal.service` user service and confirms numeric-loopback
-   liveness/readiness.
-3. `cognitive init` creates the data layout and selects an approved
-   `SecretStore`: desktop Secret Service or the headless encrypted-vault path.
-   It asks for the Provider key through hidden input only after the backend is
-   ready.
-4. Daemon discovers Provider models and persists a non-secret selected-model
-   snapshot.
-5. User selects a Standard Workspace. The preview states that Extended Home is
-   empty until explicit paths and operations are added.
-6. Product previews official Pi acquisition with exact package/version/source,
-   network use, sidecar identity and no automatic runtime capability.
-7. User admits acquisition. Daemon verifies identity/SRI/digests, commits the
-   immutable installation, registration and sidecar binding, then activates a
-   supervised instance.
-8. Pi hosts the Shell under client credentials and sends model requests through
-   the daemon Provider proxy.
+| Boundary | Journey truth |
+|---|---|
+| **Current implementation (Now)** | Linux 1.0 provides the Pi-qualified six-family path. `/ui/` provides Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel is separate. |
+| **Adopted Personal 2.0 target** | Five-minute first chat, then an optional owner request/confirmation followed by daemon admission into Goal -> Plan revision -> Task -> Attempt work across Agents, with Account Hub, federated Library, merged Activity, and MCP. |
+| **Requires-backend** | Embedded conversations, onboarding/catalog, Goal -> Plan revision -> Task -> Attempt, controls, multi-Agent orchestration, federated sync, account import/runtime methods, and MCP management. |
+| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. Only a new/changed public MCP, conversation extension, Goal, Plan, Run, Harness, or attempt machine surface requires P10-T02/Lane-CTR. |
 
-**Identity shown:** package, installation, registration, sidecar, instance and
-process are separate rows. The Shell session is separate from all of them.
+## 1. Five-minute first chat
 
-**Failure exits:** invalid signature, unavailable or locked selected
-`SecretStore`, incompatible
-Node, package/sidecar drift, failed health or Provider probe fail closed with no
-active registration.
+**Adopted Personal 2.0 target**
 
-**Secret/evidence:** key material stays in the selected approved `SecretStore`.
-Evidence holds only redacted status, versions and digests.
+1. The user opens Home or Agents and chooses **Add Agent**.
+2. Step 1 offers a signed upstream catalog or **Connect existing**. A catalog
+   record shows source, version, digest, signature, license, and adapter
+   compatibility before installation.
+3. Step 2 is one review for Provider/profile, Standard Workspace, and requested
+   permissions. Optional configuration is deferred.
+4. That connection review establishes the exact observation scope; no
+   speculative/global session scan or surprise per-session enrollment occurs.
+5. Step 3 opens the Agent's embedded native conversation. The setup is not
+   labelled ready until a real model response arrives.
+6. The conversation remains Native. The UI points to the next milestone:
+   **Manage with Personal** and complete the first governed and verified Task.
 
-### Headless and foreground variants
+**Failure and recovery**
 
-- A headless daemon with a locked vault starts in read-only diagnostic mode.
-  The operator unlocks it over an SSH TTY, or explicitly configures unattended
-  unlock with systemd encrypted credential material. Provider/user secret
-  values never enter the service unit, credential, environment or argv.
-- Foreground recovery uses the same artifact, data, authority service and
-  `SecretStore` port. It does not start a second backend or bind a public API.
-- If the selected secret backend cannot unlock, Provider and Agent execution
-  stay unavailable while doctor/status and deterministic recovery remain
-  usable.
+- Missing or locked SecretStore links to Account Hub without discarding Agent
+  selection.
+- Provider/model failure retains the review and names whether reachability,
+  credential, model, or native adapter is at fault.
+- Permission denial preserves a narrower or native-only path when safe.
+- Installation or connection failure preserves source and review state and
+  offers retry only when the daemon says retry is safe.
 
-## 2. Navigate and inspect cognitive resources
+**Current implementation (Now)**
 
-User asks: "What can my Agents use, what is running, and what is blocked?"
+The current Control Plane can inspect bounded Agent facts and manage current
+Provider bindings, but cannot run this onboarding or embed a conversation. The
+qualified Pi conversation path and separate native dsh panel remain available.
 
-1. Pi emits an interpretation candidate.
-2. Daemon resolves it as read-only management queries.
-3. Shell presents the five top-level spaces:
-   - Home;
-   - Agents;
-   - Tasks;
-   - Resources with Memory, Skills, Tools and Context;
-   - Activity with Run, Process, Effect and Evidence.
-4. Family views include related Budget, Permission, Model, Artifact and Event
-   facts without presenting them as extra resource families.
-5. Unknown and not-run fields remain explicit; Pi does not fill them from
-   conversation or process state.
+**Dependency:** onboarding/catalog and embedded conversation are
+**Requires-backend**. This journey invents no route or schema.
 
-No confirmation is required for authorized Tier 0 inspection. The management
-bearer remains separate from the Task bearer.
+## 2. First governed and verified success
 
-`CognitiveResourceManifest`, when used, lists only what is discoverable for the
-current `ActivityContext`. Discovering a name does not grant read or action.
+**Adopted Personal 2.0 target**
 
-## 3. Remember explicit knowledge
+1. In a useful Native Conversation, the user chooses **Manage with Personal**.
+2. The global Agent Shell explains that native conversation and Agent plan are
+   not yet governed and proposes the smallest durable outcome.
+3. The daemon previews admission of a persistent Goal, initial daemon-owned
+   Plan revision, bounded Task, Agent, workspace, Context sources, permissions,
+   budget, external effects, and acceptance criteria.
+4. The user confirms the consequential preview once.
+5. The daemon admits the Goal, initial Plan revision, and Task, then starts
+   attempt 1 under that Task.
+6. Work shows one execution flow with Native, Observed, and Governed events
+   clearly separated.
+7. Agent text, Tool output, and process exit remain observations. Effects are
+   reconciled and an independent verifier evaluates the fixed criteria.
+8. The milestone is reached only when the Task has current Verified evidence
+   and daemon acceptance. The success state links to the Goal, durable receipt,
+   affected resources, and next action.
 
-User asks: "Remember that this workspace uses the checked-in formatter for 90
-days."
+**Failure and recovery**
 
-1. Daemon records the explicit request and creates a `MemoryCandidate` with
-   workspace scope, purpose, provenance and requested expiry.
-2. Admission validates permission, content bounds, conflict policy and current
-   versions.
-3. The preview shows candidate source, scope, purpose, conflict disposition and
-   retention.
-4. On admission, daemon creates a versioned `MemoryObject` and the linked
-   `MemoryAdmissionDecision` in SQLite.
-5. FTS5 and metadata indexes update as derived data.
-6. Shell shows the object version, provenance, expiry and supported forget
-   action.
+- Changed scope or stale versions require a new daemon preview.
+- Missing Context or permission fails closed and preserves the Goal draft.
+- Unknown external outcome moves to reconciliation; it is never silently
+  retried.
+- Failed verification preserves attempt 1 and offers a bounded correction,
+  retry, or checkpoint fork only when supported.
 
-Explicit `remember` is high-confidence user intent but does not bypass policy.
+**Current implementation (Now)**
 
-## 4. Review an Agent Memory proposal and forget Memory
+Current `/ui/` implements the governed intent/interpret/preview/admit chain and
+Task evidence reading. It has no persistent Goal or daemon-owned Plan API and
+no common native-conversation projection or retry/fork control. Existing Core
+Conversation/ConversationBinding contracts are reused but are not a Control
+Plane implementation. The current Task path can demonstrate governed,
+independently verified success without claiming the Personal 2.0 wrapper.
 
-1. During a Task, Pi proposes a reusable fact as a `MemoryCandidate`.
-2. Daemon does not admit it automatically merely because the Agent is trusted
-   for execution.
-3. User or policy reviews purpose, scope, provenance and any conflicting
-   version; daemon records admit, reject or keep-separate disposition.
-4. Later, user asks to forget the admitted object.
-5. Daemon expires access, records the forget transition and durable tombstone,
-   then invalidates FTS, cache and active Context references.
-6. A stale sidecar proposal cannot resurrect the forgotten version.
+**Dependency:** Goal -> Plan revision -> Task -> Attempt and target controls are
+**Requires-backend**; only new public machine semantics conditionally require
+P10-T02/Lane-CTR.
 
-Embeddings, vector/graph retrieval and automatic extraction of full
-conversation history are absent from this journey.
+## 3. Daily Goal → Plan → Tasks execution
 
-## 5. Import and govern a local Skill
+**Adopted Personal 2.0 target**
 
-User asks: "Import this local Skill and pin the exact revision."
+1. Home resumes the most relevant active Goal with current Plan revision,
+   blockers, last verified outcome, and next action.
+2. In Work, the user reviews a plain-language Plan. The inspector shows exact
+   revision, authority, Context, budgets, and dependencies.
+3. The hierarchy is Goal -> Plan revision -> Task -> Attempt. The daemon
+   decomposes the admitted Plan into one or more Tasks. If multiple
+   Agents are useful, it owns the graph and issues explicit handoffs; Agents do
+   not transfer authority to each other.
+4. Each Task starts an attempt bound to its Agent runtime engine, Context, and
+   epoch. Native Agent plans and conversations remain source-labelled.
+5. The execution flow shows what is Native, Observed, Governed, and Verified.
+   Counts appear only with a declared denominator; no fake percentage or ETA is
+   inferred from model narration.
+6. A Plan revision preserves prior revisions and explains why Tasks changed.
+   Consequential scope changes receive a fresh daemon preview and one
+   confirmation.
+7. Completion rolls up only from independently verified Tasks with reconciled
+   Effects. A Goal can remain open even after one Task completes.
 
-1. Daemon previews the local source, normalized `SKILL.md`, bounded
-   `resources/` and `scripts/`, digest and compatibility result.
-2. Import creates an immutable package/revision. Editing the source later does
-   not mutate that revision.
-3. User can install, list, inspect, pin, enable, disable and remove it.
-4. Enablement makes the revision eligible for Context selection under policy;
-   it grants no Tool or other capability.
-5. Skill instructions/resources can enter a Task's Context after authorization.
-6. If a Skill script is needed, daemon resolves a registered Tool and previews
-   that Tool operation. The Skill never executes the script directly.
+**Recovery**
 
-An unknown script runner has dispatch count zero. No marketplace, automatic
-download or Skill chaining occurs.
+- A failed Agent handoff blocks downstream governed work rather than cascading.
+- A stale Plan or Context revision requires reload and review.
+- Returning tomorrow resumes from durable Goal/Task facts, not browser memory.
+- Switching Agent or Provider for current work is explicit and preserves the
+  previous attempt.
 
-## 6. Create a governed Task and inspect its Context
+**Current implementation (Now)**
 
-1. User states a goal and desired outcome.
-2. Daemon durably records raw intent before Pi interpretation.
-3. Pi may propose targets and Context needs; daemon resolves exact identities.
-4. Shell presents a server-issued canonical preview with Standard Workspace,
-   any Extended Home entries, model, Pi instance/sidecar, Skill revisions,
-   Tools, deadline/retry/step/cost bounds, permissions, external mutations and
-   acceptance criteria.
-5. User admits the exact digest. Stale versions or changed scope require a new
-   preview.
-6. Daemon creates Task/Loop and an epoch-fenced `AgentExecution`.
-7. Daemon creates the Task's real `ContextRequest` and resolves its
-   `ContextView` from Task/current state, Memory, Skill instructions/resources,
-   Tool summaries, artifacts/evidence, workspace and explicit Task inputs.
-8. Authorization/filtering occurs before deterministic priority and FTS
-   ranking. A required unavailable source fails closed.
-9. Shell shows selected source versions/digests and every omission, truncation,
-   conflict, stale source or budget loss.
-10. Refresh preserves unchanged stable prefix segments, binds a new view digest
-    and exposes an explicit delta from the base digest.
-11. Shell watches progress, budgets, Activity, Effects and evidence.
-12. Independent verification decides completion.
+The current UI has Task inventory/detail and a composed execution reading. It
+has no Goal, Plan, first-class Run, Harness, Conversation, multi-Agent graph, or
+attempt API.
 
-This journey does not claim that a future `TaskContract` already contains
-fixed resource refs/constraints, sidecar adapter identity or Context policy.
-Those are future contract directions requiring separate contract work.
+**Dependency:** the target journey is **Requires-backend**. New public concepts
+conditionally require P10-T02/Lane-CTR; Personal-private projections may not.
 
-## 7. Use registered workspace Tools
+## 4. Use the Library without collapsing resource boundaries
 
-User asks: "Patch these files and run the registered checks."
+**Current implementation (Now)**
 
-1. Daemon resolves workspace read/search/write/patch and bounded check Tool
-   descriptors from the static registry.
-2. Descriptor digest, current availability, canonical paths, arguments,
-   working directory, timeout and output bounds appear in the preview.
-3. Reversible Standard Workspace writes use a low-friction recovery journal
-   with intended paths, before/after identity and rollback status.
-4. The bounded check process runs under the registered descriptor. Process
-   observations appear under Activity/Process.
-5. Exit zero is evidence input, not automatic Task completion.
+1. The user may remember or forget admitted Memory. Candidate, admission,
+   provenance, version, expiry, conflict, and tombstone remain distinct.
+2. The user may import, inspect, bind, and revoke immutable Skill revisions.
+   Skill content grants no execution permission.
+3. The user may inspect and govern registered Tools. Unknown, drifted,
+   disabled, quarantined, or revoked operations cannot dispatch.
+4. Context is inspected with its Task in Work; Runtime is inspected with its
+   Agent. Neither belongs in the Library navigation.
 
-If a Tool is unknown, descriptor-drifted, disabled or quarantined, daemon
-dispatches it zero times and explains the availability reason.
+**Adopted Personal 2.0 target**
 
-## 8. Fetch read-only information and perform an external mutation
+Library contains Memory, Skills, Tools, and MCP. Vendor-native resources are
+mapped through adapters with origin and sync state. Personal owns governance
+and bindings, not the native content. A Skill script still executes only
+through an independently registered and authorized Tool. An MCP server
+connection still grants neither Tool nor Context permission.
 
-### Read-only HTTP fetch
+**Dependency:** federated mapping and bidirectional sync are
+**Requires-backend**. MCP implementation is **Requires-backend**; only a
+new/changed public MCP machine surface conditionally requires P10-T02/Lane-CTR.
 
-1. User asks for a document from an allowed URL.
-2. Daemon resolves the static read-only fetch descriptor and applies origin,
-   redirect, size, time and content bounds.
-3. Fetch carries no ambient cookies, Provider credentials or arbitrary write
-   method.
-4. Result becomes a provenance-bound Context or Artifact input.
+## 5. Import an existing account credential
 
-### External or irreversible operation
+**Adopted Personal 2.0 target**
 
-1. Shell previews exact target, Tool descriptor, capability, idempotency and
-   rollback/reconcile expectations.
-2. Daemon persists Intent and Effect before dispatch.
-3. Sidecar or Tool adapter performs only the admitted request.
-4. Daemon records receipt or unknown outcome and reconciles with the original
-   identity.
-5. Activity shows Effect and Evidence separately from Process.
+1. In Settings → Account Hub, the user chooses a Provider preset or custom
+   OpenAI-compatible endpoint and selects **Import existing credential**.
+2. The daemon names the exact source and target SecretStore before reading.
+   The user consents per source; there is no background scan.
+3. The user reviews redacted source kind, target profile, Provider endpoint,
+   and source-retention choice. Retention is the default; secure deletion is a
+   separate per-import choice.
+4. The daemon reads the owner-designated source through the ADR-0055
+   non-logging boundary and writes directly to the approved SecretStore. No new
+   plaintext copy is created.
+5. A bounded probe reports reachability, credential, model, and capability
+   facts separately. Failure preserves the source and entered configuration.
+6. The user selects whether the profile is a global default, Agent override, or
+   conversation override. Any current session rebind/restart is explicit.
+7. The receipt contains redacted metadata and audit identity only.
 
-A successful external response does not complete the Task.
+**Failure and permission**
 
-## 9. Extend workspace access without ambient home access
+- A locked source or SecretStore does not expose material and offers unlock or
+  another account method.
+- Unsupported source format stays unavailable; it is not guessed.
+- Import success does not imply Provider reachability or model availability.
+- Secret material never enters browser storage, Agent config, logs, evidence,
+  SQLite, argv, environment, or chat.
 
-User asks: "Also read this configuration file in my home directory."
+**Current implementation (Now)**
 
-1. Daemon resolves the requested path but does not grant the home directory.
-2. Preview adds one Extended Home entry with purpose, allowed operation,
-   expiry/retention and affected Task.
-3. User grants the bounded entry.
-4. Sidecar and Tool receive only that resolved path and operation.
-5. A sibling path or write attempt fails closed and dispatches zero times.
-6. Revocation invalidates subsequent Context refresh and Tool access.
+Current Provider management supports API-key handoff to SecretStore, model
+catalog, custom OpenAI-compatible accounts/endpoints, fixed Agent binding,
+usage, budgets, alerts, and audit. ADR-0055 authorizes the import boundary but
+explicitly does not implement it.
 
-The same profile may enable ordinary outbound network access. It never grants
-Secret Store contents, SSH/GPG keys, browser credential/profile stores,
-CognitiveOS authority/bootstrap data, Docker/system sockets, system
-directories, privilege elevation, service management or package management.
-Publication, repository push and other remote mutations remain separately
-typed and governed.
+**Dependency:** credential import, subscription/OAuth, expanded presets, and
+override hierarchy are **Requires-backend**.
 
-## 10. Pause, resume and recover work
+## 6. Install and project an MCP server
 
-User asks: "Pause this Task after a safe checkpoint."
+**Adopted Personal 2.0 target**
 
-1. Shell resolves whether the target is Task, execution, instance, sidecar or
-   process and shows the distinction.
-2. Daemon disables new dispatch under a fresh control epoch.
-3. Worker checkpoints bounded state and reconciles pending Effects.
-4. Projection reports suspended, blocked or reconciliation-needed.
-5. Resume rechecks current permission, budget, package/registration/sidecar
-   identity and Context digest, then starts a fresh execution epoch.
+1. In Library → MCP, the user chooses a server source and reviews identity,
+   version, trust/provenance facts, requested permissions, compatible Agent
+   clients, and update behavior.
+2. The daemon previews installation and any external mutation. Connection alone
+   grants no Tool, Context, workspace, model, or host-session authority.
+3. After confirmation, the daemon installs/registers the server through the
+   family-specific workflow and reports health separately from permission.
+4. The user selects compatible Agent clients. Vendor-native session APIs are
+   preferred for projection.
+5. Where no native API exists, MCP plus vendor rules may cooperatively update
+   configuration. It cannot control the host Agent session.
+6. After the first explicit authorization, an admin-preauthorized configuration
+   may be applied automatically only within that exact scope. Permission
+   expansion always receives a new preview and confirmation.
+7. Library shows server health, permissions, update state, projected clients,
+   and conflicts. Exposed capabilities become eligible Tools or Context inputs
+   only through their own mapping and authorization.
 
-After daemon, Agent, sidecar, process or network failure:
+**Failure and recovery**
 
-1. daemon reloads durable Task, scheduler, Memory/Context, registration and
-   Effect facts;
-2. stale leases, sidecars and executions are fenced;
-3. unknown Effects are queried/reconciled with original idempotency keys;
-4. current policy and Tool availability are reauthorized;
-5. a compatible checkpoint and fresh Context delta are restored;
-6. daemon resumes, replaces, suspends or quarantines with an explicit reason.
+- Unhealthy server and denied permission are separate states.
+- Partial client projection lists each successful and failed target.
+- A host Agent may require explicit restart/reload; Personal does not claim to
+  control it through MCP.
+- Update failure preserves the last known usable version when the underlying
+  lifecycle supports that outcome; otherwise the state remains explicit.
 
-Killing a process is not a pause protocol, cancellation or authority success.
-Process remains observation/supervision data, not a new domain.
+**Current implementation (Now)**
 
-## 11. Upgrade, roll back or uninstall Pi
+MCP is outside the six-family Linux 1.0 model and no Personal MCP family manager
+exists.
 
-1. User asks to upgrade Pi.
-2. Preview shows old/new package, installation and sidecar identities, npm
-   source/digests, compatibility, affected instances/Tasks, permissions and
-   rollback.
-3. Daemon acquires a new immutable installation without changing the active
-   registration.
-4. Health and sidecar checks run with no inherited Provider secret.
-5. Daemon fences/migrates affected executions and atomically activates the new
-   registration binding.
-6. Failed activation restores the prior complete binding; incomplete rollback
-   remains a visible durable failure.
+**Dependency:** MCP family implementation is **Requires-backend**. A new or
+changed public machine surface conditionally requires P10-T02/Lane-CTR; a
+Personal-private projection may not.
 
-Uninstall previews package bytes, registration, sidecar, instances, Tasks,
-pending Effects, capability leases and retained data. Daemon blocks new
-dispatch, fences work, reconciles/quarantines Effects and then removes the
-installation binding. Task history, Memory, Skills, evidence, Provider
-configuration and secrets remain unless separate retention or purge policy
-applies.
+## 7. Detect and resolve a federated-resource conflict
 
-Pi is the only Linux 1.0 qualification. The journey cannot be relabeled for
-another Agent without independent evidence.
+**Adopted Personal 2.0 target**
 
-## 12. Upgrade, roll back or uninstall Personal
+1. An authorized adapter detects that a vendor-native Skill, Memory, Tool
+   description, MCP configuration, or related binding changed at its origin.
+2. Personal records the observation and compares it with the last admitted
+   binding/sync fact. Read and change detection may be automatic only inside
+   the explicit observation scope established when the Agent was connected.
+3. If there is no conflict, the origin-owned content remains native and
+   Personal refreshes its governed projection.
+4. If native and Personal-side changes conflict, synchronization fails closed.
+   No side wins by timestamp or model judgment alone.
+5. The global Agent Shell explains the origin, changed facts, affected Agents
+   and work, and the family-specific resolution choices available from the
+   daemon.
+6. Every write-back retains daemon Intent/Effect. Because this journey is
+   conflicted, the daemon previews the exact target/consequence and the user
+   confirms once. Unconflicted writes may run automatically only inside an
+   unchanged exact daemon grant/risk policy.
+7. Activity records Native/Observed/Governed facts separately. Verification is
+   attached only when an independent check exists.
 
-Desktop, headless and foreground operation use the same signed artifact,
-daemon and application services.
+**Current implementation (Now)**
 
-- Product upgrade verifies and stages that artifact, restarts the canonical
-  service, confirms pointer/unit/process/liveness consistency and then issues a
-  receipt.
-- Failure restores prior binary, unit, pointer and database compatibility.
-- Product uninstall previews service, binaries and retained data separately;
-  deleting user data is a Tier 2 operation.
+Current Personal resource operations do not provide general bidirectional
+vendor-resource synchronization.
 
-No mode introduces a second database writer or alternate authority backend.
-Removing Personal never prints or exports secret material.
+**Dependency:** adapter change detection, sync state, guarded write-back, and
+conflict resolution are **Requires-backend**. Public sync contracts, if needed,
+conditionally require P10-T02/Lane-CTR.
 
-## 13. Backup and restore
+## 8. Disconnect or uninstall an Agent
 
-1. `cognitive backup` previews included authority data, Memory, Skill registry,
-   Task, Context metadata, runtime registrations and evidence while explicitly
-   excluding secrets.
-2. Daemon quiesces required writes and produces versioned, digest-bound backup
-   metadata.
-3. Restore verifies integrity, compatibility, tombstones and migrations before
-   dispatch is re-enabled.
-4. Derived FTS indexes can be rebuilt from SQLite authority data.
-5. User rebinds required secrets through the selected approved `SecretStore`
-   prompt or headless TTY unlock path.
+**Adopted Personal 2.0 target**
 
-An archive containing Provider keys is a critical failure, not a convenience.
+1. From an Agent inspector, the user chooses Remove.
+2. The product asks a required first question:
+   - **Disconnect** Personal management and preserve the native installation;
+   - **Uninstall** the Personal-managed installation after an impact preview.
+3. The daemon shows affected conversations, Goals, Plan revisions, Tasks,
+   Task-owned attempts, bindings, runtime engines, pending Effects, and retained
+   data without conflating them.
+4. Disconnect revokes Personal bindings and observation according to the exact
+   preview; it does not claim to delete vendor-native data.
+5. Uninstall follows the daemon-owned lifecycle, fences new work, reconciles or
+   exposes pending Effects, and preserves governed history unless a separately
+   confirmed retention action applies.
+6. The receipt states what was removed, retained, unknown, or incomplete.
 
-## 14. Diagnose and obtain support
+**Current implementation (Now)**
 
-`cognitive doctor --bundle` gathers redacted platform, service, database,
-SecretStore backend/locked state, Provider model, Standard Workspace/Extended Home policy, Pi
-installation/registration/sidecar/instance, Tool availability, Context loss,
-Task, Process, Effect and recovery facts. It provides stable errors, evidence
-digests and next actions without prompts, raw Provider traffic, key material,
-SecretRefs or sensitive SQLite/Memory/Context content.
+The Control Plane has no full Agent lifecycle HTTP surface. Current lifecycle
+operations remain outside this UI and must not be represented as working
+buttons.
 
-Support output describes what is known, unknown and not-run. It never converts
-a local smoke result into a Gate, release or Profile claim.
+**Dependency:** disconnect/uninstall projection and typed controls are
+**Requires-backend**.
 
-## 15. Linux and hardware evolution non-journey
+## 9. Recover work without erasing attempts
 
-Users do not install a Personal kernel module, eBPF control plane, device
-scheduler or distributed authority for Linux 1.0. Linux service, filesystem,
-process, secret, network and future hardware integration remain behind bounded
-software ports. Hardware acceleration cannot bypass daemon authorization, CAS,
-budget, Intent/Effect or acceptance.
+**Adopted Personal 2.0 target**
+
+1. Work states exactly what failed: conversation transport, Agent runtime
+   engine, Task, Effect, Context source, Provider, MCP server, or watch.
+2. The global Agent Shell explains available controls without exercising them.
+3. The user chooses among the controls the daemon genuinely supports:
+   - **Interrupt** the current interaction;
+   - **Pause/Resume request** for governed work;
+   - **Cancel** the Task;
+   - **Detach** observation only;
+   - **Retry** or **Fork from checkpoint** into a new attempt;
+   - **Restart/Recover** the Agent runtime engine;
+   - **Compensate** an external effect only when a defined compensation exists.
+4. The daemon previews consequential scope, pending/unknown Effects, checkpoint
+   compatibility, and what cannot be undone.
+5. Recovery reloads durable facts, fences stale work, reconciles unknown
+   Effects, reauthorizes current policy, and rebuilds Context before dispatch.
+6. A retry/fork preserves the failed attempt and its evidence. Current and
+   prior attempts remain inspectable under their Task in the same Goal
+   timeline.
+7. The outcome is Verified only after current independent verification.
+
+**Current implementation (Now)**
+
+Current `/ui/` can attach/detach bounded Task observation; detach does not
+cancel or stop anything. It has no Task pause/cancel/retry controls and no full
+Agent restart/recover API. Killing a process is not pause, cancellation,
+recovery, or completion.
+
+**Dependency:** the target controls and attempt model are
+**Requires-backend**. New public control/attempt semantics conditionally require
+P10-T02/Lane-CTR.
+
+## 10. Current deterministic stewardship
+
+These are **Current implementation (Now)** Linux/daemon journeys and remain
+available as the Personal 2.0 UI evolves:
+
+- Agent/package upgrade uses exact source and digest, stages immutable bytes,
+  validates compatibility, preserves the prior complete binding for rollback,
+  and exposes incomplete rollback honestly. Pi evidence qualifies only Pi.
+- Product upgrade, rollback, and uninstall use the same signed artifact,
+  daemon, and application services across desktop, headless, and foreground
+  modes. No mode creates a second authority writer.
+- Backup/restore excludes secrets, verifies integrity and compatibility, and
+  requires secrets to be rebound through an approved SecretStore.
+- Deleting user data, changing external state, or removing a managed
+  installation receives a daemon preview and retains durable receipts.
+
+The current Control Plane exposes bounded system stewardship such as
+backup/restore, but full Agent lifecycle remains outside its HTTP surface.
+Personal 2.0 may regroup these journeys under Settings; regrouping does not
+change their authority semantics.
+
+## 11. Empty, loading, error, permission, and stale journeys
+
+These states apply to Home, Agents, Work, Library, Activity, Settings, the
+global Agent Shell, and every onboarding/import flow.
+
+| State | User sees | Recovery |
+|---|---|---|
+| **Empty** | why no Agent, conversation, Goal, resource, account, MCP server, or activity exists | one concrete create/connect/import action; filter-empty also offers clear filters |
+| **Loading** | the exact source being read or mutation awaiting authority; stable content remains in place | leave/detach when safe; no fake progress bar |
+| **Partial** | available facets plus the missing source and coverage boundary | continue with safe facts or repair the missing source |
+| **Error** | what failed, where, whether input/work was preserved, and whether retry is safe | retry, edit, choose alternate path, copy redacted details, or open support |
+| **Permission** | exact requested scope, reason, consequence, and current narrower capability | deny, grant the bounded scope, or select a narrower/native-only path |
+| **Stale** | last known fact, age/freshness, and actions unsafe until refresh | refresh/re-authenticate; never infer current progress or completion |
+| **Disconnected** | which watch, adapter, Agent, server, or daemon link was lost | reconnect or remain detached; work state stays unknown unless authority says otherwise |
+| **Success** | durable receipt, affected object, source/authority badge, and next valuable action | continue conversation, open Goal, inspect evidence, or return to the previous list |
+
+Long-running setup, import, installation, synchronization, and execution must
+also define cancel/detach/retry/resume honestly. If the backend lacks a control,
+the state explains that absence instead of drawing a fake control.
+
+## 12. Diagnosis and fixed boundaries
+
+`cognitive doctor --bundle` and System gather redacted platform, service,
+database, SecretStore state, Provider, workspace, Agent, Tool, Context, Task,
+Process, Effect, and recovery facts. Support output distinguishes known,
+unknown, stale, and not-run without prompts, raw Provider traffic, key
+material, resolvable SecretRefs, or sensitive content.
+
+Personal 2.0 does not install a kernel module, eBPF control plane, device
+scheduler, or distributed authority. It remains owner-local. Hardware or
+native integration cannot bypass daemon authorization, CAS/epoch, budget,
+Intent/Effect, reconciliation, or independent acceptance.
+
+No journey here is a Gate, release, Profile, performance, containment, or
+Agent-benefit claim.

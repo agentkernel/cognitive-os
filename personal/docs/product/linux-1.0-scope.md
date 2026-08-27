@@ -1,8 +1,9 @@
-# CognitiveOS Personal Linux 1.0 Scope
+# CognitiveOS Personal Linux 1.0 scope
 
 - Product version target: `1.0.0`
 - Release Gate: `GMVP-LINUX`
 - Platform target: Linux x86_64
+- Product boundary: six resource families; Pi-qualified Agent path
 - Decisions: [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md),
   [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
   [ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
@@ -11,15 +12,25 @@ This document defines the stable release target. Current readiness, task state
 and every Gate status remain exclusively in
 [PROGRESS.md](../../../docs/plan/PROGRESS.md).
 
+## 0. Current, target, and dependency boundary
+
+| Label | Linux 1.0 meaning |
+|---|---|
+| **Current implementation (Now)** | Personal has the six-family Linux product, the independently qualified Pi path, and the additive P7-T05 daemon-served `/ui/`. The current UI has Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel is separate. |
+| **Adopted Personal 2.0 target** | Seven families including MCP; desktop-primary Agent conversations; Goal -> Plan revision -> Task -> Attempt orchestration; federated resources; Account Hub; target IA Home/Agents/Work/Library/Activity/Settings. |
+| **Requires-backend** | Personal 2.0 projections, controls, orchestration, synchronization, and MCP management do not enter the Linux 1.0 definition. |
+| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding remains unchanged. Only a new/changed public MCP, conversation extension, Goal, Plan, Run, Harness, or attempt machine surface requires P10-T02/Lane-CTR and does not revise this release retroactively. |
+
 ## 1. Release identity and authority
 
 Linux 1.0 is the first public realization of CognitiveOS Personal as a
-single-user local Agent cognitive-resource substrate. It delivers a minimum
-real slice of Memory, Skill, Tool, Context, Task and Runtime/Process. These are
-six user-visible families, not rows in a universal Resource table.
+single-user local Agent cognitive-resource substrate. It defines a minimum real
+slice of Memory, Skill, Tool, Context, Task, and Runtime/Process. These are six
+user-visible families, not rows in a universal Resource table. MCP is not a
+seventh Linux 1.0 family.
 
 The Rust daemon is the only authority writer. Pi, the Pi sidecar, the
-Pi-hosted Shell, CLI, SDK and future UI are clients. They cannot authorize,
+Pi-hosted Shell, CLI, SDK and Control Plane UI are clients. They cannot authorize,
 advance state, commit Effects, reconcile or decide Task completion.
 
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
@@ -112,7 +123,7 @@ authority.
 Pi is the only Agent/sidecar combination qualified for Linux 1.0. The generic
 sidecar framework is reusable but transfers no Pi evidence to another Agent.
 
-## 4. Information architecture requirement
+## 4. Linux 1.0 information model and current UI
 
 The Linux 1.0 Shell and deterministic projection model use:
 
@@ -124,6 +135,19 @@ The Linux 1.0 Shell and deterministic projection model use:
 
 Model, Budget, Permission, Artifact and Event appear contextually rather than
 as additional top-level spaces.
+
+P7-T05 later delivered a non-blocking, daemon-served Control Plane at `/ui/`
+with **Home / Work / Agents / Providers / Resources / Activity / System**.
+That current surface is additive implementation, not a rewrite of the Linux
+1.0 family or Gate composition. It has no embedded native conversation,
+Goal/Plan/Run/Harness/Conversation APIs, Task pause/cancel/retry, full Agent
+lifecycle, authority-backed Context/Runtime inventory, or unified Activity
+feed. Its Activity view is an explicitly bounded composition. The native
+`cognitive dsh web` panel remains separate.
+
+Personal 2.0's target IA
+**Home / Agents / Work / Library / Activity / Settings** is a later product
+adoption. It does not change this release definition.
 
 ## 5. Gate composition target
 
@@ -148,7 +172,7 @@ Passing one component cannot replace another. This section sets target
 composition only. Whether any Gate is `not-run`, `running`, `pass`, `fail` or
 `blocked` is stated only by `PROGRESS.md` and preregistered campaign evidence.
 
-## 6. Pi-only sidecar qualification
+## 6. Pi-only Agent and sidecar qualification
 
 Linux 1.0 must bind exact Pi package, installation, registration, sidecar,
 instance and execution identities and qualify drift, channel separation,
@@ -159,7 +183,7 @@ package/protocol/sidecar identity, capability, sandbox, lifecycle, recovery,
 negative campaign and release inclusion decisions. MCP integration does not
 inherit Tool or Agent support merely because a bridge can connect.
 
-## 7. Explicitly deferred
+## 7. Explicitly outside the Linux 1.0 claim
 
 - embedding/vector/graph Memory and automatic extraction of all conversations;
 - Skill marketplace, chaining, automatic download and autonomous dependencies;
@@ -167,13 +191,17 @@ inherit Tool or Agent support merely because a bridge can connect.
 - broad dynamic Tool catalogs and general MCP ecosystem qualification;
 - OpenClaw, Hermes, Codex, WorkBuddy and every non-Pi Agent qualification;
 - Multi-Agent delegation/orchestration;
-- Web UI and independent Console product;
+- the current additive Web UI as a release requirement, plus Personal 2.0
+  embedded conversations, Goal -> Plan revision -> Task -> Attempt flows, federated resources,
+  Account Hub methods, and target IA;
 - Windows installer, service and credential-store parity;
 - Linux aarch64, macOS, mobile and WSL2 as product platforms;
 - enterprise approval chains, multi-tenancy, HA and cloud sync.
 
-These may be developed in isolated tracks after their implementation
-requirements are met, but cannot expand a Linux 1.0 release statement.
+Some of these capabilities now exist as additive post-baseline work, including
+the P7-T05 Control Plane. Existence outside the claim does not expand a Linux
+1.0 release statement. Other items remain adopted Personal 2.0 targets or
+unadopted headroom according to their own product documents.
 
 ## 8. Unsupported or forbidden in 1.0
 
@@ -190,6 +218,8 @@ requirements are met, but cannot expand a Linux 1.0 release statement.
 - dispatch of unknown, drifted, disabled or quarantined Tools/sidecars;
 - unpinned/latest Agent acquisition or treating npm SRI as publisher signature;
 - installing an Agent or Skill and automatically granting runtime capability;
+- automatically promoting a native or observed conversation, Agent plan, or
+  result into governed work;
 - blind redispatch after an unknown external outcome;
 - marking a Task complete from Provider response, Agent/sidecar output, Tool
   result or process exit;
@@ -197,6 +227,10 @@ requirements are met, but cannot expand a Linux 1.0 release statement.
 - kernel module, eBPF control plane, device scheduler or distributed authority;
 - claims of Windows install parity, containment or CognitiveOS Profile
   implementation.
+
+The same rules apply to MCP: connection or client configuration grants no Tool,
+Context, workspace, model, or host-session authority and transfers no
+qualification evidence.
 
 ## 9. Release evidence composition
 
@@ -232,9 +266,9 @@ A valid post-Gate release statement is bounded:
 > Agent, Pi sidecar and Pi-hosted Shell. It provides the executed minimum
 > Memory, Skill, Tool, Context, Task and Runtime/Process capabilities listed in
 > the release manifest through one daemon authority. Other Agents, advanced
-> retrieval/ranking, Skill marketplaces, MCP, Multi-Agent, Web UI, Windows
-> installation, kernel/hardware control and Profile conformance are not
-> included.
+> retrieval/ranking, Skill marketplaces, MCP, Multi-Agent, the additive Web UI
+> as a release requirement, Windows installation, kernel/hardware control and
+> Profile conformance are not included.
 
 Before `GMVP-LINUX` passes, the same wording must use "target" or "planned" and
 must not say "supports" or "released".

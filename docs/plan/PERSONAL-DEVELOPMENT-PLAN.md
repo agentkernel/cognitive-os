@@ -3,8 +3,8 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T06、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
-> **最后更新：2026-08-26**
+> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T06、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；P10-T01 documentation-only semantic adoption `in-progress`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
+> **最后更新：2026-08-27**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
 > 重组为 `core/`、`personal/`、`enterprise/`、`clients/` 四个子项目目录（clients 自独立
@@ -14,7 +14,7 @@
 > 定义边界与激活门槛（[enterprise/docs/VERSION-1.0.0.md](../../enterprise/docs/VERSION-1.0.0.md)），
 > 不激活实现。该 **structural** 修订只移动路径并同步工具链/文档索引，不改变任何任务
 > 验收、Gate 结论、evidence 或 claim scope；1.0.0 定稿逐字保留各 Gate 的 MVP 声明上限。
-> **计划追踪 ID：** `P0-T01` 至 `P9-T12`（含后续登记的 `P2-T09..P2-T38`、`P8-T12`、`P8-T13`、`P8-T14` 与 `P8-T15`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **计划追踪 ID：** `P0-T01` 至 `P10-T04`（含后续登记的 `P2-T09..P2-T38`、`P8-T12`、`P8-T13`、`P8-T14`、`P8-T15` 与 `P9-T05..P9-T12`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** [`docs/plan/plan.md`](plan.md)；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`docs/plan/plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
@@ -88,6 +88,20 @@
 > 表述。该 `product-semantic + corrective` 修订不改变任何既有任务状态、attempt、
 > evidence、Gate 结论或 `GMVP-LINUX` 组合，不修改 registry/schema/transition/vector，
 > 也不产生实现、Gate、release 或 Profile 证据。
+>
+> **Personal 2.0 desktop + MCP semantic adoption（2026-08-27，P10-T01 /
+> ADR-0056/0057）：** owner 正式采用 desktop-first Control Plane，目标 IA 为
+> Home / Agents / Work / Library / Activity / Settings（Providers 与 System 归入
+> Settings）；global Agent Shell 仅建议/提案，installed Agent conversation 通过
+> vendor-specific adapter 汇入 common internal projection/capability matrix，原生 Agent
+> app 保持可用。Personal 2.0 同时增加真正第七 product family **MCP**，其 server/package/
+> connection/capability/binding/health/quarantine 身份与生命周期独立治理；advertised tool
+> 仍只是 Tool candidate，MCP resource/prompt 分别经 Context/Skill admission，禁止 generic
+> `Resource` schema。Linux/Personal 1.0 仍是 finalized six-family。任何 credential import
+> 都沿用 ADR-0055 的 per-source consent、daemon-only、SecretStore 与 raw-secret
+> non-exposure，未实现入口必须标 `Requires-backend`。本批登记 Phase 10 四项任务且不新增
+> Gate；P10-T01 为 documentation-only，未修改代码、合同、负例或任何 Gate/release/Profile
+> 结论。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -168,7 +182,8 @@
 | Phase 7 - 产品化与发布 | 8 | 7 | 0 | 1 | 0 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| **合计** | **111** | **106** | **0** | **1** | **4** | — |
+| Phase 10 - Personal 2.0 desktop 与 MCP | 4 | 0 | 1 | 0 | 3 | 无新 Gate；先决策、再 Lane-CTR/实现 |
+| **合计** | **115** | **106** | **1** | **1** | **7** | — |
 
 ## 2. 产品边界与不变量
 
@@ -189,6 +204,18 @@
   Task、Runtime 六类资源的最小真实 slice。六类资源经 daemon application services 和
   私有、versioned Personal projection 统一呈现，但不合并各自 authority、生命周期或
   schema，也不新增巨型 `Resource` schema 或 `Process` domain。
+- **Personal 2.0 desktop-first（ADR-0056）：** desktop Control Plane 是 2.0 primary
+  entry/supervision center，目标 IA 为 Home / Agents / Work / Library / Activity /
+  Settings，Providers 与 System 位于 Settings。global Agent Shell 与所有 installed-Agent
+  conversation adapter 均为 candidate/observation client；common internal projection 必须
+  通过 capability matrix 诚实暴露 vendor 差异，且 native Agent app 仍可使用。
+- **Personal 2.0 MCP family（ADR-0057）：** MCP 是 2.0 第七 product family，拥有
+  server/package/connection/capability/binding/health/quarantine 身份与生命周期；advertised
+  tools 仍经 Tool admission，resources/prompts 经 Context/Skill admission。该结构不得生成
+  generic `Resource` schema；Linux/Personal 1.0 六 family 定稿与 evidence 不变。
+- **Credential import（ADR-0055）：** 每个 source 必须 user-initiated、per-source
+  consented，由 daemon 读取并只写 approved SecretStore；raw secret 不得到达 UI/Agent。
+  未有正式 backend implementation task 的 import surface 一律标 `Requires-backend`。
 - **Sidecar-first（ADR-0038）：** Shell 经 per-Agent sidecar 调用 daemon application
   services；sidecar、Pi Extension、CLI 和其他 client 都不是 authority，不得持有 daemon
   bootstrap/management authority。Linux 1.0 只资格化 pinned Pi + sidecar；其他 Agent 和
@@ -225,6 +252,7 @@
 | P5B | post-1.0 MCP/dynamic Tool ecosystem | P2 native Tool/Effect 闭环 | B10 | 自动市场发现或未资格化 MCP |
 | P6 | post-1.0 Multi-Agent 可选实验 | 单 Agent benchmark 与明确并行假设 | B11 GO 或合法 NO-GO/disabled | 默认开启 Multi-Agent |
 | P7 | Linux 1.0 Product Operability 与后续 RC | 对应 P1/P2/P3/P4/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
+| P10 | Personal 2.0 desktop Control Plane 与 MCP family | P10-T01 semantic adoption；随后按 typed dependency 进入 Lane-CTR 与实现 | P10-T01..T04 各自 acceptance；**无新 Gate** | 把 docs/既有 P5/B10/P7 UI evidence 写成 seventh-family 或 desktop support |
 
 ### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
@@ -242,9 +270,11 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Capability train | 任务归宿 | 边界 |
 |---|---|---|
 | Embedding/semantic retrieval/vector/graph | P4 后续独立决策 | 不替代 SQLite FTS5 authority-first baseline，不阻塞 1.0 |
-| MCP 与 dynamic Tool marketplace | P5-T03、P5-T04、B10 | MCP 只做 adapter，dynamic discovery 不自动启用 |
+| MCP Tool adapter 与 dynamic Tool ecosystem（既有） | P5-T03、P5-T04、B10 | 既有 transport/Tool candidate evidence；不等于 Personal 2.0 MCP family |
+| Personal 2.0 MCP seventh family | P10-T01、P10-T02、P10-T03 | 先完成 product semantics 与 Lane-CTR compatibility；不自动启用 advertised tools |
 | Multi-Agent | P6-T01..T04、B11 | 默认关闭；NO-GO 是合法结果 |
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
+| Personal 2.0 desktop Control Plane | P10-T01、P10-T02、P10-T04 | primary desktop target；现有 Web UI/Agent app evidence 不自动成为 2.0 support |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -299,6 +329,15 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P5-T05 | P5-T02 | B09 managed Pi + sidecar qualification；任务完成与 B10 解耦 | GMVP-LINUX requires B09 |
 | P7-T01 | P0-T03、P1-T08、P2-T08 | production signing、immutable action/tool pins、SBOM、attestation、release manifest 与 acquisition-lock trust | GMVP-LINUX |
 | P7-T08 | P1-T09、P2-T08、P3-T06、P4-T06、P5-T01/P5-T02/P5-T05 B09、P7-T01..T03 | Linux 1.0 六类资源 release manifest、native systemd、desktop/headless SecretStore、Pi sidecar、UCR-01 fixed-scenario correctness/utility、lifecycle/backup/doctor evidence | **B01+B02+B03+B04+B05+B08+B09+B12**；B06/B07/B10/B11 不阻塞 |
+
+### Personal 2.0 Phase 10 typed dependencies
+
+| Task | implementation_requires | acceptance_requires | promotion_requires |
+|---|---|---|---|
+| P10-T01 | owner-accepted 2026-08-27 scope；ADR-0037/0043/0055 与 finalized Personal 1.0 baseline | ADR-0056/0057 accepted；ADR-0037 partial-supersession backlink；formal plan/trace/support/version/current snapshot 与 stable product docs 同步；import 能力诚实标 `Requires-backend`；documentation-only validation | 无；不创建 Gate |
+| P10-T02 | P10-T01 | Lane-CTR decision 覆盖 MCP family 与 common conversation projection 的 public/private boundary、identity/version compatibility、capability digest、binding、health/quarantine、P5-era migration、older-client fail-closed；若改变 machine contract，schema/generated binding/negative 同批 | 无；task `done` 不构成 support/release/Profile |
+| P10-T03 | P10-T02、P5-T03、P5-T04、P8-T12 | daemon-owned MCP server/package/connection/capability/binding/health/quarantine lifecycle；advertised tools 走 Tool candidate/admission；resources/prompts 走 Context/Skill admission；SecretStore、Intent/Effect、fencing/reconcile negatives | 无；任何后续 support/promotion 需独立正式决策 |
+| P10-T04 | P10-T02、P10-T03、P7-T05、P8-T13 | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor conversation adapters + honest capability matrix；native Agent apps usable；缺 import backend 显示 `Requires-backend` | 无；不从现有 Web UI/Agent evidence 推导 2.0 support |
 
 #### Context MVP authorization scope
 
@@ -366,6 +405,9 @@ formal task acceptance assessment 和收口。
 | `P8-T01/D01` | P8-T01 | 公理体系与治理规则收敛：单一公理文档（AXIOMS）落地并由 Operating Model §8 指向；AGENTS/.cursor 规则薄入口化并消除清单漂移；PARALLEL-LANES closed 历史外置；ADR-0008 标注 superseded；milestone prompts 标注 non-executable；docs/standards 状态标签校正；PROGRESS Layer 3 过期 Gate 行、GMVP 行、PERSONAL-TEST-ENVIRONMENTS 截断/过期文案与本计划结构错乱修复。documentation-only 出口 | 已合并 `main`（P7-T04 收口后）与既有治理文档 | 本地 `pnpm run check:consistency`、`git diff --check`、守卫片段与相对链接核验；task Draft PR 上的 required Ubuntu/Windows CI；无 Gate/release/Profile claim |
 | `P8-T01/D02` | P8-T01 | 现行白皮书（OS 定位正名/对标差距/三支柱工程原则/生态定位）、产品与架构设计扩展（通用 Agent Adapter Contract、多 agent 编排、性能架构、IoT 与企业多租户延伸余量章）、`personal-2.0-scope` 与 ADR-0041+ 系列决策文档 | `P8-T01/D01` 公理与规则基线 | 本地 consistency/链接核验与 required Ubuntu/Windows CI；documentation-only，设计文档不改 specs 机器合同，不产生实现/Gate/release/Profile claim |
 | `P8-T01/D03` | P8-T01 | 任务文档扩展收口：P8/P9 任务卡细化与 typed dependency 对齐、根 `docs/plan/plan.md` 研究层同步、traceability 联动、全栈交叉校验、完整 acceptance mapping 与任务收口 checkpoint | `P8-T01/D02` 设计文档基线 | 本地 consistency/diff/链接核验、required Ubuntu/Windows CI、closure checkpoint 与 lease/branch/main 收口；documentation-only |
+| `P10-T01/D01` | P10-T01 | ADR-0056 desktop-first Control Plane 与 ADR-0057 MCP seventh-family accepted；ADR-0037 仅对 Personal 2.0 family count 增 partial-supersession backlink；formal plan/trace/support/version/current snapshot 与 stable product semantics 对齐，明确 ADR-0055 import `Requires-backend`、1.0 six-family 不变、无 generic `Resource` schema | owner-accepted 2026-08-27 scope；ADR-0037/0043/0055；finalized Personal 1.0 baseline | documentation/static consistency、相对链接与 `git diff --check`；只含文档语义，不改 code/contracts/tests/generated references，不创建 Gate/release/Profile claim；完成后进入 D02 |
+| `P10-T01/D02` | P10-T01 | 将 desktop IA、global candidate-only Agent Shell、vendor conversation projection/capability matrix、native Agent app coexistence 与 MCP family lifecycle 同步到详细 product/architecture/bilingual design surfaces；所有未实现 import/backend action 显示 `Requires-backend` | `P10-T01/D01` | documentation/static consistency、链接/terminology/secret-boundary review；不得发明 backend capability；完成后进入 D03 |
+| `P10-T01/D03` | P10-T01 | 全量 acceptance mapping、source-of-truth/版本边界复核、docs-sync/handbook closure、唯一 closure record 与 task/lease/branch/main deterministic closure | `P10-T01/D01-D02` | `check:consistency`、affected handbook/generator/docs-sync gates、`git diff --check` 与 required CI；documentation-only；无 Gate/release/Profile/B01/Agent-benefit claim |
 
 > **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
 > PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`；
@@ -1020,6 +1062,20 @@ Phase 9 是实现层演进候选池：不新增产品能力与 Gate，出口以 
 | P9-T10 | Live C1/C2 P/O `--append-system-prompt` injection (EVAL-012 Priority 2 remainder) | P9-T09 | P9-T09 froze dry-run observation of `frozen-system-task-prompt.txt`. Live O-arm `cognitive pi launch` must forward `--append-system-prompt <absolute existing non-empty file>` to Pi after `--print`; live P-arm uses the same flag and file without loading the CognitiveOS Extension. Relative, missing, and empty files fail closed. File bytes are not printed. Out of scope: a new EVAL, B0 samples, replacement-bytes Patch, private-candidate epoch-1 skips. | done | Merged PR [#250](https://github.com/agentkernel/cognitive-os/pull/250) at `main@30c4e16a`. Local `c1_c2_paired_p_arm` **16/16**. Linux exact `745c60d8` admin-cli `append_system_prompt` **3/3**, print-mode **1/1**, Clippy `-D warnings`, fmt. Required CI `32350029054` at `745c60d8`; docs-head `32352242187` at `36fe0029`. Report: [P9-T10 validation](../checkpoints/20260820-personal-p9-t10-live-prompt-injection-report.md). Claim ceiling `hypothesis`. |
 | P9-T11 | Comparable C1/C2 P/O WorkspacePatch unified-diff payload (EVAL-012 Priority 3) | P9-T10 | EVAL-012 C2a P-arm Patch passed via replacement bytes while O-arm production Patch applies a strict unified diff. P-arm must apply the same UTF-8 unified-diff `input_b64` the daemon would accept, refuse replacement bytes and invalid diffs, pin `workspace_patch_payload: unified-diff` in the freeze ledger, and include `fixtures/c2a/workspace-patch.unified.diff`. Out of scope: a new EVAL, B0 samples, private-candidate epoch-1 skips, changing the daemon patch applier. | done | Merged PR [#251](https://github.com/agentkernel/cognitive-os/pull/251) at `main@49b66200`. Local `c1_c2_paired_p_arm` **19/19**; tools suite **83/83**. Required CI `32359826035` at `6fe018cf` passed Ubuntu, Windows, and required-ci. Report: [P9-T11 validation](../checkpoints/20260820-personal-p9-t11-c2a-patch-unified-diff-report.md). Claim ceiling `hypothesis`. |
 | P9-T12 | Live C1/C2 paired executor (EVAL-013 Priority 1) | P9-T11 | Closed measurement on `evaluation/EVAL-013-freeze` left B1/B2 `not-run` because `paired-runner.mjs` is dry-run fairness only (execution plan §2.5 forbids cobbling B0 shell into a formal paired campaign). Freeze a campaign-only live paired executor: injected `executeArm`, required `--append-system-prompt` absolute freeze file, deterministic arm order, `retry=0`, fairness-before-count, `counted_sample` only for b1/b2 when both arms complete. Dry-run cannot be labeled counted. Out of scope: a new EVAL, B01 samples, live Provider cells, changing freeze default binds. | done | Merged PR [#252](https://github.com/agentkernel/cognitive-os/pull/252) at `main@39cf8019`. Local `c1_c2_paired_p_arm` **24/24**; tools suite **88/88**. Required CI `32370316101` at `a7b09edd` passed Ubuntu, Windows, and required-ci. Report: [P9-T12 validation](../checkpoints/20260820-personal-p9-t12-live-paired-executor-report.md). Claim ceiling `hypothesis`. |
+
+### Phase 10 - Personal 2.0 desktop Control Plane 与 MCP family
+
+Phase 10 按“先语义、再合同兼容、再 authority integration、最后 desktop experience”
+推进。它不新增 Gate，不改变 finalized Personal 1.0 六 family 或任何既有 evidence。
+
+| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
+|---|---|---|---|---|---|
+| P10-T01 | Personal 2.0 desktop + MCP semantic adoption | owner-accepted scope；ADR-0037/0043/0055 | 接受 ADR-0056/0057；ADR-0037 partial backlink；desktop IA / candidate-only global Shell / vendor conversation capability matrix / native Agent app coexistence / MCP seventh-family routing / ADR-0055 `Requires-backend` 在 canonical product、plan、trace、support、version 与 current snapshot 一致；documentation-only，不改 machine contract | in-progress | `P10-T01/D01` 与 `D02` done；`P10-T01/D03` validation/docs-sync/acceptance closure active on `personal/P10-T01-desktop-mcp-semantics` with `lease/personal/P10-T01/desktop-mcp-semantics`。无 implementation/Gate/release/Profile claim |
+| P10-T02 | Lane-CTR contract and compatibility decision | P10-T01 | 决定 MCP family 与 common conversation projection 的 public/private contract boundary、identity/version/capability/binding/health/quarantine compatibility、P5-era migration 与 older-client fail-closed；需要的 schema/generated bindings/negatives 只在 Lane-CTR 决策后同批交付 | not-started | unclaimed；不创建 Gate |
+| P10-T03 | MCP family authority and product integration | P10-T02, P5-T03, P5-T04, P8-T12 | daemon-only seventh-family identities/lifecycle；Tool candidate、Context/Skill admission、SecretStore、Intent/Effect、fencing、quarantine/requalification/reconcile 与 focused negatives；不得建立 generic Resource authority | not-started | unclaimed；既有 P5/B10 evidence 不等于本任务实现 |
+| P10-T04 | Desktop Control Plane experience | P10-T02, P10-T03, P7-T05, P8-T13 | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor-specific conversation adapters behind honest common capability matrix；native Agent apps 可用；缺 backend/import 显示 `Requires-backend` | not-started | unclaimed；现有 Web UI/Agent evidence 不自动构成 Personal 2.0 support |
+
+Phase 10 只使用上述 task acceptance；**不登记 G10、B13 或任何新 Gate**。
 
 ## 5. Gate 与证据要求
 

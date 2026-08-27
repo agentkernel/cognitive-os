@@ -29,7 +29,17 @@ handbook's consistent translation（中文列是手册统一译法；代码与�
 | loss declaration | 损失声明 | explicit record of omitted/truncated context |
 | Memory tombstone | 记忆墓碑 | append-only forget/expiry fact that survives rebuilds |
 | Skill binding | 技能绑定 | scope-bound pin of an imported skill revision |
-| native Tool | 原生工具 | one of six built-in governed operations |
+| current six-family model | 当前六族模型 | Linux 1.0/current API taxonomy: Memory, Skill, Tool, Context, Task, Runtime/Process |
+| native Tool | 原生工具 | one of the current seven static governed Tool operations; not the Personal 2.0 MCP resource family |
+| MCP family | MCP 资源族 | adopted Personal 2.0 seventh family for MCP integration identities and federated capabilities; `Requires-backend`/`Requires-core`, not a current Linux 1.0/API claim |
+| federated resource | 联邦资源 | source-owned capability or data projected with stable source identity, provenance, trust and availability; discovery does not copy authority or grant use |
+| Native / Observed / Governed / Verified | 原生 / 已观测 / 受治理 / 已验证 | distinct relationship/evidence labels: Personal-owned; discovered read-only; daemon-authorized and auditable; independently verified — not an automatic maturity ladder or release claim |
+| Account Hub | 账户中心 | adopted Personal 2.0 desktop target for Provider accounts, subscriptions and user-consented credential import; concrete import mechanisms are `Requires-backend` |
+| Goal | 目标 | adopted Personal 2.0 durable owner outcome above one or more Tasks; no current Goal API |
+| Plan revision | 计划修订 | immutable candidate decomposition of a Goal that requires daemon preview/admission before authority use; no current Plan API |
+| Agent Shell | Agent 交互壳 | user-facing conversation/command client; it is not an Agent instance, sidecar, Task, or authority writer |
+| Requires-backend | 需要后端 | adopted product behavior whose daemon route, projection, persistence or policy implementation does not yet exist |
+| Requires-core | 需要核心合同 | adopted behavior that additionally needs approved core contract/authority semantics before implementation |
 | Provider | 模型服务商 | external LLM API reached only through the daemon proxy |
 | SecretRef | 密钥引用 | opaque handle to material in the Secret Store (A5) |
 | bootstrap secret | 引导密钥 | per-boot file exchanged for channel-bound bearers |

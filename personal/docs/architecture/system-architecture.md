@@ -1,325 +1,329 @@
 # CognitiveOS Personal System Architecture
 
-- Status: informative target/design architecture
+- Status: informative current/target alignment
 - Change class: owner-approved `product-semantic + structural` documentation
-- Product release target: Linux 1.0 through `GMVP-LINUX`
-- Existing decisions: [ADR-0035](../../../docs/adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
-  [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
+- Linux 1.0 decisions:
+  [ADR-0035](../../../docs/adr/0035-personal-pi-shell-and-managed-agent-role-separation.md),
+  [ADR-0036](../../../docs/adr/0036-personal-linux-1-0-and-official-pi-acquisition.md), and
+  [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md)
+- Personal 2.0 decisions:
+  [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md) and
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
 
-## 1. Architectural purpose and invariant
+## 1. Purpose and invariant
 
-Personal is not a replacement for the Linux kernel. Linux owns hardware,
-processes, filesystems, networking and user isolation. Personal is the local
-control plane for the higher-level cognitive-resource facts that make Agent
-work inspectable, bounded and recoverable.
+Personal is the owner-local control plane for cognitive resources above the
+host operating system. Linux still owns processes, filesystems, networking,
+devices, and user isolation. Personal owns the higher-level authority facts
+that make Agent work governed, inspectable, budgeted, recoverable, and
+independently verifiable.
 
-The design has one authority invariant:
+The architecture has one authority invariant:
 
-> A probabilistic component may produce a candidate or observation. Only the
-> deterministic Rust daemon may authorize, apply CAS, advance lifecycle state,
-> grant budget or capability, persist and reconcile an Effect, or accept a
-> Task.
+> Agents, models, adapters, Shells, browsers, MCP servers, and origin systems
+> produce requests, candidates, or observations. Only the deterministic Rust
+> daemon authorizes, applies version and epoch guards, changes authority state,
+> persists and reconciles Effects, and accepts work.
 
-The unified control plane therefore means one discovery and management
-projection over six domain services. It does not mean a universal persisted
-resource object, one lifecycle enum or a second authority beside the daemon.
+A unified control plane means a coherent owner experience over independent
+domains. It never means a universal resource row, a shared lifecycle for
+unrelated families, or a second writer beside the daemon.
 
-## 2. Layered model
+## 2. Current system: Personal 1.0 plus delivered post-1.0 services
+
+### Now
+
+- Linux 1.0 retains six user-visible families: Memory, Skill, Tool, Context,
+  Task, and Runtime/Process.
+- One canonical daemon owns authority storage, scheduling, policy, Provider
+  egress, Secret Store access, Effect reconciliation, and verification.
+- The delivered Control Plane client is
+  [`clients/pc/web/`](../../../clients/pc/web), statically served same-origin
+  by the daemon. Native dsh web is a separate surface.
+- The Resource Manager, Provider Control Plane, adapter
+  registration/lifecycle boundary, and cross-episode learning admission path
+  are delivered post-1.0 capabilities. Their presence creates no new Linux
+  1.0 family or qualification transfer.
+- The delivered P5 MCP Tool transport and bounded dynamic-Tool ecosystem remain
+  Tool-family integration evidence. They do not implement the Personal 2.0 MCP
+  family.
+- Pi remains the only Agent covered by the Linux 1.0 qualification claim.
+  Codex fixture qualification and the dsh integration path are not Pi evidence
+  and are not a general multi-Agent runtime.
+- The current Control Plane has no typed browser controls for Task
+  cancel/pause/resume or Agent lifecycle, and no Goal, revisioned Plan, or
+  common native-conversation projection service. Existing Core
+  Conversation/ConversationBinding contracts do not make that product surface
+  implemented. Those absences must remain visible.
+
+## 3. Personal 2.0 layered composition
+
+### 2.0 target
 
 ```mermaid
 flowchart TB
-  subgraph experienceLayer["Experience"]
-    piShell["Pi-hosted Agent Shell"]
-    cognitiveCli["Deterministic cognitive CLI"]
-    sdkClients["SDK and future clients"]
+  subgraph experience["Owner experiences — clients only"]
+    desktop["Desktop Control Plane\nsame-origin daemon-served"]
+    shell["Global Agent Shell\ncandidate-producing assistant"]
+    cli["Deterministic CLI"]
+    nativeUi["Agent-native UI\nincluding separate dsh web"]
   end
 
-  subgraph applicationLayer["Resource and Task application services"]
-    channelSessions["Loopback authentication and isolated channels"]
-    resourceApplication["ResourceApplicationService"]
-    taskApplication["TaskApplicationService"]
-    bindingPolicy["Resource bindings and cross-cutting policy"]
+  subgraph application["Daemon application layer"]
+    sessions["Authenticated channel and session boundary"]
+    work["Goal / revisioned Plan / governed Task orchestration"]
+    resources["Seven-family Resource Manager"]
+    accounts["Account Hub and daemon proxy profiles"]
+    progress["Provenance-preserving progress composer"]
   end
 
-  subgraph domainLayer["Six independent domain services"]
-    memoryDomain["MemoryDomainService"]
-    skillDomain["SkillDomainService"]
-    toolDomain["ToolDomainService"]
-    contextDomain["ContextDomainService"]
-    taskDomain["TaskDomainService"]
-    runtimeDomain["RuntimeDomainService"]
+  subgraph domains["Independent authority domains"]
+    existing["Memory · Skill · Tool · Context · Task · Runtime/Process"]
+    mcp["MCP family"]
+    policy["Cross-cutting policy, budget, permission,\nartifact, Intent/Effect, evidence, event"]
   end
 
-  subgraph executionLayer["Sidecar, scheduler, executor and verifier"]
-    sidecarBoundary["Per-Agent logical sidecar boundary"]
-    schedulerAuthority["Daemon scheduler, leases and budgets"]
-    toolExecutor["Catalog-bound Tool executor"]
-    verifierAuthority["Evidence and acceptance verifier"]
+  subgraph integration["Candidate and observation boundaries"]
+    adapters["Vendor-specific Agent adapters"]
+    mcpOrigins["MCP servers and origin-owned capability catalogs"]
+    executors["Governed executors and external writeback"]
+    verifier["Independent verifier"]
   end
 
-  subgraph platformLayer["Persistence and Linux host ports"]
-    sqlitePort["Daemon-owned SQLite WAL"]
-    artifactPort["Artifact and evidence store"]
-    secretPort["Approved SecretStore backend"]
-    linuxHostPorts["Linux process, filesystem and network ports"]
+  subgraph platform["Daemon-owned platform ports"]
+    authority["Authority and event stores"]
+    artifacts["Artifact and evidence store"]
+    secrets["Approved SecretStore"]
+    host["Host process, filesystem, and network ports"]
   end
 
-  piShell --> channelSessions
-  cognitiveCli --> channelSessions
-  sdkClients --> channelSessions
-  channelSessions --> resourceApplication
-  channelSessions --> taskApplication
-  resourceApplication --> bindingPolicy
-  taskApplication --> bindingPolicy
-
-  resourceApplication --> memoryDomain
-  resourceApplication --> skillDomain
-  resourceApplication --> toolDomain
-  resourceApplication --> contextDomain
-  resourceApplication --> taskDomain
-  resourceApplication --> runtimeDomain
-  taskApplication --> taskDomain
-  taskApplication --> runtimeDomain
-  taskApplication --> toolDomain
-  taskApplication --> contextDomain
-  taskApplication --> memoryDomain
-  taskApplication --> skillDomain
-
-  runtimeDomain --> sidecarBoundary
-  taskDomain --> schedulerAuthority
-  contextDomain --> sidecarBoundary
-  memoryDomain --> sidecarBoundary
-  skillDomain --> sidecarBoundary
-  toolDomain --> toolExecutor
-  bindingPolicy --> schedulerAuthority
-  schedulerAuthority --> sidecarBoundary
-  sidecarBoundary --> toolExecutor
-  toolExecutor --> verifierAuthority
-  sidecarBoundary --> verifierAuthority
-
-  memoryDomain --> sqlitePort
-  skillDomain --> sqlitePort
-  toolDomain --> sqlitePort
-  contextDomain --> sqlitePort
-  taskDomain --> sqlitePort
-  runtimeDomain --> sqlitePort
-  bindingPolicy --> sqlitePort
-  schedulerAuthority --> sqlitePort
-  verifierAuthority --> sqlitePort
-  verifierAuthority --> artifactPort
-  sidecarBoundary --> linuxHostPorts
-  toolExecutor --> linuxHostPorts
-  bindingPolicy --> secretPort
+  desktop --> sessions
+  shell --> sessions
+  cli --> sessions
+  nativeUi --> adapters
+  sessions --> work
+  sessions --> resources
+  sessions --> accounts
+  sessions --> progress
+  work --> existing
+  work --> policy
+  resources --> existing
+  resources --> mcp
+  resources --> policy
+  accounts --> policy
+  accounts --> secrets
+  adapters --> work
+  adapters --> progress
+  mcpOrigins --> mcp
+  mcpOrigins --> progress
+  work --> executors
+  resources --> executors
+  executors --> verifier
+  verifier --> work
+  existing --> authority
+  mcp --> authority
+  policy --> authority
+  work --> artifacts
+  progress --> artifacts
+  adapters --> host
+  executors --> host
 ```
 
-The boxes describe responsibility, not one-process-per-box deployment. Linux
-1.0 keeps one canonical daemon service. A sidecar may be a separately supervised
-OS process, but it remains subordinate to that daemon and does not become a
+The boxes are responsibility boundaries, not deployment requirements. The
+target still has one daemon authority. A sidecar, adapter, MCP process, native
+Agent runtime, or browser can be separately supervised without becoming a
 service authority.
 
-## 3. Experience and application services
+## 4. Experience boundaries
 
-Every experience component is a client. The Pi-hosted Shell and deterministic
-CLI call the same application services; client-local caches, conversation text
-and optimistic UI state never replace authority projections. Task and
-management channels have separate credentials, retry identities, watch cursors,
-projection caches and operation sets.
+### Desktop Control Plane
 
-`TaskApplicationService` is the specialized command path for the Task family:
-persist raw intent,
-clarify, construct a digest-bound preview, admit the exact `TaskContract`,
-control it under epoch CAS, and expose authority-backed Task/watch projections.
-It composes typed references to Memory, Skill, Tool, Context and Runtime while
-leaving every family lifecycle independent. Model, Budget, Permission,
-Artifact, Intent/Effect, Evidence and Event bind across those families through
-deterministic policy rather than becoming additional domains.
+The Desktop Control Plane is the primary Personal 2.0 entry and remains a
+same-origin, daemon-served client. It reads daemon projections and submits
+conceptual typed actions through isolated channels. Its local cache, pending UI
+state, optimistic feedback, and merged timeline are presentation state only.
 
-### 3.1 ResourceApplicationService
+The 2.0 information architecture has six spaces:
 
-`ResourceApplicationService` is a narrow, versioned management projection. Its
-common operation vocabulary is limited to:
+1. **Home** — readiness, attention, current governed work, health, and bounded
+   alerts;
+2. **Agents** — native identity, capabilities, conversations, Runtime/Process,
+   bindings, lifecycle, and health;
+3. **Work** — Goals, Plan revisions, Tasks, each Task's attempts/execution
+   flows, Context, Effects, verification, and acceptance;
+4. **Library** — Memory, Skills, Tools, MCP, and their federated bindings;
+5. **Activity** — the time-ordered Native/Observed/Governed/Verified timeline
+   with explicit audit coverage; and
+6. **Settings** — Account Hub, Providers/models, System stewardship, sessions,
+   workspace/permissions, and product configuration.
 
-| Operation | Common meaning | Domain responsibility |
+Navigation placement does not change family ownership: Context and Task belong
+to Work, Runtime/Process belongs to Agents, and Providers/System are Settings
+sections rather than families.
+
+### Agent Shell
+
+The Agent Shell is global assistance over the same daemon projections. It may
+interpret intent, navigate, explain, and prepare a candidate admission. It may
+not turn conversational fluency into authority state, claim native-session
+control that an adapter does not support, or bypass exact confirmation and
+typed daemon policy.
+
+### Agent-native surfaces
+
+An Agent-native UI remains the origin's own surface. In particular,
+`cognitive dsh web` is not the Control Plane and does not share its authority
+session. Native conversation and plan state observed there remains native
+state until explicitly admitted.
+
+## 5. Resource families
+
+| Family | Now | Personal 2.0 responsibility |
 |---|---|---|
-| `list` | return a bounded family/scope page at a declared projection version | select and authorize domain records |
-| `inspect` | return one exact stable ID and current projection version | supply domain-specific details and lifecycle state |
-| `watch` | resume a bounded event projection from a versioned cursor | emit typed events and deduplicate delivery |
-| `bind` | request a typed relationship under expected-version guards | validate relationship and run the domain transition |
-| `unbind` | request removal of a typed relationship under guards | enforce safety, dependencies and domain transition |
-| `enable` | request admission to domain-defined usable state | apply typed health, policy and lifecycle rules |
-| `disable` | stop new use without fabricating removal or completion | quiesce/fence according to the domain lifecycle |
-| `revoke` | invalidate a grant, binding or usable revision | fence affected use and expose consequences |
+| Memory | Linux 1.0 family | admitted durable knowledge; origin observations remain candidates until admission |
+| Skill | Linux 1.0 family | immutable reusable content; content never implies capability |
+| Tool | Linux 1.0 family | daemon-registered governed operations; MCP-advertised tools remain candidates |
+| Context | Linux 1.0 family | authorized Task input with provenance and explicit loss; origin/MCP content remains source material |
+| Task | Linux 1.0 family | current governed unit; target Tasks are created under an admitted Goal and revisioned Plan |
+| Runtime/Process | Linux 1.0 family | strict package-to-process identities plus native conversation/runtime attachment observations |
+| MCP | **Not a Linux 1.0 family** | target server, package, connection, capability, binding, health, and quarantine identities; config projection remains a governed external mutation |
 
-Every mutating request includes exact stable IDs, expected object/projection
-versions, idempotency identity and the authenticated channel. The common
-service does not expose generic `create`, `install`, `execute`, `complete` or
-arbitrary state transitions. Acquisition, admission, execution, reconciliation,
-retention and purge remain typed domain or Task workflows.
+Model, Provider profile, Budget, Permission, Artifact, Intent/Effect, Evidence,
+Event, Goal, and Plan are cross-cutting or orchestration concepts. They do not
+silently become extra resource families. Their implementation is
+**Requires-backend**. Only a new or changed public Goal/Plan/MCP machine shape
+conditionally requires P10-T02/Lane-CTR; a Personal-private projection may not.
 
-### 3.2 Common resource projection
+## 6. Native conversation to governed work
 
-Each list/inspect/watch item exposes a stable envelope with:
-
-- stable ID;
-- resource family;
-- revision digest, or an explicit reason why the domain object has no immutable
-  revision;
-- scope and owner;
-- health;
-- typed bindings;
-- current usage and bounded budget/lease facts when applicable;
-- blocked reason;
-- currently allowed actions;
-- object version, projection version and watch cursor.
-
-The envelope is assembled from domain authority facts. It is not a universal
-SQLite row, does not normalize domain state names, and cannot be written back
-as a generic resource object. Unknown or unavailable data stays explicit.
-
-## 4. Six independent domain services
-
-| Domain service | Own schema and lifecycle examples | Common projection examples |
-|---|---|---|
-| Memory | admitted records, provenance, conflict set and tombstone; propose/admit/retrieve/forget | admitted revision, owner/scope, retrieval use and conflicts |
-| Skill | package/revision identity, provenance and Task pin; import/qualify/pin/deprecate/revoke | stable Skill ID, `SkillRevision` digest, Task bindings and reuse |
-| Tool | immutable descriptor, operation candidate and availability; register/qualify/enable/quarantine/revoke | descriptor digest, effect class, capability and health |
-| Context | source references, `ContextRequest`, `ContextView`, provenance, losses and delta; resolve/render/invalidate | view digest, source bindings, token usage and stale blockers |
-| Task | raw intent, `TaskContract`, Task/Loop, checkpoint and verification binding; propose/preview/admit/control/accept | objective, current state, budget, resource bindings and acceptance blockers |
-| Runtime/Process | package, installation, registration, instance, sidecar binding, `AgentExecution` and process observation; acquire/install/register/activate/suspend/replace/remove | exact package/adapter digests, instance health, execution/process usage |
-
-Model, Budget, Permission, Artifact, Intent/Effect, Evidence and Event remain
-cross-cutting authority concepts composed with these domains; they are not
-silently promoted into a seventh generic resource lifecycle. Agent is the
-user-facing Runtime projection, but package, installation, registration,
-instance, sidecar, execution and process identities are not collapsed merely
-because the Shell lists them together.
-
-## 5. Per-Agent sidecar execution boundary
-
-For every active `AgentInstance`, the daemon supervises exactly one logical
-sidecar session. Linux 1.0 may realize that session as one separate OS process.
-The daemon creates private stdio pipes or a socketpair and runs framed AKP over
-that transport.
+### 2.0 target
 
 ```mermaid
 flowchart LR
-  daemonSupervisor["Daemon supervisor and authority"] --> privateTransport["Private stdio or socketpair"]
-  privateTransport --> sidecarSession["Logical sidecar session"]
-  sidecarSession --> adapterBoundary["Pinned Agent adapter"]
-  adapterBoundary --> agentRuntime["Agent runtime process"]
-  sidecarSession --> candidateStream["Candidates and bounded observations"]
-  candidateStream --> daemonSupervisor
+  native["Origin-owned native conversation\nand native plan observations"]
+  adapter["Vendor adapter\ncapability + sequenced observations"]
+  candidate["Admission candidate\nwith provenance and explicit gaps"]
+  preview["Daemon policy, scope, budget,\nand resource resolution"]
+  governed["Goal + revisioned Plan + Tasks"]
+  execute["Assignments, handoffs,\nIntent/Effect, verification"]
+
+  native --> adapter
+  adapter --> candidate
+  candidate --> preview
+  preview -->|"owner confirms; daemon admits"| governed
+  governed --> execute
 ```
 
-The sidecar has no public listener. This local parent-child boundary does not
-require TLS PKI, service discovery or a service mesh. The transport carries no
-daemon bootstrap or ambient management authority. On daemon restart, inherited
-transport closure or parent-death supervision makes the old sidecar exit. The
-daemon reloads authority state, establishes a higher epoch, then creates a new
-sidecar session; it never adopts the old session as current.
+Loading, resuming, forking, or closing a native conversation changes native
+state only. A native plan is an observation and can inform a proposed Personal
+Plan, but it is never the daemon's revisioned Plan. Admission records lineage
+and provenance and creates new daemon authority; it does not rewrite the
+origin's history.
 
-The sidecar may translate Agent protocol, construct candidates and report
-bounded process/progress observations. It cannot authorize a Tool, change a
-budget, commit an Effect, reconcile an external mutation or complete a Task.
+Where applicable, the projection reuses or references existing Core
+`Conversation` and `ConversationBinding`. Vendor-native conversation IDs remain
+opaque origin bindings; any additional projection stays Personal-private until
+P10-T02 decides otherwise.
 
-## 6. Control plane and data plane
+The daemon owns the resulting Goal, Plan revisions, Task graph, Agent
+assignments, handoffs, budget allocation, Effect lifecycle, verification, and
+acceptance. Agents may propose every one of those decisions but cannot commit
+them.
 
-The private AKP boundary separates two logical planes even if both use the same
-framed transport:
+## 7. Vendor adapter fabric
 
-| Plane | Allowed content | Rules |
+The target uses one adapter per Agent/vendor integration rather than requiring
+one vendor-neutral session protocol. Each adapter:
+
+- uses the strongest safe native interface available, such as an Agent
+  application server, RPC protocol, or native host integration;
+- projects a minimal capability matrix and common conversation state;
+- preserves adapter-specific detail in bounded render slots;
+- reports sequenced native observations with source identity and provenance;
+- exposes unsupported, unavailable, and unknown as different conditions;
+- carries no Provider/user secret through its conversation wire; and
+- emits only candidates or observations into daemon services.
+
+ACP is optional interoperability, not an admission requirement. MCP plus
+instructions/rules can exchange cooperative candidates where no native
+integration exists, but cannot reliably impersonate login, conversation
+lineage, interrupt, resume, fork, history, or runtime attachment.
+
+The delivered P8 adapter manifest and private AKP boundary remain the current
+registration and daemon-adaptation foundation. The richer conversation model
+is **Requires-backend**. A new public machine contract conditionally requires
+P10-T02/Lane-CTR; Personal-private projection state may not.
+
+## 8. Federated resource and MCP boundary
+
+Personal 2.0 is federated rather than copy-everything:
+
+- the origin owns native conversation content, MCP-advertised content, and
+  other source-native records;
+- Personal owns policy, bindings, admission decisions, provenance,
+  reconciliation facts, and the governed objects it explicitly creates;
+- Agent connection establishes an explicit observation scope; observation may
+  be automatic and non-mutating only inside it, with no speculative/global
+  scan or surprise per-session enrollment;
+- every writeback requires daemon authority, current expected origin revision,
+  persisted Intent/Effect, verification, and a recoverable preimage. It may run
+  automatically inside an unchanged exact daemon grant/risk policy; new,
+  broader, destructive, or conflicted scope requires preview and confirmation;
+- concurrent or ambiguous edits fail closed into an explicit reconcile path;
+  timestamp order never silently chooses a winner.
+
+Installing or connecting an MCP server grants no Tool authority. Advertised
+tools, protocol resources, and prompts enter Tool, Context, and Skill
+respectively as untrusted candidates. An administrator may preauthorize
+reconciliation within an unchanged grant, but any capability, scope, target,
+secret, or network expansion requires a new confirmation.
+
+## 9. Control, data, and secret planes
+
+| Plane | Content | Authority treatment |
 |---|---|---|
-| Control plane | handshake; package, adapter, instance and execution identities; protocol digest; lifecycle request/observation; budget/capability snapshot; current epoch | daemon validates exact digests and versions; stale epoch or adapter/protocol digest drift fails closed |
-| Data plane | governed Context and Skill references; Memory and Tool candidates; progress; artifact references; bounded stdout/stderr or event streams; content-addressed references | references are scoped and digest-bound; sidecar output remains candidate/observation until deterministic validation |
+| Control | exact identities, adapter/runtime attachment, capability status, epochs, policy and budget views | daemon validates current identity, version, scope, and channel |
+| Candidate/observation | native conversation events, plans, history, MCP advertisements, progress, artifacts, bounded output | retained with provenance; never authority by shape |
+| Governed data | admitted Context, Memory, Skill, Task, Goal/Plan references, bindings, Intent/Effect, evidence | daemon-owned and versioned under domain-specific rules |
+| Secret | approved import/input path, `SecretStore`, daemon egress/proxy resolution | raw material is excluded from browser, Agent, adapter conversation, MCP, Context, logs, and evidence |
 
-Provider/user secret material belongs to neither plane. The daemon resolves it
-only at an approved Secret Store/egress boundary.
+An external mutation permit exists only after the daemon has authorized the
+exact operation and persisted its Intent/Effect and fencing identity. A native
+or MCP receipt remains an observation until daemon reconciliation and
+independent verification.
 
-A mutating Tool permit is issued only after the daemon has authorized the exact
-operation and durably persisted its Intent, Effect, stable idempotency key,
-dispatch identity and epoch. The permit is narrow, short-lived and bound to the
-Task, execution, sidecar session, Tool descriptor, capability, budget and
-Effect. A sidecar receipt is an observation: it is not an Effect commit,
-reconciliation result, verification result or Task completion.
+## 10. Progress and recovery composition
 
-## 7. Core flows
+The target progress timeline merges four labeled lanes without erasing source:
 
-### 7.1 Governed Task flow
+- **Native** — origin conversation or native plan event;
+- **Observed** — adapter/process/MCP observation;
+- **Governed** — daemon Goal, Plan, Task, assignment, Intent/Effect,
+  reconciliation, or policy fact;
+- **Verified** — independent verification and daemon acceptance only.
 
-```mermaid
-sequenceDiagram
-  participant User
-  participant Shell
-  participant Applications
-  participant Daemon
-  participant Sidecar
-  participant Verifier
+Every item preserves source identity, sequence/cursor when available, observed
+time, daemon record linkage, and confidence/coverage. Missing coverage remains
+visible. The client must not manufacture a continuous lifecycle from gaps.
 
-  User->>Shell: Goal or resource intent
-  Shell->>Applications: Task or isolated management request
-  Applications->>Daemon: Persist raw intent and resolve typed references
-  Daemon-->>Shell: Candidate plus canonical digest-bound preview
-  User->>Shell: Admit exact preview
-  Shell->>Applications: Preview digest and idempotency key
-  Applications->>Daemon: Authorization, CAS, TaskContract and schedule
-  Daemon->>Sidecar: Current epoch and governed data references
-  Sidecar-->>Daemon: Candidates, progress and artifact references
-  Daemon->>Verifier: Closed Effects and criterion evidence
-  Verifier->>Daemon: Acceptance disposition
-  Daemon-->>Shell: Authority projection over watch
-```
+Detach, interrupt, cancel, pause, restart, fork, and compensating undo remain
+different operations. Their exact ownership and recovery semantics are defined
+in [Authority, data and recovery](authority-data-and-recovery.md).
 
-The Shell cannot convert its proposal, Pi `agent_end`, sidecar output or an
-optimistic display into authority state.
+## 11. Required future work
 
-### 7.2 External mutation
-
-```mermaid
-flowchart LR
-  operationCandidate["Tool operation candidate"] --> authorizeOperation["Daemon catalog, capability and budget checks"]
-  authorizeOperation --> persistIntent["Persist Intent"]
-  persistIntent --> persistEffect["Persist Effect and original key"]
-  persistEffect --> issuePermit["Issue epoch-bound dispatch permit"]
-  issuePermit --> externalDispatch["Executor dispatch"]
-  externalDispatch --> receiptObservation["Receipt or unknown observation"]
-  receiptObservation --> reconcileEffect["Daemon query and reconcile with original key"]
-  reconcileEffect --> verifyOutcome["Artifact, evidence and acceptance"]
-```
-
-An unknown dispatch outcome is never retried under a new identity. External
-success and receipt persistence are distinct from authoritative Effect closure,
-which is distinct again from Task completion.
-
-## 8. Future Linux and hardware evolution ports
-
-The architecture preserves narrow ports so later product work can evolve
-without moving authority out of the daemon:
-
-| Port | Target responsibility |
+| Target capability | Status |
 |---|---|
-| Identity/store | durable identity records, versions, CAS and migration |
-| Scope/capability | owner, tenant/workspace scope, policy and revocation |
-| Scheduler/lease/budget | eligibility, fencing, placement constraints and hard ceilings |
-| Agent/sidecar execution | private protocol, lifecycle supervision and bounded observations |
-| Tool executor | descriptor-bound execution, idempotency, query and reconciliation |
-| Context/Memory source | authorized source resolution, provenance and content-addressed reads |
-| Artifact/evidence | governed output, immutable evidence and verifier references |
-| Secret | desktop Secret Service or headless encrypted-vault reference resolution at approved egress only |
-| Event/watch/transport | bounded events, cursors, resumable projection and private framed transport |
-| Placement description | declarative host/device requirements and observed compatibility, not a scheduling authority |
+| Goal and revisioned Plan authority plus Goal/Plan/Task/Attempt graph | **Requires-backend**; P10-T02/Lane-CTR only if new public machine semantics are selected |
+| Native Agent identity, capability, auth, conversation, turn, history, attachment, plan, and runtime projection | **Requires-backend**; reuse Core Conversation/ConversationBinding, with P10-T02 only for a public extension |
+| Typed browser Task and Agent controls | **Requires-backend** |
+| Browser session lifecycle/introspection beyond current issuance | **Requires-backend** |
+| MCP seventh-family identities and lifecycle | **Requires-backend**; P10-T02/Lane-CTR only for a new/changed public machine surface |
+| Federated origin observation, conflict records, and governed writeback | **Requires-backend**; shared public contract portions conditionally require Lane-CTR |
+| Account Hub credential import and scoped Provider switching/rebinding | **Requires-backend** |
+| Complete cross-domain progress projection | **Requires-backend** |
 
-These are design ports, not current generalized infrastructure. The target does
-not now implement a kernel module, eBPF policy system, cgroup orchestrator,
-container or VM abstraction, device scheduler, TPM framework, shared-memory
-protocol, device bus or distributed authority. Such work requires a separate
-approved task, threat model and evidence plan; placement descriptions cannot
-grant capability or dispatch work by themselves.
-
-## 9. Current-versus-target boundary
-
-This document defines target composition only. It does not assert that all six
-domain services, the sidecar, UCR-01, managed Pi lifecycle, Task/Tool/recovery
-closure, any Gate, Linux release or Profile are implemented or passed. Exact
-current facts remain only in [PROGRESS.md](../../../docs/plan/PROGRESS.md); formal task
-and Gate meaning remains in the
+This architecture does not authorize those changes by itself. Current facts,
+formal task status, and claim boundaries remain owned by
+[PROGRESS.md](../../../docs/plan/PROGRESS.md) and the
 [Personal development plan](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md).

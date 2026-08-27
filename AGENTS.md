@@ -260,8 +260,9 @@ ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@1
 `http://127.0.0.1:3080/`（dsh 原生面板）。**每次在 guest 上完成调试或验证后，代理须在回合
 末尾重复给出上述转发命令与本地 URL**，不要假设 owner 已记住或只会用 VM 桌面查看。若 runtime 的
 daemon 端口不是 `48681`，以 guest 上 `cognitive daemon status` 为准并改 `-L` 映射。Control
-Plane 门禁粘贴 runtime 的 bootstrap secret（不是 Provider key）。daemon 重启后需刷新 dsh
-web/apply。完整说明见
+Plane 门禁粘贴 runtime 的 bootstrap secret（不是 Provider key）。daemon 重启后必须重启
+`cognitive dsh web`；新 daemon 将 dsh 报为 `INACTIVE`，`cognitive dsh apply` 不能恢复该
+stale session，只用于已为 `ACTIVE` 的 runtime 所支持的 overlay 同步。完整说明见
 [`PERSONAL-TEST-ENVIRONMENTS.md`](docs/plan/PERSONAL-TEST-ENVIRONMENTS.md) §7 与
 `.cursor/rules/10-autonomous-personal-development.mdc`。
 

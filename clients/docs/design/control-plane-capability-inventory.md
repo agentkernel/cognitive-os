@@ -1,14 +1,63 @@
 # Control Plane Capability Inventory
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: `P10-T01` adopted Personal 2.0 current/target capability alignment
+- Document revision: 2026-08-27
+- Change class: `product-semantic` documentation; no implementation, public
+  contract, Gate, release, Profile, or task-status change
 - Companion: [Current State Map](control-plane-current-state.md)
-- Method: every capability is rated from **verified daemon/UI evidence only** (route handlers, store schemas, canonical docs, frozen route inventory). Ratings:
+- Current implementation:
+  [P7-T05 closure](../../../docs/checkpoints/20260826-personal-p7-t05-control-plane-redesign-closure.md),
+  merged PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) at
+  `main@5996afbb` with product SPA head `872074bf`
+- Adopted target:
+  [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md) and
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
+- Frozen audit body: the ratings and evidence below preserve the verified
+  2026-08-24 daemon/UI audit (route handlers, store schemas, then-canonical
+  documents, and frozen route inventory). Ratings:
   - **AVAILABLE** — implemented and reachable by an operator through the daemon HTTP API (the SPA's only possible backend).
   - **PARTIAL** — implemented with material restrictions (process-local, observe-only, CLI-only, placeholder, or inconsistent planes).
   - **NOT AVAILABLE** — does not exist on any operator-reachable surface, or is deliberately refused/forbidden.
   - **UNKNOWN** — cannot be verified from the audited sources.
 - Hard rule (inherited from `web-ui-architecture.md:98-106` + ADR-0053 §4): a capability that is PARTIAL/NOT AVAILABLE must be *rendered* as such; this inventory never licenses inventing routes.
+
+## Current implementation (frozen P7-T05 capability evidence)
+
+All ratings and citations below remain the verified 2026-08-24 inventory.
+`AVAILABLE`, `PARTIAL`, `NOT AVAILABLE`, and `UNKNOWN` describe that audited
+implementation only. Target design cannot upgrade a rating.
+The accepted current SPA groups those capabilities under seven routes:
+Home / Work / Agents / Providers / Resources / Activity / System.
+
+## Personal 2.0 target delta
+
+The target adds the following product capabilities and placements, all of which
+must be checked against this inventory and
+[Backend Dependencies](37-backend-dependency-matrix.md):
+
+Adapter-facing target matrices do not reuse this inventory's delivery ratings
+as runtime conditions. They separately record runtime
+`Supported|Unsupported|Unavailable|Unknown`, delivery
+`Now|Requires-backend`, and support path
+`vendor-native|managed-adapter|MCP-cooperative|observable-only|unqualified`.
+
+| Target | Current evidence | Target disposition |
+|---|---|---|
+| Global Agent Shell and embedded native history | no Control Plane projection | Requires-backend |
+| Agent catalog/install/connect and first real chat | lifecycle CLI/library only | Requires-backend |
+| Goal/Plan revision/attempt and multi-Agent Work | current Task chain partial | Requires-backend beyond current Task facts |
+| Seven-family task-oriented placement | current six-family depth varies; Library has Memory/Skill/Tool today | MCP Requires-core + Requires-backend; absent family depth Requires-backend; Context/Task stay in Work, Runtime/Process in Agents |
+| Federated resource observation/writeback | no general typed surface | Requires-backend |
+| Account Hub API key | Provider routes available | current-backed, moved under Settings |
+| Account Hub OAuth/subscription/import/custom gateway | absent or partial | Requires-backend; import governed by ADR-0055 |
+| Models/quotas/cost | model/usage/advisory budget partial | missing/unknown facets remain Requires-backend/unknown |
+| Unified four-provenance Activity | provider audit + per-task facts partial | Requires-backend for native/unified coverage |
+| Providers/System placement | current routes exist | frontend target change only; does not change API ratings |
+
+The target uses `Requires-backend` as a design-availability label, not as a new
+authority state or an API promise. MCP plus rules does not control host Agent
+sessions. No target-only control may appear active, and progress must come from
+a real source/denominator.
 
 ---
 

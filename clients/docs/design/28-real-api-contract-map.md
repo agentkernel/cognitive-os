@@ -4,6 +4,25 @@
 - Date: 2026-08-24
 - Rule enforced: **a route exists only because implementation confirms it.** Every entry cites the handler. Documentation claims without handlers are listed as absent. Audited source: `apps/kernel-server/src/personal/` @ working tree (~`main` `aeb9c3a9`).
 
+## Current implementation (frozen audit baseline)
+
+This route inventory is preserved verbatim as the P7-T05 implementation audit at
+the revision above. It is evidence of what existed then, including absent
+handlers and hygiene risks; it is not an API roadmap.
+The accepted current SPA consumes the supported subset through seven product
+routes: Home / Work / Agents / Providers / Resources / Activity / System.
+
+## Personal 2.0 target delta
+
+Global Agent conversation/history, catalog install/connect, Goal/Plan/attempt,
+multi-Agent orchestration, first-class MCP management, federated
+observation/writeback, OAuth/subscription/import/custom-gateway acquisition,
+rich quota/cost, and unified provenance Activity are **not established by this
+map**. Target specs label them `Requires-backend`. Any future route or envelope
+must be separately designed and approved; no target screen may infer it from a
+200 stub or a nearby current route. See
+[Backend Dependency Matrix](37-backend-dependency-matrix.md).
+
 ---
 
 ## 1. Front door (all routes inherit)

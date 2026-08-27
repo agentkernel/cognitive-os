@@ -5,6 +5,24 @@
 - Subject: `pc/web/src/App.tsx` @ `0320c1a` (branch `personal/P7-T05-dsh-binding-cas`; superset of `main`). Line numbers cite that revision.
 - Per-page record format: Route · Purpose · Component tree · Data source · State · User actions · Problems · Reusable · Replaceable · Missing.
 
+## Current implementation (frozen audit baseline)
+
+The per-page observations below are preserved without reinterpretation as
+pre-closure P7-T05 evidence at `0320c1a`. Route names, line numbers, actions,
+omissions and reusable logic refer to that revision. The accepted current SPA
+now has seven routes: Home / Work / Agents / Providers / Resources / Activity /
+System; that later integration does not erase the older observations.
+
+## Personal 2.0 target delta
+
+The target six-space IA and global Agent Shell supersede this page map for
+design: Providers/System move under Settings, Resources becomes Library,
+embedded conversation/history lives under Agents, managed Goal/Plan/Task Work
+gains Context/orchestration, MCP is first-class, and Activity gains provenance.
+Those changes are not present in this audit. Use
+[Traceability](35-design-to-code-traceability.md) for explicit gaps; do not
+rewrite the historical findings or infer an API.
+
 ---
 
 ## Page: Session

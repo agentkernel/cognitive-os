@@ -9,11 +9,22 @@ sources:
   - path: personal/docs/architecture/system-architecture.md
   - path: personal/docs/architecture/resource-manager-architecture.md
   - path: personal/docs/product/resource-manager-design.md
+  - path: personal/docs/product/personal-2.0-scope.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
+  - path: personal/docs/architecture/web-ui-architecture.md
+  - path: personal/docs/architecture/multi-agent-orchestration.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:7d4c85a3d00f411981de256ba6b5df6d3da16e7c3e158765cdaae9b4ef20555b"
+fingerprint: "sha256:d716173c7d0320d28c16db03dfe208dc9717a310fbee5c1262c3403bfcad7690"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -51,12 +62,32 @@ digest 钉住转移表与 `cognitive-contracts` 的 canonical digest 校验。
 - **平台端口**：SQLite WAL（双库）、文件系统 artifact CAS、Linux Secret Service、
   systemd 用户服务。`implemented`。
 
+## 已采纳的 Personal 2.0 组合——不是当前实现
+
+Personal 2.0 保留上述不变量，同时采纳以下目标层次：
+
+- 当前客户端是 daemon 提供、来自 `clients/pc/web/` 的 `/ui/` bundle；桌面优先
+  Control Plane/Agent Shell 重设计是 `Requires-backend`，不是第二权威平面；
+- Account Hub 凭据导入是 ADR-0055 下 daemon 独占的来源到 SecretStore 操作。UI 只
+  提供精确来源选择与同意，绝不读取或拿到导入材料；
+- MCP 成为带联邦来源身份、trust、availability 与 policy 的第七个用户可见资源族。
+  当前 Resource Manager 与权威服务仍保持六族，直到类型化 backend/core 工作落地；
+- 厂商专用对话适配器保留每个 Agent 的协议与身份。Pi 仍是唯一已资格化 Agent；dsh
+  实现证据与通用适配器合同都不转移资格；
+- Goal 与不可变 Plan revision 组合当前 Task；daemon-owned 多 Agent 监督负责分配、
+  fencing、budget、对账与验证。
+
+今天没有 Goal/Plan/MCP 资源族/联邦/导入/监督 API，也没有目标 UI 重设计。公开权威或
+合同增量标为 `Requires-core`；daemon 投影、持久化与路由增量标为
+`Requires-backend`。
+
 ## 解释"意外"的设计决策
 
 - 单 canonical 服务 + 固定 loopback 端口 48181（ADR-0034）——早期 UDS 与双 unit 晋升
   设计（ADR-0019/0032/0033）文本尚存，但产品路径已被取代。
 - Pi 刻意双角色：shell 宿主（客户端）与受管 agent（受治理运行时），身份绝不合并
   （ADR-0035）。
-- 六族、无通用 `Resource` 表（ADR-0037）；per-agent sidecar 作为集成边界
+- 当前 Linux 1.0/API 为六族、无通用 `Resource` 表（ADR-0037）。ADR-0057 采纳 MCP
+  为 Personal 2.0 第七族，但不折叠各族权威；per-Agent sidecar 仍是集成边界
   （ADR-0038）。
 - MVP-first 授权：owner-local、单 principal、task-scoped；RBAC 与审批链明确推迟。

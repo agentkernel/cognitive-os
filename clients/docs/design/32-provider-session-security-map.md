@@ -4,6 +4,25 @@
 - Date: 2026-08-24
 - Covers brief §8 (authority model), §11 (provider reality), §12 (session reality). Sources: `apps/kernel-server/src/personal/{server.rs,auth.rs,provider_control_plane.rs,provider_proxy.rs,bounds.rs}`, ADR-0053, `pc/web/src/{channels.ts,session.ts,api.ts,policy.ts}`.
 
+## Current implementation (frozen audit baseline)
+
+The authority, Provider and session observations below remain P7-T05 evidence.
+They continue to bind every Personal 2.0 screen: daemon-only writes,
+channel-scoped memory-only sessions, presence-only credential display, and
+daemon-mediated Provider egress.
+The accepted current SPA presents Provider management as a top-level Providers
+route; moving it under Settings is target IA, not a current API change.
+
+## Personal 2.0 target delta
+
+Settings / Account Hub adds target acquisition tiers (OAuth/subscription, API
+key, user-directed import, custom gateway), but only the verified API-key/current
+gateway subset below is implemented. Import is governed by
+[ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
+and remains `Requires-backend`; the browser never reads or receives imported
+material. Rich quota/cost and Adapter account routing also require real
+projections. The target changes placement and UX, not these security facts.
+
 ---
 
 ## 1. Authority chain (verified)

@@ -10,6 +10,42 @@ capabilities.
 files (no `npx skills`, no global install).  
 **Install root:** `.cursor/skills/`
 
+## Personal 2.0 design-corpus use
+
+The installed skill provenance and security record below are unchanged. For the
+adopted Personal 2.0 Control Plane target, the stack is applied in this order:
+
+1. current implementation evidence and immutable authority/secret boundaries;
+2. adopted product model and six-space IA;
+3. UX flows and state/recovery coverage;
+4. Apple restraint and accessibility;
+5. Agent supervision/trust/error resilience;
+6. frontend aesthetics only after the operational model is stable.
+
+The adopted target output is the design corpus `01`–`25` as amended for:
+
+- `Home / Agents / Work / Library / Activity / Settings`;
+- desktop primary three-region shell and global Agent Shell;
+- Adapter-backed native conversation/history with common projection and native
+  slots;
+- explicit Manage with Personal into daemon Goal/Plan
+  revisions/Tasks/attempts and multi-Agent orchestration;
+- seven-family task-oriented placement: Library has Memory/Skills/Tools/MCP,
+  Work has Context/Task, and Agents has Runtime/Process;
+- Settings Account Hub with ADR-0055 consent and SecretStore/proxy boundaries;
+- federated observation and governed writeback;
+- one Native/Observed/Governed/Verified timeline;
+- calm, dense, precise, professional visuals with full keyboard and reduced
+  motion/transparency.
+
+The stack may specify target capabilities, but every capability lacking verified
+backend support is labeled **Requires-backend**. It must not invent an API,
+active-looking control, progress signal, Provider secret path, MCP host-session
+authority, or completion claim. Reality/audit documents `26`–`41`,
+[Current State Map](control-plane-current-state.md), and
+[Capability Inventory](control-plane-capability-inventory.md) remain the
+P7-T05 current-state evidence baseline.
+
 ---
 
 ## Priority / conflict rules

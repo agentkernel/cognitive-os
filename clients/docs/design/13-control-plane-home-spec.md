@@ -1,9 +1,43 @@
 # 13 — Home Spec (Attention Surface)
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 Home target; historical P7-T05 spec retained
+- Updated: 2026-08-27
 - Contract: DD-03 (attention surface, not dashboard); jobs J-K1/J-K3/J-R1; Flow 1 in `07`; state language `22`; shell `12` (composed surface, CS layout).
 - **Design thesis:** Home answers three questions in reading order — *Is the system ready? What needs me? What is in flight?* — and nothing else. Every element is a navigable authority fact or one action. There are no metrics about metrics.
+
+## Personal 2.0 Home amendment
+
+Home is now a **resume-and-attention surface**. It answers, in order:
+
+1. What conversation or managed work should I resume?
+2. What needs my decision?
+3. Is Personal ready enough for the next real action?
+4. What outcome was recently verified?
+
+### Target regions
+
+| Region | Content | Availability rule |
+|---|---|---|
+| Resume | recent Agent conversations and active Goal/Task, each with source and age | show only a real history/work projection; otherwise Requires-backend |
+| Needs attention | clarification, conflict, blocked task/effect, degraded account, consent, stale observation | composed rows declare source and coverage |
+| Readiness | compact daemon/account/Agent readiness with deep link to Settings/System | current-backed where P7-T05 facts exist |
+| Verified outcomes | evidence/acceptance receipts, never Agent self-report | current-backed for known Tasks; coverage labeled |
+| First value | when empty, install/connect Agent or finish Account Hub setup | CTA active only for a current-backed path |
+
+Home still refuses charts, KPI tiles, giant welcome cards, marketing copy and
+fake counts. "Nothing needs you" is a calm authoritative-empty state only when
+the loaded coverage supports that claim; otherwise copy says what was checked.
+
+Conversation preview rows never expose raw secret, hidden reasoning or
+unbounded transcript content. Selecting one restores the Agent workspace and
+its embedded native conversation; the candidate-only global Agent Shell remains
+available alongside it. A Work row opens Goal/Plan/Task context without
+conflating it with chat history.
+
+The current implementation has readiness JSON and partial Provider/Task facts,
+but no cross-Agent recent-conversation projection, Goal/Plan model or complete
+attention feed. Those target regions are `Requires-backend`; they must not be
+filled with mock data or inferred progress.
 
 ---
 

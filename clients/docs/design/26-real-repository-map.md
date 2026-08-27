@@ -4,6 +4,24 @@
 - Date: 2026-08-24
 - Audit basis: `D:\agent-kernel` working tree at/around `main` `aeb9c3a9` (PR #271); `D:\cognitiveos-clients` worktree `personal/P7-T05-dsh-binding-cas` @ `0320c1a`, `main` @ `db56374`. All facts below were verified against source in Phase-1/2.5 audits; documentation-only claims are labeled as such.
 
+## Current implementation (frozen audit baseline)
+
+The accepted current implementation is integrated at `clients/pc/web/` and uses
+Home / Work / Agents / Providers / Resources / Activity / System. The body is
+preserved as P7-T05 evidence at the exact earlier repositories/revisions above.
+It must not be silently updated to describe the later ADR-0054 layout; its
+two-repository statements are historical observations, not instructions.
+
+## Personal 2.0 target delta
+
+The target design now lives in `01`–`25` and uses
+Home / Agents / Work / Library / Activity / Settings, a global Agent Shell,
+Adapter-backed conversation, first-class MCP, Account Hub, and provenance-aware
+Activity. This map proves only the P7-T05 SPA/daemon seam; it does not prove
+those target capabilities. Use [Recommended IA](06-control-plane-recommended-ia.md)
+and [Design Decisions](10-control-plane-design-decisions.md) for the superseding
+target, and keep this document as implementation history.
+
 ---
 
 ## 1. Repository identity

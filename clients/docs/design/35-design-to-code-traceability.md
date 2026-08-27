@@ -4,6 +4,44 @@
 - Date: 2026-08-24
 - Maps each Phase-2 design element to: existing SPA route/component → existing API → existing backend capability → **required change** (SPA-side unless marked BACKEND). "Existing component" cites `pc/web/src/` @ `0320c1a`; API cites `28`. Backend gaps reference BD-n (verified in `37`).
 
+## Current implementation (frozen matrix)
+
+Sections 1–10 below are preserved as the trace from the 2026-08-24 design to
+P7-T05 code at `0320c1a`. They must not be read as traceability for the adopted
+Personal 2.0 target.
+The accepted current SPA's seven-route grouping is
+Home / Work / Agents / Providers / Resources / Activity / System.
+
+## Personal 2.0 target delta matrix
+
+`Existing evidence` names only verified P7-T05 facts. `Gap` is deliberately a
+product/backend need, not a proposed route or API.
+
+| Target element | Existing evidence reusable | Frontend/design change | Gap; no API claim |
+|---|---|---|---|
+| Six-space shell | HashRouter, session gate, current Shell | new three-region shell; Providers/System nested under Settings | none for static IA; data gaps below |
+| Global Agent Shell | no cross-space Control Plane Shell | candidate-only explain/compare/propose surface and daemon-preview handoff | cross-space fact/action composition **Requires-backend**; no authority |
+| Embedded Agent conversation/history | separate dsh/Pi native surfaces only; no CP transcript | Agent workspace transcript/composer, capability matrix and native slots | Adapter conversation/history projection and turn semantics **Requires-backend** |
+| Agent install/connect ≤3 steps | runtime envelopes; CLI/library lifecycle | catalog/review/first-chat UX | signed catalog, typed install/connect/lifecycle and first-chat evidence **Requires-backend** |
+| Common projection + native slots | identity merge only | three-axis capability matrix; display/artifact-only slot host; Control Plane-owned action controls | Adapter capability/history schema and source freshness **Requires-backend** |
+| Explicit Manage with Personal | current task record/interpret/preview/admit | preserve conversation; review durable conversion | Goal/Plan/attempt may **Require-core**; implementation **Requires-backend** |
+| Goal / Plan revisions / Tasks / attempts | Task/evidence/effects/observation partial | hierarchical Work master/detail | Goal, Plan revision, attempt, orchestration and rich inventory projections **Requires-backend** |
+| Multi-Agent orchestration | architecture design only | roles/handoffs/disagreement UI | daemon orchestration projections/actions **Requires-backend** |
+| Seven-family task-oriented placement | Memory/Skill/Tool current; Context/Task/Runtime partial | Library = Memory/Skills/Tools/MCP; Work = Context/Task; Agents = Runtime/Process | MCP family **Requires-core/backend**; absent family depth **Requires-backend** |
+| MCP first-class page | Tool/MCP fixture/design evidence only | MCP master/detail/inspector | product MCP identity/discovery/policy/lifecycle/binding requires **Requires-core + Requires-backend** |
+| Federated observation/writeback | no general cross-source projection | source comparison, conflict and receipt UI | source revision/conflict projection plus typed preview/Effect/writeback **Requires-backend** |
+| Provenance Activity | provider audit + per-task facts | one Native/Observed/Governed/Verified grammar | Adapter-native and unified cross-domain feed/order/coverage **Requires-backend** |
+| Account Hub API-key tier | current Provider/key/model/binding logic | relocate/refine under Settings | current-backed; preserve security negatives |
+| OAuth/subscription tier | none | acquisition/consent target spec | OAuth/subscription credential lifecycle **Requires-backend** |
+| User-directed import | ADR-0055 authorization only | exact-source consent and source-disposition review | per-source daemon import readers/audit **Requires-backend** |
+| Custom gateway tier | current openai-compatible endpoint subset | tiered account UX | unsupported gateway contracts **Requires-backend** |
+| Models/quotas/cost | current models, usage, advisory budgets partial | source/freshness/unknown presentation | normalized capabilities, real quota and missing cost facts **Requires-backend** |
+| Target progress/control | current exact Task/watch states partial | ProgressFact and RequiresBackendBlock | no inferred percentages; each missing control remains **Requires-backend** |
+| Accessibility | skip/focus/live-region seeds | full keyboard, reduced motion/transparency, contrast/text-scale QA | implementation and evidence work; no backend claim |
+
+The matrix intentionally does not name future route paths, DTOs or lifecycle
+states. Those require separate product/architecture/contract work.
+
 ---
 
 ## 1. Shell & cross-cutting

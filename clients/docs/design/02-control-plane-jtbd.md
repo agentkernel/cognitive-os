@@ -1,9 +1,42 @@
 # 02 — Control Plane Jobs-to-be-Done
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 JTBD; historical analysis retained
+- Updated: 2026-08-27
 - Method: `jtbd-analysis` (job statements = When [situation] / I want to [motivation] / so I can [outcome]; Forces of Progress), grounded in the documented product JTBD (`product-design.md:36-52`), the Web UI's four product questions (`web-ui-design.md:19-24`), the audited current state, and the capability inventory. No invented user research: every job cites its evidence source.
 - User frame: one owner in five modes (see `01-control-plane-product-model.md` §4). Primary mode: **Individual Operator**.
+
+## Personal 2.0 JTBD amendment
+
+The prior supervision jobs below remain valid. Personal 2.0 expands the hired
+job from "inspect a local authority" to "start with an Agent naturally, then
+govern the work without switching products."
+
+| Priority | When… | I want to… | So I can… | Target surface |
+|---|---|---|---|---|
+| 1 | I open Personal | resume the right Agent conversation or urgent governed work | reach value immediately without decoding a dashboard | Home + global Agent Shell |
+| 2 | I add an Agent | install or connect it in at most three steps and send a real message | know the integration works, not merely that setup completed | Agents |
+| 3 | I converse with any supported Agent | keep its native history and strengths inside one predictable workspace | switch Agents without relearning the product | Agents |
+| 4 | a conversation becomes consequential | choose Manage with Personal and see a daemon-owned Goal, Plan revisions, Tasks and attempts | supervise durable work without treating chat as authority | Work |
+| 5 | several Agents can help | see daemon-issued roles, handoffs, conflicts, budgets and evidence | use multi-Agent work without creating a second authority plane | Work |
+| 6 | I need a model or subscription | add an account through the best supported tier and see models, quota and cost honestly | understand availability and spend without exposing credentials | Settings / Account Hub |
+| 7 | I need cognitive resources | browse each family in its task-oriented home and understand provenance, scope and availability | know what each Agent may use and why | Library / Work / Agents |
+| 8 | external and Personal copies disagree | ask the Shell for a resolution, inspect a daemon preview, then confirm | write back deliberately and recoverably | Library + Agent Shell |
+| 9 | I investigate an outcome | read one timeline with Native, Observed, Governed and Verified provenance | distinguish vendor history, observation, authority and proof | Activity |
+| 10 | I tune the desktop | use full keyboard paths and reduced-motion/transparency modes | operate comfortably and repeatedly | global shell / Settings |
+
+Important boundaries:
+
+- Native conversation is the default; **Manage with Personal is explicit**.
+  Ordinary messages do not silently mint Goals or Tasks.
+- "Connected", "imported", or "MCP discovered" does not mean usable or
+  authorized. First value is a real chat response through the supported path.
+- MCP plus rules can provide capabilities to an Agent; it cannot control the
+  Agent's host session.
+- OAuth/subscription/import/custom-gateway choices, rich quotas, multi-Agent
+  orchestration, federated observation, and writeback are target jobs marked
+  **Requires-backend** until typed daemon support exists.
+- The P7-T05 current implementation and its seven current routes remain factual
+  evidence; see [Current State Map](control-plane-current-state.md).
 
 ---
 

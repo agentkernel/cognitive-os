@@ -1,11 +1,105 @@
 # 16 — Agent Spec (Actor Inventory & Dossier)
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
-- Contract: `06` §3.3, `04` §1.1 (seven identities), jobs J-K2 + canonical job 6, capability reality: Agents are **read-mostly** — lifecycle verbs are class-C (BD-2); HTTP-visible agent facts = runtime inventory/inspect + bindings + dsh runtime snapshot.
-- Design thesis: the Agent surface is a **dossier**, not a profile page and not a control panel. Its job is trust: *what is this actor, what may it use, what is it doing, what has it verifiably done.*
+- Status: adopted Personal 2.0 Agent target plus current P7-T05 dossier reality
+- Updated: 2026-08-27
+- Target: Adapter conversation/capability projection, typed Control Plane
+  actions, and Agent runtime engine supervision
+- Current implementation: read-mostly runtime inventory/inspect, bindings, and
+  dsh runtime snapshot; lifecycle remains unavailable over HTTP
+
+## Personal 2.0 Agent spec
+
+Agents is both the conversational center and the trust center. Each Agent uses a
+vendor-specific Adapter behind a common internal projection.
+
+### Inventory
+
+Rows show Agent identity, connection/install state, Adapter compatibility,
+account/model route, last native conversation, current managed work when known,
+and one honest next action. "No work observed" is never translated to idle.
+
+### Install/connect flow (three steps maximum)
+
+1. **Choose:** signed catalog entry or supported existing installation.
+2. **Review:** source/signature, Adapter capabilities, native slots, account and
+   resource boundaries, retained data, and every `Requires-backend` limitation.
+3. **Connect:** perform the typed daemon operation and open conversation.
+
+Success is a real first chat response. A successful download, registration,
+process start or connection probe is not first-chat success. Catalog,
+signature, install/register/lifecycle and embedded conversation are target
+capabilities and currently `Requires-backend` unless a verified route backs the
+specific step.
+
+### Agent workspace
+
+| Section | Target content |
+|---|---|
+| Conversation | embedded native history through the Adapter common projection; source identity and freshness |
+| Native slots | display-safe vendor metadata and artifact renderers; no actions, executable markup, or credentials |
+| Manage with Personal | explicit conversation-to-Goal/Plan preview; never implicit |
+| Agent runtime engine | beginner label for package, installation, registration, instance, sidecar, execution, process—exact Runtime/Process terms stay distinct in the inspector |
+| Capabilities | common matrix: conversation/history, attachments, models, MCP, resource observation/writeback, managed-work participation |
+| Accounts | effective global/Agent/conversation account/model route; repair opens Settings/Account Hub; override hierarchy Requires-backend beyond today's fixed binding |
+| Work | Goal/Task/attempt links projected by the daemon |
+| Activity | Agent-filtered Native/Observed/Governed/Verified timeline |
+
+### Common projection and native slots
+
+The common projection defines only semantics every supported Adapter can
+declare honestly: conversation identity, message identity/order, role, content
+kind, timestamps, attachment refs, capability availability, source/freshness
+and errors. Missing support is explicit. Native slots may render bounded vendor
+history metadata or artifacts only. They cannot inject controls, action
+handlers, executable markup/scripts, credentials, or authority-shaped state,
+and they may disappear without changing common state. Vendor-specific actions
+use Control Plane-owned components whose typed capability entry defines
+preconditions, request semantics, result/receipt, and recovery. Undelivered
+actions remain `Requires-backend`.
+
+### Capability matrix contract
+
+Every capability row has independent fields:
+
+| Field | Values | Rule |
+|---|---|---|
+| Runtime condition | `Supported`, `Unsupported`, `Unavailable`, `Unknown` | evaluated from current adapter/runtime facts; includes reason and freshness |
+| Delivery status | `Now`, `Requires-backend` | product delivery truth; `Requires-core` is a separate contract dependency note |
+| Support path | `vendor-native`, `managed-adapter`, `MCP-cooperative`, `observable-only`, `unqualified` | origin and claim boundary; never inferred from runtime condition |
+
+Runtime conditions mean:
+
+- `Supported`: the integration declares the capability and has enough current
+  information to evaluate it;
+- `Unsupported`: the origin/integration does not provide it;
+- `Unavailable`: it exists but current authentication, runtime, connection,
+  policy, version, or dependency blocks it;
+- `Unknown`: the integration cannot establish support or usability.
+
+Support-path preference is `vendor-native -> managed-adapter ->
+MCP-cooperative`. `MCP-cooperative` is a bounded MCP-plus-rules fallback and
+cannot establish host-session inventory/control semantics. `observable-only`
+can populate read state but exposes no action. `unqualified` is informative
+only and cannot be presented as supported.
+
+### Disconnect versus uninstall
+
+- **Disconnect:** stop using the connection/Adapter route while retaining the
+  installation and source-owned history according to real semantics.
+- **Uninstall:** destructive lifecycle preview covering running work, Effects,
+  retained history/data, credentials, package bytes and rollback/recovery.
+
+Neither operation is currently an HTTP-backed Control Plane action. Both are
+`Requires-backend`; do not render active controls.
+
+The P7-T05 read-mostly dossier and dsh/runtime facts below remain current
+implementation evidence. They are the fallback when conversation, catalog,
+lifecycle, Work linkage or native history is unavailable—not proof those
+target capabilities exist.
 
 ---
+
+## Historical 2026-08-24 current-backed dossier specification
 
 ## 1. The observation / control / configuration boundary (explicit, per the brief)
 

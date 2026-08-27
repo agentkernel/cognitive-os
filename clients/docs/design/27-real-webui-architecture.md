@@ -4,6 +4,26 @@
 - Date: 2026-08-24
 - Subject: `D:\cognitiveos-clients\pc\web\` — audited read-only on branch `personal/P7-T05-dsh-binding-cas` @ `0320c1a` (superset of `main` @ `db56374`; deltas in §8). **No inference: every entry cites a file.**
 
+## Current implementation (frozen audit baseline)
+
+The accepted current SPA uses seven routes:
+Home / Work / Agents / Providers / Resources / Activity / System. Everything
+below remains the as-built pre-closure observation at `0320c1a` / `db56374`:
+the single-file React SPA, HashRouter, then-current routes, tests, memory-only
+session and policy modules. Later P7-T05 integration and target design must not
+be read back into those facts.
+
+## Personal 2.0 target delta
+
+The adopted target replaces the view architecture with a three-region desktop
+shell, global Agent Shell, six-space IA, Adapter conversation projection,
+Goal/Plan/Task Work, task-oriented seven-family placement (Library holds
+Memory/Skills/Tools/MCP), Settings Account Hub, and one provenance timeline.
+Most are not present here and therefore remain
+`Requires-backend` or new frontend work as mapped in
+[Traceability](35-design-to-code-traceability.md). No statement below claims
+those target capabilities or authorizes an API.
+
 ---
 
 ## 1. Toolchain reality

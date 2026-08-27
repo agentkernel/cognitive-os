@@ -1,8 +1,49 @@
 # 19 — Activity Spec (Evidence Stream)
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 Activity target; historical evidence-stream spec retained
+- Updated: 2026-08-27
 - Contract: `06` §3.6, DD-11 (per-object timelines first; unified feed labeled + gated on BD-5), jobs J-I1/J-I2/J-R2. Activity is an **evidence stream**, not a raw log viewer: every row is an authority fact with identity, not a line of text.
+
+## Personal 2.0 Activity spec
+
+Activity is one ordered reading across four provenance classes:
+
+| Provenance | Meaning | Examples |
+|---|---|---|
+| **Native** | emitted by an Agent/vendor-native conversation or history source | message, native action/result, Adapter event |
+| **Observed** | bounded runtime/transport/process observation | process, heartbeat, provider transport, watch fact |
+| **Governed** | daemon authority record | Goal/Plan/Task/admission, binding, Intent/Effect transition |
+| **Verified** | independent evidence and acceptance | verification report, reconciliation proof, acceptance |
+
+State and provenance remain independent. A Native success can coexist with a
+Governed pending Task and no Verified outcome. Rows retain source identity,
+object identity, revision/cursor, freshness, coverage and related links.
+
+### Surface model
+
+- Time-ordered master with visible provenance/object/state filters.
+- Selection opens a beginner summary inspector; full depth exposes exact source,
+  digest, cursor, redaction/coverage and related Agent/Work/Library/Settings
+  objects.
+- Object detail reuses the same grammar; Work may group by Goal/Plan/Task while
+  Agents may group by conversation.
+- Native transcript content is bounded and source-owned; unbounded output and
+  hidden reasoning are not copied into Activity.
+- No toast or notification substitutes for a durable fact.
+
+### Coverage honesty
+
+The current backend has provider audit plus bounded per-task
+evidence/effects/observations, not a complete cross-domain or Agent-native
+stream. The current composition therefore keeps its coverage banner. Unified
+timeline queries, native Adapter events, Goal/Plan/attempt events, resource
+writeback receipts and broad cross-domain audit are `Requires-backend`.
+The UI must not manufacture a total order across sources lacking an ordering
+contract; it may group by observed time and label that limitation.
+
+The seven event kinds below remain valid event *types* within the four
+provenance classes. The provenance amendment supersedes the idea that every row
+is already an authority fact.
 
 ---
 

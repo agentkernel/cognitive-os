@@ -4,6 +4,24 @@
 - Date: 2026-08-24
 - Question (brief §10): which Agent concepts are persistent domain entities / runtime entities / observations / projections / CLI concepts / documentation concepts — and which lifecycle operations are reachable where. Sources: `crates/cognitive-store/src/installation.rs`, `crates/cognitive-runtime/`, `apps/admin-cli/src/main.rs`, `apps/kernel-server/src/personal/`.
 
+## Current implementation (frozen audit baseline)
+
+The identity and lifecycle tables below remain the P7-T05 as-of audit. They
+prove limited runtime/binding/dsh projections and CLI/library lifecycle—not a
+browser Agent workspace.
+The accepted current SPA exposes the bounded dossier under Agents and does not
+embed native conversation/history or typed lifecycle controls.
+
+## Personal 2.0 target delta
+
+Agents now targets Adapter-backed embedded conversation/history, a common
+capability matrix with display/artifact-only native slots, signed catalog
+install/connect in at most three steps, first-real-chat success, Runtime
+placement, managed-Work links, and distinct disconnect/uninstall. None of those
+target additions is established by the facts below; absent projections/actions
+remain `Requires-backend`. The current identity discipline is preserved in
+[Agent Spec](16-control-plane-agent-spec.md).
+
 ---
 
 ## 1. The eight identities, classified

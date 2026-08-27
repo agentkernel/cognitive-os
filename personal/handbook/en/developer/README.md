@@ -11,6 +11,13 @@ generated: false
 How the implementation actually works, mapped file-by-file to sources and tests.
 Capability labels are honest: `partial` pages say exactly which wiring is missing.
 
+Read every Personal 2.0 statement against the current boundary: current
+Linux/API composition is six-family, Pi-only qualified, with the existing
+same-origin `/ui/` SPA at `clients/pc/web/`. The desktop-first redesign,
+Account Hub import, seventh MCP family, vendor conversation adapters,
+Goal/Plan and multi-Agent supervision, and federated resources are adopted
+targets marked `Requires-backend`/`Requires-core`, not implementation.
+
 Orientation:
 
 1. [Repository map](repository-map.md)
