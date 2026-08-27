@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T06、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；P10-T01 documentation-only semantic adoption `done`（PR #278）；P10-T05..P10-T18 已于 2026-08-27 登记为 `not-started`、无人领取；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
+> **状态：active（P0-T01..T08、P1-T01..T09、P2-T01..T08、P3-T01..T06、P4-T01..T06、P5-T01、P5-T02、P5-T05、P7-T01、P7-T02、P7-T03、P7-T04、P7-T05、P7-T06、P7-T08、P8-T01..T06、P9-T02、P9-T03 已完成；P0-T08 仓库子项目化重构 `done`；P10-T01 documentation-only semantic adoption `done`（PR #278）；P10-T02 Lane-CTR compatibility `in-progress`；P10-T03..T18 仍为 `not-started`；B02/B04/B05/B12 MVP `pass` under ADR-0046；B08 MVP `pass` under ADR-0048；B09 MVP `pass` under ADR-0047；GMVP-LINUX MVP `pass` under ADR-0049；B06/B07 仍为 non-claim observation；P6 对本 RC 为 disabled-NO-GO；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-27**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -195,8 +195,8 @@
 | Phase 7 - 产品化与发布 | 8 | 7 | 0 | 1 | 0 | GMVP-LINUX / G7 / RC |
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
-| Phase 10 - Personal 2.0 desktop 与 MCP | 18 | 1 | 0 | 0 | 17 | 无新 Gate；先决策、再 Lane-CTR/实现 |
-| **合计** | **129** | **107** | **0** | **1** | **21** | — |
+| Phase 10 - Personal 2.0 desktop 与 MCP | 18 | 1 | 1 | 0 | 16 | 无新 Gate；先决策、再 Lane-CTR/实现 |
+| **合计** | **129** | **107** | **1** | **1** | **20** | — |
 
 ## 2. 产品边界与不变量
 
@@ -222,10 +222,12 @@
   Settings，Providers 与 System 位于 Settings。global Agent Shell 与所有 installed-Agent
   conversation adapter 均为 candidate/observation client；common internal projection 必须
   通过 capability matrix 诚实暴露 vendor 差异，且 native Agent app 仍可使用。
-- **Personal 2.0 MCP family（ADR-0057）：** MCP 是 2.0 第七 product family，拥有
+- **Personal 2.0 MCP family（ADR-0057 / ADR-0058）：** MCP 是 2.0 第七 product family，拥有
   server/package/connection/capability/binding/health/quarantine 身份与生命周期；advertised
   tools 仍经 Tool admission，resources/prompts 经 Context/Skill admission。该结构不得生成
-  generic `Resource` schema；Linux/Personal 1.0 六 family 定稿与 evidence 不变。
+  generic `Resource` schema；Linux/Personal 1.0 六 family 定稿与 evidence 不变。ADR-0058
+  裁定 MCP family 与 common conversation/history projection 保持 Personal-private
+  envelope，本批不改变 Core public schema。
 - **Credential import（ADR-0055）：** 每个 source 必须 user-initiated、per-source
   consented，由 daemon 读取并只写 approved SecretStore；raw secret 不得到达 UI/Agent。
   未有正式 backend implementation task 的 import surface 一律标 `Requires-backend`。
@@ -435,6 +437,9 @@ formal task acceptance assessment 和收口。
 | `P10-T01/D01` | P10-T01 | ADR-0056 desktop-first Control Plane 与 ADR-0057 MCP seventh-family accepted；ADR-0037 仅对 Personal 2.0 family count 增 partial-supersession backlink；formal plan/trace/support/version/current snapshot 与 stable product semantics 对齐，明确 ADR-0055 import `Requires-backend`、1.0 six-family 不变、无 generic `Resource` schema | owner-accepted 2026-08-27 scope；ADR-0037/0043/0055；finalized Personal 1.0 baseline | documentation/static consistency、相对链接与 `git diff --check`；只含文档语义，不改 code/contracts/tests/generated references，不创建 Gate/release/Profile claim；完成后进入 D02 |
 | `P10-T01/D02` | P10-T01 | 将 desktop IA、global candidate-only Agent Shell、vendor conversation projection/capability matrix、native Agent app coexistence 与 MCP family lifecycle 同步到详细 product/architecture/bilingual design surfaces；所有未实现 import/backend action 显示 `Requires-backend` | `P10-T01/D01` | documentation/static consistency、链接/terminology/secret-boundary review；不得发明 backend capability；完成后进入 D03 |
 | `P10-T01/D03` | P10-T01 | 全量 acceptance mapping、source-of-truth/版本边界复核、docs-sync/handbook closure、唯一 closure record 与 task/lease/branch/main deterministic closure | `P10-T01/D01-D02` | `check:consistency`、affected handbook/generator/docs-sync gates、`git diff --check` 与 required CI；documentation-only；无 Gate/release/Profile/B01/Agent-benefit claim |
+| `P10-T02/D01` | P10-T02 | ADR-0058 Lane-CTR 裁定：MCP family 与 common conversation/history projection 保持 Personal-private versioned envelope；不新增/不改 Core public schema、transition、registered error 或 generated binding；1.0 six-family projection 与 Core ConversationBinding 对 older client fail-closed | completed P10-T01 | documentation/static consistency、相对链接与 `git diff --check`；无 public machine-contract 变更；完成后进入 D02 |
+| `P10-T02/D02` | P10-T02 | focused negatives：Core 无 MCP family / conversation-projection / generic Resource schema；ConversationBinding `additionalProperties: false`；1.0 `RESOURCE_FAMILIES` 仍为六 family 且 `mcp` 走 `RESOURCE_PROJECTION_FAMILY_INVALID`；P5 adapter 仍为 transport-only | `P10-T02/D01` | 本机 Node `tools/test/p10_t02_lane_ctr.test.mjs`；不跑 Rust linking；完成后进入 D03 |
+| `P10-T02/D03` | P10-T02 | 将 ADR-0058 边界同步到 product/architecture/handbook/plan/trace；完整 acceptance mapping、required CI、唯一 closure 与 lease/branch/main 收口 | `P10-T02/D01-D02` | `check:consistency`、handbook/generator/docs-sync、tools suite、`git diff --check` 与 required Ubuntu/Windows CI；无 Gate/release/Profile claim |
 
 > **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
 > PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`；
@@ -1103,7 +1108,7 @@ Linux 主线，macOS `shelved`（不排期不声明能力），Windows code-sign
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P10-T01 | Personal 2.0 desktop + MCP semantic adoption | owner-accepted scope；ADR-0037/0043/0055 | 接受 ADR-0056/0057；ADR-0037 partial backlink；desktop IA / candidate-only global Shell / vendor conversation capability matrix / native Agent app coexistence / MCP seventh-family routing / ADR-0055 `Requires-backend` 在 canonical product、plan、trace、support、version 与 current snapshot 一致；documentation-only，不改 machine contract | done | 2026-08-27；merged PR [#278](https://github.com/agentkernel/cognitive-os/pull/278) at `main@aa7ab42e`；required CI `33028175298` SUCCESS at `a52815b9`。Closure：[20260827-personal-p10-t01-desktop-mcp-semantics-closure.md](../checkpoints/20260827-personal-p10-t01-desktop-mcp-semantics-closure.md)。无 implementation/Gate/release/Profile claim |
-| P10-T02 | Lane-CTR contract and compatibility decision | P10-T01 | 决定 MCP family 与 common conversation projection 的 public/private contract boundary、identity/version/capability/binding/health/quarantine compatibility、P5-era migration 与 older-client fail-closed；需要的 schema/generated bindings/negatives 只在 Lane-CTR 决策后同批交付 | not-started | unclaimed；不创建 Gate。验证路由：文档/决策走本机 Node 门；若动 schema 则 CI-UBUNTU-01 + CI-WINDOWS-MSVC-01。平台：Linux 主线 |
+| P10-T02 | Lane-CTR contract and compatibility decision | P10-T01 | 决定 MCP family 与 common conversation projection 的 public/private contract boundary、identity/version/capability/binding/health/quarantine compatibility、P5-era migration 与 older-client fail-closed；需要的 schema/generated bindings/negatives 只在 Lane-CTR 决策后同批交付 | in-progress | 2026-08-27 claimed `lease/personal/P10-T02/lane-ctr-compatibility` on `personal/P10-T02-lane-ctr-compatibility`. Draft PR [#279](https://github.com/agentkernel/cognitive-os/pull/279). D01 ADR-0058 **done**; D02 Node focused negatives **pass** (106/106). D03 handbook/CI recorded: required CI [33048210670](https://github.com/agentkernel/cognitive-os/actions/runs/33048210670) SUCCESS at `c726ab11`. Remaining merge/lease close. 平台：Linux 主线。无 Gate/release/Profile claim |
 | P10-T03 | MCP family authority and product integration | P10-T02, P5-T03, P5-T04, P8-T12 | daemon-only seventh-family identities/lifecycle；Tool candidate、Context/Skill admission、SecretStore、Intent/Effect、fencing、quarantine/requalification/reconcile 与 focused negatives；不得建立 generic Resource authority | not-started | unclaimed；既有 P5/B10 evidence 不等于本任务实现。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision 真机 E2E + CI-WINDOWS-MSVC-01。平台：Linux 主线 |
 | P10-T04 | Desktop Control Plane experience | P10-T02, P10-T03, P7-T05, P8-T13 | desktop primary entry；Home/Agents/Work/Library/Activity/Settings；Providers/System under Settings；global Agent Shell candidate-only；vendor-specific conversation adapters behind honest common capability matrix；native Agent apps 可用；缺 backend/import 显示 `Requires-backend` | not-started | unclaimed；现有 Web UI/Agent evidence 不自动构成 Personal 2.0 support。依赖注记（2026-08-27 登记）：UI-W1..W6 六波经复检无后端依赖（`artifacts/ui-ux-review-2026-08-27/02-refactoring-proposal.md` R8），D01..D06 不受 P10-T02/T03 阻塞；MCP/对话数据接线波保持原依赖。验证路由：本机 `pnpm -r build ; pnpm -r test` + 渲染评审（沿用 P7-T05 方法）+ linux-002 daemon-served `/ui/` 真机 + required CI。平台：Linux 主线 |
 | P10-T05 | 对话观察与嵌入历史投影（P2-BD-A） | P10-T02（公共面裁定先行；Personal-private 路线可并行但不冻结公共 shape）, P8-T09..T11 | daemon-owned Personal-private conversation/session 持久投影（installations 库新迁移）；复用 Core ConversationBinding 身份；首个垂直切片 = dsh Path B 会话 adapter-backed 转录投影 + 历史读取 HTTP（management/task 双通道只读）+ 对话族 watch 事件；vendor 对话标识保持 opaque origin binding；对话内容 daemon 侧 redaction；negatives：跨通道读取拒绝、超界 resume、origin 伪造、secret-shape 内容不入投影 | not-started | unclaimed。验证路由：CI-UBUNTU-01（required）+ linux-002 exact-revision（真实 dsh 会话转录 E2E）+ CI-WINDOWS-MSVC-01。平台：Linux 主线 |

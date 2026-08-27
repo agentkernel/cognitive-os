@@ -141,6 +141,7 @@
       "id": "personal-2-agent-supervision",
       "sources": [
         "docs/adr/0056-personal-2-0-desktop-control-plane.md",
+        "docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md",
         "personal/docs/product/agent-integration-and-conversations.md",
         "personal/docs/product/agent-integration-and-conversations.zh-CN.md",
         "personal/docs/product/user-journeys.md",
@@ -158,11 +159,13 @@
       "sources": [
         "docs/adr/0037-personal-unified-cognitive-resource-substrate.md",
         "docs/adr/0057-personal-2-0-mcp-resource-family.md",
+        "docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md",
         "personal/docs/product/cognitive-resource-model.md",
         "personal/docs/product/mcp-resource-family.md",
         "personal/docs/product/mcp-resource-family.zh-CN.md",
         "personal/docs/product/resource-manager-design.md",
-        "personal/docs/architecture/resource-manager-architecture.md"
+        "personal/docs/architecture/resource-manager-architecture.md",
+        "personal/docs/architecture/mcp-conversation-private-projection.md"
       ],
       "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.resources-model", "user.provider-and-secrets", "user.tasks-and-execution", "user.security-boundaries", "user.limitations", "dev.index", "dev.architecture-overview", "ref.capability-status"],
       "note": "adopted seventh MCP family and federated-resource semantics; current Linux 1.0 and current Resource Manager APIs remain six-family"

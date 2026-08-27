@@ -75,8 +75,8 @@ The common/native conversation projection reuses or references existing Core
 `Conversation` and `ConversationBinding` identities where applicable.
 Vendor-native conversation/thread IDs are opaque origin bindings carried by
 the adapter. They do not create a duplicate public Conversation model.
-Additional projection state remains Personal-private until P10-T02 decides
-otherwise.
+Additional projection state remains Personal-private (ADR-0058); it is not a
+public Core schema.
 
 ## 3. Capability condition model
 

@@ -356,8 +356,8 @@ or error. See [MCP resource family](mcp-resource-family.md).
     admitted governance, bindings, permissions, and synchronization intent.
 11. Existing Core Conversation and ConversationBinding identities are reused or
     referenced where applicable. Vendor-native conversation IDs remain opaque
-    origin bindings; additional projection state stays Personal-private until
-    P10-T02 decides otherwise.
+    origin bindings; additional projection state stays Personal-private
+    (ADR-0058) and is not a public Core schema.
 12. Agent connection establishes an explicit observation scope. Adapters may
     automatically read and detect native changes only inside it; there is no
     speculative/global scan or surprise per-session enrollment.

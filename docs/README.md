@@ -104,6 +104,7 @@ CognitiveOS 白皮书、RFC 与冻结评审自 ADR-0054 起住在 `core/docs/arc
 | [0024-personal-cognitive-cli-product-entry.md](adr/0024-personal-cognitive-cli-product-entry.md) | Personal `cognitive` CLI 产品入口（P1-T06；非 Profile） |
 | [0025-personal-license-platform-distribution.md](adr/0025-personal-license-platform-distribution.md) | Personal License / 首发平台 / 分发决策（P0-T03；非 Profile） |
 | [0053-personal-web-ui-stack.md](adr/0053-personal-web-ui-stack.md) | Personal Web UI stack, same-origin `/ui/` serving, memory-only session, Origin/CSRF binding（P7-T05；非 Gate/release/Profile） |
+| [0058-personal-2-0-mcp-conversation-private-projection.md](adr/0058-personal-2-0-mcp-conversation-private-projection.md) | Personal 2.0 MCP family 与 common conversation projection 保持 Personal-private；不新增公开机器合同（P10-T02 Lane-CTR；非 Gate/release/Profile） |
 | [0022-personal-bounded-daemon-local-auth.md](adr/0022-personal-bounded-daemon-local-auth.md) | Personal bounded daemon + local auth（P1-T04；非 Profile） |
 | [0035-personal-pi-shell-and-managed-agent-role-separation.md](adr/0035-personal-pi-shell-and-managed-agent-role-separation.md) | Pi-hosted Agent Shell 与 managed Pi Agent 角色/身份分离 |
 | [0036-personal-linux-1-0-and-official-pi-acquisition.md](adr/0036-personal-linux-1-0-and-official-pi-acquisition.md) | Linux 1.0 范围与固定官方 npm Pi acquisition |

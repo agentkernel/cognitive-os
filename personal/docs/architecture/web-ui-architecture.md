@@ -180,8 +180,8 @@ The common Agent reading includes only concepts shared safely across adapters:
 Where applicable, the reading reuses or references existing Core
 `Conversation` and `ConversationBinding` identities. Vendor-native
 conversation/thread IDs are opaque origin bindings, not a duplicate public
-Conversation model. Additional projection state remains Personal-private until
-P10-T02 decides otherwise.
+Conversation model. Additional projection state remains Personal-private
+(ADR-0058); it is not a public Core schema.
 
 Agent connection establishes an explicit observation scope. Conversation lists
 and event updates may refresh automatically only inside that scope; the client

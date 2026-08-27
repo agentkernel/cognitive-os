@@ -22,7 +22,7 @@ Personal 2.0 将 MCP 采纳为真正的第七认知资源族。该资源族管�
 | **当前实现（Now）** | Linux 1.0 有六个资源族。P5-T03/P5-T04 已在 Tool 资源族内交付 MCP Tool transport 与有界 dynamic-Tool 路径；它们没有实现 MCP 资源族 manager、authority-backed MCP inventory、server lifecycle、permission/update workflow 或通用 client projection。 |
 | **已采纳的 Personal 2.0 目标** | MCP 是 Library 中的第七资源族，具备 server install、health、permission、update、client projection、conflict handling 与 Activity。 |
 | **需要后端（Requires-backend）** | 所有 Personal MCP runtime management、adapter/client projection、health、permission、update、synchronization 与 recovery 行为。 |
-| **有条件需要 core** | 只有新增或变更公开 MCP 机器面时才需要 P10-T02/Lane-CTR；Personal-private 投影未必需要 core 变更。 |
+| **有条件需要 core** | ADR-0058 将 MCP family 保持为 Personal-private。日后若新增公开 MCP 机器面，需要新的 Lane-CTR 裁定。 |
 
 ## 2. 为什么 MCP 是资源族
 
@@ -249,9 +249,10 @@ host-session control。
 
 ### 合同/core 缺口
 
-MCP 已是采纳的第七产品资源族，实现仍**需要后端**。只有新增或变更公开
-lifecycle、permission、mapping、projection、error、transition 或 negative 机器面时，
-才有条件需要 P10-T02/Lane-CTR；Personal-private 投影未必需要 core 变更。
+MCP 已是采纳的第七产品资源族，实现仍**需要后端**。
+[ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
+将 family 保持为 Personal-private；日后若新增公开 lifecycle、permission、
+mapping、projection、error 或 transition 机器面，需要新的 Lane-CTR 裁定。
 
 ## 15. 固定边界与非声明
 

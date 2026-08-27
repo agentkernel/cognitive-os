@@ -24,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:fae27fe54ed520a78aeef6885bbaab9d6540332316d83b63f4ca7304c1f21474"
+fingerprint: "sha256:0eb16b585d7bb33d1d419b6b0d7a8d11f1be0e23e390f6b2cd1ae772844c1fc0"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -73,7 +73,8 @@ Personal 2.0 保留上述不变量，同时承诺以下产品边界：
 - Account Hub 凭据导入是 ADR-0055 下 daemon 独占的来源到 SecretStore 操作。UI 只
   提供精确来源选择与同意，绝不读取或拿到导入材料；
 - MCP 成为带联邦来源身份、trust、availability 与 policy 的第七个用户可见资源族。
-  当前 Resource Manager 与权威服务仍保持六族，直到类型化 backend/core 工作落地；
+  当前 Resource Manager 与权威服务在 1.0 投影上仍保持六族；ADR-0058 把 MCP 放在独立
+  Personal-private envelope 上，直到 `P10-T03` 实现该 envelope；
 - 厂商专用对话适配器保留每个 Agent 的协议与身份。Pi 仍是唯一已资格化 Agent；dsh
   实现证据与通用适配器合同都不转移资格；
 - 嵌入式原生对话只有经显式 admission 才进入受治理工作；
@@ -81,7 +82,8 @@ Personal 2.0 保留上述不变量，同时承诺以下产品边界：
   多 Agent 监督负责分配、fencing、budget、对账与验证；
 - 统一 Activity 以声明的覆盖范围区分 Native、Observed、Governed、Verified provenance。
 
-这些缺失能力仍为 `Requires-backend`；公开权威或合同增量仍为 `Requires-core`。完整
+这些缺失能力仍为 `Requires-backend`。公开权威或合同增量仍需日后 Lane-CTR 裁定；
+ADR-0058 已将 MCP family 与对话投影保持为 Personal-private。完整
 版本承诺与固定 8/8 AI-window 模拟验收都不构成实现、人类 usability、release 或 Gate
 证据。
 
@@ -92,6 +94,6 @@ Personal 2.0 保留上述不变量，同时承诺以下产品边界：
 - Pi 刻意双角色：shell 宿主（客户端）与受管 agent（受治理运行时），身份绝不合并
   （ADR-0035）。
 - 当前 Linux 1.0/API 为六族、无通用 `Resource` 表（ADR-0037）。ADR-0057 采纳 MCP
-  为 Personal 2.0 第七族，但不折叠各族权威；per-Agent sidecar 仍是集成边界
-  （ADR-0038）。
+  为 Personal 2.0 第七族；ADR-0058 将其保持 Personal-private，不折叠各族权威；
+  per-Agent sidecar 仍是集成边界（ADR-0038）。
 - MVP-first 授权：owner-local、单 principal、task-scoped；RBAC 与审批链明确推迟。

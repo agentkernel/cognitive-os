@@ -124,13 +124,15 @@ Connection credentials enter and remain in an approved Secret Store; raw
 secret material never reaches the Control Plane, Agent, sidecar, package
 metadata, ordinary configuration, SQLite, logs, Context, evidence, or chat.
 
-`P10-T02` must decide the public-contract and compatibility surface under
-Lane-CTR before any structural machine-contract change. It must address at
-least identity/version compatibility, capability digesting, binding scope,
-health/quarantine projection, migration from the P5 adapter-era records, and
-fail-closed behavior for older clients. `P10-T03` owns the future daemon
-authority and product integration. `P10-T04` may expose the family in the
-desktop Control Plane only after its required backend surface exists.
+`P10-T02` decided the public-contract and compatibility surface under
+Lane-CTR in [ADR-0058](0058-personal-2-0-mcp-conversation-private-projection.md):
+MCP family identities and the common conversation projection stay
+Personal-private versioned envelopes; no Core public schema is added; the 1.0
+six-family projection and Core `ConversationBinding` remain fail-closed for
+older clients; P5-era Tool-transport records do not auto-migrate.
+`P10-T03` owns daemon authority and product integration against that private
+envelope. `P10-T04` may expose the family in the desktop Control Plane only
+after its required backend surface exists.
 
 ## Supersession and migration
 
@@ -143,8 +145,10 @@ The existing P5-T03 MCP Tool adapter and P5-T04/B10 dynamic Tool implementation
 remain valid historical implementation evidence for their accepted scope.
 They do **not** retroactively constitute the Personal 2.0 MCP family and do not
 prove server/package/connection/binding/health/quarantine lifecycle support.
-Migration or compatibility treatment of those records is deferred to
-`P10-T02`; current implementation of the seventh-family model is absent.
+Migration or compatibility treatment of those records is decided by
+[ADR-0058](0058-personal-2-0-mcp-conversation-private-projection.md)
+(no automatic promotion into seventh-family identities). Current
+implementation of the seventh-family model remains absent until `P10-T03`.
 
 ## Consequences
 
@@ -156,7 +160,8 @@ Migration or compatibility treatment of those records is deferred to
 - Existing B10 evidence remains bounded to its recorded MCP Tool/dynamic
   ecosystem MVP and does not become seventh-family support evidence.
 - A structural public contract cannot be inferred from this documentation
-  decision; P10-T02 is the required compatibility and Lane-CTR boundary.
+  decision; [ADR-0058](0058-personal-2-0-mcp-conversation-private-projection.md)
+  is the Lane-CTR compatibility boundary and keeps the family Personal-private.
 
 ## Rejected alternatives
 

@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:3d105a259aa8c0437805c6a0b44008b912510b5ac9b69acaab196041f2aaaa5f"
+fingerprint: "sha256:a859d135e542d2b2f482ef92c44e87f9a610d0ec5dabfb10a74c6b3680290318"
 non_claims:
   - Family presence in authority storage does not claim complete user-facing workflows; per-family gaps are listed below and in known-limitations.
 ---
@@ -60,7 +60,9 @@ multi-Agent orchestration, and the complete Personal 2.0 product composition.
 
 Personal 2.0 adopts **MCP** as a seventh user-visible resource family. This does
 not change the current six-family Resource Manager API and does not turn MCP
-content into native Tools.
+content into native Tools. ADR-0058 keeps the seventh family on a
+Personal-private envelope; older clients still see only the six-family
+projection.
 
 The target family owns distinct server, package, connection, advertised
 capability, binding, health, update, and quarantine identities. A **federated

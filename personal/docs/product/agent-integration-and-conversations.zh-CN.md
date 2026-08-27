@@ -59,7 +59,7 @@ epoch、digest 和原始脱敏投影保留在 inspector 中。不存在 Basic/Ex
 适用时，通用投影复用或引用现有 Core `Conversation` 与
 `ConversationBinding` 身份。Vendor 原生 conversation/thread ID 保持为不透明的
 origin binding，不创建第二套公开 Conversation 模型。其他原生/通用投影状态在
-P10-T02 另行决定前保持 Personal-private。
+ADR-0058 将其保持为 Personal-private，不是公开 Core schema。
 
 ### Capability matrix
 

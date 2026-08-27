@@ -140,7 +140,7 @@ observation is allowed only inside that scope; there is no speculative/global
 scan or surprise per-session enrollment. Existing Core Conversation and
 ConversationBinding identities are reused/referenced where applicable, while
 vendor-native IDs remain opaque origin bindings. Additional projection state
-stays Personal-private until P10-T02 decides otherwise. Observation grants no
+stays Personal-private (ADR-0058); it is not a public Core schema. Observation grants no
 mutation. Personal may cache bounded projections for availability, but the
 cache never replaces either origin truth or daemon authority.
 

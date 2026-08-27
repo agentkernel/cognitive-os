@@ -30,7 +30,7 @@ tests:
   - personal/apps/kernel-server/tests/p9_t07_route_observation.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:c1144234892f49dea6e3209262a6b13ad2def8768c603417e5f9e32d1ac351a6"
+fingerprint: "sha256:d9725da512ecfe80ad5ec9eb77b4d16337530ceddccb1a37a18ed7ec18dcac3c"
 non_claims:
   - Best-effort in-memory zeroization is not a side-channel or mlock guarantee. Headless encrypted-vault operation is a design target. The Windows backend does not imply a supported Windows install route (B01-W has not been executed).
   - Account Hub credential import is an adopted Personal 2.0 target; no concrete browser-profile, Agent credential-file, subscription, or OAuth import mechanism is implemented.

@@ -23,7 +23,7 @@ into an authority writer.
 | **Current implementation (Now)** | Pi is the Linux 1.0 qualified Agent/sidecar path. `/ui/` has an Agent inventory and dossier with bounded Runtime/dsh facts, no lifecycle controls, and no embedded conversations. The native `cognitive dsh web` panel is separate. |
 | **Adopted Personal 2.0 target** | Agents contains signed onboarding, connected-existing Agents, a common capability view, adapter-backed native conversations/history, Runtime supervision, owner Goal requests followed by daemon admission, handoffs, and removal choices. |
 | **Requires-backend** | Catalog onboarding, common conversation/history projection, scoped native-session observation and daemon admission, full Agent lifecycle HTTP, Goal -> Plan revision -> Task -> Attempt orchestration, multi-Agent graph/handoffs, and target controls. |
-| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. P10-T02/Lane-CTR is required only for a new public Agent capability, conversation extension, Goal, Plan, Run, Harness, attempt, or handoff machine contract; Personal-private projections may not require core changes. |
+| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. ADR-0058 kept additional conversation projection Personal-private. A later public Agent capability, conversation extension, Goal, Plan, Run, Harness, attempt, or handoff machine contract would need a new Lane-CTR decision. |
 
 ## 2. Product model
 
@@ -63,7 +63,7 @@ Where applicable, the common projection reuses or references existing Core
 `Conversation` and `ConversationBinding` identities. Vendor-native conversation
 and thread IDs remain opaque origin bindings; they do not create a second
 public Conversation model. Additional native/common projection state remains
-Personal-private until P10-T02 decides otherwise.
+Personal-private (ADR-0058); they are not a public Core schema.
 
 ### Capability matrix
 
