@@ -102,8 +102,8 @@ daemon Plan without admission.
 
 Where applicable, Personal reuses or references existing Core `Conversation`
 and `ConversationBinding`. Vendor-native IDs remain opaque origin bindings;
-additional projection state is Personal-private until P10-T02 decides
-otherwise. Agent connection establishes the explicit observation scope.
+additional projection state is Personal-private (ADR-0058); it is not a
+public Core schema. Agent connection establishes the explicit observation scope.
 Automatic observation is limited to that scope; there is no speculative/global
 scan or surprise per-session enrollment.
 

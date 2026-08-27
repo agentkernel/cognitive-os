@@ -20,7 +20,8 @@
   [ADR-0054](../../../docs/adr/0054-repository-subproject-structure-and-1.0.0-finalization.md),
   [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md),
   [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md), and
-  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md), and
+  [ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
 
 This directory explains how Personal composes accepted contracts and product
 decisions. It does not create public DTOs, routes, errors, state machines,
@@ -35,7 +36,7 @@ Architecture chapters use these labels:
 | **Now** | Implemented current behavior confirmed by the canonical current-status source; not automatically a release or Gate claim |
 | **2.0 target** | Adopted Personal product direction that must not be presented as current capability |
 | **Requires-backend** | Needs a future daemon/client implementation task before a product surface may offer it |
-| **Requires-core (conditional)** | P10-T02/Lane-CTR is needed only for a new or changed public machine surface. Personal-private projections may not require core changes. |
+| **Requires-core (conditional)** | ADR-0058 kept Personal 2.0 MCP family and conversation projection Personal-private. A later public machine surface needs a new Lane-CTR decision. |
 
 `Requires-backend` and conditional `Requires-core` can both apply when a target
 also changes a public machine surface. Unknown capability is never upgraded to
@@ -131,6 +132,7 @@ verification, and acceptance.
 | [Agent adapter architecture](agent-adapter-contract.md) | delivered P8 registration boundary plus the vendor-specific 2.0 capability/conversation projection |
 | [Multi-agent orchestration](multi-agent-orchestration.md) | daemon-owned Goal -> Plan revision -> Task -> Attempt graph, assignments, handoffs, budgets, verification, and default-off current boundary |
 | [Resource Manager](resource-manager-architecture.md) | delivered six-family common projection plus federated resource policy and target MCP family |
+| [MCP and conversation private envelopes](mcp-conversation-private-projection.md) | ADR-0058 Personal-private envelope identifiers and older-client fail-closed rules; not a Core public contract |
 | [Provider Control Plane](provider-control-plane.md) | delivered provider governance plus target Account Hub import, proxy profiles, and scoped switching |
 | [Authority, data and recovery](authority-data-and-recovery.md) | authority placement, progress provenance, external writeback, restart/reconcile ordering, and compensating undo |
 | [Learning loop](learning-loop.md) | delivered candidate/admission loop plus native-session and federated-origin learning inputs |
@@ -140,29 +142,29 @@ verification, and acceptance.
 | [Headroom: IoT and multi-tenancy](headroom-iot-and-multitenancy.md) | reserved bridges; not current Personal implementation scope |
 | [Web UI route inventory](web-ui-route-inventory.json) | frozen P7-T05/D01 input with stale pre-ADR-0054 checkout metadata; not a current exhaustive route inventory and not a 2.0 contract |
 
-## Contract decisions intentionally unresolved
+## Contract decisions resolved by ADR-0058
 
-Architecture does not pre-decide the Lane-CTR work assigned to `P10-T02`.
-That work must decide:
+[ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
+is the Lane-CTR compatibility decision for MCP family and common conversation
+projection:
 
-1. how the common Agent conversation projection reuses or references existing
-   Core `Conversation` and `ConversationBinding`, while vendor-native IDs remain
-   opaque origin bindings; any additional projection stays Personal-private
-   unless P10-T02 selects a public extension, including identity/version
-   compatibility and capability digesting;
-2. the MCP public/private boundary for server, package, connection,
-   capability, binding, health, and quarantine;
-3. compatibility and migration from the delivered P5 MCP Tool/adapter-era
-   records into any seventh-family representation;
-4. fail-closed behavior for older clients that do not understand the new
-   family or conversation capabilities; and
-5. which target Goal -> Plan revision -> Task -> Attempt, execution-flow,
-   Harness, Conversation extension, and cross-Agent handoff concepts require
-   separate public core contracts rather than Personal-private projections.
+1. the common Agent conversation projection reuses or references existing Core
+   `Conversation` and `ConversationBinding`; vendor-native IDs remain opaque
+   origin bindings; additional projection is the Personal-private envelope
+   `cognitiveos.personal.conversation-projection/0.1`;
+2. MCP server, package, connection, capability, binding, health, and quarantine
+   stay Personal-private as `cognitiveos.personal.mcp-family/0.1`;
+3. P5 MCP Tool/adapter-era records do not auto-migrate into seventh-family
+   identities;
+4. older clients fail closed on the 1.0 six-family projection and Core
+   `ConversationBinding`; unknown envelope identifiers are refused, not
+   down-converted.
 
-Provider-profile override and federated synchronization shapes likewise remain
-private/product concepts until a later contract decision selects a public
-surface.
+Goal -> Plan revision -> Task -> Attempt, execution-flow, Harness, and
+cross-Agent handoff public contracts remain undecided here and stay
+`Requires-backend` for `P10-T06` and `P10-T13`. Provider-profile override and
+federated synchronization shapes likewise remain private/product concepts until
+a later contract decision selects a public surface.
 
 ## Source ownership and non-claims
 

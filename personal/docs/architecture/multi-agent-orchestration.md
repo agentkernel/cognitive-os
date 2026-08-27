@@ -91,7 +91,7 @@ Agent connection establishes the observation scope used by the adapters.
 Automatic native-session observation is limited to that exact scope; there is
 no speculative/global scan or surprise per-session enrollment. Vendor-native
 IDs remain opaque bindings, and extra projection state is Personal-private
-until P10-T02 decides otherwise.
+(ADR-0058); it is not a public Core schema.
 
 Subsequent native conversation forks do not automatically fork the Personal
 Plan. Native steering does not reassign a Task. A native "done" does not

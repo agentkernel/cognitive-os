@@ -15,7 +15,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:539cbd20fa414530f63e5eff6852b751a6f2f90f379ee77307fb8853619a89e0"
+fingerprint: "sha256:ae98fd0a48d1d134e1e1aa5202a52272f1995de80b12f8b9d15745ae05d23cb2"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---

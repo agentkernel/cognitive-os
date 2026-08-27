@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:3d105a259aa8c0437805c6a0b44008b912510b5ac9b69acaab196041f2aaaa5f"
+fingerprint: "sha256:a859d135e542d2b2f482ef92c44e87f9a610d0ec5dabfb10a74c6b3680290318"
 non_claims:
   - 资源族在权威存储中的存在不等于完整的用户工作流；各族缺口见下文与已知限制页。
 ---
@@ -56,7 +56,8 @@ Linux 1.0 与当前 API 分别治理六个资源族。它们有意**不**共享�
 ## Personal 2.0 必须交付的第七族（`Requires-backend`）
 
 Personal 2.0 已采纳 **MCP** 为第七个用户可见资源族。这不改变当前六族 Resource
-Manager API，也不会把 MCP 内容自动变成原生 Tool。
+Manager API，也不会把 MCP 内容自动变成原生 Tool。ADR-0058 把第七族放在
+Personal-private envelope 上；旧客户端仍然只看到六族投影。
 
 目标资源族拥有彼此分离的 server、package、connection、advertised capability、
 binding、health、update 与 quarantine 身份。**联邦资源**投影保留来源身份、

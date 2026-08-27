@@ -1373,8 +1373,9 @@ Pi 不可以：
 - 决定 MCP family 与 common conversation projection 的 public/private boundary，
   identity/version compatibility、capability digest、binding、health/quarantine、P5-era
   migration 与 older-client fail-closed。
-- 如果决定改变 public machine contract，schema、generated bindings、registered errors、
-  transition 与 focused negatives 必须由 Lane-CTR 同批交付；不得从 ADR 文案推断合同。
+- [ADR-0058](../adr/0058-personal-2-0-mcp-conversation-private-projection.md)
+  裁定两者保持 Personal-private versioned envelope，本批不改变 public machine
+  contract；schema/generated bindings 因此不同批新增。
 
 ### P10-T03 — MCP family authority and product integration
 

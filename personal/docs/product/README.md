@@ -72,8 +72,8 @@ The common/native conversation experience reuses or references existing Core
 [`Conversation`](../../../core/specs/schemas/conversation.schema.json) and
 [`ConversationBinding`](../../../core/specs/schemas/conversation-binding.schema.json)
 identities where applicable. Vendor-native conversation IDs remain opaque
-origin bindings; any additional projection is Personal-private until P10-T02
-decides otherwise.
+origin bindings; any additional projection is Personal-private (ADR-0058) and
+is not a public Core schema.
 
 The target is beginner-first by default. Governance detail remains available
 in inspectors; there is no Basic/Expert mode.

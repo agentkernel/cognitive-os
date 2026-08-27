@@ -95,7 +95,7 @@ not unrelated future actions.
 Embedded/common conversation views reuse or reference existing Core
 `Conversation` and `ConversationBinding` identities where applicable.
 Vendor-native IDs are opaque origin bindings, and additional projection fields
-remain Personal-private until P10-T02 decides otherwise.
+remain Personal-private (ADR-0058); they are not a public Core schema.
 
 ### 3.2 Page-fact rules
 

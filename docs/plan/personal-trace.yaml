@@ -366,6 +366,15 @@ personal_requirements:
     gates: []
     evidence_status: not-run
 
+  # Added 2026-08-27 (ADR-0058 Personal-private MCP/conversation envelopes).
+  - id: PERS-PR-038
+    classification: product-only
+    statement: Personal 2.0 MCP family and common conversation/history projection remain Personal-private versioned envelopes (cognitiveos.personal.mcp-family/0.1 and cognitiveos.personal.conversation-projection/0.1); Core public schema, the 1.0 six-family projection, and Core ConversationBinding stay unchanged and fail-closed for older clients; P5-era Tool-transport records do not auto-migrate; a later public surface requires a new Lane-CTR batch with schema, bindings, errors, transitions, and negatives together.
+    direct_registry_requirements: []
+    tasks: [P10-T02, P10-T03, P10-T05]
+    gates: []
+    evidence_status: not-run
+
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness
 # execution plan and do not create task, requirement, Gate, or evidence status.
 benchmark_readiness_packages:

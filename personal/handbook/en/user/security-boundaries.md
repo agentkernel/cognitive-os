@@ -20,7 +20,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/packages/pi-cognitiveos/src/safety.test.ts
   - personal/crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:e1fe4664c60c8ba2a060486d04a2904577c461e47f8439755419428b9b10d9a1"
+fingerprint: "sha256:09d42f2e888c412ccde64d84dcaca513bac1675d17f8920887161727e42597ce"
 non_claims:
   - Windows file ACL hardening for local runtime files is absent — OS-CSPRNG token generation does not make an ACL claim.
   - ADR-0055 adopts a credential-import boundary but no concrete import mechanism; Account Hub import remains Requires-backend.

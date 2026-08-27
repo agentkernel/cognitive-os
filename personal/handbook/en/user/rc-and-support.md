@@ -17,7 +17,7 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/daemon.rs
 tests:
   - tools/test/personal-rc-gate.test.mjs
-fingerprint: "sha256:819dbb6082eaba9982c52baf9dbe66d04e1cc5fb2b3bf6e12cc90f0c1b2785a4"
+fingerprint: "sha256:0622c852ccc45846659522778d5521b726fad24c3451be137daea0abe5414fbb"
 non_claims:
   - This page is an operator map, not a Gate disposition, Profile result, or production GitHub Release.
   - There is no public `cognitive uninstall` or `cognitive update` verb; do not invent one.

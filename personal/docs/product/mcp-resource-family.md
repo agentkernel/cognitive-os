@@ -22,7 +22,7 @@ authority plane or a host-session controller.
 | **Current implementation (Now)** | Linux 1.0 has six families. P5-T03/P5-T04 delivered an MCP Tool transport and bounded dynamic-Tool path inside the Tool family. They did not implement an MCP family manager, authority-backed MCP inventory, server lifecycle, permission/update workflow, or general client projection. |
 | **Adopted Personal 2.0 target** | MCP is the seventh family in Library, with server install, health, permissions, update, client projection, conflict handling, and Activity. |
 | **Requires-backend** | All Personal MCP runtime management, adapter/client projection, health, permission, update, synchronization, and recovery behavior. |
-| **Requires-core (conditional)** | P10-T02/Lane-CTR is required only for a new or changed public MCP machine surface. A Personal-private projection may not require core changes. |
+| **Requires-core (conditional)** | ADR-0058 kept the MCP family Personal-private. A later public MCP machine surface would need a new Lane-CTR decision. |
 
 ## 2. Why MCP is a family
 
@@ -271,10 +271,10 @@ not Personal governance or host-session control.
 ### Contract/core gap
 
 MCP is already the adopted seventh product family and implementation is
-**Requires-backend**. Only a new or changed public lifecycle, permission,
-mapping, projection, error, transition, or negative machine surface
-conditionally requires P10-T02/Lane-CTR; a Personal-private projection may
-not.
+**Requires-backend**. [ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
+keeps the family Personal-private; a later public lifecycle, permission,
+mapping, projection, error, or transition machine surface would need a new
+Lane-CTR decision.
 
 ## 15. Fixed boundaries and non-claims
 

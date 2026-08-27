@@ -222,8 +222,8 @@ origin's history.
 
 Where applicable, the projection reuses or references existing Core
 `Conversation` and `ConversationBinding`. Vendor-native conversation IDs remain
-opaque origin bindings; any additional projection stays Personal-private until
-P10-T02 decides otherwise.
+opaque origin bindings; any additional projection stays Personal-private
+(ADR-0058) and is not a public Core schema.
 
 The daemon owns the resulting Goal, Plan revisions, Task graph, Agent
 assignments, handoffs, budget allocation, Effect lifecycle, verification, and

@@ -24,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:fae27fe54ed520a78aeef6885bbaab9d6540332316d83b63f4ca7304c1f21474"
+fingerprint: "sha256:0eb16b585d7bb33d1d419b6b0d7a8d11f1be0e23e390f6b2cd1ae772844c1fc0"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -82,7 +82,8 @@ boundaries:
   but never reads or receives imported material;
 - MCP becomes a seventh user-visible family with federated source identity,
   trust, availability, and policy. The current Resource Manager and authority
-  services stay six-family until typed backend/core work lands;
+  services stay six-family on the 1.0 projection; ADR-0058 keeps MCP on a
+  separate Personal-private envelope until `P10-T03` implements that envelope;
 - vendor-specific conversation adapters preserve each Agent's protocol and
   identity. Pi remains the only qualified Agent; dsh implementation evidence
   and generic adapter contracts do not transfer qualification;
@@ -93,8 +94,10 @@ boundaries:
 - unified Activity keeps Native, Observed, Governed, and Verified provenance
   separate with declared coverage.
 
-These missing capabilities remain `Requires-backend`; public authority or
-contract additions remain `Requires-core`. The full-version commitment and
+These missing capabilities remain `Requires-backend`. Public authority or
+contract additions still need a later Lane-CTR decision; ADR-0058 already
+kept MCP family and conversation projection Personal-private. The full-version
+commitment and
 fixed 8/8 AI-window simulated acceptance do not establish implementation,
 human usability, release, or Gate evidence.
 
@@ -106,8 +109,8 @@ human usability, release, or Gate evidence.
 - Pi is deliberately two roles: shell host (client) and managed agent (governed
   runtime). Identities never merge (ADR-0035).
 - Current Linux 1.0/API: six families and no universal `Resource` table
-  (ADR-0037). ADR-0057 adopts MCP as the seventh Personal 2.0 family without
-  collapsing family authority; per-Agent sidecar remains the integration
-  boundary (ADR-0038).
+  (ADR-0037). ADR-0057 adopts MCP as the seventh Personal 2.0 family; ADR-0058
+  keeps it Personal-private without collapsing family authority; per-Agent
+  sidecar remains the integration boundary (ADR-0038).
 - MVP-first authorization: owner-local, single-principal, task-scoped; RBAC and
   approval chains are explicitly deferred.

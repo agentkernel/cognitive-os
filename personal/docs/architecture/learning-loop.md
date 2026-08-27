@@ -81,7 +81,7 @@ speculative/global scan or surprise per-session enrollment, and does not copy
 history into Memory, Context, Skill, Goal, Plan, or Task. Existing Core
 Conversation/ConversationBinding identities are reused/referenced where
 applicable; vendor-native IDs remain opaque bindings and additional projection
-state stays Personal-private until P10-T02 decides otherwise.
+state stays Personal-private (ADR-0058); it is not a public Core schema.
 
 Before admission, the daemon evaluates:
 

@@ -25,7 +25,7 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
-fingerprint: "sha256:948eaaa6acc01125193057d95577efebc3b45929e09216a5cf01b71451a18962"
+fingerprint: "sha256:d2844dc4dbafcad98c8a5bd1c9181981c03fcd14f62295454a350e217267e2f0"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -77,7 +77,7 @@ and Agent requires independent qualification.
 | Personal 2.0 initial Agent set | Requires-backend | exact Pi, `deepseek-ai/deepseek-harness` Developer Preview, and the Codex experience in the current official ChatGPT desktop app only on officially supported platforms; no Linux Codex desktop; CLI/Provider/model/account/bridge/platform evidence does not transfer |
 | Vendor-specific Agent conversation adapters | Requires-backend | current Pi/dsh routes do not provide a generic desktop conversation-adapter layer; Pi alone is qualified |
 | Existing MCP Tool transport + bounded dynamic-Tool MVP | implemented for its accepted P5-T03/P5-T04 scope | interop produces Tool candidates; it has no Personal 2.0 server/package/connection/binding/health/quarantine family lifecycle |
-| Personal 2.0 MCP seventh family + federated resources | Requires-backend / Requires-core | adopted by ADR-0057; no current family API, persistence, trust policy, federation projection, or target UI |
+| Personal 2.0 MCP seventh family + federated resources | Requires-backend | adopted by ADR-0057; ADR-0058 keeps the family and conversation projection Personal-private (no public Core schema, no `family=mcp` on the 1.0 six-family projection); no current family API, persistence, trust policy, federation projection, or target UI |
 | Goal + immutable Plan revisions + Task-owned preserved Attempts + multi-Agent supervision | Requires-backend / Requires-core | full-version target only; current durable work object remains Task and the complete hierarchy, controls, unified Activity, and supervisor do not exist |
 | Frozen AI-window product acceptance | Requires-backend | eight fixed N=1 scenarios; full pass requires 8/8, and S3 (Codex desktop) is platform-conditional (owner decision 2026-08-27: recorded `not-run (platform-conditional)` while no supported platform is in execution scope, Linux-mainline closes at seven platform-eligible passes plus that disposition); no execution result is claimed and any future pass remains simulated product evaluation, not human or release/Gate evidence |
 | Management fallback verbs | implemented | R0/R2/R3 approval flows partial |

@@ -3,7 +3,7 @@
 - Status: owner-accepted product support policy
 - Original decision: ADR-0025, 2026-07-26
 - Linux 1.0 updates: ADR-0034, ADR-0036, ADR-0037 and ADR-0038
-- Personal 2.0 adopted targets: ADR-0056 and ADR-0057
+- Personal 2.0 adopted targets: ADR-0056, ADR-0057, and ADR-0058
 - Current Gate status: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Environment evidence: [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)
 
@@ -127,5 +127,6 @@ No Personal 2.0 Gate is created by this adopted-target table.
 - [ADR-0055](../adr/0055-personal-credential-import-boundary-and-a5-revision.md)
 - [ADR-0056](../adr/0056-personal-2-0-desktop-control-plane.md)
 - [ADR-0057](../adr/0057-personal-2-0-mcp-resource-family.md)
+- [ADR-0058](../adr/0058-personal-2-0-mcp-conversation-private-projection.md)
 - [THIRD-PARTY-NOTICES.md](../legal/THIRD-PARTY-NOTICES.md)
 - [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)
