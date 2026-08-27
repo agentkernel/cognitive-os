@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:2385144a588f8e78dd131d95d2859a593bc05ef79d258adf9b8ba67035b7d6ff"
+fingerprint: "sha256:be2d45b22b6656be0222290d93b7f93e6314111b5c54367e02ba0227234c5e08"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -28,9 +28,16 @@ owns what each environment may claim. Practical routing:
 | `DEV-LINUX-NATIVE-01` (native Linux host) | exact-revision native validation, experimental service/Pi work; consumes **pushed commits only** into a cleanable worktree | uncommitted code, production claims |
 | `CLOUD-AGENT-LINUX-01` (Cursor Cloud Agent pod) | full bash-shell Rust + TS iteration before pushing; bootstrapped by `.cursor/environment.json` | native systemd/Secret Service behavior, timing baselines, Gate/release/Profile |
 | Local Windows GNU host | pnpm builds/tests, `cargo fmt`, Node checkers, docs work | any workspace `cargo build/test/clippy/run` — registered linker exit 121 |
-| WSL2 | historical engineering evidence | product-path claims (product target is native Linux) |
+| `DEV-WINDOWS-NATIVE-OPC-01` | future qualified native Windows 11 Phase 11 host; currently not provisioned | any claim until qualification exists |
+| WSL2 | historical engineering evidence | Linux 1.0 or Windows OPC product-path claims |
 | `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures; since 2026-08-27 also the owner-authorized Personal 2.0 development-validation host (exact-revision disposable worktrees and task-declared cleanable roots only; frozen while a B01 campaign is active) | guest-baseline, snapshot, or credential changes outside a preregistered B01 campaign lease |
 | `B01-W-DESKTOP-001` | registered-but-not-provisioned Windows Gate guest (B01-W) | anything until provisioned per its preregistration |
+
+Phase 11 uses Windows MSVC CI plus the future qualified native Windows host for
+host/tray/background, DSH sandbox/process, Vault/index, UI and connector work.
+The final N=15 OPC acceptance additionally needs one preregistered qualified
+Windows revision. Local GNU, WSL, Linux, ordinary CI and Canvas are explicit
+non-substitutes; `not-run` remains `not-run`.
 
 Toolchain pins: Rust 1.97.1 (`rust-toolchain.toml`), pnpm 10.33.2 + Node ≥22
 (`package.json`), workspace-wide `unsafe_code = "forbid"` and pedantic clippy

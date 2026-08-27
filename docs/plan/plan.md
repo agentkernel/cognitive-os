@@ -148,7 +148,7 @@ retrieval/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI/Windows 与 non
 
 ## 2.5 阶段数量
 
-共十一个阶段（Phase 0 至 Phase 10）：
+共十二个阶段（Phase 0 至 Phase 11）：
 
 - Phase 0：研究、基线和决策；
 - Phase 1：安装到首次对话；
@@ -160,7 +160,8 @@ retrieval/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI/Windows 与 non
 - Phase 7：产品化和发布；
 - Phase 8：通用 Agent 适配与 2.0 设计基线（post-1.0）；
 - Phase 9：性能与结构演进候选池；
-- Phase 10：Personal 2.0 desktop Control Plane 与 MCP seventh family。
+- Phase 10：已显式退出 current 2.0 主链的 desktop/MCP 计划（T01/T02 done，其余 cancelled）；
+- Phase 11：Windows-first OPC Project、Digital Employee、managed DSH、Conversation/Memory/Vault、Routine/Inbox/Provider/UI/X acceptance。
 
 ## 2.6 最大风险
 
@@ -1395,6 +1396,203 @@ Pi 不可以：
 - credential import 只显示真实 backend capability；无 ADR-0055 implementation 时必须
   `Requires-backend`。现有 P7 Web UI/P8 Provider/dsh evidence 不自动构成 2.0 support。
 
+### Phase 10 disposition (2026-08-27)
+
+P10-T01/T02 remain completed historical facts. P10-T03..T18 retained their
+original acceptance in the formal plan but were cancelled before implementation:
+T03/T14 move to future advanced MCP/federation; T04/T12/T15 -> P11-T13;
+T05 -> P11-T05/T07; T06/T08 -> P11-T03/T09; T07 -> P11-T08/T13;
+T09 -> P11-T06/T07; T10/T11 -> P11-T12; T13 -> P11-T04; T16 -> future
+independent adapter qualification; T17 -> P11-T15; T18 -> P11-T02.
+
+## Phase 11 — Windows-first OPC 2.0 task cards
+
+These cards elaborate the formal Phase 11 rows. They do not authorize
+implementation. Each implementation task uses one task branch, lease, Draft
+PR, focused negatives, supported CI, and the qualified environment named by its
+formal acceptance.
+
+### P11-T01 — OPC docs/ADR closure
+
+- **Outcome:** one canonical Windows OPC product/design/architecture/plan/
+  handbook graph with frozen legacy corpora and an interactive non-effect
+  Canvas.
+- **Boundaries:** documentation/design/prototype only; no product code,
+  contracts, negatives, tests, support, Gate, or qualification.
+- **Acceptance:** ADR-0059 partial supersession; P10 dispositions; P11 cards/
+  trace/support/environment; bilingual handbook/source-map/fingerprints;
+  generated docs unchanged/check; all static/required CI; closure.
+- **Validation:** local Markdown/links/anchors/fences/terminology, Canvas TS,
+  consistency, handbook, generator, docs-sync, diff/lint; required CI.
+
+### P11-T02 — Windows host, tray, and background
+
+- **Vertical path:** inspectable install -> Personal Home `app/`/`data/` ->
+  daemon/tray -> close background-or-pause -> sleep/offline missed facts ->
+  ordered recovery.
+- **Interfaces/data:** Windows host/service/process/filesystem/clock/SecretStore
+  ports; host observations never write authority.
+- **Negatives:** wrong install root, ACL escape, raw secret/env/argv, duplicate
+  daemon, orphan DSH, stale epoch, fake background, restore-as-backup claim.
+- **Validation:** CI-WINDOWS-MSVC plus a future qualified native Windows dev
+  environment; B01-W remains separately provisioned/preregistered.
+
+### P11-T03 — Project/Charter/Goal/Plan/Attempt authority
+
+- **Vertical path:** guided daemon draft -> Charter/Goal/Metric/Plan/team/
+  permission/budget/trigger preview -> Owner confirmation -> active Project ->
+  Task/Attempt -> Effect/evidence/verification.
+- **Ownership:** new Project-domain identities; do not retrofit Task rows or
+  create a generic Resource.
+- **Negatives:** unconfirmed activation, stale preview, cross-Project access,
+  Attempt erasure, Agent self-completion, manager boundary expansion.
+- **Validation:** store/application/API/CLI positives and negatives in required
+  CI plus qualified Windows restart/recovery E2E.
+
+### P11-T04 — Role Blueprint, Assignment, and Digital Employee
+
+- **Vertical path:** specialize immutable Project Manager base Blueprint ->
+  create Project Assignment -> create Employee -> bind compatible runtime ->
+  explicit Task/artifact/handoff.
+- **Invariants:** one current manager per active Project; Blueprint has no
+  Provider binding; employee survives runtime replacement; upgrades are
+  versioned and per-Project opt-in.
+- **Negatives:** Role=Agent, Employee=process, manager duty deletion, implicit
+  Blueprint upgrade, authority transfer by chat/handoff.
+- **Validation:** required CI and qualified Windows Project/team lifecycle E2E.
+
+### P11-T05 — Personal-owned Conversation archive/index/retrieval
+
+- **Vertical path:** append scoped Personal Conversation -> archive/index ->
+  authorized/redacted/provenance retrieval -> bounded Context -> Task/artifact/
+  receipt links; one active composer with per-recipient drafts.
+- **Contract decision:** do not reinterpret ADR-0058
+  `conversation-projection/0.1`; select a new private version or Lane-CTR.
+- **Negatives:** cross-Project/employee read, secret shape, unbounded resume,
+  full-archive injection, Conversation-as-authority/completion, lost draft.
+- **Validation:** required CI plus qualified Windows archive/restart/index E2E.
+
+### P11-T06 — Pi-backed Personal Assistant
+
+- **Vertical path:** current object/question -> bounded projection/Context ->
+  exact Pi engine -> source/scope/uncertainty explanation or change candidate ->
+  daemon preview request -> receipt explanation.
+- **Invariants:** Pi hidden from ordinary Installed Agents, candidate-only,
+  default-deny, no authority/Secret/archive/Memory/Task completion.
+- **Negatives:** direct DB/SecretStore/Provider, ambient Tool/shell, fabricated
+  source/confidence, preview bypass, memory write.
+- **Validation:** exact Pi pin, required CI, and qualified Windows native route.
+
+### P11-T07 — Preinstalled managed DSH Agent
+
+- **Vertical path:** exact audited official artifact -> immutable install slot
+  -> isolated child/stdio broker -> daemon-proxied Provider -> bounded
+  Task/Attempt candidate -> health/update/rollback/remove.
+- **Invariants:** visible Installed Agent; no in-process daemon/vendored fork/
+  native UI/conversation ownership; Personal owns Conversation/Memory/Task.
+- **Negatives:** digest/protocol mismatch, ACL escape, env/plaintext secret,
+  native MCP/base tool/HMR/home patch, orphan, stale process, failed rollback,
+  unknown output as success.
+- **Validation:** required CI plus qualified Windows supply-chain/sandbox/
+  process/Provider/restart E2E; only DSH enters 2.0 qualification.
+
+### P11-T08 — Routine, Trigger, no-overlap, and missed run
+
+- **Vertical path:** immutable Routine revision + manual/schedule/qualified
+  event Trigger -> occurrence ledger -> no-overlap/queue-latest -> offline/
+  missed/coalesced -> risk-based catch-up.
+- **Authority:** daemon scheduler/run ledger; no Temporal/workflow-engine second
+  scheduler. Attempt engine checkpoint is recovery input only.
+- **Negatives:** overlapping occurrence, silent drop, stale policy/budget,
+  consequential auto-resume, clock/restart duplicate, checkpoint completion.
+- **Validation:** required CI + qualified Windows clock/sleep/restart E2E.
+
+### P11-T09 — HITL Inbox, approval, and recovery
+
+- **Vertical path:** aggregate approval/input/permission/failure/unknown/missed/
+  budget facts -> selected current preview -> edit/narrow/reject/confirm ->
+  Intent/Effect/reconcile -> receipt.
+- **Interfaces:** structured preview is confirmable; Conversation explanation is
+  not. Preserve input and originating Project/employee/Task links.
+- **Negatives:** stale/cross-channel preview, chat-only approval, blind retry,
+  lost form input, unknown=success, unavailable control rendered active.
+- **Validation:** required CI + qualified Windows UI/runtime failure matrix.
+
+### P11-T10 — Knowledge and Markdown Vault
+
+- **Vertical path:** Personal Home Project directory -> shared/Project import ->
+  rights/provenance -> parse/OCR/index -> reindex/conflict -> config-like edit
+  candidate -> optional Obsidian-compatible companion.
+- **Ownership:** source/Vault, rebuildable index, Context, Memory, Project
+  authority, and SecretStore remain distinct.
+- **Negatives:** traversal, secret ingestion, rights bypass, silent overwrite,
+  file-as-authority, proprietary app required/bundled.
+- **Validation:** required CI + qualified Windows filesystem/index/conflict E2E.
+
+### P11-T11 — Memory admission, privacy, correction, and forget
+
+- **Vertical path:** scoped Conversation/Vault/verified source -> candidate ->
+  deterministic admission -> Context retrieval -> inspect/correct/forget ->
+  index/cache non-resurrection.
+- **Boundaries:** Letta/Mem0 may inform extraction/retrieval only; no direct
+  write, external authority store, env secret, or default telemetry.
+- **Negatives:** cross-scope recall, secret/PII leak, stale/poisoned source,
+  Agent self-admission, full archive injection, tombstone resurrection.
+- **Validation:** required CI + qualified Windows privacy/rebuild/restart E2E.
+
+### P11-T12 — Provider routing, budgets, and usage
+
+- **Vertical path:** account/auth + model + quota -> global/Project/employee/Task
+  binding -> DSH/Pi daemon-proxied call -> Task/member/Project usage/cost ->
+  budget warning/stop/adjustment Inbox.
+- **Invariants:** subscription/account/billing/quota separate; raw SecretStore
+  material never reaches UI/DSH/Pi; current budgets remain advisory until
+  enforcement passes.
+- **Negatives:** fallback/silent rebind, arbitrary headers, secret in env/log/
+  DB, unknown=0/free, budget bypass, un-reconciled Effect reroute.
+- **Validation:** required CI + qualified Windows SecretStore/Provider route.
+
+### P11-T13 — OPC Control Plane
+
+- **Vertical path:** daemon-served `/ui/` -> Today -> Project briefing/setup ->
+  Team/employee Conversation -> Knowledge import -> Inbox approval/recovery ->
+  Settings Installed Agents/Providers/Usage.
+- **UX:** bottom Settings, right Personal Assistant, one active composer,
+  draft preservation, business terminology, progressive disclosure, every
+  empty/loading/partial/stale/permission/error/unknown/offline/missed/success/
+  archived state.
+- **Negatives:** Vite as product origin, fake Requires-backend action, secret/
+  token DOM/storage leak, Agent self-verified, cross-recipient send.
+- **Validation:** TS/component/a11y tests, rendered keyboard/focus/reduced-
+  motion/narrow-window/state review, required CI, qualified Windows daemon UI.
+
+### P11-T14 — X/Twitter qualified connector scenario
+
+- **Vertical path:** confirmed charter/audience/cadence/metrics/rights -> source-
+  backed research -> original content -> publication package -> exact preview
+  -> qualified API/browser dispatch -> Effect reconcile -> metric readback ->
+  independent acceptance.
+- **Safety:** only owned/licensed/open/public-domain material is copied; other
+  sources support analysis/attribution/new creation.
+- **Negatives:** fingerprint/CAPTCHA/anti-abuse evasion, platform drift,
+  wrong account/target, unlicensed copy, blind retry, receipt/self-report as
+  completion.
+- **Validation:** required CI + preregistered qualified Windows connector
+  environment; no business-result or browser-reliability claim.
+
+### P11-T15 — Fixed-denominator Windows OPC acceptance
+
+- **Manifest:** freeze 15 scenarios matching P11-T02..T14 user-visible paths,
+  exact revision/environment/artifacts/oracles/redaction/cleanup and `retry=0`
+  where Provider/external cells require it.
+- **Accounting:** retain every started scenario as pass/fail/partial/not-run;
+  denominator remains 15; zero critical A1–A8 failures; independent review.
+- **Environment:** qualified Windows native host; ordinary CI/Canvas/Linux/
+  WSL/Win-GNU cannot promote the result.
+- **Claim ceiling:** product acceptance non-claim until separate production
+  signing, B01-W/release evidence, and owner release disposition. 2.1 remote is
+  outside the denominator.
+
 ---
 
 # 12. 机器可读 typed dependency 图
@@ -1447,8 +1645,13 @@ phases:
     gate: GMVP_LINUX_then_G7_RC
   P10:
     implementation_requires: [OWNER_ACCEPTED_PERSONAL_2_0_SCOPE]
-    acceptance_requires: [P10-T01, P10-T02, P10-T03, P10-T04]
-    claim_boundary: NO_NEW_GATE
+    acceptance_requires: [P10-T01, P10-T02]
+    disposition: SUPERSEDED_BY_ADR_0059_PHASE_11
+    claim_boundary: HISTORICAL_NO_NEW_GATE
+  P11:
+    implementation_requires: [P11-T01]
+    acceptance_requires: [P11-T15]
+    claim_boundary: WINDOWS_OPC_NON_CLAIM_UNTIL_SEPARATE_RELEASE
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -1458,10 +1661,10 @@ linux_1_0_active_tracks:
 post_1_0:
   EMBEDDING_SEMANTIC_VECTOR_GRAPH: []
   MCP_TOOL_ADAPTER_HISTORY: [P5-T03, P5-T04, B10]
-  MCP_SEVENTH_FAMILY_2_0: [P10-T01, P10-T02, P10-T03]
+  MCP_SEVENTH_FAMILY_ADVANCED: [P10-T01, P10-T02, FUTURE_MCP_SUCCESSOR]
   MULTI_AGENT: [P6-T01, P6-T02, P6-T03, P6-T04, B11]
   WEB_UI_WINDOWS: [P7-T05, P7-T07, B01-W]
-  DESKTOP_CONTROL_PLANE_2_0: [P10-T01, P10-T02, P10-T04]
+  WINDOWS_OPC_2_0: [P11-T01, P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13, P11-T14, P11-T15]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -1597,6 +1800,54 @@ tasks:
   P10-T04:
     implementation_requires: [P10-T02, P10-T03, P7-T05, P8-T13]
     acceptance_requires: [DESKTOP_PRIMARY_ENTRY, TARGET_IA, GLOBAL_AGENT_SHELL_CANDIDATE_ONLY, VENDOR_CONVERSATION_CAPABILITY_MATRIX, NATIVE_AGENT_APP_COEXISTENCE, ADR-0055_IMPORT_HONESTY]
+    disposition: CANCELLED_SUPERSEDED_BY_P11_T13
+
+  P11-T01:
+    implementation_requires: [OWNER_APPROVED_OPC_BASELINE, ADR-0059, FINALIZED_PERSONAL_1_0_BASELINE]
+    acceptance_requires: [OPC_PRODUCT_DESIGN_ARCHITECTURE_PLAN_TRACE_HANDBOOK_CANVAS_CLOSURE]
+  P11-T02:
+    implementation_requires: [P11-T01, ADR-0052, WINDOWS_INSTALL_FRAGMENTS]
+    acceptance_requires: [WINDOWS_HOST_TRAY_BACKGROUND_SLEEP_MISSED_RECOVERY]
+  P11-T03:
+    implementation_requires: [P11-T01, TASK_INTENT_EFFECT_VERIFICATION_FOUNDATION]
+    acceptance_requires: [PROJECT_CHARTER_GOAL_PLAN_TASK_ATTEMPT_AUTHORITY]
+  P11-T04:
+    implementation_requires: [P11-T03, AGENT_ADAPTER_IDENTITY_FOUNDATION]
+    acceptance_requires: [BLUEPRINT_ASSIGNMENT_EMPLOYEE_MANAGER_HANDOFF]
+  P11-T05:
+    implementation_requires: [P11-T03, P11-T04, ADR-0058_RETAINED_BOUNDARY]
+    acceptance_requires: [PERSONAL_CONVERSATION_ARCHIVE_INDEX_RETRIEVAL_SINGLE_COMPOSER]
+  P11-T06:
+    implementation_requires: [P11-T03, P11-T05, EXACT_PI_FOUNDATION]
+    acceptance_requires: [PI_BACKED_PERSONAL_ASSISTANT_CANDIDATE_ONLY]
+  P11-T07:
+    implementation_requires: [P11-T02, P11-T03, P11-T04, DSH_ADAPTER_FOUNDATION]
+    acceptance_requires: [MANAGED_DSH_ARTIFACT_ISOLATED_CHILD_PROXY_UPDATE_ROLLBACK]
+  P11-T08:
+    implementation_requires: [P11-T03, SCHEDULER_EFFECT_RECOVERY_FOUNDATION]
+    acceptance_requires: [ROUTINE_TRIGGER_NO_OVERLAP_QUEUE_LATEST_MISSED_RESUME]
+  P11-T09:
+    implementation_requires: [P11-T03, P11-T08, PREVIEW_EFFECT_ALERT_RECOVERY_FOUNDATION]
+    acceptance_requires: [INBOX_SERIALIZED_APPROVAL_RECOVERY_RECONCILE]
+  P11-T10:
+    implementation_requires: [P11-T03, P11-T05, MEMORY_SKILL_CONTEXT_ARTIFACT_FOUNDATION]
+    acceptance_requires: [KNOWLEDGE_VAULT_IMPORT_INDEX_CONFLICT]
+  P11-T11:
+    implementation_requires: [P11-T05, P11-T10, MEMORY_ADMISSION_FORGET_FOUNDATION]
+    acceptance_requires: [EPISODIC_RETRIEVAL_MEMORY_PRIVACY_CORRECT_FORGET]
+  P11-T12:
+    implementation_requires: [P11-T03, P11-T04, P11-T06, P11-T07, PROVIDER_CONTROL_PLANE_FOUNDATION]
+    acceptance_requires: [GLOBAL_PROJECT_EMPLOYEE_TASK_BINDING_BUDGET_USAGE_PROXY]
+  P11-T13:
+    implementation_requires: [P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12]
+    acceptance_requires: [TODAY_PROJECTS_TEAM_KNOWLEDGE_INBOX_UI_STATE_MATRIX]
+  P11-T14:
+    implementation_requires: [P11-T03, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13]
+    acceptance_requires: [QUALIFIED_X_CONNECTOR_RIGHTS_PREVIEW_RECEIPT_READBACK]
+  P11-T15:
+    implementation_requires: [P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13, P11-T14, QUALIFIED_WINDOWS_NATIVE_ENVIRONMENT]
+    acceptance_requires: [WINDOWS_OPC_FIXED_DENOMINATOR_15_ZERO_CRITICAL_INDEPENDENT_REVIEW]
+    promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。

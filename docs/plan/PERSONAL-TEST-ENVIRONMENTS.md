@@ -57,6 +57,7 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `DEV-WIN-GNU-01` | local Windows GNU/MinGW host | local development | TypeScript and non-linking checks only |
 | `CI-UBUNTU-01` | GitHub `ubuntu-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
 | `CI-WINDOWS-MSVC-01` | GitHub `windows-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
+| `DEV-WINDOWS-NATIVE-OPC-01` | future qualified Windows 11 x86_64 development host | **not provisioned/qualified** | none; required for native Phase 11 host/DSH/UI/connector evidence |
 | `CLOUD-AGENT-LINUX-01` | Cursor Cloud Agent Linux pod | ephemeral remote container | strong local/container implementation evidence |
 | `DEV-WSL2-01` | Windows WSL2 Linux guest | local Linux guest | strong local/fixture implementation evidence |
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
@@ -116,6 +117,33 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 - **Cannot claim:** Windows installer/service, native credential backend,
   B01-W, install parity, release or Profile.
 - **Evidence:** [baseline](../../personal/tests/baseline/README.md) and CI workflow.
+
+### 5.1 Phase 11 Windows OPC validation route
+
+ADR-0059 makes Windows the Personal 2.0 target, but no current environment is a
+qualified Windows OPC product environment:
+
+| Phase 11 work | Required development evidence | Explicit non-substitute |
+|---|---|---|
+| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` plus future qualified `DEV-WINDOWS-NATIVE-OPC-01` install/service/tray/sleep/filesystem/SecretStore execution | `DEV-WIN-GNU-01`, WSL, Linux, Canvas |
+| P11-T03/T04 Project/Employee | required CI plus exact-revision qualified Windows daemon/store/restart E2E | docs/fixtures alone |
+| P11-T05/T06 Conversation/Pi Assistant | required CI plus qualified Windows archive/index/Pi native route | Linux Pi qualification transfer |
+| P11-T07 managed DSH | required CI plus qualified Windows artifact/sandbox/process/stdio/Provider/update/rollback E2E | existing Linux dsh Path B or research HEAD |
+| P11-T08/T09 Routine/Inbox | required CI plus qualified Windows clock/sleep/offline/restart/UI E2E | process exit or synthetic timer only |
+| P11-T10/T11 Knowledge/Memory | required CI plus qualified Windows filesystem/index/privacy/rebuild E2E | proprietary Obsidian app availability |
+| P11-T12 Provider/budgets | required CI plus qualified Windows SecretStore/daemon-proxy/budget/usage route | raw env/plaintext credential or advisory budget |
+| P11-T13 OPC UI | client tests/rendered review plus daemon-served `/ui/` on qualified Windows | Vite preview as product origin |
+| P11-T14 X connector | preregistered qualified Windows connector/account path | CAPTCHA/fingerprint/anti-abuse evasion |
+| P11-T15 fixed acceptance | preregistered `N=15` on one exact qualified Windows revision | ordinary CI, local GNU, Linux, WSL, Canvas |
+
+`DEV-WINDOWS-NATIVE-OPC-01` is a reserved capability requirement, not an
+existing machine or qualification claim. Until provisioned and qualified,
+native checks are `not-run`/`Requires-environment`.
+
+`CI-WINDOWS-MSVC-01` may prove compile/test behavior only. It cannot prove
+Windows install, tray/background, SecretStore, process/ACL containment, sleep/
+missed recovery, DSH supply chain/runtime, connector behavior, B01-W, support,
+release, or Profile.
 
 ## 6. `DEV-WSL2-01` — WSL2 Linux guest
 

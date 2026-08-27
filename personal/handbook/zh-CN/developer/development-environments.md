@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:2385144a588f8e78dd131d95d2859a593bc05ef79d258adf9b8ba67035b7d6ff"
+fingerprint: "sha256:be2d45b22b6656be0222290d93b7f93e6314111b5c54367e02ba0227234c5e08"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -28,9 +28,15 @@ non_claims:
 | `DEV-LINUX-NATIVE-01`（native Linux 主机） | exact-revision native 验证、实验性服务/Pi 工作；只消费**已推送 commit** 到可清理 worktree | 未提交代码、生产声明 |
 | `CLOUD-AGENT-LINUX-01`（Cursor Cloud Agent pod） | 推送前的完整 bash shell Rust + TS 迭代；由 `.cursor/environment.json` 引导 | native systemd/Secret Service 行为、timing 基线、Gate/release/Profile |
 | 本地 Windows GNU 主机 | pnpm 构建/测试、`cargo fmt`、Node 检查器、文档工作 | 任何 workspace `cargo build/test/clippy/run`——已登记 linker exit 121 |
-| WSL2 | 历史工程证据 | 产品路径声明（产品目标是 native Linux） |
+| `DEV-WINDOWS-NATIVE-OPC-01` | future qualified native Windows 11 Phase 11 host；当前未 provision | qualification 前的任何 claim |
+| WSL2 | 历史工程证据 | Linux 1.0 或 Windows OPC 产品路径声明 |
 | `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest；自 2026-08-27 起同时为 owner 授权的 Personal 2.0 开发验证主机（仅限 exact-revision 一次性 worktree 与任务声明的可清理目录；B01 campaign 活动期间冻结开发用途） | 在预注册 B01 campaign lease 之外改变 guest 基线、快照或凭据 |
 | `B01-W-DESKTOP-001` | 已注册但未供给的 Windows Gate guest（B01-W） | 按其预注册供给前的一切用途 |
+
+Phase 11 使用 Windows MSVC CI 加 future qualified native Windows host，验证
+host/tray/background、DSH sandbox/process、Vault/index、UI 与 connector。最终 N=15
+OPC acceptance 还需要同一 preregistered qualified Windows revision。本地 GNU、WSL、
+Linux、ordinary CI 与 Canvas 明确不能替代；`not-run` 保持 `not-run`。
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22
 （`package.json`）、workspace 级 `unsafe_code = "forbid"` 与 pedantic clippy

@@ -12,12 +12,19 @@ This document defines the stable release target. Current readiness, task state
 and every Gate status remain exclusively in
 [PROGRESS.md](../../../docs/plan/PROGRESS.md).
 
+> **Personal 2.0 backlink (2026-08-27):** the current Windows-first OPC target
+> is owned by [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
+> and [Personal 2.0 scope](personal-2.0-scope.md). That target does not revise
+> any Linux 1.0 requirement, Pi qualification, six-family fact, Gate result, or
+> release provenance in this document. Older 2.0 summaries here are context
+> only and cannot be used as a second active target definition.
+
 ## 0. Current, target, and dependency boundary
 
 | Label | Linux 1.0 meaning |
 |---|---|
 | **Current implementation (Now)** | Personal has the six-family Linux product, the independently qualified Pi path, and the additive P7-T05 daemon-served `/ui/`. The current UI has Home, Work, Agents, Providers, Resources, Activity, and System. The native dsh panel is separate. |
-| **Adopted Personal 2.0 target** | A separately qualified cross-platform local product for Windows, macOS, and Linux; exact Pi, DeepSeek Harness Developer Preview, and supported-platform Codex desktop paths; seven families including MCP; embedded Agent conversations; Goal -> Plan revision -> Task -> Attempt; multi-Agent work; federated resources; Account Hub; unified Activity; and target IA Home/Agents/Work/Library/Activity/Settings. |
+| **Current Personal 2.0 pointer** | The separate Windows-first OPC target is defined only by [Personal 2.0 scope](personal-2.0-scope.md); it does not alter this Linux 1.0 release identity. |
 | **Requires-backend** | Personal 2.0 projections, controls, orchestration, synchronization, and MCP management do not enter the Linux 1.0 definition. |
 | **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding remains unchanged. Only a new/changed public MCP, conversation extension, Goal, Plan, Run, Harness, or attempt machine surface requires P10-T02/Lane-CTR and does not revise this release retroactively. |
 

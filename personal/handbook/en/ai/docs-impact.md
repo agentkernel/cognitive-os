@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:894db3102b8099c13368a4b3659b1c4231eb88fb04def0a7ccad99779703918d"
+fingerprint: "sha256:1b4f62292d6513d322310dc11d1886fec3544a2456df34af425f024d44f9e245"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -58,13 +58,17 @@ silently:
   design and Agent Shell/adapter/multi-Agent/recovery/learning architecture;
 - `personal-2-mcp-family` routes ADR-0037/0057 plus the bilingual MCP-family,
   cognitive-resource, and Resource Manager sources.
+- `personal-2-opc-rebaseline` routes ADR-0059, the Phase 11 formal/support/
+  environment sources, focused Project/Conversation/Windows/Routine product
+  and architecture chapters, and the current client OPC design corpus.
 
-For every hit, preserve two explicit columns of truth: **current Linux
-1.0/current API** (six-family, Pi-qualified, current `/ui/` at
-`clients/pc/web/`) and **adopted Personal 2.0 target** (`Requires-backend` or
-`Requires-core`). Never infer implementation of Account Hub import, the target
-desktop redesign, MCP seventh-family/federation, vendor conversation adapters,
-Goal/Plan, or multi-Agent supervision from design adoption.
+For every hit, preserve explicit truth columns: **current Linux 1.0/current
+API**, **adopted Windows OPC target**, **Requires-backend**, and
+**Requires-environment/deferred**. Never infer Project/Employee, Personal
+Conversation/Vault/Memory, Pi Assistant, managed DSH, Routine/Inbox, binding/
+budget, OPC UI, X connector, or fixed N=15 acceptance from design adoption,
+Canvas, ordinary CI, Linux, WSL, or Windows GNU evidence. MCP remains an
+advanced deferred target; 2.1 owns native mobile/E2E relay remote.
 
 The localized canonical design files route to the same bilingual handbook
 `doc_id`s. Update both locales. Refresh fingerprints only for hand-written

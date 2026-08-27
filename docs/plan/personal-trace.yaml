@@ -352,6 +352,7 @@ personal_requirements:
   - id: PERS-PR-036
     classification: product-only
     statement: Personal 2.0 uses the desktop Control Plane as its primary entry and supervision center with Home, Agents, Work, Library, Activity, and Settings; Providers and System live under Settings, the global Agent Shell remains candidate-only, installed-Agent conversations use vendor-specific adapters behind an honest common internal projection and capability matrix, native Agent applications remain usable, and every unimplemented ADR-0055 credential-import surface is marked Requires-backend.
+    superseded_by: [ADR-0059, PERS-PR-039]
     direct_registry_requirements: []
     tasks: [P10-T01, P10-T02, P10-T04]
     gates: []
@@ -361,6 +362,7 @@ personal_requirements:
   - id: PERS-PR-037
     classification: product-only
     statement: MCP is the seventh Personal 2.0 product resource family with distinct server, package, connection, capability, binding, health, and quarantine identities and lifecycle; advertised tools remain Tool candidates, resources and prompts pass through Context and Skill admission, and no generic Resource schema or retroactive Personal 1.0 family change is implied.
+    disposition: retained-advanced-deferred-from-opc-p0
     direct_registry_requirements: []
     tasks: [P10-T01, P10-T02, P10-T03]
     gates: []
@@ -370,8 +372,82 @@ personal_requirements:
   - id: PERS-PR-038
     classification: product-only
     statement: Personal 2.0 MCP family and common conversation/history projection remain Personal-private versioned envelopes (cognitiveos.personal.mcp-family/0.1 and cognitiveos.personal.conversation-projection/0.1); Core public schema, the 1.0 six-family projection, and Core ConversationBinding stay unchanged and fail-closed for older clients; P5-era Tool-transport records do not auto-migrate; a later public surface requires a new Lane-CTR batch with schema, bindings, errors, transitions, and negatives together.
+    disposition: mcp-and-fail-closed-retained-conversation-first-slice-superseded
     direct_registry_requirements: []
     tasks: [P10-T02, P10-T03, P10-T05]
+    gates: []
+    evidence_status: not-run
+
+  # Added 2026-08-27 (ADR-0059 Windows-first OPC rebaseline).
+  - id: PERS-PR-039
+    classification: product-only
+    statement: Personal 2.0 is a Windows-local operating console for one human Owner, with Today, Projects, Team, Knowledge, Inbox, bottom Settings, and a global right-side candidate-only Personal Assistant; native mobile and E2E relay remote are Personal 2.1.
+    direct_registry_requirements: []
+    tasks: [P11-T01, P11-T02, P11-T13, P11-T15]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-040
+    classification: product-only
+    statement: A Project is a governed long-term workspace with confirmed Charter, Goal, Metric, Plan revisions, one current manager, bounded Tasks and preserved Attempts; manager autonomy stays inside the approved goal, team, budget, Provider, Tool, permission, and external-action envelope.
+    direct_registry_requirements: []
+    tasks: [P11-T03, P11-T04, P11-T08, P11-T09]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-041
+    classification: product-only
+    statement: Role Blueprint, Project Role Assignment, Digital Employee, Agent Runtime, and Personal-owned Conversation remain distinct; only the Project Manager base Blueprint is built in and every active Project has exactly one current manager.
+    direct_registry_requirements: []
+    tasks: [P11-T04, P11-T07, P11-T13]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-042
+    classification: product-only
+    statement: Pi is the hidden candidate-only Personal Assistant engine, while DSH is the preinstalled managed Installed Agent and default employee runtime through an exact audited artifact, isolated child, bounded stdio broker, and daemon Provider proxy; Personal owns Conversation, Memory, Task, and completion.
+    direct_registry_requirements: []
+    tasks: [P11-T05, P11-T06, P11-T07]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-043
+    classification: product-only
+    statement: Routine and Trigger authority supports manual, schedule, and qualified events with no-overlap, queue-latest, visible coalesced and missed occurrences, host-offline honesty, risk-based resume, and explicit close-window background-or-pause choice.
+    direct_registry_requirements: []
+    tasks: [P11-T02, P11-T08, P11-T09]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-044
+    classification: product-only
+    statement: Owner-shared knowledge, Project Markdown Vault, employee-private Memory, and scoped episodic Conversation archive remain distinct; retrieval is bounded, redacted, provenance-bearing and untrusted, while semantic Memory requires admission and supports view, correction, and forget.
+    direct_registry_requirements: []
+    tasks: [P11-T05, P11-T10, P11-T11]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-045
+    classification: product-only
+    statement: Subscription, Provider account, API billing and quota, model, binding, budget, and actual usage remain separate; effective binding is global to Project to employee to Task, with Project, member, and Task budgets and no raw secret outside the approved SecretStore/daemon proxy.
+    direct_registry_requirements: []
+    tasks: [P11-T12]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-046
+    classification: product-only
+    statement: The OPC Control Plane and first X/Twitter scenario expose every required state, structured daemon preview and receipt, rights-safe source handling, qualified connector drift failure, and no fingerprint, CAPTCHA, or anti-abuse evasion; browser or Agent self-report is not completion.
+    direct_registry_requirements: []
+    tasks: [P11-T09, P11-T13, P11-T14]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-047
+    classification: product-only
+    statement: Windows OPC acceptance uses a fixed N=15 preregistered denominator at one exact supported revision with every result retained, zero critical A1-A8 failures, independent review and non-claim reporting; signing, B01-W, release, Profile, and 2.1 remote remain separate.
+    direct_registry_requirements: []
+    tasks: [P11-T15]
     gates: []
     evidence_status: not-run
 

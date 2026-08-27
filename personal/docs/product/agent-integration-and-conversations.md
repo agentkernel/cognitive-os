@@ -1,299 +1,150 @@
-# Agent integration and conversations
+# Personal Assistant, Installed Agents, and employee conversations
 
 - Status: adopted Personal 2.0 product target
 - Canonical language: English
+- Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Architecture:
-  [Universal Agent Adapter Contract](../architecture/agent-adapter-contract.md) and
-  [Multi-Agent orchestration](../architecture/multi-agent-orchestration.md)
-- Related: [Web UI product design](web-ui-design.md),
-  [User journeys](user-journeys.md), and
-  [Account Hub](account-hub.md)
-- Chinese translation:
+  [Agent lifecycle](../architecture/agent-shell-and-agent-lifecycle.md) and
+  [Project, Role, and Employee](../architecture/project-role-employee.md)
+- Chinese mirror:
   [agent-integration-and-conversations.zh-CN.md](agent-integration-and-conversations.zh-CN.md)
 
-Personal 2.0 makes the Control Plane the desktop-primary entry and supervisor
-for the owner's Agents while preserving each Agent's native conversation and
-harness behavior. Integration never turns an Agent, adapter, or conversation
-into an authority writer.
-
-## 1. Reality ledger
-
-| Boundary | Agent truth |
-|---|---|
-| **Current implementation (Now)** | Pi is the Linux 1.0 qualified Agent/sidecar path. `/ui/` has an Agent inventory and dossier with bounded Runtime/dsh facts, no lifecycle controls, and no embedded conversations. The native `cognitive dsh web` panel is separate. |
-| **Adopted Personal 2.0 target** | Agents contains signed onboarding, connected-existing Agents, a common capability view, adapter-backed native conversations/history, Runtime supervision, owner Goal requests followed by daemon admission, handoffs, and removal choices. |
-| **Requires-backend** | Catalog onboarding, common conversation/history projection, scoped native-session observation and daemon admission, full Agent lifecycle HTTP, Goal -> Plan revision -> Task -> Attempt orchestration, multi-Agent graph/handoffs, and target controls. |
-| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. ADR-0058 kept additional conversation projection Personal-private. A later public Agent capability, conversation extension, Goal, Plan, Run, Harness, attempt, or handoff machine contract would need a new Lane-CTR decision. |
-
-## 2. Product model
-
-The **Agents** space is organized around an Agent dossier:
-
-- signed source and installation/connection identity;
-- adapter compatibility and capability matrix;
-- current Provider/proxy profile and workspace scope;
-- native conversations and history;
-- Agent runtime engine, process observations, and health;
-- current Goals, Plan revisions, Tasks, each Task's attempts, and handoffs;
-- permissions, federated resources, Activity, and evidence;
-- supported lifecycle and recovery actions.
-
-Default language is plain: **conversation**, **execution flow**, and
-**Agent runtime engine**. Package, installation, registration, instance,
-sidecar, execution, process, session, epochs, digests, and raw redacted
-projections remain available in inspectors. There is no Basic/Expert mode.
-
-## 3. Adapter projection
-
-Every vendor adapter preserves the native harness and projects:
-
-### Common core
-
-- Agent display identity and exact native/managed identity facts;
-- source/version/adapter compatibility;
-- native conversation list and selected conversation, when observable;
-- current response/activity and health, when observable;
-- Provider/profile, workspace, permission, and resource-binding facts the
-  adapter can truthfully expose;
-- supported lifecycle, conversation, Context, Tool, and synchronization
-  capabilities;
-- explicit unsupported, unknown, stale, and native-only facets.
-
-Where applicable, the common projection reuses or references existing Core
-`Conversation` and `ConversationBinding` identities. Vendor-native conversation
-and thread IDs remain opaque origin bindings; they do not create a second
-public Conversation model. Additional native/common projection state remains
-Personal-private (ADR-0058); they are not a public Core schema.
-
-### Capability matrix
-
-The UI shows whether a capability is:
-
-- native and directly supported by a vendor session API;
-- supported through a managed adapter path;
-- cooperative through MCP plus vendor rules;
-- observable only;
-- unavailable.
-
-The matrix is descriptive, not a capability grant. It never implies host
-session control from process liveness or MCP connectivity.
+## 1. Three separate product identities
+
+| Identity | Product role | Authority boundary |
+|---|---|---|
+| **Personal Assistant** | global explanation, navigation, research, and proposal surface | candidate-only; daemon issues every confirmable preview |
+| **Digital Employee** | long-lived Project member with responsibility, Conversation, Memory, work, and history | not an Agent process; work authority remains daemon-owned |
+| **Installed Agent / Runtime** | qualified execution integration used by employees | bounded executor/observer; no Project, Memory, secret, or completion ownership |
 
-### Vendor extension slots
+Collapsing these identities creates false lifecycle and trust claims. Restarting
+a runtime does not replace an employee. A conversation message does not update
+a Project. An installed package grants no execution permission.
 
-Vendor-specific concepts may appear in an extension inspector when they cannot
-be faithfully mapped to the common core. Extensions preserve native semantics
-and source labels. They cannot override daemon authority or disguise missing
-common behavior.
-
-## 4. Native conversation as the interaction source
+## 2. Personal Assistant and Pi
 
-A conversation begins and remains **Native** unless the user requests
-**Manage with Personal**, confirms the daemon preview, and the daemon admits
-the governed outcome.
+The Personal Assistant is the user-visible system identity. It can:
 
-- The embedded view uses a vendor-native session API when available.
-- The native Agent application remains usable at all times.
-- The current native session and opaque vendor ID remain distinct from the
-  Core Conversation/ConversationBinding-backed Personal projection, Goal,
-  Task, Agent runtime engine, and process.
-- A native Agent plan remains Native, even when displayed in Work.
-- Adapter observation creates an **Observed** fact, not a governed Task,
-  permission, Memory, or completion.
+- explain a Project, employee, Inbox item, source, uncertainty, or conflict;
+- navigate to the exact object;
+- conduct guided Project/role research;
+- draft charter, plan, role, binding, budget, or recovery candidates;
+- request a daemon-issued structured preview;
+- explain a receipt and remaining decision.
 
-### Manage with Personal
+Pi may support this experience internally as a fixed, managed, default-deny
+engine. Pi is hidden from the ordinary Installed Agents list. It owns no
+authority, Provider secret, Project, Task, long-term Conversation, episodic
+archive, semantic Memory, or completion. Pi output remains a candidate.
 
-The action **Manage with Personal**:
+Explanations show source, scope, freshness, limitations, and uncertainty.
+Personal does not expose model chain-of-thought or invented numerical
+confidence. A suggestion cannot be confirmed until the daemon resolves it into
+an exact preview.
 
-1. identifies the selected native conversation and desired outcome;
-2. asks the daemon to preview a persistent Goal;
-3. lets the owner confirm that exact consequential preview;
-4. lets the daemon admit the Goal and establish the daemon-owned Plan revision;
-5. lets the daemon create one or more governed Tasks, each with its own
-   preserved attempts;
-6. binds only the admitted Context, Agent, workspace, Provider/profile,
-   permissions, budget, and acceptance criteria;
-7. preserves a source link back to the native conversation without copying
-   secret material or inventing native authority.
+## 3. Preinstalled managed DSH Installed Agent
 
-A Goal may span conversations, sessions, and Agents. The daemon owns the
-multi-Agent graph and handoffs. Agents do not transfer leases, permissions, or
-completion authority to one another.
+DeepSeek Harness is supplied with Personal 2.0 as the **preinstalled managed
+Installed Agent** and default runtime for Project digital employees. It remains
+visible under Settings > Installed Agents so the Owner can inspect:
 
-This target is **Requires-backend**. New public machine semantics conditionally
-require P10-T02/Lane-CTR; Personal-private projections may not.
+- exact official artifact source, version, digest, license, and admission;
+- adapter/broker version and protocol compatibility;
+- Windows host/sandbox qualification boundary;
+- current health and bounded capabilities;
+- update availability, compatibility changes, and rollback slot;
+- which employees and Tasks currently use it.
 
-## 5. Observed native sessions
+It is not an in-process daemon library and not a vendored fork. Personal runs
+the exact audited artifact as an isolated child process behind a bounded stdio
+broker. DSH has no direct authority database, SecretStore, Provider credential,
+ambient environment secret, native MCP/base-tool, HMR, or home-patch access.
+Provider traffic is daemon-proxied and executable actions pass Personal
+admission.
 
-Native Agent use remains possible outside Personal-managed execution. Agent
-connection establishes an explicit observation scope. An adapter may
-automatically observe supported native sessions only inside that scope.
+Personal does not embed DSH's native UI or synchronize native DSH
+conversations. The employee's Conversation, archive, Memory, Task, Context,
+and evidence belong to Personal. DSH receives a bounded Context payload and
+returns candidates/observations.
 
-Observation rules:
+The existing post-1.0 dsh Path B implementation is reusable evidence only
+within its recorded scope. It does not qualify this Windows-managed artifact,
+sandbox, supply chain, or product experience.
 
-- the exact source and observation scope are visible and authorized when the
-  Agent is connected;
-- there is no speculative/global session scan and no surprise per-session
-  enrollment;
-- only capabilities the adapter can truthfully read are shown;
-- an observed session is never automatically governed;
-- a native plan, Tool result, process exit, or final text is never promoted to
-  Task completion;
-- **Manage with Personal** is the only product request from observation toward
-  a new governed Goal; the owner confirms the preview and the daemon alone
-  admits it;
-- unsupported native sessions remain native-only rather than being controlled
-  through guesses or process signals.
+## 4. Employee conversations
 
-## 6. Agent onboarding in no more than three steps
+Each Personal-owned Conversation is scoped to Owner, Project, and employee.
+It may contain user messages, bounded retrieved Context, engine output,
+tool/action proposals, receipts, and source links. The archive is local and
+indexed, but retrieval injects only relevant, bounded, redacted,
+provenance-bearing observations.
 
-### Step 1 — choose source
+Conversation is not authority:
 
-Choose either:
+1. employee or manager output is a candidate;
+2. ordinary discussion can remain conversational;
+3. a Project/plan/team/budget/provider/tool/permission/external-rule change
+   requests a daemon preview;
+4. the Owner confirms, edits, narrows, or rejects;
+5. the applied revision and receipt return to the Conversation and object page.
 
-- a signed upstream catalog record; or
-- **Connect existing**.
+Agent final text, process exit, Tool result, Provider response, manager
+agreement, or engine checkpoint is not Task completion.
 
-Every catalog record shows source, version, digest, signature, license, and
-adapter compatibility. A catalog listing grants no permission and transfers no
-qualification evidence.
+## 5. One active composer
 
-### Step 2 — one review
+The right rail allows conversation with the Personal Assistant, Project
+Manager, or an employee. Exactly one composer is active:
 
-Review Provider/proxy profile, Standard Workspace, and requested permissions in
-one place. Optional detail stays in inspectors. The user may deny or narrow
-permission and preserve a native-only path when safe.
+- the recipient identity is visible in the composer label and submit action;
+- selecting another recipient switches contexts but preserves both drafts;
+- no draft is merged, cleared, or sent on switch;
+- the active composer has one keyboard focus owner;
+- an Inbox approval opens a structured preview, not a second chat composer;
+- offline and permission states preserve draft content.
 
-### Step 3 — first conversation
+This avoids accidental cross-Project or assistant/employee dispatch.
 
-Open the embedded native conversation. **Ready** means the first real response
-arrived. Installed bytes, process health, adapter handshake, model discovery,
-or a synthetic probe alone is not ready.
+## 6. Runtime lifecycle
 
-### Activation milestones
+The following remain separate even when one process participates in several:
 
-1. **First chat** — a real native conversation response.
-2. **First governed and verified Task** — daemon-admitted work with current
-   independent verification and reconciled Effects.
+`Artifact -> Installation -> Agent definition -> Runtime instance -> Task execution -> OS process -> Conversation`
 
-The product does not collapse these milestones into one readiness badge.
+The daemon owns artifact admission, installation activation, employee/runtime
+binding, execution epoch, budget, fencing, health interpretation, update,
+rollback, and removal. Process liveness is only an observation.
 
-## 7. Runtime and lifecycle
+Disconnecting an employee from a runtime preserves employee identity,
+Conversation, Memory, work, and evidence. Uninstalling DSH is a managed
+artifact operation with an impact preview and cannot silently delete Personal
+history.
 
-Package, installation, registration, instance, sidecar, execution, process,
-native session, Core Conversation/ConversationBinding-backed Personal
-projection, Goal, Plan revision, Task, and Task-owned attempt remain distinct.
-Co-location or shared bytes does not merge identity, permission, epoch, or
-completion.
+## 7. Future adapters
 
-The adopted target controls are:
+Personal 2.0 qualifies only DSH as an employee runtime. Hermes, Codex, Cursor,
+and other products are future adapter candidates. Each needs exact artifact,
+license, protocol, capability, secret, sandbox, lifecycle, platform, negative,
+and independent qualification evidence. No DSH or Pi evidence transfers.
 
-- interrupt current conversation interaction;
-- request Task pause/resume;
-- cancel Task;
-- detach observation without changing work;
-- retry/fork from checkpoint into a preserved attempt;
-- restart/recover the Agent runtime engine;
-- disconnect or uninstall the Agent.
+The retained generic adapter architecture may support future work, but there is
+no 2.0 promise of multiple external engines, native conversation
+synchronization, or a vendor-neutral runtime contract.
 
-These controls are **Requires-backend** today. Current `/ui/` must continue to
-explain their absence rather than render false controls.
-
-## 8. Disconnect versus uninstall
-
-Every removal flow asks:
-
-- **Disconnect** — remove Personal management/observation bindings while
-  preserving the native installation and native data;
-- **Uninstall** — remove the Personal-managed installation after a daemon
-  impact preview and lifecycle procedure.
-
-The preview distinguishes conversations, Goals, Plan revisions, Tasks,
-Task-owned attempts, Agent runtime engines, pending Effects, bindings, and
-retained data. Governed history remains unless a separate retention/purge
-action is explicitly confirmed. A receipt states removed, retained, unknown,
-and incomplete outcomes.
-
-## 9. Multi-Agent work and handoffs
-
-For a daemon-admitted Goal, the daemon may schedule multiple independently
-supported Agents:
-
-- each Task owns its attempts, and each attempt binds one exact
-  Agent/runtime/epoch;
-- handoffs are explicit events with source and target;
-- downstream governed work waits when an upstream handoff fails;
-- Agent disagreement is shown as Native/Observed proposals until the daemon
-  admits a Plan decision;
-- shared resources are reauthorized for each Task/body;
-- no Agent can grant another Agent permission or acceptance.
-
-Multi-Agent is an adopted Personal 2.0 target and **Requires-backend**. It is not
-a Linux 1.0 or non-Pi qualification claim.
-
-## 10. Timeline and completion
-
-Conversation and work views share one timeline grammar:
-
-| Badge | Meaning |
-|---|---|
-| **Native** | vendor Agent/session content or plan |
-| **Observed** | adapter/daemon observation not admitted as authority |
-| **Governed** | daemon admission, authorization, mutation, and Effect reconciliation |
-| **Verified** | current independent verification and daemon acceptance only |
-
-Badges are provenance/authority labels, not progress. No fake percentage or ETA
-is derived from model text. Counts appear only with a declared denominator.
-Agent final text, native harness result, Tool result, Provider response, or
-process exit is not completion.
-
-## 11. Required states
-
-| State | Required treatment |
-|---|---|
-| Empty | signed catalog/connect-existing action and native-only explanation |
-| Loading | name catalog, adapter, conversation, runtime, or governed source being loaded |
-| Partial | show supported common core and list unavailable native facets |
-| Permission | exact Provider/workspace/resource/native-session scope with deny/narrow path |
-| Error | preserve source/review/conversation context and offer supported recovery |
-| Stale | show last observation time and prevent unsafe inference/action |
-| Conflict | fail closed, invoke Agent Shell explanation, require daemon preview for resolution |
-| Success | distinguish first chat from first governed/verified Task |
-
-## 12. Backend Capability Gaps
-
-### Backend absent
-
-- signed catalog onboarding and connect-existing workflow;
-- common conversation/history projection reusing Core ConversationBinding;
-- connection-scoped native-session observation and daemon admission;
-- full Agent lifecycle over the Control Plane;
-- Goal -> Plan revision -> Task -> Attempt and multi-Agent graph/handoff orchestration;
-- interrupt/pause/resume/cancel/retry/fork/restart/recover controls;
-- general federated resource synchronization.
-
-### API/native surface exists, UI-dark or partial
-
-- The native dsh panel is an existing separate interaction surface.
-- Current Runtime and dsh projections provide bounded Agent facts but not the
-  target conversation or lifecycle model.
-- Existing Provider bindings and Task evidence can be linked into the dossier
-  but do not fill the missing Agent semantics.
-
-### Contract/core gap
-
-The Personal-private projection reuses existing Core Conversation and
-ConversationBinding. Only a new or changed public common capability,
-conversation extension, Goal, Plan, Run, Harness, attempt, or handoff machine
-surface conditionally requires P10-T02/Lane-CTR.
-
-## 13. Fixed boundaries and non-claims
-
-- The daemon is the sole authority writer.
-- Native app use is preserved; observation and governance are explicit.
-- MCP plus rules cannot control a host Agent session.
-- No Agent, adapter, Shell, or native plan can self-admit, widen permission,
-  commit Effects, or accept completion.
-- Pi remains the Linux 1.0 qualified Agent path; other Agents need independent
-  qualification.
-- This target makes no implementation, Gate, release, Profile, performance,
-  containment, or Agent-benefit claim.
+## 8. Required states
+
+Installed Agent and Conversation surfaces cover empty, loading, partial,
+stale, permission, error, unknown, offline, long-running, success, and archived
+states. DSH-specific examples include artifact unavailable, digest mismatch,
+compatibility unknown, sandbox unqualified, broker failed, Provider unavailable,
+update pending, rollback available, and outcome unknown.
+
+An unimplemented lifecycle action is `Requires-backend`, not a disabled control
+that implies an existing operation.
+
+## 9. Fixed non-claims
+
+This target does not establish a Windows DSH package, qualification, sandbox,
+native Provider support, managed child process, archive, conversation UI,
+Personal Assistant, employee runtime, another adapter, support, Gate, release,
+Profile, or multi-Agent benefit.

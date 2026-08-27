@@ -13,9 +13,11 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:ae98fd0a48d1d134e1e1aa5202a52272f1995de80b12f8b9d15745ae05d23cb2"
+fingerprint: "sha256:ae27fd621e8f46188f7eeb54afff654bfa8602c84254d40f65e005eca6546158"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -24,8 +26,10 @@ non_claims:
 
 ## 是什么
 
-一个面向单一 owner 的跨平台本地 Agent、账户、资源与受治理工作管理产品。当前 release
-是 Linux 1.0；Personal 2.0 完整目标对 Windows、macOS 与 Linux 路径分别独立资格化。
+一个让 Agent 工作可审计、有预算、可恢复且不可虚假完成的本地单 owner 系统。当前定稿
+release 边界是 Linux 1.0；已采纳的 Personal 2.0 目标是**面向一人公司与个人开发者的
+Windows-first 业务控制台**：Owner 在主机在线时用业务语言运营受治理 Project 与长期
+Digital Employee。
 本地 daemon 加确定性客户端让 Agent 工作**可审计、有预算、可恢复、不可虚假完成**：
 
 - 一个 Rust daemon（`kernel-server --personal`）只绑定 loopback，是权威状态的唯一写入
@@ -55,21 +59,28 @@ non_claims:
 [`personal/docs/product/`](../../../docs/product/README.md) 拥有；本页跟踪
 代码今天真实做到的部分。
 
-## 当前产品与 Personal 2.0 完整承诺
+## 当前产品与 Personal 2.0 OPC 目标
 
 必须分开理解两条基线：
 
 - **当前 Linux 1.0/当前 API：** 六个资源族；Pi 是唯一已资格化 Agent；daemon、CLI、
   Pi 路径、Provider Control Plane，以及位于 `clients/pc/web/` 的同源 `/ui/` SPA
   都是当前实现。Web UI 不属于 Linux 1.0 release 声明。
-- **Personal 2.0 完整目标 — `Requires-backend`：** 各自独立资格化的 Windows、
-  macOS、Linux 本地产品路径；精确 Pi、DeepSeek Harness Developer Preview 与受官方
-  平台限制的 Codex desktop 路径；Account Hub；MCP 第七族；嵌入式对话；持久
-  Goal -> Plan revision -> Task -> Attempt；多 Agent 监督；统一 Activity、控制与联邦
-  资源。
+- **Personal 2.0 OPC 目标 — `Requires-backend` /
+  `Requires-environment`：** Today / Projects / Team / Knowledge / Inbox、底部
+  Settings、右侧 Personal Assistant；Project/Charter/Goal/Plan/Routine/Task/Attempt；
+  Role Blueprint/Assignment/Digital Employee；Personal-owned Conversation/archive/
+  Vault/admitted Memory；global→Project→employee→Task Provider/budget；以及固定
+  Windows 验收路径。
+- **Agent 边界：** Pi 是 hidden、candidate-only 的 Personal Assistant engine。DSH 是
+  preinstalled managed Installed Agent 与默认员工 runtime，采用 exact audited artifact、
+  isolated child、bounded stdio broker 与 daemon Provider proxy。Conversation、Memory、
+  Task 和 completion 属于 Personal。Hermes、Codex、Cursor 等仅为 future qualification
+  candidates。
+- **Deferred：** MCP 保留为 advanced seventh-family target，但不是 OPC P0。native
+  mobile、device pairing 与 E2E relay remote 从 Personal 2.1 开始。
 
-完整版本承诺使每项都成为 release blocker，但仍不构成实现证据。固定 AI-window 分母
-保持八个场景；Codex desktop 场景为平台受限场景（owner 决策 2026-08-27）——在活动执行
-范围内没有受支持的 Codex desktop 平台期间记 `not-run (platform-conditional)`，
-Linux 主线验收以七个平台可执行场景全过加该处置收口。即使完整 8/8 通过也只构成模拟
-产品验收，不证明人类 desirability、usability、adoption、WTP 或 release/Gate 技术就绪。
+本文不声称 OPC backend 或 Windows/DSH qualification。Phase 11 的 future fixed
+denominator 是 15 个场景；Canvas 与 ordinary CI 不执行也不提升它。没有 human
+desirability、usability、adoption、WTP、support、release、Gate、Profile 或
+Agent-benefit evidence。

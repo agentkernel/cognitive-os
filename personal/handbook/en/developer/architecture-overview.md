@@ -20,11 +20,16 @@ sources:
   - path: personal/docs/architecture/multi-agent-orchestration.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/project-role-employee.md
+  - path: personal/docs/architecture/conversation-memory-vault.md
+  - path: personal/docs/architecture/windows-host-background.md
+  - path: personal/docs/architecture/routine-trigger-missed-run.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:0eb16b585d7bb33d1d419b6b0d7a8d11f1be0e23e390f6b2cd1ae772844c1fc0"
+fingerprint: "sha256:66a15772056b5c20b1471cee626b3e6125906cd821896289418df9e6616a8291"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -67,39 +72,37 @@ What exists today:
 - **Platform ports**: SQLite WAL (two databases), filesystem artifact CAS, Linux
   Secret Service, systemd user service. `implemented`.
 
-## Full Personal 2.0 composition — not current implementation
+## Personal 2.0 Windows OPC composition — not current implementation
 
-Personal 2.0 preserves the invariant above while committing to these product
-boundaries:
+The target dependency direction is Windows UI/Assistant/engines/connectors ->
+daemon application ports -> daemon-owned Project/execution/memory/provider
+domains. Windows host, DSH, Pi, Vault and connector adapters never own
+authority.
 
-- Windows, macOS, and Linux are independently qualified local product paths;
-  no platform or Agent evidence transfers;
-- the exact initial Agent set is Pi, DeepSeek Harness Developer Preview, and
-  supported-platform Codex desktop. CLI, Provider, model, account, adapter, or
-  bridge evidence does not qualify another product;
-- Account Hub credential import is a daemon-owned source-to-SecretStore
-  operation under ADR-0055. The UI supplies exact source selection and consent,
-  but never reads or receives imported material;
-- MCP becomes a seventh user-visible family with federated source identity,
-  trust, availability, and policy. The current Resource Manager and authority
-  services stay six-family on the 1.0 projection; ADR-0058 keeps MCP on a
-  separate Personal-private envelope until `P10-T03` implements that envelope;
-- vendor-specific conversation adapters preserve each Agent's protocol and
-  identity. Pi remains the only qualified Agent; dsh implementation evidence
-  and generic adapter contracts do not transfer qualification;
-- embedded native conversations enter governed work only by explicit admission;
-- Goal -> immutable Plan revision -> Task -> preserved Attempt composes
-  governed work, while daemon-owned multi-Agent supervision assigns, fences,
-  budgets, reconciles, and verifies;
-- unified Activity keeps Native, Observed, Governed, and Verified provenance
-  separate with declared coverage.
+- Project owns Charter, Goal, Plan revision, manager Assignment and employee
+  identity; Task/Attempt/Effect/verification remain daemon-governed.
+- Pi is the hidden candidate-only Personal Assistant engine.
+- DSH is the visible preinstalled managed Installed Agent and default employee
+  runtime: exact audited artifact, isolated child, bounded stdio broker, daemon
+  Provider proxy and update/rollback. No native DSH UI/conversation, raw
+  secret, MCP/base tool, HMR or home patch.
+- Personal owns scoped Conversation archive/index/retrieval, Project Markdown
+  Vault integration and semantic Memory admission/correct/forget.
+- Routine/Trigger uses daemon-owned no-overlap, queue-latest, missed/coalesced
+  facts and risk-based resume. Engine checkpoint is not authority.
+- Provider binding resolves global→Project→employee→Task; subscription,
+  account, billing/quota, budget and actual usage remain separate.
+- UI is Today/Projects/Team/Knowledge/Inbox with bottom Settings and one
+  active Assistant/employee composer.
 
-These missing capabilities remain `Requires-backend`. Public authority or
-contract additions still need a later Lane-CTR decision; ADR-0058 already
-kept MCP family and conversation projection Personal-private. The full-version
-commitment and
-fixed 8/8 AI-window simulated acceptance do not establish implementation,
-human usability, release, or Gate evidence.
+ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its
+dsh first-conversation-slice role is superseded; `conversation-projection/0.1`
+is not reinterpreted. MCP is advanced/deferred from OPC P0.
+
+All missing capabilities remain `Requires-backend`; Windows host/DSH/connector
+validation also `Requires-environment`. Native mobile/E2E relay remote is 2.1.
+The future fixed denominator is N=15 and proves nothing until run on a
+qualified Windows revision.
 
 ## Design decisions that explain surprises
 

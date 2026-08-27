@@ -1,335 +1,212 @@
-# CognitiveOS Personal Web UI product design
+# Personal 2.0 OPC Control Plane product design
 
-- Status: current P7-T05 surface plus adopted Personal 2.0 target
-- Current implementation: `clients/pc/web/`, daemon-served at `/ui/`
-- Product boundary: owner-local, desktop-primary Personal
-- Change class: `product-semantic + structural` documentation
-- Related: [Product design](product-design.md),
-  [Agent integration and conversations](agent-integration-and-conversations.md),
-  [Account Hub](account-hub.md), and [User journeys](user-journeys.md)
+- Status: adopted target; implementation remains capability-gated
+- Current client: `clients/pc/web/`, daemon-served at `/ui/`
+- Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
+- Interaction corpus: [clients OPC design](../../../clients/docs/design/opc-2.0/README.md)
+- Product prototype: external Cursor Canvas
+  `personal-2-opc-product-prototype.canvas.tsx`
 
-[ADR-0053](../../../docs/adr/0053-personal-web-ui-stack.md) establishes the
-React + TypeScript + Vite client at `clients/pc/web/`, same-origin daemon
-serving, and memory-only browser sessions. P7-T05 delivered that Control Plane;
-its closure record is
-[here](../../../docs/checkpoints/20260826-personal-p7-t05-control-plane-redesign-closure.md).
-Current task and evidence facts remain in
-[PROGRESS.md](../../../docs/plan/PROGRESS.md).
+## 1. Reality and capability honesty
 
-## 0. Reality ledger
-
-| Boundary | Web UI truth |
+| Boundary | UI truth |
 |---|---|
-| **Current implementation (Now)** | `/ui/` has Home, Work, Agents, Providers, Resources, Activity, and System. It provides governed Task creation/inspection, Provider and resource management, Agent dossier projections, composed Activity, and stewardship. |
-| **Adopted Personal 2.0 target** | Desktop-primary Control Plane with Home, Agents, Work, Library, Activity, and Settings; adapter-backed conversations; global Agent Shell; durable Goal -> Plan revision -> Task -> Attempt supervision; Account Hub; MCP; and federated resources. |
-| **Requires-backend** | Embedded conversations/history, Goal -> Plan revision -> Task -> Attempt and multi-Agent orchestration, full controls, authoritative Context/Runtime inventory, unified Activity, federated sync, new account methods, and MCP management. |
-| **Requires-core (conditional)** | Existing Core Conversation/ConversationBinding is reused. P10-T02/Lane-CTR is required only for a new or changed public MCP/Goal/Plan/Run/Harness/conversation extension; Personal-private projections may not require core changes. |
+| **Current implementation (Now)** | The delivered daemon-served UI has Linux-era Home, Work, Agents, Providers, Resources, Activity, and System surfaces with bounded real capabilities. |
+| **Adopted Personal 2.0 target** | Windows OPC shell with Today, Projects, Team, Knowledge, Inbox, bottom Settings, and a global right Personal Assistant. |
+| **Requires-backend** | Project/Role/Employee authority, Personal conversations/archive, Pi Assistant composition, managed DSH supply chain/runtime, Routine/missed-run, Inbox workflows, Vault ingestion/retrieval, binding hierarchy/budget enforcement, and OPC projections. |
+| **Requires-environment** | Windows host, background/tray, DSH sandbox, connector, and final OPC validation require qualified Windows-native routes not supplied by ordinary CI or this prototype. |
 
-## 1. Product outcome
+The prototype is an interaction specification. A control that lacks a backend
+is labelled `Requires-backend` and appears as explanatory status or a route to
+the dependency—not a button that pretends to execute.
 
-The Control Plane lets the owner:
+## 2. UX decision brief
 
-1. start or continue a real native Agent conversation;
-2. decide when an outcome should become a governed Goal;
-3. supervise Plan revisions, Tasks, attempts, Agent handoffs, Context, Effects,
-   and independent verification;
-4. curate federated Memory, Skills, Tools, and MCP resources;
-5. manage accounts, routing, permissions, runtime engines, and system recovery;
-6. understand what happened from a source-labelled timeline.
+- **Job:** understand the most important Project decision, supervise digital
+  employees, and intervene safely.
+- **User mode:** first-time Owner during setup; daily returning operator
+  afterward.
+- **Frequency/risk:** daily scan plus occasional high-risk approvals, Provider
+  changes, publishing, permissions, and deletion.
+- **Pattern:** hub-and-spoke app shell; Today priority stack; Projects/Team/
+  Knowledge master-detail; Inbox approval queue; searchable grouped Settings;
+  guided setup with review.
+- **Primary action:** the next Project-specific action, never a generic
+  "Manage".
+- **Recovery:** preserve filters, selection, drafts, form input, Project setup,
+  and last-known facts across errors and offline state.
+- **Required states:** empty, loading, partial, stale, permission, error,
+  unknown, offline, missed, long-running, success, archived.
 
-The browser remains an untrusted client. It makes daemon and adapter facts
-legible and submits typed requests. It never stores Provider secrets, writes
-authority data, controls a native host session through inference, or accepts
-completion.
+## 3. Task ergonomics contract
 
-## 2. User and entry conditions
+- **Core task:** find what needs the Owner and resolve it with evidence.
+- **Cognitive load:** visible Project/employee identity, reason, consequence,
+  freshness, cost basis, and next action; no recall of internal IDs.
+- **Control model:** edit/narrow/deny/confirm; stop/pause/retry/resume only when
+  the daemon supports them; export and audit for consequential work.
+- **Speed path:** stable sidebar, recents, preserved list filters, keyboard
+  navigation, Project switcher, and persistent object links.
+- **Error prevention:** safe defaults, constraints before input, daemon-issued
+  diff preview, stale-version invalidation, destructive separation.
+- **Evidence plan:** static prototype scenario review now; browser/runtime,
+  keyboard, reduced-motion, state, and qualified Windows scenarios later.
 
-The target user is one owner, including a user new to governed Agents. The
-default path is beginner-first: concrete labels, safe defaults, and one clear
-next action. Full authority detail stays in inspectors. There is no
-Basic/Expert mode.
+## 4. App shell and route map
 
-Desktop is the primary layout. The Control Plane attaches to the loopback
-daemon and is not a remote console, multi-user RBAC product, or public Internet
-service. It remains useful when Provider, SecretStore, Agent, adapter, native
-panel, MCP server, or model execution is unavailable: readiness, known facts,
-staleness, and deterministic recovery remain visible.
+```text
+/today
+/projects
+/projects/:projectId/briefing
+/projects/:projectId/setup
+/projects/:projectId/work/:taskId/:attemptId?
+/team
+/team/:employeeId
+/team/:employeeId/conversation
+/knowledge
+/knowledge/projects/:projectId
+/inbox
+/inbox/:itemId
+/settings
+/settings/installed-agents
+/settings/providers
+/settings/usage
+/settings/privacy-recovery
+```
 
-## 3. Information architecture
+These are design routes, not existing HTTP/SPA claims. Current implementation
+routes remain factual only in the archived as-built design corpus and code.
 
-The target shell uses stable desktop navigation, a persistent health/session
-strip, a global Agent Shell, master/detail views, and inspectors. The six
-top-level spaces are:
+The desktop shell has:
 
-**Home / Agents / Work / Library / Activity / Settings**
+1. a stable left navigation with Settings anchored at the bottom;
+2. a page title and selected Project/object identity;
+3. a central task surface;
+4. a right Personal Assistant rail;
+5. a single active composer zone.
 
-| Target surface | Current implementation (Now) | Adopted Personal 2.0 target | Dependency |
-|---|---|---|---|
-| **Home** | readiness, attention, current Task composition, alerts, recent evidence | resume conversation/Goal, triage blockers and conflicts, start first chat or governed work | richer Goal/Agent composition Requires-backend |
-| **Agents** | Runtime inventory/dossier and bounded dsh projection; no lifecycle buttons | roster, signed source, adapter capability matrix, embedded native conversations/history, Runtime, handoffs, permissions, health | conversations/catalog/lifecycle Require-backend |
-| **Work** | Task inventory/creation/detail; Run is a composed reading | Goals, daemon Plan revisions, Tasks, each Task's attempts, Context, execution flows, multi-Agent graph, Effects, evidence | Goal/Plan/control/inventory Require-backend; only new public semantics conditionally require P10-T02 |
-| **Library** | current Resources hub with Memory, Skills, Tools, and Context link to Work | Memory, Skills, Tools, and MCP; federated origin and sync state | MCP/federation Require-backend; only new public semantics conditionally require P10-T02 |
-| **Activity** | provider audit plus session-known Task facts, explicitly incomplete | one merged Native/Observed/Governed/Verified timeline with coverage and object links | unified feed and durable live updates Require-backend |
-| **Settings** | Providers and System are top-level peers | Account Hub, System, workspace, permissions, backup/recovery, session stewardship | regrouping uses current APIs; new account methods Require-backend |
+On narrow windows, the sidebar and assistant become labelled sheets while the
+current location, primary action, and unsent draft remain visible. This is a
+responsive Windows window treatment, not a native mobile product.
 
-Providers are accounts and routes inside Settings, not a resource family.
-Context belongs in Work; Runtime belongs in Agents. Existing deep links should
-redirect or preserve selection when navigation is regrouped.
+## 5. Surface responsibilities
 
-### 3.1 Global Agent Shell
+### Today
 
-The global Agent Shell is available from every target space. It:
+Shows today's plan, Owner decisions, Project health narrative, employee state,
+missed work, and latest verified results. It avoids generic KPI tiles. Every
+item states Project, responsibility, state, next action, verification, cost
+basis, and freshness.
 
-- answers "what is happening, why is this blocked, and what can I do next?"
-  from declared daemon and adapter facts;
-- explains sync conflicts and unavailable controls;
-- proposes an action in the current object context;
-- asks the daemon to issue a consequential preview;
-- returns focus to the affected object and durable receipt.
+### Projects
 
-It never owns credentials, authority, policy, Tool dispatch, write-back, or
-completion. A suggestion is not a preview; only the daemon preview can be
-confirmed. One confirmation covers the exact consequential action and scope,
-not unrelated future actions.
+Uses a stable list and Project briefing. The briefing prioritizes goal,
+current phase, manager summary, today's work, Team, Inbox items, latest
+artifacts/evidence, and spend. Tasks/Attempts are a drilldown, not the default
+mental model.
 
-Embedded/common conversation views reuse or reference existing Core
-`Conversation` and `ConversationBinding` identities where applicable.
-Vendor-native IDs are opaque origin bindings, and additional projection fields
-remain Personal-private (ADR-0058); they are not a public Core schema.
+### Guided setup
 
-### 3.2 Page-fact rules
+Uses conversational research plus structured sections. States are
+`local-draft`, `daemon-draft`, `researching`, `waiting`, `re-preview`,
+`creating`, `failed`, and `active-receipt`. The review screen has editable
+charter/goals/metrics/team/plan/permissions/budgets/triggers and an exact
+daemon-issued diff before activation.
 
-These are display requirements, not new public schemas:
+### Team
 
-- every fact carries its origin, authority level, freshness, and unknown or
-  not-run meaning when available;
-- the first reading uses plain terms; stable IDs, versions, digests, epochs,
-  raw redacted projection, and policy detail remain in an inspector;
-- default labels are **execution flow** and **Agent runtime engine**;
-- raw prompts, completions, headers, keys, bearer tokens, resolvable SecretRefs,
-  and unbounded process output are never required display facts;
-- counts, percentages, rates, and ETAs appear only with a declared denominator
-  and basis.
+Shows the current Project Manager, Role Blueprints, Assignments, employees, and
+their goal/responsibility/state/next/verified/cost facts. The employee detail
+contains work, Conversation, Memory, runtime diagnostics, and history without
+equating employee identity with a process.
 
-## 4. Core journeys and interaction model
+### Knowledge
 
-### 4.1 Five-minute first chat
+Shows Owner-shared knowledge, Project Vaults, employee-private Memory,
+provenance, import/index status, conflicts, exclusion, correction, and forget.
+Credentials route to SecretStore setup and never enter Knowledge.
 
-The first screen offers a signed upstream Agent catalog or **Connect existing**.
-The target flow has at most three steps:
+### Inbox
 
-1. select the Agent source;
-2. review Provider, workspace, and permissions together;
-3. open its embedded native conversation.
+Uses a priority queue and selected-item detail for approvals, requested input,
+permissions, blocks, failures, unknown Effects, missed runs, and budget
+warnings. Approval is a structured action preview; chat explanation is
+secondary.
 
-The Agent becomes **chat-ready** only when a real response arrives. Install,
-process health, model discovery, or a synthetic probe is not that milestone.
-The second activation milestone is the first governed and independently
-verified Task.
+### Settings
 
-This target is **Requires-backend**. Current `/ui/` can inspect Agents but does
-not install/connect them or embed conversations.
+Searchable groups cover Personal Home, Installed Agents, Providers, Usage &
+Budgets, Notifications, Privacy & Recovery, Diagnostics, and Advanced.
+Installed Agents shows preinstalled managed DSH with source/version/health/
+qualification/update/rollback. Pi is shown only in advanced Personal Assistant
+diagnostics, not as an ordinary installed Agent.
 
-### 4.2 Native conversation to governed work
+## 6. Conversation and single-composer contract
 
-Conversation begins as **Native**. Choosing **Manage with Personal**:
+The right rail may host the Personal Assistant or selected employee
+Conversation, but only one composer is active:
 
-1. identifies the selected conversation and outcome;
-2. asks the daemon to preview a persistent Goal;
-3. presents the daemon preview for owner confirmation;
-4. lets the daemon admit the Goal and first Plan revision;
-5. creates bounded Tasks and preserves attempts under their owning Task;
-6. shows Agent handoffs, Context, Effects, and evidence in Work.
+- changing recipient requires an explicit tab/identity change;
+- each recipient keeps an independent unsent draft;
+- submit labels name the recipient;
+- switching cannot send, merge, or discard a draft;
+- employee output remains candidate/observation;
+- consequential suggestions open a daemon preview in the central surface;
+- no raw chain-of-thought or fabricated confidence percentage is shown.
 
-A Goal may continue across sessions and Agents. An Agent-authored plan remains
-Native until admitted. Nothing is auto-promoted because an adapter observed it.
-Goal/Plan/Conversation projections and multi-Agent orchestration are
-**Requires-backend**. New public machine semantics conditionally require
-P10-T02/Lane-CTR; Personal-private projections may not.
+The Personal Assistant layers explanation: a one-sentence answer, expandable
+basis/sources/scope, then an audit link. Uncertainty is stated as missing or
+conflicting evidence with a concrete next step.
 
-Agent connection establishes the explicit observation scope for native
-sessions. Automatic observation is limited to that scope; there is no
-speculative/global session scan or surprise per-session enrollment.
+## 7. Form and confirmation contract
 
-### 4.3 Accounts and routing
+Project setup, role creation, imports, Provider binding, budgets, and approval
+use visible labels, constraints before entry, validation after blur/submit,
+preserved values, exact field errors, async status, and keyboard focus on the
+first error. High-risk changes use a review step with edit links and
+consequence/reversibility/source/budget facts.
 
-Settings opens Account Hub. The target first screen offers OpenAI, Anthropic,
-Google, and DeepSeek, followed by Qwen/Bailian, Kimi, Zhipu, SiliconFlow,
-Volcengine-Doubao, MiniMax, OpenRouter, and a first-class custom
-OpenAI-compatible endpoint.
+Only a daemon-issued preview is confirmable. Client or Assistant summaries are
+clearly labelled candidates. A stale preview disables confirmation and
+preserves edits for re-preview.
 
-The target methods are subscription/OAuth, API key, ADR-0055 import of an
-existing credential, and custom endpoint. Custom OpenAI-compatible
-account/endpoint support is already **Current implementation (Now)**; broader
-OAuth/import/preset and override behavior is missing. All Personal-managed
-paths terminate in daemon SecretStore custody and a daemon proxy profile.
-Routing precedence is global default, Agent override, then conversation
-override. A current native session changes only after explicit rebind/restart;
-it never switches silently.
+## 8. State system
 
-Current Provider accounts, API keys, models, fixed Agent bindings, usage,
-budgets, alerts, and audit are implemented. The broader methods and override
-hierarchy are **Requires-backend**. See [Account Hub](account-hub.md).
+Every surface specifies:
 
-### 4.4 Execution flow, attempts, and controls
-
-Work shows one Goal's Plan revisions, Tasks, each Task's attempts, Context,
-Effects, artifacts, and verification without inventing a first-class Run
-entity. The default label is **execution flow**; inspectors can identify the
-exact daemon records that compose it.
-
-The adopted controls are:
-
-- interrupt the current interaction;
-- request Task pause/resume;
-- cancel Task;
-- detach observation, which never changes work;
-- retry or fork from a checkpoint into a preserved new attempt;
-- restart or recover the Agent runtime engine;
-- compensating undo only where a real daemon compensation exists.
-
-These controls are **Requires-backend** today. Current `/ui/` has no Task
-pause/cancel/retry and no full Agent lifecycle HTTP surface. It must continue
-to show explanatory unavailable text rather than fake or disabled controls.
-
-### 4.5 Federated resources and conflicts
-
-Library and object inspectors show origin, native identity, Personal binding,
-permission, sync freshness, and conflict state. Adapters may automatically read
-and detect changes only inside the explicit observation scope established at
-Agent connection. Every write-back is a daemon Intent/Effect operation. It may
-run automatically inside an unchanged exact daemon grant/risk policy; new,
-broader, destructive, or conflicted scope requires preview and confirmation.
-A conflict fails closed; the global Agent Shell explains it and proposes a
-family-specific resolution.
-
-Bidirectional synchronization and conflict workflows are
-**Requires-backend**. Current resource operations remain Personal-owned and do
-not imply federation.
-
-### 4.6 One merged timeline
-
-Activity and per-object timelines use four source badges:
-
-- **Native** — vendor Agent or native session;
-- **Observed** — adapter/daemon observation without admission;
-- **Governed** — daemon admission, authorization, mutation, and Effect reconciliation;
-- **Verified** — current independent verification and daemon acceptance only.
-
-The current Activity page is a partial composition and must keep its coverage
-statement. A complete cross-domain feed is **Requires-backend**. Agent final
-text, Tool result, process exit, or Provider response never receives a Verified
-badge by itself.
-
-## 5. Interaction and visual rules
-
-The visual language is **Calm, Dense, Precise, Professional**.
-
-- Use stable sidebar navigation, compact rows, master/detail layouts, and a
-  persistent inspector. Density comes from alignment and hierarchy, not tiny
-  type or hidden controls.
-- Use restrained color, material, radius, shadow, and motion. This is not
-  glassmorphism, Liquid Glass, a marketing site, a wall of rounded cards, a
-  purple AI gradient, or an ornamental KPI dashboard.
-- Home is an attention surface. It leads with readiness, blockers, conflicts,
-  current Goals/Tasks, and next actions rather than hero copy or metric cards.
-- Beginner language is always the default. Governance details expand in place
-  or in the inspector; the layout does not switch modes.
-- Status uses text plus shape/icon where useful, never color alone. Native,
-  Observed, Governed, and Verified badges remain visually distinct without
-  implying a percentage.
-- Lists are sortable and filterable when the data supports it. Stable identity,
-  source, freshness, and timestamps are copyable without exposing credentials
-  or session bearers.
-- Motion provides immediate feedback and spatial continuity only. It is short,
-  interruptible where interactive, and replaced by non-motion feedback under
-  `prefers-reduced-motion`.
-- Desktop is primary. Narrow windows preserve current location, the primary
-  action, forms, tables, conversation, and recovery without claiming a separate
-  mobile product.
-- Keyboard operation, visible focus, semantic landmarks/forms/tables, live
-  status announcements, and color-independent states are required.
-
-### 5.1 State system
-
-Every surface defines:
-
-| State | Required answer |
+| State | UI requirement |
 |---|---|
-| Empty | Why is it empty, and what concrete action creates value? |
-| Loading | What is being read or changed, what remains stable, and can the user safely leave? |
-| Partial | Which source or facet is missing, and what still works? |
-| Stale | How old is the fact, why is refresh needed, and what actions are unsafe meanwhile? |
-| Permission | What exact scope is blocked, why is it needed, and can the user deny or choose a narrower path? |
-| Error | What failed, what input/work was preserved, and what is the next safe action? |
-| Success | What changed, where is the durable receipt, and what should the user do next? |
-| Long-running | Which Plan/Task/attempt is active, what facts changed, and which controls genuinely exist? |
+| empty | reason plus one first-value action |
+| loading | stable shell/skeleton, exact source, cancel only if real |
+| partial | available data, missing source, coverage |
+| stale | last-known time, unsafe actions, refresh |
+| permission | exact scope, consequence, deny/narrow path |
+| error | failed object/stage, preserved input, retry/edit/support |
+| unknown | explicit non-conclusion; no zero/healthy/success coercion |
+| offline | local host/network state, retained work, reconnect |
+| missed | missed/coalesced occurrences and risk-based next action |
+| long-running | plan, current step, artifacts, elapsed basis, real controls |
+| success | changed object, receipt/evidence, next action |
+| archived | read/export/restore/delete pathways and stopped triggers |
 
-A disconnected watch never fabricates progress or completion. A disabled
-control must not stand in for a capability that does not exist.
+## 9. Visual and accessibility direction
 
-### 5.2 Consequential actions
+The target is **calm, dense, precise, professional**:
 
-The daemon supplies exact targets, versions, permissions, external effects,
-reconciliation/compensation expectations, and idempotency identity. The user
-confirms that consequential preview once. The browser does not assemble its own
-authority preview and the Agent Shell cannot bypass the confirmation.
+- Segoe UI/system fonts, stable alignment, restrained radius/shadow, no
+  gradient/card wall, and no decorative AI glass;
+- operational density from hierarchy, not tiny text;
+- immediate feedback, spatially consistent and interruptible motion only where
+  interaction warrants it;
+- reduced-motion cross-fades/static continuity and high-contrast support;
+- semantic landmarks/headings/forms/lists/tables/dialogs;
+- visible focus, logical order, keyboard exit, non-color state labels, and
+  sufficiently large pointer targets;
+- no hover-only critical control.
 
-Provider keys, resolvable SecretRefs, bootstrap/session tokens, raw Provider
-headers, and unbounded sensitive content are never rendered.
+## 10. Non-claims
 
-## 6. Backend Capability Gaps
-
-### 6.1 Backend absent
-
-| Gap | Current UI behavior | Adopted target |
-|---|---|---|
-| Embedded Agent conversations/history | absent; native dsh panel is separate | adapter-backed native conversation inside Agents |
-| Goal -> Plan revision -> Task -> Attempt and multi-Agent graph | absent | durable Goal, daemon Plan revisions, Tasks with preserved attempts, and handoffs |
-| Task controls | no pause/cancel/retry HTTP capability | interrupt, pause/resume request, cancel, retry/fork |
-| Full Agent lifecycle | no Control Plane lifecycle API | install/connect, lifecycle, restart/recover, disconnect/uninstall |
-| Context/Runtime inventory | bounded or projection-only facets | authority-backed inspectors in Work and Agents |
-| Unified Activity/live updates | partial composition and bounded watch | cross-domain merged timeline with durable coverage/freshness |
-| Federated resources | absent | automatic read/change detection and guarded bidirectional write-back |
-| Account methods/overrides | API key and custom OpenAI-compatible accounts/endpoints plus fixed Agent binding | subscription/OAuth, credential import, broader presets, and global/Agent/conversation scopes |
-| MCP family | absent | server lifecycle, health, permissions, updates, and client projection |
-
-### 6.2 API exists, UI-dark or partially composed
-
-- The native dsh panel can host its own interaction, but it is not a Control
-  Plane conversation/history projection.
-- Context authorization/revocation facts exist, but the current UI has no
-  complete authority-backed Context inventory.
-- Existing Provider, resource, Task-evidence, dsh runtime, readiness, and
-  backup/restore APIs cover meaningful target pieces. Regrouping those pieces
-  does not fill Goal, conversation, lifecycle, federation, Activity, or MCP
-  gaps.
-
-### 6.3 Contract/core gap
-
-- MCP implementation is **Requires-backend**. Only a new/changed public MCP
-  machine surface conditionally requires P10-T02/Lane-CTR.
-- Existing Core Conversation/ConversationBinding is reused. Any new public
-  conversation extension, Goal, Plan, Run, Harness, attempt, or cross-Agent
-  handoff machine semantics conditionally require the same contract lane;
-  Personal-private projections may not.
-- This document deliberately names no proposed route, JSON envelope, database
-  table, transition, or error code.
-
-## 7. Fixed boundaries and non-claims
-
-- The product origin is daemon-served `/ui/` on loopback. A Vite preview or the
-  separate native dsh panel is not a substitute.
-- The browser has no direct SQLite, SecretStore, filesystem, shell, host
-  process, or Provider network authority.
-- Remote/public access, multi-user/RBAC, organization tenancy, HA, and cloud
-  authority remain outside this owner-local scope.
-- Native app use is allowed, but Native or Observed activity is not silently
-  governed.
-- Detach is observation-only. Agent output, Tool results, process exit, or
-  Provider response is not completion.
-- Linux 1.0 remains six-family and Pi-qualified. The Control Plane and adopted
-  Personal 2.0 target do not alter its Gate composition.
-- P7-T05 implementation and rendered-review evidence do not establish a Gate,
-  release, Profile, performance, containment, or Agent-benefit claim. The same
-  non-claim applies to this adopted target.
+No route, control, projection, Windows behavior, conversation, or Agent
+capability described here is implemented by this document or Canvas. Existing
+P7-T05 review evidence does not transfer to this target. Human usability and
+accessibility conformance require later executed scenarios.

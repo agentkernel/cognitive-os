@@ -3,7 +3,8 @@
 - Status: owner-accepted product support policy
 - Original decision: ADR-0025, 2026-07-26
 - Linux 1.0 updates: ADR-0034, ADR-0036, ADR-0037 and ADR-0038
-- Personal 2.0 adopted targets: ADR-0056, ADR-0057, and ADR-0058
+- Personal 2.0 adopted target: ADR-0059 (partial supersession of ADR-0056/0058;
+  ADR-0057 and ADR-0058 MCP/private compatibility retained)
 - Current Gate status: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Environment evidence: [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)
 
@@ -16,9 +17,10 @@ Profile evidence.
 | Platform | Architecture | Product policy | Installation/secret boundary |
 |---|---|---|---|
 | Linux | x86_64 | **Personal 1.0 unified cognitive-resource target and first public release** | GitHub Release checkable bundle; one `cognitiveos-personal.service` user unit; loopback 48181; desktop Secret Service or approved headless encrypted vault; bounded Extended Home; headless/foreground operation; `GMVP-LINUX` required |
-| Windows | x86_64 | product target after Linux 1.0; no install-parity claim yet | P7-T07 owns native credential backend, installer/service and independent B01-W |
+| Windows | x86_64 | **Personal 2.0 Windows-first OPC target; not yet supported or qualified** | P11-T02/P11-T07/P11-T13/P11-T15 own host, managed DSH, UI and fixed acceptance; production signing and independent B01-W remain separate |
 | WSL2 | x86_64 guest | engineering environment only, not a 1.0 product runtime | cannot substitute for native Linux/Windows product evidence |
-| Linux aarch64, macOS, mobile | various | deferred | requires later product decision and independent qualification |
+| Linux aarch64, macOS | various | deferred | requires later product decision and independent qualification |
+| native mobile / E2E relay remote | mobile | Personal 2.1 only; host-online, no secret downlink | device-bound keys, revocation, short sessions, preview/receipt/audit; no 2.0 support |
 
 ## 2. Linux 1.0 cognitive-resource support
 
@@ -99,21 +101,29 @@ authorship.
 - A Personal Linux RC declaration does not imply CognitiveOS Core Profile
   `implemented`. `implemented` counts only applicable MUST evidence.
 
-## 8. Personal 2.0 adopted targets — not yet supported
+## 8. Personal 2.0 Windows OPC target — not yet supported
 
-The following are owner-accepted Personal 2.0 product targets. They are not
-current support rows, implementation evidence, or Gate/release/Profile claims.
-Existing Linux 1.0 support and Gate boundaries above remain unchanged.
+The following are owner-accepted Personal 2.0 product targets under ADR-0059.
+They are not current support rows, implementation evidence, or Gate/release/
+Profile claims. Existing Linux 1.0 support and Gate boundaries above remain
+unchanged.
 
 | Personal 2.0 target | Adopted policy | Current support boundary |
 |---|---|---|
-| Desktop Control Plane | Primary entry and supervision center; target IA is Home / Agents / Work / Library / Activity / Settings, with Providers and System under Settings | **not yet supported as a Personal 2.0 target**; existing daemon-served Web UI evidence does not establish desktop packaging, target IA, or 2.0 qualification |
-| Global Agent Shell | Advises, explains, navigates, and proposes daemon previews; remains candidate-only and never writes authority or claims Task completion | **not yet supported**; no Personal 2.0 desktop Shell implementation or qualification |
-| Installed-Agent conversations | Vendor-specific adapters behind a common internal projection and honest capability matrix; native Agent applications remain usable | **not yet supported**; existing Pi/dsh/Codex adapter evidence does not establish a common conversation surface or transfer qualification |
-| MCP seventh family | Server/package/connection/capability/binding/health/quarantine identities and lifecycle; advertised tools remain Tool candidates; resources/prompts route through Context/Skill admission; no generic `Resource` schema | **not yet supported**; P5-T03/P5-T04/B10 evidence remains bounded to its MCP Tool adapter/dynamic Tool scope and is not seventh-family implementation |
-| Credential import | ADR-0055 user-initiated per-source consent; daemon-only read; approved SecretStore target; raw material never reaches UI or Agent | **`Requires-backend`** for every concrete source until a formal implementation task and focused negatives exist |
+| Windows OPC host | Local Personal Home, app/data separation, daemon/tray/background choice, sleep/offline/missed recovery | **Requires-backend + Requires-environment**; ordinary MSVC CI, Win-GNU, WSL, Linux, or Canvas is not Windows product support |
+| OPC Control Plane | Today / Projects / Team / Knowledge / Inbox; Settings bottom; right Personal Assistant; Project briefing; all states | **Requires-backend**; current daemon-served Web UI evidence does not establish the target IA or Windows packaging |
+| Project/digital employee model | Project/Charter/Goal/Plan/Routine/Task/Attempt plus Blueprint/Assignment/Employee; one current manager | **Requires-backend**; no current generic Project support claim |
+| Personal Assistant / Pi | Pi may power the candidate-only hidden Assistant engine; no authority/secret/archive/Memory ownership | **Requires-backend**; Pi Linux qualification does not qualify Windows OPC Assistant |
+| Preinstalled managed DSH Agent | Exact audited artifact, isolated child/stdio broker, daemon Provider proxy, Personal-owned Conversation/Memory/Task, health/update/rollback | **Requires-backend + Requires-environment**; current dsh Path B is not Windows managed-Agent/sandbox/supply-chain qualification |
+| Personal Conversation/Knowledge/Vault/Memory | scoped local archive/index/retrieval, Obsidian-compatible Project Vault, semantic admission/view/correct/forget | **Requires-backend**; no proprietary Obsidian app support or memory-quality claim |
+| Routine/Inbox/recovery | manual/schedule/qualified-event, no-overlap, queue-latest, missed/catch-up, structured approval/reconcile | **Requires-backend**; no 24/7/offline-host claim |
+| Provider/budget/usage | global→Project→employee→Task binding; Project/member/Task budgets; DSH/Pi daemon proxy; actual usage/quota | **Requires-backend** beyond current fixed binding/advisory-budget foundation |
+| X/Twitter connector scenario | rights-safe original content, qualified connector, preview/receipt/readback, no evasion | **Requires-backend + Requires-environment**; no connector, platform, browser-reliability, or business-outcome support |
+| MCP seventh family | retained advanced ADR-0057/0058 target; server/package/connection/capability/binding/health/quarantine; candidates only | **deferred from OPC P0 and not supported**; current MCP Tool transport is not family implementation; DSH native MCP/base tools remain disabled |
+| Future Agent adapters | Hermes, Codex, Cursor and others | future independent qualification candidates only; no Personal 2.0 support promise or evidence transfer |
+| Credential import | ADR-0055 user-initiated per-source consent; daemon-only read; approved SecretStore target | **Requires-backend** for every concrete source; raw material never reaches UI/Agent/DSH/Pi |
 
-No Personal 2.0 Gate is created by this adopted-target table.
+No Personal 2.0 Gate or support row is created by this adopted-target table.
 
 ## 9. References
 
@@ -128,5 +138,6 @@ No Personal 2.0 Gate is created by this adopted-target table.
 - [ADR-0056](../adr/0056-personal-2-0-desktop-control-plane.md)
 - [ADR-0057](../adr/0057-personal-2-0-mcp-resource-family.md)
 - [ADR-0058](../adr/0058-personal-2-0-mcp-conversation-private-projection.md)
+- [ADR-0059](../adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - [THIRD-PARTY-NOTICES.md](../legal/THIRD-PARTY-NOTICES.md)
 - [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)

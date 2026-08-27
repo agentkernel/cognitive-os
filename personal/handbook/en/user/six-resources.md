@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:a859d135e542d2b2f482ef92c44e87f9a610d0ec5dabfb10a74c6b3680290318"
+fingerprint: "sha256:682ff5a399ebd646b4a38156a2f3259e40ca38cf84cf26a9486f2a801c56c834"
 non_claims:
   - Family presence in authority storage does not claim complete user-facing workflows; per-family gaps are listed below and in known-limitations.
 ---
@@ -52,17 +52,16 @@ Two rules explain most behavior you will see:
    content cannot even influence ordering.
 
 Deferred from Linux 1.0: embeddings/vector/graph Memory, skill marketplaces,
-the required Personal 2.0 MCP resource family (the delivered post-1.0 MCP Tool
-transport/dynamic-Tool MVP is not that family), federated synchronization,
-multi-Agent orchestration, and the complete Personal 2.0 product composition.
+the Personal MCP family (the delivered post-1.0 MCP Tool transport/dynamic-Tool
+MVP is not that family), and general federation.
 
-## Personal 2.0 required seventh family (`Requires-backend`)
+## Advanced Personal seventh family (`Requires-backend`, deferred)
 
-Personal 2.0 adopts **MCP** as a seventh user-visible resource family. This does
-not change the current six-family Resource Manager API and does not turn MCP
-content into native Tools. ADR-0058 keeps the seventh family on a
-Personal-private envelope; older clients still see only the six-family
-projection.
+ADR-0057 retains **MCP** as an advanced seventh Personal family. ADR-0059
+defers it from the Windows OPC P0 path; it does not block Project, employee,
+Conversation, Routine, Provider, UI, or X acceptance. This does not change the
+current six-family Resource Manager API or turn MCP content into native Tools.
+ADR-0058 keeps it Personal-private; older clients see six families.
 
 The target family owns distinct server, package, connection, advertised
 capability, binding, health, update, and quarantine identities. A **federated
@@ -88,6 +87,6 @@ Unified Activity keeps these labels distinct:
 - `Verified`: current independent verification and daemon acceptance only.
 
 They are not an automatic maturity ladder and `Verified` is not a release or
-qualification claim. The MCP family and general federation capability are full
-Personal 2.0 release blockers and remain `Requires-backend`; connection alone
+qualification claim. MCP/federation remains `Requires-backend` for a future
+advanced successor. DSH native MCP/base tools stay disabled; connection alone
 grants no Tool, Context, workspace, model, or host-session authority.

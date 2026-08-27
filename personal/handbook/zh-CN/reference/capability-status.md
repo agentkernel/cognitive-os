@@ -25,7 +25,9 @@ sources:
   - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
-fingerprint: "sha256:d2844dc4dbafcad98c8a5bd1c9181981c03fcd14f62295454a350e217267e2f0"
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/architecture/windows-host-background.md
+fingerprint: "sha256:dedde65bf37ac7ad7bf82c71bd3593c345aeee169b71b7ea8c8279db6ead7c17"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -34,8 +36,8 @@ non_claims:
 
 图例：`implemented`（真实路径 + 测试）、`partial`（可用但有具名缺口）、
 `designed`（仅合同/设计）、`unavailable`（无可用路径）、`Requires-backend`
-（已采纳目标但缺所需 daemon/API 实现）与 `Requires-core`（还需要批准的 core
-合同/权威工作）。
+（已采纳目标但缺所需 daemon/API 实现）、`Requires-environment`（缺 qualified
+native/campaign environment）与 `Requires-core`（还需要批准的 core 合同/权威工作）。
 
 未带 Personal 2.0 限定的行描述当前 Linux/当前 API 基线：六个资源族，Pi 是唯一已
 资格化 Agent。同源 `/ui/` 已存在于 `clients/pc/web/`；已采纳的桌面优先重设计是另一
@@ -70,17 +72,25 @@ non_claims:
 | 当前六族资源投影/watch | implemented | 仅 management+task 通道；不是已采纳的 MCP 第七族 |
 | Agent 生命周期（Pi 获取→sidecar） | implemented | — |
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
-| Personal 2.0 跨平台本地产品 | Requires-backend | Windows、macOS、Linux 是精确且各自独立的目标路径；当前 release 证据仍属于 Linux 1.0，不转移 |
-| Personal 2.0 初始 Agent 集 | Requires-backend | 精确 Pi、`deepseek-ai/deepseek-harness` Developer Preview，以及只进入官方支持平台的当前官方 ChatGPT desktop app 内 Codex experience；不声明 Linux Codex desktop；CLI/Provider/model/account/bridge/平台证据都不转移 |
-| 厂商专用 Agent 对话适配器 | Requires-backend | 当前 Pi/dsh 路径不提供通用桌面对话适配层；只有 Pi 已资格化 |
+| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Team/Knowledge/Inbox、Project 工作闭环与 native Windows host 均为 target；Linux/WSL/CI/Canvas evidence 不转移 |
+| Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority 可复用，但 Project activation、manager envelope、Routine/missed ledger 与完整 hierarchy 不存在 |
+| Role Blueprint/Assignment/Digital Employee | Requires-backend | 没有完整 authority/projection；employee identity 必须与 runtime/process 分离 |
+| Pi-backed Personal Assistant | Requires-backend | Pi 是 hidden、candidate-only target engine；current Pi Shell/Linux qualification 不构成 OPC Assistant |
+| Preinstalled managed DSH Installed Agent | Requires-backend + Requires-environment | existing dsh Path B 不是 exact Windows artifact/isolated child/sandbox/update/rollback qualification；没有 native DSH UI/conversation target |
+| Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive 与 single composer 不存在；不得重解释 ADR-0058 `conversation-projection/0.1` |
+| Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |
+| Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget 已有，但 Conversation/Vault extraction/retrieval 与 privacy matrix 不存在 |
+| Routine/Trigger/Inbox/offline-missed recovery | Requires-backend | scheduler/Effect/preview foundation 已有；没有完整 no-overlap/queue-latest/missed/approval 产品路径 |
+| Provider global→Project→employee→Task binding 与 hard budget | Requires-backend | current fixed Agent binding 与 advisory budget 保持 partial；DSH/Pi 必须经 no-raw-secret daemon proxy |
+| X/Twitter qualified connector scenario | Requires-backend + Requires-environment | 不声明 connector/platform qualification 或业务结果；禁止 evasion |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |
-| Personal 2.0 MCP 第七族 + 联邦资源 | Requires-backend | ADR-0057 已采纳；ADR-0058 将资源族与对话投影保持为 Personal-private（无公开 Core schema，1.0 六族投影无 `family=mcp`）；当前没有资源族 API、持久化、trust policy、联邦投影或目标 UI |
-| Goal + 不可变 Plan revision + Task 所属保留 Attempt + 多 Agent 监督 | Requires-backend / Requires-core | 仅完整版本目标；当前持久工作对象仍是 Task，完整层级、控制、统一 Activity 与 supervisor 不存在 |
-| 固定 AI-window 产品验收 | Requires-backend | 八个固定 N=1 场景；完整通过要求 8/8，其中 S3（Codex desktop）为平台受限场景（owner 决策 2026-08-27：活动执行范围内无受支持平台期间记 `not-run (platform-conditional)`，Linux 主线以七个平台可执行场景全过加该处置收口）；当前不声明执行结果，未来 pass 仍只是模拟产品评估，不是人类或 release/Gate 证据 |
+| Personal MCP 第七族 | deferred / Requires-backend | ADR-0057/0058 retained advanced private target；不是 OPC P0，无 current family API，DSH native MCP/base tools 继续禁用 |
+| Windows OPC fixed-denominator acceptance | Requires-environment / not-run | future N=15、同一 qualified Windows revision；required CI/Canvas 不执行；signing/B01-W/release 分离 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
 | 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
-| 当前 Web UI / Console | partial | daemon 同源提供的 `/ui/` 已存在于 `clients/pc/web/`；HTTP Task/Agent 控制仍缺失，Personal 2.0 桌面优先重设计未实现 |
-| 当前 Windows/macOS 产品 | unavailable | 仅 Linux x86_64；Windows 安装模板与凭据后端已成稿并过 CI，但 B01-W 安装战役未执行；Personal 2.0 采纳不让任一平台成为当前事实 |
+| 当前 Web UI / Console | partial | daemon 同源 `/ui/` 位于 `clients/pc/web/`；OPC IA/Project/Conversation/Agent/background target 未实现 |
+| 当前 Windows 产品 | unavailable | installer/credential fragment 与 ordinary CI 不是 Windows OPC host/DSH/UI support；qualified native environment 与 B01-W 均不存在 |
+| Personal 2.1 native mobile/E2E relay remote | deferred | 仅 host-online；device-bound key/revocation/short session/preview/audit/no secret downlink 为 future controls |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |
 | UJ1–UJ6 capability-truth 登记 | implemented | 冻结 public-caller/oracle/cleanup/evidence 行；Web UI/Multi-Agent 为 scope-excluded，不得阻塞 required arm；linux-002 命名 oracle 是产品证据，不是 EVAL/Gate |
 

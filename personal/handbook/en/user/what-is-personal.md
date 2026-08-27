@@ -13,9 +13,11 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:ae98fd0a48d1d134e1e1aa5202a52272f1995de80b12f8b9d15745ae05d23cb2"
+fingerprint: "sha256:ae27fd621e8f46188f7eeb54afff654bfa8602c84254d40f65e005eca6546158"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -24,9 +26,11 @@ non_claims:
 
 ## What it is
 
-A cross-platform local stewardship product for one owner's Agents, accounts,
-resources, and governed work. Its current release is Linux 1.0; its full
-Personal 2.0 target independently qualifies Windows, macOS, and Linux paths.
+A local, single-owner system for auditable, budgeted, recoverable Agent work.
+Its current finalized release boundary is Linux 1.0. Its adopted Personal 2.0
+target is a **Windows-first operating console for one-person companies and
+individual developers**: the Owner runs governed Projects and long-lived
+digital employees in business language while the host is online.
 A local daemon plus deterministic clients make Agent work **auditable,
 budgeted, recoverable, and never falsely completed**:
 
@@ -67,7 +71,7 @@ independent verification wired end-to-end) is not yet connected — see
 by [`personal/docs/product/`](../../../docs/product/README.md); this page
 tracks what the code does today.
 
-## Current product and full Personal 2.0 commitment
+## Current product and Personal 2.0 OPC target
 
 Keep these two baselines separate:
 
@@ -75,19 +79,23 @@ Keep these two baselines separate:
   qualified Agent; the daemon, CLI, Pi paths, Provider Control Plane, and the
   same-origin `/ui/` SPA at `clients/pc/web/` are current implementation. The
   Web UI is not part of the Linux 1.0 release claim.
-- **Full Personal 2.0 target — `Requires-backend`:** independently qualified
-  Windows, macOS, and Linux local product paths; exact Pi, DeepSeek Harness
-  Developer Preview, and supported-platform Codex desktop paths; Account Hub;
-  MCP as a seventh family; embedded conversations; durable Goal -> Plan
-  revision -> Task -> Attempt work; multi-Agent supervision; unified Activity;
-  controls; and federated resources.
+- **Personal 2.0 OPC target — `Requires-backend` /
+  `Requires-environment`:** Today / Projects / Team / Knowledge / Inbox,
+  bottom Settings, and a right Personal Assistant; Project/Charter/Goal/Plan/
+  Routine/Task/Attempt; Role Blueprint/Assignment/Digital Employee; Personal-
+  owned Conversations, archive, Vault and admitted Memory; global→Project→
+  employee→Task Provider/budget control; and one fixed Windows acceptance path.
+- **Agent boundary:** Pi is the hidden candidate-only Personal Assistant
+  engine. DSH is the preinstalled managed Installed Agent and default employee
+  runtime through an exact audited artifact, isolated child, bounded stdio
+  broker and daemon Provider proxy. Personal owns Conversation, Memory, Task
+  and completion. Hermes, Codex, Cursor and others are future qualification
+  candidates.
+- **Deferred:** MCP remains an advanced seventh-family target but is not an OPC
+  P0 dependency. Native mobile, device pairing and E2E relay remote begin in
+  Personal 2.1.
 
-The complete version commitment makes every item a release blocker, but remains
-separate from implementation evidence. The fixed AI-window denominator stays
-eight scenarios; the Codex desktop scenario is platform-conditional (owner
-decision 2026-08-27) and is recorded `not-run (platform-conditional)` while no
-supported Codex desktop platform is in the active execution scope, so
-Linux-mainline acceptance closes at seven platform-eligible passes plus that
-disposition. Even a full 8/8 pass is simulated product acceptance only and
-proves no human desirability, usability, adoption, willingness to pay, or
-release/Gate technical readiness.
+No OPC backend or Windows/DSH qualification is claimed. Phase 11's future fixed
+denominator is 15 scenarios; Canvas and ordinary CI do not execute or promote
+it. There is no human desirability, usability, adoption, willingness-to-pay,
+support, release, Gate, Profile or Agent-benefit evidence.

@@ -11,7 +11,9 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
   - path: personal/docs/product/linux-1.0-scope.md
-fingerprint: "sha256:3acadef5dd987a8db65469aec58a7cdb34edccb6b2d1dd7351c2517e48cf2882"
+  - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
+  - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
+fingerprint: "sha256:3133c39510f40757e4b03f7e1a2ff8c608bd6bf51e2ec43074e9c9130dc3d0ab"
 non_claims:
   - Compilation on a platform is not product support; only the listed product target carries installation and service paths.
 ---
@@ -25,13 +27,14 @@ sessions need a Secret Service keyring (GNOME Keyring). Headless operation is
 designed (encrypted vault) but not selectable yet. WSL2 and Windows-native hosts
 are explicitly refused by the Pi launch admission path.
 
-Personal 2.0 separately commits to local Windows, macOS, and Linux product
-paths. Each platform and Agent needs its own capability, lifecycle, recovery,
-negative, and release qualification; current Linux evidence does not transfer.
-The initial target Agent set is exact Pi, DeepSeek Harness Developer Preview,
-and the Codex experience in the current official ChatGPT desktop app only on
-officially supported and independently qualified platforms. No Linux Codex
-desktop is implied. These targets remain `Requires-backend`.
+Personal 2.0 is Windows-first and remains `Requires-backend` plus
+`Requires-environment`. The qualified native Windows OPC development
+environment and B01-W are not provisioned. The target runtime is preinstalled
+managed DSH; Pi is the hidden Personal Assistant engine. Existing Linux Pi/dsh,
+WSL, ordinary CI, Canvas, CLI, Provider, model, account, adapter, or Windows GNU
+evidence transfers no Windows support or DSH qualification. Hermes, Codex,
+Cursor and others remain future candidates. Native mobile/E2E relay remote is
+Personal 2.1.
 
 ## Pinned versions
 
