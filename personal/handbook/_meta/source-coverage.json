@@ -77,6 +77,7 @@
     { "glob": "docs/evaluation/**", "category": "legacy-docs", "reason": "evaluation/benchmark design sources" },
     { "glob": "docs/traceability/**", "category": "legacy-docs", "reason": "traceability ledger and findings" },
     { "glob": "docs/legal/**", "category": "legacy-docs", "reason": "third-party notices" },
+    { "glob": "docs/bug/**", "category": "legacy-docs", "reason": "dated product diagnostics and recovery notes; current product status remains in PROGRESS.md" },
     { "glob": "docs/clients/**", "category": "legacy-docs", "reason": "deprecated stub pointing at external clients repository" },
     { "glob": "clients/docs/platforms/**", "category": "legacy-docs", "reason": "deprecated stub pointing at external clients repository" },
     { "glob": "docs/research/**", "category": "legacy-docs", "reason": "documentation-only research reviews" },

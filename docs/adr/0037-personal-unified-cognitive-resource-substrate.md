@@ -7,6 +7,9 @@
 - Related: ADR-0026, ADR-0035, ADR-0036, P2-T02, P3, P4, P5, P7-T08
 - Partially supersedes: ADR-0036 only where it defers all durable Memory and
   general Context delivery from Linux 1.0
+- Partially superseded by: [ADR-0057](0057-personal-2-0-mcp-resource-family.md)
+  for the Personal 2.0 family count only; this ADR remains authoritative for
+  the finalized six-family Linux/Personal 1.0 boundary
 
 ## Context
 
@@ -214,3 +217,17 @@ This ADR and its documentation batch implement no runtime behavior. They do not
 run or pass any Gate, release Personal 1.0, produce release or Profile evidence,
 or establish CognitiveOS Profile conformance. Gate states remain whatever
 `PROGRESS.md` currently records.
+
+## Personal 2.0 successor boundary
+
+On 2026-08-27 the owner accepted
+[ADR-0057](0057-personal-2-0-mcp-resource-family.md), which adds MCP as a true
+seventh product resource family for Personal 2.0. That decision partially
+supersedes only this ADR's exact family count for the 2.0 product line. The
+Linux/Personal 1.0 product remains finalized with the six families recorded
+above, and its Gate, release, support, and evidence statements are unchanged.
+
+This backlink intentionally does not rewrite the historical 1.0 decision.
+ADR-0057 also preserves this ADR's prohibition on a universal `Resource`
+schema, table, or lifecycle; any public contract or compatibility change
+requires the separately registered Lane-CTR decision in `P10-T02`.

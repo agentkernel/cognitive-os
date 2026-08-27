@@ -1,8 +1,68 @@
 # 12 — Control Plane App Shell
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 app-shell target; historical shell retained
+- Updated: 2026-08-27
 - Contract: IA per `06-control-plane-recommended-ia.md`; state language per `22`; tokens per `11`. Archetype decision (from `desktop-app-archetypes`): **monitoring cockpit with command-center chrome** — "priority stack + timeline + detail pane" inside, "status rail + command surface" as the frame. Explicitly NOT the SaaS dashboard layout (no KPI grid, no welcome hero, no card wall).
+
+## Personal 2.0 app shell
+
+The adopted shell replaces the earlier status-strip + seven-space cockpit:
+
+```text
+┌─ Navigation ─┬──────────── Primary workspace ────────────┬─ Inspector ─┐
+│ Home         │ selected route/object                      │ summary     │
+│ Agents       │ conversation · master/detail · Work ·      │ provenance  │
+│ Work         │ Library · Activity · Settings              │ full facts  │
+│ Library      │                                             │ actions     │
+│ Activity     │                                             │ gaps        │
+│ Settings     │                                             │             │
+├──────────────┴─────────────────────────────────────────────┴─────────────┤
+│ Global Agent Shell: explain · compare · propose · daemon preview · receipt│
+└──────────────────────────────────────────────────────────────────────────┘
+```
+
+### Region ownership
+
+- **Navigation:** six destinations, selected state, daemon/readiness summary,
+  active Agent/conversation, and command-palette entry. Provider/System are not
+  peers; they are Settings groups.
+- **Primary workspace:** the selected product object and its dominant task.
+  List/master-detail is default for repeated operations; conversation is
+  default inside an Agent.
+- **Inspector:** beginner summary first, then source, identity, freshness,
+  capability matrix, provenance, digests, raw redacted facts, and current-backed
+  actions. The inspector never becomes a second navigation tree.
+- **Agent Shell:** globally reachable, candidate-only explainer/proposal layer.
+  It can collapse to a labeled bar, expand without covering the active object,
+  and preserve its local prompt draft. Vendor-native conversation/composer
+  remains inside Agents. The Shell never stores credentials, sends a native
+  turn by inference, or silently converts chat to Work.
+
+### Shell behavior
+
+1. Selected object and Agent context survive route changes. Native conversation
+   state remains source-owned in the Agents workspace.
+2. `Manage with Personal` from a native conversation or a Shell proposal asks
+   the daemon for a preview and, after real admission, opens the resulting Work
+   object. Without backend support it appears only as a
+   `Requires-backend` specification—not a button.
+3. `⌘/Ctrl+K` opens the command palette; all shell and palette behavior has a
+   complete keyboard path and focus return.
+4. Status cells link to Settings/System or Activity filters; they never become
+   an ornamental top strip.
+5. At wide desktop widths all three regions may coexist. At narrower widths,
+   inspector and detail become explicit overlays/routes; navigation remains
+   recoverable. No separate mobile-product claim is made.
+6. Reduced motion replaces spatial transitions with short fades; reduced
+   transparency makes overlays solid.
+
+### Current-versus-target boundary
+
+The P7-T05 SPA currently has a flat route shell and no embedded Agent
+conversation. Its current seven routes remain documented in
+[Current State Map](control-plane-current-state.md). This shell requires new
+frontend structure and multiple backend projections; target-only portions are
+`Requires-backend`.
 
 ---
 

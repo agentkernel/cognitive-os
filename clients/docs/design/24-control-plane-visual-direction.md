@@ -1,9 +1,68 @@
 # 24 — Visual Direction
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 visual direction; no implementation claim
+- Updated: 2026-08-27
 - Authorities: `apple-design` (primary), `09` (product translation), `frontend-design` (auxiliary — distinctiveness discipline, used under Apple restraint and operator density). Tokens: `11`. State language: `22`.
 - This is the visual thesis for the whole surface, applied concretely to the three core pages (Home, Work, Work Detail). It is a *direction*, not final art: final palettes/hues are produced and contrast-verified in the visual phase against `11` §2's gates.
+
+## Personal 2.0 visual direction
+
+### Thesis: "The Provenance Desk"
+
+The brand-new desktop feels like a private, well-made working desk for many
+Agents: calm enough for conversation, dense enough for operations, precise
+enough for evidence. Its signature is not glass, gradient or cards. It is the
+continuous visual grammar connecting:
+
+`Agent conversation -> Manage with Personal -> Goal/Plan/Task -> provenance
+timeline -> verification`.
+
+### Signature
+
+The signature element is a **provenance rail** that can appear beside a
+conversation message, Work attempt or Activity event. Its four marks—Native,
+Observed, Governed, Verified—let the owner see where a fact came from without
+turning every screen into an audit log. The full inspector telescopes from that
+mark to source, revision, digest and evidence.
+
+### Composition
+
+- Navigation is quiet and stable.
+- The workspace owns attention and uses lists, transcript rows, master/detail
+  and continuous documents—not card galleries.
+- The inspector is the depth surface, beginner summary first and exact facts
+  beneath.
+- The candidate-only global Agent Shell docks as product chrome with clear
+  selected-object/source context and the daemon-preview boundary. Native
+  Agent conversation, account/model route, and Manage with Personal entry
+  remain visible in the Agents workspace.
+- Settings uses compact grouped rows; Account Hub is operational, not a
+  checkout or SaaS billing dashboard.
+
+### Visual refusal list
+
+No Liquid Glass everywhere; no giant gradients; no oversized cards; no
+marketing-page spacing; no welcome hero; no decorative metric strip; no
+sparkles or robot motifs; no fake progress; no glossy Provider logos as primary
+navigation. Translucency is restricted to true overlays. Color is spent on
+selection, state and provenance and always has text/shape redundancy.
+
+### Page language
+
+- **Agents:** transcript and dossier share one baseline grid; display-only
+  native metadata/artifact slots are inset by structure, not themed mini-apps
+  and never carry actions.
+- **Work:** Goal/Plan/Task hierarchy uses indentation, rules and typography;
+  attempts and provenance remain scannable.
+- **Library:** family index and master/detail; MCP looks first-class, not bolted
+  onto Tools.
+- **Activity:** one calm time axis with provenance markers and source coverage.
+- **Settings/Account Hub:** compact grouped forms and receipts; credentials are
+  presence-only.
+
+The earlier "Instrument" direction remains compatible in its restraint,
+ledger texture and evidence craft. This amendment changes its center from a
+two-lane Task-only timeline to the end-to-end Provenance Desk.
 
 ---
 

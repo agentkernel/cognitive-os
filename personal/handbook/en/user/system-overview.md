@@ -8,18 +8,27 @@ generated: false
 sources:
   - path: personal/docs/product/README.md
   - path: personal/docs/product/cognitive-resource-model.md
+  - path: personal/docs/product/personal-2.0-scope.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
   - path: personal/docs/architecture/README.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
 tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:a3e5c88501e93bcd424f27a48c62a0e92475d1d5c1df118c2cd8f648b6a1c080"
+fingerprint: "sha256:9d2765dd3f966220dfb96fc5ff3e3357b8b22acfcde178b0cb60946da6b9ce07"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
-  - Linux 1.0 does not claim Windows installation parity, Web UI, MCP/dynamic tools, or multi-agent orchestration.
+  - Linux 1.0 does not include Windows installation parity, Web UI, MCP-family, or multi-Agent orchestration in its claim composition; current `/ui/` existence does not change that boundary.
 ---
 
 # System overview
@@ -33,7 +42,7 @@ clients such as `cognitive`, Pi, and SDKs request or propose operations.
 ## The model in one picture
 
 ```text
-You -> cognitive CLI or Pi Shell -> local Rust daemon -> six domain services
+You -> cognitive CLI or Pi Shell -> local Rust daemon -> current six domain services
                                       |                 -> Provider proxy
                                       |                 -> SQLite authority store
                                       `-> Intent/Effect, budget, evidence, events
@@ -57,6 +66,31 @@ independent, current verification result.
 
 Budget, Permission, Model, Artifact, Intent/Effect, Evidence, and Event are
 cross-cutting objects. They do not form a seventh universal resource table.
+
+## Adopted Personal 2.0 target (`Requires-backend`)
+
+Personal 2.0 keeps the daemon-only authority boundary but changes the intended
+product composition:
+
+- the existing same-origin `/ui/` SPA at `clients/pc/web/` becomes a
+  desktop-first Control Plane only after a target redesign that is not
+  implemented;
+- target navigation is Home, Agents, Work, Library, Activity, and Settings;
+  Providers and System live under Settings, and `Work` is a navigation label
+  rather than a new Task/Run authority domain;
+- Account Hub manages Provider accounts and subscriptions and offers
+  user-initiated, per-source credential import through the daemon;
+- MCP becomes a seventh resource family for source-identified federated
+  capabilities; it is not an alias for the current native Tool catalog;
+- vendor-specific conversation adapters connect installed Agents to the Agent
+  Shell without qualifying them by association with Pi;
+- durable Goal and Plan revisions organize work above current Tasks, while the
+  daemon supervises independently qualified Agents and remains the only
+  authority writer.
+
+There are no current APIs for these target additions. `Requires-backend` means
+the adopted design must not be shown as a working feature; `Requires-core`
+additionally marks work that needs approved contract/authority semantics.
 
 ## How a normal interaction flows
 

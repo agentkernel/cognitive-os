@@ -12,11 +12,12 @@ sources:
   - path: .github/workflows/ci.yml
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["COMMAND-SHELL-PS51", "RUST-LINK-DEV-WIN-GNU-01"]
+  - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: tools/src/p7_t05_web_ui_inventory.mjs
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:2cd15b384f7f131864d44aaa5014aba98c92e80e8ddd74896d4fcdc7ff239a53"
+fingerprint: "sha256:e05af897b90644bf5149c21c2df648df3b219edf920537ca719cd0a781cbcd6f"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -48,7 +49,8 @@ node --test tools/test/personal-rc-gate.test.mjs         # P7-T06 RC 合成器�
 # 产品源是 daemon GET /ui（将 dist/ 复制到 data_dir()/ui）。Vite preview 不是产品源。
 # linux-002 部署 Control Plane / dsh 后，owner 在本机 Windows 经 SSH 转发查看：
 #   ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
-# 然后打开 http://127.0.0.1:48681/ui/ 与 http://127.0.0.1:3080/。daemon 重启后须刷新 dsh web/apply。
+# 然后打开 http://127.0.0.1:48681/ui/ 与 http://127.0.0.1:3080/。
+# daemon 重启后必须重启 cognitive dsh web；apply 不能恢复新 daemon 的 INACTIVE dsh 状态。
 ```
 
 ## 必须走受支持 CI（Ubuntu / Windows MSVC）或 exact-revision native Linux

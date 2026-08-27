@@ -13,14 +13,17 @@ sources:
   - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: docs/governance/AXIOMS.md
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/packages/pi-cognitiveos/src/safety.test.ts
   - personal/crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:aafc661d2d07a2c5e348b7d2ca6aa66f078bd278490f1fcdf64b3b64c33dac7e"
+fingerprint: "sha256:e1fe4664c60c8ba2a060486d04a2904577c461e47f8439755419428b9b10d9a1"
 non_claims:
   - Windows 本地 runtime 文件仍缺少显式 ACL 加固——OS CSPRNG 令牌生成不构成 ACL 声明。
+  - ADR-0055 采纳了凭据导入边界，但没有具体导入机制；Account Hub 导入仍为 Requires-backend。
 ---
 
 # 安全边界
@@ -52,6 +55,26 @@ token 前 fail closed，绝无 PID/时间/hash fallback。持久文件若仍是�
   单、帧字节上限与硬截止下运行；其唯一网络路径是回连 daemon 的一次性私有 socket。
 - `admit_pi_launch` 对 Windows 原生/WSL2 主机、缺失 sandbox 适配器、digest 不符及注
   册 HTTPS 代理端点之外的任何模型 egress 一律 fail-close。
+
+## 用户定向凭据导入（已采纳目标）
+
+ADR-0055 扩展 approved non-logging input path，但不削弱 secret 隔离。未来每次导入
+必须同时满足：
+
+- 用户发起导入，并在读取前同意精确命名的来源与目标 SecretStore；
+- 只有 Rust daemon 读取来源并写入 approved SecretStore；
+- 来源材料只短暂存在于 daemon 内存，绝不进入 UI、Agent、sidecar、argv、环境变量、
+  CognitiveOS 普通配置、SQLite、日志、CI/测试输出、证据、支持输出或聊天；
+- 审计只含脱敏元数据；
+- 默认保留来源；安全删除必须是该次导入的显式用户选择。
+
+浏览器 profile/cookie 解密、第三方 Agent 凭据文件解析、订阅 token 导入与 OAuth 捕获
+均为 `Requires-backend`。边界被接受不等于这些机制已存在。
+
+已采纳的 MCP 第七族目标同样为 `Requires-backend`：连接凭据留在 approved
+SecretStore；MCP client/server/package/adapter 仍只产 candidate 或 observation；
+广告的 tool、resource 或 prompt 不授予任何能力。原始连接材料绝不进入 Control Plane、
+Agent、sidecar、package metadata、普通配置、SQLite、Context、日志、证据或聊天。
 
 ## 请求界限（DoS 卫生）
 

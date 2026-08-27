@@ -1,8 +1,50 @@
-# 20 — System Spec (Readiness · Doctor · Stewardship · Session)
+# 20 — Settings / System Spec
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 Settings/System target; current System spec retained
+- Updated: 2026-08-27
 - Contract: `06` §3.7, Flow 8 in `07`, capability domain D1/D7. Job: make a complex substrate legible — **the surface an operator reads when something is wrong**, so its design bar is clarity under stress, not feature breadth.
+
+## Personal 2.0 Settings / System amendment
+
+System is no longer a first-level destination. It is a high-stakes group under
+**Settings**, alongside Account Hub, Appearance & Accessibility, and
+Diagnostics.
+
+```text
+Settings
+  Account Hub
+  System
+    Readiness
+    Doctor
+    Backup / restore
+    Session
+    About
+  Appearance & accessibility
+  Diagnostics
+```
+
+Global readiness remains visible from every route and deep-links to
+Settings/System. The System content below—readiness, doctor, stewardship,
+session, about—remains the current-backed core and keeps all P7-T05 honesty
+notes.
+
+### Settings behavior
+
+- Groups are searchable by concrete labels; search never implies a backend
+  global index.
+- Forms preserve dirty input, validate near fields, expose save/current state,
+  and separate destructive operations.
+- Appearance covers system-following theme, density where supported, reduced
+  motion/transparency and contrast preferences. Client-local preferences are
+  labeled local; no server preference API is implied.
+- Account Hub follows `17-control-plane-provider-spec.md`.
+- Diagnostics expose redacted facts, source and age. Unsupported export or
+  service-control actions are `Requires-backend`.
+
+Daemon start/stop/restart, product upgrade/uninstall, session revoke,
+unimplemented doctor probes, and any unsupported backup/restore extension
+remain unavailable or `Requires-backend`. They must not appear as active
+controls. The target placement changes IA, not the authority boundary.
 
 ---
 

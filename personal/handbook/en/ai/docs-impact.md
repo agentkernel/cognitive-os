@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:915e3234c0ad4d3ceb005f0990b580c25650ac249bb48d2a7566a6487ed28b96"
+fingerprint: "sha256:ce3a7f83c4a745263460f87f5aac054cba810d5867f0bc6c6fcc4060c6838dcc"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -44,6 +44,32 @@ Decide documentation impact **before** finishing a change, using
 5. If a change genuinely affects no documentation, the PR description must record a
    concrete `docs-impact: none — <reason>` line, not silence.
 6. Affected docs and code belong to the same formal task and the same PR.
+
+## Personal 2.0 semantic routes
+
+The source map deliberately makes the adopted target impossible to change
+silently:
+
+- `personal-2-baseline` routes the canonical Personal 2.0 product and
+  architecture baseline;
+- `personal-2-desktop-account-hub` routes ADR-0055/0056 plus Account Hub,
+  Provider, and Web UI product/architecture sources;
+- `personal-2-agent-supervision` routes the bilingual Agent conversation
+  design and Agent Shell/adapter/multi-Agent/recovery/learning architecture;
+- `personal-2-mcp-family` routes ADR-0037/0057 plus the bilingual MCP-family,
+  cognitive-resource, and Resource Manager sources.
+
+For every hit, preserve two explicit columns of truth: **current Linux
+1.0/current API** (six-family, Pi-qualified, current `/ui/` at
+`clients/pc/web/`) and **adopted Personal 2.0 target** (`Requires-backend` or
+`Requires-core`). Never infer implementation of Account Hub import, the target
+desktop redesign, MCP seventh-family/federation, vendor conversation adapters,
+Goal/Plan, or multi-Agent supervision from design adoption.
+
+The localized canonical design files route to the same bilingual handbook
+`doc_id`s. Update both locales. Refresh fingerprints only for hand-written
+pages after all mapped sources exist; do not hand-edit or regenerate unrelated
+generated pages merely to hide fingerprint drift.
 
 Verification set for any documentation-affecting change:
 

@@ -20,22 +20,28 @@ sources:
     symbols: ["TrustedEndpoint", "ProviderKind"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
     symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS"]
+  - path: personal/docs/product/provider-control-plane.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
 tests:
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:75c5451c416435defc5fe95943c73b362defa6b034d7a0ebc746fa99f402bbfa"
+fingerprint: "sha256:d812b0e2331c2720221bd076bebbd84fe1e223bace4c718f2c0f4eae1a374971"
 non_claims:
-  - 本页记录已交付的 daemon API、cognitive CLI 与 localhost Web UI 客户端路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、桌面面板或 Agent-benefit。
+  - 本页记录已交付的 daemon API、cognitive CLI 与当前 localhost Web UI 路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、Personal 2.0 桌面重设计/Account Hub 导入或 Agent-benefit。
 ---
 
 # Provider Control Plane
 
 `partial`：下面的 daemon management API 与 `cognitive` CLI 调用方已经实现，并有聚焦
-测试覆盖。localhost-only Web UI（外部 clients checkout，由 `GET /ui/` 同源提供）
-是同一套 management 路由的 daemon 客户端：命名账户、SecretStore 密钥交接、有界
-探测、以及固定 Agent binding。**没有桌面控制面板**。原生 dsh 控制面板
+测试覆盖。localhost-only Web UI 位于本仓库 `clients/pc/web/`，由 `GET /ui/` 同源
+提供，是同一套 management 路由的 daemon 客户端：命名账户、SecretStore 密钥交接、
+有界探测以及固定 Agent binding。已采纳的桌面优先 Personal 2.0 重设计**尚未实现**。
+原生 dsh 控制面板
 （`cognitive dsh web`，默认 `http://127.0.0.1:3080`）是独立的 dsh 自带 UI，
 不是本 Provider Control Plane 面，也不是 Personal `/ui/`。当 store 或上游不可用时，
 live Secret Store 轮换/删除与 live Provider/Pi/dsh 资格化仍然失败闭合；它们不是
@@ -62,9 +68,22 @@ SQLite 或 Secret Store。它们向 daemon 发送 management 通道 HTTP。浏�
 设置了 control-plane binding，该 binding 就是该 agent 唯一允许的 account+model——
 `provider.json` 不是回退。
 
-范围外（被拒绝或根本未交付）：OAuth、浏览器登录 Provider、自动路由或负载均衡、硬
-预算阻断、第三方 Anthropic 兼容端点、后台模型刷新，以及任何桌面控制面板。Web UI
-不发明 Task cancel 或 Agent pause/resume/stop/restart/quarantine HTTP。
+当前 API 未交付：OAuth、浏览器/Agent 凭据导入、自动路由或负载均衡、硬预算阻断、
+第三方 Anthropic 兼容端点、后台模型刷新，以及已采纳的桌面优先 Account Hub 重设计。
+前两项与重设计是标记为 `Requires-backend` 的 Personal 2.0 目标，不是当前功能。
+Web UI 不发明 Task cancel 或 Agent pause/resume/stop/restart/quarantine HTTP。
+
+## Personal 2.0 Account Hub 目标（`Requires-backend`）
+
+目标 Account Hub 把当前命名 API-key 账户扩展为一个桌面入口，用于 Provider 账户、
+订阅、模型访问与已安装 Agent binding。厂商专用对话适配器将连接每个 Agent 真正支持的
+对话行为；当前 API 仍只绑定已交付的 `pi` 与 `dsh` 身份，且只有 Pi 已资格化。
+
+凭据导入严格遵守 ADR-0055：用户发起并在读取前逐个同意精确来源；只有 daemon 读取该
+来源并写入 approved SecretStore；默认保留来源，安全删除是每次导入的显式选择。原始
+材料绝不返回 UI 或 Agent，也绝不进入 argv、环境变量、CognitiveOS 普通配置、SQLite、
+日志、证据、支持输出或聊天。浏览器 profile、Agent 凭据文件、订阅与 OAuth 的导入机制
+当前均不存在。见 [Provider 与 secret](provider-and-secrets.md)。
 
 ## 前置条件
 
@@ -316,6 +335,7 @@ cognitive alerts acknowledge --alert-id YOUR-ALERT-ID
 | `PROVIDER_ENDPOINT_HTTP_REQUIRES_GRANT` / `PROVIDER_ENDPOINT_PRIVATE_REQUIRES_GRANT` | 在 create 或 update 时传入匹配的 `--allow-*` 标志（需要时带 `--reconfirm`）。 |
 | `cost_status: cost_unavailable` | 为自定义/手动模型定价。不要把缺失成本当成 `$0`。 |
 | 官方 Anthropic + `stream:true` | 绑定路径不支持。Pi 无论是否绑定都保持 unary。 |
+| daemon 重启后 dsh 面板报 “API key invalid”，但账户/binding 显示持久化 `active` 状态 | 新 daemon 把 dsh 报为 `INACTIVE`，因此 `cognitive dsh apply` 会被拒绝，不能恢复 stale session。不要提取或直接探测 bearer。必须重启 `cognitive dsh web`，再检查 `cognitive dsh status`。`apply` 只用于 daemon 未重启且 runtime 已为 `ACTIVE` 时所支持的 binding/model overlay 同步。持久化账户 `active` 不证明当前 SecretStore 可解析；实时解析发生在 discovery/proxy 使用期间，锁定或变化的 store 仍是独立可能原因。见[正式登记缺陷](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)。 |
 
 ## 操作序列（官方 OpenAI，然后绑定 Pi）
 

@@ -13,14 +13,17 @@ sources:
   - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
     symbols: ["admit_pi_launch"]
   - path: docs/governance/AXIOMS.md
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/packages/pi-cognitiveos/src/safety.test.ts
   - personal/crates/cognitive-runtime/tests/pi_linux_launcher.rs
-fingerprint: "sha256:aafc661d2d07a2c5e348b7d2ca6aa66f078bd278490f1fcdf64b3b64c33dac7e"
+fingerprint: "sha256:e1fe4664c60c8ba2a060486d04a2904577c461e47f8439755419428b9b10d9a1"
 non_claims:
   - Windows file ACL hardening for local runtime files is absent — OS-CSPRNG token generation does not make an ACL claim.
+  - ADR-0055 adopts a credential-import boundary but no concrete import mechanism; Account Hub import remains Requires-backend.
 ---
 
 # Security boundaries
@@ -60,6 +63,32 @@ Windows ACL hardening).
 - `admit_pi_launch` fail-closes on Windows-native/WSL2 hosts, missing sandbox
   adapter, digest mismatches, and any model egress other than the registered HTTPS
   proxy endpoint.
+
+## User-directed credential import (adopted target)
+
+ADR-0055 extends approved non-logging input paths without weakening secret
+isolation. Every future import must satisfy all of these conditions:
+
+- the user initiates it and consents to the exact named source and target
+  SecretStore before the source is read;
+- only the Rust daemon reads the source and writes the approved SecretStore;
+- source material is transient in daemon memory and never reaches the UI,
+  Agents, sidecars, argv, environment, ordinary CognitiveOS configuration,
+  SQLite, logs, CI/test output, evidence, support output, or chat;
+- audit records contain redacted metadata only;
+- source retention is the default; secure deletion is an explicit per-import
+  user choice.
+
+Browser profile/cookie decryption, third-party Agent credential-file parsing,
+subscription-token import, and OAuth capture are `Requires-backend`. The
+accepted boundary is not proof that any of them exists.
+
+The adopted MCP seventh-family target is also `Requires-backend`: connection
+credentials stay in an approved SecretStore, MCP clients/servers/packages/
+adapters remain candidate or observation producers, and an advertised tool,
+resource, or prompt grants no capability. Raw connection material never
+reaches the Control Plane, Agent, sidecar, package metadata, ordinary config,
+SQLite, Context, logs, evidence, or chat.
 
 ## Request bounds (DoS hygiene)
 

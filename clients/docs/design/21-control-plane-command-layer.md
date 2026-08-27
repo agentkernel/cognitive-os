@@ -1,8 +1,41 @@
 # 21 — Command Layer (⌘K)
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 command-layer target
+- Updated: 2026-08-27
 - Contract: DD-09 (speed layer, not a space); navigation-IA reference (command palettes need a real action/retrieval model and must not become junk drawers); capability honesty (class A/B only — the palette never exposes class-C/D capabilities).
+
+## Personal 2.0 command-layer amendment
+
+The palette accelerates the six-space IA and global Agent Shell:
+
+- switch to Home, Agents, Work, Library, Activity or Settings;
+- navigate to an Agent/native conversation when the Adapter projection is
+  available;
+- open a known Goal, Plan revision, Task/attempt, Library item, account or
+  timeline item;
+- focus the global Agent Shell prompt for explanation/proposal, or navigate to
+  the selected Agent's native composer;
+- enter a current-backed governed flow;
+- open a target-only capability's explanation, labeled `Requires-backend`.
+
+The palette never sends an Agent message, converts conversation to Work,
+imports credentials, performs resource writeback or executes a consequential
+mutation directly. It can navigate to those review surfaces. Class-B current
+actions may execute inline only with a durable/visible receipt.
+
+Search scope is always declared: loaded client projections, current Adapter
+history projection, or a real backend query. No result cannot mean no object
+exists when coverage is partial. MCP entries and rules never expose host Agent
+session controls.
+
+Keyboard contract: `Ctrl/⌘+K`, predictable group order, arrows, Enter, Escape,
+typeahead, complete screen-reader semantics, visible focus and exact focus
+return. Reduced motion uses a short fade. The palette is an accelerator—not a
+replacement for navigation, global Agent Shell, or full-depth inspectors.
+
+The destination examples later in this file use the old seven-space IA and are
+superseded by this section; their honesty, grouping and focus rules remain
+adopted.
 
 ---
 

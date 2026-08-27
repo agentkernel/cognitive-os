@@ -1,10 +1,65 @@
 # Control Plane Current State Map
 
-- Phase: Product Redesign Phase 1 (design-only; no implementation)
-- Date: 2026-08-24
-- Change class: `implementation-only` documentation (new design working notes; no product/contract/status facts changed)
-- Evidence base: read-only audits of `D:\cognitiveos-clients\pc\web\` (branch `personal/P7-T05-dsh-binding-cas` @ `0320c1a`, `main` @ `db56374`), `D:\agent-kernel` daemon/management/contract sources, and canonical product/architecture/plan documents. Every claim below cites its source. Unverifiable items are marked UNKNOWN.
-- Authority note: this document **describes** the current system. It does not modify product code, contracts, the canonical product design (`docs/product/personal/`), or any status ledger.
+- Status: `P10-T01` adopted Personal 2.0 current/target alignment
+- Document revision: 2026-08-27
+- Change class: `product-semantic` documentation; no implementation, public
+  contract, Gate, release, Profile, or task-status change
+- Current implementation:
+  [P7-T05 closure](../../../docs/checkpoints/20260826-personal-p7-t05-control-plane-redesign-closure.md),
+  merged PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) at
+  `main@5996afbb` with product SPA head `872074bf`
+- Adopted target:
+  [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md) and
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
+- Frozen audit body: read-only 2026-08-24 audits of
+  `D:\cognitiveos-clients\pc\web\` (branch
+  `personal/P7-T05-dsh-binding-cas` @ `0320c1a`, `main` @ `db56374`),
+  `D:\agent-kernel` daemon/management/contract sources, and then-canonical
+  product/architecture/plan documents. Historical claims below retain their
+  original citations; unverifiable items remain `UNKNOWN`.
+- Authority note: this document aligns current evidence and adopted target
+  semantics. It does not modify product code, contracts, or status ledgers.
+
+## Current implementation (frozen P7-T05 evidence)
+
+The accepted current Control Plane uses seven routes:
+Home / Work / Agents / Providers / Resources / Activity / System. This claim is
+pinned to the
+[P7-T05 closure](../../../docs/checkpoints/20260826-personal-p7-t05-control-plane-redesign-closure.md):
+merged PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) at
+`main@5996afbb`, product SPA head `872074bf`, with required CI
+[32942980183](https://github.com/agentkernel/cognitive-os/actions/runs/32942980183)
+successful at `b147711a`.
+
+The entire body is retained as an as-of 2026-08-24 pre-closure audit at the
+exact revisions above; its older Bindings/Tasks/Session route observations, API
+limitations, strengths, problems, and citations remain historical truth. Later
+P7-T05 integration or Personal 2.0 target choices must not be rewritten into
+those observations.
+
+## Personal 2.0 target delta
+
+The adopted target is a distinct redesign:
+
+- IA: Home / Agents / Work / Library / Activity / Settings;
+- Providers and System under Settings;
+- desktop-primary three-region shell with global Agent Shell;
+- Adapter-backed embedded native conversation/history and capability matrix;
+- explicit Manage with Personal into daemon Goal/Plan
+  revisions/Tasks/attempts and multi-Agent orchestration;
+- seven-family task-oriented placement: Library has Memory/Skills/Tools/MCP,
+  Work has Context/Task, and Agents has Runtime/Process;
+- Account Hub acquisition tiers with ADR-0055 consent and daemon
+  SecretStore/proxy custody;
+- federated observation and governed writeback;
+- one Native/Observed/Governed/Verified timeline.
+
+These are target semantics, not corrections to the current-state evidence.
+Where no verified backend support exists they are `Requires-backend`, with no
+active fake control or fake progress. Controlling target specs:
+[Product Model](01-control-plane-product-model.md),
+[Recommended IA](06-control-plane-recommended-ia.md), and
+[Target Traceability](35-design-to-code-traceability.md).
 
 ---
 

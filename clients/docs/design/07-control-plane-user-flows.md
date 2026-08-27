@@ -1,9 +1,126 @@
 # 07 — Control Plane Core User Flows
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 flows; historical P7-T05 flows retained
+- Updated: 2026-08-27
 - Method: stark `ux-design` flow mapping (entry → first action → decision → feedback → success → recovery), `task-ergonomics` contracts for the three highest-risk flows, `usability-pattern-matrix` pattern choices. IA per `06`; capabilities and honesty classes per `03`. Every flow names its backend dependencies and its not-run branches.
 - Convention: **[A]** class-A governed mutation · **[B]** class-B safe action · **[C]** deferred verb (renders not-available + CLI path) · **[D]** never rendered.
+
+## Personal 2.0 core flows
+
+The flows below are the adopted target. Existing Flow 0–10 later in this file
+remain useful current-backed subflows, especially task admission, Provider
+binding, evidence inspection, and degraded recovery.
+
+### T1 — Open Personal and resume
+
+`desktop entry -> Home -> recent Agent conversation or highest-priority Work
+item -> Agents/Work -> useful next action`.
+
+Home has no marketing hero and no metric wall. It shows only sourced,
+actionable rows. If the data needed for a complete resume view is unavailable,
+the row states its coverage; it never invents recency or progress.
+
+### T2 — Install or connect an Agent in at most three steps
+
+1. Choose a signed catalog entry or a supported existing installation.
+2. Review source/signature, Adapter capability matrix, requested account and
+   resource boundaries; confirm the current-backed operation.
+3. Connect and land directly in that Agent's conversation.
+
+Success is the **first real chat response**, not "installed" or "connected".
+Failure preserves selections and offers the exact recovery. Unsupported catalog,
+install, registration, lifecycle, and conversation operations render
+`Requires-backend`; the current UI must not offer fake buttons. Disconnect keeps
+installation/history according to source semantics; uninstall previews retained
+data and is a separate destructive choice.
+
+### T3 — Converse natively, then choose Manage with Personal
+
+`Agents -> select Agent -> embedded native conversation/history -> ordinary
+messages remain native -> Manage with Personal -> daemon preview ->
+confirm/admit -> Work`.
+
+The Adapter provides a common message/history projection and capability matrix.
+Vendor-specific metadata/artifacts may appear in display-only native slots;
+actions always use Control Plane-owned controls backed by typed capability
+semantics. Manage with Personal names what will become durable, shows
+losses/unsupported fields, and never treats hidden reasoning or chat text as a
+Plan. Goal/Plan/attempt creation is `Requires-core + Requires-backend` where
+public machine semantics are needed.
+
+### T4 — Supervise managed and multi-Agent work
+
+`Work -> Goal -> current Plan revision -> Tasks/attempts -> one provenance
+timeline -> inspect Effects/Evidence -> revise Plan or resolve blocker`.
+
+The daemon assigns roles and handoffs. A Plan revision never edits history;
+prior revisions stay inspectable. Multi-Agent disagreement is shown as
+candidate alternatives with source identity. Only recorded authority state can
+show progress; missing denominators render unknown, not a percentage.
+
+### T5 — Add an account in Account Hub
+
+`Settings -> Account Hub -> choose acquisition tier -> consent/review ->
+daemon-owned credential path -> verify account -> inspect models/quota/cost ->
+optionally bind Agent`.
+
+Tiers: OAuth/subscription, API key, user-directed import, custom gateway.
+Current implementation supports only its verified API-key/custom endpoint
+subset. All other tiers, subscription semantics, import readers, quota and cost
+facets are `Requires-backend`. Import follows
+[ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md):
+exact source and target shown before read, per-source consent, retention default,
+optional secure deletion, redacted audit, no secret return to the UI.
+Target routing precedence is global default -> Agent override -> conversation
+override. A current native session changes only after explicit rebind/restart;
+all override and rebind semantics are `Requires-backend` beyond today's fixed
+Agent binding.
+
+### T6 — Browse MCP as a first-class Library family
+
+`Library -> MCP -> server/package/connection/capability/binding/health/
+quarantine -> candidate mappings into Tool/Context/Skill -> typed daemon
+workflow`.
+
+MCP discovery does not imply authorization. MCP plus rules does not control a
+host Agent session. Every unsupported operation is `Requires-backend`; current
+Tool/MCP fixture facts must not be promoted into a product control.
+
+Integration preference is `vendor-native API -> managed Adapter ->
+MCP-cooperative`. MCP plus rules is used only as a declared cooperative
+fallback. After first authorization, automatic reconciliation is allowed only
+for the exact unchanged grant and client/target/trust boundary. Permission
+expansion, a new client, trust-boundary or target expansion, or an incompatible
+update requires a fresh daemon preview and confirmation. Reload/restart is a
+separate supported action with its own capability condition and receipt; it is
+never hidden inside auto-reconciliation.
+
+### T7 — Resolve a federated resource conflict
+
+`Library/Work conflict -> compare Personal and Agent-native versions with
+provenance -> ask Agent Shell for a resolution candidate -> daemon preview ->
+confirm -> persist Intent/Effect -> writeback -> verify receipt`.
+
+The Shell suggestion is never authority. If observation or writeback lacks a
+typed backend path, the UI explains the target and stops before an action
+affordance. No optimistic success and no fake progress.
+
+### T8 — Investigate in one provenance timeline
+
+`Activity or object detail -> filter Native/Observed/Governed/Verified ->
+select item -> inspector shows source, identity, freshness and coverage ->
+pivot to Agent/Work/Library/Settings`.
+
+Native vendor events, process observations, daemon governance facts, and
+independent verification remain visually and semantically distinct even when
+time-aligned.
+
+### Shared recovery contract
+
+Every flow defines empty, loading, partial, stale, denied, disconnected,
+conflict, error, success, and long-running states. User input is preserved.
+Long-running views show only source-backed phase/progress and controls that
+really exist. Keyboard-only and reduced-motion/transparency paths are complete.
 
 ---
 

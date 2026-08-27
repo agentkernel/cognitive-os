@@ -8,9 +8,10 @@ generated: false
 sources:
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
+  - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:661a5e80265cf94dedb761063496a1e59c98e659b8013e7f19b3354e24a8cb80"
+fingerprint: "sha256:956c4925f41014c422282492cc33cf8d7dba7a659dae22d09d4046606bc31789"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -56,8 +57,9 @@ ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@1
 保持该会话不退出，然后打开 `http://127.0.0.1:48681/ui/`（Control Plane；粘贴
 runtime 的 management bootstrap secret，绝不是 Provider API key）和
 `http://127.0.0.1:3080/`（原生 dsh 面板）。guest 上 daemon 重启或替换
-kernel-server 之后，须在该 runtime 上重启 `cognitive dsh web` 或执行
-`cognitive dsh apply`，再期望 dsh 对话可用。Vite preview 不是产品源。完整端口表
-与隔离规则由环境注册表拥有；本页只做路由。
+kernel-server 之后，须在该 runtime 上重启 `cognitive dsh web`，再期望 dsh
+对话可用；新 daemon 将 dsh 报为 `INACTIVE`，所以 `cognitive dsh apply` 不能恢复该
+stale session。`apply` 只用于 runtime 已为 `ACTIVE` 时所支持的 binding/model overlay
+同步。Vite preview 不是产品源。完整端口表与隔离规则由环境注册表拥有；本页只做路由。
 
 命令速查：见 [AI 验证命令](../ai/validation-commands.md)——内容一致，只维护一份。

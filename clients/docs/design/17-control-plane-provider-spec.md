@@ -1,11 +1,83 @@
-# 17 — Provider Spec (Egress Governance)
+# 17 — Account Hub / Provider Spec
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
-- Contract: `06` §3.4, Flows 3–5 in `07`, capability model D4 (the deepest live domain). Provider is a **governance domain, not settings** — its pages lead with state and bindings, not forms.
+- Status: adopted Personal 2.0 Account Hub target; current Provider evidence retained
+- Updated: 2026-08-27
+- Target placement: Settings / Account Hub
+- Current implementation: P7-T05 Provider/account/model/binding surfaces
 - Absolute rule: `secret_ref` renders as **present / absent / unknown-state only**. No secret value, no secret-shaped string, no partial key masking ("sk-…a1" is still secret material — banned). Key entry fields are memory-only, non-echoing, cleared on submit, never persisted (ADR-0053).
 
+## Personal 2.0 Account Hub spec
+
+Provider management moves to **Settings / Account Hub**. "Provider" remains a
+backend/domain fact; "Account Hub" is the owner-facing product model for
+subscriptions, API credentials, gateways, model access, quota and cost.
+
+### Acquisition tiers
+
+| Tier | Target flow | Current status |
+|---|---|---|
+| OAuth / subscription | choose supported service -> browser/device consent -> daemon stores resulting credential -> verify models | Requires-backend |
+| API key | enter once through approved non-logging path -> daemon SecretStore -> bounded verify | current-backed for verified Provider routes |
+| User-directed import | choose exact source -> per-source consent -> daemon read/write -> retain or secure-delete source -> redacted receipt | Requires-backend under ADR-0055 |
+| Custom gateway | configure supported endpoint/trust -> credential -> verify models | current openai-compatible subset only; broader target Requires-backend |
+
+Target presets lead with OpenAI, Anthropic, Google, and DeepSeek, followed by
+Qwen/Bailian, Kimi, Zhipu, SiliconFlow, Volcengine-Doubao, MiniMax, OpenRouter,
+and a first-class custom OpenAI-compatible endpoint. A preset is product
+guidance, not proof of backend support; unsupported methods remain
+`Requires-backend`.
+
+Credential import follows
+[ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md).
+The UI shows the exact source and target before read, never scans speculatively,
+defaults to retaining the source, offers secure deletion only per import, and
+receives no raw material or brute-forceable representation.
+
+### Account Hub structure
+
+1. **Accounts:** source/tier, provider kind, status, credential presence, trust,
+   last verification and affected Agents.
+2. **Models:** availability/source, capabilities, context/pricing facts,
+   freshness and honest unknowns.
+3. **Bindings:** Agent/account/model route with CAS and consequences.
+4. **Quota and cost:** provider-reported, locally estimated or unavailable;
+   period/source/freshness visible; unknown never means free.
+5. **Credentials and consent:** presence and source metadata only; rotate,
+   reconnect, re-consent or remove through typed paths.
+6. **Audit:** redacted acquisition, import, binding and verification receipts
+   with explicit coverage.
+
+Target routing precedence is global default -> Agent override -> conversation
+override. A current native session never switches silently; changing its route
+requires an explicit rebind/restart with impact review. The override hierarchy
+and native-session rebind are `Requires-backend` beyond today's fixed Agent
+binding.
+
+### Capability honesty
+
+- Current API-key account/model/binding/usage/budget/alert/audit capabilities
+  remain usable and keep all P7-T05 security negatives.
+- OAuth, subscription-token capture, browser/CLI credential import readers,
+  refresh-token lifecycle, rich model capability normalization, provider quotas
+  and complete cost projections are `Requires-backend`.
+- An unsupported tier is a descriptive row with dependency and learn-more
+  content, not an active or disabled-looking button.
+- Account verification, model discovery and first Agent chat are separate
+  outcomes. A green account probe does not prove chat success.
+- Agents never receive Provider secrets; all egress stays daemon-proxied.
+
+The five-section Provider detail below remains the current-backed technical
+core, relocated beneath Account Hub. Its earlier "no OAuth concepts" statement
+is current implementation truth, not the Personal 2.0 target.
+
 ---
+
+## Historical 2026-08-24 Provider specification
+
+The current-backed Provider detail below is retained as P7-T05 design and
+implementation context. Its earlier first-level placement and "not settings"
+framing are superseded; its authority, SecretStore, CAS, and honesty rules
+remain applicable inside Account Hub.
 
 ## 1. Accounts master
 

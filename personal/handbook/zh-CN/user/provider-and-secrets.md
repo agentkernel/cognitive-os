@@ -17,6 +17,12 @@ sources:
   - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
     symbols: ["TrustedEndpoint", "ProviderKind"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/crates/cognitive-secret/tests/p1_t02_provider_secret.rs
   - personal/crates/cognitive-secret/tests/p1_t03_provider_discovery.rs
@@ -24,9 +30,10 @@ tests:
   - personal/apps/kernel-server/tests/p9_t07_route_observation.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:9b73f66320870e89724075e035ee78d26ac3461644252a027567befed378360b"
+fingerprint: "sha256:c1144234892f49dea6e3209262a6b13ad2def8768c603417e5f9e32d1ac351a6"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
+  - Account Hub 凭据导入是已采纳的 Personal 2.0 目标；当前没有浏览器 profile、Agent 凭据文件、订阅或 OAuth 的具体导入机制。
 ---
 
 # Provider 与 secret
@@ -48,6 +55,28 @@ blob 上限 2560 字节）。配置只保留不透明引用（`SecretRef`），�
 操作步骤（账户、信任标志、binding、用量、仅观察预算）见
 [Provider Control Plane](provider-control-plane.md)。localhost Web UI 是同一套
 management 路由的 daemon 客户端；没有桌面面板。
+
+## Account Hub 凭据导入目标（`Requires-backend`）
+
+ADR-0055 允许未来的用户定向导入边界，但没有授权任何具体导入机制：
+
+1. 每次导入都由用户发起；读取前向用户展示**精确来源**与目标 approved SecretStore，
+   并逐来源单独取得同意。禁止后台、推测式或批量扫描凭据位置。
+2. 只有 Rust daemon 读取指定来源并写入目标 SecretStore。材料只在两步之间短暂存在于
+   daemon 进程内存；UI 与任何 Agent/sidecar 都拿不到原始材料。
+3. 原始材料绝不进入 argv、环境变量、CognitiveOS 写出的普通配置、SQLite、UI 输出、
+   Agent Context、日志、CI/测试输出、证据、支持数据或聊天。审计只记录脱敏的来源种类、
+   目标 store、时间与结果。
+4. 默认保留来源；只有用户针对该次导入明确选择时才安全删除来源。
+
+浏览器 cookie/profile 解密、第三方 Agent 凭据文件解析、订阅 token 导入与 OAuth 捕获
+均为 `Requires-backend`。当前 `cognitive init`、`--api-key-file` 与现有 `/ui/` 手工
+密钥交接是另一条当前 API 行为；它们不证明 Account Hub 来源导入已存在。
+
+已采纳的 MCP 第七族目标使用同一隔离：连接凭据留在 approved SecretStore，原始材料
+绝不进入 Control Plane、Agent、sidecar、package metadata、普通配置、SQLite、
+Context、日志、证据或聊天。该资源族 backend 仍为
+`Requires-backend`/`Requires-core`。
 
 ## Provider 流量如何流动
 

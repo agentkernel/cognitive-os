@@ -7,12 +7,15 @@ status: partial
 generated: false
 sources:
   - path: personal/docs/product/product-design.md
+  - path: personal/docs/product/personal-2.0-scope.md
   - path: personal/apps/kernel-server/src/personal/server.rs
     symbols: ["serve_personal_loopback"]
   - path: personal/docs/product/linux-1.0-scope.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:e6a88761a70a397baaf92ed549ec43667edfb79429763cd795e72c22dd8cff3a"
+fingerprint: "sha256:17492e3ebdab7f7cd7d73121927fbfe47e3f1466a258ecc0d966f61dbceb9edf"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -49,3 +52,17 @@ non_claims:
 端接线）尚未接通——见 [Task 与执行](tasks-and-execution.md)。稳定产品意图由
 [`personal/docs/product/`](../../../docs/product/README.md) 拥有；本页跟踪
 代码今天真实做到的部分。
+
+## 当前产品与已采纳的 Personal 2.0 目标
+
+必须分开理解两条基线：
+
+- **当前 Linux 1.0/当前 API：** 六个资源族；Pi 是唯一已资格化 Agent；daemon、CLI、
+  Pi 路径、Provider Control Plane，以及位于 `clients/pc/web/` 的同源 `/ui/` SPA
+  都是当前实现。Web UI 不属于 Linux 1.0 release 声明。
+- **已采纳的 Personal 2.0 目标 — `Requires-backend`：** 桌面优先 Control Plane
+  重设计；带逐来源用户同意凭据导入的 Account Hub；MCP 第七族；厂商专用 Agent 对话
+  适配器；持久 Goal 与 Plan revision；多 Agent 监督；以及联邦资源。
+
+采纳只确定产品方向，不构成实现证据。当前没有 Goal/Plan API、MCP 资源族 API、Account
+Hub 导入 API 或多 Agent 监督路径，现有 `/ui/` 也尚未完成目标重设计。

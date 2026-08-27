@@ -1,9 +1,69 @@
 # 25 — UX Review & Design Review Gate
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: Personal 2.0 corpus review; historical Phase-2 gate retained
+- Updated: 2026-08-27
 - Method: five review gates run against the Phase-2 artifact set (11–24) under the Phase-1 contract (01–10 + current-state + capability inventory). Method sources: stark `ux-design` (heuristic audit, scenario tests), `apple-design` (principles + brief §18 checklist), `ai-agent-ux`/`ai-trust-transparency`/`ai-error-resilience` (§19 checklist), product-skills conformance (Phase-1 contract), WCAG-informed accessibility baseline.
 - Gate rule (from the brief): **any gate fails → fix the design, do not implement.** Results below are honest: two items are marked CONDITIONAL PASS with named follow-ups rather than waved through.
+
+## Personal 2.0 review amendment
+
+The 2026-08-24 gate result below applies only to the earlier seven-space,
+P7-T05-centered design. It does **not** clear Personal 2.0 implementation. The
+adopted target passes corpus-level design review only when all checks below are
+met in implementation planning and supported evidence.
+
+### Target conformance checklist
+
+| Check | Corpus result | Implementation status |
+|---|---|---|
+| IA is Home / Agents / Work / Library / Activity / Settings | specified in 05/06/12 | not implemented |
+| Providers and System live under Settings | specified in 17/20 | not implemented |
+| Candidate-only global Agent Shell is distinct from Adapter-backed native conversation/history in Agents | specified in 01/08/12/16 | both Require-backend |
+| Render slots display metadata/artifacts only; typed Control Plane controls own vendor actions | specified in 03/08/16/23 | must be verified in implementation |
+| Capability matrix separates runtime condition, delivery status, and support path | specified in 03/08/16/22/23 | must be verified in implementation |
+| Manage with Personal is explicit; Goal/Plan revisions/Tasks/attempts are daemon-owned | specified in 04/07/14/15 | Goal/Plan may Require-core; implementation Requires-backend |
+| Multi-Agent orchestration stays daemon-authoritative | specified in 08/14/15 | Requires-backend |
+| Seven families keep task-oriented placement: Library has Memory/Skills/Tools/MCP; Work has Context/Task; Agents has Runtime/Process | specified in 04/18 | MCP Requires-core/backend; placement target only |
+| MCP owns integration identities; advertisements remain Tool/Context/Skill candidates | specified in 04/18/23 | Requires-core/backend |
+| MCP fallback and preauthorization use exact-scope reconciliation and explicit re-confirmation triggers | specified in 07/10/18 | Requires-core/backend |
+| Account Hub acquisition tiers follow ADR-0055 and SecretStore/proxy | specified in 07/17 | API key partial; OAuth/subscription/import Requires-backend |
+| Federated observation/writeback preserves provenance and preview/effect | specified in 07/18/23 | Requires-backend |
+| One Native/Observed/Governed/Verified timeline | specified in 15/19/22 | unified/native sources Require-backend |
+| Current P7-T05 facts remain distinguishable | historical docs 26–41/current/inventory preserved | pass at documentation level |
+| No active fake controls or fake progress | specified in 03/07/22/23 | must be verified in code |
+
+### Scenario gates
+
+Before target implementation can be called usable, test:
+
+1. new owner installs/connects a supported Agent in no more than three steps and
+   receives the first real chat response;
+2. returning owner resumes the correct native conversation with keyboard only;
+3. owner chooses Manage with Personal, reviews losses/bounds, and reaches a real
+   Work object;
+4. multi-Agent disagreement and failed attempt remain attributable and do not
+   fabricate progress;
+5. Account Hub handles current API key flow and renders every unsupported tier
+   as Requires-backend;
+6. MCP page explains identity/capability/policy and never controls host session;
+7. resource conflict flows from comparison to daemon preview/effect/receipt;
+8. Activity distinguishes all four provenance classes;
+9. reduced motion/transparency, high contrast, text scaling and focus survive
+   the three-region shell and Agent Shell.
+
+### Gate disposition
+
+- **Design corpus coherence:** PASS for the adopted target after the amendments
+  in 01–24.
+- **Current implementation conformance:** NOT RUN / not implemented.
+- **Backend capability:** PARTIAL; named target gaps must remain
+  `Requires-backend`.
+- **Visual/accessibility validation:** NOT RUN; directional tokens are not
+  measured evidence.
+
+The old "Design Review Gate: PASSED" statement below is retained as historical
+truth for the superseded proposal and must not be cited as approval of the
+Personal 2.0 target or of frontend implementation.
 
 ---
 

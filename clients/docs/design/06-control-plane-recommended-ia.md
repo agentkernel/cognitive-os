@@ -1,11 +1,96 @@
 # 06 — Control Plane Recommended IA
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
-- Decision: **Option D — Supervision IA** (analysis in `05-control-plane-ia-options.md`; logged as DD-01 in `10-control-plane-design-decisions.md`).
-- This document is the IA *specification* for the next phase (UX/visual design). It defines structure, routes, states, and the navigation system — no components, no code, no visual styling.
+- Status: adopted Personal 2.0 target IA; historical Option D retained below
+- Updated: 2026-08-27
+- Decision carriers:
+  [ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md) and
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
+- Current implementation: P7-T05 seven-route SPA, distinct from this target
+
+## Personal 2.0 recommended IA
+
+The adopted recommendation supersedes Option D's seven top-level spaces:
+
+```text
+Global frame
+  navigation | primary workspace | contextual inspector
+  persistent Agent Shell + command palette accelerator
+
+Home
+Agents
+  Agent list
+  Agent detail
+  Conversation/history (common Adapter projection + display/artifact slots)
+  Runtime
+  Install or connect
+Work
+  Goals
+  Plan revisions
+  Tasks and attempts
+  Context
+  Effects and verification
+  Multi-Agent orchestration
+Library
+  Memory
+  Skills
+  Tools
+  MCP
+Activity
+  Native / Observed / Governed / Verified timeline
+Settings
+  Account Hub (Providers, acquisition, credentials, quotas, cost)
+  System (readiness detail, doctor, backup/restore, session)
+  Appearance and accessibility
+  Diagnostics
+```
+
+### Target route model
+
+Route strings remain implementation decisions because the daemon currently
+serves a HashRouter SPA. The semantic route tree is binding:
+
+| Route family | Required target content | Availability |
+|---|---|---|
+| Home | resume, attention, readiness, verified outcomes | partial composition today |
+| Agents / Agent / conversation | Adapter projection, history, display/artifact slots, Runtime | conversation/install/lifecycle Requires-backend |
+| Work / Goal / Plan revision / Task / attempt | explicit Manage with Personal output, Context, Effects, Evidence | current Task facts partial; Goal/Plan may Require-core and all target orchestration Requires-backend |
+| Library / family / object | Memory/Skills/Tools/MCP family-native pages; MCP first-class | current depth varies; MCP Requires-core + Requires-backend |
+| Activity / item | one provenance timeline and source inspector | unified feed Requires-backend |
+| Settings / accounts | Account Hub acquisition tiers and account/model truth | API-key path current; OAuth/subscription/import/custom gateway Requires-backend |
+| Settings / system | readiness, doctor, stewardship, session | mostly current-backed with documented gaps |
+
+### Navigation and current-location contract
+
+1. First-level selection, page title, and selected object must agree.
+2. Master filters, selected row, scroll, Agent/conversation, and inspector state
+   survive detail navigation and browser back/forward.
+3. The global Agent Shell never obscures current location. It explains,
+   compares, proposes, and asks the daemon for a preview; vendor-native
+   conversation stays in Agents. Collapse/expand is explicit, and focus returns
+   to the invoker.
+4. Manage with Personal preserves the conversation and opens the resulting Work
+   object; it does not replace or rewrite native history.
+5. Beginner-first summaries lead; full-depth inspectors expose identities,
+   digests, provenance, capability gaps, and raw redacted projections.
+6. Target-only controls use a non-interactive `Requires-backend` specification
+   state. No fake disabled button and no fake progress.
+
+### Current implementation boundary
+
+The current SPA routes remain
+Home/Work/Agents/Providers/Resources/Activity/System and retain the P7-T05
+limitations recorded in [Current State Map](control-plane-current-state.md).
+They must never be described as already matching this IA. Providers and System
+move under Settings only in the target redesign; Library, global Agent Shell,
+Manage with Personal, MCP, Account Hub tiers, Goal/Plan, and unified provenance are target
+semantics.
 
 ---
+
+## Historical 2026-08-24 Option D proposal (superseded)
+
+The sections below preserve the earlier seven-space Option D analysis and
+specification. They are design history, not the adopted Personal 2.0 IA.
 
 ## 1. The shell
 

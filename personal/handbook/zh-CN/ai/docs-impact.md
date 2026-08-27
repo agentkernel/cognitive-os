@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:915e3234c0ad4d3ceb005f0990b580c25650ac249bb48d2a7566a6487ed28b96"
+fingerprint: "sha256:ce3a7f83c4a745263460f87f5aac054cba810d5867f0bc6c6fcc4060c6838dcc"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -39,6 +39,26 @@ map 路由，命中即运行手册检查集，并使"映射源改动而无手册
 5. 若变更确实不影响任何文档，PR 描述必须写明具体的
    `docs-impact: none — <理由>`，不得沉默跳过。
 6. 受影响文档与代码属于同一正式任务、同一 PR。
+
+## Personal 2.0 语义路由
+
+source map 有意让已采纳目标无法静默变化：
+
+- `personal-2-baseline` 路由 canonical Personal 2.0 产品与架构基线；
+- `personal-2-desktop-account-hub` 路由 ADR-0055/0056 以及 Account Hub、Provider、
+  Web UI 产品/架构来源；
+- `personal-2-agent-supervision` 路由双语 Agent 对话设计及 Agent Shell/adapter/
+  多 Agent/recovery/learning 架构；
+- `personal-2-mcp-family` 路由 ADR-0037/0057 以及双语 MCP 资源族、认知资源与 Resource
+  Manager 来源。
+
+每次命中都必须保留两列显式事实：**当前 Linux 1.0/当前 API**（六族、Pi 已资格化、
+当前 `/ui/` 位于 `clients/pc/web/`）与**已采纳 Personal 2.0 目标**
+（`Requires-backend` 或 `Requires-core`）。绝不能从设计采纳推断 Account Hub 导入、
+目标桌面重设计、MCP 第七族/联邦、厂商对话适配器、Goal/Plan 或多 Agent 监督已实现。
+
+本地化 canonical 设计文件路由到相同的双语 handbook `doc_id`。必须同步两个 locale。
+只有在全部映射源存在后才刷新手写页指纹；不得为掩盖指纹漂移而手改或重生成无关生成页。
 
 任何影响文档的变更的验证集：
 

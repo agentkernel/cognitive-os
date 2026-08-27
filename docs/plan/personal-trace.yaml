@@ -348,6 +348,24 @@ personal_requirements:
     gates: []
     evidence_status: not-run
 
+  # Added 2026-08-27 (ADR-0056 Personal 2.0 desktop-first product decision).
+  - id: PERS-PR-036
+    classification: product-only
+    statement: Personal 2.0 uses the desktop Control Plane as its primary entry and supervision center with Home, Agents, Work, Library, Activity, and Settings; Providers and System live under Settings, the global Agent Shell remains candidate-only, installed-Agent conversations use vendor-specific adapters behind an honest common internal projection and capability matrix, native Agent applications remain usable, and every unimplemented ADR-0055 credential-import surface is marked Requires-backend.
+    direct_registry_requirements: []
+    tasks: [P10-T01, P10-T02, P10-T04]
+    gates: []
+    evidence_status: not-run
+
+  # Added 2026-08-27 (ADR-0057 Personal 2.0 MCP seventh-family decision).
+  - id: PERS-PR-037
+    classification: product-only
+    statement: MCP is the seventh Personal 2.0 product resource family with distinct server, package, connection, capability, binding, health, and quarantine identities and lifecycle; advertised tools remain Tool candidates, resources and prompts pass through Context and Skill admission, and no generic Resource schema or retroactive Personal 1.0 family change is implied.
+    direct_registry_requirements: []
+    tasks: [P10-T01, P10-T02, P10-T03]
+    gates: []
+    evidence_status: not-run
+
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness
 # execution plan and do not create task, requirement, Gate, or evidence status.
 benchmark_readiness_packages:

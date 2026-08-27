@@ -1,4 +1,4 @@
-# CognitiveOS Personal Product Design
+# CognitiveOS Personal product design
 
 - Status: canonical stable product-design index
 - Project: `cognitiveos-personal`
@@ -6,83 +6,128 @@
 - Task/Gate owner: [PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
 - Product decisions: [Personal ADRs](../../../docs/adr)
 
-This directory owns stable product intent, user concepts, release boundaries
-and user journeys. It does not own implementation status, active leases,
-campaign results, evidence or Profile claims.
+This directory owns stable product intent, user concepts, release boundaries,
+information architecture, and user journeys. It does not own implementation
+status, leases, campaign evidence, Gate results, or Profile claims.
 
-## Vision
+## How to read product status
 
-CognitiveOS Personal is a single-user, local **operating system for cognitive
-resources**—a unified substrate for mainstream Agents. It gives one owner a
-low-friction place to organize and govern six user-visible families: Memory,
-Skill, Tool, Context, Task and Runtime/Process. A Pi-hosted Agent Shell is the
-primary conversational entry for Linux 1.0, while the Rust daemon remains the
-sole authority writer. Post-1.0 design (see
-[personal-2.0-scope.md](personal-2.0-scope.md)) extends the same substrate to
-independently qualified Agents under a Universal Adapter Contract.
+Every product document uses the same four labels:
 
-Budget, Permission, Model, Artifact, Intent/Effect, Evidence and Event are
-cross-cutting objects, not extra resource families. The product does not
-collapse the six families into a giant `Resource` table or universal state
-machine.
+| Label | Meaning |
+|---|---|
+| **Current implementation (Now)** | A shipped or otherwise repository-established capability. Exact current status still comes from `PROGRESS.md`. |
+| **Adopted Personal 2.0 target** | An owner-approved product direction. It is not an implementation claim. |
+| **Requires-backend** | The target needs a daemon projection, workflow, adapter, or typed API that is absent or insufficient today. The UI must not fake it. |
+| **Requires-core (conditional)** | P10-T02/Lane-CTR is required only if the target adds or changes a public machine surface. A Personal-private projection may not require core changes. Product prose does not invent that surface. |
 
-Linux 1.0 delivers a minimum real slice of every family. The per-Agent sidecar
-is the primary Agent integration boundary, and Pi is the only qualified Agent
-and sidecar combination for 1.0. Other Agents remain independently qualified
-future work under Phase 8.
+English product documents are canonical. The new `*.zh-CN.md` documents are
+faithful translations and explicitly link back to their English source.
 
-## Stable product shape
+## Product model at a glance
 
-- **Authority:** Pi, sidecars, CLI, SDK and future UI are clients; only the
-  daemon authorizes, applies CAS/epoch guards, schedules, commits Effects,
-  reconciles and accepts Tasks.
-- **Workspace:** a Standard Workspace provides low-friction bounded access;
-  Extended Home adds explicitly selected document/project roots and ordinary
-  outbound network access, while credential stores, authority data, system
-  sockets/directories and privilege management stay hard-denied.
-- **Local modes:** desktop, headless and foreground operation use the same
-  signed artifact, daemon and application services. Desktop uses Secret
-  Service; headless can use a locked encrypted vault with TTY unlock and an
-  optional systemd encrypted-credential unlock path.
-- **Evolution:** Linux and hardware integration stabilize bounded software
-  ports. Linux 1.0 does not include a kernel module, eBPF control plane, device
-  scheduler or distributed authority.
+### Current implementation (Now)
 
-## Information architecture
+- Linux 1.0 is a six-family, Pi-qualified product:
+  Memory, Skill, Tool, Context, Task, and Runtime/Process.
+- P7-T05 delivered the daemon-served local Control Plane at `/ui/` with
+  **Home / Work / Agents / Providers / Resources / Activity / System**.
+- The current UI has governed Task creation and inspection, Provider and
+  resource operations, Agent dossier projections, composed Activity, and
+  system stewardship. It does not have task pause/cancel/retry, full Agent
+  lifecycle, embedded native conversations, Goal/Plan/Run/Harness APIs, a
+  common native-conversation projection, authority-backed Context/Runtime
+  inventory, or a unified Activity feed.
+- The native `cognitive dsh web` panel is a separate product surface.
 
-The stable top-level spaces are:
+### Adopted Personal 2.0 target
 
-1. **Home** - readiness, active work, health and blockers;
-2. **Agents** - package, installation, registration, instance and sidecar;
-3. **Tasks** - intent, preview, bounds, progress and acceptance;
-4. **Resources** - Memory, Skills, Tools and Context;
-5. **Activity** - Run, Process, Effect and Evidence.
+CognitiveOS Personal is the desktop-primary entry and supervisor for one
+owner's Agents. Its top-level information architecture is:
+
+**Home / Agents / Work / Library / Activity / Settings**
+
+- **Agents** embeds adapter-backed native conversations and history while
+  preserving vendor-native harness behavior and native-app use.
+  Agent connection establishes the explicit observation scope; there is no
+  speculative/global scan or surprise per-session enrollment.
+- **Work** holds persistent Goals, daemon-owned Plan revisions, Tasks,
+  each Task's preserved attempts, Context, execution flows, evidence, and
+  multi-Agent handoffs.
+- **Library** is task-oriented: Memory, Skills, Tools, and MCP. Context belongs
+  in Work; Runtime belongs in Agents.
+- **Activity** becomes one source-labelled timeline: Native, Observed,
+  Governed, and Verified.
+- **Settings** contains Account Hub and System. Providers are accounts and
+  routes inside Account Hub, not a resource family or top-level peer.
+- A global Agent Shell explains state and conflicts and proposes actions. The
+  daemon issues previews, the user confirms consequential actions once, and
+  the daemon executes. The Shell never has authority.
+- Personal 2.0 adopts MCP as a true seventh resource family. Its machine
+  implementation remains **Requires-backend**. Only a new or changed public
+  machine surface requires P10-T02/Lane-CTR; a Personal-private projection may
+  not require core changes.
+
+The common/native conversation experience reuses or references existing Core
+[`Conversation`](../../../core/specs/schemas/conversation.schema.json) and
+[`ConversationBinding`](../../../core/specs/schemas/conversation-binding.schema.json)
+identities where applicable. Vendor-native conversation IDs remain opaque
+origin bindings; any additional projection is Personal-private until P10-T02
+decides otherwise.
+
+The target is beginner-first by default. Governance detail remains available
+in inspectors; there is no Basic/Expert mode.
 
 ## Documents
 
+### Product and release boundaries
+
 | Document | Responsibility |
 |---|---|
-| [Product design](product-design.md) | positioning, users, principles, surfaces, workspace and information architecture |
-| [Cognitive resource model](cognitive-resource-model.md) | six resource families, cross-cutting objects, actions, identity and storage boundaries |
-| [Resource Manager](resource-manager-design.md) | common list/inspect/watch/bind/unbind/enable/disable/revoke envelope; no generic create/install/execute/complete |
-| [Provider Control Plane](provider-control-plane.md) | owner-local provider accounts, model discovery, fixed agent bindings, usage, cost, and soft alerts |
-| [Web UI product design](web-ui-design.md) | post-1.0 localhost operator experience for Agents, Providers, bindings and Activity |
-| [Linux 1.0 scope](linux-1.0-scope.md) | minimum real slices, Pi qualification, Gate composition, deferred and forbidden boundaries |
-| [Personal 2.0 scope](personal-2.0-scope.md) | post-1.0 design baseline: adapter, multi-agent mainline, pillars, headroom non-claims |
-| [User journeys](user-journeys.md) | install, Memory, Skill, Tool, Context, Task, Runtime, recovery and support flows |
+| [Product design](product-design.md) | product model, authority, users, adopted IA, interaction principles, and capability boundaries |
+| [Personal 2.0 scope](personal-2.0-scope.md) | adopted 2.0 scope, delivery boundaries, and categorized capability gaps |
+| [Linux 1.0 scope](linux-1.0-scope.md) | preserved six-family, Pi-qualified 1.0 boundary and non-claims |
+| [User journeys](user-journeys.md) | first chat, governed success, daily work, recovery, conflict, account import, MCP, and state handling |
 
-The baseline decisions are
-[ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md) and
-[ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md).
+### Desktop Control Plane and Agents
 
-## Non-duplication and non-claim rules
+| Document | Responsibility |
+|---|---|
+| [Web UI product design](web-ui-design.md) | current `/ui/`, target surfaces, global Shell, visual language, controls, state system, and backend gaps |
+| [Agent integration and conversations](agent-integration-and-conversations.md) ([中文](agent-integration-and-conversations.zh-CN.md)) | signed onboarding, adapter capability projection, native conversations, owner confirmation followed by daemon Goal admission, Task attempts, and removal |
+| [Account Hub](account-hub.md) ([中文](account-hub.zh-CN.md)) | provider presets, subscriptions/API keys/import, proxy profiles, override hierarchy, and honest metering |
+| [Provider Control Plane](provider-control-plane.md) | current Provider authority and its evolution into Account Hub |
 
-- Product requirements link to `PERS-PR-*`; they do not invent REQ IDs.
-- Tasks and Gate targets are linked, not copied as current status.
+### Cognitive resources
+
+| Document | Responsibility |
+|---|---|
+| [Cognitive resource model](cognitive-resource-model.md) | current six families, adopted seventh MCP family, cross-cutting objects, federation, and ownership |
+| [Resource Manager](resource-manager-design.md) | common projection envelope, family-native actions, federated bindings, and conflict behavior |
+| [MCP resource family](mcp-resource-family.md) ([中文](mcp-resource-family.zh-CN.md)) | server lifecycle, health, permissions, updates, client projection, and cooperative fallback |
+
+The product decisions build on
+[ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
+[ADR-0038](../../../docs/adr/0038-personal-agent-sidecar-linux-evolution-boundary.md),
+[ADR-0043](../../../docs/adr/0043-personal-universal-agent-adapter.md),
+[ADR-0044](../../../docs/adr/0044-personal-multi-agent-mainline.md),
+[ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md),
+[ADR-0056](../../../docs/adr/0056-personal-2-0-desktop-control-plane.md), and
+[ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md).
+
+## Authority and non-claim rules
+
+- Only the Rust daemon authorizes, applies CAS/epoch guards, schedules,
+  persists Intent/Effect, reconciles, and accepts Tasks. UI, Shell, Agents,
+  adapters, MCP servers, sidecars, CLI, and SDK remain clients or candidate
+  producers.
+- Provider and user secrets stay in approved Secret Stores and daemon-mediated
+  proxy paths. The user-directed import boundary is defined by ADR-0055.
+- Agent final text, Tool result, Provider response, process exit, or native
+  harness success is not Task completion. Current independent verification is.
 - `CognitiveResourceManifest` keeps its normative ActivityContext discovery
-  meaning; it is not redefined as this product taxonomy.
-- Environment results are linked from
-  [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
-- Release claims use only the exact scope proved by `GMVP-LINUX`.
-- Architecture presence, a documented Gate composition and these product
-  decisions do not imply implementation, Gate, release or Profile evidence.
+  meaning; this product taxonomy does not redefine it.
+- Unknown, unavailable, stale, and not-run remain explicit. A percentage,
+  count, rate, or ETA appears only when its denominator and basis are declared.
+- Architecture or product adoption does not imply implementation, Gate,
+  release, Profile, containment, performance, or Agent-benefit evidence.

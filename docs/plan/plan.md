@@ -16,6 +16,14 @@
 > **统一认知资源与 sidecar 重基线（2026-08-02，ADR-0037/0038）：** owner 已批准 Personal 作为 Memory/Skill/Tool/Context/Task/Runtime 统一认知资源基座，六类最小真实 slice 进入 Linux 1.0；Agent 路径采用 per-Agent sidecar-first，Pi 仍是唯一 qualified Agent。1.0 由 Runtime Spine、Resource Value、Product Operability 三条 active track 汇合；Context correctness 与 Memory+Skill actual consumption 进入 promotion，复杂 Context 收益、embedding/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI 和 Windows 后置。本批不改变任何 task status、attempt、evidence、Gate current status 或 Profile：P1-T09 仍 `in-progress`、B01 仍 `running`（1/至少20）、P2-T01/P2-T03 仍 `in-progress`、`GMVP-LINUX` 仍 `not-run`、Profile `implemented: 0`。本文件仍不是状态源；该 product-semantic + structural 文档批不含实现、规范变更或 Gate/release/Profile evidence。
 > **B01 successor campaign amendment（2026-08-09，ADR-0039）：** owner set separately preregistered successor `002` to fixed N=6, at least 5 successes, zero critical safety failures, complete aggregate statistics, and affirmative independent-verifier closure. Attempts 1--6 remain immutable at 5 successes / 1 failure. Transition Attempt 7 is retained but owner-waived outside the denominator because no artifact, Pi, Provider, service, or route operation occurred. Retained `001` remains its historical N=20 failure. This decision does not claim B01, release, or Profile pass; `PROGRESS.md` remains the current-status source.
 > **2.0 设计基线与计划扩展（2026-08-10，P8-T01 / ADR-0041+）：** 正式台账新增 Phase 8/9；公理单一文档见 `docs/governance/AXIOMS.md`；产品定位为认知资源操作系统与主流 Agent 统一管理底座。本文件只补充研究层卡片与依赖说明，不拥有当前状态；Multi-Agent 设计正线化但 Linux 1.0 claim 仍仅资格化 Pi。
+> **Personal 2.0 desktop + MCP semantic adoption（2026-08-27，P10-T01 /
+> ADR-0056/0057）：** 正式台账新增 Phase 10。Personal 2.0 采用 desktop-first
+> Control Plane 与 Home/Agents/Work/Library/Activity/Settings IA（Providers、System
+> 归 Settings），global Agent Shell 仅产 candidate，installed-Agent conversation
+> 通过 vendor-specific adapter + common internal capability projection，native Agent app
+> 仍可使用；MCP 成为第七 family，advertised tools 仍走 Tool candidate，resources/prompts
+> 走 Context/Skill admission，不建 generic Resource schema。Linux/Personal 1.0 六 family
+> 定稿不变；本文件不拥有 P10-T01 当前状态。
 > **本草案不包含生产代码、规范或数据库 Schema 变更。**
 > **落盘说明：** 正式计划与进度台账已保存于 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`；本文件保留研究结论、详细任务卡和原始审计材料。
 
@@ -104,8 +112,13 @@ Linux x86_64 可验证安装包
      仅从 native store 注入初始 Pi child，且在 P2 结束到期。它不适用于 CI、发布或
      containment 声明。
 
-5. **Native Tool 进入 1.0；MCP 只是 post-1.0 工具传输适配器。**
-   - MCP discovery、connection 和 protocol completion 都不等于 CognitiveOS 授权、Effect 提交或 Task 完成。
+5. **Native Tool 进入 1.0；Personal 2.0 将 MCP 从 transport 扩展为第七 family。**
+   - Linux/Personal 1.0 的 P5 MCP 路径仍只是 post-1.0 Tool transport/dynamic
+     ecosystem evidence；它不改变 six-family 1.0 boundary。
+   - Personal 2.0 中 MCP server/package/connection/capability/binding/health/quarantine
+     是独立 family identity/lifecycle；advertised tools 仍是 Tool candidate，
+     resources/prompts 经 Context/Skill admission。discovery、connection 和 protocol
+     completion 都不等于 CognitiveOS 授权、Effect 提交或 Task 完成。
 
 6. **Memory + Skill 是 1.0 Resource Value，而 embedding 后置。**
    - Memory 采用 SQLite source-of-record + FTS5/metadata filter；Skill 采用 local package/revision/import/binding。
@@ -115,8 +128,11 @@ Linux x86_64 可验证安装包
    - 只有受治理单 Agent benchmark 与明确并行收益假设具备后才能进入 Phase 6；Memory、
      MCP/B10 或其他非 Pi adapter 不应成为 isolated implementation mutex。
 
-8. **六类资源统一呈现但不统一 authority schema。**
-   - Memory、Skill、Tool、Context、Task、Runtime 使用 private versioned Personal projection；第二个真实 adapter/client 出现后才评估 public `ResourceSummary`。
+8. **版本化 family 统一呈现但不统一 authority schema。**
+   - Linux/Personal 1.0 的 Memory、Skill、Tool、Context、Task、Runtime 六 family
+     保持 finalized；Personal 2.0 增 MCP 为第七 family。
+   - 各 family 使用 private versioned Personal projection；P10-T02 在 Lane-CTR
+     决定 MCP/conversation 的 public/private compatibility surface。
    - 不新增 `Process` domain 或 giant `Resource` schema；public prerequisite 逐项走 Lane-CTR。
 
 ## 2.4 Linux 1.0 三条 active release track
@@ -132,7 +148,7 @@ retrieval/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI/Windows 与 non
 
 ## 2.5 阶段数量
 
-共八个阶段：
+共十一个阶段（Phase 0 至 Phase 10）：
 
 - Phase 0：研究、基线和决策；
 - Phase 1：安装到首次对话；
@@ -141,9 +157,10 @@ retrieval/vector/graph、MCP/dynamic Tool、Multi-Agent、Web UI/Windows 与 non
 - Phase 4：Memory；
 - Phase 5：Agent 与 Tool 生态；
 - Phase 6：Multi-Agent；
-- Phase 7：产品化和发布。
-- Phase 8：通用 Agent 适配与 2.0 设计基线（post-1.0）。
-- Phase 9：性能与结构演进候选池。
+- Phase 7：产品化和发布；
+- Phase 8：通用 Agent 适配与 2.0 设计基线（post-1.0）；
+- Phase 9：性能与结构演进候选池；
+- Phase 10：Personal 2.0 desktop Control Plane 与 MCP seventh family。
 
 ## 2.6 最大风险
 
@@ -1329,6 +1346,56 @@ Pi 不可以：
 
 ---
 
+## Phase 10 — Personal 2.0 desktop Control Plane 与 MCP family（研究卡；正式状态见台账）
+
+> 正式定义、typed dependencies 与状态以 `PERSONAL-DEVELOPMENT-PLAN.md` Phase 10
+> 为准。本节只补充实施边界；Phase 10 不创建 Gate。
+
+### P10-T01 — Personal 2.0 desktop + MCP semantic adoption
+
+- **目的：** 以 ADR-0056/0057 固定 owner 已决定的 desktop primary entry、目标 IA、
+  candidate-only global Agent Shell、vendor-specific conversation adapter/common internal
+  capability projection、native Agent app coexistence 与 MCP seventh-family 语义。
+- **Typed dependencies：** `implementation_requires` 为 owner-accepted 2026-08-27
+  scope、ADR-0037/0043/0055 与 finalized Personal 1.0 baseline；ADR-0056/0057、
+  ADR-0037 partial backlink、product/plan/trace/support/version sync 与 ADR-0055
+  `Requires-backend` honesty 保持独立 `acceptance_requires`，不回写为实现前置。
+- **边界：** Linux/Personal 1.0 保持 finalized six-family；ADR-0037 只对 2.0 family count
+  增 backlink，不重写历史；ADR-0055 import 全部 per-source consent + daemon-only +
+  SecretStore，未实现 surface 标 `Requires-backend`。
+- **切片：** D01 ADR/canonical product semantics → D02 detailed product/architecture/bilingual
+  alignment → D03 consistency/acceptance/closure。
+- **不包含：** code、contract、schema、transition、negative、generated reference、Gate、
+  release、Profile 或 support claim。
+
+### P10-T02 — Lane-CTR contract and compatibility decision
+
+- 决定 MCP family 与 common conversation projection 的 public/private boundary，
+  identity/version compatibility、capability digest、binding、health/quarantine、P5-era
+  migration 与 older-client fail-closed。
+- 如果决定改变 public machine contract，schema、generated bindings、registered errors、
+  transition 与 focused negatives 必须由 Lane-CTR 同批交付；不得从 ADR 文案推断合同。
+
+### P10-T03 — MCP family authority and product integration
+
+- 在 P10-T02 后实现 daemon-owned server/package/connection/capability/binding/health/
+  quarantine lifecycle，并把 Tool/Context/Skill candidate 接到各自 admission。
+- 复用 P5-T03/P5-T04 transport/dynamic Tool 与 P8-T12 management envelope，但不得把
+  既有 evidence 写成 seventh-family implementation；保持 SecretStore、Intent/Effect、
+  fencing、reconcile 与 quarantine/requalification negatives。
+
+### P10-T04 — Desktop Control Plane experience
+
+- 以 desktop Control Plane 为 primary entry，交付 Home / Agents / Work / Library /
+  Activity / Settings；Providers 与 System 进入 Settings。
+- global Agent Shell 只建议、解释、导航和提案；installed-Agent conversations 经
+  vendor-specific adapters 汇入 common internal projection/capability matrix，能力缺失
+  诚实显示；native Agent app 仍可使用。
+- credential import 只显示真实 backend capability；无 ADR-0055 implementation 时必须
+  `Requires-backend`。现有 P7 Web UI/P8 Provider/dsh evidence 不自动构成 2.0 support。
+
+---
+
 # 12. 机器可读 typed dependency 图
 
 本节是正式计划的研究级细化，不拥有 current status。`implementation_requires`、
@@ -1377,6 +1444,10 @@ phases:
     implementation_requires: [P1_INSTALL_FOUNDATION, P2_PRODUCT_INTERFACES, P3_CONTEXT_CORRECTNESS, P4_MEMORY_SKILL, P5A_MANAGED_PI]
     promotion_requires: [B01, B02, B03, B04, B05, B08, B09, B12]
     gate: GMVP_LINUX_then_G7_RC
+  P10:
+    implementation_requires: [OWNER_ACCEPTED_PERSONAL_2_0_SCOPE]
+    acceptance_requires: [P10-T01, P10-T02, P10-T03, P10-T04]
+    claim_boundary: NO_NEW_GATE
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -1385,9 +1456,11 @@ linux_1_0_active_tracks:
 
 post_1_0:
   EMBEDDING_SEMANTIC_VECTOR_GRAPH: []
-  MCP_DYNAMIC_TOOL: [P5-T03, P5-T04, B10]
+  MCP_TOOL_ADAPTER_HISTORY: [P5-T03, P5-T04, B10]
+  MCP_SEVENTH_FAMILY_2_0: [P10-T01, P10-T02, P10-T03]
   MULTI_AGENT: [P6-T01, P6-T02, P6-T03, P6-T04, B11]
   WEB_UI_WINDOWS: [P7-T05, P7-T07, B01-W]
+  DESKTOP_CONTROL_PLANE_2_0: [P10-T01, P10-T02, P10-T04]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -1510,6 +1583,19 @@ tasks:
     implementation_requires: [P1-T09, P2-T08, P3-T06, P4-T06, P5-T01, P5-T02, P5-T05, P7-T01, P7-T02, P7-T03]
     acceptance_requires: [SIX_RESOURCE_RELEASE_MANIFEST, MANAGED_PI_SIDECAR, RESOURCE_ACTUAL_CONSUMPTION, PRODUCT_LIFECYCLE, MEMORY_SKILL_BACKUP_RESTORE, SIX_RESOURCE_DOCTOR_SUPPORT]
     promotion_requires: [B01, B02, B03, B04, B05, B08, B09, B12]
+
+  P10-T01:
+    implementation_requires: [OWNER_ACCEPTED_2026_08_27_SCOPE, ADR-0037, ADR-0043, ADR-0055, FINALIZED_PERSONAL_1_0_BASELINE]
+    acceptance_requires: [ADR-0056, ADR-0057, ADR-0037_PARTIAL_BACKLINK, PRODUCT_PLAN_TRACE_SUPPORT_VERSION_SYNC, ADR-0055_REQUIRES_BACKEND_HONESTY]
+  P10-T02:
+    implementation_requires: [P10-T01]
+    acceptance_requires: [LANE_CTR_MCP_CONVERSATION_CONTRACT_COMPATIBILITY_DECISION]
+  P10-T03:
+    implementation_requires: [P10-T02, P5-T03, P5-T04, P8-T12]
+    acceptance_requires: [MCP_FAMILY_DAEMON_AUTHORITY, TOOL_CONTEXT_SKILL_ADMISSION, HEALTH_QUARANTINE_RECONCILIATION]
+  P10-T04:
+    implementation_requires: [P10-T02, P10-T03, P7-T05, P8-T13]
+    acceptance_requires: [DESKTOP_PRIMARY_ENTRY, TARGET_IA, GLOBAL_AGENT_SHELL_CANDIDATE_ONLY, VENDOR_CONVERSATION_CAPABILITY_MATRIX, NATIVE_AGENT_APP_COEXISTENCE, ADR-0055_IMPORT_HONESTY]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。

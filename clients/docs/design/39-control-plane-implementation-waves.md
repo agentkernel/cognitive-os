@@ -4,6 +4,32 @@
 - Date: 2026-08-24
 - Inputs: refactor verdicts (`36`), traceability (`35`), verified backend dependencies (`37`), design challenges (`38`), capability matrix (`29`).
 
+## Current implementation (frozen planning record)
+
+The wave plan below targeted the 2026-08-24 seven-space proposal and P7-T05
+codebase. It records prior sequencing rationale; it did not authorize
+implementation.
+
+## Personal 2.0 target delta / supersession
+
+This wave order is **superseded and must not be executed as the Personal 2.0
+plan**. The adopted target first needs separate product/backend dispositions for
+Adapter conversation, Agent install/connect, Goal/Plan/attempt, multi-Agent,
+MCP, Account Hub tiers, federated observation/writeback and unified provenance.
+Only after those dependencies are defined can frontend slices be sequenced.
+
+Any future plan must:
+
+1. preserve P7-T05 current behavior and security negatives;
+2. establish the six-space shell and target/current capability labeling;
+3. deliver a real vertical first-value path, not placeholder pages;
+4. keep each unsupported control `Requires-backend`;
+5. validate keyboard/reduced-motion/transparency and no-fake-progress behavior.
+
+Use [Target Traceability](35-design-to-code-traceability.md) and
+[Target Gap Register](37-backend-dependency-matrix.md), not the old Wave 0–12
+ordering, for new planning.
+
 ---
 
 ## 1. Implementation strategy decision (brief §21)

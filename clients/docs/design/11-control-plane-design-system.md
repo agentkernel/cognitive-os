@@ -1,9 +1,67 @@
 # 11 — Control Plane Design System (Tokens)
 
-- Phase 2 (design-only; tokens are specifications, not code)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 design-system specification; no code claim
+- Updated: 2026-08-27
 - Authority order: CognitiveOS Reality > Apple (`apple-design`) > UX/IA > Agent UX > frontend aesthetics. Token values follow Apple discipline: system font first, size-specific tracking, 4 pt spacing grid, restrained materials, motion that orients.
 - Scope: token *definitions and rules*. Hex values are directional proposals for the visual phase to finalize against both themes and contrast gates; the **semantic structure is binding**, the exact hues are refinable.
+
+## Personal 2.0 design-system amendment
+
+The token proposal below becomes the seed of a **brand-new desktop system**,
+not a promise to preserve the P7-T05 palette or dimensions.
+
+### Semantic foundations
+
+| Foundation | Binding target rule |
+|---|---|
+| Surfaces | `canvas / navigation / workspace / inspector / overlay`; solid by default, tonal depth before shadow |
+| Type | human-readable UI face + compact data/identity mono; sentence case; tabular numerals |
+| Spacing | 4 pt base; operational density with legible floors; no marketing-section gaps |
+| Shape | small system radii; pills only for filters/status; no oversized rounded cards |
+| Color | neutral field, one restrained selection accent, semantic state and provenance colors only |
+| Motion | immediate feedback and orientation; no authority/progress inference; reduced-motion equivalent |
+| Transparency | overlays only; solid replacement under reduced transparency |
+| Focus | always-visible, high-contrast, not clipped by docked Shell/inspector |
+
+### Provenance tokens
+
+The state system and provenance system are independent:
+
+- `provenance.native` — Agent/vendor-origin fact;
+- `provenance.observed` — bounded process/transport observation;
+- `provenance.governed` — daemon authority fact;
+- `provenance.verified` — independent verification/acceptance fact.
+
+Each uses label + icon/shape + subtle rule. Provenance color never substitutes
+for state, and `Verified` is not a green synonym for "success".
+
+### Three-region density
+
+The target shell reserves tokens for navigation, primary workspace and
+inspector. Widths are adaptive bands, not one fixed pixel contract. The
+workspace is never constrained to a marketing content column. Master rows,
+conversation messages, timelines, forms and inspectors each receive distinct
+density floors; beginner summaries may be spacious, while expanded inspectors
+remain compact and aligned.
+
+### Agent Shell and conversation
+
+Conversation content uses the same typography and state grammar as the rest of
+the product. It avoids bubble decoration when a simple transcript row is
+clearer. Agent identity, model/account route, provenance, attachment state and
+Manage with Personal boundary remain visible. Native slots inherit common
+spacing/focus/error tokens and cannot introduce an unrelated vendor theme into
+the shell.
+
+### Target-only states
+
+`Requires-backend` has its own non-action treatment: neutral bordered
+specification block, dependency label, and no hover/pressed styling. Loading
+does not imply progress. Indeterminate work never receives a percentage.
+
+Exact colors, type metrics and region widths below remain directional until
+measured for light/dark/high-contrast themes. Their anti-glass, anti-gradient,
+anti-card-wall, accessibility and density rules remain binding.
 
 ---
 

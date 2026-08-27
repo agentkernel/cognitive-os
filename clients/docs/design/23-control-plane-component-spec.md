@@ -1,8 +1,66 @@
 # 23 — Component Taxonomy & Core Component Specs
 
-- Phase 2 (design-only — taxonomy and behavioral specifications, **no code**)
-- Date: 2026-08-24
-- Contract: state language `22`; tokens `11`; shell `12`; page specs 13–21. Implementation format (CSS variables vs TS token module, component library choices) is deferred to the authorized implementation phase.
+- Status: adopted Personal 2.0 component specification; no implementation claim
+- Updated: 2026-08-27
+- Inputs: state language `22`; tokens `11`; shell `12`; page specs 13–21
+- Boundary: component technology remains an implementation decision
+
+## Personal 2.0 component amendment
+
+The component taxonomy expands around the adopted desktop model:
+
+| Area | Required target components |
+|---|---|
+| Shell | ThreeRegionShell, GlobalAgentShell, ShellDock, ContextAnchor, CommandPalette |
+| Agents | AgentMaster, AgentWorkspace, ConversationTranscript, Composer, AdapterCapabilityMatrix, NativeSlot, InstallConnectFlow, RuntimeDossier, DisconnectUninstallReview |
+| Work | GoalMaster, PlanRevisionList, TaskAttemptTree, ManagePreview, OrchestrationMap, ContextInspector |
+| Library | LibraryFamilyIndex, FamilyMasterDetail, McpServerInspector, FederatedSourceCompare, ConflictResolutionPreview, WritebackReceipt |
+| Activity | ProvenanceTimeline, ProvenanceMarker, SourceCoverage, TimelineInspector |
+| Settings | SettingsGroups, AccountHub, AcquisitionTierPicker, ConsentReview, CredentialPresence, ModelQuotaCost, SystemReadiness |
+| Honesty | RequiresBackendBlock, CurrentImplementationNote, TargetDeltaNote, ProgressFact, CoverageBanner |
+
+### Behavioral contracts
+
+- **ConversationTranscript:** source-ordered messages, explicit Agent/vendor
+  identity, bounded rendering, attachment refs, loading/sync/error states,
+  keyboard navigation and no hidden-reasoning presentation.
+- **ManagePreview:** preserves conversation, names proposed durable objects,
+  Context/resource losses and participating Agents; submits only a real daemon
+  preview/admission.
+- **AdapterCapabilityMatrix:** each row renders three separate fields:
+  runtime condition (`Supported|Unsupported|Unavailable|Unknown`), delivery
+  status (`Now|Requires-backend`), and support path
+  (`vendor-native|managed-adapter|MCP-cooperative|observable-only|unqualified`),
+  plus source, freshness, reason, and optional `Requires-core` dependency.
+- **NativeSlot:** bounded display/artifact renderer owned and versioned by the
+  Adapter. It accepts display-safe data only; it cannot inject actions,
+  executable markup/scripts, credentials, or authority-shaped state. Any
+  vendor-specific action is rendered by a Control Plane-owned component tied to
+  typed capability semantics.
+- **TaskAttemptTree:** hierarchy and dependency state without fake percent
+  progress; selection opens provenance timeline and inspector.
+- **ProvenanceTimeline:** keeps Native/Observed/Governed/Verified distinct while
+  time-aligning them; never claims a global order unsupported by sources.
+- **McpServerInspector:** distinct server/package/connection/capability/binding/
+  health/quarantine identities; source, trust, transport, revision/freshness,
+  advertised Tool/Context/Skill candidates and admitted mappings; no
+  host-session-control affordance.
+- **FederatedSourceCompare:** both revisions, provenance and conflict; Agent
+  suggestion is a candidate; writeback requires daemon preview/effect/receipt.
+- **AcquisitionTierPicker:** active only for delivery status `Now`. Target-only
+  tiers use RequiresBackendBlock, not disabled buttons.
+- **RequiresBackendBlock:** non-interactive, dependency-specific and visually
+  distinct from loading, permission denied and temporarily disabled.
+
+### Component bans
+
+The existing bans remain, with these additions: fake step progress,
+thinking-animation-as-status, generic ChatBubble walls, active-looking target
+controls, provider-secret previews, hidden provenance, and MCP host-session
+controls.
+
+The earlier component list remains useful for current Task/Provider/System
+facts. Where names assume the old seven-space shell, this amendment controls.
 
 ---
 

@@ -3,6 +3,7 @@
 - Status: owner-accepted product support policy
 - Original decision: ADR-0025, 2026-07-26
 - Linux 1.0 updates: ADR-0034, ADR-0036, ADR-0037 and ADR-0038
+- Personal 2.0 adopted targets: ADR-0056 and ADR-0057
 - Current Gate status: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Environment evidence: [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md)
 
@@ -98,7 +99,23 @@ authorship.
 - A Personal Linux RC declaration does not imply CognitiveOS Core Profile
   `implemented`. `implemented` counts only applicable MUST evidence.
 
-## 8. References
+## 8. Personal 2.0 adopted targets — not yet supported
+
+The following are owner-accepted Personal 2.0 product targets. They are not
+current support rows, implementation evidence, or Gate/release/Profile claims.
+Existing Linux 1.0 support and Gate boundaries above remain unchanged.
+
+| Personal 2.0 target | Adopted policy | Current support boundary |
+|---|---|---|
+| Desktop Control Plane | Primary entry and supervision center; target IA is Home / Agents / Work / Library / Activity / Settings, with Providers and System under Settings | **not yet supported as a Personal 2.0 target**; existing daemon-served Web UI evidence does not establish desktop packaging, target IA, or 2.0 qualification |
+| Global Agent Shell | Advises, explains, navigates, and proposes daemon previews; remains candidate-only and never writes authority or claims Task completion | **not yet supported**; no Personal 2.0 desktop Shell implementation or qualification |
+| Installed-Agent conversations | Vendor-specific adapters behind a common internal projection and honest capability matrix; native Agent applications remain usable | **not yet supported**; existing Pi/dsh/Codex adapter evidence does not establish a common conversation surface or transfer qualification |
+| MCP seventh family | Server/package/connection/capability/binding/health/quarantine identities and lifecycle; advertised tools remain Tool candidates; resources/prompts route through Context/Skill admission; no generic `Resource` schema | **not yet supported**; P5-T03/P5-T04/B10 evidence remains bounded to its MCP Tool adapter/dynamic Tool scope and is not seventh-family implementation |
+| Credential import | ADR-0055 user-initiated per-source consent; daemon-only read; approved SecretStore target; raw material never reaches UI or Agent | **`Requires-backend`** for every concrete source until a formal implementation task and focused negatives exist |
+
+No Personal 2.0 Gate is created by this adopted-target table.
+
+## 9. References
 
 - [Linux 1.0 scope](../../personal/docs/product/linux-1.0-scope.md)
 - [ADR-0025](../adr/0025-personal-license-platform-distribution.md)
@@ -107,5 +124,8 @@ authorship.
 - [ADR-0036](../adr/0036-personal-linux-1-0-and-official-pi-acquisition.md)
 - [ADR-0037](../adr/0037-personal-unified-cognitive-resource-substrate.md)
 - [ADR-0038](../adr/0038-personal-agent-sidecar-linux-evolution-boundary.md)
+- [ADR-0055](../adr/0055-personal-credential-import-boundary-and-a5-revision.md)
+- [ADR-0056](../adr/0056-personal-2-0-desktop-control-plane.md)
+- [ADR-0057](../adr/0057-personal-2-0-mcp-resource-family.md)
 - [THIRD-PARTY-NOTICES.md](../legal/THIRD-PARTY-NOTICES.md)
 - [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)

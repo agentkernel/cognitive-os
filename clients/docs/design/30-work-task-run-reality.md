@@ -4,6 +4,24 @@
 - Date: 2026-08-24
 - Question (brief §9): Phase 1/2 made **Work** the primary operational object — what does the REAL backend provide? Sources: store audit (`crates/cognitive-store`, `crates/cognitive-domain`, `specs/transitions/`) + HTTP audit (`28`). Every claim cites implementation.
 
+## Current implementation (frozen audit baseline)
+
+The Task, transition, Effect, evidence and Run-composition findings below remain
+P7-T05 facts. In particular, no first-class Run entity was found and the task
+inventory was envelope-only at the audited revision.
+The accepted current SPA exposes this bounded composition through its Work
+route; that route does not add Goal, Plan, attempt, or Run authority.
+
+## Personal 2.0 target delta
+
+Target Work is Goal -> Plan revision -> Task -> attempt, with Context,
+multi-Agent orchestration and a Native/Observed/Governed/Verified timeline.
+Only the Task/effect/evidence subset below is current-backed. Goal, Plan
+revision, attempt identity, orchestration and rich inventory are
+`Requires-backend`; target design must not synthesize them from conversation or
+the Run composition. See [Work Spec](14-control-plane-work-spec.md) and
+[Work Detail](15-control-plane-work-detail-spec.md).
+
 ---
 
 ## 1. The true Task entity (A. True task entity)

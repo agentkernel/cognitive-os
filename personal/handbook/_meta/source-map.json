@@ -111,10 +111,84 @@
       "note": "UJ1-UJ6 public-caller/oracle register; Web UI/Multi-Agent are scope-excluded"
     },
     {
+      "id": "personal-2-baseline",
+      "sources": [
+        "personal/docs/product/README.md",
+        "personal/docs/product/personal-2.0-scope.md",
+        "personal/docs/product/product-design.md",
+        "personal/docs/architecture/README.md",
+        "personal/docs/architecture/system-architecture.md"
+      ],
+      "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.resources-model", "user.tasks-and-execution", "user.limitations", "dev.index", "dev.architecture-overview", "dev.agent-pi-lifecycle", "ref.capability-status"],
+      "note": "adopted Personal 2.0 composition; every handbook projection must preserve the current Linux 1.0/current-API versus Requires-backend target boundary"
+    },
+    {
+      "id": "personal-2-desktop-account-hub",
+      "sources": [
+        "docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md",
+        "docs/adr/0056-personal-2-0-desktop-control-plane.md",
+        "personal/docs/product/account-hub.md",
+        "personal/docs/product/account-hub.zh-CN.md",
+        "personal/docs/product/provider-control-plane.md",
+        "personal/docs/product/web-ui-design.md",
+        "personal/docs/architecture/provider-control-plane.md",
+        "personal/docs/architecture/web-ui-architecture.md"
+      ],
+      "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.provider-and-secrets", "user.provider-control-plane", "user.security-boundaries", "user.limitations", "dev.index", "dev.architecture-overview", "ref.capability-status"],
+      "note": "desktop-first Control Plane and Account Hub target, including the daemon-only ADR-0055 credential-import boundary; concrete import and redesign capabilities remain Requires-backend"
+    },
+    {
+      "id": "personal-2-agent-supervision",
+      "sources": [
+        "docs/adr/0056-personal-2-0-desktop-control-plane.md",
+        "personal/docs/product/agent-integration-and-conversations.md",
+        "personal/docs/product/agent-integration-and-conversations.zh-CN.md",
+        "personal/docs/product/user-journeys.md",
+        "personal/docs/architecture/agent-adapter-contract.md",
+        "personal/docs/architecture/agent-shell-and-agent-lifecycle.md",
+        "personal/docs/architecture/authority-data-and-recovery.md",
+        "personal/docs/architecture/learning-loop.md",
+        "personal/docs/architecture/multi-agent-orchestration.md"
+      ],
+      "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.tasks-and-execution", "user.limitations", "dev.index", "dev.architecture-overview", "dev.agent-pi-lifecycle", "ref.capability-status"],
+      "note": "vendor-specific conversation adapters, Agent Shell, Goal and Plan revisions, and multi-Agent supervision; Pi remains the only currently qualified Agent"
+    },
+    {
+      "id": "personal-2-mcp-family",
+      "sources": [
+        "docs/adr/0037-personal-unified-cognitive-resource-substrate.md",
+        "docs/adr/0057-personal-2-0-mcp-resource-family.md",
+        "personal/docs/product/cognitive-resource-model.md",
+        "personal/docs/product/mcp-resource-family.md",
+        "personal/docs/product/mcp-resource-family.zh-CN.md",
+        "personal/docs/product/resource-manager-design.md",
+        "personal/docs/architecture/resource-manager-architecture.md"
+      ],
+      "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.resources-model", "user.provider-and-secrets", "user.tasks-and-execution", "user.security-boundaries", "user.limitations", "dev.index", "dev.architecture-overview", "ref.capability-status"],
+      "note": "adopted seventh MCP family and federated-resource semantics; current Linux 1.0 and current Resource Manager APIs remain six-family"
+    },
+    {
+      "id": "dsh-recovery-docs",
+      "sources": [
+        "docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md",
+        "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md",
+        ".cursor/rules/10-autonomous-personal-development.mdc",
+        "AGENTS.md"
+      ],
+      "docs": ["user.provider-control-plane", "user.limitations", "dev.agent-pi-lifecycle", "dev.dev-environments", "ai.validation-commands"],
+      "note": "secret-free diagnosis and recovery after daemon restart invalidates the native dsh Path B management session"
+    },
+    {
       "id": "handbook-itself",
       "sources": ["personal/handbook/**", "llms.txt", ".cursor/rules/20-cognitiveos-personal-handbook-sync.mdc"],
       "docs": ["meta.doc-standards", "meta.sync-policy", "ai.entry"],
       "note": "changes here run the handbook checker and generator --check"
+    },
+    {
+      "id": "handbook-source-map",
+      "sources": ["personal/handbook/_meta/source-map.json"],
+      "docs": ["ai.docs-impact"],
+      "note": "routing-table changes must keep the AI docs-impact procedure synchronized"
     },
     {
       "id": "docs-sync-enforcement",

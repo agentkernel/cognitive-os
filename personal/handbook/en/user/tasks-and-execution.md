@@ -14,10 +14,14 @@ sources:
     symbols: ["record_user_intent", "mint_schedulable_task_contract"]
   - path: personal/apps/kernel-server/src/personal/scheduler_authority/dispatch.rs
     symbols: ["run_private_scheduler_tick"]
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/architecture/multi-agent-orchestration.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:4d5da7fad11014cc66879490ff44e68c1a668e51e03db5f36e3bff1b8b716811"
+fingerprint: "sha256:28c3e6df2f619bc4adc12e38404fd43afed8b95b4402cdc24260fafceacc8740"
 non_claims:
   - Admission still does not consume the worker authorization or acquire a scheduler lease on the same pass; a later tick does. No Gate, release, Profile, or EVAL promotion.
 ---
@@ -77,6 +81,31 @@ only after RegisteredCheckRun plus independent verification.
 So admitted Tasks are durable, watchable, and runnable in authority state;
 autonomous execution remains `partial`. Details for developers:
 [execution-chain status](../developer/execution-chain-status.md).
+
+## Personal 2.0 Goal, Plan, and supervision target (`Requires-backend`)
+
+The current durable work object is still **Task**. There is no Goal or Plan API,
+no persisted Plan-revision lifecycle, and no multi-Agent supervisor in the
+current daemon.
+
+The adopted target adds:
+
+- **Goal**: an owner-authored durable outcome above one or more Tasks;
+- **Plan revision**: an immutable candidate decomposition of that Goal. An
+  Agent may propose one, but only a daemon-issued preview and admission may
+  make a revision current;
+- **multi-Agent supervision**: independently qualified Agents contribute
+  bounded candidates through vendor-specific adapters. The daemon assigns,
+  fences, budgets, arbitrates Effects, and verifies; Agents never transfer
+  authority to one another;
+- **federated resources**: a Plan may reference MCP-family resources by exact
+  source identity and revision/freshness, but discovery or mention grants no
+  permission.
+
+These concepts do not rename today's Task rows or infer implementation from the
+existing Pi/dsh paths. Pi remains the only qualified Agent, and all target
+Goal/Plan/multi-Agent/federation behavior is `Requires-backend` (or
+`Requires-core` where public authority contracts must change).
 
 ## What can never happen, by construction
 

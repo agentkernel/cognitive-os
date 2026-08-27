@@ -1,10 +1,126 @@
 # 10 — Control Plane Design Decision Log
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 decisions; historical DD-01–DD-17 retained
+- Updated: 2026-08-27
 - Format per decision: **Decision / Context / Options / Chosen / Why / Rejected alternatives / Consequences**. Decisions are design-phase decisions: they bind subsequent design phases (UX/visual/component specs) and become implementation input only when the owner authorizes implementation. None of these decisions modifies product code, contracts, or canonical docs; changing canonical product IA (`docs/product/personal/`) is a separate owner-approved `product-semantic` step.
 
+## Personal 2.0 adopted decisions
+
+These decisions supersede DD-02, DD-04, DD-05, DD-06, DD-11, DD-14,
+DD-16, and the chat/multi-Agent/provider/MCP portions of DD-17 where they
+conflict. The earlier entries remain the decision history of the
+2026-08-24 P7-T05-centered proposal.
+
+### DD-18 — Desktop entry = global Agent Shell + Control Plane
+
+- **Chosen:** one desktop product with native Agent conversation by default and
+  explicit Manage with Personal into daemon-governed Work.
+- **Why:** first value is a real Agent conversation; governance becomes useful
+  when consequential work begins.
+- **Consequences:** conversation/history needs an Adapter common projection and
+  display/artifact-only native slots. Goal/Plan conversion is never implicit and is
+  `Requires-backend` until typed.
+
+### DD-19 — Six first-level destinations
+
+- **Chosen:** `Home / Agents / Work / Library / Activity / Settings`.
+- **Consequences:** Providers and System move under Settings; Resources becomes
+  Library; Context moves to Work; Runtime moves to Agents. Current seven routes
+  remain factual implementation evidence, not target IA.
+
+### DD-20 — Agent integration is Adapter-backed and first-chat complete
+
+- **Chosen:** install/connect in no more than three understandable steps,
+  signed-catalog posture, capability matrix, embedded native history, then a
+  real first chat.
+- **Consequences:** disconnect and uninstall are separate; unsupported catalog,
+  install, lifecycle and conversation capabilities are `Requires-backend`.
+
+### DD-21 — Managed Work model
+
+- **Chosen:** daemon-owned `Goal -> Plan revision -> Task -> attempt`, with
+  Context, Effects and Evidence, and daemon-orchestrated multi-Agent roles.
+- **Consequences:** plan history is immutable/versioned; no fake progress;
+  existing Task evidence is reused but does not prove Goal/Plan support.
+
+### DD-22 — Seven target families, task-oriented placement
+
+- **Chosen:** Personal 2.0 families are Memory, Skill, Tool, Context, Task,
+  Runtime/Process, and MCP. Library contains Memory, Skills, Tools, and MCP;
+  Work contains Context and Task; Agents contains Runtime/Process.
+- **Consequences:** MCP gets a first-class Library page. Model, Permission,
+  Artifact, Budget, Evidence, and Event remain cross-cutting objects, not
+  families. The product organization does not claim a universal backend record.
+  MCP + rules does not control host Agent sessions.
+
+### DD-23 — Account Hub lives in Settings
+
+- **Chosen:** tiered account acquisition: OAuth/subscription, API key,
+  user-directed import under
+  [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md),
+  and custom gateway; daemon SecretStore/proxy custody always.
+- **Consequences:** only verified API-key/provider functions are current-backed.
+  Import/OAuth/subscription/unsupported quotas and costs are
+  `Requires-backend`.
+
+### DD-24 — One provenance timeline
+
+- **Chosen:** Activity and object timelines share
+  `Native / Observed / Governed / Verified` provenance.
+- **Consequences:** sources can align in time but never merge identities or
+  authority. Unified cross-domain coverage remains Requires-backend.
+
+### DD-25 — Federated observation and governed writeback
+
+- **Chosen:** show source/revision/conflicts across Personal and Agent-native
+  resources. Agent Shell may suggest resolution; daemon preview/confirm/Effect
+  performs any supported writeback.
+- **Consequences:** observation never grants write authority; unsupported
+  writeback has no active control.
+
+### DD-26 — Brand-new calm desktop system
+
+- **Chosen:** three-region desktop, master/detail/inspector, command palette,
+  full keyboard, reduced motion/transparency, calm-dense-precise-professional
+  visual language.
+- **Rejected:** Liquid Glass everywhere, giant gradients/cards, marketing
+  spacing, card-wall dashboards and fake progress.
+
+### DD-27 — Target controls use `Requires-backend`
+
+- **Chosen:** target-only behavior is documented in place with dependency and
+  non-interactive state. Current-backed controls alone may look actionable.
+- **Why:** disabled buttons and simulated progress both overstate capability.
+
+### DD-28 — Render slots never own actions
+
+- **Chosen:** Adapter-specific render slots display bounded metadata/artifacts
+  only. They cannot inject controls, executable markup/scripts, credentials, or
+  authority-shaped state.
+- **Consequences:** vendor-specific actions use Control Plane-owned components
+  backed by typed capability semantics.
+
+### DD-29 — Capability status has three independent axes
+
+- **Chosen:** runtime condition is
+  `Supported|Unsupported|Unavailable|Unknown`; delivery status is
+  `Now|Requires-backend`; support path is
+  `vendor-native|managed-adapter|MCP-cooperative|observable-only|unqualified`.
+- **Consequences:** no runtime condition is used as a delivery claim, and no
+  delivery gap is misreported as vendor `Unsupported`.
+
+### DD-30 — MCP fallback and preauthorization are exact-scope only
+
+- **Chosen:** preference is vendor-native API -> managed Adapter -> MCP plus
+  rules as cooperative fallback. Automatic reconciliation is limited to an
+  exact unchanged grant.
+- **Consequences:** permission expansion, a new client, trust-boundary or target
+  expansion, or an incompatible update requires fresh daemon preview and
+  confirmation. Reload/restart remains a separate typed action and receipt.
+
 ---
+
+## Historical 2026-08-24 decisions (superseded where noted)
 
 ## DD-01 — Product model: Cognitive System Control Plane
 

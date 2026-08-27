@@ -74,10 +74,15 @@ owner 于 2026-08-25 定稿 `cognitiveos-personal` 1.0.0：**1.0.0 版本开发�
 
 ## 5. Post-1.0 路线图（登记归宿）
 
+Personal 2.0 新采用的 desktop-first Control Plane 与 MCP 第七 family 仅作为
+post-1.0 后续指针登记：见 [ADR-0056](../../docs/adr/0056-personal-2-0-desktop-control-plane.md)、
+[ADR-0057](../../docs/adr/0057-personal-2-0-mcp-resource-family.md) 与正式计划 Phase 10。
+这些决策不修改本文件任何 1.0.0 范围、证据或声明。
+
 | 列车 | 任务归宿 | 状态 |
 |---|---|---|
 | Multi-Agent（默认关闭；NO-GO 合法） | P6-T01..T04 / B11 | not-started |
-| Control Plane Web UI 后续 wave（W6+、legacy 收尾、rendered review 补全） | P7-T05 续（需新 lease） | paused by owner |
+| Control Plane Web UI 后续 wave（W6+、legacy 收尾、rendered review 补全） | P7-T05 | done / closed（D10–D26；PR [#274](https://github.com/agentkernel/cognitive-os/pull/274) @ `main@5996afbb`；不构成 Gate、release 或 Profile claim） |
 | RC / 发行证据 | P7-T06 | done（PR [#276](https://github.com/agentkernel/cognitive-os/pull/276) @ `main@712a517d`；不设 Gate 状态；非生产 GitHub Release） |
 | Windows 安装面 | P7-T07 / B01-W | blocked（B01-W 前置） |
 | Embedding/vector/graph、MCP marketplace、非 Pi Agent qualification | P4 后续 / P5B / P8 模式 | 设计/能力列车 |

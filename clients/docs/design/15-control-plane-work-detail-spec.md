@@ -1,9 +1,61 @@
 # 15 — Work Detail Spec
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 Work-detail target; historical Task detail retained
+- Updated: 2026-08-27
 - Contract: `06` §3.2 (six sections), `04` (Run = presentation object; authority vs observation lanes), `08` (evidence-linked completion), Flow 2/6/7 in `07`.
 - **Structure decision (researched, not mechanical):** the six sections were evaluated as (a) tabs, (b) accordion, (c) single scrolled document with local section navigator + facts inspector. **Chosen: (c).** Tabs hide exactly the thing supervision needs (the relationship between Run, Effects, Evidence is one read, not three destinations); accordion breaks deep links and scan; a supervised document with a local navigator keeps one continuous evidentiary narrative while preserving jump-to-section speed. Section *order* is supervision order (state → what happened → proof → what was agreed → what it saw), a refinement of the Phase-1 listing order; all six contracted sections are preserved. Logged as a Phase-2 refinement, not a contract change.
+
+## Personal 2.0 Work detail amendment
+
+The target detail is Goal-centered and keeps one continuous evidentiary read:
+
+1. **Goal summary** — owner-approved objective, current disposition, participants,
+   budget and latest verified outcome.
+2. **Plan revisions** — immutable revision list, selected revision, change
+   rationale, candidate source, daemon admission and supersession links.
+3. **Tasks and attempts** — dependency-aware hierarchy with exact Task states,
+   attempt identities, Agent assignments and current blockers.
+4. **One provenance timeline** — `Native`, `Observed`, `Governed`, `Verified`
+   items time-aligned but never merged.
+5. **Context** — authorized inputs, source versions, explicit losses/conflicts,
+   and resource pins.
+6. **Effects** — persist-before-dispatch records, outcome and reconciliation.
+7. **Evidence and acceptance** — independent verification, artifacts, currency
+   and acceptance.
+
+The inspector begins with plain-language "what is happening / what needs you"
+and expands to full IDs, digests, epochs, source routes, coverage and raw
+redacted projections.
+The beginner-facing operational label is **execution flow**; `Task`, `attempt`,
+`Effect`, and current Run-composition terms remain exact in the inspector.
+
+### Timeline provenance
+
+- **Native:** Agent conversation/history or Adapter-native event. It may explain
+  intent but cannot advance authority.
+- **Observed:** process, transport, heartbeat or bounded runtime fact.
+- **Governed:** Goal/Plan/Task/admission/Effect state written by the daemon.
+- **Verified:** independent report and acceptance.
+
+The former two-lane Run timeline remains a valid current-Task detail inside this
+four-provenance model. It is not discarded; it becomes the
+Observed/Governed/Verified subset available today.
+
+### Revision, attempt and progress rules
+
+- Plan revision is append-only in the target; prior versions stay inspectable.
+- An attempt never overwrites its Task or another attempt.
+- A native message, process exit, stream close or provider response never marks
+  progress or completion.
+- Percent progress requires a real bounded denominator. Otherwise render state,
+  current recorded step and age.
+- Re-plan, retry, pause/cancel and multi-Agent role changes are
+  `Requires-backend` until typed services exist.
+
+The current API exposes per-task evidence/effects/observation but not Goal,
+Plan revision, attempt or orchestration entities. Those sections must render an
+explicit target delta rather than fabricated records. The existing six-section
+Task specification below remains the P7-T05 current-backed fallback.
 
 ---
 

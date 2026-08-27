@@ -1,31 +1,44 @@
 # Personal Cognitive Resource Model
 
-- Status: canonical product concept model
+- Status: canonical current + Personal 2.0 product concept model
 - Architecture mapping: [System architecture](../architecture/system-architecture.md)
-- Decision: [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md)
+- Decisions:
+  [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md) and
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
 
 ## 1. Definition and boundaries
 
 A cognitive resource is a user-visible family of durable knowledge, reusable
 capability description, governed operation, resolved input, goal-directed work
-or managed runtime activity. Personal exposes exactly six families:
+or managed integration/runtime activity.
+
+| Boundary | Family model |
+|---|---|
+| **Current implementation (Now)** | Linux 1.0 and current authority projections have six families: Memory, Skill, Tool, Context, Task, Runtime/Process. |
+| **Adopted Personal 2.0 target** | MCP becomes a true seventh family beside the existing six. |
+| **Requires-backend** | MCP server lifecycle, health, permissions, updates, client projection, and federated synchronization are not implemented as a Personal family today. |
+| **Requires-core (conditional)** | P10-T02/Lane-CTR is required only if MCP adds or changes a public machine surface. A Personal-private projection may not require core changes. |
+
+The seven-family target is:
 
 1. Memory;
 2. Skill;
 3. Tool;
 4. Context;
 5. Task;
-6. Runtime/Process.
+6. Runtime/Process;
+7. MCP.
 
-The word family is a product taxonomy. It does not authorize a public generic
+The word *family* is a product taxonomy. It does not authorize a public generic
 `Resource` DTO, a giant SQLite `Resource` table, a universal repository or one
 state machine. Each family retains its own stable identities, transitions,
-storage, retention and failure semantics. Product views compose those family
-projections without erasing the boundaries.
+storage, ownership, retention, and failure semantics. Product views compose
+family projections without erasing those boundaries.
 
-The Pi-hosted Shell provides names and natural-language access. A server-issued
-preview resolves names to exact identities and versions before mutation. The
-Rust daemon remains the sole authority writer.
+The global Agent Shell may provide names and explain state, but a daemon-issued
+preview resolves exact identity, version, permission, and consequence before a
+mutation. The Shell, Agents, adapters, sidecars, and MCP servers remain
+non-authority clients or candidate producers.
 
 ## 2. Cross-cutting objects
 
@@ -43,8 +56,11 @@ families:
 | Event | ordered authority change and watch projection input |
 
 These objects are displayed where they explain Memory, Skill, Tool, Context,
-Task or Runtime activity. An Agent is a navigation and actor concept composed
-from Runtime identities, not a seventh family.
+Task, Runtime, or MCP activity. An Agent remains a navigation and actor concept
+composed from Runtime identities; it is not a resource family. MCP is the
+seventh target family because Personal manages the integration's own lifecycle,
+health, permissions, updates, and client projections rather than treating an
+Agent as stored resource content.
 
 ## 3. Discovery is not the family catalog
 
@@ -271,7 +287,51 @@ separate Process authority domain, advance Task state or prove completion.
 Pi is the only Linux 1.0 qualified Agent/sidecar combination. Other adapters do
 not inherit Pi evidence.
 
-## 10. Workspace and relationship rules
+## 10. MCP family
+
+### Current implementation (Now)
+
+MCP is outside the Linux 1.0 six-family model. Personal has no MCP family
+authority, server manager, health/permission/update projection, or general
+client-configuration workflow today. P5-T03/P5-T04 delivered an MCP Tool
+transport and bounded dynamic-Tool path inside the Tool family; that evidence
+does not implement the seventh family. Existing Tool, Context, and Skill
+semantics must not be relabelled MCP.
+
+### Adopted Personal 2.0 target
+
+The MCP family represents a managed server integration and its projection into
+compatible Agent clients. Its product responsibilities are:
+
+- server source, installation/registration, version, and update posture;
+- health and compatibility, separate from permission;
+- requested and admitted permissions;
+- projection into one or more Agent clients;
+- configuration/write-back state, conflicts, and durable receipts;
+- source-labelled capabilities that may later map into Tool or Context use.
+
+MCP protocol prompts or reusable instruction packages may map into Skill only
+as candidates through Skill admission; they do not become MCP-owned Skill
+authority.
+
+Connecting a server grants no Tool, Context, workspace, network, model, secret,
+or host-session authority. Each capability remains subject to family-specific
+mapping and daemon authorization. Vendor-native session APIs are preferred.
+MCP plus vendor rules is only a cooperative fallback and cannot control the
+host Agent session.
+
+After first explicit authorization, admin-preauthorized configuration may be
+applied automatically only within the exact approved scope. Permission
+expansion always requires a fresh daemon preview and confirmation.
+
+### Dependency boundary
+
+MCP implementation is **Requires-backend**. A new or changed public MCP machine
+surface conditionally requires P10-T02/Lane-CTR; a Personal-private projection
+may not. This model defines no public DTO, database row, endpoint, transition,
+or error. See [MCP resource family](mcp-resource-family.md).
+
+## 11. Workspace, federation, and relationship rules
 
 1. Standard Workspace is the low-friction default boundary for registered
    read/search and reversible write/patch Tools.
@@ -292,12 +352,43 @@ not inherit Pi evidence.
    establishes the authoritative outcome.
 9. Verification remains independent from the Agent/executor that produced the
    result.
+10. Vendor-native resource content remains owned by its origin. Personal owns
+    admitted governance, bindings, permissions, and synchronization intent.
+11. Existing Core Conversation and ConversationBinding identities are reused or
+    referenced where applicable. Vendor-native conversation IDs remain opaque
+    origin bindings; additional projection state stays Personal-private until
+    P10-T02 decides otherwise.
+12. Agent connection establishes an explicit observation scope. Adapters may
+    automatically read and detect native changes only inside it; there is no
+    speculative/global scan or surprise per-session enrollment.
+13. Every native write-back uses daemon-owned Intent/Effect and execution. It
+    may run automatically inside an unchanged exact daemon grant/risk policy;
+    new, broader, destructive, or conflicted scope requires preview and
+    confirmation. Conflicts fail closed and invoke the global Agent Shell for
+    an explanation and a daemon-backed resolution path.
+14. Bidirectional synchronization is an adopted Personal 2.0 target and
+    **Requires-backend**; it is not inferred from current one-way imports or
+    bindings.
 
-## 11. Information architecture and Shell examples
+## 12. Information architecture and Shell examples
 
-The five spaces are Home, Agents, Tasks, Resources and Activity. Resources
-contains Memory, Skills, Tools and Context. Activity contains Run, Process,
-Effect and Evidence.
+### Current implementation (Now)
+
+The daemon-served Control Plane has Home, Work, Agents, Providers, Resources,
+Activity, and System. The Linux 1.0 conceptual projection remains six-family.
+Current Context and Runtime resource inventories are bounded or projection-only,
+and current Activity is composed rather than unified.
+
+### Adopted Personal 2.0 target
+
+- **Library:** Memory, Skills, Tools, MCP;
+- **Work:** Task and Context;
+- **Agents:** Runtime/Process;
+- **Activity:** source-labelled Native, Observed, Governed, and Verified facts.
+
+The top-level IA is Home, Agents, Work, Library, Activity, and Settings.
+Providers and System live in Settings. Navigation placement does not change
+family ownership.
 
 Examples of intended requests:
 
@@ -312,17 +403,31 @@ Examples of intended requests:
 - "Why is this Pi sidecar quarantined, and which execution and process did it
   last serve?"
 - "Which Effect is unresolved, and what evidence still blocks acceptance?"
+- "Show the native Skill change that conflicts with Personal's binding, but do
+  not write back until the daemon previews the resolution."
+- "Which MCP servers are healthy, which permissions are admitted, and which
+  Agent clients have a current projection?"
 
-The Shell compiles each request into a structured operation. It never answers a
-state-changing request by invoking ambient Pi tools, running Skill scripts or
-mutating local files directly.
+The global Agent Shell explains and proposes. It never answers a state-changing
+request by invoking ambient Agent tools, running Skill scripts, changing MCP
+configuration, or mutating native resources directly. Only the daemon issues
+and executes the confirmed preview.
 
-## 12. Linux 1.0 boundary
+## 13. Linux 1.0 and target boundary
 
-Linux 1.0 targets a minimum real slice of every family described above.
-Embeddings/vector/graph Memory, automatic full-conversation extraction, Skill
-marketplaces/chaining/auto-download, complex Context ranking, broad Tool/MCP
-ecosystems, non-Pi qualification and Multi-Agent orchestration remain deferred.
+Linux 1.0 targets a minimum real slice of its six families: Memory, Skill,
+Tool, Context, Task, and Runtime/Process. MCP is not retroactively included.
+Embeddings/vector/graph Memory, automatic
+full-conversation extraction, Skill marketplaces/chaining/auto-download,
+complex Context ranking, broad dynamic Tool ecosystems, MCP, non-Pi
+qualification, federated synchronization, and Multi-Agent orchestration remain
+outside the Linux 1.0 claim.
+
+Personal 2.0 adopts MCP and federated resource behavior as target semantics.
+MCP implementation remains **Requires-backend**. Public machine semantics
+conditionally require P10-T02/Lane-CTR; Personal-private projections may not.
+Other target features remain capability-gated as identified in
+[Personal 2.0 scope](personal-2.0-scope.md).
 
 Documented scope is not implementation evidence. Current task, Gate, release
 and Profile facts remain in [PROGRESS.md](../../../docs/plan/PROGRESS.md).

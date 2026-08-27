@@ -1,10 +1,105 @@
-# 18 — Resources Spec (Memory · Skills · Tools · Context)
+# 18 — Library Spec (Memory · Skills · Tools · MCP)
 
-- Phase 2 (design-only)
-- Date: 2026-08-24
-- Contract: `06` §3.5, `04` §4 (families differ; flattening is the failure), capability model D5. Anti-goal from the brief: **no resource card wall** — the hub is navigation, families have real hierarchy.
+- Status: adopted Personal 2.0 Library/MCP target; historical resource spec retained
+- Updated: 2026-08-27
+- Decision:
+  [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md)
+- Current implementation: Memory/Skill/Tool depth; MCP family
+  Requires-core + Requires-backend
+
+## Personal 2.0 Library spec
+
+Resources becomes **Library**, organized around recurring owner tasks and four
+family-native sections: Memory, Skills, Tools, and MCP.
+
+Personal 2.0 has seven families overall: Memory, Skill, Tool, Context, Task,
+Runtime/Process, and MCP. Context and Task live in Work; Runtime/Process lives
+in Agents. Model, Permission, Artifact, Budget, Evidence, and Event remain
+cross-cutting objects. This placement does not claim a universal Resource table
+or shared lifecycle.
+
+### Library shell
+
+The landing surface is a compact family index plus recent/conflicted items, not
+a card wall. Each family page uses master/detail/inspector and answers:
+what is it, where did it come from, what revision is current, who may use it,
+what is stale/conflicted, and which typed actions really exist.
+
+Families may group entries by task (for example "prepare an Agent", "ground a
+Goal", "connect external capabilities") without hiding the underlying family,
+source or identity.
+
+### MCP first-class page
+
+MCP gets its own family route with server/source identity, transport and trust
+facts, advertisement summaries and their candidate mappings, capability/policy
+status, connected Agents/Work, freshness and errors. Discovery is observation;
+binding and use require daemon authorization. MCP plus rules never controls the
+host Agent session. The current MCP adapter/Tool evidence does not provide this
+product surface: all unsupported discovery, lifecycle, binding and
+observation/writeback operations are `Requires-core + Requires-backend`.
+
+The inspector keeps seven MCP identities distinct: server, package, connection,
+capability revision/digest, binding scope, health, and quarantine. The target
+lifecycle covers acquire/import, registration, inspection, connection,
+capability refresh, binding, enable/disable, quarantine, requalification,
+reconciliation, and removal; this document defines no transition names or API.
+
+Advertised MCP objects stay candidates:
+
+- tools map into Tool admission and never auto-enable;
+- resources/content map into Context admission;
+- prompts/instructions map into Skill admission.
+
+They are not MCP-family members merely because an MCP server advertised them.
+Connecting a server or projecting configuration grants no Tool, Context,
+workspace, network, model, secret, or host-session authority. After a first
+explicit authorization, admin-preauthorized projection may proceed only inside
+the exact admitted scope.
+
+### Support preference and reconciliation
+
+The preference order is:
+
+1. vendor-native API;
+2. managed Adapter;
+3. MCP plus rules as a cooperative fallback.
+
+`MCP-cooperative` cannot establish native host-session control, ordered native
+history, runtime attachment, interrupt, fork, close, or login semantics unless
+those facts independently come from the native integration.
+
+Automatic reconciliation is allowed only when the prior grant is exactly
+unchanged: same permission set, client identity, trust boundary, target, and
+compatible server/package/capability revision. A fresh daemon preview and
+confirmation are required for permission expansion, a new client,
+trust-boundary or target expansion, or an incompatible update. Reload/restart
+is a separate typed supported action with its own runtime condition, effect,
+and receipt; it is not an auto-reconcile side effect.
+
+### Federated observation and writeback
+
+Library can target a federated view across Personal and Agent-native sources.
+Every copy carries source, revision/digest, observed time and authority class.
+Conflicts show both versions. The Agent Shell may propose a resolution, but a
+writeback is actionable only through a typed daemon flow:
+
+`candidate -> preview -> confirmation -> persisted Intent/Effect -> dispatch ->
+verification/receipt`.
+
+Without that path the page explains `Requires-backend` and provides no active
+control or optimistic update.
+
+### Current-backed depth
+
+The existing Memory, Skill and Tool routes remain current implementation. MCP
+is target-only and Requires-core + Requires-backend. The older
+Memory/Skill/Tool/Context specification below remains the P7-T05 fallback and
+audit rationale; Context's target placement is Work.
 
 ---
+
+## Historical 2026-08-24 Resources specification
 
 ## 1. Hub (the space's landing)
 

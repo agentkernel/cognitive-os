@@ -1,11 +1,87 @@
 # 03 — Control Plane Capability Model
 
-- Phase: Product Redesign Phase 1 (design-only)
-- Date: 2026-08-24
+- Status: adopted Personal 2.0 capability model; historical current-state model retained
+- Updated: 2026-08-27
 - Purpose: turn the audited [Capability Inventory](control-plane-capability-inventory.md) (current-state ratings) into the **product capability model** the redesign is allowed to design with: the capability domains, the operator actions inside each, the state vocabularies, and the honesty class of every action. This is the contract between product design and backend reality.
 - Rule inherited from the workflow skill: **CognitiveOS Reality outranks every design authority.** Nothing below invents a route, a lifecycle, or a state.
 
+## Personal 2.0 capability model amendment
+
+The target uses six product spaces and separates **placement** from
+**availability**. A target capability may be specified before implementation,
+but it must be labeled `Requires-backend` and rendered as explanatory target
+content—not as an enabled or disabled control.
+
+| Target domain | Target capability | Current implementation | Target treatment |
+|---|---|---|---|
+| Home | resumable conversations, attention, readiness, verified outcomes | readiness and partial task/provider facts | compose only real facts; broader resume/attention projection Requires-backend |
+| Agents | catalog install/connect, Adapter-backed native conversation/history, Runtime dossier | runtime envelopes, bindings, dsh snapshot; no lifecycle HTTP | current facts remain read-only; catalog/lifecycle/history projection Requires-backend |
+| Work | Goal, Plan revisions, Tasks/attempts, Context, multi-Agent orchestration | governed task chain and bounded per-task facts; no Goal/Plan or rich inventory | current task view may ship; Goal/Plan/orchestration controls Requires-backend |
+| Library | Memory, Skills, Tools, MCP | partial Memory/Skill/Tool APIs; MCP not a product family today | each unsupported family facet Requires-backend; MCP gets a first-class target page and Requires-core + Requires-backend |
+| Activity | one Native/Observed/Governed/Verified timeline | provider audit + bounded per-task facts | coverage labels are mandatory; unified provenance feed Requires-backend |
+| Settings | Account Hub, System, appearance/accessibility, diagnostics | API-key accounts, models, bindings, readiness, backup/restore | move current Provider/System views here; OAuth/subscription/import/custom gateway and rich quota/cost Requires-backend |
+| Global Agent Shell | explain state, navigate/compare, propose next action, request daemon preview, suggest conflict resolution | no cross-space Control Plane Shell | Shell projection/action composition Requires-backend; vendor-native conversation remains in Agents |
+
+### Capability classes for target design
+
+1. **Now / direct** — a verified typed route/projection exists; an active
+   control may be specified with its real preconditions.
+2. **Now / composed** — the client may combine verified facts, with visible
+   source and coverage limits. Composition is source/coverage metadata, not a
+   separate delivery status.
+3. **Requires-backend** — adopted target semantics without current typed
+   support. Show the intended outcome, dependency, and non-interactive preview;
+   never draw an active-looking control or progress indicator.
+4. **Forbidden** — violates daemon-only authority, secret isolation, provider
+   proxying, or host-session boundaries; never render.
+
+The existing A/B/C/D taxonomy below is retained as the 2026-08-24 current-state
+classification. For Personal 2.0 documents, `Requires-backend` replaces vague
+"deferred verb" language and covers non-control projections as well as actions.
+
+### Adapter capability matrix contract
+
+Adapter capability rows do not use one overloaded status:
+
+| Dimension | Values | Question answered |
+|---|---|---|
+| Runtime condition | `Supported`, `Unsupported`, `Unavailable`, `Unknown` | Can the current adapter/runtime establish this capability now? |
+| Delivery status | `Now`, `Requires-backend` | Does Personal currently deliver the required projection/action? |
+| Support path | `vendor-native`, `managed-adapter`, `MCP-cooperative`, `observable-only`, `unqualified` | Which integration path supplies the fact/action, and at what claim boundary? |
+
+`Requires-core` is an additional contract dependency, not a runtime condition
+or delivery status. Runtime `Unsupported` never means "not built yet";
+`Unavailable` requires a current blockage reason; `Unknown` stays unknown.
+Only a `Now` row with typed Control Plane action semantics can produce an
+action control.
+
+### Non-negotiable target capability boundaries
+
+- Adapter projections normalize Agent conversation/history, but native slots
+  render display-safe vendor metadata/artifacts only. They cannot inject
+  actions, executable markup/scripts, credentials, or authority-shaped state.
+  Vendor actions use Control Plane-owned controls backed by typed capability
+  semantics.
+- Conversation does not become managed work until the owner explicitly chooses
+  Manage with Personal and the daemon returns durable Goal/Plan/Task facts.
+- A federated resource writeback is current-backed only when a typed daemon
+  preview/confirm/effect path exists. Shell suggestions are candidates.
+- MCP discovery/configuration never grants Tool, filesystem, model, or host
+  session authority.
+- Account credentials enter only through approved daemon-owned paths. Import
+  follows
+  [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
+  and is currently Requires-backend.
+- Progress is shown only from a real source with known semantics. Otherwise use
+  a pending/unknown/Requires-backend state, never an estimated bar.
+
 ---
+
+## Historical 2026-08-24 capability model
+
+The sections below preserve the P7-T05-centered capability classification and
+backend dependency analysis. The Personal 2.0 three-axis Adapter matrix and
+six-space placement above supersede its product-domain framing.
 
 ## 1. Capability domains
 

@@ -8,18 +8,27 @@ generated: false
 sources:
   - path: personal/docs/product/README.md
   - path: personal/docs/product/cognitive-resource-model.md
+  - path: personal/docs/product/personal-2.0-scope.md
+  - path: personal/docs/product/account-hub.md
+  - path: personal/docs/product/account-hub.zh-CN.md
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/product/mcp-resource-family.md
+  - path: personal/docs/product/mcp-resource-family.zh-CN.md
   - path: personal/docs/architecture/README.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
+  - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
 tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:a3e5c88501e93bcd424f27a48c62a0e92475d1d5c1df118c2cd8f648b6a1c080"
+fingerprint: "sha256:9d2765dd3f966220dfb96fc5ff3e3357b8b22acfcde178b0cb60946da6b9ce07"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
-  - Linux 1.0 不声明 Windows 安装对等、Web UI、MCP/动态工具或多 Agent 编排。
+  - Linux 1.0 声明组合不包含 Windows 安装对等、Web UI、MCP 资源族或多 Agent 编排；当前 `/ui/` 已存在不改变该边界。
 ---
 
 # 系统总览
@@ -32,7 +41,7 @@ CognitiveOS Personal 是本地、单一 owner 的认知资源操作系统：为 
 ## 一张图理解
 
 ```text
-使用者 -> cognitive CLI 或 Pi Shell -> 本地 Rust daemon -> 六个领域服务
+使用者 -> cognitive CLI 或 Pi Shell -> 本地 Rust daemon -> 当前六个领域服务
                                       |                 -> Provider 代理
                                       |                 -> SQLite 权威存储
                                       `-> Intent/Effect、预算、证据、事件
@@ -55,6 +64,25 @@ daemon 是唯一的权威写入者。客户端响应、Provider 响应、Pi `age
 
 预算、Permission、Model、Artifact、Intent/Effect、Evidence 和 Event 是横切对象，
 不是第七类通用 Resource 表。
+
+## 已采纳的 Personal 2.0 目标（`Requires-backend`）
+
+Personal 2.0 保留 daemon-only 权威边界，但改变目标产品组合：
+
+- 当前位于 `clients/pc/web/` 的同源 `/ui/` SPA 只有在完成尚未实现的目标重设计后，
+  才成为桌面优先 Control Plane；
+- 目标导航为 Home、Agents、Work、Library、Activity、Settings；Providers 与 System
+  位于 Settings 下，`Work` 只是导航标签，不新增 Task/Run 权威域；
+- Account Hub 管理 Provider 账户与订阅，并经 daemon 提供用户发起、逐来源同意的凭据
+  导入；
+- MCP 成为承载带来源身份联邦能力的第七资源族，不是当前原生 Tool 目录的别名；
+- 厂商专用对话适配器把已安装 Agent 接到 Agent Shell，任何 Agent 都不会因 Pi 的证据
+  自动获得资格；
+- 持久 Goal 与 Plan revision 在当前 Task 之上组织工作；daemon 监督各自独立资格化的
+  Agent，仍是唯一权威写入者。
+
+这些目标增量当前没有 API。`Requires-backend` 表示已采纳设计不得展示为可用功能；
+`Requires-core` 还表示实现前需要批准的合同/权威语义。
 
 ## 一次交互如何流动
 

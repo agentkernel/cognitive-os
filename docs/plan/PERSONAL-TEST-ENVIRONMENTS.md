@@ -220,9 +220,11 @@ Keep the session open. Open locally:
 - `http://127.0.0.1:3080/` — native dsh panel (Path B via daemon proxy)
 
 After guest **daemon restart** or kernel-server replace, agents must restart
-`cognitive dsh web` or run `cognitive dsh apply` on that runtime before owner
-dsh review. A stale Path B `DAEMON_BEARER` after daemon restart is an
-operator recovery step, not a Control Plane code defect.
+`cognitive dsh web` on that runtime before owner dsh review. The new daemon
+projects dsh as `INACTIVE`, so `cognitive dsh apply` cannot recover the stale
+Path B management session; reserve `apply` for supported overlay synchronization
+while the runtime is already `ACTIVE`. This is an operator recovery step, not
+a Control Plane code defect.
 
 Agents should record the forwarded ports and exact Git revision deployed when
 handing off UI review. **After each guest debug session, remind the owner** with

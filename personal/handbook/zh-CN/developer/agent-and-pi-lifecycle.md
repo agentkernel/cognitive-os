@@ -34,6 +34,12 @@ sources:
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/architecture/agent-shell-and-agent-lifecycle.md
+  - path: personal/docs/architecture/agent-adapter-contract.md
+  - path: personal/docs/architecture/multi-agent-orchestration.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
 tests:
   - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - personal/crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -46,7 +52,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:76426030242c92706bc01d4113c62584434e6345185c645e58a48ecf76cbe896"
+fingerprint: "sha256:493cd97bdfc668ddc35c2296d6d091d8b75dcd5a09be040bde2870307e77b3b4"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -119,6 +125,18 @@ Universal Agent Adapter Contract（`agent_adapter_manifest`）注册讲 AKP 的�
 Pi 资格化（OpenAI Codex CLI）是 fixture 范围的身份/生命周期矩阵，证明证据独立于
 Pi——明确不是网络或二进制集成。
 
+### Personal 2.0 Agent 对话与监督目标
+
+`Requires-backend`：桌面 Agent Shell 的目标是呈现厂商专用对话适配器，而不是假装
+所有 Agent 共用一种通用聊天协议。每个适配器必须保留厂商的 conversation/session
+身份、支持的控制、能力缺口与恢复语义，同时只翻译有界 candidate 与 observation。
+通用 adapter manifest 或可工作的 dsh bridge 都不构成对话对等或资格化。
+
+Goal 与不可变 Plan revision 也是位于当前 Task 之上的目标权威对象。多 Agent 监督仍由
+daemon 拥有：各自独立资格化的 Agent 可以贡献 candidate，但 daemon 分配工作、签发
+continuation authority、fence epoch、强制预算、对账 Effect 并取得独立验证。当前没有
+Goal/Plan 或多 Agent 监督 API。Pi 仍是唯一已资格化 Agent。
+
 DeepSeek Harness 桥接是仅 candidate 的适配器。Rust 侧钉住精确 dsh git revision 与 AKP
 request-envelope schema digest，对进程内 session 做 fencing，强制单调 sequence，并拒绝
 authority-shaped 与 secret-shaped payload。`POST /task/akp/dsh` 必须在 daemon 启动后显式
@@ -156,6 +174,17 @@ set/remove 与 `op: apply` 会重写该覆盖层；Cos 安装的 web 会重载�
 `POST /personal/dsh/runtime` 的 `op: apply` 把 Cos `agent://personal/dsh` binding
 发布为 Path B selected-model，并按该目录重载原生 Models。
 `op: clear` 会清掉绑定 pid 与内存中的 session，投影回到 `INACTIVE`。
+`op: apply` 只接受已经为 `ACTIVE` 的 runtime，且只用于所支持的 binding/model
+overlay 同步。它不是 daemon 重启后的 session 刷新路径：新 daemon 没有先前 runtime
+登记，将 dsh 投影为 `INACTIVE`，并拒绝 `apply`。
 直接 Flash（`--path a`）只经 `scripts/paired-path.mjs` 做测量。
 `dsh.json` 里的 adapter registration digest 不是 SQLite 持久的 daemon adapter 状态。
 两者都只是 implementation evidence。
+
+daemon 重启后，当前 dsh Path B web 进程可能继续持有 stale management session，并把
+401 显示成 “API key invalid”。必须重启 `cognitive dsh web`，再检查
+`cognitive dsh status`；新 daemon 报 `INACTIVE` 时 `apply` 会被拒绝。当前没有 approved
+non-logging direct-bearer probe：不得提取该凭据或通过进程 argv 传递。持久化 Provider
+账户 `active` 不是实时 SecretStore 解析结果；discovery/proxy 使用时才实时解析，因此
+锁定或变化的 store 状态仍是独立可能原因。见
+[正式登记缺陷](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)。

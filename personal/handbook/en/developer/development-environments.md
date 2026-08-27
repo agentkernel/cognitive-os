@@ -8,9 +8,10 @@ generated: false
 sources:
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
     symbols: ["CI-UBUNTU-01", "DEV-LINUX-NATIVE-01", "RUST-LINK-DEV-WIN-GNU-01"]
+  - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:661a5e80265cf94dedb761063496a1e59c98e659b8013e7f19b3354e24a8cb80"
+fingerprint: "sha256:956c4925f41014c422282492cc33cf8d7dba7a659dae22d09d4046606bc31789"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -58,10 +59,12 @@ ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@1
 Keep that session open and open `http://127.0.0.1:48681/ui/` (Control Plane;
 paste the runtime management bootstrap secret, never a Provider API key) and
 `http://127.0.0.1:3080/` (native dsh panel). After a guest daemon restart or
-kernel-server replace, restart `cognitive dsh web` or run `cognitive dsh apply`
-on that runtime before expecting dsh chat. Vite preview is not the product
-origin. The environments registry owns the full port table and isolation
-rules; this page only routes.
+kernel-server replace, restart `cognitive dsh web` on that runtime before
+expecting dsh chat; the new daemon reports dsh `INACTIVE`, so `cognitive dsh
+apply` cannot recover that stale session. Reserve `apply` for supported
+binding/model overlay synchronization while the runtime is already `ACTIVE`.
+Vite preview is not the product origin. The environments registry owns the
+full port table and isolation rules; this page only routes.
 
 Command cheat sheet: see [AI validation commands](../ai/validation-commands.md) —
 identical content, maintained once.

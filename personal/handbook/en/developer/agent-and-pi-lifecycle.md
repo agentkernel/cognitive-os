@@ -34,6 +34,12 @@ sources:
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
+  - path: personal/docs/product/agent-integration-and-conversations.md
+  - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
+  - path: personal/docs/architecture/agent-shell-and-agent-lifecycle.md
+  - path: personal/docs/architecture/agent-adapter-contract.md
+  - path: personal/docs/architecture/multi-agent-orchestration.md
+  - path: docs/adr/0056-personal-2-0-desktop-control-plane.md
 tests:
   - personal/crates/cognitive-runtime/tests/p5_t01_pi_acquisition.rs
   - personal/crates/cognitive-runtime/tests/p5_t02_agent_registration.rs
@@ -46,7 +52,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:76426030242c92706bc01d4113c62584434e6345185c645e58a48ecf76cbe896"
+fingerprint: "sha256:493cd97bdfc668ddc35c2296d6d091d8b75dcd5a09be040bde2870307e77b3b4"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -138,6 +144,23 @@ qualification (OpenAI Codex CLI) is a fixture-scoped identity/lifecycle matrix
 proving independence from Pi evidence — explicitly not a network or binary
 integration.
 
+### Personal 2.0 Agent conversation and supervision target
+
+`Requires-backend`: the desktop Agent Shell is intended to present
+vendor-specific conversation adapters rather than pretending every Agent has
+one generic chat protocol. Each adapter must preserve the vendor's
+conversation/session identity, supported controls, capability gaps, and
+recovery semantics while translating only bounded candidates and observations.
+A generic adapter manifest or a working dsh bridge does not establish
+conversation parity or qualification.
+
+Goal and immutable Plan revisions are also target authority objects above
+current Tasks. Multi-Agent supervision remains daemon-owned: independently
+qualified Agents may contribute candidates, but the daemon assigns work,
+issues continuation authority, fences epochs, enforces budgets, reconciles
+Effects, and obtains independent verification. There is no current Goal/Plan
+or multi-Agent supervision API. Pi remains the only qualified Agent.
+
 The DeepSeek Harness bridge is a candidate-only adapter. The Rust side pins
 the exact dsh git revision and the AKP request-envelope schema digest, fences
 a process-local session, enforces monotonic sequences, and rejects
@@ -185,7 +208,22 @@ reads `GET /personal/dsh/runtime`. `POST /personal/dsh/runtime` `op: apply`
 publishes the Cos `agent://personal/dsh` binding as Path B selected-model and
 reloads native Models from that catalog. `op: clear`
 drops the bound pid and in-memory sessions so the projection is `INACTIVE`.
+`op: apply` is accepted only for an already-`ACTIVE` runtime and is limited to
+supported binding/model overlay synchronization. It is not a session-refresh
+path after daemon restart: the new daemon has no prior runtime registration,
+projects dsh as `INACTIVE`, and rejects `apply`.
 Direct Flash
 (`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter
 registration digest in `dsh.json` is not SQLite-durable daemon adapter state.
 Both remain implementation evidence only.
+
+After a daemon restart, the current dsh Path B web process can retain a stale
+management session and surface the resulting 401 as "API key invalid." The
+required recovery is to restart `cognitive dsh web`, then inspect
+`cognitive dsh status`; `apply` is rejected while the new daemon reports
+`INACTIVE`. No
+approved non-logging direct-bearer probe exists: never extract the credential
+or pass it on process argv. Persisted Provider account `active` is not a live
+SecretStore-resolution result; discovery/proxy use performs live resolution,
+so locked or changed store state remains a separate possible cause. See the
+[tracked defect](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md).
