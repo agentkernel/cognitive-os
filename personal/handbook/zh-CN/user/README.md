@@ -13,7 +13,7 @@ CognitiveOS Personal 是本地、单一 Owner 的受治理 Agent 工作系统。
 1.0/API 六族。本指南分开 current behavior 与 Windows-first OPC target
 （`Requires-backend`、`Requires-environment` 或 deferred）。
 
-Personal 2.0 target 包含 Today/Projects/Team/Knowledge/Inbox；Project、Role、
+Personal 2.0 target 包含 Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）；Project、Role、
 Digital Employee、Routine 与 preserved Attempt；Personal-owned Conversation/Vault/
 Memory；Pi-backed Personal Assistant；preinstalled managed DSH；Provider/budget
 hierarchy 与固定 Windows acceptance path。当前同源 `/ui/` 真实存在，但这些 OPC

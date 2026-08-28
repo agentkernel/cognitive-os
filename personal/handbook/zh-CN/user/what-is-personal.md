@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:ae27fd621e8f46188f7eeb54afff654bfa8602c84254d40f65e005eca6546158"
+fingerprint: "sha256:3158bff7c3c2faff747286ac53eaf0d497f70276109fb4437f70a2d0b231adc2"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -67,8 +67,8 @@ Digital Employee。
   Pi 路径、Provider Control Plane，以及位于 `clients/pc/web/` 的同源 `/ui/` SPA
   都是当前实现。Web UI 不属于 Linux 1.0 release 声明。
 - **Personal 2.0 OPC 目标 — `Requires-backend` /
-  `Requires-environment`：** Today / Projects / Team / Knowledge / Inbox、底部
-  Settings、右侧 Personal Assistant；Project/Charter/Goal/Plan/Routine/Task/Attempt；
+  `Requires-environment`：** Today / Projects / Knowledge、底部 Settings（Team 与
+  Inbox 不是一级导航）、持久右侧会话；Project/Charter/Goal/Plan/Routine/Task/Attempt；
   Role Blueprint/Assignment/Digital Employee；Personal-owned Conversation/archive/
   Vault/admitted Memory；global→Project→employee→Task Provider/budget；以及固定
   Windows 验收路径。

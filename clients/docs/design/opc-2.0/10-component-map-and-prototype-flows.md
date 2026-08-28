@@ -1,92 +1,144 @@
-# 10 — Component map and prototype flows
+# 10 — Component map and v2 prototype flows
+
+- Requirements:
+  [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
+  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 
 ## App composition
 
 ```text
-OpcAppShell
-  SidebarNav
-  ContextHeader
-  RouteStateBoundary
-    TodayView
-    ProjectsMasterDetail
-    ProjectSetup
-    TeamMasterDetail
-    KnowledgeMasterDetail
-    InboxMasterDetail
-    SettingsWorkbench
-  ConversationRail
-  InspectorSheet
+OpcAppShell  (locked left / center / right; overflow-x on narrow canvas)
+  PrimaryNavigation
+    Today
+    Projects
+    Knowledge
+    Settings
+  CenterColumn
+    ContextHeader
+    RouteStateBoundary
+      TodayView
+      ProjectsMasterDetail
+      ProjectSetup
+      ProjectOperatingCanvas
+      KnowledgeMasterDetail
+      SettingsWorkbench
+    ContextInspector
+      MemberRoster
+      AttentionDetail
+      SourceEvidenceDetail
+      AdvancedDiagnostics
+  RightColumnConversation
+    AssistantOrProjectConversation
   ReceiptDrawer
   CloseBackgroundDialog
 ```
 
-This is design composition, not an implementation module contract.
+This is design composition, not an implementation module or API contract.
 
 ## Core components
 
 | Component | Job | Required states |
 |---|---|---|
-| `ProjectBrief` | summarize goal, phase, manager, today, team, Inbox, results, cost | loading, partial, stale, offline, archived |
-| `AttentionItem` | explain why Owner action is needed | approval, input, block, unknown, missed, budget |
-| `EmployeeCard` | goal, responsibility, state, next, verified, cost | working, waiting, blocked, offline, runtime-unqualified |
-| `RoleBlueprintPreview` | proposed role and Assignment diff | candidate, validating, stale, confirmed/rejected |
-| `ConversationRail` | one recipient and retained draft | loading, offline, permission, error, success |
-| `SingleComposer` | submit to exactly one visible recipient | idle, dirty, sending, failed-preserved, switched-preserved |
-| `KnowledgeSourceRow` | source/provenance/rights/index state | importing, duplicate, failed, stale, excluded, indexed |
-| `ApprovalPreview` | daemon-issued exact diff and consequence | current, stale, editing, rejected, applying, receipt |
-| `AttemptLedger` | preserve each Task execution try | queued, running, failed, unknown, verified |
-| `RoutineStatus` | active/latest queued/missed/coalesced facts | scheduled, running, offline, missed, waiting-owner |
-| `InstalledAgentDossier` | DSH artifact/runtime truth | healthy, partial, drifted, unqualified, update/rollback |
-| `UsageBudgetPanel` | Project/member/Task budget and source-labelled use | advisory, warning, stopped, quota unknown |
-| `CapabilityGap` | honest missing dependency | Requires-backend / Requires-environment; never executable |
+| `GoalOutputHeader` | lead with goal, expected result, due/openable deliverable, acceptance | loading, partial, stale, accepted, attention |
+| `AuthoritySpine` | visible CEO loop: Ingest → Decide → Authorize → Execute → Verify → Report | current step, blocked, Requires-backend |
+| `DecisionPacket` | consequence, reversibility, alternatives, kernel truth, why A is first | loading, stale, waiting-owner, receipt |
+| `ExceptionSwimlanes` | Needs you / Can continue / Unknown / Missed | empty, partial, unknown, missed |
+| `ProjectOperatingCanvas` | render stable source-linked Project report | loading, partial, stale, offline, archived |
+| `TypedCanvasSection` | compose approved goal/artifact/evidence/timeline/decision/cost views | temporary, source-missing, pinned, template-saved |
+| `ProjectGroupThread` | Owner/manager/Members group with bounded proactive speech | loading, offline, permission, failed-draft |
+| `ContextComposer` | post to global Assistant or current Project group | idle, dirty, sending, failed-preserved, switched-preserved |
+| `MemberCard` | responsibility, current work, next, accepted result, decision, cost | working, waiting, blocked, missed, runtime-unqualified |
+| `RoleRuntimePreview` | exact Template plus Project Member Runtime diff | researching, candidate, validating, stale, confirmed/rejected |
+| `AttentionItem` | explain exact Owner decision in Today/Project context | approval, input, block, unknown, missed, cost-warning |
+| `ApprovalPreview` | daemon-issued diff and consequences | current, stale, editing, narrowed, rejected, applying, receipt |
+| `AttemptLedger` | preserve Task tries and independent verification | queued, running, failed, unknown, verified |
+| `RoutineStatus` | trigger, active/latest queued/missed/coalesced facts | scheduled, running, offline, missed, waiting-owner |
+| `ContextBudgetView` | model-window priorities, omissions, truncation, freshness | fitting, compressed, conflict, required-source-missing |
+| `MemoryLineage` | candidate, admission, correction, promotion, forget | candidate, admitted, conflict, promotion-preview, tombstoned |
+| `WhyThisFragment` | why each Context excerpt was selected | selected, omitted, truncated, conflict, redacted |
+| `AuthorityPath` | Candidate → Intent persisted → Fence → Execute → Independent verify → Receipt | candidate, persisted, fenced, executing, verifying, receipt |
+| `ModelConnectionForm` | quick/custom connection plus explicit Member model | empty, checking, partial, secret-locked, saved |
+| `CapabilityReview` | Skill/MCP source, version, permissions, grant, rollback | reviewing, confirm-required, compatible, failed, rollback |
+| `CostReading` | actual/estimated/unknown source and warning | actual, estimated, unknown, warning, quota-unavailable |
+| `EngineDiagnostics` | hidden DSH/Pi facts only for recovery | healthy, partial, drifted, unqualified, update/rollback |
+| `CapabilityGap` | honest missing backend/environment | explanatory only; never executable |
+
+## Typed canvas constraints
+
+The approved component registry may project only real Project objects and
+source-linked results. It cannot accept generated code, `eval`, arbitrary
+script, hidden fetch, invented value, or untrusted layout instruction.
+Mandatory goal/acceptance/failure/not-run/Owner-decision/source/freshness facts
+cannot be suppressed. Ad-hoc canvases are temporary unless pinned or saved as
+a Project template.
 
 ## Interaction rules
 
-- Selection remains visible when an inspector opens.
+- Goal and deliverable precede state; state precedes configuration.
+- Opening a contextual inspector preserves Project and selection.
 - Lists preserve filters, sort, selection, and scroll.
-- Dialogs manage focus and return it to the trigger.
-- A stale preview cannot confirm.
-- Loading never clears last-known safe facts without explanation.
-- Error never clears form input or Conversation drafts.
+- Dialogs restore trigger focus; `@` suggestions are keyboard accessible.
+- Stale previews cannot confirm.
+- Loading/error never erase last-known safe facts, form input, or drafts.
 - Unknown never becomes zero, healthy, done, or retryable.
-- Stop/retry/resume appear only if the backend declares them.
-- Native/Observed/Governed/Verified badges never imply confidence.
+- Pause/stop/retry/resume appear only when backed.
+- Native/Observed/Governed/Verified never imply confidence.
+- A work-changing group message resolves to a Task/revision before execution.
 
-## Prototype navigation
+## Owner-approved prototype source coverage
 
-The external Canvas prototype provides a top scene switcher for:
+The owner-accepted competitive-informed v2 source provides navigation among:
 
-1. Today;
-2. Project briefing;
-3. Guided setup;
-4. setup preview/re-preview;
-5. Team role and employee card;
-6. employee Conversation;
-7. Knowledge import;
-8. Inbox approval/recovery;
-9. Settings > Installed Agents;
-10. Settings > Providers;
-11. Settings > Usage;
-12. State lab.
+1. visible CEO loop and Today decision packet plus four exception swimlanes
+   (Needs you / Can continue / Unknown / Missed);
+2. Project stable operating report first, then the X loop, plus right-column
+   group conversation;
+3. Project publish preview as the full AUTONOMY packet; no Confirm in chat;
+   Package A thread preview plus acceptance; planned is not published;
+4. temporary source-linked ad-hoc canvas with pin/save-template;
+5. research-first setup and one-cycle simulation;
+6. stale launch preview/re-preview;
+7. Role Template and Project Member creation with explicit model;
+8. Member Runtime comparison and rollback; process death does not delete the
+   Member;
+9. Knowledge Markdown Vault, optional Obsidian companion (not embedded),
+   Context compression, and Memory lineage;
+10. HITL announced in chat and linked to the center preview; no chat Approve;
+    no “Don’t ask again”;
+11. no-overlap/queue-latest/missed Routine; Working is not completion;
+12. Model Connection gaps labelled `Requires-backend`; no Connect / Install /
+    Confirm fake buttons;
+13. Skill review and MCP exact-permission confirmation as labelled gaps;
+14. hidden engine diagnostics;
+15. X/Twitter publish/readback/reflection loop;
+16. state/accessibility lab.
 
-Each scene includes at least one non-happy state. A global control switches
-online/offline and normal/partial/unknown perspectives. Requires-backend items
-are explanatory callouts, not buttons.
+Each scene includes a non-happy state. Global controls may switch
+online/offline and normal/partial/unknown views. No scene represents an old
+formal-plan denominator. Native mobile, pairing, and cloud 24/7 chrome are
+parked 2.1 and are not drawn.
 
-## Single-composer prototype behavior
+## Conversation behavior
 
-Personal Assistant and employee tabs share one visible rail. Switching:
-
-- changes the composer recipient label;
-- stores current draft by recipient;
-- restores the selected recipient's draft;
-- does not submit or merge;
-- keeps the central page unchanged;
-- announces the recipient change.
+Outside a Project the composer targets the global Assistant in the right
+column. Inside one it targets the Project group in that same third column;
+`@manager` and `@member` route within that group. Context switching
+stores/restores separate drafts, never sends or merges, and announces the new
+context. `@` inserts only into the unsent draft. HITL is announced in chat and linked to the center canvas; chat has
+no Approve control and no “Don’t ask again” grant. Member work conversations
+remain source drilldowns, not the shell's primary recipient model.
 
 ## Prototype non-effects
 
-The Canvas uses only `cursor/canvas`, React hooks re-exported there, and host
-theme tokens. It performs no network request, storage write, daemon call,
-filesystem mutation, import, approval, or Provider/Agent action. All receipts
-are explicitly labelled prototype examples.
+Static source checks found no network request, storage write, daemon call,
+filesystem mutation, capability installation, approval, publication, or
+Provider/Agent action. Example artifacts and receipts are labelled prototype
+data. Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout
+remain `not-run`; this document claims no rendered behavior.

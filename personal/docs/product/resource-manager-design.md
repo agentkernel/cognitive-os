@@ -5,6 +5,14 @@
   [resource-manager-architecture.md](../architecture/resource-manager-architecture.md)
 - Current task evidence: formal plan `P8-T12`
 - Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md)
+- Current OPC requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop, Today decision packet plus
+  four exception swimlanes, canvas-only HITL, and daemon authority path. Resource
+  Manager family semantics are unchanged.
 
 ## 1. Current implementation (Now)
 
@@ -22,14 +30,16 @@ Unknown, unavailable, stale, not-backed, and empty remain different states.
 Personal 2.0 business surfaces compose resource facts around Projects:
 
 - Project briefing links Tasks, Context, artifacts, evidence, and cost;
-- employee detail links Runtime, effective Tool/Skill/Memory bindings, and
+- Member detail links Runtime, effective Tool/Skill/Memory grants, and
   current Context;
 - Knowledge links source archive/Vault to derived index and admitted Memory;
-- Settings Advanced links MCP, Tool/Skill details, and family governance.
+- Project capability flows link reviewed Skill/MCP acquisition and grants;
+  Settings Advanced exposes family diagnostics only when needed.
 
-Project, Role, Employee, Routine, Attempt, Conversation, Vault, Provider, and
-Budget are not added to the Resource Manager family allowlist. The Resource
-Manager does not become the Project repository.
+Project, Role Runtime Template, Project Member Runtime, Routine, Attempt,
+Conversation, Vault, Model Connection, and cost reading are not added to the
+Resource Manager family allowlist. The Resource Manager does not become the
+Project repository.
 
 ## 3. Common operation vocabulary
 
@@ -69,15 +79,18 @@ Origin-owned native content and Personal-owned admission remain separate:
 
 The Personal Assistant can explain the conflict but cannot resolve or write it.
 
-## 6. Advanced MCP boundary
+## 6. MCP capability boundary
 
 MCP is a separately managed advanced family under ADR-0057/0058, not a Tool
 alias or DSH native/base-tool grant. Server/package/connection/capability/
 binding/health/quarantine stay distinct. Capabilities pass Tool, Context, or
 Skill admission before use.
 
-The MCP family manager and client projection are **Requires-backend** and
-deferred from the 2.0 OPC success path.
+Assistant-led discovery, source/security review, exact-version acquisition,
+separate Project/Member grants, update compatibility checks, rollback, family
+runtime, and client projection are **Requires-backend**. A broad MCP
+marketplace/family console remains outside the 2.0 path; capability acquisition
+itself is part of the target.
 
 ## 7. Channels and non-claims
 

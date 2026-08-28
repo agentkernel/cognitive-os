@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:20b04d11f41cdf795d18632af8d8c430259353d08649abb94da87ca657ac9493"
+fingerprint: "sha256:3b3aa3ff8b89930b419a0c46f04edcdbaa894528fc25ef7d1aa4adc728f54da3"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -83,8 +83,8 @@ Owner
        -> Personal-owned Conversation and Memory
 ```
 
-The UI is Today / Projects / Team / Knowledge / Inbox, bottom Settings, and a
-right Personal Assistant. Pi is the hidden candidate-only Assistant engine.
+The UI is Today / Projects / Knowledge, bottom Settings, and a persistent
+right conversation. Team and Inbox are not first-level destinations. Pi is the hidden candidate-only Assistant engine.
 DSH is the preinstalled managed Installed Agent and default employee runtime,
 using an exact audited artifact, isolated child, stdio broker and daemon
 Provider proxy. Personal owns Conversation, archive/index/retrieval, Memory,

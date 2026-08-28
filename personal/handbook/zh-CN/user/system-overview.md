@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:20b04d11f41cdf795d18632af8d8c430259353d08649abb94da87ca657ac9493"
+fingerprint: "sha256:3b3aa3ff8b89930b419a0c46f04edcdbaa894528fc25ef7d1aa4adc728f54da3"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -81,8 +81,8 @@ Owner
        -> Personal-owned Conversation and Memory
 ```
 
-UI 是 Today / Projects / Team / Knowledge / Inbox、底部 Settings 与右侧 Personal
-Assistant。Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是 preinstalled
+UI 是 Today / Projects / Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
+不是一级导航。Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是 preinstalled
 managed Installed Agent 与默认员工 runtime，采用 exact audited artifact、isolated
 child、stdio broker 与 daemon Provider proxy。Conversation、archive/index/retrieval、
 Memory、Task、Effect 与 completion 属于 Personal。

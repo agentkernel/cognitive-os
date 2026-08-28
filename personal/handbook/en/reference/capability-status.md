@@ -27,7 +27,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:dedde65bf37ac7ad7bf82c71bd3593c345aeee169b71b7ea8c8279db6ead7c17"
+fingerprint: "sha256:dab27872206d9e9971071b57034700b95d69235db078d2bdcb1c623ccb3b1b0e"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -75,7 +75,7 @@ and Agent requires independent qualification.
 | Current six-family resource projection/watch | implemented | management+task channels only; this is not the adopted MCP seventh family |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |
 | Non-Pi agents | designed | Codex fixture qualification only |
-| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Team/Knowledge/Inbox, Project work loop and native Windows host are target-only; Linux/WSL/CI/Canvas evidence does not transfer |
+| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level), Project work loop and native Windows host are target-only; Linux/WSL/CI/Canvas evidence does not transfer |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority is reusable, but Project activation, manager envelope, Routine/missed ledger and complete hierarchy do not exist |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | no complete authority/projection; employee identity must remain separate from runtime/process |
 | Pi-backed Personal Assistant | Requires-backend | Pi is the hidden candidate-only target engine; current Pi Shell/Linux qualification does not establish the OPC Assistant |

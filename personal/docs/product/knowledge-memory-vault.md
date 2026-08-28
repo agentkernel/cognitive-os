@@ -2,7 +2,16 @@
 
 - Status: adopted Personal 2.0 product target
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
-- Architecture:
+- Requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
+  Authorize → Execute → Verify → Report), Today decision packet plus four
+  exception swimlanes, canvas-only HITL, and daemon authority path. This is
+  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Existing architecture input (pending reconciliation):
   [Conversation, Memory, and Vault](../architecture/conversation-memory-vault.md)
 - Current Memory/resource facts:
   [Cognitive resource model](cognitive-resource-model.md)
@@ -35,7 +44,7 @@ temporarily denying that directory must not silently delete Project authority.
 |---|---|---|
 | Owner-shared knowledge | facts and methods intentionally reusable across Projects | explicit Owner scope and provenance |
 | Project Markdown Vault | human-readable Project research, notes, plans-as-projections, and artifacts | Project-isolated, Obsidian-compatible Markdown |
-| Employee-private Memory | admitted working knowledge for one employee inside one Project | unavailable to other employees unless explicitly promoted/re-scoped |
+| Member-private Memory | admitted working knowledge for one Member inside one Project | unavailable to other Members unless explicitly promoted/re-scoped |
 
 Secrets belong only in approved Secret Stores. Detecting credential-shaped
 content routes the Owner to a secret-import flow; it never turns the material
@@ -57,15 +66,18 @@ Only Owner-owned, licensed, open-license, or public-domain material may be
 copied for reuse. Other sources may support analysis, citation, and original
 creation with provenance.
 
-Ordinary knowledge edits trigger reindexing. Edits that appear to change a
-Project charter, Goal, role, permission, budget, Provider, trigger, or workflow
-create a candidate; a file edit cannot bypass daemon authority.
+Ordinary knowledge may be written automatically with author, source, and
+version, then reindexed. Edits that appear to change a Project charter, Goal,
+Role, Member, permission, Provider/model, trigger, or workflow create a
+candidate; a file edit cannot bypass daemon authority.
 
 ## 4. Obsidian compatibility
 
 The Project Vault uses ordinary Markdown, stable relative links, attachments,
 and inspectable metadata so it remains readable by Obsidian and other tools.
-Obsidian is proprietary and is not embedded, redistributed, or required.
+Obsidian is proprietary and is not embedded, redistributed, or required. The
+Knowledge surface treats the Vault as Markdown files; the optional Obsidian
+companion is not drawn inside the App.
 
 An optional companion, URI action, or plugin may be qualified later. It remains
 thin, uninstallable, non-authoritative, and secret-free. The Obsidian API and
@@ -76,12 +88,14 @@ sample plugin are informative interface references only.
 All Personal conversations form a local, scoped episodic archive:
 
 - Personal Assistant conversations: Owner/system scope;
-- manager and employee conversations: Project + employee scope;
+- Project group conversations: Owner + Project scope;
+- Member work conversations: Project + Member scope;
 - Task/Attempt links: explicit references, not inferred completion;
 - source messages, receipts, and correction history: retained with provenance.
 
-"All conversations participate in active memory" means they are eligible
-retrieval sources. It does **not** mean all text is inserted into every prompt.
+"All conversations are retained" means they remain inspectable source records
+and may be eligible retrieval sources. It does **not** mean all text is
+inserted into every prompt or automatically admitted to Memory.
 The retrieval boundary is:
 
 ```text
@@ -97,20 +111,43 @@ Missing index, stale source, conflicting statement, or redaction loss remains
 visible. DSH and Pi receive only the selected Context and cannot query the raw
 archive directly.
 
+Each Agent process receives a package bounded by its model's context limit:
+
+```text
+current Task contract
+  -> fixed decisions
+  -> relevant source and artifact excerpts
+  -> provenance-linked summaries
+  -> older narrative
+```
+
+When over limit, Personal reduces older summaries and narrative first. It does
+not discard the current Task contract or fixed decisions. The UI shows a
+**Why this fragment** table for selected excerpts. Compression never
+rewrites the archive, proves completion, or admits Memory. Memory is not
+silent auto-ingest.
+
 ## 6. Semantic Memory admission
 
+Ordinary chat does not become Memory. Explicit instructions become formal
+revisions; “remember” or stable verified facts may produce Memory candidates.
 Conversation fragments, extracted facts, reflections, and external sources
-produce Memory candidates. Durable semantic Memory requires:
+otherwise remain source material. Durable semantic Memory requires:
 
 - explicit Owner intent or a verified source fact;
 - source/provenance and timestamp;
 - scope, purpose, retention, and conflict policy;
 - deterministic admission;
-- inspect/correct/forget lifecycle.
+- inspect/correct/promote/forget lifecycle.
 
 Agent self-report, repeated text, manager agreement, or retrieval score does
 not admit Memory. Correction creates a new version with lineage. Forget creates
 a durable tombstone that prevents index/cache resurrection.
+
+Cross-Project Memory promotion requires Owner confirmation. Accept, reject,
+edit, and rate actions are Project feedback evidence. Stable repeated
+preferences may produce a versioned Member or global Role revision proposal;
+one feedback event never silently changes global behavior.
 
 Letta and Mem0 are extraction/retrieval candidate references only; they do not
 write Personal Memory or own an external authority store.

@@ -30,7 +30,7 @@ tests:
   - personal/apps/kernel-server/tests/p9_t07_route_observation.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
-fingerprint: "sha256:7c12bbd82dd4bb81851b96458e0e4abdca63fb62c861336550e750c67204de1a"
+fingerprint: "sha256:786f85c3fecb4adc787977edbf5a5fd2d3b60c61d2880a26533f2d7f6e225ec5"
 non_claims:
   - 尽力而为的内存清零不构成侧信道或 mlock 保证。headless 加密 vault 运行仍是设计目标。Windows 后端不意味着受支持的 Windows 安装路线（B01-W 尚未执行）。
   - Account Hub 凭据导入是已采纳的 Personal 2.0 目标；当前没有浏览器 profile、Agent 凭据文件、订阅或 OAuth 的具体导入机制。

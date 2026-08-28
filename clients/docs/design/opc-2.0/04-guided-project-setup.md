@@ -1,104 +1,120 @@
-# 04 — Guided Project setup
+# 04 — Research-first guided Project setup
+
+- Requirements:
+  [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
+- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
+  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 
 ## Pattern and first value
 
-Pattern: resumable guided conversation plus structured review. First value is
-an active Project briefing with a confirmed charter, manager, first plan,
-permission/budget envelope, triggers, and receipt—not a feature tour or
-celebration screen.
-
-Only information needed to activate safe first work is mandatory. Optional
-business/brand profile, polished descriptions, additional roles, and advanced
-MCP/Tool details can be deferred.
+The pattern is a resumable Assistant conversation synchronized with structured,
+editable sections. First value is an active Project canvas and group
+conversation with a confirmed charter, goal/output contracts, manager/team,
+first work cycle, permissions, triggers, and receipt—not a tour or fabricated
+celebration.
 
 ## Setup sequence
 
 ```text
-business situation
-  -> optional source-backed research
+business understanding
+  -> broad automatic web research
   -> charter
-  -> goals + success/process metrics
-  -> Project Manager specialization + proposed roles
-  -> first plan
-  -> permissions + Provider bindings + budgets
-  -> Routine/Trigger defaults
-  -> structured diff preview
-  -> Owner confirmation
+  -> main/period/day goals + output/evidence contracts
+  -> Project Manager + researched Member Roles
+  -> plan and work cycle
+  -> explicit Provider/model + required capabilities
+  -> permissions, autonomy envelope, HITL/external-action policy
+  -> triggers and no-overlap/queue-latest behavior
+  -> one-cycle simulation
+  -> structured launch preview
+  -> Owner edit / narrow / reject / confirm
   -> active Project receipt
 ```
 
-The Owner can move between conversation and structured sections. Confirmed
-answers remain visible and editable; assistant prose never becomes authority.
+Research seeks sufficiently broad, high-quality coverage without asking for
+each ordinary web read. Sources, freshness, rights, conflicts, gaps, and
+coverage remain visible. Non-secret Project context may be used; raw
+credentials and third-party data the Owner cannot disclose may not.
+
+## Goal and output contract
+
+Every goal records expected result, openable deliverables, due/cadence,
+responsible Member, success criteria, evidence, and uncontrollable-outcome
+limits. Goal depth is main -> phase/quarter when useful -> month -> week ->
+day/Task. The manager owns planning and acceptance preparation, not guaranteed
+followers, revenue, quality, or other uncontrollable results.
+
+## Role, model, and capability setup
+
+Only the base Project Manager Role is built in. The Assistant researches and
+proposes each additional Role Runtime Template with purpose, responsibility,
+prohibited work, input/output/handoff/success contracts, instructions, work
+cycle/reflection, Context/Memory, model needs, Skills, Tools, MCP, permissions,
+and escalation.
+
+Each Project Member adds Project-specific responsibility, pinned Template
+revision, explicit Provider/model choice, grants, Memory scope, and
+permissions. Recommendations cannot bind silently.
+
+Skill candidates may install automatically only after source, exact version,
+license, hidden-instruction, prompt-injection, and file/network/command-intent
+review. MCP additionally reviews dependency, executable code, network, Secret,
+Tool permission, and supply chain; first installation or permission expansion
+requires exact Owner confirmation. Acquisition and Project/Member grants are
+separate.
+
+## Simulation and structured launch review
+
+The one-cycle simulation exposes:
+
+- planned delegation and handoffs;
+- Task/output/evidence contracts;
+- Context sources and likely model-window compression;
+- permissions and human-intervention points;
+- external actions plus Intent/Effect/receipt flow;
+- trigger overlap, queue-latest, missed/offline behavior;
+- actual/estimated/unknown cost basis and warnings;
+- missing backend/environment capabilities.
+
+The confirmable review is daemon-issued and digest-bound. It includes editable
+charter, goals, outputs, team, plan, models, capabilities, autonomy/HITL,
+triggers, simulation findings, risks, omissions, and recovery. Launch preview
+is the full AUTONOMY packet on the canvas; there is no Confirm in chat.
+Assistant prose remains a Candidate.
 
 ## State model
 
 | State | UI behavior |
 |---|---|
-| `local-draft` | unsynced client draft; safe-leave/persistence basis shown |
-| `daemon-draft` | daemon id/version exists; Project remains inactive |
-| `researching` | sources, coverage, progress, cancel, partial findings |
-| `waiting` | exact Owner input, permission, or source needed |
-| `review-ready` | complete structured summary and validation |
-| `re-preview` | preview stale; preserve edits and explain changed fact |
-| `creating` | durable operation identity and safe-leave behavior |
-| `failed` | stage/reason, retained draft, retry/edit/copy details |
-| `active-receipt` | Project/charter revision, manager, plan, budgets, triggers, next action |
+| `local-draft` | client custody and safe-leave basis shown |
+| `daemon-draft` | daemon identity/version exists; Project inactive |
+| `researching` | exact sources, progress, partial results, conflicts, cancellation |
+| `waiting-owner` | exact input, account, credential, permission, or decision |
+| `partial` | usable sections and missing facets remain distinct |
+| `simulation-failed` | retained draft, failed step, edit/retry route |
+| `review-ready` | validated structured revision; still inactive |
+| `re-preview` | stale preview, changed facts, preserved edits |
+| `creating` | durable operation, safe-leave behavior, no fake success |
+| `failed` | failed stage, retained work, safe recovery |
+| `active-receipt` | Project/revision, team, plan, triggers, first output, next action |
 
-The Project does not activate in `local-draft`, `daemon-draft`,
-`researching`, `waiting`, or `review-ready`.
+## Form, recovery, and capability honesty
 
-## Structured review
+Fields use visible labels, pre-input constraints, connected errors, async
+status, preserved non-secret values, error summaries, and predictable focus.
+External text is untrusted and cannot execute, install, change schema, or
+expand permission. A stale preview returns to review. Offline/research/model/
+permission failure preserves completed work and exact custody.
 
-The review contains editable sections and exact before/after additions:
-
-- charter and scope;
-- primary goal, metrics, unknown assumptions;
-- manager and member responsibilities;
-- first plan and Routine frequency;
-- Provider/Tool/connector capability needs;
-- filesystem/network/external action permissions;
-- Project/member/Task budgets;
-- acceptance and independent verification basis.
-
-The confirm action binds the current daemon preview digest. An Assistant-built
-summary is labelled Candidate and has no confirm action until resolved by the
-daemon.
-
-## Form and validation
-
-- Visible labels; no placeholder-only fields.
-- Constraints shown before input.
-- Format checks after blur; required/cross-field checks on review.
-- Async source/permission checks show checking, retry, and freshness.
-- Errors connect to fields plus a summary; focus moves to the first error.
-- User content survives validation, server failure, and re-preview.
-- Permission requests state benefit, exact scope, risk, and deny/narrow path.
-- Destructive or external implications stay separated from routine fields.
-
-## Research and untrusted inputs
-
-Source research records URI/name, retrieval time, license/rights when relevant,
-coverage, and conflicting facts. External text is untrusted observation and
-cannot modify the setup schema, invoke a Tool, import a Skill/MCP server, or
-expand permission.
-
-Executable Skill/Tool/MCP candidates receive a separate source/capability/
-permission/risk review and Owner confirmation. They are not silently installed
-during research.
-
-## Recovery
-
-- Leaving setup preserves the draft and next unanswered section.
-- Offline work remains local/daemon-draft according to actual custody.
-- Research failure permits continue-without-source, retry, or source edit.
-- Folder permission denial preserves all other answers.
-- Provider failure does not block a Project that can safely activate without
-  that binding.
-- A stale preview returns to review, never directly to creating.
-
-## Requires-backend
-
-Project draft authority, research orchestration, structured preview, charter
-activation, role generation, budget/trigger admission, and receipt are not
-current backend capabilities. The prototype demonstrates states only and must
-not emit a fake Project id or active receipt as execution evidence.
+Project draft authority, research orchestration, Role/Member creation,
+capability review/acquisition, simulation, launch preview, activation, and
+receipt are **Requires-backend**; Windows, DSH, Provider, MCP, and X execution
+also require applicable environments. The prototype may demonstrate only
+labelled example states, never a real Project id or acceptance receipt. There
+are no Connect / Install / Confirm fake buttons.

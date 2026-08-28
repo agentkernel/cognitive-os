@@ -61,7 +61,8 @@ current fact of the code.
 - **Personal 2.0 OPC capabilities are not current**: Windows host/tray/
   background, Project/Role/Employee/Routine/Attempt authority, Personal
   Conversation archive/Vault/retrieval, Pi-backed Assistant, managed DSH
-  artifact/child/sandbox, Inbox, binding/budget enforcement, OPC UI and X
+  artifact/child/sandbox, contextual attention (Inbox is not first-level
+  navigation), binding/budget enforcement, OPC UI and X
   connector are `Requires-backend`/`Requires-environment`.
 - **Installed Agent target is narrow**: DSH is the only 2.0 runtime
   qualification target. Existing dsh Path B does not prove the Windows managed

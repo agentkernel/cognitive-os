@@ -29,7 +29,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:66a15772056b5c20b1471cee626b3e6125906cd821896289418df9e6616a8291"
+fingerprint: "sha256:288682032d90766e65b70cc623182e5f505e7722abbce53b5659ae325e8b309b"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -92,8 +92,8 @@ authority.
   facts and risk-based resume. Engine checkpoint is not authority.
 - Provider binding resolves global→Project→employee→Task; subscription,
   account, billing/quota, budget and actual usage remain separate.
-- UI is Today/Projects/Team/Knowledge/Inbox with bottom Settings and one
-  active Assistant/employee composer.
+- UI is Today/Projects/Knowledge with bottom Settings and one persistent
+  right conversation. Team and Inbox are not first-level destinations.
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its
 dsh first-conversation-slice role is superseded; `conversation-projection/0.1`

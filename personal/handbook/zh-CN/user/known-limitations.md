@@ -52,7 +52,7 @@ non_claims:
 - **Personal 2.0 OPC 能力不是 current**：Windows host/tray/background、
   Project/Role/Employee/Routine/Attempt authority、Personal Conversation
   archive/Vault/retrieval、Pi-backed Assistant、managed DSH artifact/child/sandbox、
-  Inbox、binding/budget enforcement、OPC UI 与 X connector 都是
+  上下文关注（Inbox 不是一级导航）、binding/budget enforcement、OPC UI 与 X connector 都是
   `Requires-backend`/`Requires-environment`。
 - **Installed Agent target 很窄**：DSH 是唯一 2.0 runtime qualification target。
   Existing dsh Path B 不证明 Windows managed artifact；Pi 是 hidden Assistant target；

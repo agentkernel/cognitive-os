@@ -5,13 +5,18 @@
 - Status: current Provider authority plus adopted OPC evolution
 - Product: `cognitiveos-personal`
 - Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md)
-- Target experience: [Account Hub](account-hub.md)
+- Target experience: [Model Connections](account-hub.md)
+- Requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
 - Credential boundary:
   [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
 
 The Rust daemon remains the only component allowed to resolve Provider
 credentials or perform Personal-managed Provider egress. UI, Personal
-Assistant, digital employees, DSH, Pi, adapters, MCP servers, and Vault tools
+Assistant, Project Members, Agent processes, DSH, Pi, adapters, MCP servers,
+and Vault tools
 never receive raw secret material.
 
 ## 1. Current implementation (Now)
@@ -37,26 +42,28 @@ references. This product document does not redefine it.
 
 ## 2. Adopted Personal 2.0 target
 
-The OPC target groups Provider facts in Settings > Providers and Account Hub:
+The OPC target groups Provider facts in Settings > Model Connections:
 
 ```text
-account/authentication
+connection/account
   + endpoint/trust
+  + compatibility mode
   + model catalog
-  + effective binding
-  + Project/member/Task budget
+  + explicit Project Member selection
   + Provider quota
-  + actual usage/cost
+  + source-labelled actual/estimated/unknown usage and cost
 ```
 
-Effective binding becomes global -> Project -> employee -> Task. Subscription,
-OAuth/API account, API billing/quota, and consumer-product entitlement remain
-separate. DSH and Pi use only a Task-scoped effective route through the daemon
-proxy.
+Mainstream Providers use quick templates where the Owner enters a key.
+Advanced setup accepts custom URL, compatibility mode, key, and model. Every
+Member creation requires an explicit Provider/model choice. The Assistant may
+recommend but cannot bind or rebind silently. DSH and Pi use only an admitted
+Task-scoped route through the daemon proxy.
 
-The hierarchy, subscription/OAuth observations, concrete credential import,
-additional adapters, quota integration, and hard budget enforcement are
-**Requires-backend**.
+Consumer subscription, plan, invoice, and product billing management are
+outside 2.0. Custom compatibility setup, concrete credential import,
+additional adapters, Member revision, quota integration, and cost attribution
+are **Requires-backend**.
 
 ## 3. Endpoint and credential controls
 
@@ -73,21 +80,22 @@ additional adapters, quota integration, and hard budget enforcement are
 Account import success is not Provider reachability, model availability,
 entitlement, or Agent readiness.
 
-## 4. Routing and budget behavior
+## 4. Member routing and cost behavior
 
-The narrower admitted binding wins; no caller chooses an arbitrary route.
-Changing a binding states whether it affects new Tasks or requires current
-runtime rebind/restart. Existing work never switches silently.
+The Owner explicitly selects a Provider/model when creating each Member. A
+Role Runtime Template declares model capabilities but stores no concrete
+connection or secret. Changing a Member or Task route states the affected work
+and whether a process restart is required. Existing work never switches
+silently, and no caller chooses an arbitrary route.
 
-Budget enforcement must:
+Personal shows cost as actual, estimated, or unknown with source and period.
+It may warn on a threshold or variance, but Personal 2.0 does not automatically
+stop work at a product budget threshold. Provider quota, credential failure, or
+unavailability may still block the external call. In-flight and unknown Effects
+continue reconciliation; cost pressure never authorizes silent rerouting.
 
-1. evaluate the Project, member, and Task envelopes before new dispatch;
-2. preserve in-flight and unknown Effect reconciliation;
-3. stop and create an Inbox item at the declared boundary;
-4. require an admitted adjustment rather than silently rerouting;
-5. retain the actual metering source and period.
-
-Current budgets are advisory and must not be presented as enforced.
+Current advisory-budget behavior remains a factual implementation foundation
+and must not be presented as the 2.0 product policy.
 
 ## 5. Usage and quota honesty
 
@@ -104,11 +112,12 @@ declared denominator. Missing quota or price stays unavailable.
 ## 6. Required states and non-claims
 
 The product distinguishes usable, degraded, credential missing/revoked,
-SecretStore locked, endpoint trust required, model unavailable, quota unknown,
-budget warning/stopped, stale catalog, rebind required, and outcome unknown.
+SecretStore locked, endpoint trust required, compatibility unknown, model
+unavailable, quota unknown, cost warning, stale catalog, rebind required, and
+outcome unknown.
 Errors preserve non-secret input and state whether retry is safe.
 
 This evolution does not implement Provider adapters, DSH/Pi proxy changes,
-binding hierarchy, budget enforcement, quota, Windows support, or qualification.
+Member routing, cost composition, quota, Windows support, or qualification.
 It makes no Provider-quality, cost-accuracy, Gate, release, Profile, business,
 or Agent-benefit claim.

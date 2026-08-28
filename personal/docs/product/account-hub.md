@@ -1,108 +1,133 @@
-# Personal Account Hub
+# Personal Model Connections
 
 - Status: adopted Personal 2.0 target over a current Provider foundation
 - Canonical language: English
 - Current authority foundation:
   [Provider Control Plane](provider-control-plane.md)
+- Requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
+  Authorize → Execute → Verify → Report), Today decision packet plus four
+  exception swimlanes, canvas-only HITL, and daemon authority path. This is
+  not the pre-overwrite overlay-conversation / stacked-column V2.
 - Credential boundary:
   [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
 - Chinese mirror: [account-hub.zh-CN.md](account-hub.zh-CN.md)
 
-## 1. Separate facts
+## 1. Product boundary
 
-Account Hub must not collapse these concepts:
+Model Connections keeps these facts separate:
 
 | Fact | Meaning |
 |---|---|
-| Consumer subscription | entitlement in a vendor consumer product |
-| Provider account/auth | API key, OAuth, or approved imported credential identity |
-| API billing/quota | allowance, reset, limits, invoice/pricing basis |
+| Connection | admitted Provider endpoint, compatibility mode, and account identity |
+| Secret custody | opaque SecretRef in an approved SecretStore |
 | Model catalog | models available to an account at an observed time |
-| Binding | admitted account/provider/model route for a scope |
-| Budget | Personal's Project/member/Task ceiling |
+| Member selection | explicit admitted Provider/model route for one Project Member |
+| Provider quota | externally reported allowance/reset/availability when available |
 | Usage/cost | source-labelled actual or estimated consumption |
 
-Subscription does not prove API entitlement. Credential presence does not
-prove reachability. Quota is not inferred from usage. Unknown usage/cost is not
-zero.
+Consumer subscription, invoice, plan, and product billing management are not
+Personal 2.0 features. Credential presence does not prove reachability. Quota
+is not inferred from usage. Unknown usage/cost is not zero.
 
 ## 2. Reality ledger
 
-| Boundary | Account truth |
+| Boundary | Connection truth |
 |---|---|
 | **Current implementation (Now)** | Named OpenAI, Anthropic, and custom OpenAI-compatible accounts; API-key SecretStore handoff; model discovery/manual models; fixed Agent binding; usage/cost; advisory budgets/alerts; audit and current Provider UI. |
-| **Adopted Personal 2.0 target** | Settings Account Hub with account/subscription/billing separation, global/Project/employee/Task binding, Project/member/Task budgets, DSH/Pi daemon proxy, and honest quota/usage. |
-| **Requires-backend** | Additional adapters, OAuth/subscription observation, concrete ADR-0055 import readers, binding hierarchy, budget enforcement, broader quota, and runtime rebind/restart. |
+| **Adopted Personal 2.0 target** | Settings > Model Connections with mainstream quick templates, advanced custom connection, explicit Provider/model selection for every Member, DSH/Pi daemon proxy, and honest quota/usage/cost. |
+| **Requires-backend** | Additional adapters, custom compatibility modes, concrete SecretStore readers, Member selection/revision, broader quota, source-labelled cost composition, and runtime rebind/restart. |
 
-## 3. Effective binding
+Current fixed Agent bindings and advisory budgets remain factual foundations;
+they do not define the 2.0 product organization or an automatic stop policy.
 
-The admitted route resolves in this order:
+## 3. Connection creation
+
+The everyday flow is:
 
 ```text
-global default
-  -> Project default
-  -> digital employee override
-  -> Task temporary override
+choose mainstream Provider template
+  -> enter key through one-way SecretStore handoff
+  -> discover/select model
+  -> verify redacted endpoint/account/model facts
+  -> save connection receipt
 ```
 
-The narrowest admitted value wins. A Role Blueprint declares capability needs
-but never stores a concrete Provider binding. A change states which future and
-current Tasks are affected and whether a DSH/Pi runtime restart is required.
-There is no silent fallback, ambient load balancing, caller-supplied credential,
-or arbitrary auth header.
+Advanced setup accepts an explicit custom URL, compatibility mode, key, and
+model. Endpoint trust, compatibility, credential, reachability, and model
+availability are separate checks. There is no consumer-subscription or invoice
+flow.
 
-## 4. Secret and proxy boundary
+## 4. Explicit Member selection
+
+Creating every Project Member requires the Owner to choose a Provider/model.
+The Assistant may explain requirements and recommend a route but cannot bind
+silently. A Role Runtime Template declares model capabilities, not a concrete
+connection or credential.
+
+A later change is a versioned Member/Task revision that states affected work
+and whether a process restart is required. Existing work never switches
+silently. There is no ambient load balancing, hidden fallback, caller-supplied
+credential, or arbitrary auth header.
+
+## 5. Secret and proxy boundary
 
 All Personal-managed methods terminate in an approved SecretStore and daemon
 proxy:
 
-- user-initiated API-key handoff;
-- OAuth/subscription token lifecycle when implemented;
+- user-initiated API-key SecretStore takeover (the key never appears in chat
+  or the canvas);
 - per-source ADR-0055 credential import;
 - custom endpoint with explicit trust review.
 
-Raw material never enters UI storage, URL, Agent/employee configuration, DSH,
+Raw material never enters UI storage, DOM, URL, Agent/Member configuration, DSH,
 Pi, MCP, Vault, Conversation archive, ordinary config, SQLite, argv,
 environment, logs, evidence, or chat. Import success means only SecretStore
 custody; Provider/model/quota checks remain separate.
 
-## 5. Budgets, quota, and usage
+## 6. Cost, quota, and usage
 
 | Control | Product target |
 |---|---|
-| Project budget | total approved envelope and warning/stop policy |
-| Member budget | employee allocation inside the Project envelope |
-| Task budget | temporary maximum for one governed Task |
 | Provider quota | provider-reported allowance/reset/source, if available |
-| Actual usage | Task/member/Project/account/model attribution and metering source |
+| Actual cost | Provider-reported or directly metered value with source/period |
+| Estimated cost | declared model/pricing/method/version and scope |
+| Unknown cost | unavailable conclusion that must never render as zero |
+| Cost warning | visible threshold/variance signal for Owner/manager attention |
 
-Budget enforcement stops new dispatch at the defined boundary and sends the
-adjustment request to Inbox. It does not erase an in-flight unknown Effect or
-invent a cheaper route. Current advisory budgets remain labelled advisory
-until enforcement is implemented and validated.
+Personal 2.0 does not automatically stop work at a product budget threshold.
+Warnings do not erase an in-flight unknown Effect or invent a cheaper route.
+Provider quota, credential failure, or Provider unavailability may still cause
+an external failure. Current advisory-budget facts remain labelled as current
+implementation behavior, not the 2.0 target policy.
 
-## 6. Setup and recovery
+## 7. Setup and recovery
 
-Account setup:
+Model Connection setup:
 
-1. select a supported Provider/custom endpoint and method;
+1. select a mainstream Provider template or advanced custom connection;
 2. complete the non-logging secret path;
 3. inspect redacted endpoint, account, model, quota, and trust facts;
-4. choose global/Project/employee/Task scope;
-5. run bounded reachability/credential/model checks separately;
-6. save and return to the originating Project/employee/Task.
+4. run bounded reachability/credential/model checks separately;
+5. save and return to the originating Member creation or Settings surface;
+6. explicitly select the connection/model for the Member.
 
 Input is preserved after recoverable failure. Locked SecretStore, expired
 credential, unreachable endpoint, model missing, quota unknown, stale catalog,
-budget exceeded, and rebind-required are distinct states.
+cost warning, and rebind-required are distinct states.
 
-## 7. Required states and non-claims
+## 8. Required states and non-claims
 
-Account Hub covers empty, loading, partial, stale, permission, error, unknown,
-offline, budget-warning/stopped, success, and archived-account states. Every
-reading carries source and period; every percentage carries a denominator.
+Model Connections covers empty, loading, partial, stale, permission, error,
+unknown, offline, cost-warning, quota-unavailable, success, and archived
+states. Every reading carries source and period; every percentage carries a
+denominator.
 
-The expanded Account Hub, binding hierarchy, budget enforcement, DSH/Pi proxy
-composition, and quota integration are **Requires-backend**. This document
+The expanded Model Connections, Member selection/revision, DSH/Pi proxy
+composition, and quota/cost integration are **Requires-backend**. This document
 makes no Provider quality, entitlement, cost-accuracy, support, Gate, release,
 Profile, or business-outcome claim.

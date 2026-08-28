@@ -1,100 +1,123 @@
-# 07 — Inbox, approval, recovery, and long-running work
+# 07 — Contextual attention, approval, recovery, and long-running work
+
+- Requirements:
+  [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
+- Product source:
+  [Long-running operations](../../../../personal/docs/product/long-running-operations.md)
+- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
+  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 
 ## Operational thesis
 
-Inbox answers **what needs the Owner next and why**. It is a priority queue,
-not chat or a generic event log.
+What needs the Owner appears in Today and the affected Project canvas. There is
+no permanent first-level attention queue. Contextual attention covers:
 
-Item types:
-
-- consequential approval;
-- information/material requested;
-- permission or connector block;
-- execution failure;
-- outcome unknown/reconciling;
+- consequential approval or requested input;
+- permission, credential, model, connector, or capability block;
+- execution failure or outcome unknown/reconciling;
 - missed/coalesced Routine occurrence;
-- budget/quota warning or stop;
-- stale source or Project revision conflict.
+- actual/estimated/unknown cost warning or Provider quota failure;
+- stale source, preview, or Project revision conflict.
 
-## Item anatomy
+Every item shows Project/Member, goal or affected deliverable, age/freshness,
+reason, consequence, reversibility, source/evidence, cost basis, and available
+next actions. Priority is textual and explained, not color-only.
 
-Every item shows Project/employee, age/freshness, reason, affected target,
-consequence, reversibility, source/evidence, cost/budget impact, and available
-next actions. Priority uses text and rationale, not color alone.
+The default Operations working view is the daemon authority path:
 
-List filters and selection remain stable. Empty states distinguish "nothing
-needs you" from data unavailable or filters hiding results.
+**Candidate → Intent persisted → Fence → Execute → Independent verify →
+Receipt.**
 
-## Approval
+Working is in-progress observation, not completion. Agent self-report is not
+verification.
 
-Approval opens a daemon-issued structured preview:
+## Approval and HITL
 
-- current/proposed revision;
-- targets and external Effects;
-- permission and budget changes;
-- source and uncertainty;
-- reversibility/compensation truth;
-- stale-preview status;
-- confirm, edit, narrow, reject.
+Consequential work opens a daemon-issued structured preview with current and
+proposed revisions, targets, Intent/Effect implications, exact permissions,
+source/uncertainty, cost basis, reversibility/compensation, freshness, and
+edit/narrow/deny/confirm choices.
 
-Chat explanation may be adjacent but is not the confirmable object. Confirm
-binds the exact preview. Rejection preserves the candidate. Drift forces
-re-preview. Receipt returns to the item, originating Conversation, and affected
-Project.
+Chat may announce a HITL pause and link to the center-canvas preview, but chat
+is never the confirmable object. There is no chat Approve control and no
+“Don’t ask again” grant. Project publish preview is the full AUTONOMY packet
+on the canvas; there is no Confirm in chat. Confirmation binds its exact
+digest. Rejection
+preserves the candidate. Drift forces re-preview. The resulting receipt links
+the Project object, originating conversation, and applicable Task/Effect.
+
+The launch-time autonomy envelope permits low-risk reversible internal work.
+Primary-goal, team, Provider/model, Tool/MCP, permission, global Role,
+external-action-rule, permanent deletion, and first/expanded MCP permissions
+cross the applicable Owner boundary.
 
 ## Unknown and failure recovery
 
-Unknown external outcome is not safe retry. The item shows persisted Effect
-identity, dispatch fact, observation coverage, reconcile step, and why
-redispatch is blocked.
+An unknown external outcome is not safe to retry. The view shows persisted
+Effect identity, dispatch fact, observation coverage, reconciliation step, and
+why redispatch is blocked. Recoverable failure preserves Task, Attempt, input,
+artifacts, and evidence. Retry/restart creates a new Attempt.
 
-Recoverable failure preserves Task/Attempt, input, artifact, and evidence. A
-new retry/fork receives a new Attempt identity. Process exit, engine
-checkpoint, Provider response, or Agent claim is not recovery or completion.
+Agent or manager self-report, process exit, Provider/Tool success, and engine
+checkpoint are neither recovery nor completion. Only independent criteria and
+daemon acceptance close the Task.
 
-## Routine, queue-latest, and missed state
+## Triggers, no-overlap, and queue-latest
 
-For one Routine:
+Routines may be requested manually or by schedule, accepted artifact, Project
+state, qualified external event, or testable data condition. For one Routine:
 
-- no overlapping active occurrence;
+- active occurrences never overlap;
 - at most the latest pending occurrence is queued;
-- superseded occurrences retain skipped/coalesced facts;
-- offline/sleep/shutdown produces missed facts;
-- low-risk internal work may resume under policy;
-- publishing, communication, spending, deletion, permission expansion, or
-  changed targets require fresh review.
+- superseded occurrences remain skipped/coalesced facts with denominator;
+- sleep, shutdown, daemon/dependency outage, and expired content create visible
+  missed facts;
+- low-risk internal work may resume under unchanged policy;
+- consequential or stale work receives fresh Context, policy, or Owner review.
 
-The queue shows active, latest queued, missed/coalesced denominator, and next
-action. It does not infer an ETA from Agent text.
+Across Projects, ordering is explained by Owner priority, deadline, schedule,
+resource availability, and fairness. No ETA or queue authority is inferred from
+Agent prose.
 
-## Close-window decision
+## Long-running progress and instruction changes
 
-When eligible work is active, closing the Windows window asks:
+Progress shows goal/output contract, current durable step, responsible Member,
+Task/Attempt, latest openable artifact, Intent/Effect/evidence, cost basis,
+queued/missed facts, blocked reason, and only real pause/stop/retry/resume/
+reconcile controls. Working is in-progress observation, not completion. Final
+receipt separates completed, skipped, failed, unknown, and not-run work.
 
-1. continue eligible work in background; or
-2. pause at the current safe boundary.
+A new Owner instruction creates a version and applies at a safe point through
+continue, pause, or restart. It is never injected silently into a running
+prompt.
 
-The preview names affected Projects/Routines, work that cannot stop instantly,
-host-online limitations, and reopen behavior. If the backend is absent, both
-options are explanatory `Requires-backend`, not fake controls.
+Closing the Windows window offers **continue eligible work in background** or
+**pause at the current safe boundary**, names affected work, and states that
+host shutdown stops execution. Missing backend support renders explanation,
+not fake controls.
 
-## Long-running progress
+## X/Twitter external-action recovery
 
-The progress surface shows plan, current durable step, responsible employee,
-Task/Attempt, latest artifact, Effect/evidence, actual/unknown cost, blocked
-reason, and real pause/stop/retry/resume capabilities. Final receipt separates
-completed, skipped, failed, unknown, and not-run work.
+The content loop is research -> topic plan -> draft/media artifacts ->
+publication package -> applicable preview -> qualified dispatch -> receipt ->
+metric/comment readback -> reflection -> next cycle. Dispatch and readback are
+separate facts. CAPTCHA, anti-abuse, account lock, UI drift, or unknown result
+fails closed; no evasion or blind retry.
 
-## States
+## States and capability honesty
 
-Inbox covers empty, loading, partial, stale, permission, error, unknown,
-offline, missed, waiting-owner, queued, running, reconciling, stopped,
-recovered, success, and archived. Error messages identify the object and safe
-next path; user input is preserved.
+Contextual attention covers empty, loading, partial, stale, permission, error,
+unknown, offline, missed, waiting-owner, queued, running, reconciling,
+failed-preserved, recovered, success, and archived. Cost warnings never imply
+an automatic Personal budget stop.
 
-## Requires-backend
-
-The unified Inbox, serialized approval, Routine ledger, queue-latest,
-missed/catch-up policy, close-window choice, and recovery controls are target
-behavior. Existing previews, Effects, alerts, and scheduler facts are reusable
-but do not make the complete surface available.
+The complete attention projection, serialized approval, Routine ledger,
+queue-latest, catch-up, safe-point revision, close-window choice, and recovery
+controls are **Requires-backend**. External connectors are additionally
+**Requires-environment**.

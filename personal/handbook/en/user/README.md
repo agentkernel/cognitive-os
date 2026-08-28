@@ -14,7 +14,8 @@ Runtime/Process are the six current Linux 1.0/API families. This guide separates
 current behavior from the Windows-first OPC target (`Requires-backend`,
 `Requires-environment`, or deferred).
 
-Personal 2.0 targets Today/Projects/Team/Knowledge/Inbox; Projects, roles,
+Personal 2.0 targets Today/Projects/Knowledge with bottom Settings (Team and
+Inbox are not first-level); Projects, roles,
 digital employees, Routines and preserved Attempts; Personal-owned
 Conversations/Vault/Memory; a Pi-backed Personal Assistant; preinstalled
 managed DSH; Provider/budget hierarchy; and one fixed Windows acceptance path.

@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:ae27fd621e8f46188f7eeb54afff654bfa8602c84254d40f65e005eca6546158"
+fingerprint: "sha256:3158bff7c3c2faff747286ac53eaf0d497f70276109fb4437f70a2d0b231adc2"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -80,8 +80,8 @@ Keep these two baselines separate:
   same-origin `/ui/` SPA at `clients/pc/web/` are current implementation. The
   Web UI is not part of the Linux 1.0 release claim.
 - **Personal 2.0 OPC target — `Requires-backend` /
-  `Requires-environment`:** Today / Projects / Team / Knowledge / Inbox,
-  bottom Settings, and a right Personal Assistant; Project/Charter/Goal/Plan/
+  `Requires-environment`:** Today / Projects / Knowledge, bottom Settings
+  (Team and Inbox are not first-level), and a persistent right conversation; Project/Charter/Goal/Plan/
   Routine/Task/Attempt; Role Blueprint/Assignment/Digital Employee; Personal-
   owned Conversations, archive, Vault and admitted Memory; global→Project→
   employee→Task Provider/budget control; and one fixed Windows acceptance path.

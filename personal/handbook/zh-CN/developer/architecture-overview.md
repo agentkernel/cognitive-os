@@ -29,7 +29,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:66a15772056b5c20b1471cee626b3e6125906cd821896289418df9e6616a8291"
+fingerprint: "sha256:288682032d90766e65b70cc623182e5f505e7722abbce53b5659ae325e8b309b"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -86,8 +86,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   risk-based resume。Engine checkpoint 不是 authority。
 - Provider binding 按 global→Project→employee→Task；subscription、account、
   billing/quota、budget 与 actual usage 分离。
-- UI 是 Today/Projects/Team/Knowledge/Inbox、底部 Settings 与一个 active
-  Assistant/employee composer。
+- UI 是 Today/Projects/Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
+  不是一级导航。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh
 first-conversation-slice 角色，`conversation-projection/0.1` 不重解释。MCP 从 OPC P0

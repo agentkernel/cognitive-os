@@ -1,0 +1,777 @@
+# Personal 2.0 OPC requirements analysis
+
+- Status: owner-confirmed requirements baseline
+- Date: 2026-08-28
+- Change class: `product-semantic`
+- Source: synthesis of the completed owner `/grill-me` design interview; this
+  is a requirements analysis, not a transcript
+- Product intent: [Product design](product-design.md)
+- Version boundary: [Personal 2.0 scope](personal-2.0-scope.md)
+- Product model: [OPC product model](opc-product-model.md)
+- Interaction corpus:
+  [OPC 2.0 design](../../../clients/docs/design/opc-2.0/README.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
+  Authorize → Execute → Verify → Report), Today decision packet plus four
+  exception swimlanes, canvas-only HITL, and daemon authority path. This is
+  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
+
+## A. Document status, source, and authority boundary
+
+This document records the complete owner-confirmed need for Personal 2.0. It is
+the baseline from which the current product intent, scope, object model, user
+journeys, and prototype-design corpus are derived. The interview has been
+synthesized into problems, jobs, principles, requirements, boundaries, and
+traceability; conversational wording and question order are intentionally not
+preserved.
+
+The requirements are approved **product semantics**. They are not:
+
+- market validation or evidence that an ICP will adopt or pay;
+- architecture or implementation design;
+- a task plan, acceptance ledger, current-status source, or authorization to
+  begin implementation;
+- proof that Windows, DSH, Pi, X/Twitter, a Provider, a Skill, an MCP server,
+  multi-Agent work, or any described UI is implemented or qualified;
+- a Gate, release, Profile, usability, accessibility, performance, security,
+  containment, reliability, or business-benefit result.
+
+Source ownership remains separated:
+
+| Fact | Owner |
+|---|---|
+| Owner need and requirement baseline | this document |
+| Stable current product intent | [product-design.md](product-design.md) |
+| Exact Personal 2.0 inclusion/exclusion | [personal-2.0-scope.md](personal-2.0-scope.md) |
+| Product objects and terminology | [opc-product-model.md](opc-product-model.md) |
+| Ordered experience | [user-journeys.md](user-journeys.md) and the [OPC design corpus](../../../clients/docs/design/opc-2.0/README.md) |
+| Architecture composition | `personal/docs/architecture/**` |
+| Accepted architecture decisions | `docs/adr/**` |
+| Formal tasks and Gates | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` |
+| Current implementation and evidence facts | `docs/plan/PROGRESS.md` |
+
+Architecture, ADR, formal-plan, and handbook material still carrying the
+2026-08-27 OPC vocabulary is **pending architecture/plan/handbook
+reconciliation**. It remains valid as dated decision or implementation fact,
+but it does not override the product semantics in this baseline. This delivery
+does not modify those surfaces.
+
+All absent product behavior is labelled **Requires-backend**; behavior that
+also needs a qualified native or external environment is labelled
+**Requires-environment**. `not-run` is never pass.
+
+## B. Executive summary, problem, JTBD, and personas
+
+### Executive summary
+
+Personal 2.0 is an **AI-native digital-staff console for one-person companies
+and individual developers**, built on `cognitiveos-core`. It lets one human
+Owner describe business goals, create long-lived governed Projects, assemble
+Project Members from reusable Role Runtime Templates, supervise work through a
+Project group conversation and evidence-backed canvas, and receive openable,
+verifiable deliverables without first learning Agent infrastructure.
+
+Content operations on X/Twitter are the first hero loop. The product model is
+industry-neutral, but 2.0 does not promise connectors for every industry.
+Personal remains local to the Windows host and works only while that host is
+online.
+
+### Problem
+
+Agent-first products make the Owner translate business intent into prompts,
+sessions, agents, tools, MCP configuration, harnesses, and runtime mechanics.
+That is the wrong operating model for the target user. The Owner needs to:
+
+1. state and revise a business outcome;
+2. know which result is due and what evidence will make it acceptable;
+3. delegate planning and execution within explicit boundaries;
+4. inspect usable deliverables rather than raw Agent chatter;
+5. intervene only when a decision or exception matters;
+6. understand failures, missed work, cost uncertainty, and recovery;
+7. improve the operating system without turning one interaction into hidden
+   global behavior.
+
+The existing mental model also conflates stable people-like responsibility,
+runtime configuration, and disposable processes. Process exit then appears to
+delete an employee, chat appears to become authority, and engine success
+appears to prove completion. Personal 2.0 separates those concepts.
+
+### Primary JTBD
+
+> When I run an OPC Project with digital staff, I want to describe goals and
+> acceptable outputs in business language, let a manager organize and improve
+> the work inside approved boundaries, talk to the team in one Project group,
+> and receive verified deliverables on a clear canvas, so I can operate the
+> business without becoming an Agent-infrastructure administrator.
+
+### Supporting jobs
+
+| Job type | Job |
+|---|---|
+| Functional | Turn a business situation into an active Project with goals, output contracts, team, plan, capabilities, permissions, triggers, and a receipt. |
+| Functional | See what is due, what changed, what failed or was missed, and what needs the Owner now. |
+| Functional | Ask the manager for progress or delegation and redirect a Member's bounded work without creating shadow authority. |
+| Functional | Open, inspect, accept, reject, or revise deliverables with source, freshness, and verification state. |
+| Functional | Connect a model and acquire reviewed Skills/MCP capabilities without exposing credentials or silently expanding grants. |
+| Functional | Preserve conversations, knowledge, admitted Memory, evidence, and Member identity across disposable Agent processes. |
+| Emotional | Feel in control without supervising every micro-step. |
+| Emotional | Trust that silence, polished prose, or a green Provider call is not being mistaken for completion. |
+| Emotional | Avoid anxiety caused by hidden publishing, stale context, unknown cost shown as zero, or unrecoverable automation. |
+| Social | Operate professionally and consistently in front of customers and an audience even as a one-person company. |
+
+### Personas
+
+#### Primary — OPC Owner-operator
+
+- understands the business, audience, and desired results;
+- may not understand Agent, model, Tool, MCP, Context, or Harness concepts;
+- delegates recurring knowledge work but remains accountable for public,
+  financial, security, and destructive actions;
+- values fast comprehension, low intervention burden, reliable outputs, and
+  clear recovery over technical configurability.
+
+#### Secondary — individual developer
+
+- can understand deeper runtime detail when needed;
+- uses the same Project/Role/Member model for software or AIGC work;
+- expects source-linked artifacts, reproducibility, permissions, and rollback;
+- does not change the product into an IDE, generic workflow builder, or
+  multi-user engineering-management system.
+
+No multi-user administrator, human teammate, enterprise approver, or cloud
+operator persona is in the Personal 2.0 boundary.
+
+## C. Design principles
+
+1. **Outcomes before operations.** Project goals, expected results, due
+   deliverables, success criteria, and evidence precede runtime state; runtime
+   state precedes configuration.
+2. **Business language first.** Project, Role, Member, goal, deliverable, work
+   plan, and work cycle are defaults. Agent/runtime vocabulary is disclosed
+   only when useful.
+3. **Project is the operating unit.** A Project is a long-lived governed
+   workspace, not a Loop, Harness, directory, session, or group chat.
+4. **Stable orientation, contextual depth.** Only Today, Projects, and
+   Knowledge are stable first-level anchors; Settings stays at the bottom.
+   Members, approvals, exceptions, and diagnostics open in context.
+5. **Conversation proposes; authority records.** Natural-language messages
+   must resolve to formal Tasks or revisions before changing governed state.
+6. **Deliverables over chatter.** The default view emphasizes openable
+   artifacts, acceptance, omissions, failures, decisions, and freshness.
+   Ordinary execution traces remain collapsed.
+7. **Flexible but governed canvas.** Stable operating reports use a Project
+   template; ad-hoc questions compose approved typed components from real
+   facts. No generated code, `eval`, or invented values.
+8. **Stable members, disposable processes.** Role Templates and Project Member
+   Runtime definitions persist; each Task Attempt starts a disposable Agent
+   process.
+9. **Invisible infrastructure by default.** DSH and Pi are managed engines,
+   not daily product destinations.
+10. **Calibrated autonomy.** One launch-time autonomy envelope enables
+    low-risk, reversible internal work; consequential boundary crossings
+    receive preview, confirmation, and receipt.
+11. **Evidence honesty.** Unknown stays unknown; self-report, process exit, or
+    tool/provider success never becomes completion.
+12. **Local, inspectable, recoverable.** Source records, conversations,
+    versions, Memory lineage, attempts, Effects, and receipts survive failure
+    and can be inspected, corrected, exported, archived, or restored within
+    their real limits.
+13. **Progressive capability acquisition.** Skills and MCP capabilities are
+    discovered and reviewed when a Project needs them; installation never
+    implies a Project/Member grant.
+14. **No silent global learning.** Feedback influences later work, while
+    persistent Member or global Role changes require explicit versioned
+    proposals and the applicable approval.
+
+## D. Complete product object model and glossary
+
+### Product object chain
+
+```text
+Owner
+  -> global Personal Assistant
+  -> Project
+       -> Charter
+       -> Goal hierarchy
+            -> main
+            -> phase / quarter (when useful)
+            -> month
+            -> week
+            -> day / Tasks
+       -> expected results / deliverables / success criteria / evidence
+       -> current Plan revision / autonomy envelope / external-action policy
+       -> Project group Conversation
+       -> Project Manager Member
+       -> other Project Members
+            -> pinned Role Runtime Template revision
+            -> Project-specific Member Runtime definition
+            -> Provider / model
+            -> Project- and Member-scoped capability grants
+            -> Member work Conversation / admitted Memory
+       -> Routine / Trigger / occurrence
+            -> Task
+                 -> Attempt
+                      -> disposable Agent process
+                      -> bounded internal subagents
+                      -> Artifact / Intent / Effect / Evidence
+                 -> independent verification / acceptance
+       -> operating-report canvas template / temporary ad-hoc canvases
+       -> Project Vault / sources / group archive / feedback evidence
+```
+
+### Object definitions
+
+| Object | Meaning | Explicit non-equivalence |
+|---|---|---|
+| Owner | the sole local human principal | not a tenant, organization, or human team |
+| Personal Assistant | global user-facing identity that can inspect, explain, research, recommend, and initiate every management flow | not a Project Member, authority writer, or durable-memory owner |
+| Project | long-lived governed workspace for one business outcome and its operating loop | not a directory, chat, Loop, Harness, Runtime, or Task collection alone |
+| Charter | confirmed description of Project purpose, scope, constraints, and primary outcome | not free-form assistant prose |
+| Goal | versioned intended result with expected result, deliverables, cadence/due, owner, success criteria, and evidence | not an Agent promise or uncontrolled commercial guarantee |
+| Plan revision | current governed decomposition and sequencing of goals, work, responsibilities, triggers, and acceptance | not chat history |
+| Role Runtime Template | reusable, versioned operating recipe | not a process, Member, credential, or authority grant |
+| Project Member Runtime definition | persistent Project-specific definition created from a pinned Role Template revision | not a human identity or always-running process |
+| Project Manager Member | the single current Member responsible for planning, assignment, verification, escalation, summaries, and reflection | not the authority writer and not guarantor of uncontrollable business results |
+| Task | bounded admitted work with contract, responsibility, resources, limits, outputs, and acceptance criteria | not a chat message or Agent turn |
+| Attempt | one preserved execution try for a Task | not the Member |
+| Agent process | disposable runtime process started for one Attempt | not a Role or Project Member |
+| Internal subagent | bounded temporary helper created by one Member Task process | not a Project Member; no long-lived identity or Memory |
+| Routine | versioned recurring work definition | not one run, cron row, or prompt |
+| Trigger | admitted cause that requests a Routine occurrence | not permission to complete work |
+| Conversation | Personal-owned full local source archive for Project group or Member work discussion | not authority, completion, or automatically admitted Memory |
+| Canvas | source-linked projection of Project goals, deliverables, evidence, state, and decisions | not an authority store, arbitrary program, or data generator |
+| Artifact | inspectable work product or intermediate output | not accepted completion by itself |
+| Evidence | source/provenance-bearing observation used by an independent criterion | not Agent self-report |
+| Memory | admitted durable fact/preference with scope, provenance, lineage, correction, and forget lifecycle | not a raw chat transcript, summary, or retrieval cache |
+| Vault | Personal-owned, Obsidian-compatible Markdown knowledge store | not the proprietary Obsidian application and not daemon authority |
+| Model Connection | Provider endpoint/account/key/model configuration whose raw secret remains in SecretStore | not a consumer subscription or product billing account |
+| Skill | reviewed, pinned work-method artifact | not permission or executable authority |
+| MCP capability | reviewed server/package/connection/capability artifact plus separate Project/Member grants | not a marketplace install or automatic Tool grant |
+| Autonomy envelope | launch-time approved limits for low-risk internal planning and execution | not permission for every future external or high-risk action |
+| Receipt | durable result of an admitted consequential operation | not a conversational acknowledgement |
+
+### Role Runtime Template contents
+
+Every Template version defines:
+
+- business purpose, responsibilities, and prohibited work;
+- input, output, handoff, and success contracts;
+- work instructions;
+- required Skills, Tools, and MCP capabilities;
+- work cycle, reflection, collaboration, and handoff behavior;
+- model capability requirements;
+- Context assembly and Memory policy;
+- permissions, escalation rules, and safety boundaries.
+
+Only the base **Project Manager Role** is built in. The Personal Assistant
+conducts sufficiently broad web research before proposing other Roles. Role
+Templates are reusable; Member definitions, Memory, Provider/model selection,
+permissions, and grants remain isolated per Project.
+
+### Retired current-product terms
+
+`Digital Employee` / `数字员工` remains only in the market-positioning phrase
+“digital-staff console / 数字员工控制台”. It is no longer a separate user-visible
+object between Role and Runtime. `Role Blueprint`, `Project Role Assignment`,
+daily `Installed Agent`, and a user-selectable `Harness` are also retired from
+the current 2.0 object model. See section L for migration.
+
+## E. Functional requirements
+
+### E1. Project and goal management (`PRJ`)
+
+- **PRJ-01:** Create a Project through a resumable flow:
+  business understanding -> broad automatic web research -> charter -> goal
+  hierarchy and output contracts -> team -> plan/work cycle ->
+  Provider/capabilities -> permissions/HITL -> triggers -> one-cycle
+  simulation -> structured launch preview -> confirm -> receipt.
+- **PRJ-02:** Research defaults to broad, high-quality coverage without asking
+  for permission for each ordinary web read. Sources, freshness, conflicts,
+  gaps, and rights remain visible.
+- **PRJ-03:** Research may use non-secret Project context, but never raw
+  credentials, SecretStore material, or third-party data the Owner lacks the
+  right to disclose. External text remains untrusted and cannot execute,
+  install, or expand permission.
+- **PRJ-04:** A Project remains inactive until the Owner confirms the exact
+  structured launch revision.
+- **PRJ-05:** Each goal records expected result, deliverables, cadence or due
+  date, responsible owner, success criteria, and evidence.
+- **PRJ-06:** Goal depth is main -> phase/quarter when useful -> month -> week
+  -> day/Tasks. The manager rolls lower-level plans forward as evidence and
+  conditions change.
+- **PRJ-07:** The manager is responsible for planning, assignment,
+  verification, acceptance preparation, and escalation, but does not guarantee
+  followers, GMV, revenue, or other uncontrollable outcomes.
+- **PRJ-08:** Today prioritizes due outputs, accepted results, exceptions,
+  missed work, and Owner decisions across Projects.
+- **PRJ-09:** A Project opens to an operating canvas and Project group
+  conversation, not a runtime inventory.
+- **PRJ-10:** Multi-Project scheduling explains ordering by Owner priority,
+  deadline, schedule, resource availability, and fairness.
+- **PRJ-11:** Archive stops new triggers first while preserving read, export,
+  and restore access.
+- **PRJ-12:** Permanent deletion requires an impact preview and restore point;
+  raw secrets never enter export.
+
+### E2. Role and Project Member management (`ROLE`)
+
+- **ROLE-01:** Only the base Project Manager Role is built in.
+- **ROLE-02:** The Assistant researches and proposes every other Role Runtime
+  Template with the complete contract listed in section D.
+- **ROLE-03:** A Template is reusable and versioned; a Project Member pins one
+  revision and adds Project-specific responsibility, subgoal, instructions,
+  Provider/model, grants, Memory, Context, and permission.
+- **ROLE-04:** The Owner explicitly chooses a Provider/model for every Member
+  during creation. The Assistant may recommend but must not bind silently.
+- **ROLE-05:** Member cards lead with goal, responsibility, current work, next
+  action, latest accepted deliverable, block/decision, cost basis, and
+  freshness. Engine detail is secondary.
+- **ROLE-06:** Process exit, retry, engine update, or quarantine preserves
+  Member identity, conversations, Memory, artifacts, attempts, and evidence.
+- **ROLE-07:** A persistent Member Runtime change creates a new version and
+  receives replay/simulation/comparison plus rollback. The manager may activate
+  it only inside the approved envelope.
+- **ROLE-08:** Global Role changes, team changes, primary-goal changes,
+  Provider/model changes, Tool/MCP changes, permission changes, and
+  external-action-rule changes require Owner confirmation.
+
+### E3. Project conversation and canvas (`CONV`, `CAN`)
+
+- **CONV-01:** Outside a Project the conversation identity is the global
+  Personal Assistant; inside a Project it is the Project group.
+- **CONV-02:** The group includes Owner, Project Manager, and Members. The
+  manager speaks by default. Members speak proactively only when `@` mentioned,
+  submitting a deliverable, handing off, blocked, or requesting a decision.
+- **CONV-03:** `@manager` can request status or delegation. `@member` can ask a
+  question or temporarily adjust the execution goal/path inside its approved
+  boundary.
+- **CONV-04:** A directive that changes work becomes a formal Task or plan/
+  Member revision. A message cannot be shadow authority.
+- **CONV-05:** Ordinary execution traces are collapsed behind the relevant
+  Task, Attempt, artifact, or evidence.
+- **CONV-06:** Full raw Project-group and Member-work conversations remain
+  locally inspectable even when Context packages contain only selected parts.
+- **CAN-01:** Routine operating reports use a stable default template that the
+  Project Manager may version for that Project.
+- **CAN-02:** For an ad-hoc question, the Assistant/manager interprets intent,
+  reads real Project results, and composes a temporary canvas from approved
+  typed components.
+- **CAN-03:** An ad-hoc canvas is not saved by default. The Owner may pin it or
+  save it as a Project template.
+- **CAN-04:** Canvas components cannot run generated code or `eval`, fetch
+  unapproved data, or invent values.
+- **CAN-05:** Goal state, acceptance state, failed/not-run work, Owner
+  decisions, data source, and freshness cannot be hidden by a template.
+
+### E4. Execution, long-running work, and multi-Agent (`EXEC`)
+
+- **EXEC-01:** The manager loop is observe -> plan -> delegate -> execute ->
+  independently verify -> summarize -> reflect -> adjust.
+- **EXEC-02:** A Task starts a disposable Agent process/Attempt from an exact
+  Member Runtime revision and bounded Context package.
+- **EXEC-03:** DSH is the hidden default Member execution engine. Pi is the
+  hidden Assistant engine. Neither has a daily native product UI.
+- **EXEC-04:** Engine exact version, health, qualification, update, and
+  rollback appear only for recovery or advanced diagnostics.
+- **EXEC-05:** A Member Task process may create bounded internal subagents with
+  explicit count, time, cost, and permission limits. Results return to the
+  Member; subagents gain no Project identity or long-term Memory.
+- **EXEC-06:** Project Members collaborate through Tasks, artifacts, and
+  explicit handoffs.
+- **EXEC-07:** Agent/manager self-report, process exit, Provider success, Tool
+  success, or connector response is insufficient for completion.
+- **EXEC-08:** Triggers include manual, schedule, accepted artifact,
+  Project-state change, qualified external event, and testable data condition.
+- **EXEC-09:** The same Routine does not overlap; at most the latest pending
+  occurrence is queued, while missed/coalesced facts remain visible.
+- **EXEC-10:** Offline resume is risk-based. Expired external content is not
+  silently backfilled. Windows host shutdown means no execution.
+- **EXEC-11:** A new Owner instruction creates a version. It applies at a safe
+  point through continue, pause, or restart; it is never silently injected into
+  a running prompt.
+- **EXEC-12:** External unknown outcomes reconcile before retry; blind retry is
+  prohibited.
+
+### E5. Reflection and feedback (`REFL`)
+
+- **REFL-01:** Reflection occurs at Task, daily, cycle/weekly, and incident
+  levels.
+- **REFL-02:** A one-off Task strategy adjustment may apply directly inside
+  the Task boundary; persistent Member changes follow `ROLE-07`.
+- **REFL-03:** Accept, reject, edit, and rate actions become Project feedback
+  evidence for later Task planning.
+- **REFL-04:** Repeated stable preferences may produce a Member or global Role
+  revision proposal; one feedback event never silently changes global
+  behavior.
+- **REFL-05:** A comparable later cycle should expose whether the revision
+  reduced the prior goal/output gap.
+
+### E6. Knowledge, Context, and Memory (`KNOW`)
+
+- **KNOW-01:** Personal owns the local Project group archive, Member work
+  conversations, admitted Memory, and Obsidian-compatible Markdown Vault.
+- **KNOW-02:** Personal does not embed, distribute, or require the proprietary
+  Obsidian application.
+- **KNOW-03:** Ordinary Vault knowledge may be written automatically with
+  author, source, and version. Configuration-like edits produce candidates.
+- **KNOW-04:** Ordinary chat is not automatically Memory. Explicit directives
+  become revisions; “remember” or stable verified facts create Memory
+  candidates.
+- **KNOW-05:** Memory supports inspect, correct, promote, and forget. Promotion
+  across Projects requires Owner confirmation.
+- **KNOW-06:** Summaries remain provenance-linked retrieval aids; they do not
+  prove completion or become Memory automatically.
+- **KNOW-07:** Source rights, parse/index state, conflicts, exclusions,
+  freshness, and redaction loss remain visible.
+
+### E7. Model Connections and cost (`MODEL`)
+
+- **MODEL-01:** Settings exposes **Model Connections**, not subscription,
+  billing, invoice, or plan management.
+- **MODEL-02:** Mainstream Providers use quick templates where the Owner enters
+  a key. Advanced setup accepts custom URL, compatibility mode, key, and model.
+- **MODEL-03:** Each Member creation requires explicit Provider/model
+  selection; recommendations never become silent bindings.
+- **MODEL-04:** Raw secret material enters only an approved SecretStore through
+  a non-logging path and never appears in DOM, URL, chat, Vault, ordinary
+  config, runtime environment, SQLite, logs, evidence, or export.
+- **MODEL-05:** Usage/cost is labelled actual, estimated, or unknown with
+  source and period. Unknown never renders as zero.
+- **MODEL-06:** Personal 2.0 provides warnings and visibility, not a
+  product-budget threshold that automatically blocks work. Provider quota,
+  credential failure, or unavailability may still cause an external failure.
+- **MODEL-07:** Existing work does not switch endpoint, model, or credential
+  silently.
+
+### E8. Skill and MCP capability acquisition (`CAP`)
+
+- **CAP-01:** The Assistant may discover Skills and MCP servers through broad
+  web research when a Project needs a capability.
+- **CAP-02:** A Skill is reviewed for source, exact version, license, hidden
+  instructions, prompt injection, and file/network/command intent before
+  automatic installation.
+- **CAP-03:** MCP receives all Skill checks plus dependency, executable-code,
+  network, Secret, tool-permission, and supply-chain review.
+- **CAP-04:** First MCP installation or any permission expansion requires
+  Owner confirmation of exact version and permissions.
+- **CAP-05:** A globally acquired artifact can be reused, but every
+  Project/Member receives a separate least-privilege grant.
+- **CAP-06:** Versions are pinned. Updates require review, compatibility
+  testing, and rollback.
+- **CAP-07:** Installation or connection grants no filesystem, network,
+  command, model, secret, Tool, Context, Memory, or authority access by
+  implication.
+- **CAP-08:** A general marketplace, MCP-family console, Agent store, or
+  Harness store is outside 2.0.
+
+### E9. X/Twitter hero loop (`X`)
+
+- **X-01:** The hero loop is research -> topic plan -> draft/media artifacts
+  -> publication package -> applicable confirmation -> qualified connector
+  dispatch -> receipt -> metric/comment readback -> manager reflection -> next
+  cycle.
+- **X-02:** The Project records account position, audience, allowed formats,
+  cadence, success evidence, source-rights rules, and external-action policy.
+- **X-03:** Publishing may run inside the launch-approved policy; exceptions,
+  scope drift, changed targets, or high-risk conditions escalate.
+- **X-04:** Comment-reply suggestions follow the applicable external-action
+  policy.
+- **X-05:** Manual publication is a degraded fallback, not the primary
+  acceptance route.
+- **X-06:** Fingerprint, CAPTCHA, and anti-abuse evasion, blind retry, and
+  unlicensed copying are prohibited.
+- **X-07:** Receipt and metric readback are separate facts. Neither guarantees
+  followers, engagement, revenue, or another business result.
+- **X-08:** X connector behavior is **Requires-backend +
+  Requires-environment** until independently qualified.
+
+## F. Authority, HITL, and security requirements
+
+The immutable boundary remains
+[A1–A8](../../../docs/governance/AXIOMS.md):
+
+- the Rust daemon is the only authority writer;
+- probabilistic components produce candidates/observations;
+- external mutation persists Intent/Effect before dispatch and reconciles
+  unknown outcomes under fencing;
+- independent verification is required for completion;
+- secrets remain in approved Secret Stores;
+- contracts and negatives are not rewritten to fit implementation;
+- evidence is not promoted outside its campaign;
+- unknown concurrent work is protected.
+
+### Authority distribution
+
+| Actor | May do | May not do |
+|---|---|---|
+| Owner | confirm/reject/narrow consequential revisions and define the autonomy envelope | bypass secret, authority, evidence, or external-policy constraints |
+| Personal Assistant | see available product facts, explain, research, recommend, draft, and initiate every management flow | write authority, bind silently, receive raw secret, or declare completion |
+| Project Manager | plan, delegate, verify, summarize, reflect, and adjust inside the approved envelope | change boundary objects listed in `ROLE-08` without Owner confirmation |
+| Member / Agent process | execute the admitted Task and return artifacts/observations | expand scope, self-admit Memory/capabilities, or accept its own work |
+| UI / canvas | render projections and submit candidates | become an authority store or hide mandatory risk/evidence facts |
+
+### HITL policy
+
+Project launch includes one explicit **autonomy-envelope approval**. Low-risk,
+reversible, internal work may then proceed without micro-confirmations.
+Boundary-crossing and high-risk external work uses:
+
+```text
+candidate
+  -> daemon-issued structured preview
+  -> Owner confirm / edit / narrow / reject
+  -> admitted revision or persisted Intent/Effect
+  -> independently grounded receipt
+```
+
+X publication may operate within an approved external-action policy; exceptions
+escalate. Permanent deletion, new/expanded MCP permissions, primary-goal/team/
+Provider/model/Tool/MCP/permission/external-rule changes, and other
+consequential boundary changes require the applicable preview and confirmation.
+A stale preview cannot be confirmed.
+
+### Security requirements
+
+- External research text is untrusted data, never executable instruction.
+- Capability installation and grants are separate; global acquisition does not
+  create a Project grant.
+- Raw credentials never reach Assistant, Member, DSH, Pi, MCP metadata,
+  Context, Memory, Conversation, canvas, DOM, URL, logs, evidence, or exports.
+- No UI control claims an unavailable backend action.
+- Cross-Project retrieval, Memory promotion, capability grants, Provider
+  bindings, and Member conversations remain isolated by default.
+- External Effect uncertainty blocks blind redispatch.
+
+## G. Context compression and Memory requirements
+
+Full raw conversation and artifact sources are retained under their actual
+retention policy. Each Agent process receives a Context package bounded by the
+selected model's context limit in this priority order:
+
+```text
+current Task contract
+  -> fixed decisions
+  -> relevant source and artifact excerpts
+  -> provenance-linked summaries
+  -> older narrative
+```
+
+When the package is too large, Personal reduces older summaries and narrative
+first. It must not discard the current Task contract or fixed decisions.
+Omissions, truncation, stale/conflicting sources, and redaction losses remain
+visible.
+
+Compression:
+
+- does not delete or rewrite the source archive;
+- does not replace Project, Task, permission, or acceptance authority;
+- does not prove completion;
+- does not automatically admit Memory;
+- does not allow Pi, DSH, a Member, or a retrieval engine to query all raw
+  archives outside authorized scope.
+
+Memory candidates require source/provenance, scope, purpose, retention, and
+conflict treatment. Stable verified facts or explicit “remember” intent can
+produce candidates. Inspect, correct, promote, and forget preserve lineage;
+forget creates a durable tombstone against index/cache resurrection.
+
+## H. State, lifecycle, and recovery requirements
+
+Every applicable surface distinguishes:
+
+| State | Required answer |
+|---|---|
+| empty | why no object exists and the first valuable action |
+| loading/researching | exact work/source, retained state, partial results, and safe-leave behavior |
+| partial | available facts, missing source/facet, and coverage |
+| stale | last-known fact, age, unsafe actions, and refresh/re-preview path |
+| waiting-owner | exact decision/input, consequence, and retained work |
+| permission | exact scope, reason, benefit, risk, and deny/narrow/grant paths |
+| error | failed stage/object, retained work, and safe retry/edit/escalation |
+| unknown/reconciling | what cannot be concluded and why retry/success is blocked |
+| offline | host/network/dependency state and retained work |
+| queued/running | current durable step, responsibility, artifacts, and real controls |
+| missed/coalesced | occurrence, reason, denominator, expiry, and catch-up choice |
+| success | changed object, receipt/evidence, and next valuable action |
+| archived | stopped triggers plus read/export/restore/delete paths |
+| Requires-backend | absent capability, dependency, and no fake action |
+| Requires-environment | unexecuted qualification need and no support claim |
+
+Same-Routine overlap is prohibited by default. Multiple Projects share
+resources through an explainable queue. Host shutdown means work stops; no
+cloud-like 24/7 claim is implied.
+
+Project lifecycle is create/confirm -> active -> pause/archive -> restore or
+permanent-delete preview. Archive precedes deletion. A same-disk restore point
+is not disaster backup.
+
+Agent-process lifecycle is separate: start -> observe -> stop/fail/exit ->
+preserve Attempt -> reconcile Effects -> retry/new Attempt when safe. None of
+those transitions deletes the Member definition, archive, Memory, or evidence.
+
+## I. Success metrics and countermetrics
+
+These are measurement targets, not current results:
+
+### Product success metrics
+
+- time to first active Project;
+- activation without needing to understand Agent/runtime concepts;
+- share of due deliverables that arrive on time, open correctly, and have a
+  clear verification/acceptance state;
+- Owner intervention burden and the clarity/consequence of each intervention;
+- detection rate for missed, failed, stale, partial, and unknown work;
+- time from exception detection to a safe recovery decision;
+- reduction in comparable goal/output deviation after a manager revision;
+- continuity across repeated daily/weekly/cycle operation;
+- time from an ad-hoc question to a source-linked useful canvas;
+- rate at which external actions carry the required preview and receipt.
+
+### Countermetrics
+
+- unintended or wrong-target publication;
+- false completion;
+- authority or permission expansion outside the approved envelope;
+- Memory poisoning or one-off feedback leaking into global behavior;
+- cross-Project Context, Memory, Provider, or capability leakage;
+- invented canvas values or hidden failed/not-run work;
+- unknown cost rendered as zero;
+- silent Provider/model binding;
+- blind retry after unknown external outcome;
+- loss of Member identity, conversation, or evidence after process failure.
+
+Targets and denominators remain gaps until research and executable measurement
+plans define them.
+
+## J. Out of scope
+
+- multi-user accounts, human-team collaboration, RBAC, enterprise approval,
+  multi-tenancy, or HA;
+- cloud 24/7 authority, native mobile, cross-device sync, pairing, or remote
+  control;
+- Agent/Harness installation or marketplace, alternative supported runtimes,
+  native DSH/Pi UI, or native session synchronization;
+- consumer subscription, billing, invoice, or plan management;
+- a generic no-code workflow builder or arbitrary generated-code canvas;
+- a broad MCP marketplace/family console;
+- all-industry connectors or all-platform publishing;
+- unsupervised high-risk actions;
+- guaranteed followers, GMV, revenue, quality, or other business outcomes;
+- fingerprint/CAPTCHA/anti-abuse evasion, blind retry, or unlicensed copying;
+- automatic Memory capture from every chat or direct third-party Memory
+  authority;
+- a claim that multi-Agent delegation improves outcomes;
+- disaster backup from same-disk restore points;
+- architecture implementation design or task decomposition in this document.
+
+## K. Evidence, assumptions, and gaps
+
+### Evidence present
+
+- confirmed owner requirements from the completed `/grill-me` interview;
+- current repository capability and product-document audit;
+- dated informative OSS reference snapshots and verified official pages in
+  [oss-reference-matrix.md](oss-reference-matrix.md).
+
+### Evidence absent
+
+- multiple ICP interviews, observed workflow frequency, switching behavior,
+  analytics, retention, willingness to pay, and pricing evidence;
+- executed first-run, returning-use, recovery, keyboard, accessibility, and
+  comprehension studies;
+- qualified Windows host, DSH/Pi packaging, Provider/model matrix, Skill/MCP
+  supply chain, or X connector evidence;
+- measurable multi-Agent, manager-revision, or business-outcome benefit;
+- calibrated success-metric targets and denominators.
+
+### Assumptions to validate
+
+- OPC owners prefer Project group conversation plus canvas over an Agent or
+  workflow inventory;
+- one launch-time autonomy envelope reduces burden without reducing control;
+- the Role Template / Member Runtime distinction is understandable in business
+  language;
+- X content operations provide a representative first hero loop;
+- source-linked ad-hoc canvas composition answers unplanned questions better
+  than fixed dashboards.
+
+### Reconciliation gaps
+
+- **Pending architecture reconciliation:** current architecture and ADR
+  documents still contain 2026-08-27 object names, top-level Team/Inbox,
+  Installed Agents, budget-stop, subscription, and deferred-MCP assumptions.
+- **Pending formal-plan reconciliation:** registered P11 acceptance and task
+  descriptions use the prior denominator, routes, object model, and task IDs.
+- **Pending handbook reconciliation:** generated bilingual handbook pages have
+  not been synchronized because this delivery is expressly limited to product
+  and prototype-design documents.
+- **Requires-backend:** all new Project/Member/conversation/canvas/reflection/
+  acquisition behavior needs implementation decisions.
+- **Requires-environment:** Windows-native operation and X/Provider/DSH/MCP
+  qualification need supported, preregistered evidence routes.
+
+The owner decisions themselves are closed for this baseline; these gaps are
+validation and downstream-reconciliation work, not questions to re-ask in this
+document.
+
+## L. Explicit supersession map from the 2026-08-27 OPC baseline
+
+The frozen sources remain in
+`personal/docs/product/legacy-agent-stewardship-20260827/` and
+`clients/docs/design/legacy-control-plane-20260827/`. Current product text uses
+the following replacements:
+
+| 2026-08-27 term/surface | 2026-08-28 current product semantic | Disposition |
+|---|---|---|
+| Today / Projects / **Team** / Knowledge / **Inbox** | **Today / Projects / Knowledge**, Settings at bottom | Team and Inbox cease to be first-level anchors; members, approvals, exceptions, and attention open contextually |
+| right single-recipient Assistant/employee rail | global Personal Assistant outside a Project; Owner/manager/Members group conversation inside a Project | individual Member work conversations remain source records and contextual drilldowns, not the primary shell model |
+| Role Blueprint -> Assignment -> Digital Employee -> Runtime | Role Runtime Template -> Project Member Runtime definition -> Task -> Agent process/Attempt | Blueprint, Assignment, and Digital Employee are retired as separate current user objects |
+| Digital Employee as durable object | Project Member Runtime definition | “digital staff / 数字员工” remains positioning language only |
+| Runtime as employee identity | disposable Agent process/Attempt started from a Member Runtime revision | process exit never deletes the Member |
+| Settings > Installed Agents | hidden managed DSH/Pi engines; advanced diagnostics only | no Agent/Harness store, alternative installation, or daily engine destination |
+| Account Hub with subscription/account/billing | Settings > Model Connections | consumer subscription, invoices, plans, and product billing are removed |
+| global -> Project -> employee -> Task silent precedence | explicit Provider/model choice when each Member is created; versioned changes only | recommendations do not silently bind or rebind |
+| Project/member/Task product budget automatically stops dispatch | source-labelled actual/estimated/unknown cost plus warnings | Provider quota/unavailability can still fail externally; Personal budget threshold does not auto-block in 2.0 |
+| MCP fully deferred behind an advanced family console | Assistant-led Skill/MCP discovery, review, exact-version acquisition, and per-Project/Member grants | broad marketplace/family console remains out of scope |
+| optional source-backed setup research | broad automatic high-quality web research by default | ordinary research does not prompt per request; external content remains untrusted |
+| manager/employee free chat as interaction | Project group conversation with formal Task/revision translation | no shadow authority; proactive speech is bounded |
+| fixed dashboard/project briefing | stable Project report template plus typed temporary ad-hoc canvases | temporary by default; pin/save explicitly; mandatory evidence facts cannot be hidden |
+| generic manual/schedule/qualified-event triggers | manual, schedule, accepted-artifact, Project-state, qualified external-event, and testable-data-condition triggers | same Routine no-overlap and queue-latest remain |
+| one generic reflection | Task, daily, cycle/weekly, and incident reflection | persistent Member changes are versioned, compared, and rollback-capable |
+| 15-scene prototype denominator as current product authority | requirement-family and scenario coverage in the current OPC design corpus | formal acceptance denominator is pending plan reconciliation; no old task ID is current product authority |
+| pre-overwrite V2 overlay conversation / stacked columns | locked left / center / right shell; conversation always the third column; narrow canvas scrolls horizontally | no overlay “open conversation”; Team/Inbox stay out of L1; 2.1 mobile/pairing/cloud 24/7 chrome is not drawn |
+| chat Approve / “Don’t ask again” | HITL announced in chat and linked to the center-canvas preview; `@` only into the unsent draft | chat cannot approve, publish, install, or grant silence |
+| Today KPI card wall / missing CEO loop | one decision packet plus four exception swimlanes under a visible Ingest → Decide → Authorize → Execute → Verify → Report rail | Operations defaults to Candidate → Intent persisted → Fence → Execute → Independent verify → Receipt; Knowledge shows why each fragment was selected |
+| superseded external source-review prototype, then pre-overwrite V2 | [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx) | same V2 files (not a v3); Owner accepted the 2026-08-28 competitive-informed overwrite; source/static checks passed; Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout remain `not-run`; Owner approval is not usability, accessibility, backend, Gate, release, qualification, or acceptance |
+
+Accepted 2026-08-27 ADRs and formal-plan records are not rewritten by this map.
+They are dated inputs awaiting the explicit downstream reconciliation named in
+section K.
+
+## M. Requirement trace matrix
+
+| Requirement family | Canonical Personal product documents | OPC interaction-design documents |
+|---|---|---|
+| Status/evidence boundary | this document §A/K; [README](README.md); [scope](personal-2.0-scope.md) | [README](../../../clients/docs/design/opc-2.0/README.md); [11 backend matrix](../../../clients/docs/design/opc-2.0/11-design-to-code-and-backend-matrix.md); [12 review](../../../clients/docs/design/opc-2.0/12-scenario-and-heuristic-review.md) |
+| Problem/JTBD/personas | this document §B; [product design](product-design.md) | [01 product model and JTBD](../../../clients/docs/design/opc-2.0/01-product-model-and-jtbd.md) |
+| Project/goals/setup (`PRJ`) | [product design](product-design.md); [scope](personal-2.0-scope.md); [user journeys](user-journeys.md) | [03 Today/Projects](../../../clients/docs/design/opc-2.0/03-today-projects-and-briefing.md); [04 setup](../../../clients/docs/design/opc-2.0/04-guided-project-setup.md) |
+| Role/Member (`ROLE`) | [OPC product model](opc-product-model.md); [agent integration](agent-integration-and-conversations.md) | [05 Members/Roles/conversations](../../../clients/docs/design/opc-2.0/05-team-roles-employees-and-conversations.md) |
+| Conversation/canvas (`CONV`, `CAN`) | [product design](product-design.md); [user journeys](user-journeys.md); [Web UI](web-ui-design.md) | [02 IA/shell](../../../clients/docs/design/opc-2.0/02-information-architecture-and-app-shell.md); [03 Project canvas](../../../clients/docs/design/opc-2.0/03-today-projects-and-briefing.md); [10 components/flows](../../../clients/docs/design/opc-2.0/10-component-map-and-prototype-flows.md) |
+| Execution/long-running/multi-Agent (`EXEC`) | [long-running operations](long-running-operations.md); [OPC product model](opc-product-model.md) | [07 attention/recovery](../../../clients/docs/design/opc-2.0/07-inbox-approval-and-recovery.md); [10 components/flows](../../../clients/docs/design/opc-2.0/10-component-map-and-prototype-flows.md) |
+| Reflection/feedback (`REFL`) | [product design](product-design.md); [long-running operations](long-running-operations.md); [knowledge/memory](knowledge-memory-vault.md) | [03 Project canvas](../../../clients/docs/design/opc-2.0/03-today-projects-and-briefing.md); [05 Members/Roles](../../../clients/docs/design/opc-2.0/05-team-roles-employees-and-conversations.md) |
+| Knowledge/Context/Memory (`KNOW`) | [knowledge, Memory, Vault](knowledge-memory-vault.md); [cognitive-resource model](cognitive-resource-model.md) | [06 Knowledge/Vault/Memory](../../../clients/docs/design/opc-2.0/06-knowledge-vault-and-memory.md) |
+| Model Connections/cost (`MODEL`) | [Model Connections](account-hub.md); [Provider Control Plane](provider-control-plane.md) | [08 Settings/model connections](../../../clients/docs/design/opc-2.0/08-settings-agents-providers-and-usage.md) |
+| Skill/MCP acquisition (`CAP`) | [MCP capability governance](mcp-resource-family.md); [resource model](cognitive-resource-model.md); [Resource Manager](resource-manager-design.md) | [04 setup](../../../clients/docs/design/opc-2.0/04-guided-project-setup.md); [08 Settings/capabilities](../../../clients/docs/design/opc-2.0/08-settings-agents-providers-and-usage.md) |
+| X hero loop (`X`) | [product design](product-design.md); [user journeys](user-journeys.md); [scope](personal-2.0-scope.md) | [03 Project canvas](../../../clients/docs/design/opc-2.0/03-today-projects-and-briefing.md); [07 external action/recovery](../../../clients/docs/design/opc-2.0/07-inbox-approval-and-recovery.md); [12 scenarios](../../../clients/docs/design/opc-2.0/12-scenario-and-heuristic-review.md) |
+| Authority/HITL/security | this document §F; [OPC product model](opc-product-model.md); [Provider Control Plane](provider-control-plane.md) | [07 attention/recovery](../../../clients/docs/design/opc-2.0/07-inbox-approval-and-recovery.md); [09 state/accessibility](../../../clients/docs/design/opc-2.0/09-state-accessibility-and-visual-system.md); [11 backend matrix](../../../clients/docs/design/opc-2.0/11-design-to-code-and-backend-matrix.md) |
+| Context compression/Memory | this document §G; [knowledge, Memory, Vault](knowledge-memory-vault.md); [agent integration](agent-integration-and-conversations.md) | [06 Knowledge/Vault/Memory](../../../clients/docs/design/opc-2.0/06-knowledge-vault-and-memory.md) |
+| State/recovery/lifecycle | this document §H; [long-running operations](long-running-operations.md); [Web UI](web-ui-design.md) | [07 attention/recovery](../../../clients/docs/design/opc-2.0/07-inbox-approval-and-recovery.md); [09 state/accessibility](../../../clients/docs/design/opc-2.0/09-state-accessibility-and-visual-system.md); [12 scenarios](../../../clients/docs/design/opc-2.0/12-scenario-and-heuristic-review.md) |
+| Metrics/countermetrics | this document §I; [product design](product-design.md) | [01 product model/JTBD](../../../clients/docs/design/opc-2.0/01-product-model-and-jtbd.md); [12 scenarios](../../../clients/docs/design/opc-2.0/12-scenario-and-heuristic-review.md) |
+| Supersession/migration | this document §L; [README](README.md) | [README](../../../clients/docs/design/opc-2.0/README.md); [02 IA/shell](../../../clients/docs/design/opc-2.0/02-information-architecture-and-app-shell.md) |
+| Preserved Linux/current foundations and research provenance | [Linux 1.0 scope](linux-1.0-scope.md); [Provider Control Plane](provider-control-plane.md); [Resource Manager](resource-manager-design.md); [cognitive-resource model](cognitive-resource-model.md); [OSS reference matrix](oss-reference-matrix.md) | [11 backend matrix](../../../clients/docs/design/opc-2.0/11-design-to-code-and-backend-matrix.md); [12 review](../../../clients/docs/design/opc-2.0/12-scenario-and-heuristic-review.md) |

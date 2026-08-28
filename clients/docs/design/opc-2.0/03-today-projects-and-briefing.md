@@ -1,91 +1,129 @@
-# 03 — Today, Projects, and Project briefing
+# 03 — Today, Projects, and the operating canvas
 
-## Today: attention, not analytics
+- Requirements:
+  [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
+- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
+  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 
-Today answers:
+## Priority rule
 
-1. what is planned today;
-2. what needs the Owner;
-3. which Project/employee changed state;
-4. what was missed, blocked, stale, or unknown;
-5. which result was independently verified;
-6. what it cost or why cost is unavailable;
-7. what action is next.
+Every surface orders information as:
 
-It uses a priority narrative and compact rows. Generic KPI cards, decorative
-charts, welcome heroes, and undifferentiated activity are rejected. A metric
-appears only when it changes a decision and declares source/denominator.
+1. goal, expected result, due/openable deliverable, acceptance, and evidence;
+2. operational state, exception, missed work, and Owner decision;
+3. configuration, runtime, and diagnostics.
 
-## Project cards
+## Today: decision packet plus four exception swimlanes
 
-Each card shows:
+Today opens with **one decision packet**, then four exception swimlanes. It is
+not a KPI card wall.
 
-- Project goal and current phase;
-- current manager;
-- health reason in plain language;
-- next planned work;
-- Inbox count/reason;
-- latest verified result;
-- actual/unknown spend basis;
-- freshness/offline/missed indicator.
+The decision packet states:
 
-Card selection opens the briefing while preserving Today context.
+- consequence of acting or waiting;
+- reversibility / compensation;
+- alternatives;
+- kernel truth (what the daemon already persisted);
+- **why option A is first**.
 
-## Projects master/detail
+Provenance chips are Observed / Proposed / Governed / Verified. They describe
+authority relationship, not confidence.
 
-The list supports search, status, next-decision, manager, and recency filters.
-The detail defaults to the Project briefing:
+The four swimlanes, in this order, are:
 
-| Briefing section | Required answer |
+1. **Needs you** — which Owner decision is due (for example Package A review;
+   planned is not published);
+2. **Can continue** — which work proceeds without the Owner now;
+3. **Unknown** — which actuals, Effects, or verification are missing; actual
+   unknown is never shown as zero;
+4. **Missed** — which Routine occurrences were missed or coalesced.
+
+Member activity is Working / Queued / Waiting; queued is not running. It is a
+table, not three identical staff cards. Generic KPI tiles, decorative charts,
+welcome heroes, raw execution feeds, and false “all clear” states are rejected.
+A metric appears only with source, freshness, denominator, and decision
+relevance.
+
+## Project cards and list
+
+Each Project card leads with main/period goal and next expected deliverable,
+then shows current manager, state reason, latest accepted result, exception or
+decision, actual/estimated/unknown cost basis, and freshness. Selection opens
+the Project while preserving Today filters and scroll.
+
+Projects supports search plus status, due result, Owner-decision, manager, and
+recency filters. Empty, partial, archived, and unavailable results remain
+distinct.
+
+## Stable Project operating report
+
+A Project opens to a versioned operating-report canvas in the center column,
+with the group conversation always in the right column:
+
+| Region | Required answer |
 |---|---|
-| Goal | what outcome and metric were confirmed |
-| Manager brief | what changed, why, and what is uncertain |
-| Today | planned/active/queued/missed work |
-| Team | responsibility, state, next action |
-| Needs Owner | approvals, input, permissions, budget |
-| Results | artifacts, external receipts, verified evidence |
-| Cost | Project/member/Task basis and unknowns |
-| Timeline | current plan revision and key milestones |
+| Goals and outputs | main/period goal, expected results, due deliverables, success criteria |
+| Manager summary | what changed, why, what remains uncertain, next adjustment |
+| Current work | Working / Queued / Waiting Members and Tasks; queued is not running |
+| Results | openable artifacts, acceptance, evidence, receipt, source, freshness; Package A is a thread preview plus acceptance, planned not published |
+| Needs Owner | exact decision/input/permission, consequence, deadline, choices |
+| Members | responsibility, current work, next action, latest accepted result |
+| Cost | actual/estimated/unknown, source, period, warning |
+| Plan and reflection | current revision, milestones, comparable gap, rollback option |
 
-Advanced drilldown reveals Goal/Plan/Routine/Task/Attempt/Effect/Evidence. A
-Task row preserves every Attempt; retry/fork never replaces the failed one.
-Agent self-report and process exit are labelled Observed, not Verified.
+The manager may version this Project template. A template cannot hide a failed
+or not-run item, Owner decision, stale source, or unknown outcome.
 
-## Manager revision
+## Temporary ad-hoc canvases
 
-Changing approved subgoal, Task order/frequency, or bounded responsibility may
-run under manager policy. Primary goal, team, budget, Provider, Tool,
-permission, or external rule opens a structured diff:
+For an unplanned question, the Assistant or manager:
 
-- current vs proposed revision;
-- source/reason and uncertainty;
-- affected employees/Tasks/Routines;
-- permission/budget/external consequences;
-- reversibility and rollback/compensation truth;
-- confirm, edit, narrow, or reject.
+1. interprets the question and identifies authoritative Project sources;
+2. reads real goals, artifacts, evidence, decisions, timeline, organization,
+   and cost readings;
+3. composes approved typed components;
+4. labels source, freshness, omissions, conflicts, and unknowns;
+5. returns a temporary canvas.
 
-A stale revision disables confirmation and offers re-preview with edits
-preserved.
+The canvas is not saved by default. The Owner may pin it or save it as a
+Project template. It cannot execute generated code or `eval`, perform
+unapproved fetches, invent values, or become authority.
 
-## States
+## Work and manager revision drilldown
 
-Today and Projects cover:
+Advanced drilldown reveals Goal -> Plan revision -> Routine/Task -> Attempt ->
+Intent/Effect/Artifact/Evidence. Every Attempt is retained; retry or restart
+creates a new one. Agent/manager prose, Provider success, Tool success, engine
+checkpoint, and process exit remain observations.
 
-- empty: create/import sample Project, with no fake activity;
-- loading: stable shell and labelled sources;
-- partial/stale: last-known safe facts and missing coverage;
-- permission: exact Project/folder/Provider scope;
-- error/unknown: preserved list/context and recovery;
-- offline/missed: host/dependency state and catch-up decisions;
-- success: receipt/evidence and next action;
-- archived: read/export/restore/delete paths.
+Inside the autonomy envelope, the manager may adjust subgoals, Tasks, order,
+frequency, and bounded Member responsibility. A primary-goal, team,
+Provider/model, Tool/MCP, permission, global Role, or external-action-rule
+change opens a daemon-issued diff with affected work, consequences,
+reversibility, and edit/narrow/deny/confirm. A stale preview must be regenerated.
 
-## Prototype scenes
+## Owner-approved prototype source coverage
 
-The Canvas prototype must switch among:
+The owner-accepted competitive-informed v2 source is the current interaction
+baseline for:
 
-1. Today with missed work and a budget approval;
-2. active Project briefing with one verified result and one unknown Effect;
-3. Project list empty/loading/partial;
-4. archived Project;
-5. Task/Attempt detail labelled `Requires-backend`.
+- visible CEO loop: Ingest → Decide → Authorize → Execute → Verify → Report;
+- Today decision packet plus four exception swimlanes (Needs you / Can
+  continue / Unknown / Missed); estimated cost plus actual unknown never shown
+  as zero; Working / Queued / Waiting as a table, not a staff-card mosaic;
+- Project stable operating report first, then the X loop;
+- Project publish preview as the full AUTONOMY packet on the canvas; no
+  Confirm in chat; Package A thread preview plus acceptance; planned is not
+  published;
+- right-column group conversation with HITL announced and linked to the center
+  preview; no chat Approve; no “Don’t ask again”;
+- temporary ad-hoc canvas with sources plus pin/save-template options;
+- Project empty/loading/partial/stale/archived states;
+- Task/Attempt detail labelled `Requires-backend` where no backend exists;
+- cost warning where unknown remains unknown and work is not auto-stopped.

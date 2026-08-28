@@ -1,8 +1,25 @@
 # CognitiveOS Personal product design
 
 - Status: canonical stable product-design index
-- Current product direction:
+- Current requirements:
+  [Personal 2.0 OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Prior accepted decision:
   [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
+- Product-direction amendment: owner-confirmed `/grill-me` design tree,
+  2026-08-28
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
+  Authorize → Execute → Verify → Report), Today decision packet plus four
+  exception swimlanes, canvas-only HITL, and daemon authority path. This is
+  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Cursor-openable copy (IDE detection path; not a second product baseline):
+  [personal-20-ai-ceo-e2e-optimized-v2](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 - Current-status owner:
   [PROGRESS.md](../../../docs/plan/PROGRESS.md) `Current snapshot`
 - Task/Gate owner:
@@ -16,20 +33,49 @@ results.
 
 ## Current direction
 
-Personal 2.0 is a **Windows-first, owner-local operating console for one-person
-companies and individual developers**. One human Owner creates governed
-Projects and long-lived digital employees in business language, supervises
-work and cost, approves consequential actions, and verifies outcomes. The
-primary IA is:
+Personal 2.0 is a **Windows-first, owner-local, AI-native digital-staff
+console for one-person companies and individual developers**. One human Owner
+creates governed Projects in business language, supervises Project Members,
+opens real deliverables, approves consequential actions, and verifies outcomes
+without first learning Agent infrastructure.
 
-**Today / Projects / Team / Knowledge / Inbox**, with **Settings** at the
-bottom and a global right-side **Personal Assistant**.
+The stable first-level anchors are **Today / Projects / Knowledge**, with
+**Settings** at the bottom. Team and Inbox are not first-level destinations;
+rosters, approvals, exceptions, and attention open in Project or Today
+context. The desktop shell is a locked left / center / right layout: navigation,
+operating canvas, and conversation. Conversation is always the third column;
+there is no overlay “open conversation” control. A narrow canvas scrolls
+horizontally and does not stack the three columns. Native mobile, pairing, and
+cloud 24/7 chrome are 2.1 and are not drawn as current product chrome.
+
+Outside a Project the conversational identity is the global **Personal
+Assistant**; inside a Project it is the Owner, Project Manager, and Members'
+**Project group conversation**. HITL is announced in chat and confirmed on the
+center canvas preview; chat has no Approve control and no “Don’t ask again”
+grant. `@` inserts only into the unsent draft.
+
+The workbench exposes a visible CEO loop:
+**Ingest → Decide → Authorize → Execute → Verify → Report**. Today leads with
+one decision packet (consequence, reversibility, alternatives, kernel truth,
+and why option A is first) plus four exception swimlanes, not a KPI card wall.
+Operations defaults to
+**Candidate → Intent persisted → Fence → Execute → Independent verify →
+Receipt**. Project publish preview is the full AUTONOMY packet on the canvas.
+Knowledge Context shows why each fragment was selected; Memory is not silent
+auto-ingest. Secrets use SecretStore takeover and never appear in chat. The
+prototype is an interactive spec, not daemon `/ui/`.
+
+A reusable **Role Runtime Template** becomes a Project-specific, long-lived
+**Project Member Runtime definition**. Each Task execution starts a disposable
+**Agent process/Attempt**. “Digital staff / 数字员工” remains positioning
+language, not an additional product object.
 
 The direction is approved product semantics, not shipped capability. Most OPC
 surfaces are **Requires-backend** and Windows remains unqualified. The delivered
 Linux 1.0 product, current daemon-served `/ui/`, Provider Control Plane,
-Resource Manager, Pi qualification, and dsh Path B are preserved current facts
-only within their recorded boundaries.
+Resource Manager, Pi qualification, and dsh Path B are preserved factual
+foundations only within their recorded boundaries. They are not the 2.0
+product organization.
 
 ## Status vocabulary
 
@@ -50,9 +96,10 @@ English product documents are canonical where a bilingual pair exists.
 
 | Document | Responsibility |
 |---|---|
-| [Product design / PRD](product-design.md) | problem evidence, target user, outcome, P0 requirements, success measures, exclusions, and non-claims |
+| [Requirements analysis](personal-2.0-opc-requirements-analysis.md) | complete owner-confirmed problem, JTBD, personas, principles, requirements, authority, metrics, supersession, and traceability |
+| [Product design / PRD](product-design.md) | stable product thesis, priority, experience model, success measures, exclusions, and non-claims |
 | [Personal 2.0 scope](personal-2.0-scope.md) | exact Windows-local inclusion, capability ledger, version boundary, and 2.1 deferral |
-| [OPC product model](opc-product-model.md) | Project, Role Blueprint, Assignment, Digital Employee, Runtime, Conversation, authority, and terminology |
+| [OPC product model](opc-product-model.md) | Project, Role Runtime Template, Project Member Runtime, Agent process/Attempt, Conversation, authority, and terminology |
 | [User journeys](user-journeys.md) | first Project, daily operation, approvals, recovery, knowledge, archive, and X scenario |
 | [Long-running operations](long-running-operations.md) | Routine/Trigger, no-overlap, queue-latest, offline/missed, background choice, and receipts |
 
@@ -60,20 +107,24 @@ English product documents are canonical where a bilingual pair exists.
 
 | Document | Responsibility |
 |---|---|
-| [Web UI product design](web-ui-design.md) | OPC IA, app shell, page responsibilities, state matrix, single-composer rule, and Requires-backend behavior |
-| [Agent integration and conversations](agent-integration-and-conversations.md) ([中文](agent-integration-and-conversations.zh-CN.md)) | Personal Assistant/Pi, preinstalled managed DSH, Installed Agents, employee conversations, and future adapters |
-| [Knowledge, Memory, and Vault](knowledge-memory-vault.md) | Personal Home, app/data split, archive/index/retrieval, Vault, memory admission, correction, and forgetting |
-| [Account Hub](account-hub.md) ([中文](account-hub.zh-CN.md)) | account/subscription/billing separation, binding precedence, budgets, quota, and usage |
-| [Provider Control Plane](provider-control-plane.md) | current Provider authority and OPC daemon-proxy evolution |
+| [Web UI product design](web-ui-design.md) | OPC IA, app shell, Assistant/Project-group conversation, typed canvas, state matrix, and Requires-backend behavior |
+| [Assistant, Member execution, and conversations](agent-integration-and-conversations.md) ([中文](agent-integration-and-conversations.zh-CN.md)) | global Assistant/Pi, Project group conversation, Project Members, disposable processes, and hidden DSH diagnostics |
+| [Knowledge, Memory, and Vault](knowledge-memory-vault.md) | local archive, Context compression, Vault, feedback, Memory admission, correction, promotion, and forgetting |
+| [Model Connections](account-hub.md) ([中文](account-hub.zh-CN.md)) | Provider templates/custom endpoints, explicit Member selection, SecretStore boundary, cost provenance, and warnings |
+| [Provider Control Plane](provider-control-plane.md) | factual current Provider authority and the target Model Connections evolution |
 
-### Resources and external references
+### Factual foundations and external references
+
+The documents in this subsection preserve Linux 1.0/current Provider/Resource
+facts or advanced governance detail. They do **not** define the 2.0 navigation,
+object hierarchy, or everyday experience.
 
 | Document | Responsibility |
 |---|---|
-| [Cognitive resource model](cognitive-resource-model.md) | preserved six-family 1.0, advanced MCP target, and why OPC domain objects are not a generic Resource family |
+| [Cognitive resource model](cognitive-resource-model.md) | preserved six-family 1.0, capability-family boundary, and why OPC domain objects are not a generic Resource family |
 | [Resource Manager](resource-manager-design.md) | factual common projections, family-native actions, knowledge indexing boundaries, and conflict behavior |
-| [MCP resource family](mcp-resource-family.md) ([中文](mcp-resource-family.zh-CN.md)) | advanced/deferred MCP identities, admission, health, quarantine, and DSH base-tool prohibition |
-| [Informative OSS matrix](oss-reference-matrix.md) | exact research HEAD, license, verdict, allowed learning, and rejected inference |
+| [MCP capability governance](mcp-resource-family.md) ([中文](mcp-resource-family.zh-CN.md)) | assistant-led acquisition, review, pinning, per-Project/Member grants, underlying identities, and DSH base-tool prohibition |
+| [Informative OSS matrix](oss-reference-matrix.md) | preserved exact 2026-08-27 research HEADs plus the 2026-08-28 official-evidence refresh and reuse/rejection boundaries |
 
 ## Preserved and frozen material
 
@@ -82,22 +133,26 @@ English product documents are canonical where a bilingual pair exists.
 - [Frozen 2026-08-27 agent-stewardship corpus](legacy-agent-stewardship-20260827/README.md)
   preserves the superseded cross-platform/external-Agent 2.0 target and its
   original index. It is not current semantics.
-- Accepted ADR-0056/0058 remain historical decisions. ADR-0059 records their
-  exact partial supersession; no accepted history is rewritten.
+- Accepted ADR-0056/0058/0059 remain dated decisions. Current product semantics
+  are amended by the 2026-08-28 owner requirements. Architecture, ADR, formal
+  plan, and handbook text that still reflects the 2026-08-27 object model or IA
+  is **pending architecture/plan/handbook reconciliation**; accepted history is
+  not rewritten here.
 
 ## Fixed safety and claim boundaries
 
 - The Rust daemon remains the sole authority writer. The Personal Assistant,
-  Pi, DSH, digital employees, adapters, UI, MCP servers, and connectors are
-  clients, candidate producers, or bounded executors.
+  Pi, DSH, Project Members, Agent processes, adapters, UI, MCP servers, and
+  connectors are clients, candidate producers, or bounded executors.
 - External mutation remains persist-before-dispatch Intent/Effect work under
   fencing and reconciliation. Independent verification remains required for
   completion.
 - Secrets enter only approved Secret Stores through non-logging daemon paths.
   DSH/Pi Provider traffic is daemon-proxied.
-- Project, Role, Employee, Routine, Trigger, Attempt, Conversation, Vault,
-  Provider account, and budget are product/domain concepts, not new generic
-  Cognitive Resource families or public Core schemas.
+- Project, Role Runtime Template, Project Member Runtime, Routine, Trigger,
+  Attempt, Conversation, Vault, Model Connection, and cost reading are
+  product/domain concepts, not new generic Cognitive Resource families or
+  public Core schemas.
 - Product adoption does not imply Windows support, DSH qualification,
   connector reliability, a Gate, release, Profile, business outcome, market
   validation, usability validation, 24/7 operation, or multi-Agent benefit.

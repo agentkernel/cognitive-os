@@ -15,7 +15,8 @@ Windows-first Personal 2.0 OPC target. Target-only behavior is marked
 
 **Status boundary:** Linux 1.0 and the current APIs remain six-family and Pi is
 the only qualified Agent. The current same-origin `/ui/` SPA exists at
-`clients/pc/web/`. Personal 2.0 targets Today/Projects/Team/Knowledge/Inbox,
+`clients/pc/web/`. Personal 2.0 targets Today/Projects/Knowledge with bottom
+Settings (Team and Inbox are not first-level),
 Project/Role/Employee/Routine/Attempt authority, Personal-owned Conversations/
 Vault/Memory, Pi-backed Personal Assistant, preinstalled managed DSH,
 global→Project→employee→Task Provider/budgets, and a fixed Windows acceptance

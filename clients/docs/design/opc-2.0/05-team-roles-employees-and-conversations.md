@@ -1,97 +1,124 @@
-# 05 — Team, roles, employees, and conversations
+# 05 — Roles, Project Members, and governed conversations
 
-## Team model
+- Requirements:
+  [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
+- Product model:
+  [OPC product model](../../../../personal/docs/product/opc-product-model.md)
+- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
+  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 
-Team is a Project-scoped roster, not human account administration. Every
-Project has exactly one current manager. The base Project Manager Blueprint is
-the only built-in role; the Personal Assistant proposes additional roles from
-the charter and plan.
+## Project-scoped roster
 
-`Blueprint -> Assignment -> Employee -> Runtime -> Conversation` remains
-visible in the inspector and never collapses into one Agent card.
+Members are opened from a Project; there is no first-level roster destination
+or human-account team model. Every active Project has exactly one current
+Project Manager Member. Only the base Project Manager Role is built in. The
+Personal Assistant researches and proposes all other Roles.
 
-## Cards and details
+The current chain is:
 
-Every manager/employee card answers:
+`Role Runtime Template -> Project-specific Member Runtime definition -> Task
+-> Attempt -> disposable Agent process`
 
-- Project goal and assigned responsibility;
-- current state and why;
-- next planned action;
-- latest verified result and evidence link;
-- actual/unknown spend basis;
-- current Runtime health/qualification;
-- Conversation and Memory scope;
-- blocked/permission/offline/missed state.
+There is no additional employee object. “Digital staff” remains marketing
+positioning only.
 
-The employee detail has Work, Conversation, Memory, Runtime, and History tabs.
-The Project/employee identity stays visible across tabs.
+## Role Runtime Template and Member creation
 
-## Role creation and upgrade
+Every Template version defines purpose, responsibilities, prohibited work,
+input/output/success/handoff contracts, instructions, Skills/Tools/MCP needs,
+work cycle, collaboration/reflection, model capability, Context/Memory policy,
+permissions, safety, and escalation.
 
-1. Owner asks the Personal Assistant for a role in business language.
-2. Assistant proposes purpose, responsibilities, capability needs, work
-   methods, handoff expectations, risk, permission, and budget.
-3. Daemon preview shows Blueprint revision plus Project Assignment and employee
-   impact.
-4. Owner edits/narrows/confirms.
-5. Receipt links the new employee and first bounded Task.
+A Project Member pins one Template revision and adds name, Project-specific
+responsibility/subgoal, explicit Provider/model, capability grants, Memory
+scope, cost basis, permission, and Runtime recipe. The Owner reviews the exact
+Template and Member revisions. A global Template update never silently changes
+existing Members.
 
-Blueprint upgrade is versioned and opt-in per Project. Existing employees and
-history remain pinned until an Assignment revision is confirmed. Project
-Manager safety/governance obligations cannot be removed by specialization.
+## Member cards and detail
 
-## Manager autonomy
+Cards lead with:
 
-Inside the approved envelope the manager may adjust subgoals, Task
-decomposition/order/frequency, and member responsibility. Primary goal, team,
-budget, Provider, Tool, permission, or external-action rule changes are
-proposal-only and go to Inbox.
+- goal, responsibility, and expected deliverable;
+- current work and next action;
+- Working / Queued / Waiting activity; queued is not running;
+- latest accepted result with evidence/source/freshness;
+- block, missed work, or Owner decision;
+- actual/estimated/unknown cost basis;
+- Member Runtime version and rollback availability.
 
-Manager or employee disagreement remains a source-labelled candidate.
-Collaboration is expressed through daemon-owned Tasks, artifacts, and explicit
-handoffs. Free group chat does not transfer authority.
+Work, group participation, Member work Conversation, Memory, grants, versions,
+Attempts, artifacts, evidence, and advanced diagnostics are contextual tabs or
+inspectors. Engine health is not the card's primary status.
 
-## Conversation workbench
+## Project Manager loop and versioned improvement
 
-The right rail or employee detail hosts a Personal-owned Conversation:
+The manager operates:
 
-- recipient, Project, and employee scope are always visible;
-- retrieved fragments show source/scope/freshness and untrusted status;
-- DSH output is candidate/observation;
-- proposed Task/plan changes open the central daemon preview;
-- receipts/evidence link back without exposing secrets;
-- archive, correction, and forget controls follow their actual backend status.
+`observe -> plan -> delegate -> execute -> independently verify -> summarize
+-> reflect -> adjust`
 
-### Single active composer
+Reflection occurs per Task, day, cycle/week, and incident. A one-off Task
+strategy adjustment may apply within the current boundary. A persistent Member
+Runtime change creates a new version, runs replay/simulation/comparison where
+available, records evidence, and retains rollback. Activation is allowed only
+inside the approved autonomy envelope.
 
-Exactly one composer can submit. Choosing Personal Assistant, manager, or
-employee changes the labelled recipient. Each keeps a distinct draft.
-Switching preserves drafts, returns focus predictably, and never sends or
-merges text.
+Primary-goal, team, Provider/model, Tool/MCP, permission, global Role, and
+external-action-rule changes require a daemon preview and Owner confirmation.
+Cost pressure produces source-labelled warnings, not an automatic product stop.
 
-Inbox approval has no independent composer. It may show the originating
-conversation, but confirm/edit/narrow/reject act on the structured preview.
+## Project group conversation
 
-## DSH and Pi presentation
+Inside a Project, the primary conversation contains Owner, manager, and
+Members:
 
-Employee pages say **Execution engine: DSH** with status and a link to advanced
-Installed Agent diagnostics. They do not expose a native DSH UI or native
-conversation. DSH artifact/process/session is separate from employee identity.
+- manager speaks by default;
+- Members speak proactively only when `@` mentioned, delivering, handing off,
+  blocked, or requesting a decision;
+- `@manager` requests a briefing or delegation;
+- `@member` asks or temporarily redirects bounded goal/path;
+- ordinary execution traces stay folded behind Tasks/Attempts;
+- full group and Member-work archives remain inspectable under their scopes.
 
-Personal Assistant pages do not show Pi as an installed Agent. Advanced
-diagnostics may identify the exact Pi engine and health while preserving its
-candidate-only, no-secret, no-memory-ownership boundary.
+Every message is conversation until a work-changing instruction becomes a
+formal Task or revision. Group discussion, agreement, and routing never become
+authority or independent verification. HITL is announced in the right-column
+chat and linked to the center-canvas preview. Chat has no Approve control and
+no “Don’t ask again” grant. Chat may narrate “Observed now”; self-report is
+not completion. Why is layered (candidate reason, then kernel fact). `@`
+inserts only into the unsent draft.
 
-## States
+Outside a Project the global Personal Assistant is the visible conversation
+in the same right column. Assistant/Project contexts retain independent
+drafts. Switching context cannot merge, clear, or send. A consequential
+suggestion opens a central daemon-issued structured preview.
 
-Team and Conversation cover empty roster, role generation, loading, partial
-employee facts, stale Runtime, permission blocked, offline, missed work,
-unknown outcome, conversation error with retained draft, archived employee,
-runtime update/rollback, and success receipt.
+## Process and engine separation
 
-## Requires-backend
+A Task starts a disposable Agent process/Attempt from an exact Member Runtime
+revision. Process stop, failure, retry, DSH update, or quarantine preserves the
+Member, conversations, Memory, artifacts, attempts, and evidence. Process death
+does not delete the Member.
 
-Blueprint/Assignment/Employee authority, role generation, manager autonomy
-policy, Personal-owned Conversation/archive, single-composer persistence,
-managed DSH runtime, and Pi Assistant composition are target-only. No element
-may simulate a backend mutation.
+DSH and Pi are hidden managed engines. Their exact version, provenance, health,
+qualification, update, and rollback appear only for fault recovery or advanced
+diagnostics. No native engine UI, native session sync, alternate Harness
+selector, or everyday engine-installation surface is designed.
+
+## States and capability honesty
+
+Roster and Conversation cover empty, researching Role, loading, partial,
+stale, permission, offline, blocked, missed, unknown, failed-preserved-draft,
+version-validating, rollback-available, archived, and receipt states.
+
+Role/Member authority, manager policy, Project/group archives, Runtime
+versioning, managed engines, and Assistant composition are
+**Requires-backend**; Windows/DSH/Provider execution is also
+**Requires-environment**. No prototype control may simulate these mutations.

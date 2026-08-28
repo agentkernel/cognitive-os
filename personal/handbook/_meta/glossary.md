@@ -40,7 +40,7 @@ handbook's consistent translation（中文列是手册统一译法；代码与�
 | Project Manager | 项目管理员 | the single current manager Assignment in an active Project; coordinates daemon-owned Tasks, artifacts and handoffs |
 | Routine / Trigger | 例行工作 / 触发器 | revisioned recurring work definition and admitted manual/schedule/qualified-event cause; neither is one Task completion |
 | Attempt | 执行尝试 | one preserved execution/recovery branch under one Task; retry/fork never erases prior attempts |
-| Inbox | 待办箱 | priority queue for approvals, requested input, permission, failure, unknown Effect, missed work and budget decisions |
+| Inbox | 待办箱 | contextual attention for approvals, requested input, permission, failure, unknown Effect, missed work and budget decisions; not a first-level navigation destination |
 | Personal Assistant | Personal 助手 | global explain/navigate/research/propose surface; Pi may power it internally, but it is candidate-only and not authority |
 | Installed Agent | 已安装 Agent | managed execution integration with exact artifact/lifecycle/qualification facts; DSH is the preinstalled 2.0 target |
 | Personal Conversation | Personal 会话 | Owner/Project/employee-scoped local archive and interaction; it is not Task/Effect/verification authority |

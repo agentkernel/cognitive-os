@@ -5,6 +5,10 @@
   [ADR-0037](../../../docs/adr/0037-personal-unified-cognitive-resource-substrate.md),
   [ADR-0057](../../../docs/adr/0057-personal-2-0-mcp-resource-family.md), and
   [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
+- Current OPC requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
 - Architecture mapping:
   [Resource Manager](../architecture/resource-manager-architecture.md)
 
@@ -19,11 +23,14 @@ Linux Personal 1.0 remains a six-family product:
 5. Task;
 6. Runtime/Process.
 
-ADR-0057 adopts MCP as an advanced seventh Personal family, but no MCP family
-manager exists and MCP is not a Personal 2.0 OPC P0 dependency. Existing MCP
-Tool transport stays Tool-family implementation. The current 1.0 private
-projection remains six-family and rejects `mcp`; ADR-0058's fail-closed
-compatibility remains unchanged.
+ADR-0057 adopts MCP as a seventh Personal family, but no broad MCP family
+manager exists. Personal 2.0 now includes Assistant-led, security-reviewed
+MCP acquisition and per-Project/Member grants while keeping a general
+marketplace/family console out of scope. Existing MCP Tool transport stays
+Tool-family implementation. The current 1.0 private projection remains
+six-family and rejects `mcp`; ADR-0058's fail-closed compatibility remains
+unchanged. Architecture/formal-plan text that treats all MCP use as deferred is
+pending reconciliation.
 
 ## 2. OPC objects are not generic Resources
 
@@ -31,10 +38,10 @@ The following are domain/governance concepts, not additional resource
 families:
 
 - Project, Charter, Goal, Metric, and Plan revision;
-- Role Blueprint, Project Role Assignment, and Digital Employee;
+- Role Runtime Template and Project Member Runtime definition;
 - Routine, Trigger, occurrence, Task Attempt, and Handoff;
 - Personal-owned Conversation and episodic archive;
-- Provider account, subscription, binding, quota, usage, and budget;
+- Model Connection, Provider quota, usage, and source-labelled cost;
 - Permission, Model, Artifact, Intent/Effect, Evidence, and Event.
 
 They may reference cognitive resources and appear in common product views, but
@@ -51,8 +58,8 @@ own identity, ownership, retention, transitions, and failure semantics.
 | Tool | registered executable action with availability, permission, budget, and dispatch policy | shown as **Executable action**; DSH/Pi native/base tools are not auto-admitted |
 | Context | authorized, bounded Task input with provenance, freshness, omissions, and losses | archive/Vault/Memory fragments are filtered before ranking and selected per Attempt |
 | Task | bounded admitted work, budget, Effect, evidence, verification, and acceptance | belongs to a Project/Goal/plan; retry creates preserved Attempts |
-| Runtime/Process | artifact-through-execution identity and bounded host observations | DSH runs employees; employee identity and completion do not live here |
-| MCP (advanced target) | managed server/package/connection/capability/binding/health/quarantine | a connected application/capability; not DSH base tools or host-session control |
+| Runtime/Process | artifact-through-execution identity and bounded host observations | DSH starts disposable Agent processes for Members; Member identity and completion do not live here |
+| MCP | managed server/package/connection/capability/binding/health/quarantine | Assistant-led reviewed acquisition and scoped grants; not DSH base tools, a marketplace, or host-session control |
 
 ## 4. Candidate and authority flows
 
@@ -63,7 +70,7 @@ Conversation/Vault/external source
   -> Context selection or Memory/Skill/Tool admission
 ```
 
-DSH, Pi, an MCP server, a Skill, a connector, or a digital employee cannot
+DSH, Pi, an MCP server, a Skill, a connector, or a Project Member cannot
 self-admit content or capability. Installing or connecting something grants no
 filesystem, process, network, model, secret, Tool, Context, or host-session
 authority.
@@ -83,7 +90,7 @@ Origin owns native content. Personal owns admitted policy, bindings, and
 authority facts. A file resembling a plan or permission configuration creates
 a candidate; it cannot mutate Project authority by being edited.
 
-## 6. MCP advanced boundary
+## 6. MCP acquisition and family boundary
 
 MCP retains distinct server, package, connection, capability, binding, health,
 and quarantine identities in the Personal-private envelope selected by
@@ -91,8 +98,13 @@ ADR-0058. Advertised operations remain Tool candidates, protocol resources
 remain Context candidates, and prompts/instructions remain Skill candidates.
 
 DSH's native MCP/base tools are disabled for the qualified 2.0 default path.
-A future Personal MCP manager is independently planned and qualified; it does
-not enter by enabling DSH configuration.
+The Assistant may discover candidates; first installation and every permission
+expansion require exact-version/permission confirmation after source, license,
+hidden-instruction, prompt-injection, dependency, executable-code, network,
+Secret, Tool-permission, and supply-chain review. Artifacts may be reused
+globally, but grants are isolated per Project/Member, pinned, compatibility
+tested on update, and rollback-capable. This behavior is **Requires-backend**
+and does not enter by enabling DSH configuration.
 
 ## 7. Product language
 

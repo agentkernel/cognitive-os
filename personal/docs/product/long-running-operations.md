@@ -2,9 +2,19 @@
 
 - Status: adopted Personal 2.0 product target
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
-- Architecture:
+- Requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
+  Authorize → Execute → Verify → Report), Today decision packet plus four
+  exception swimlanes, canvas-only HITL, and daemon authority path. This is
+  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Existing architecture input (pending reconciliation):
   [Routine, Trigger, and missed-run](../architecture/routine-trigger-missed-run.md)
-- UX surface: [Inbox and recovery journey](user-journeys.md#6-approve-or-recover-work-from-inbox)
+- UX surface:
+  [Contextual attention and recovery journey](user-journeys.md#6-resolve-contextual-attention-approval-and-recovery)
 
 ## 1. Product concepts
 
@@ -13,6 +23,9 @@
 | Routine | revisioned recurring work definition inside one Project | one execution, cron row, Loop, or Agent prompt |
 | Trigger | admitted cause that requests one Routine occurrence | authority to run or proof it ran |
 | Occurrence | one requested time/event/manual instance | Task completion |
+| Working | in-progress observation of a current occurrence | completion, verification, or success |
+| Queued | latest eligible occurrence waiting to start | a running process |
+| Waiting | blocked on evidence, Owner, or handoff | a running process |
 | Task / Attempt | bounded governed work and one preserved execution try | Routine definition |
 | Missed-run fact | occurrence that could not start while host/dependency was unavailable | failure, retry, or success |
 
@@ -20,18 +33,35 @@ The daemon owns these facts. DSH, Pi, a Project Manager, Windows Task
 Scheduler, or an external platform event may signal or execute bounded work but
 cannot become the scheduling authority.
 
+The default Operations working view is the daemon authority path:
+
+**Candidate → Intent persisted → Fence → Execute → Independent verify →
+Receipt.**
+
+Working is in-progress observation, not completion.
+
 ## 2. Trigger classes
 
 Personal 2.0 allows:
 
 1. **Manual** — Owner or admitted manager request;
 2. **Schedule** — daemon-owned time policy with timezone and clock basis;
-3. **Qualified platform event** — exact connector/event identity after
-   independent qualification.
+3. **Accepted artifact** — a named artifact reaching an admitted acceptance
+   state;
+4. **Project state** — a testable governed Project transition;
+5. **Qualified external event** — exact connector/event identity after
+   independent qualification;
+6. **Testable data condition** — a deterministic condition with declared
+   source, freshness, and evaluation basis.
 
 An event adapter cannot silently broaden scope or create a trigger from
 untrusted content. Trigger admission identifies Project, Routine revision,
-event/source, deduplication/idempotency, risk class, permission, and budget.
+event/source, deduplication/idempotency, risk class, permission, and declared
+cost/limit policy.
+
+Product cost visibility and warnings do not create an automatic Personal 2.0
+budget-threshold stop. Provider quota, unavailable credentials, or resource
+unavailability may still prevent an external call.
 
 ## 3. No overlap and queue latest
 
@@ -41,12 +71,16 @@ The same Routine does not overlap by default:
 - if one is active, at most the latest pending occurrence is retained;
 - an older pending occurrence superseded by a newer one is recorded as
   coalesced/skipped with reason and timestamps;
-- different Routines still obey shared Project/member/Provider budgets and
-  scheduler fencing;
+- different Routines still obey shared Project/Member/Provider availability,
+  declared limits, and scheduler fencing;
 - no queue policy turns a dropped occurrence into success.
 
 The Product shows the active occurrence, latest queued occurrence, coalesced
 count with declared denominator, and one next action.
+
+Across Projects, Personal orders eligible work by Owner priority, deadline,
+schedule, resource availability, and fairness. The current reason is
+explainable; queue order is not inferred from Agent prose.
 
 ## 4. Offline, sleep, and missed work
 
@@ -54,7 +88,7 @@ Windows sleep, shutdown, daemon stop, network loss, Provider outage, connector
 unavailability, or locked SecretStore can prevent dispatch. Personal records
 the applicable state rather than simulating background cloud execution.
 
-On resume, Inbox groups:
+On resume, Today and the affected Project group:
 
 - missed occurrences and their source/time;
 - work safe to resume automatically;
@@ -65,6 +99,9 @@ On resume, Inbox groups:
 Low-risk internal work may resume inside the unchanged policy. Publishing,
 communication, spending, deletion, permission expansion, or a changed
 external target requires a new preview or renewed approval.
+
+Expired external content is not silently backfilled. Personal shows the missed
+occurrence and requires the applicable fresh research, policy, or Owner choice.
 
 ## 5. Closing the window
 
@@ -78,23 +115,34 @@ instantly, offline limitations, and how to reopen status. It does not promise
 execution after host shutdown. If a backend cannot yet honor a choice, the
 prototype labels it `Requires-backend`.
 
+A new Owner instruction creates a version and applies at a safe point by
+continue, pause, or restart. It is never silently injected into a running
+prompt.
+
 ## 6. Manager autonomy and reflections
 
 Within an approved Project boundary, the manager may change a Routine's
-subgoal, Task decomposition, order, frequency, or member responsibility if the
-total goal, team, budget, Provider, tools, permissions, and external-action
-rules remain unchanged.
+subgoal, Task decomposition, order, frequency, or Member responsibility if the
+primary goal, team, Provider/model, Tool/MCP grants, permissions, and
+external-action rules remain unchanged.
 
 A change outside that envelope creates a plan/Routine revision candidate,
-structured diff, and Owner confirmation. Key-result and daily/weekly
-reflections may propose such revisions. Agent or manager self-report does not
-admit a revision or mark work complete.
+structured diff, and Owner confirmation. The manager loop is observe -> plan
+-> delegate -> execute -> independently verify -> summarize -> reflect ->
+adjust. Reflection occurs per Task, day, cycle/week, and incident. Agent or
+manager self-report does not admit a revision or mark work complete.
+
+A one-off Task strategy adjustment may apply inside its boundary. A persistent
+Member Runtime change creates a new version with replay/simulation/comparison
+and rollback; the manager may activate it only inside the approved envelope.
+Global Role, team, primary goal, Provider/model, Tool/MCP, permission, and
+external-rule changes require Owner confirmation.
 
 ## 7. Progress and controls
 
 A long-running surface shows:
 
-- Project, Routine revision, Task, Attempt, and responsible employee;
+- Project, Routine revision, Task, Attempt, and responsible Member;
 - current step and latest durable fact—not hidden "thinking";
 - queued/missed/coalesced occurrences;
 - artifacts, Effects, evidence, Provider usage/cost basis;
@@ -102,6 +150,11 @@ A long-running surface shows:
 - unsupported control reasons;
 - final receipt separating completed, skipped, failed, unknown, and not-run
   work.
+
+One Member Task process may create internal subagents only under explicit
+count, time, cost, and permission limits. They return results to that Member,
+receive no Project-member identity or long-term Memory, and cannot turn their
+self-report into completion.
 
 Every control is capability-backed. Detach affects observation only. Process
 exit is not cancel, recovery, or completion. Engine checkpoints are recovery

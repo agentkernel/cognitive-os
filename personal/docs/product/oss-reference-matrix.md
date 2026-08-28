@@ -2,7 +2,7 @@
 
 - Status: informative research record; not a dependency or support manifest
 - Reviewed date: 2026-08-27
-- Source synthesis:
+- Dated 2026-08-27 source synthesis retained only as research provenance:
   `personal-2-opc-research-migration-plan.canvas.tsx`
 - Source artifact SHA-256:
   `4892cb827d98f4ab850826e6317d5f481221809fb8393135d3885ee58e5ae292`
@@ -12,6 +12,17 @@ Each row records the exact research snapshot supplied by the Owner. License is
 the repository-root license observed by that input and is not a complete legal,
 dependency, transitive-license, security, maintenance, or provenance review.
 No external instruction is executed and no code is copied by this document.
+This retained source filename is not the current product prototype. The
+[**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+is the only current prototype baseline. It is the same V2 files (not a v3).
+Owner accepted the 2026-08-28 competitive-informed overwrite: visible CEO loop,
+Today decision packet plus four exception swimlanes, canvas-only HITL, and
+daemon authority path. This is not the pre-overwrite overlay-conversation /
+stacked-column V2. Owner approval is
+recorded and source/static checks passed; Canvas runtime/render, NVDA,
+host-theme contrast, and 200% real layout remain `not-run`. Owner approval is
+not usability, accessibility, backend, Gate, release, qualification, or
+acceptance evidence.
 
 | Project / repository | Exact HEAD | Observed license | Verdict | Allowed learning | Rejected inference |
 |---|---|---|---|---|---|

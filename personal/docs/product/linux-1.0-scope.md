@@ -12,9 +12,12 @@ This document defines the stable release target. Current readiness, task state
 and every Gate status remain exclusively in
 [PROGRESS.md](../../../docs/plan/PROGRESS.md).
 
-> **Personal 2.0 backlink (2026-08-27):** the current Windows-first OPC target
-> is owned by [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
-> and [Personal 2.0 scope](personal-2.0-scope.md). That target does not revise
+> **Personal 2.0 backlink (updated 2026-08-28):** the current Windows-first OPC
+> target is owned by [Personal 2.0 requirements](personal-2.0-opc-requirements-analysis.md),
+> [product design](product-design.md), and
+> [Personal 2.0 scope](personal-2.0-scope.md). Interaction chrome is the
+> [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx).
+> That target does not revise
 > any Linux 1.0 requirement, Pi qualification, six-family fact, Gate result, or
 > release provenance in this document. Older 2.0 summaries here are context
 > only and cannot be used as a second active target definition.
@@ -152,9 +155,8 @@ lifecycle, authority-backed Context/Runtime inventory, or unified Activity
 feed. Its Activity view is an explicitly bounded composition. The native
 `cognitive dsh web` panel remains separate.
 
-Personal 2.0's target IA
-**Home / Agents / Work / Library / Activity / Settings** is a later product
-adoption. It does not change this release definition.
+Personal 2.0's separate current IA and object model are defined only by the
+linked 2.0 product documents. They do not change this release definition.
 
 ## 5. Gate composition target
 
@@ -204,7 +206,7 @@ because a bridge can connect.
 - Multi-Agent delegation/orchestration;
 - the current additive Web UI as a release requirement, plus Personal 2.0
   embedded conversations, Goal -> Plan revision -> Task -> Attempt flows, federated resources,
-  Account Hub methods, and target IA;
+  Model Connections methods, and target IA;
 - Windows installer, service and credential-store parity;
 - Linux aarch64, macOS, Windows, mobile and WSL2 as Linux 1.0 product
   platforms; later Personal 2.0 platform targets do not revise this claim;

@@ -1,94 +1,115 @@
-# 12 — Scenario and heuristic review
+# 12 — Requirement-family scenario and heuristic review
 
-## Review status
+- Requirements:
+  [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
+  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
+  200% real layout
+- Evidence boundary: Owner approval is not usability, accessibility, backend,
+  Gate, release, qualification, or acceptance evidence
 
-This is the static design review protocol for the current corpus and Canvas.
-It is not an executed human-usability, browser/DOM, accessibility-conformance,
-backend, Windows-host, or product acceptance result.
+This is the review protocol for the Markdown corpus and the Owner-approved
+post-overwrite V2 interaction baseline. It
+is not an executed Canvas, browser/DOM, accessibility, usability, backend,
+Windows-host, connector, or product-acceptance result.
 
 ## Heuristic contract
 
-Review each scenario for:
+Review every scenario for:
 
-- visible system/host/source status;
-- business-language match;
-- one primary action;
-- cancel/back/deny/narrow/retry/resume/undo where real;
-- constraints and daemon preview before consequential work;
-- recognition over recall and preserved context;
-- repeated-use speed;
-- exact error recovery and retained input;
-- keyboard/focus/target/reduced-motion behavior;
-- capability honesty and evidence provenance.
+- goal, expected output, acceptance, and evidence before state/configuration;
+- correct global Assistant versus Project group identity;
+- one clear primary action and contextual edit/narrow/deny path;
+- daemon preview before consequential work;
+- recognition over recall, preserved context, and repeated-use speed;
+- exact empty/loading/partial/stale/permission/error/unknown/offline/missed/
+  running/success/archived behavior;
+- safe recovery with retained input and no blind retry;
+- keyboard, focus, target, contrast, reduced-motion, and long-copy behavior;
+- capability honesty, source/freshness, and independent-verification boundary.
 
 Severity 4 blocks design acceptance; repeated severity 3 is repaired before
-visual polish. Findings cite the exact scene/step/state.
+visual polish. Findings cite exact scene, step, state, and requirement family.
 
-## Static scenarios
+## Static scenario corpus
 
-| ID | Task | Non-happy condition | Static success condition |
+| ID | Requirement family | Non-happy condition | Static success condition |
 |---|---|---|---|
-| UX-01 | create first Project | research fails, draft preserved | reach review/receipt model without optional setup or false activation |
-| UX-02 | inspect Today | partial/stale Project source | Owner can state what needs action and what is unknown |
-| UX-03 | revise Project plan | preview becomes stale | edits persist and confirm is replaced by re-preview |
-| UX-04 | create role/employee | permission narrowed | Blueprint/Assignment/Employee remain distinct |
-| UX-05 | switch Assistant/employee | both have unsent drafts | exactly one recipient active; both drafts preserved |
-| UX-06 | import Knowledge | parser failure and secret detected | original preserved; secret routes out of Knowledge |
-| UX-07 | approve external work | user rejects/narrows | structured preview, consequence, receipt path; chat not authority |
-| UX-08 | recover unknown Effect | retry unsafe | reconcile explanation; no blind redispatch |
-| UX-09 | resume missed Routine | publish occurrence missed offline | low-risk vs consequential catch-up is separated |
-| UX-10 | inspect DSH | sandbox unqualified/update failed | exact artifact/health/rollback; no native UI or false support |
-| UX-11 | change Provider binding | quota unknown/budget stopped | global/Project/employee/Task precedence and actual unknown visible |
-| UX-12 | archive/delete Project | same-disk restore only | archive-first, export, impact, second confirm, no disaster-backup claim |
-| UX-13 | keyboard navigation | drawer/dialog/composer open | no trap; visible focus; recipient and location preserved |
-| UX-14 | narrow window/reduced motion | long copy and errors | primary job/state remains visible without hover/motion dependency |
-| UX-15 | view Requires-backend | backend absent | explanation and dependency only; no active-looking action |
+| UX-01 | research-first setup | source fails/conflicts | draft and partial research preserved; no false activation |
+| UX-02 | goal/output contract | business outcome uncontrollable | deliverable/evidence contract remains testable; no guaranteed result |
+| UX-03 | Today | source partial/stale | Needs you / Can continue / Unknown / Missed remain distinguishable; actual unknown is not zero |
+| UX-04 | Project report | failed/not-run work exists | template cannot hide it behind summary |
+| UX-05 | ad-hoc canvas | requested view lacks data | typed source-linked components show omission; no invented value |
+| UX-06 | group conversation | `@member` redirects work | formal Task/revision appears before execution; no shadow authority |
+| UX-07 | Role/Member creation | permission narrowed/model unavailable | Template, Member Runtime, and process remain distinct |
+| UX-08 | Runtime improvement | comparison fails | old version remains active; rollback path retained |
+| UX-09 | Context compression | package exceeds model window | Task contract/fixed decisions remain; omissions visible |
+| UX-10 | Memory/feedback | one rating suggests global preference | Project evidence only; versioned proposal required |
+| UX-11 | Knowledge import | parser failure/secret detected | original retained; secret exits Knowledge path |
+| UX-12 | approval | stale preview/reject/narrow | exact diff and choices; chat cannot confirm |
+| UX-13 | unknown Effect | retry unsafe | reconciliation is visible; redispatch unavailable |
+| UX-14 | Routine | overlap plus offline missed run | one active, latest queued, coalesced/missed denominator |
+| UX-15 | Model Connection | quota/cost unknown | unknown is not zero; explicit Member selection; no silent binding |
+| UX-16 | cost warning | threshold exceeded | warning visible; Personal does not automatically stop work |
+| UX-17 | Skill/MCP | first MCP install expands permission | exact version/permission confirmation and scoped grant |
+| UX-18 | hidden DSH/Pi | engine unqualified/update failed | advanced diagnosis/rollback only; no everyday engine UI |
+| UX-19 | X/Twitter loop | connector drift/CAPTCHA/unknown publish | fail closed, receipt/readback separated, no evasion/retry |
+| UX-20 | archive/delete | same-disk restore only | archive-first, export, impact, second confirm, no backup claim |
+| UX-21 | keyboard/narrow window | conversation remains the third column | no trap; location, context identity, and action preserved; columns do not stack |
+| UX-22 | capability gap | backend/environment absent | explanation/dependency only; no active-looking action |
+
+These scenario IDs are local design-review labels, not formal task IDs or a
+replacement acceptance denominator.
 
 ## Friction budget
 
-- daily low-risk navigation: one selection/shortcut, no confirmation;
-- reversible approved-boundary manager adjustment: direct action plus history;
-- role/plan/binding/budget changes: structured review and confirmation;
-- external/public/security/destructive work: scope, consequence, source,
-  reversibility, Owner confirmation, and receipt;
-- first Project value: resumable setup, optional detail deferred;
-- Inbox triage: stable priority list and detail, no modal chain.
+- daily navigation and low-risk inspection: direct, no confirmation;
+- Project group question or temporary canvas: one message/action, temporary by
+  default;
+- reversible manager adjustment inside envelope: direct plus version/history;
+- primary goal, team, model, capability, permission, or external rule:
+  structured preview and Owner confirmation;
+- first MCP install/expansion: exact version and permission confirmation;
+- public/security/destructive action: scope, consequence, source,
+  reversibility, confirmation, Intent/Effect, and receipt;
+- recovery: contextual list/detail, no modal chain or hidden retry.
 
 ## State coverage audit
 
-The prototype must visibly exercise:
-
-- empty: Project or Knowledge;
-- loading: Project/setup/import;
-- partial/stale: Today or Provider;
-- permission: Knowledge/import or binding;
-- error: setup/import/connector;
-- unknown: Effect or usage;
-- offline/missed: Routine;
-- long-running: research/import/Attempt;
-- success: daemon receipt example labelled prototype;
-- archived: Project;
-- Requires-backend: at least one unavailable action on every target-only
-  surface.
+The owner-approved post-overwrite v2 source is reviewed against all state classes from
+[09](09-state-accessibility-and-visual-system.md), include at least one
+`Requires-backend` treatment on every target-only surface, and use
+`Requires-environment` for unqualified Windows/DSH/Provider/MCP/X behavior.
+Prototype example artifacts and receipts must be labelled and must not imply a
+daemon write.
 
 ## Evidence ladder
 
-1. **Static design review:** this corpus and Canvas TypeScript structure.
-2. **Canvas interaction check:** scene switching, drafts, setup states, and no
-   network/external package use.
-3. **Future browser review:** role/label selection, focus order, error states,
-   narrow windows, reduced motion/contrast.
-4. **Future backend integration:** real daemon previews, receipts, and
-   capability gaps.
-5. **Future qualified Windows fixed denominator:** Phase 11 acceptance.
-6. **Separate human research:** first-time, returning, recovery, keyboard, and
-   comprehension observation with target users.
+1. Markdown structure, links, terminology, and cross-document consistency:
+   source/static checks passed.
+2. Canvas source/import/type/API review: passed.
+3. Canvas runtime interaction review: scenes, drafts, group routing, typed
+   canvases, states, and zero external effects.
+4. Browser accessibility and usability review, including NVDA, host-theme
+   contrast, and 200% real layout.
+5. Future backend integration using real previews, receipts, and gaps.
+6. Future qualified Windows/external fixed denominator after formal-plan
+   reconciliation.
+7. Separate target-user research for activation, returning use, recovery,
+   comprehension, trust, and willingness to pay.
 
-No lower level is promoted into a higher-level claim.
+No lower rung is promoted into a higher claim.
 
-## Current static disposition
+## Current disposition
 
-The corpus provides a complete review target but this row is `not-run` until
-the new Canvas exists and the documented static/type checks execute. Results
-must be appended to the task's single running report immediately after each
-check.
+The Owner-accepted competitive-informed V2 source exists (same V2 files, not a
+v3). It records the visible CEO loop, Today decision packet plus four
+exception swimlanes, canvas-only HITL, and daemon authority path. Owner
+acceptance is recorded, and source/static checks passed. Canvas
+runtime/render, NVDA, host-theme contrast, 200% real layout, and all
+backend/external/qualified execution remain `not-run`. Owner approval does
+not promote any of those results and is not usability, accessibility, backend,
+Gate, release, qualification, or acceptance evidence.

@@ -1,9 +1,18 @@
-# Personal Assistant, Installed Agents, and employee conversations
+# Personal Assistant, Project Members, and governed conversations
 
 - Status: adopted Personal 2.0 product target
 - Canonical language: English
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
-- Architecture:
+- Requirements:
+  [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
+- Interaction baseline:
+  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
+  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
+  Authorize → Execute → Verify → Report), Today decision packet plus four
+  exception swimlanes, canvas-only HITL, and daemon authority path. This is
+  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Existing architecture inputs (pending reconciliation):
   [Agent lifecycle](../architecture/agent-shell-and-agent-lifecycle.md) and
   [Project, Role, and Employee](../architecture/project-role-employee.md)
 - Chinese mirror:
@@ -14,26 +23,29 @@
 | Identity | Product role | Authority boundary |
 |---|---|---|
 | **Personal Assistant** | global explanation, navigation, research, and proposal surface | candidate-only; daemon issues every confirmable preview |
-| **Digital Employee** | long-lived Project member with responsibility, Conversation, Memory, work, and history | not an Agent process; work authority remains daemon-owned |
-| **Installed Agent / Runtime** | qualified execution integration used by employees | bounded executor/observer; no Project, Memory, secret, or completion ownership |
+| **Project Member Runtime definition** | long-lived Project-specific responsibility, Conversation, Memory, work, grants, and history | not an Agent process; work authority remains daemon-owned |
+| **Agent process / Attempt** | disposable execution started from an exact Member revision for one Task | bounded executor/observer; no Project identity, long-term Memory, secret, or completion ownership |
 
 Collapsing these identities creates false lifecycle and trust claims. Restarting
-a runtime does not replace an employee. A conversation message does not update
-a Project. An installed package grants no execution permission.
+a process does not replace a Member. A conversation message does not update a
+Project. An acquired package grants no execution permission.
 
 ## 2. Personal Assistant and Pi
 
 The Personal Assistant is the user-visible system identity. It can:
 
-- explain a Project, employee, Inbox item, source, uncertainty, or conflict;
+- inspect available product facts and explain a Project, Member, attention
+  item, source, uncertainty, or conflict;
 - navigate to the exact object;
 - conduct guided Project/role research;
-- draft charter, plan, role, binding, budget, or recovery candidates;
+- draft charter, plan, Role, Model Connection, capability, or recovery
+  candidates;
+- initiate every management flow without becoming its writer;
 - request a daemon-issued structured preview;
 - explain a receipt and remaining decision.
 
 Pi may support this experience internally as a fixed, managed, default-deny
-engine. Pi is hidden from the ordinary Installed Agents list. It owns no
+engine. Pi is hidden from ordinary navigation. It owns no
 authority, Provider secret, Project, Task, long-term Conversation, episodic
 archive, semantic Memory, or completion. Pi output remains a candidate.
 
@@ -42,18 +54,19 @@ Personal does not expose model chain-of-thought or invented numerical
 confidence. A suggestion cannot be confirmed until the daemon resolves it into
 an exact preview.
 
-## 3. Preinstalled managed DSH Installed Agent
+## 3. Hidden managed DSH execution engine
 
-DeepSeek Harness is supplied with Personal 2.0 as the **preinstalled managed
-Installed Agent** and default runtime for Project digital employees. It remains
-visible under Settings > Installed Agents so the Owner can inspect:
+DeepSeek Harness is the hidden default engine for Project Member Task
+processes. It is not an Installed Agent product object, user-selectable
+Harness, or everyday destination. Only fault recovery and advanced diagnostics
+may expose:
 
 - exact official artifact source, version, digest, license, and admission;
 - adapter/broker version and protocol compatibility;
 - Windows host/sandbox qualification boundary;
 - current health and bounded capabilities;
 - update availability, compatibility changes, and rollback slot;
-- which employees and Tasks currently use it.
+- which Members and Tasks currently use it.
 
 It is not an in-process daemon library and not a vendored fork. Personal runs
 the exact audited artifact as an isolated child process behind a bounded stdio
@@ -63,7 +76,7 @@ Provider traffic is daemon-proxied and executable actions pass Personal
 admission.
 
 Personal does not embed DSH's native UI or synchronize native DSH
-conversations. The employee's Conversation, archive, Memory, Task, Context,
+conversations. The Member's Conversation, archive, Memory, Task, Context,
 and evidence belong to Personal. DSH receives a bounded Context payload and
 returns candidates/observations.
 
@@ -71,19 +84,27 @@ The existing post-1.0 dsh Path B implementation is reusable evidence only
 within its recorded scope. It does not qualify this Windows-managed artifact,
 sandbox, supply chain, or product experience.
 
-## 4. Employee conversations
+## 4. Project group and Member work conversations
 
-Each Personal-owned Conversation is scoped to Owner, Project, and employee.
-It may contain user messages, bounded retrieved Context, engine output,
-tool/action proposals, receipts, and source links. The archive is local and
-indexed, but retrieval injects only relevant, bounded, redacted,
-provenance-bearing observations.
+Outside a Project the conversational identity is the global Personal
+Assistant. Inside a Project, the primary surface is the group containing
+Owner, manager, and Members. The manager speaks by default. A Member speaks
+proactively only when mentioned, submitting a deliverable, handing off,
+blocked, or requesting a decision. `@manager` can request progress/delegation;
+`@member` can ask or temporarily redirect bounded goal/path.
+
+Personal also retains scoped Member work conversations as inspectable source
+records. Conversations may contain user messages, bounded retrieved Context,
+engine output, action proposals, receipts, and source links. The full local
+archive remains inspectable, while an Agent process receives only relevant,
+bounded, redacted, provenance-bearing observations.
 
 Conversation is not authority:
 
-1. employee or manager output is a candidate;
+1. Member or manager output is a candidate;
 2. ordinary discussion can remain conversational;
-3. a Project/plan/team/budget/provider/tool/permission/external-rule change
+3. a work-changing message becomes a formal Task or revision; a
+   Project/plan/team/Provider/model/Tool/MCP/permission/external-rule change
    requests a daemon preview;
 4. the Owner confirms, edits, narrows, or rejects;
 5. the applied revision and receipt return to the Conversation and object page.
@@ -91,38 +112,48 @@ Conversation is not authority:
 Agent final text, process exit, Tool result, Provider response, manager
 agreement, or engine checkpoint is not Task completion.
 
-## 5. One active composer
+## 5. Composer and authority handoff
 
-The right rail allows conversation with the Personal Assistant, Project
-Manager, or an employee. Exactly one composer is active:
+The visible composer posts to the currently named context: global Personal
+Assistant outside a Project or the selected Project group inside one.
 
-- the recipient identity is visible in the composer label and submit action;
-- selecting another recipient switches contexts but preserves both drafts;
-- no draft is merged, cleared, or sent on switch;
-- the active composer has one keyboard focus owner;
-- an Inbox approval opens a structured preview, not a second chat composer;
-- offline and permission states preserve draft content.
+- Project/Assistant context switching preserves independent unsent drafts;
+- switching cannot merge, clear, or send text;
+- `@` routing inserts only into the unsent draft and never bypasses the Project
+  scope or approved envelope;
+- contextual approval opens a structured daemon preview on the center canvas,
+  not a second chat authority; chat has no Approve control and no “Don’t ask
+  again” grant;
+- offline and permission states preserve draft content;
+- ordinary execution traces remain folded behind Tasks/Attempts.
 
-This avoids accidental cross-Project or assistant/employee dispatch.
+This avoids accidental cross-Project or Assistant/group dispatch while
+preserving one understandable conversation model.
 
-## 6. Runtime lifecycle
+## 6. Member and process lifecycle
 
-The following remain separate even when one process participates in several:
+The following remain separate:
 
-`Artifact -> Installation -> Agent definition -> Runtime instance -> Task execution -> OS process -> Conversation`
+`Role Runtime Template -> Project Member Runtime definition -> Task -> Attempt -> Agent process`
 
-The daemon owns artifact admission, installation activation, employee/runtime
-binding, execution epoch, budget, fencing, health interpretation, update,
-rollback, and removal. Process liveness is only an observation.
+The daemon owns artifact admission, Member revision activation, process
+identity, execution epoch, fencing, health interpretation, update, rollback,
+and removal. Process liveness is only an observation.
 
-Disconnecting an employee from a runtime preserves employee identity,
-Conversation, Memory, work, and evidence. Uninstalling DSH is a managed
-artifact operation with an impact preview and cannot silently delete Personal
-history.
+Stopping or losing a process preserves Member identity, group and work
+Conversations, Memory, work, Attempts, and evidence. Process death does not
+delete the Member. Updating or rolling back
+DSH is an advanced managed-artifact operation with impact preview and cannot
+silently delete Personal history.
 
-## 7. Future adapters
+A Member Task process may create bounded internal subagents with explicit
+count, time, cost, and permission limits. They are disposable helpers, not
+Project Members, and retain no long-lived identity or Memory.
 
-Personal 2.0 qualifies only DSH as an employee runtime. Hermes, Codex, Cursor,
+## 7. Alternative engines are outside 2.0
+
+Personal 2.0 targets only DSH as a Member execution engine. Hermes, Codex,
+Cursor,
 and other products are future adapter candidates. Each needs exact artifact,
 license, protocol, capability, secret, sandbox, lifecycle, platform, negative,
 and independent qualification evidence. No DSH or Pi evidence transfers.
@@ -133,11 +164,12 @@ synchronization, or a vendor-neutral runtime contract.
 
 ## 8. Required states
 
-Installed Agent and Conversation surfaces cover empty, loading, partial,
-stale, permission, error, unknown, offline, long-running, success, and archived
-states. DSH-specific examples include artifact unavailable, digest mismatch,
-compatibility unknown, sandbox unqualified, broker failed, Provider unavailable,
-update pending, rollback available, and outcome unknown.
+Assistant, Project-group, Member-work, and advanced-diagnostics surfaces cover
+empty, loading, partial, stale, permission, error, unknown, offline,
+long-running, success, and archived states. DSH-specific diagnostic examples
+include artifact unavailable, digest mismatch, compatibility unknown, sandbox
+unqualified, broker failed, Provider unavailable, update pending, rollback
+available, and outcome unknown.
 
 An unimplemented lifecycle action is `Requires-backend`, not a disabled control
 that implies an existing operation.
@@ -146,5 +178,5 @@ that implies an existing operation.
 
 This target does not establish a Windows DSH package, qualification, sandbox,
 native Provider support, managed child process, archive, conversation UI,
-Personal Assistant, employee runtime, another adapter, support, Gate, release,
+Personal Assistant, Member Runtime, another adapter, support, Gate, release,
 Profile, or multi-Agent benefit.

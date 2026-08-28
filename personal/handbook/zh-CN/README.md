@@ -14,7 +14,7 @@ Linux 1.0/API 与已采纳的 Windows-first Personal 2.0 OPC target。仅目标�
 
 **状态边界：** Linux 1.0 与当前 API 仍是六族模型，Pi 是唯一已资格化 Agent。当前同源
 `/ui/` SPA 已存在于 `clients/pc/web/`。Personal 2.0 target 包含
-Today/Projects/Team/Knowledge/Inbox、Project/Role/Employee/Routine/Attempt authority、
+Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）、Project/Role/Employee/Routine/Attempt authority、
 Personal-owned Conversation/Vault/Memory、Pi-backed Personal Assistant、preinstalled
 managed DSH、global→Project→employee→Task Provider/budget 与固定 Windows acceptance。
 MCP advanced/deferred；native mobile/E2E relay remote 属于 2.1。上述都不是 current
