@@ -4,10 +4,11 @@
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Product source:
   [Knowledge, conversation archive, Memory, and Project Vault](../../../../personal/docs/product/knowledge-memory-vault.md)
-- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
-  overwrite; not a v3; not overlay-conversation / stacked-column V2)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Status: current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -74,7 +75,9 @@ authorize scope
   -> older narrative
 ```
 
-The selected model's context window sets the package bound. When over limit,
+The selected model's context window sets the package bound. The assembly order
+is Codex-inspired as a behavior reference only: Personal owns the layers; DSH
+receives only the selected bounded Context. When over limit,
 Personal reduces older summaries and narrative first, never the current Task
 contract or fixed decisions. The UI shows omissions, truncation, stale or
 conflicting sources, redaction loss, and a first-class **Why this fragment**

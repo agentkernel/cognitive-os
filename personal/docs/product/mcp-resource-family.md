@@ -9,13 +9,12 @@
   and [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is the post-workshop canvas. Archived V2
+  is not current chrome. Canvas-only HITL and daemon authority path remain.
 - Chinese mirror: [mcp-resource-family.zh-CN.md](mcp-resource-family.zh-CN.md)
 
 ## 1. Scope
@@ -23,7 +22,10 @@
 The Personal Assistant may discover an MCP capability when Project setup or
 operation identifies a need. Security-reviewed acquisition, exact-version
 pinning, and separate Project/Member grants are in the Personal 2.0 target;
-they are not fully deferred.
+they are not fully deferred. Skills use a different path: they may auto-install
+only after the same class of source/prompt-injection review. MCP is stricter:
+first installation or any permission expansion still needs Owner confirmation
+of exact version and permissions.
 
 The retained underlying model keeps server, package, connection, capability,
 binding, health, and quarantine identities distinct. MCP is not a Tool alias,

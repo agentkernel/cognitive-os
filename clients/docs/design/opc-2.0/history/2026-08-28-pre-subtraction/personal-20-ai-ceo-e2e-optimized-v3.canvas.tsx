@@ -1,27 +1,33 @@
 /**
- * PERSONAL 2.0 INTERACTION PROTOTYPE — V2
+ * PERSONAL 2.0 INTERACTION PROTOTYPE — V3
  *
  * Built-in mock data and local React state only. This Canvas does not connect
  * to a daemon, network, storage, filesystem, Provider, model, Skill, MCP
  * server, connector, or SecretStore. It cannot create Projects, send messages,
  * install capabilities, grant permissions, publish, reconcile Effects, admit
  * Memory, or issue receipts. Target-state samples are labelled explicitly.
+ * HITL buttons are simulated: they change local prototype state only.
  *
  * Product thesis: an OPC Owner should understand the outcome due today and the
  * one consequential decision within five seconds, then move from a business
  * description to a structured Project launch preview within five minutes.
  *
- * Cursor-openable copy (IDE detection path, not the design authority):
- * C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx
+ * Official interaction baseline after owner 批准 of exploration v13 (2026-08-28).
+ * Visual / IA ancestor is owner-approved V2 (Today / Projects / Knowledge,
+ * Settings at the bottom; locked three-column shell; visible CEO loop;
+ * canvas-only HITL). V3 promotes v13 flows without a new visual direction:
+ * Owner refuse, stale re-preview, scene-native loading/error/offline,
+ * contextual attention (not L1 Inbox), Goal→Evidence inspector, archive
+ * impact preview, setup refuse / keep-draft, and return paths from
+ * Knowledge / Settings. v12 Team/Inbox L1, overlay conversation, and
+ * Digital-Employee objects are not adopted. V2 and v13 files are not
+ * overwritten.
  *
- * This overwrite (same V2 files, not v3) applies the 2026-08-28 design-tooling
- * pass on the owner-approved baseline: product IA is Today / Projects /
- * Knowledge with Settings at the bottom; conversation stays the third column;
- * first-run no longer leaks into the populated X sample; QA state coverage
- * lives in State Lab as rendered panels, not a “Designed” matrix; the CEO
- * cycle is a status on work, not a second primary nav; Settings is a hub
- * without fake Connect / Install / Confirm controls.
- * Hosted and repository copies must stay byte-aligned after each overwrite.
+ * Design artifact:
+ * d:\agent-kernel\clients\docs\design\opc-2.0\personal-20-ai-ceo-e2e-optimized-v3.canvas.tsx
+ * Cursor-openable copy (IDE detection path; not a second product baseline):
+ * C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-ai-ceo-e2e-optimized-v3.canvas.tsx
+ * Hosted and repository copies must stay byte-aligned.
  */
 
 import {
@@ -47,19 +53,33 @@ type Scene =
   | "settings"
   | "connections"
   | "capabilities"
+  | "attention"
+  | "confirm"
+  | "evidence"
+  | "archive"
+  | "cost"
+  | "notify"
+  | "recovery"
   | "state-lab";
 
-type TodayMode = "returning" | "first-run";
+type TodayMode = "returning" | "first-run" | "loading" | "error" | "offline";
 type SetupStage = "describe" | "research" | "design" | "simulate" | "preview";
 type XStage = "package" | "preview" | "receipt" | "readback" | "reflection";
 type PeopleView = "members" | "role" | "version";
-type OperationsView = "working" | "missed" | "unknown" | "blocked";
+type OperationsView = "working" | "missed" | "unknown" | "blocked" | "error";
 type KnowledgeView = "vault" | "memory" | "context";
 type ConnectionView = "quick" | "custom";
 type CapabilityView = "skill" | "mcp";
 type Channel = "assistant" | "project";
 type LoopStep = "ingest" | "decide" | "authorize" | "execute" | "verify" | "report";
 type ProvenanceKind = "observed" | "proposed" | "governed" | "verified";
+type HitlIntent = "inspect" | "wait" | "export" | "refuse";
+type LaunchFate = "none" | "refused" | "kept-draft";
+type PreviewAge = "fresh" | "stale";
+type EvidenceLayer = "goal" | "plan" | "task" | "attempt" | "evidence";
+type AttentionId = "package" | "unknown-effect" | "missed" | "mcp-grant";
+type InstructionChoice = "none" | "continue" | "pause" | "restart";
+type HitlLog = { id: string; action: string; result: string };
 type StateKey =
   | "loading"
   | "empty"
@@ -84,7 +104,7 @@ type SurfaceKey =
   | "capabilities";
 type Tone = "neutral" | "good" | "warn" | "bad" | "info";
 type MemberId = "lin" | "mei" | "rui";
-type MemoryAction = "inspect" | "correct" | "forget";
+type MemoryAction = "inspect" | "correct" | "promote" | "forget";
 type CapabilityDecision = "inspect" | "narrow" | "reject";
 
 type Member = {
@@ -117,16 +137,23 @@ type Outcome = {
 };
 
 const SCENES: ReadonlyArray<{ id: Scene; label: string }> = [
-  { id: "today", label: "Today · returning or first-run" },
+  { id: "today", label: "Today · decision packet and host states" },
   { id: "projects", label: "Projects · list or empty" },
   { id: "setup", label: "Project setup · description to preview" },
   { id: "project", label: "X Project · operating report and package inspect" },
   { id: "temporary", label: "Temporary typed canvas · pin preview" },
   { id: "people", label: "Role Template and Member Runtime" },
-  { id: "operations", label: "Working, missed, unknown, blocked" },
+  { id: "operations", label: "Working, missed, unknown, blocked, error" },
   { id: "knowledge", label: "Knowledge, Vault companion, Memory" },
+  { id: "attention", label: "Contextual attention · not Inbox" },
+  { id: "confirm", label: "Owner confirmation boundary · HITL simulation" },
+  { id: "evidence", label: "Goal → Plan → Task → Attempt → Evidence" },
+  { id: "archive", label: "Archive, restore, delete impact preview" },
   { id: "settings", label: "Settings hub" },
   { id: "connections", label: "Settings · Model Connections" },
+  { id: "cost", label: "Settings · Cost & Alerts" },
+  { id: "notify", label: "Settings · Notifications" },
+  { id: "recovery", label: "Settings · Privacy & Recovery" },
   { id: "capabilities", label: "Skill and MCP safety review" },
   { id: "state-lab", label: "State Lab · rendered coverage" },
 ];
@@ -140,8 +167,15 @@ const SCENE_TITLES: Record<Scene, string> = {
   people: "Roles and Project Members",
   operations: "Work continuity",
   knowledge: "Knowledge",
+  attention: "Needs attention",
+  confirm: "Confirmation boundary",
+  evidence: "Tasks and evidence",
+  archive: "Archive and deletion",
   settings: "Settings",
   connections: "Model Connections",
+  cost: "Cost & Alerts",
+  notify: "Notifications",
+  recovery: "Privacy & Recovery",
   capabilities: "Capability review",
   "state-lab": "State Lab",
 };
@@ -152,6 +186,75 @@ const PROJECT_SCENES: readonly Scene[] = [
   "people",
   "operations",
   "capabilities",
+  "attention",
+  "confirm",
+  "evidence",
+  "archive",
+];
+
+const SETTINGS_SCENES: readonly Scene[] = [
+  "settings",
+  "connections",
+  "cost",
+  "notify",
+  "recovery",
+];
+
+const ATTENTION_ITEMS: ReadonlyArray<{
+  id: AttentionId;
+  lane: string;
+  title: string;
+  consequence: string;
+  reversibility: string;
+  next: Scene;
+}> = [
+  {
+    id: "package",
+    lane: "Needs you",
+    title: "Inspect Package A",
+    consequence: "Public identity if later dispatched",
+    reversibility: "Still preventable · planned is not published",
+    next: "confirm",
+  },
+  {
+    id: "unknown-effect",
+    lane: "Unknown",
+    title: "Prior Effect not terminal",
+    consequence: "Blind retry could duplicate a public action",
+    reversibility: "Retry blocked until reconciliation",
+    next: "operations",
+  },
+  {
+    id: "missed",
+    lane: "Missed",
+    title: "2 of 3 Routine occurrences",
+    consequence: "Research may queue-latest; publish cannot catch up",
+    reversibility: "Host-offline facts remain inspectable",
+    next: "operations",
+  },
+  {
+    id: "mcp-grant",
+    lane: "Needs you",
+    title: "MCP first-install grant",
+    consequence: "Exact version and tool permissions would expand",
+    reversibility: "No grant until a future daemon preview",
+    next: "capabilities",
+  },
+];
+
+const EVIDENCE_LAYERS: ReadonlyArray<{
+  id: EvidenceLayer;
+  label: string;
+  object: string;
+  state: string;
+  tone: Tone;
+  source: string;
+}> = [
+  { id: "goal", label: "Goal", object: "3 accepted packages / week", state: "Open", tone: "info", source: "Charter r3 · Owner-governed" },
+  { id: "plan", label: "Plan revision", object: "Weekly cycle r4", state: "Current", tone: "good", source: "Manager candidate · not silent" },
+  { id: "task", label: "Task", object: "Review Package A", state: "Waiting Owner", tone: "warn", source: "Formal Task · not a chat message" },
+  { id: "attempt", label: "Attempt", object: "attempt/01 · editor handoff", state: "Closed · process exited", tone: "neutral", source: "Disposable process · Member remains" },
+  { id: "evidence", label: "Evidence", object: "Independent check sample", state: "Partial · not-run publish", tone: "warn", source: "Verifier observation · not self-report" },
 ];
 
 const SETUP_STAGES: ReadonlyArray<{
@@ -329,14 +432,14 @@ const SURFACE_CONTEXT: Record<
     label: "Today",
     object: "cross-Project outcomes and Owner decisions",
     source: "Project, Routine, artifact, verification, and freshness projections",
-    firstAction: "Describe the first business outcome",
+    firstAction: "Create Project",
     native: "Returning = partial attention. First-run = empty.",
   },
   projects: {
     label: "Projects",
     object: "governed Project workspaces",
     source: "Project list projection",
-    firstAction: "Describe the first business outcome",
+    firstAction: "Create Project",
     native: "First-run empty list. Returning = one sample row.",
   },
   setup: {
@@ -383,7 +486,7 @@ const SURFACE_CONTEXT: Record<
   },
   settings: {
     label: "Settings",
-    object: "Personal Home, model connections, recovery, and diagnostics",
+    object: "Personal Home, Model Connections, Cost & Alerts, Notifications, Privacy & Recovery, and diagnostics",
     source: "local product settings projection",
     firstAction: "Open Model Connections",
     native: "Hub only. No subscription, marketplace, or Installed Agents.",
@@ -438,7 +541,7 @@ function loopStepFor(
   xStage: XStage,
   operationsView: OperationsView,
 ): LoopStep {
-  if (scene === "setup" || scene === "knowledge" || (scene === "today" && todayMode === "first-run") || scene === "projects") {
+  if (scene === "setup" || scene === "knowledge" || scene === "archive" || (scene === "today" && todayMode === "first-run") || scene === "projects") {
     return "ingest";
   }
   if (scene === "operations") {
@@ -450,9 +553,22 @@ function loopStepFor(
     if (xStage === "reflection") return "report";
     return "decide";
   }
-  if (scene === "capabilities" || scene === "connections" || scene === "settings") return "authorize";
+  if (scene === "confirm" || scene === "capabilities" || scene === "connections" || scene === "settings" || scene === "cost" || scene === "notify" || scene === "recovery") {
+    return "authorize";
+  }
+  if (scene === "evidence" || scene === "attention") return "decide";
   if (scene === "temporary" || scene === "people") return "decide";
+  if (todayMode === "offline" || todayMode === "error") return "verify";
   return "decide";
+}
+
+function loopTarget(step: LoopStep): Scene {
+  if (step === "ingest") return "knowledge";
+  if (step === "decide") return "today";
+  if (step === "authorize") return "confirm";
+  if (step === "execute") return "operations";
+  if (step === "verify") return "evidence";
+  return "project";
 }
 
 function Tag({
@@ -481,12 +597,29 @@ function Provenance({ kind }: { kind: ProvenanceKind }) {
   return <span className="provenance" data-kind={kind}>{label}</span>;
 }
 
-function CycleStatus({ current }: { current: LoopStep }) {
-  const step = LOOP_STEPS.find((item) => item.id === current) ?? LOOP_STEPS[1];
+function CycleStatus({
+  current,
+  onSelect,
+}: {
+  current: LoopStep;
+  onSelect?: (step: LoopStep) => void;
+}) {
   return (
-    <p className="cycle-status">
-      Cycle {step.n}/6 · {step.label} · {step.job}
-    </p>
+    <nav className="cycle-nav" aria-label="Visible CEO loop. Status on work, not a second primary nav.">
+      {LOOP_STEPS.map((item) => (
+        <button
+          key={item.id}
+          type="button"
+          className="cycle-step"
+          aria-current={item.id === current ? "step" : undefined}
+          title={item.job}
+          onClick={() => onSelect?.(item.id)}
+        >
+          <span>{item.n}</span>
+          {item.label}
+        </button>
+      ))}
+    </nav>
   );
 }
 
@@ -639,6 +772,8 @@ function TodayScene({
   setXStage,
   setOperationsView,
   setSelectedOutcome,
+  setAttentionId,
+  launchFate,
 }: {
   mode: TodayMode;
   setMode: (value: TodayMode) => void;
@@ -646,6 +781,8 @@ function TodayScene({
   setXStage: (value: XStage) => void;
   setOperationsView: (value: OperationsView) => void;
   setSelectedOutcome: (value: string) => void;
+  setAttentionId: (value: AttentionId) => void;
+  launchFate: LaunchFate;
 }) {
   const openPackage = () => {
     setXStage("package");
@@ -653,7 +790,7 @@ function TodayScene({
   };
   const openPreview = () => {
     setXStage("preview");
-    setScene("project");
+    setScene("confirm");
   };
   const openOutcome = (id: string) => {
     setSelectedOutcome(id);
@@ -671,24 +808,107 @@ function TodayScene({
           <h2>
             {mode === "returning"
               ? "One public decision. Two outcomes can continue. Nothing published."
-              : "Start with one business outcome, not Agent configuration."}
+              : mode === "first-run"
+                ? "Start with one business outcome, not Agent configuration."
+                : mode === "loading"
+                  ? "Today is loading the last safe projection."
+                  : mode === "error"
+                    ? "Today could not refresh. Retained facts stay visible."
+                    : "Host offline. Retained work only. No 24/7 claim."}
           </h2>
           <p>
             {mode === "returning"
               ? "Lin proposed Package A. The kernel has not issued a confirmable preview. One prior Effect is still unknown."
-              : "Personal researches, proposes a design, simulates one cycle, and stops at a launch preview you can reject."}
+              : mode === "first-run"
+                ? "Personal researches, proposes a design, simulates one cycle, and stops at a launch preview you can reject."
+                : mode === "loading"
+                  ? "Leaving this view does not discard a draft. No invented metrics appear while facts are still arriving."
+                  : mode === "error"
+                    ? "Retry only the failed read. Unsafe Confirm, Connect, and Install stay absent."
+                    : "Windows host shutdown means no execution. Missed occurrences wait for a fresh risk-based resume."}
           </p>
         </div>
         <Segmented
           label="Today prototype mode"
           value={mode}
           items={[
-            { id: "returning", label: "Returning today" },
+            { id: "returning", label: "Returning" },
             { id: "first-run", label: "First run" },
+            { id: "loading", label: "Loading" },
+            { id: "error", label: "Error" },
+            { id: "offline", label: "Offline" },
           ]}
           onChange={setMode}
         />
       </section>
+
+      {launchFate !== "none" ? (
+        <Notice title="Local HITL simulation only" tone="info">
+          {launchFate === "refused"
+            ? "You simulated refusing a launch candidate. No Project was activated. The local draft remains a draft."
+            : "You simulated keeping a local-draft. Daemon-draft identity, activation, and receipt remain Requires-backend."}
+        </Notice>
+      ) : null}
+
+      {mode === "loading" ? (
+        <section className="state-panel" data-tone="info" aria-live="polite">
+          <header>
+            <Tag tone="info">Loading</Tag>
+            <strong>Decision packet</strong>
+          </header>
+          <p>Refreshing outcomes, exception swimlanes, and Member activity from Project projections. Last known packet stays readable; this prototype has no network cache.</p>
+          <div className="packet-actions">
+            <button className="secondary-button" type="button" onClick={() => setMode("returning")}>
+              Show last known Today
+            </button>
+            <button className="secondary-button" type="button" onClick={() => setScene("setup")}>
+              Leave safely · Create Project draft
+            </button>
+          </div>
+          <Gap>
+            Live Project, Routine, evidence, and conversation projections require backend support.
+          </Gap>
+        </section>
+      ) : null}
+
+      {mode === "error" ? (
+        <section className="state-panel" data-tone="bad" aria-live="polite">
+          <header>
+            <Tag tone="bad">Error</Tag>
+            <strong>Today refresh failed</strong>
+          </header>
+          <p>Failed stage: read Today projection. Retained: last decision packet and drafts. Retry is not offered as a fake success; a future daemon read is required.</p>
+          <div className="packet-actions">
+            <button className="secondary-button" type="button" onClick={() => setMode("returning")}>
+              Inspect retained Today
+            </button>
+            <button className="secondary-button" type="button" onClick={() => setScene("operations")}>
+              Open work continuity
+            </button>
+          </div>
+        </section>
+      ) : null}
+
+      {mode === "offline" ? (
+        <section className="state-panel" data-tone="warn" aria-live="polite">
+          <header>
+            <Tag tone="warn">Offline</Tag>
+            <strong>Windows host not executing</strong>
+          </header>
+          <p>Retained local facts remain inspectable. Queued work is not running. Publication, spending, and permission expansion cannot catch up silently.</p>
+          <div className="packet-actions">
+            <button className="secondary-button" type="button" onClick={() => setScene("attention")}>
+              Open missed and unknown
+            </button>
+            <button className="secondary-button" type="button" onClick={() => setMode("returning")}>
+              Show returning Today
+            </button>
+          </div>
+          <Gap>
+            Offline, missed, coalesced, and risk-based resume ledgers require backend support.
+          </Gap>
+        </section>
+      ) : null}
 
       {mode === "returning" ? (
         <>
@@ -733,13 +953,33 @@ function TodayScene({
                 Inspect Package A
               </button>
               <button className="secondary-button" type="button" onClick={openPreview}>
-                Open canvas preview
+                Open confirmation boundary
+              </button>
+              <button
+                className="secondary-button"
+                type="button"
+                onClick={() => {
+                  setAttentionId("package");
+                  setScene("attention");
+                }}
+              >
+                Open attention queue
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setScene("evidence")}>
+                Open evidence trail
               </button>
             </div>
           </section>
 
           <section className="exception-lanes" aria-label="Exception-first scan. Not Inbox.">
-            <button type="button" data-tone="warn" onClick={openPackage}>
+            <button
+              type="button"
+              data-tone="warn"
+              onClick={() => {
+                setAttentionId("package");
+                setScene("attention");
+              }}
+            >
               <span>Needs you</span>
               <Provenance kind="proposed" />
               <strong>Package A review</strong>
@@ -759,6 +999,7 @@ function TodayScene({
               type="button"
               data-tone="bad"
               onClick={() => {
+                setAttentionId("unknown-effect");
                 setOperationsView("unknown");
                 setScene("operations");
               }}
@@ -772,6 +1013,7 @@ function TodayScene({
               type="button"
               data-tone="warn"
               onClick={() => {
+                setAttentionId("missed");
                 setOperationsView("missed");
                 setScene("operations");
               }}
@@ -784,7 +1026,11 @@ function TodayScene({
           </section>
 
           <section className="open-section">
-            <Heading title="Expected outcomes" meta="Deliverable and acceptance first. Not a KPI wall." />
+            <Heading
+              title="Expected outcomes"
+              meta="Deliverable and acceptance first. Not a KPI wall."
+              action={{ label: "Compare on temporary canvas", onClick: () => setScene("temporary") }}
+            />
             <ol className="result-list">
               {OUTCOMES.map((outcome) => (
                 <li key={outcome.id}>
@@ -883,7 +1129,9 @@ function TodayScene({
             2 of 3 scheduled occurrences did not run. Only the newest eligible research occurrence may queue; publication requires a fresh review. Host offline means no 24/7 cloud work.
           </Notice>
         </>
-      ) : (
+      ) : null}
+
+      {mode === "first-run" ? (
         <section className="first-run">
           <div className="first-run-copy">
             <Tag tone="info">No Projects yet</Tag>
@@ -895,20 +1143,21 @@ function TodayScene({
               <li>Sources, conflicts, rights, and freshness stay visible.</li>
               <li>Only the base Project Manager Role is built in.</li>
               <li>Keys never enter chat. External publish stays unavailable.</li>
+              <li>You can refuse the launch candidate and keep a local draft.</li>
             </ul>
           </div>
           <div className="first-run-action">
             <strong>About 5 minutes to a structured preview</strong>
             <span>Local prototype draft only. Skip if you want to inspect the X sample.</span>
             <button className="primary-button" type="button" onClick={() => setScene("setup")}>
-              Describe first outcome
+              Create Project
             </button>
             <button className="secondary-button" type="button" onClick={() => setMode("returning")}>
               Explore the X sample
             </button>
           </div>
         </section>
-      )}
+      ) : null}
 
       <Gap>
         Today requires daemon-backed Projects, Routines, evidence, conversations, missed-run facts, and independent verification.
@@ -939,9 +1188,9 @@ function ProjectsScene({
           </div>
           <div className="first-run-action">
             <strong>First valuable action</strong>
-            <span>Describe one business outcome. Exploring the sample switches Today to returning.</span>
+            <span>Create Project starts a local description. Exploring the sample switches Today to returning. Nothing activates here.</span>
             <button className="primary-button" type="button" onClick={() => setScene("setup")}>
-              Describe first outcome
+              Create Project
             </button>
             <button
               className="secondary-button"
@@ -969,8 +1218,11 @@ function ProjectsScene({
           <h2>One current Project. Nothing is always-on.</h2>
           <p>Open a Project to its operating report. Team and Inbox are not destinations.</p>
         </div>
-        <button className="secondary-button" type="button" onClick={() => setScene("setup")}>
+          <button className="secondary-button" type="button" onClick={() => setScene("setup")}>
           New Project draft
+        </button>
+        <button className="secondary-button" type="button" onClick={() => setScene("archive")}>
+          Archive impact preview
         </button>
       </section>
       <section className="work-surface">
@@ -1014,10 +1266,14 @@ function SetupStageContent({
   stage,
   brief,
   setBrief,
+  onLaunchFate,
+  onOpenToday,
 }: {
   stage: SetupStage;
   brief: string;
   setBrief: (value: string) => void;
+  onLaunchFate: (value: LaunchFate) => void;
+  onOpenToday: () => void;
 }) {
   if (stage === "describe") {
     return (
@@ -1173,7 +1429,7 @@ function SetupStageContent({
           <strong>X content operation · Project draft</strong>
           <span>Draft-only external policy · one simulated cycle · two retained gaps</span>
         </div>
-        <span className="revision-label">Candidate revision · prototype-v2</span>
+        <span className="revision-label">Candidate revision · prototype-v3</span>
       </div>
       <dl className="definition-list">
         <div><dt>Charter</dt><dd><strong>Operate a source-backed X content cycle for an OPC developer product</strong><small>Owner scope; no market validation claim</small></dd></div>
@@ -1187,6 +1443,20 @@ function SetupStageContent({
       <Notice title="Activation unavailable" tone="bad">
         This Canvas has no daemon-owned Project authority, exact revision preview, confirmation path, or activation receipt. No fake Confirm button is shown.
       </Notice>
+      <div className="packet-actions">
+        <button className="secondary-button" type="button" onClick={() => onLaunchFate("refused")}>
+          Simulate: refuse launch candidate
+        </button>
+        <button className="secondary-button" type="button" onClick={() => onLaunchFate("kept-draft")}>
+          Simulate: keep local-draft
+        </button>
+        <button className="secondary-button" type="button" onClick={() => onOpenToday()}>
+          Return to Today
+        </button>
+      </div>
+      <Notice title="HITL simulation" tone="info">
+        Refuse and keep-draft change local prototype state only. They do not create a daemon-draft, activate a Project, or write a receipt.
+      </Notice>
     </section>
   );
 }
@@ -1196,11 +1466,15 @@ function SetupScene({
   setStage,
   brief,
   setBrief,
+  onLaunchFate,
+  onOpenToday,
 }: {
   stage: SetupStage;
   setStage: (value: SetupStage) => void;
   brief: string;
   setBrief: (value: string) => void;
+  onLaunchFate: (value: LaunchFate) => void;
+  onOpenToday: () => void;
 }) {
   const index = SETUP_STAGES.findIndex((item) => item.id === stage);
   const move = (direction: -1 | 1) => {
@@ -1235,7 +1509,13 @@ function SetupScene({
         ))}
       </nav>
 
-      <SetupStageContent stage={stage} brief={brief} setBrief={setBrief} />
+      <SetupStageContent
+        stage={stage}
+        brief={brief}
+        setBrief={setBrief}
+        onLaunchFate={onLaunchFate}
+        onOpenToday={onOpenToday}
+      />
 
       <div className="flow-actions">
         <button
@@ -1305,7 +1585,11 @@ function PackagePanel() {
   );
 }
 
-function PublishPreviewPanel() {
+function PublishPreviewPanel({
+  setScene,
+}: {
+  setScene: (value: Scene) => void;
+}) {
   return (
     <section className="decision-packet">
       <header>
@@ -1362,6 +1646,14 @@ function PublishPreviewPanel() {
       <Notice title="No confirm control on purpose" tone="bad">
         A Confirm or Publish button here would fake kernel authority. Open the package, wait, or reject the candidate. There is no “don’t ask again” grant.
       </Notice>
+      <div className="packet-actions">
+        <button className="primary-button" type="button" onClick={() => setScene("confirm")}>
+          Open HITL boundary
+        </button>
+        <button className="secondary-button" type="button" onClick={() => setScene("evidence")}>
+          Inspect evidence trail
+        </button>
+      </div>
     </section>
   );
 }
@@ -1490,6 +1782,12 @@ function ProjectScene({
           <button className="secondary-button" type="button" onClick={() => setScene("people")}>
             Open Members
           </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("attention")}>
+            Attention queue
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("evidence")}>
+            Evidence trail
+          </button>
         </div>
       </section>
 
@@ -1562,7 +1860,7 @@ function ProjectScene({
       </nav>
 
       {stage === "package" ? <PackagePanel /> : null}
-      {stage === "preview" ? <PublishPreviewPanel /> : null}
+      {stage === "preview" ? <PublishPreviewPanel setScene={setScene} /> : null}
       {stage === "receipt" ? <ReceiptPanel /> : null}
       {stage === "readback" ? <ReadbackPanel /> : null}
       {stage === "reflection" ? <ReflectionPanel setScene={setScene} /> : null}
@@ -1859,6 +2157,7 @@ function OperationsScene({
   view: OperationsView;
   setView: (value: OperationsView) => void;
 }) {
+  const [instruction, setInstruction] = useState<InstructionChoice>("none");
   return (
     <div className="scene-stack">
       <section className="operations-header">
@@ -1877,6 +2176,7 @@ function OperationsScene({
           { id: "missed", label: "Missed" },
           { id: "unknown", label: "Unknown Effect" },
           { id: "blocked", label: "Blocked" },
+          { id: "error", label: "Error" },
         ]}
         onChange={setView}
       />
@@ -1935,10 +2235,50 @@ function OperationsScene({
           </ol>
           <dl className="definition-list compact">
             <div><dt>Artifacts retained</dt><dd>6 source observations · conflict note</dd></div>
-            <div><dt>Close window</dt><dd>Eligible read-only research may continue only if the future background policy allows it</dd></div>
             <div><dt>Instruction change</dt><dd>Apply at a safe point through continue, pause, or restart; never prompt-inject a running process</dd></div>
             <div><dt>Real controls</dt><dd>None in this prototype; no fake pause, stop, or restart</dd></div>
           </dl>
+          <section className="close-window" aria-label="Close window choice sample">
+            <Heading
+              title="Close window"
+              meta="Named choice from the operating spec. This Canvas cannot honor either path."
+            />
+            <div className="version-compare">
+              <div>
+                <span>Choice 1</span>
+                <strong>Continue eligible work in background</strong>
+                <p>Low-risk internal research may continue only if a future background policy admits it. Publication, spending, and permission expansion cannot.</p>
+              </div>
+              <div>
+                <span>Choice 2</span>
+                <strong>Pause after the current safe boundary</strong>
+                <p>Stop after the current fenced step. Reopen Today to resume or review missed work. Host shutdown never implies 24/7 cloud work.</p>
+              </div>
+            </div>
+            <Notice title="Choice not executable here" tone="info">
+              Affected sample: X content operation · audience research occurrence. Continue and Pause that would honor background policy are Requires-backend. The buttons below only record a local HITL simulation.
+            </Notice>
+            <div className="packet-actions">
+              <button className="secondary-button" type="button" onClick={() => setInstruction("continue")}>
+                Simulate: continue at safe point
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setInstruction("pause")}>
+                Simulate: pause after boundary
+              </button>
+              <button className="secondary-button" type="button" onClick={() => setInstruction("restart")}>
+                Simulate: restart from revision
+              </button>
+            </div>
+            {instruction !== "none" ? (
+              <Notice title="Instruction HITL · prototype only" tone="info">
+                {instruction === "continue"
+                  ? "Local simulation: apply a new Owner instruction at the next safe point. No running prompt was injected."
+                  : instruction === "pause"
+                    ? "Local simulation: pause after the current fenced step. Host shutdown still means no 24/7 work."
+                    : "Local simulation: restart from the admitted revision. Silent prompt injection remains forbidden."}
+              </Notice>
+            ) : null}
+          </section>
           <Gap>
             Durable progress, close-window eligibility, cancellation, safe points, pause, resume, and restart require backend support.
           </Gap>
@@ -2006,6 +2346,26 @@ function OperationsScene({
           </Gap>
         </section>
       ) : null}
+
+      {view === "error" ? (
+        <section className="work-surface">
+          <Heading
+            title="Failed read of Routine ledger"
+            meta="Typed input and retained Attempts stay. Retry is not a fake success."
+          />
+          <dl className="definition-list">
+            <div><dt>Failed stage</dt><dd><strong>Read occurrence ledger</strong><small>Last-known missed facts remain visible</small></dd></div>
+            <div><dt>Retained</dt><dd><strong>Package A draft · Task contract · conflict note</strong><small>Nothing was published</small></dd></div>
+            <div><dt>Safe next</dt><dd><strong>Inspect retained work · wait for a future daemon read</strong><small>No blind retry of unknown Effect</small></dd></div>
+          </dl>
+          <Notice title="Partial success is not completion" tone="warn">
+            Source collection finished; independent verification did not. Process exit is not Task completion.
+          </Notice>
+          <Gap>
+            Durable error recovery, retry policy, and independent verification require daemon support.
+          </Gap>
+        </section>
+      ) : null}
     </div>
   );
 }
@@ -2040,7 +2400,7 @@ function KnowledgeScene({
             <strong>First valuable action</strong>
             <span>Create a Project candidate, then choose a Vault source.</span>
             <button className="primary-button" type="button" onClick={() => setScene("setup")}>
-              Describe first outcome
+              Create Project
             </button>
           </div>
         </section>
@@ -2063,6 +2423,14 @@ function KnowledgeScene({
         ]}
         onChange={setView}
       />
+      <div className="header-actions">
+        <button className="secondary-button" type="button" onClick={() => setScene("today")}>
+          Return to today’s decision
+        </button>
+        <button className="secondary-button" type="button" onClick={() => setScene("evidence")}>
+          Why this fragment in a Task
+        </button>
+      </div>
 
       {view === "vault" ? (
         <section className="work-surface">
@@ -2115,6 +2483,7 @@ function KnowledgeScene({
               items={[
                 { id: "inspect", label: "Inspect lineage" },
                 { id: "correct", label: "Preview correction" },
+                { id: "promote", label: "Preview promote" },
                 { id: "forget", label: "Preview forget" },
               ]}
               onChange={setMemoryAction}
@@ -2124,7 +2493,9 @@ function KnowledgeScene({
                 ? "Show exact source excerpts, versions, scope, purpose, retention, and conflict without hidden reasoning."
                 : memoryAction === "correct"
                   ? "Preserve the prior version, record the Owner correction, and identify affected Context packages."
-                  : "Preview affected retrieval and a durable tombstone that prevents index or cache resurrection."}
+                  : memoryAction === "promote"
+                    ? "Cross-Project promotion needs Owner confirmation of exact scope. One feedback event never silently changes a global Role."
+                    : "Preview affected retrieval and a durable tombstone that prevents index or cache resurrection."}
             </Notice>
           </div>
           <Gap>
@@ -2218,6 +2589,9 @@ function SettingsScene({
           <h2>Settings exist to make Projects work</h2>
           <p>No Installed Agent store, subscription product, or capability marketplace.</p>
         </div>
+        <button className="secondary-button" type="button" onClick={() => setScene("today")}>
+          Return to Today
+        </button>
       </section>
       <section className="work-surface">
         <Heading title="Available in this prototype" meta="Local navigation only." />
@@ -2225,10 +2599,20 @@ function SettingsScene({
           <button className="secondary-button" type="button" onClick={() => setScene("connections")}>
             Model Connections
           </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("cost")}>
+            Cost & Alerts
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("notify")}>
+            Notifications
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("recovery")}>
+            Privacy & Recovery
+          </button>
           <button className="secondary-button" type="button" onClick={() => setScene("capabilities")}>
             Skill and MCP review
           </button>
         </div>
+        <p className="settings-note">Skill and MCP review is a Project-need sample, not a Settings marketplace.</p>
       </section>
       <section className="work-surface">
         <Heading title="Named, not pretend-available" meta="Each row is a 2.0 target without a fake control." />
@@ -2241,6 +2625,13 @@ function SettingsScene({
             </dd>
           </div>
           <div>
+            <dt>Cost &amp; Alerts</dt>
+            <dd>
+              Source-labelled actual, estimated, or unknown usage. Warnings only; no product budget stop. Unknown is never ¥0.
+              <small>Requires-backend · open the preview panel, no auto-stop control</small>
+            </dd>
+          </div>
+          <div>
             <dt>Notifications</dt>
             <dd>
               Exception routing for Needs you / Unknown / Missed.
@@ -2248,10 +2639,10 @@ function SettingsScene({
             </dd>
           </div>
           <div>
-            <dt>Recovery</dt>
+            <dt>Privacy &amp; Recovery</dt>
             <dd>
-              Local restore points and secret-excluding export.
-              <small>Requires-backend · not disaster backup</small>
+              Local restore points, secret-excluding export, and inspectable retention. Same-disk versions are not disaster backup.
+              <small>Requires-backend</small>
             </dd>
           </div>
           <div>
@@ -2631,6 +3022,360 @@ function StateLabScene({
   );
 }
 
+function AttentionScene({
+  selected,
+  setSelected,
+  setScene,
+  setOperationsView,
+}: {
+  selected: AttentionId;
+  setSelected: (value: AttentionId) => void;
+  setScene: (value: Scene) => void;
+  setOperationsView: (value: OperationsView) => void;
+}) {
+  const item = ATTENTION_ITEMS.find((row) => row.id === selected) ?? ATTENTION_ITEMS[0];
+  return (
+    <div className="scene-stack">
+      <section className="today-header">
+        <div>
+          <h2>Attention is contextual. It is not a first-level Inbox.</h2>
+          <p>Approvals, unknown Effects, missed runs, and grants open from Today or the affected Project. Return keeps the decision packet.</p>
+        </div>
+        <button className="secondary-button" type="button" onClick={() => setScene("today")}>
+          Return to Today
+        </button>
+      </section>
+      <div className="people-layout">
+        <nav className="member-list" aria-label="Contextual attention items">
+          {ATTENTION_ITEMS.map((row) => (
+            <button
+              key={row.id}
+              type="button"
+              aria-current={row.id === item.id ? "page" : undefined}
+              onClick={() => setSelected(row.id)}
+            >
+              <span>
+                <strong>{row.title}</strong>
+                <small>{row.lane}</small>
+              </span>
+              <Tag tone={row.lane === "Unknown" ? "bad" : "warn"}>{row.lane}</Tag>
+            </button>
+          ))}
+        </nav>
+        <section className="work-surface">
+          <Heading title={item.title} meta={`${item.lane} · canvas confirms · chat cannot Approve`} />
+          <dl className="definition-list">
+            <div><dt>Consequence</dt><dd>{item.consequence}</dd></div>
+            <div><dt>Reversibility</dt><dd>{item.reversibility}</dd></div>
+            <div><dt>Chat</dt><dd>Announces the pause and links here. No Approve. No “don’t ask again”.</dd></div>
+          </dl>
+          <div className="packet-actions">
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => {
+                if (item.id === "unknown-effect") setOperationsView("unknown");
+                if (item.id === "missed") setOperationsView("missed");
+                setScene(item.next);
+              }}
+            >
+              Open related canvas
+            </button>
+            <button className="secondary-button" type="button" onClick={() => setScene("project")}>
+              Open Project report
+            </button>
+          </div>
+        </section>
+      </div>
+      <Gap>
+        Attention queues, freshness, and daemon-issued previews require backend support.
+      </Gap>
+    </div>
+  );
+}
+
+function ConfirmScene({
+  intent,
+  setIntent,
+  previewAge,
+  setPreviewAge,
+  hitlLog,
+  appendHitl,
+  setScene,
+}: {
+  intent: HitlIntent;
+  setIntent: (value: HitlIntent) => void;
+  previewAge: PreviewAge;
+  setPreviewAge: (value: PreviewAge) => void;
+  hitlLog: readonly HitlLog[];
+  appendHitl: (action: string, result: string) => void;
+  setScene: (value: Scene) => void;
+}) {
+  const stale = previewAge === "stale";
+  const simulate = (next: HitlIntent) => {
+    setIntent(next);
+    if (next === "inspect") {
+      appendHitl("Inspect preview", "Local view only. No authority write.");
+    } else if (next === "wait") {
+      appendHitl("Keep waiting", "Candidate retained. No Intent persisted.");
+    } else if (next === "export") {
+      appendHitl("Export draft", "Unavailable · Requires-backend. Package remains inspectable.");
+    } else {
+      appendHitl("Refuse candidate", "Local refuse receipt. Daemon did not write. Package stays planned, not published.");
+    }
+  };
+
+  return (
+    <div className="scene-stack">
+      <section className="today-header">
+        <div>
+          <h2>Owner confirmation boundary</h2>
+          <p>Preview → choose keep waiting, export, or refuse. Confirm that would write authority is absent on purpose.</p>
+        </div>
+        <button className="secondary-button" type="button" onClick={() => setScene("today")}>
+          Return to Today
+        </button>
+      </section>
+
+      <section className="decision-packet" aria-label="HITL preview">
+        <header>
+          <div className="packet-marks">
+            <Tag tone={stale ? "bad" : "warn"}>{stale ? "Stale preview · re-preview required" : "Not daemon-issued"}</Tag>
+            <Provenance kind="proposed" />
+          </div>
+          <span>Canvas-only HITL · simulated choices</span>
+        </header>
+        <h3>Package A · public dispatch candidate</h3>
+        <p>Action: publish a 7-post thread. Target: Owner’s X account. Stoppable until a future Intent exists. Evidence: mock editorial checks; connector qualification absent.</p>
+        <dl className="packet-facts">
+          <div><dt>Preview</dt><dd>Exact target, content, cost basis, reversibility</dd></div>
+          <div><dt>Confirm</dt><dd>Unavailable · would fake kernel write</dd></div>
+          <div><dt>Stoppable</dt><dd>Yes until Intent; after dispatch, prevention-only</dd></div>
+          <div><dt>Evidence</dt><dd>Independent check not-run · connector missing</dd></div>
+        </dl>
+        <Segmented
+          label="Preview freshness"
+          value={previewAge}
+          items={[
+            { id: "fresh", label: "Fresh sample" },
+            { id: "stale", label: "Stale preview" },
+          ]}
+          onChange={setPreviewAge}
+        />
+        {stale ? (
+          <Notice title="Stale preview cannot be confirmed" tone="bad">
+            An earlier preview aged out. Diff and Owner edits would be preserved in a future daemon re-preview. This Canvas still shows no Confirm.
+          </Notice>
+        ) : null}
+        <div className="packet-actions">
+          <button className="secondary-button" type="button" onClick={() => simulate("inspect")}>
+            Simulate: inspect
+          </button>
+          <button className="secondary-button" type="button" onClick={() => simulate("wait")}>
+            Simulate: keep waiting
+          </button>
+          <button className="secondary-button" type="button" disabled title="Export requires backend" onClick={() => simulate("export")}>
+            Unavailable: export draft
+          </button>
+          <button className="primary-button" type="button" onClick={() => simulate("refuse")}>
+            Simulate: Owner refuse
+          </button>
+        </div>
+      </section>
+
+      <section className="work-surface">
+        <Heading title="HITL simulation log" meta="Local prototype receipts. Daemon wrote nothing." />
+        {hitlLog.length === 0 ? (
+          <p>No simulated Owner choice yet. Inspect, wait, or refuse to see a local receipt.</p>
+        ) : (
+          <ol className="result-list">
+            {hitlLog.map((row) => (
+              <li key={row.id}>
+                <div>
+                  <strong>{row.action}</strong>
+                  <span>{row.result}</span>
+                </div>
+                <Tag tone={row.action.includes("Refuse") ? "warn" : "info"}>HITL sim</Tag>
+              </li>
+            ))}
+          </ol>
+        )}
+        {intent === "refuse" ? (
+          <Notice title="Refuse receipt · prototype only" tone="info">
+            Candidate rejected in this Canvas. Package A remains planned, not published. No Effect, no grant, no Memory admission.
+          </Notice>
+        ) : null}
+      </section>
+      <Gap>
+        Daemon-issued structured preview, persist-before-dispatch Intent/Effect, fencing, and independent receipts are required for a real confirmation path.
+      </Gap>
+    </div>
+  );
+}
+
+function EvidenceScene({
+  layer,
+  setLayer,
+  setScene,
+}: {
+  layer: EvidenceLayer;
+  setLayer: (value: EvidenceLayer) => void;
+  setScene: (value: Scene) => void;
+}) {
+  const current = EVIDENCE_LAYERS.find((item) => item.id === layer) ?? EVIDENCE_LAYERS[0];
+  return (
+    <div className="scene-stack">
+      <section className="today-header">
+        <div>
+          <h2>Goal to evidence, without treating process exit as completion</h2>
+          <p>Ordinary traces stay collapsed. Independent verification, not Member self-report, closes work.</p>
+        </div>
+        <button className="secondary-button" type="button" onClick={() => setScene("today")}>
+          Return to Today
+        </button>
+      </section>
+      <nav className="stage-tabs" aria-label="Evidence layers">
+        {EVIDENCE_LAYERS.map((item) => (
+          <button
+            key={item.id}
+            type="button"
+            aria-current={item.id === current.id ? "page" : undefined}
+            onClick={() => setLayer(item.id)}
+          >
+            {item.label}
+          </button>
+        ))}
+      </nav>
+      <section className="work-surface">
+        <Heading title={`${current.label} · ${current.object}`} meta={current.source} />
+        <Tag tone={current.tone}>{current.state}</Tag>
+        <dl className="definition-list">
+          <div><dt>What this is</dt><dd>{current.object}</dd></div>
+          <div><dt>What this is not</dt><dd>{current.id === "attempt" ? "Not the Member. Process exit does not delete Lin, Mei, or Rui." : current.id === "evidence" ? "Not Agent self-report, Provider success, or a green check invented by the canvas." : "Not a chat message, Loop, or Harness."}</dd></div>
+          <div><dt>Freshness</dt><dd>18 min mock · source-linked · unknown metrics stay unknown</dd></div>
+        </dl>
+        <div className="packet-actions">
+          <button className="secondary-button" type="button" onClick={() => setScene("operations")}>
+            Open working path
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("people")}>
+            Open Member Runtime
+          </button>
+        </div>
+      </section>
+      <Gap>
+        Goal, Plan, Task, Attempt, Effect, and independent verifier projections require backend support.
+      </Gap>
+    </div>
+  );
+}
+
+function ArchiveScene({
+  setScene,
+}: {
+  setScene: (value: Scene) => void;
+}) {
+  return (
+    <div className="scene-stack">
+      <section className="today-header">
+        <div>
+          <h2>Archive stops triggers first. Deletion is a later impact preview.</h2>
+          <p>Same-disk restore points are not disaster backup. Secrets stay out of export by default.</p>
+        </div>
+        <button className="secondary-button" type="button" onClick={() => setScene("projects")}>
+          Return to Projects
+        </button>
+      </section>
+      <section className="work-surface">
+        <Heading title="Archive candidate · X content operation" meta="Prototype impact preview. No archive or delete occurred." />
+        <dl className="definition-list">
+          <div><dt>Triggers</dt><dd><strong>Would stop</strong><small>No new Routine occurrences</small></dd></div>
+          <div><dt>History</dt><dd><strong>Would remain readable</strong><small>Conversations, artifacts, Attempts, evidence</small></dd></div>
+          <div><dt>Restore point</dt><dd><strong>Local, same-disk</strong><small>Not disaster backup</small></dd></div>
+          <div><dt>Export</dt><dd><strong>Secrets excluded by default</strong><small>Requires-backend</small></dd></div>
+          <div><dt>Permanent delete</dt><dd><strong>Second confirmation required</strong><small>Names files, Vault, Memory, pending Effects, and what cannot return</small></dd></div>
+        </dl>
+        <Notice title="No Archive or Delete control that writes" tone="bad">
+          Showing those as live buttons would fake daemon authority. This is an impact preview only.
+        </Notice>
+      </section>
+      <Gap>
+        Archive, restore, secret-excluding export, and deletion receipts require backend support.
+      </Gap>
+    </div>
+  );
+}
+
+function NamedSettingsPanel({
+  kind,
+  setScene,
+}: {
+  kind: "cost" | "notify" | "recovery";
+  setScene: (value: Scene) => void;
+}) {
+  const title =
+    kind === "cost" ? "Cost & Alerts" : kind === "notify" ? "Notifications" : "Privacy & Recovery";
+  return (
+    <div className="scene-stack">
+      <section className="settings-header">
+        <div>
+          <h2>{title}</h2>
+          <p>Named 2.0 target. No fake Connect, billing, Inbox, or disaster-backup control.</p>
+        </div>
+        <div className="header-actions">
+          <button className="secondary-button" type="button" onClick={() => setScene("settings")}>
+            Settings hub
+          </button>
+          <button className="secondary-button" type="button" onClick={() => setScene("today")}>
+            Return to Today
+          </button>
+        </div>
+      </section>
+      {kind === "cost" ? (
+        <section className="work-surface">
+          <Heading title="Source-labelled usage" meta="Unknown is never ¥0. Warnings only; no product budget stop." />
+          <table>
+            <caption>Prototype cost facts. Actuals unavailable stay unknown.</caption>
+            <thead>
+              <tr><th scope="col">Basis</th><th scope="col">Amount</th><th scope="col">Source</th></tr>
+            </thead>
+            <tbody>
+              <tr><th scope="row">Estimated</th><td>¥29.60</td><td>Mock Provider estimate</td></tr>
+              <tr><th scope="row">Actual</th><td>Unknown</td><td>Usage feed unavailable</td></tr>
+              <tr><th scope="row">Dispatch</th><td>Not incurred</td><td>No Effect</td></tr>
+            </tbody>
+          </table>
+        </section>
+      ) : null}
+      {kind === "notify" ? (
+        <section className="work-surface">
+          <Heading title="Exception routing" meta="Needs you / Unknown / Missed. Not a first-level Inbox." />
+          <p>Notifications exist to return the Owner to Today or the affected Project canvas. They do not create a parallel approval product.</p>
+          <button className="secondary-button" type="button" onClick={() => setScene("attention")}>
+            Open contextual attention
+          </button>
+        </section>
+      ) : null}
+      {kind === "recovery" ? (
+        <section className="work-surface">
+          <Heading title="Local restore and export" meta="Same-disk versions are restore points, not disaster backup." />
+          <dl className="definition-list">
+            <div><dt>Restore points</dt><dd>Local · same disk · labelled honestly</dd></div>
+            <div><dt>Export</dt><dd>Secrets excluded by default</dd></div>
+            <div><dt>Diagnostics</dt><dd>Opt-in · DSH/Pi identity only when recovering</dd></div>
+          </dl>
+          <button className="secondary-button" type="button" onClick={() => setScene("archive")}>
+            Open archive impact preview
+          </button>
+        </section>
+      ) : null}
+      <Gap>
+        Settings persistence, SecretStore, restore, and notification delivery require backend support.
+      </Gap>
+    </div>
+  );
+}
+
 function Conversation({
   channel,
   drafts,
@@ -2668,14 +3413,14 @@ function Conversation({
     setStatus("Unsent text interpreted locally; no message, Task, or revision was created.");
     if (project) {
       setCandidatePreview(true);
-      setScene("project");
+      setScene("confirm");
       setXStage("preview");
     }
   };
 
   return (
     <aside
-      id="v2-conversation"
+        id="v3-conversation"
       className="conversation"
       aria-label={title}
     >
@@ -2732,7 +3477,7 @@ function Conversation({
                 className="inline-button"
                 type="button"
                 onClick={() => {
-                  setScene("project");
+                  setScene("confirm");
                   setXStage("preview");
                 }}
               >
@@ -2755,7 +3500,7 @@ function Conversation({
               <span>No Project selected</span>
               <p>Projects and Knowledge stay empty until a Project exists, or until you choose to explore the X sample.</p>
               <button className="inline-button" type="button" onClick={() => setScene("setup")}>
-                Describe first outcome
+                Create Project
               </button>
             </article>
           </>
@@ -2853,6 +3598,18 @@ function MainScene({
   setLabSurface,
   labState,
   setLabState,
+  attentionId,
+  setAttentionId,
+  launchFate,
+  setLaunchFate,
+  hitlIntent,
+  setHitlIntent,
+  previewAge,
+  setPreviewAge,
+  hitlLog,
+  appendHitl,
+  evidenceLayer,
+  setEvidenceLayer,
 }: {
   scene: Scene;
   setScene: (value: Scene) => void;
@@ -2893,6 +3650,18 @@ function MainScene({
   setLabSurface: (value: SurfaceKey) => void;
   labState: StateKey;
   setLabState: (value: StateKey) => void;
+  attentionId: AttentionId;
+  setAttentionId: (value: AttentionId) => void;
+  launchFate: LaunchFate;
+  setLaunchFate: (value: LaunchFate) => void;
+  hitlIntent: HitlIntent;
+  setHitlIntent: (value: HitlIntent) => void;
+  previewAge: PreviewAge;
+  setPreviewAge: (value: PreviewAge) => void;
+  hitlLog: readonly HitlLog[];
+  appendHitl: (action: string, result: string) => void;
+  evidenceLayer: EvidenceLayer;
+  setEvidenceLayer: (value: EvidenceLayer) => void;
 }) {
   const firstRun = todayMode === "first-run";
   if (scene === "today") {
@@ -2904,6 +3673,8 @@ function MainScene({
         setXStage={setXStage}
         setOperationsView={setOperationsView}
         setSelectedOutcome={setSelectedOutcome}
+        setAttentionId={setAttentionId}
+        launchFate={launchFate}
       />
     );
   }
@@ -2923,6 +3694,12 @@ function MainScene({
         setStage={setSetupStage}
         brief={brief}
         setBrief={setBrief}
+        onLaunchFate={(value) => {
+          setLaunchFate(value);
+          setTodayMode("first-run");
+          setScene("today");
+        }}
+        onOpenToday={() => setScene("today")}
       />
     );
   }
@@ -2977,8 +3754,46 @@ function MainScene({
       />
     );
   }
+  if (scene === "attention") {
+    return (
+      <AttentionScene
+        selected={attentionId}
+        setSelected={setAttentionId}
+        setScene={setScene}
+        setOperationsView={setOperationsView}
+      />
+    );
+  }
+  if (scene === "confirm") {
+    return (
+      <ConfirmScene
+        intent={hitlIntent}
+        setIntent={setHitlIntent}
+        previewAge={previewAge}
+        setPreviewAge={setPreviewAge}
+        hitlLog={hitlLog}
+        appendHitl={appendHitl}
+        setScene={setScene}
+      />
+    );
+  }
+  if (scene === "evidence") {
+    return (
+      <EvidenceScene
+        layer={evidenceLayer}
+        setLayer={setEvidenceLayer}
+        setScene={setScene}
+      />
+    );
+  }
+  if (scene === "archive") {
+    return <ArchiveScene setScene={setScene} />;
+  }
   if (scene === "settings") {
     return <SettingsScene setScene={setScene} />;
+  }
+  if (scene === "cost" || scene === "notify" || scene === "recovery") {
+    return <NamedSettingsPanel kind={scene} setScene={setScene} />;
   }
   if (scene === "connections") {
     return (
@@ -3012,7 +3827,7 @@ function MainScene({
   );
 }
 
-export default function Personal20AiCeoE2eOptimizedV2() {
+export default function Personal20AiCeoE2eOptimizedV3() {
   const theme = useHostTheme();
   const [scene, setScene] = useState<Scene>("today");
   const [todayMode, setTodayMode] = useState<TodayMode>("returning");
@@ -3036,6 +3851,12 @@ export default function Personal20AiCeoE2eOptimizedV2() {
   const [capabilityDecision, setCapabilityDecision] = useState<CapabilityDecision>("inspect");
   const [labSurface, setLabSurface] = useState<SurfaceKey>("today");
   const [labState, setLabState] = useState<StateKey>("empty");
+  const [attentionId, setAttentionId] = useState<AttentionId>("package");
+  const [launchFate, setLaunchFate] = useState<LaunchFate>("none");
+  const [hitlIntent, setHitlIntent] = useState<HitlIntent>("inspect");
+  const [previewAge, setPreviewAge] = useState<PreviewAge>("fresh");
+  const [hitlLog, setHitlLog] = useState<HitlLog[]>([]);
+  const [evidenceLayer, setEvidenceLayer] = useState<EvidenceLayer>("task");
   const [drafts, setDrafts] = useState<Record<Channel, string>>({
     assistant: "",
     project: "@manager ",
@@ -3043,6 +3864,9 @@ export default function Personal20AiCeoE2eOptimizedV2() {
   const [composerStatus, setComposerStatus] = useState(
     "Drafts are local prototype state only. They persist across Assistant and Project context.",
   );
+  const appendHitl = (action: string, result: string) => {
+    setHitlLog((rows) => [...rows, { id: `${rows.length + 1}`, action, result }]);
+  };
 
   const channel: Channel = PROJECT_SCENES.includes(scene) ? "project" : "assistant";
   const firstRun = todayMode === "first-run";
@@ -3050,7 +3874,7 @@ export default function Personal20AiCeoE2eOptimizedV2() {
     scene === "projects" ||
     scene === "setup" ||
     PROJECT_SCENES.includes(scene);
-  const settingsCurrent = scene === "settings" || scene === "connections";
+  const settingsCurrent = SETTINGS_SCENES.includes(scene);
 
   const locationLabel = (() => {
     if (scene === "setup") return "Projects / new draft";
@@ -3084,9 +3908,9 @@ export default function Personal20AiCeoE2eOptimizedV2() {
   } as CSSProperties;
 
   return (
-    <div className="ai-ceo-v2" style={variables}>
+    <div className="ai-ceo-v3" style={variables}>
       <style>{`
-        .ai-ceo-v2 {
+        .ai-ceo-v3 {
           display: flex;
           flex-direction: column;
           flex-wrap: nowrap;
@@ -3101,56 +3925,56 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           font: 14px/1.5 system-ui, "Segoe UI Variable", "Segoe UI", sans-serif;
           font-optical-sizing: auto;
         }
-        .ai-ceo-v2 *,
-        .ai-ceo-v2 *::before,
-        .ai-ceo-v2 *::after { box-sizing: border-box; }
-        .ai-ceo-v2 button,
-        .ai-ceo-v2 input,
-        .ai-ceo-v2 select,
-        .ai-ceo-v2 textarea {
+        .ai-ceo-v3 *,
+        .ai-ceo-v3 *::before,
+        .ai-ceo-v3 *::after { box-sizing: border-box; }
+        .ai-ceo-v3 button,
+        .ai-ceo-v3 input,
+        .ai-ceo-v3 select,
+        .ai-ceo-v3 textarea {
           color: inherit;
           font: inherit;
           touch-action: manipulation;
           -webkit-tap-highlight-color: transparent;
         }
-        .ai-ceo-v2 button { cursor: pointer; }
-        .ai-ceo-v2 button:disabled { cursor: not-allowed; opacity: .56; }
-        .ai-ceo-v2 button:active:not(:disabled) { transform: scale(.985); }
-        .ai-ceo-v2 :focus-visible {
+        .ai-ceo-v3 button { cursor: pointer; }
+        .ai-ceo-v3 button:disabled { cursor: not-allowed; opacity: .56; }
+        .ai-ceo-v3 button:active:not(:disabled) { transform: scale(.985); }
+        .ai-ceo-v3 :focus-visible {
           outline: 3px solid var(--focus);
           outline-offset: 2px;
         }
-        .ai-ceo-v2 ::selection { background: var(--accent); color: var(--on-accent); }
-        .ai-ceo-v2 h1,
-        .ai-ceo-v2 h2,
-        .ai-ceo-v2 h3,
-        .ai-ceo-v2 p { margin-block-start: 0; }
-        .ai-ceo-v2 h1,
-        .ai-ceo-v2 h2,
-        .ai-ceo-v2 h3 {
+        .ai-ceo-v3 ::selection { background: var(--accent); color: var(--on-accent); }
+        .ai-ceo-v3 h1,
+        .ai-ceo-v3 h2,
+        .ai-ceo-v3 h3,
+        .ai-ceo-v3 p { margin-block-start: 0; }
+        .ai-ceo-v3 h1,
+        .ai-ceo-v3 h2,
+        .ai-ceo-v3 h3 {
           scroll-margin-top: 72px;
           text-wrap: balance;
         }
-        .ai-ceo-v2 p { text-wrap: pretty; }
-        .ai-ceo-v2 p,
-        .ai-ceo-v2 dd,
-        .ai-ceo-v2 td,
-        .ai-ceo-v2 th,
-        .ai-ceo-v2 span,
-        .ai-ceo-v2 small { overflow-wrap: anywhere; }
-        .ai-ceo-v2 h1 { margin: 0; font-size: 16px; line-height: 1.25; letter-spacing: -.012em; }
-        .ai-ceo-v2 h2 { margin-block-end: 7px; font-size: 22px; line-height: 1.24; letter-spacing: -.022em; }
-        .ai-ceo-v2 h3 { margin-block-end: 5px; font-size: 15px; line-height: 1.3; letter-spacing: -.008em; }
-        .ai-ceo-v2 p { margin-block-end: 10px; max-width: 72ch; }
-        .ai-ceo-v2 a { color: var(--link); text-underline-offset: .2em; }
-        .ai-ceo-v2 caption {
+        .ai-ceo-v3 p { text-wrap: pretty; }
+        .ai-ceo-v3 p,
+        .ai-ceo-v3 dd,
+        .ai-ceo-v3 td,
+        .ai-ceo-v3 th,
+        .ai-ceo-v3 span,
+        .ai-ceo-v3 small { overflow-wrap: anywhere; }
+        .ai-ceo-v3 h1 { margin: 0; font-size: 16px; line-height: 1.25; letter-spacing: -.012em; }
+        .ai-ceo-v3 h2 { margin-block-end: 7px; font-size: 22px; line-height: 1.24; letter-spacing: -.022em; }
+        .ai-ceo-v3 h3 { margin-block-end: 5px; font-size: 15px; line-height: 1.3; letter-spacing: -.008em; }
+        .ai-ceo-v3 p { margin-block-end: 10px; max-width: 72ch; }
+        .ai-ceo-v3 a { color: var(--link); text-underline-offset: .2em; }
+        .ai-ceo-v3 caption {
           caption-side: top;
           text-align: start;
           padding-block-end: 8px;
           color: var(--muted);
           font-size: 12px;
         }
-        .ai-ceo-v2 .skip-link {
+        .ai-ceo-v3 .skip-link {
           position: fixed;
           z-index: 100;
           inset-block-start: 8px;
@@ -3160,8 +3984,8 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--surface);
           padding: 9px 12px;
         }
-        .ai-ceo-v2 .skip-link:focus { transform: none; }
-        .ai-ceo-v2 .prototype-bar {
+        .ai-ceo-v3 .skip-link:focus { transform: none; }
+        .ai-ceo-v3 .prototype-bar {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -3171,20 +3995,20 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--chrome);
           padding: 7px 12px;
         }
-        .ai-ceo-v2 .prototype-title { min-width: 0; }
-        .ai-ceo-v2 .prototype-title span { display: block; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .scenario-select {
+        .ai-ceo-v3 .prototype-title { min-width: 0; }
+        .ai-ceo-v3 .prototype-title span { display: block; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .scenario-select {
           display: grid;
           grid-template-columns: auto minmax(240px, 360px);
           align-items: center;
           gap: 8px;
         }
-        .ai-ceo-v2 .scenario-select span { color: var(--muted); font-size: 12px; font-weight: 650; }
-        .ai-ceo-v2 .scenario-select select,
-        .ai-ceo-v2 .field input,
-        .ai-ceo-v2 .field select,
-        .ai-ceo-v2 .field textarea,
-        .ai-ceo-v2 .state-lab-controls select {
+        .ai-ceo-v3 .scenario-select span { color: var(--muted); font-size: 12px; font-weight: 650; }
+        .ai-ceo-v3 .scenario-select select,
+        .ai-ceo-v3 .field input,
+        .ai-ceo-v3 .field select,
+        .ai-ceo-v3 .field textarea,
+        .ai-ceo-v3 .state-lab-controls select {
           min-height: 44px;
           min-width: 0;
           border: 1px solid var(--line-strong);
@@ -3192,12 +4016,12 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--surface);
           padding: 8px 10px;
         }
-        .ai-ceo-v2 .prototype-bar,
-        .ai-ceo-v2 .shell {
+        .ai-ceo-v3 .prototype-bar,
+        .ai-ceo-v3 .shell {
           flex: 0 0 auto;
           min-width: 1100px;
         }
-        .ai-ceo-v2 .shell {
+        .ai-ceo-v3 .shell {
           display: grid;
           grid-template-columns: 176px minmax(576px, 1fr) 348px;
           grid-auto-flow: column;
@@ -3205,7 +4029,7 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           min-width: 1100px;
           min-height: calc(100vh - 52px);
         }
-        .ai-ceo-v2 .primary-nav {
+        .ai-ceo-v3 .primary-nav {
           display: flex;
           flex-direction: column;
           min-width: 0;
@@ -3213,13 +4037,13 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--chrome);
           padding: 10px 8px;
         }
-        .ai-ceo-v2 .brand {
+        .ai-ceo-v3 .brand {
           padding: 8px 10px 17px;
           font-size: 15px;
           font-weight: 760;
           letter-spacing: -.01em;
         }
-        .ai-ceo-v2 .primary-nav button {
+        .ai-ceo-v3 .primary-nav button {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -3232,21 +4056,21 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           padding: 9px 10px;
           text-align: start;
         }
-        .ai-ceo-v2 .primary-nav button:hover { background: var(--fill); }
-        .ai-ceo-v2 .primary-nav button[aria-current="page"] {
+        .ai-ceo-v3 .primary-nav button:hover { background: var(--fill); }
+        .ai-ceo-v3 .primary-nav button[aria-current="page"] {
           border-color: var(--line-strong);
           background: var(--fill-strong);
           font-weight: 720;
         }
-        .ai-ceo-v2 .nav-space { flex: 1; min-height: 24px; }
-        .ai-ceo-v2 .settings-nav {
+        .ai-ceo-v3 .nav-space { flex: 1; min-height: 24px; }
+        .ai-ceo-v3 .settings-nav {
           border-block-start: 1px solid var(--line);
           border-radius: 0;
           margin-block-start: 8px;
           padding-block-start: 13px;
         }
-        .ai-ceo-v2 .main-column { min-width: 0; }
-        .ai-ceo-v2 .context-header {
+        .ai-ceo-v3 .main-column { min-width: 0; }
+        .ai-ceo-v3 .context-header {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
@@ -3256,21 +4080,47 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--surface);
           padding: 9px 16px;
         }
-        .ai-ceo-v2 .context-header p { margin: 0 0 2px; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .context-header .scene-label {
+        .ai-ceo-v3 .context-header p { margin: 0 0 2px; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .context-header .scene-label {
           margin: 0;
           color: var(--text);
           font-size: 13px;
           font-weight: 680;
         }
-        .ai-ceo-v2 .cycle-status {
+        .ai-ceo-v3 .cycle-status {
           margin: 4px 0 0;
           color: var(--muted);
           font-size: 12px;
           max-width: none;
         }
-        .ai-ceo-v2 .context-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
-        .ai-ceo-v2 .provenance {
+        .ai-ceo-v3 .cycle-nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          margin: 6px 0 0;
+        }
+        .ai-ceo-v3 .cycle-step {
+          min-height: 32px;
+          border: 1px solid transparent;
+          border-radius: 4px;
+          background: transparent;
+          padding: 4px 7px;
+          color: var(--muted);
+          font-size: 12px;
+        }
+        .ai-ceo-v3 .cycle-step span {
+          margin-inline-end: 4px;
+          font-variant-numeric: tabular-nums;
+        }
+        .ai-ceo-v3 .cycle-step[aria-current="step"] {
+          border-color: var(--line-strong);
+          background: var(--fill-strong);
+          color: var(--text);
+          font-weight: 720;
+        }
+        .ai-ceo-v3 .cycle-step:hover { background: var(--fill); }
+        .ai-ceo-v3 .context-tools { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+        .ai-ceo-v3 .provenance {
           display: inline-flex;
           align-items: center;
           width: max-content;
@@ -3284,10 +4134,10 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           letter-spacing: .04em;
           text-transform: uppercase;
         }
-        .ai-ceo-v2 .provenance[data-kind="proposed"] { border-color: var(--warn); color: var(--text); }
-        .ai-ceo-v2 .provenance[data-kind="governed"] { border-color: var(--info); color: var(--text); }
-        .ai-ceo-v2 .provenance[data-kind="verified"] { border-color: var(--good); color: var(--text); }
-        .ai-ceo-v2 .decision-packet {
+        .ai-ceo-v3 .provenance[data-kind="proposed"] { border-color: var(--warn); color: var(--text); }
+        .ai-ceo-v3 .provenance[data-kind="governed"] { border-color: var(--info); color: var(--text); }
+        .ai-ceo-v3 .provenance[data-kind="verified"] { border-color: var(--good); color: var(--text); }
+        .ai-ceo-v3 .decision-packet {
           display: grid;
           gap: 12px;
           min-width: 0;
@@ -3296,35 +4146,35 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--surface);
           padding: 14px;
         }
-        .ai-ceo-v2 .decision-packet > header {
+        .ai-ceo-v3 .decision-packet > header {
           display: flex;
           align-items: center;
           justify-content: space-between;
           gap: 12px;
         }
-        .ai-ceo-v2 .decision-packet > header > span { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .packet-marks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .ai-ceo-v2 .decision-packet h3 { margin: 0; font-size: 19px; }
-        .ai-ceo-v2 .decision-packet > p { margin: 0; color: var(--muted); max-width: none; }
-        .ai-ceo-v2 .packet-facts {
+        .ai-ceo-v3 .decision-packet > header > span { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .packet-marks { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .ai-ceo-v3 .decision-packet h3 { margin: 0; font-size: 19px; }
+        .ai-ceo-v3 .decision-packet > p { margin: 0; color: var(--muted); max-width: none; }
+        .ai-ceo-v3 .packet-facts {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 0;
           margin: 0;
           border-block: 1px solid var(--line);
         }
-        .ai-ceo-v2 .packet-facts > div {
+        .ai-ceo-v3 .packet-facts > div {
           min-width: 0;
           border-inline-end: 1px solid var(--line);
           padding: 10px 12px 10px 0;
         }
-        .ai-ceo-v2 .packet-facts > div:nth-child(4n) { border-inline-end: 0; }
-        .ai-ceo-v2 .packet-facts dt { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .packet-facts dd { margin: 4px 0 0; }
-        .ai-ceo-v2 .packet-actions { display: flex; flex-wrap: wrap; gap: 8px; }
-        .ai-ceo-v2 .why-layer { min-width: 0; }
-        .ai-ceo-v2 .why-layer summary,
-        .ai-ceo-v2 .trace-fold summary {
+        .ai-ceo-v3 .packet-facts > div:nth-child(4n) { border-inline-end: 0; }
+        .ai-ceo-v3 .packet-facts dt { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .packet-facts dd { margin: 4px 0 0; }
+        .ai-ceo-v3 .packet-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+        .ai-ceo-v3 .why-layer { min-width: 0; }
+        .ai-ceo-v3 .why-layer summary,
+        .ai-ceo-v3 .trace-fold summary {
           cursor: pointer;
           min-height: 44px;
           display: flex;
@@ -3333,22 +4183,22 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           font-size: 12px;
           font-weight: 680;
         }
-        .ai-ceo-v2 .why-layer p,
-        .ai-ceo-v2 .trace-fold p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
-        .ai-ceo-v2 .trace-fold {
+        .ai-ceo-v3 .why-layer p,
+        .ai-ceo-v3 .trace-fold p { margin: 8px 0 0; color: var(--muted); font-size: 13px; }
+        .ai-ceo-v3 .trace-fold {
           border: 1px solid var(--line);
           border-radius: 6px;
           background: var(--fill);
           padding: 8px 10px;
           margin-block-end: 13px;
         }
-        .ai-ceo-v2 .exception-lanes {
+        .ai-ceo-v3 .exception-lanes {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 0;
           border-block: 1px solid var(--line-strong);
         }
-        .ai-ceo-v2 .exception-lanes button {
+        .ai-ceo-v3 .exception-lanes button {
           display: grid;
           justify-items: start;
           gap: 6px;
@@ -3361,17 +4211,17 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           padding: 12px 14px 12px 0;
           text-align: start;
         }
-        .ai-ceo-v2 .exception-lanes button:last-child { border-inline-end: 0; }
-        .ai-ceo-v2 .exception-lanes button:hover { background: var(--fill); }
-        .ai-ceo-v2 .exception-lanes span { font-size: 12px; font-weight: 720; }
-        .ai-ceo-v2 .exception-lanes button[data-tone="warn"] > span:first-child { color: var(--warn); }
-        .ai-ceo-v2 .exception-lanes button[data-tone="info"] > span:first-child { color: var(--info); }
-        .ai-ceo-v2 .exception-lanes button[data-tone="bad"] > span:first-child { color: var(--bad); }
-        .ai-ceo-v2 .exception-lanes strong { font-size: 14px; }
-        .ai-ceo-v2 .exception-lanes small { color: var(--muted); }
-        .ai-ceo-v2 .staff-table-wrap { width: 100%; overflow: auto; }
-        .ai-ceo-v2 .staff-table th small { display: block; color: var(--muted); font-weight: 400; }
-        .ai-ceo-v2 .authority-path {
+        .ai-ceo-v3 .exception-lanes button:last-child { border-inline-end: 0; }
+        .ai-ceo-v3 .exception-lanes button:hover { background: var(--fill); }
+        .ai-ceo-v3 .exception-lanes span { font-size: 12px; font-weight: 720; }
+        .ai-ceo-v3 .exception-lanes button[data-tone="warn"] > span:first-child { color: var(--warn); }
+        .ai-ceo-v3 .exception-lanes button[data-tone="info"] > span:first-child { color: var(--info); }
+        .ai-ceo-v3 .exception-lanes button[data-tone="bad"] > span:first-child { color: var(--bad); }
+        .ai-ceo-v3 .exception-lanes strong { font-size: 14px; }
+        .ai-ceo-v3 .exception-lanes small { color: var(--muted); }
+        .ai-ceo-v3 .staff-table-wrap { width: 100%; overflow: auto; }
+        .ai-ceo-v3 .staff-table th small { display: block; color: var(--muted); font-weight: 400; }
+        .ai-ceo-v3 .authority-path {
           display: grid;
           grid-template-columns: repeat(6, minmax(0, 1fr));
           gap: 6px;
@@ -3379,7 +4229,7 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           margin: 0 0 14px;
           padding: 0;
         }
-        .ai-ceo-v2 .authority-path li {
+        .ai-ceo-v3 .authority-path li {
           display: grid;
           gap: 6px;
           min-width: 0;
@@ -3387,15 +4237,15 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-radius: 6px;
           padding: 8px;
         }
-        .ai-ceo-v2 .authority-path strong,
-        .ai-ceo-v2 .authority-path span { display: block; }
-        .ai-ceo-v2 .authority-path span { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .authority-path li[data-state="done"] { border-color: var(--good); }
-        .ai-ceo-v2 .authority-path li[data-state="current"] { border-color: var(--warn); background: var(--fill); }
-        .ai-ceo-v2 .why-fragment { margin-block-start: 14px; }
-        .ai-ceo-v2 .main-content { min-width: 0; padding: 18px; }
-        .ai-ceo-v2 .scene-stack { display: grid; gap: 14px; }
-        .ai-ceo-v2 .tag {
+        .ai-ceo-v3 .authority-path strong,
+        .ai-ceo-v3 .authority-path span { display: block; }
+        .ai-ceo-v3 .authority-path span { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .authority-path li[data-state="done"] { border-color: var(--good); }
+        .ai-ceo-v3 .authority-path li[data-state="current"] { border-color: var(--warn); background: var(--fill); }
+        .ai-ceo-v3 .why-fragment { margin-block-start: 14px; }
+        .ai-ceo-v3 .main-content { min-width: 0; padding: 18px; }
+        .ai-ceo-v3 .scene-stack { display: grid; gap: 14px; }
+        .ai-ceo-v3 .tag {
           display: inline-flex;
           align-items: center;
           width: max-content;
@@ -3409,56 +4259,56 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           font-weight: 690;
           line-height: 1.25;
         }
-        .ai-ceo-v2 .tag[data-tone="good"] { border-color: var(--good); }
-        .ai-ceo-v2 .tag[data-tone="warn"] { border-color: var(--warn); }
-        .ai-ceo-v2 .tag[data-tone="bad"] { border-color: var(--bad); }
-        .ai-ceo-v2 .tag[data-tone="info"] { border-color: var(--info); }
-        .ai-ceo-v2 .primary-button,
-        .ai-ceo-v2 .secondary-button,
-        .ai-ceo-v2 .text-button,
-        .ai-ceo-v2 .inline-button,
-        .ai-ceo-v2 .segmented button,
-        .ai-ceo-v2 .stage-tabs button,
-        .ai-ceo-v2 .mention-buttons button,
-        .ai-ceo-v2 .step-nav button {
+        .ai-ceo-v3 .tag[data-tone="good"] { border-color: var(--good); }
+        .ai-ceo-v3 .tag[data-tone="warn"] { border-color: var(--warn); }
+        .ai-ceo-v3 .tag[data-tone="bad"] { border-color: var(--bad); }
+        .ai-ceo-v3 .tag[data-tone="info"] { border-color: var(--info); }
+        .ai-ceo-v3 .primary-button,
+        .ai-ceo-v3 .secondary-button,
+        .ai-ceo-v3 .text-button,
+        .ai-ceo-v3 .inline-button,
+        .ai-ceo-v3 .segmented button,
+        .ai-ceo-v3 .stage-tabs button,
+        .ai-ceo-v3 .mention-buttons button,
+        .ai-ceo-v3 .step-nav button {
           min-height: 44px;
           border: 1px solid var(--line-strong);
           border-radius: 6px;
           background: var(--surface);
           padding: 8px 12px;
         }
-        .ai-ceo-v2 .primary-button {
+        .ai-ceo-v3 .primary-button {
           border-color: var(--accent);
           background: var(--accent);
           color: var(--on-accent);
           font-weight: 750;
         }
-        .ai-ceo-v2 .primary-button:hover:not(:disabled) {
+        .ai-ceo-v3 .primary-button:hover:not(:disabled) {
           background: var(--fill-strong);
           color: var(--text);
         }
-        .ai-ceo-v2 .secondary-button:hover,
-        .ai-ceo-v2 .text-button:hover,
-        .ai-ceo-v2 .inline-button:hover,
-        .ai-ceo-v2 .segmented button:hover,
-        .ai-ceo-v2 .stage-tabs button:hover,
-        .ai-ceo-v2 .mention-buttons button:hover,
-        .ai-ceo-v2 .step-nav button:hover { background: var(--fill); }
-        .ai-ceo-v2 .text-button,
-        .ai-ceo-v2 .inline-button { background: transparent; }
-        .ai-ceo-v2 .inline-button { min-height: 40px; padding: 6px 9px; }
-        .ai-ceo-v2 .segmented {
+        .ai-ceo-v3 .secondary-button:hover,
+        .ai-ceo-v3 .text-button:hover,
+        .ai-ceo-v3 .inline-button:hover,
+        .ai-ceo-v3 .segmented button:hover,
+        .ai-ceo-v3 .stage-tabs button:hover,
+        .ai-ceo-v3 .mention-buttons button:hover,
+        .ai-ceo-v3 .step-nav button:hover { background: var(--fill); }
+        .ai-ceo-v3 .text-button,
+        .ai-ceo-v3 .inline-button { background: transparent; }
+        .ai-ceo-v3 .inline-button { min-height: 40px; padding: 6px 9px; }
+        .ai-ceo-v3 .segmented {
           display: flex;
           flex-wrap: wrap;
           gap: 6px;
         }
-        .ai-ceo-v2 .segmented button[aria-pressed="true"],
-        .ai-ceo-v2 .provider-options button[aria-pressed="true"] {
+        .ai-ceo-v3 .segmented button[aria-pressed="true"],
+        .ai-ceo-v3 .provider-options button[aria-pressed="true"] {
           border-color: var(--accent);
           background: var(--fill-strong);
           font-weight: 720;
         }
-        .ai-ceo-v2 .section-heading {
+        .ai-ceo-v3 .section-heading {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
@@ -3466,29 +4316,29 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-block-end: 1px solid var(--line);
           padding-block-end: 10px;
         }
-        .ai-ceo-v2 .section-heading h3 { margin: 0; }
-        .ai-ceo-v2 .section-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .work-surface,
-        .ai-ceo-v2 .comparison-surface,
-        .ai-ceo-v2 .outcome-ledger,
-        .ai-ceo-v2 .decision-preview,
-        .ai-ceo-v2 .coverage-matrix,
-        .ai-ceo-v2 .state-panel {
+        .ai-ceo-v3 .section-heading h3 { margin: 0; }
+        .ai-ceo-v3 .section-heading p { margin: 3px 0 0; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .work-surface,
+        .ai-ceo-v3 .comparison-surface,
+        .ai-ceo-v3 .outcome-ledger,
+        .ai-ceo-v3 .decision-preview,
+        .ai-ceo-v3 .coverage-matrix,
+        .ai-ceo-v3 .state-panel {
           min-width: 0;
           border: 1px solid var(--line-strong);
           border-radius: 7px;
           background: var(--surface);
           padding: 14px;
         }
-        .ai-ceo-v2 .open-section { min-width: 0; padding: 4px 2px; }
-        .ai-ceo-v2 .today-header,
-        .ai-ceo-v2 .setup-header,
-        .ai-ceo-v2 .project-header,
-        .ai-ceo-v2 .temporary-header,
-        .ai-ceo-v2 .operations-header,
-        .ai-ceo-v2 .settings-header,
-        .ai-ceo-v2 .capability-header,
-        .ai-ceo-v2 .state-lab-header {
+        .ai-ceo-v3 .open-section { min-width: 0; padding: 4px 2px; }
+        .ai-ceo-v3 .today-header,
+        .ai-ceo-v3 .setup-header,
+        .ai-ceo-v3 .project-header,
+        .ai-ceo-v3 .temporary-header,
+        .ai-ceo-v3 .operations-header,
+        .ai-ceo-v3 .settings-header,
+        .ai-ceo-v3 .capability-header,
+        .ai-ceo-v3 .state-lab-header {
           display: flex;
           align-items: flex-end;
           justify-content: space-between;
@@ -3496,39 +4346,39 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-block-end: 1px solid var(--line-strong);
           padding: 5px 2px 15px;
         }
-        .ai-ceo-v2 .today-header p,
-        .ai-ceo-v2 .setup-header p,
-        .ai-ceo-v2 .project-header p,
-        .ai-ceo-v2 .temporary-header p,
-        .ai-ceo-v2 .operations-header p,
-        .ai-ceo-v2 .settings-header p,
-        .ai-ceo-v2 .capability-header p,
-        .ai-ceo-v2 .state-lab-header p { margin: 0; color: var(--muted); }
-        .ai-ceo-v2 .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
-        .ai-ceo-v2 .staff-strip { min-width: 0; }
-        .ai-ceo-v2 .operating-report {
+        .ai-ceo-v3 .today-header p,
+        .ai-ceo-v3 .setup-header p,
+        .ai-ceo-v3 .project-header p,
+        .ai-ceo-v3 .temporary-header p,
+        .ai-ceo-v3 .operations-header p,
+        .ai-ceo-v3 .settings-header p,
+        .ai-ceo-v3 .capability-header p,
+        .ai-ceo-v3 .state-lab-header p { margin: 0; color: var(--muted); }
+        .ai-ceo-v3 .header-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 7px; }
+        .ai-ceo-v3 .staff-strip { min-width: 0; }
+        .ai-ceo-v3 .operating-report {
           min-width: 0;
           border: 1px solid var(--line-strong);
           border-radius: 7px;
           background: var(--surface);
           padding: 14px;
         }
-        .ai-ceo-v2 .report-grid {
+        .ai-ceo-v3 .report-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 0;
           border-block-start: 1px solid var(--line);
         }
-        .ai-ceo-v2 .report-grid section {
+        .ai-ceo-v3 .report-grid section {
           min-width: 0;
           border-inline-end: 1px solid var(--line);
           padding: 10px 12px 10px 0;
         }
-        .ai-ceo-v2 .report-grid section:nth-child(4n) { border-inline-end: 0; }
-        .ai-ceo-v2 .report-grid span,
-        .ai-ceo-v2 .report-grid small { display: block; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .report-grid strong { display: block; margin: 4px 0 3px; }
-        .ai-ceo-v2 .thread-cards {
+        .ai-ceo-v3 .report-grid section:nth-child(4n) { border-inline-end: 0; }
+        .ai-ceo-v3 .report-grid span,
+        .ai-ceo-v3 .report-grid small { display: block; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .report-grid strong { display: block; margin: 4px 0 3px; }
+        .ai-ceo-v3 .thread-cards {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 8px;
@@ -3536,76 +4386,76 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           margin: 12px 0;
           padding: 0;
         }
-        .ai-ceo-v2 .thread-cards li {
+        .ai-ceo-v3 .thread-cards li {
           min-width: 0;
           border: 1px solid var(--line);
           border-radius: 6px;
           padding: 10px;
         }
-        .ai-ceo-v2 .thread-cards span { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
-        .ai-ceo-v2 .thread-cards p { margin: 6px 0 0; font-size: 13px; }
-        .ai-ceo-v2 .messages article.approval-card {
+        .ai-ceo-v3 .thread-cards span { color: var(--muted); font-size: 12px; font-variant-numeric: tabular-nums; }
+        .ai-ceo-v3 .thread-cards p { margin: 6px 0 0; font-size: 13px; }
+        .ai-ceo-v3 .messages article.approval-card {
           border: 1px solid var(--line-strong);
           border-radius: 6px;
           background: var(--fill);
           padding: 9px;
         }
-        .ai-ceo-v2 .ledger-facts,
-        .ai-ceo-v2 .definition-list,
-        .ai-ceo-v2 .artifact-parts,
-        .ai-ceo-v2 .decision-preview dl { margin: 0; }
-        .ai-ceo-v2 .definition-list > div,
-        .ai-ceo-v2 .artifact-parts > div,
-        .ai-ceo-v2 .decision-preview dl > div {
+        .ai-ceo-v3 .ledger-facts,
+        .ai-ceo-v3 .definition-list,
+        .ai-ceo-v3 .artifact-parts,
+        .ai-ceo-v3 .decision-preview dl { margin: 0; }
+        .ai-ceo-v3 .definition-list > div,
+        .ai-ceo-v3 .artifact-parts > div,
+        .ai-ceo-v3 .decision-preview dl > div {
           display: grid;
           grid-template-columns: minmax(126px, .36fr) minmax(0, 1fr);
           gap: 10px;
           border-block-end: 1px solid var(--line);
           padding: 8px 0;
         }
-        .ai-ceo-v2 .definition-list > div:last-child,
-        .ai-ceo-v2 .artifact-parts > div:last-child,
-        .ai-ceo-v2 .decision-preview dl > div:last-child { border-block-end: 0; }
-        .ai-ceo-v2 dt { color: var(--muted); }
-        .ai-ceo-v2 dd { min-width: 0; margin: 0; }
-        .ai-ceo-v2 dd strong,
-        .ai-ceo-v2 dd small { display: block; }
-        .ai-ceo-v2 dd small { margin-block-start: 2px; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .definition-list.compact > div { padding: 7px 0; }
-        .ai-ceo-v2 .result-list {
+        .ai-ceo-v3 .definition-list > div:last-child,
+        .ai-ceo-v3 .artifact-parts > div:last-child,
+        .ai-ceo-v3 .decision-preview dl > div:last-child { border-block-end: 0; }
+        .ai-ceo-v3 dt { color: var(--muted); }
+        .ai-ceo-v3 dd { min-width: 0; margin: 0; }
+        .ai-ceo-v3 dd strong,
+        .ai-ceo-v3 dd small { display: block; }
+        .ai-ceo-v3 dd small { margin-block-start: 2px; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .definition-list.compact > div { padding: 7px 0; }
+        .ai-ceo-v3 .result-list {
           list-style: none;
           margin: 4px 0 0;
           padding: 0;
         }
-        .ai-ceo-v2 .result-list li {
+        .ai-ceo-v3 .result-list li {
           display: grid;
           grid-template-columns: minmax(0, 1fr) minmax(148px, auto);
           gap: 14px;
           border-block-end: 1px solid var(--line);
           padding: 12px 0;
         }
-        .ai-ceo-v2 .result-list li:last-child { border-block-end: 0; }
-        .ai-ceo-v2 .result-list strong,
-        .ai-ceo-v2 .result-list span,
-        .ai-ceo-v2 .result-list small { display: block; }
-        .ai-ceo-v2 .result-list span,
-        .ai-ceo-v2 .result-list small { margin-block-start: 3px; color: var(--muted); }
-        .ai-ceo-v2 .result-list li > div:last-child { display: grid; align-content: start; justify-items: end; gap: 4px; text-align: end; }
-        .ai-ceo-v2 .accepted-line {
+        .ai-ceo-v3 .result-list li:last-child { border-block-end: 0; }
+        .ai-ceo-v3 .result-list strong,
+        .ai-ceo-v3 .result-list span,
+        .ai-ceo-v3 .result-list small { display: block; }
+        .ai-ceo-v3 .result-list span,
+        .ai-ceo-v3 .result-list small { margin-block-start: 3px; color: var(--muted); }
+        .ai-ceo-v3 .result-list li > div:last-child { display: grid; align-content: start; justify-items: end; gap: 4px; text-align: end; }
+        .ai-ceo-v3 .accepted-line {
           display: grid;
           grid-template-columns: minmax(220px, .8fr) minmax(0, 1.2fr);
           gap: 20px;
           padding-block-start: 13px;
         }
-        .ai-ceo-v2 .accepted-line > div strong,
-        .ai-ceo-v2 .accepted-line > div span { display: block; }
-        .ai-ceo-v2 .accepted-line > div strong { font-size: 16px; }
-        .ai-ceo-v2 .accepted-line > div span { margin-block-start: 4px; color: var(--muted); }
-        .ai-ceo-v2 .ledger-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
-        .ai-ceo-v2 .ledger-facts div { border-inline-start: 1px solid var(--line); padding-inline-start: 10px; }
-        .ai-ceo-v2 .ledger-facts dt,
-        .ai-ceo-v2 .ledger-facts dd { display: block; }
-        .ai-ceo-v2 .first-run {
+        .ai-ceo-v3 .accepted-line > div strong,
+        .ai-ceo-v3 .accepted-line > div span { display: block; }
+        .ai-ceo-v3 .accepted-line > div strong { font-size: 16px; }
+        .ai-ceo-v3 .accepted-line > div span { margin-block-start: 4px; color: var(--muted); }
+        .ai-ceo-v3 .ledger-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+        .ai-ceo-v3 .ledger-facts div { border-inline-start: 1px solid var(--line); padding-inline-start: 10px; }
+        .ai-ceo-v3 .ledger-facts dt,
+        .ai-ceo-v3 .ledger-facts dd { display: block; }
+        .ai-ceo-v3 .first-run {
           display: grid;
           grid-template-columns: minmax(0, 1.35fr) minmax(280px, .65fr);
           gap: 28px;
@@ -3614,36 +4464,41 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-block: 1px solid var(--line-strong);
           padding: 34px 4px;
         }
-        .ai-ceo-v2 .first-run-copy h3,
-        .ai-ceo-v2 .first-run-copy h2 { margin-block-start: 12px; font-size: 21px; }
-        .ai-ceo-v2 .first-run-copy p,
-        .ai-ceo-v2 .first-run-copy li { color: var(--muted); }
-        .ai-ceo-v2 .first-run-copy ul { display: grid; gap: 8px; padding-inline-start: 20px; }
-        .ai-ceo-v2 .first-run-action { display: grid; gap: 9px; border-inline-start: 1px solid var(--line); padding-inline-start: 22px; }
-        .ai-ceo-v2 .first-run-action span { color: var(--muted); }
-        .ai-ceo-v2 .state-panel header { display: flex; align-items: center; gap: 8px; margin-block-end: 8px; }
-        .ai-ceo-v2 .state-panel p { max-width: none; }
-        .ai-ceo-v2 .state-panel dl { margin: 0; }
-        .ai-ceo-v2 .state-panel dl > div {
+        .ai-ceo-v3 .first-run-copy h3,
+        .ai-ceo-v3 .first-run-copy h2 { margin-block-start: 12px; font-size: 21px; }
+        .ai-ceo-v3 .first-run-copy p,
+        .ai-ceo-v3 .first-run-copy li { color: var(--muted); }
+        .ai-ceo-v3 .first-run-copy ul { display: grid; gap: 8px; padding-inline-start: 20px; }
+        .ai-ceo-v3 .first-run-action { display: grid; gap: 9px; border-inline-start: 1px solid var(--line); padding-inline-start: 22px; }
+        .ai-ceo-v3 .first-run-action span { color: var(--muted); }
+        .ai-ceo-v3 .state-panel header { display: flex; align-items: center; gap: 8px; margin-block-end: 8px; }
+        .ai-ceo-v3 .state-panel p { max-width: none; }
+        .ai-ceo-v3 .state-panel dl { margin: 0; }
+        .ai-ceo-v3 .state-panel dl > div {
           display: grid;
           grid-template-columns: minmax(140px, .32fr) minmax(0, 1fr);
           gap: 10px;
           border-block-end: 1px solid var(--line);
           padding: 8px 0;
         }
-        .ai-ceo-v2 .state-panel[data-tone="bad"] { border-color: var(--bad); }
-        .ai-ceo-v2 .state-panel[data-tone="warn"] { border-color: var(--warn); }
-        .ai-ceo-v2 .state-panel[data-tone="info"] { border-color: var(--info); }
-        .ai-ceo-v2 .state-panel[data-tone="good"] { border-color: var(--good); }
-        .ai-ceo-v2 .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-block-start: 12px; }
-        .ai-ceo-v2 .step-count { display: grid; min-width: 125px; text-align: end; }
-        .ai-ceo-v2 .step-count span { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .step-nav {
+        .ai-ceo-v3 .state-panel[data-tone="bad"] { border-color: var(--bad); }
+        .ai-ceo-v3 .state-panel[data-tone="warn"] { border-color: var(--warn); }
+        .ai-ceo-v3 .state-panel[data-tone="info"] { border-color: var(--info); }
+        .ai-ceo-v3 .state-panel[data-tone="good"] { border-color: var(--good); }
+        .ai-ceo-v3 .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; padding-block-start: 12px; }
+        .ai-ceo-v3 .settings-note {
+          margin: 10px 0 0;
+          color: var(--muted);
+          font-size: 12px;
+        }
+        .ai-ceo-v3 .step-count { display: grid; min-width: 125px; text-align: end; }
+        .ai-ceo-v3 .step-count span { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .step-nav {
           display: grid;
           grid-template-columns: repeat(5, minmax(0, 1fr));
           gap: 6px;
         }
-        .ai-ceo-v2 .step-nav button {
+        .ai-ceo-v3 .step-nav button {
           display: flex;
           align-items: center;
           justify-content: flex-start;
@@ -3651,127 +4506,127 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: transparent;
           text-align: start;
         }
-        .ai-ceo-v2 .step-nav button span { color: var(--muted); font-variant-numeric: tabular-nums; }
-        .ai-ceo-v2 .step-nav button[aria-current="step"] { border-color: var(--accent); background: var(--fill-strong); }
-        .ai-ceo-v2 .field { display: grid; gap: 5px; margin-block-start: 12px; }
-        .ai-ceo-v2 .field > span { font-weight: 680; }
-        .ai-ceo-v2 .field > small { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .field textarea { min-height: 150px; resize: vertical; }
-        .ai-ceo-v2 .research-summary,
-        .ai-ceo-v2 .preview-summary,
-        .ai-ceo-v2 .running-summary,
-        .ai-ceo-v2 .memory-record header {
+        .ai-ceo-v3 .step-nav button span { color: var(--muted); font-variant-numeric: tabular-nums; }
+        .ai-ceo-v3 .step-nav button[aria-current="step"] { border-color: var(--accent); background: var(--fill-strong); }
+        .ai-ceo-v3 .field { display: grid; gap: 5px; margin-block-start: 12px; }
+        .ai-ceo-v3 .field > span { font-weight: 680; }
+        .ai-ceo-v3 .field > small { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .field textarea { min-height: 150px; resize: vertical; }
+        .ai-ceo-v3 .research-summary,
+        .ai-ceo-v3 .preview-summary,
+        .ai-ceo-v3 .running-summary,
+        .ai-ceo-v3 .memory-record header {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
           gap: 16px;
           padding-block: 12px;
         }
-        .ai-ceo-v2 .research-summary strong,
-        .ai-ceo-v2 .research-summary span,
-        .ai-ceo-v2 .preview-summary strong,
-        .ai-ceo-v2 .preview-summary span,
-        .ai-ceo-v2 .running-summary strong,
-        .ai-ceo-v2 .running-summary span,
-        .ai-ceo-v2 .running-summary small,
-        .ai-ceo-v2 .memory-record header strong,
-        .ai-ceo-v2 .memory-record header span { display: block; }
-        .ai-ceo-v2 .research-summary span,
-        .ai-ceo-v2 .preview-summary span,
-        .ai-ceo-v2 .running-summary span,
-        .ai-ceo-v2 .running-summary small,
-        .ai-ceo-v2 .memory-record header span { color: var(--muted); }
-        .ai-ceo-v2 .revision-label { text-align: end; }
-        .ai-ceo-v2 .simulation-path,
-        .ai-ceo-v2 .run-steps,
-        .ai-ceo-v2 .reconcile-path,
-        .ai-ceo-v2 .context-ladder {
+        .ai-ceo-v3 .research-summary strong,
+        .ai-ceo-v3 .research-summary span,
+        .ai-ceo-v3 .preview-summary strong,
+        .ai-ceo-v3 .preview-summary span,
+        .ai-ceo-v3 .running-summary strong,
+        .ai-ceo-v3 .running-summary span,
+        .ai-ceo-v3 .running-summary small,
+        .ai-ceo-v3 .memory-record header strong,
+        .ai-ceo-v3 .memory-record header span { display: block; }
+        .ai-ceo-v3 .research-summary span,
+        .ai-ceo-v3 .preview-summary span,
+        .ai-ceo-v3 .running-summary span,
+        .ai-ceo-v3 .running-summary small,
+        .ai-ceo-v3 .memory-record header span { color: var(--muted); }
+        .ai-ceo-v3 .revision-label { text-align: end; }
+        .ai-ceo-v3 .simulation-path,
+        .ai-ceo-v3 .run-steps,
+        .ai-ceo-v3 .reconcile-path,
+        .ai-ceo-v3 .context-ladder {
           display: grid;
           list-style: none;
           margin: 12px 0;
           padding: 0;
         }
-        .ai-ceo-v2 .simulation-path { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
-        .ai-ceo-v2 .simulation-path li,
-        .ai-ceo-v2 .run-steps li,
-        .ai-ceo-v2 .reconcile-path li {
+        .ai-ceo-v3 .simulation-path { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 7px; }
+        .ai-ceo-v3 .simulation-path li,
+        .ai-ceo-v3 .run-steps li,
+        .ai-ceo-v3 .reconcile-path li {
           min-width: 0;
           border: 1px solid var(--line);
           border-radius: 6px;
           padding: 10px;
         }
-        .ai-ceo-v2 .simulation-path strong,
-        .ai-ceo-v2 .simulation-path span,
-        .ai-ceo-v2 .run-steps strong,
-        .ai-ceo-v2 .run-steps span,
-        .ai-ceo-v2 .reconcile-path strong,
-        .ai-ceo-v2 .reconcile-path span { display: block; }
-        .ai-ceo-v2 .simulation-path span,
-        .ai-ceo-v2 .run-steps span,
-        .ai-ceo-v2 .reconcile-path span { margin-block-start: 4px; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .simulation-path li[data-state="done"] { border-color: var(--good); }
-        .ai-ceo-v2 .simulation-path li[data-state="partial"] { border-color: var(--warn); }
-        .ai-ceo-v2 .simulation-path li[data-state="blocked"] { border-color: var(--bad); }
-        .ai-ceo-v2 .gap-summary {
+        .ai-ceo-v3 .simulation-path strong,
+        .ai-ceo-v3 .simulation-path span,
+        .ai-ceo-v3 .run-steps strong,
+        .ai-ceo-v3 .run-steps span,
+        .ai-ceo-v3 .reconcile-path strong,
+        .ai-ceo-v3 .reconcile-path span { display: block; }
+        .ai-ceo-v3 .simulation-path span,
+        .ai-ceo-v3 .run-steps span,
+        .ai-ceo-v3 .reconcile-path span { margin-block-start: 4px; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .simulation-path li[data-state="done"] { border-color: var(--good); }
+        .ai-ceo-v3 .simulation-path li[data-state="partial"] { border-color: var(--warn); }
+        .ai-ceo-v3 .simulation-path li[data-state="blocked"] { border-color: var(--bad); }
+        .ai-ceo-v3 .gap-summary {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 12px;
           margin-block-start: 12px;
         }
-        .ai-ceo-v2 .gap-summary > div { display: grid; gap: 6px; border-block-start: 1px solid var(--line); padding-block-start: 10px; }
-        .ai-ceo-v2 .gap-summary span { color: var(--muted); }
-        .ai-ceo-v2 .flow-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-        .ai-ceo-v2 .flow-end { color: var(--muted); }
-        .ai-ceo-v2 .stage-tabs {
+        .ai-ceo-v3 .gap-summary > div { display: grid; gap: 6px; border-block-start: 1px solid var(--line); padding-block-start: 10px; }
+        .ai-ceo-v3 .gap-summary span { color: var(--muted); }
+        .ai-ceo-v3 .flow-actions { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+        .ai-ceo-v3 .flow-end { color: var(--muted); }
+        .ai-ceo-v3 .stage-tabs {
           display: flex;
           flex-wrap: wrap;
           gap: 5px;
           border-block-end: 1px solid var(--line);
           padding-block-end: 9px;
         }
-        .ai-ceo-v2 .stage-tabs button { border-color: transparent; background: transparent; }
-        .ai-ceo-v2 .stage-tabs button[aria-current="page"] { border-color: var(--line-strong); background: var(--fill-strong); font-weight: 720; }
-        .ai-ceo-v2 .package-layout {
+        .ai-ceo-v3 .stage-tabs button { border-color: transparent; background: transparent; }
+        .ai-ceo-v3 .stage-tabs button[aria-current="page"] { border-color: var(--line-strong); background: var(--fill-strong); font-weight: 720; }
+        .ai-ceo-v3 .package-layout {
           display: grid;
           grid-template-columns: minmax(0, 1.35fr) minmax(240px, .65fr);
           gap: 16px;
         }
-        .ai-ceo-v2 .artifact-preview { min-width: 0; border-block: 1px solid var(--line-strong); padding-block: 14px; }
-        .ai-ceo-v2 .artifact-preview header { display: flex; justify-content: space-between; gap: 12px; }
-        .ai-ceo-v2 .artifact-preview header h3 { margin-block-start: 8px; font-size: 19px; }
-        .ai-ceo-v2 .artifact-preview header > span { color: var(--muted); }
-        .ai-ceo-v2 .thread-copy { margin-block: 10px 16px; max-width: 56ch; font-size: 17px; line-height: 1.55; }
-        .ai-ceo-v2 .acceptance-checks { border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); padding: 13px; }
-        .ai-ceo-v2 .acceptance-checks ul { list-style: none; margin: 8px 0; padding: 0; }
-        .ai-ceo-v2 .acceptance-checks li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; border-block-end: 1px solid var(--line); padding: 8px 0; }
-        .ai-ceo-v2 .acceptance-checks li > span { color: var(--info); font-size: 12px; font-weight: 800; }
-        .ai-ceo-v2 .acceptance-checks strong,
-        .ai-ceo-v2 .acceptance-checks small { display: block; }
-        .ai-ceo-v2 .acceptance-checks small,
-        .ai-ceo-v2 .acceptance-checks p { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .receipt-head { display: flex; align-items: center; gap: 10px; padding-block: 13px; }
-        .ai-ceo-v2 .readback-grid,
-        .ai-ceo-v2 .reflection-grid {
+        .ai-ceo-v3 .artifact-preview { min-width: 0; border-block: 1px solid var(--line-strong); padding-block: 14px; }
+        .ai-ceo-v3 .artifact-preview header { display: flex; justify-content: space-between; gap: 12px; }
+        .ai-ceo-v3 .artifact-preview header h3 { margin-block-start: 8px; font-size: 19px; }
+        .ai-ceo-v3 .artifact-preview header > span { color: var(--muted); }
+        .ai-ceo-v3 .thread-copy { margin-block: 10px 16px; max-width: 56ch; font-size: 17px; line-height: 1.55; }
+        .ai-ceo-v3 .acceptance-checks { border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); padding: 13px; }
+        .ai-ceo-v3 .acceptance-checks ul { list-style: none; margin: 8px 0; padding: 0; }
+        .ai-ceo-v3 .acceptance-checks li { display: grid; grid-template-columns: 56px minmax(0, 1fr); gap: 8px; border-block-end: 1px solid var(--line); padding: 8px 0; }
+        .ai-ceo-v3 .acceptance-checks li > span { color: var(--info); font-size: 12px; font-weight: 800; }
+        .ai-ceo-v3 .acceptance-checks strong,
+        .ai-ceo-v3 .acceptance-checks small { display: block; }
+        .ai-ceo-v3 .acceptance-checks small,
+        .ai-ceo-v3 .acceptance-checks p { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .receipt-head { display: flex; align-items: center; gap: 10px; padding-block: 13px; }
+        .ai-ceo-v3 .readback-grid,
+        .ai-ceo-v3 .reflection-grid {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           gap: 0;
           margin-block: 12px;
           border-block: 1px solid var(--line);
         }
-        .ai-ceo-v2 .reflection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-        .ai-ceo-v2 .readback-grid > div,
-        .ai-ceo-v2 .reflection-grid > div { min-width: 0; border-inline-end: 1px solid var(--line); padding: 11px; }
-        .ai-ceo-v2 .readback-grid > div:last-child,
-        .ai-ceo-v2 .reflection-grid > div:last-child { border-inline-end: 0; }
-        .ai-ceo-v2 .readback-grid span,
-        .ai-ceo-v2 .readback-grid strong,
-        .ai-ceo-v2 .readback-grid small { display: block; }
-        .ai-ceo-v2 .readback-grid span,
-        .ai-ceo-v2 .readback-grid small,
-        .ai-ceo-v2 .reflection-grid p { color: var(--muted); }
-        .ai-ceo-v2 .readback-grid strong { margin-block: 5px; }
-        .ai-ceo-v2 .loop-ledger { border-block-start: 1px solid var(--line-strong); padding-block-start: 12px; }
-        .ai-ceo-v2 .loop-ledger ol {
+        .ai-ceo-v3 .reflection-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+        .ai-ceo-v3 .readback-grid > div,
+        .ai-ceo-v3 .reflection-grid > div { min-width: 0; border-inline-end: 1px solid var(--line); padding: 11px; }
+        .ai-ceo-v3 .readback-grid > div:last-child,
+        .ai-ceo-v3 .reflection-grid > div:last-child { border-inline-end: 0; }
+        .ai-ceo-v3 .readback-grid span,
+        .ai-ceo-v3 .readback-grid strong,
+        .ai-ceo-v3 .readback-grid small { display: block; }
+        .ai-ceo-v3 .readback-grid span,
+        .ai-ceo-v3 .readback-grid small,
+        .ai-ceo-v3 .reflection-grid p { color: var(--muted); }
+        .ai-ceo-v3 .readback-grid strong { margin-block: 5px; }
+        .ai-ceo-v3 .loop-ledger { border-block-start: 1px solid var(--line-strong); padding-block-start: 12px; }
+        .ai-ceo-v3 .loop-ledger ol {
           display: grid;
           grid-template-columns: repeat(8, minmax(116px, 1fr));
           gap: 6px;
@@ -3780,35 +4635,35 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           margin: 10px 0 0;
           padding: 0 0 6px;
         }
-        .ai-ceo-v2 .loop-ledger li { border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
-        .ai-ceo-v2 .loop-ledger strong,
-        .ai-ceo-v2 .loop-ledger span { display: block; }
-        .ai-ceo-v2 .loop-ledger span { margin-block-start: 3px; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .loop-ledger li[data-state="done"] { border-color: var(--good); }
-        .ai-ceo-v2 .loop-ledger li[data-state="partial"],
-        .ai-ceo-v2 .loop-ledger li[data-state="waiting"] { border-color: var(--warn); }
-        .ai-ceo-v2 .loop-ledger li[data-state="blocked"] { border-color: var(--bad); }
-        .ai-ceo-v2 .loop-ledger li[data-state="sample"] { border-style: dashed; }
-        .ai-ceo-v2 .comparison-table-wrap { width: 100%; overflow: auto; margin-block-start: 10px; }
-        .ai-ceo-v2 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
-        .ai-ceo-v2 th,
-        .ai-ceo-v2 td { min-width: 112px; border-block-end: 1px solid var(--line); padding: 9px 8px; text-align: start; vertical-align: top; }
-        .ai-ceo-v2 thead th { color: var(--muted); font-size: 12px; font-weight: 700; }
-        .ai-ceo-v2 tbody th { font-weight: 700; }
-        .ai-ceo-v2 tbody tr[data-selected="true"] { background: var(--fill); }
-        .ai-ceo-v2 .typed-canvas-grid {
+        .ai-ceo-v3 .loop-ledger li { border: 1px solid var(--line); border-radius: 6px; padding: 8px; }
+        .ai-ceo-v3 .loop-ledger strong,
+        .ai-ceo-v3 .loop-ledger span { display: block; }
+        .ai-ceo-v3 .loop-ledger span { margin-block-start: 3px; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .loop-ledger li[data-state="done"] { border-color: var(--good); }
+        .ai-ceo-v3 .loop-ledger li[data-state="partial"],
+        .ai-ceo-v3 .loop-ledger li[data-state="waiting"] { border-color: var(--warn); }
+        .ai-ceo-v3 .loop-ledger li[data-state="blocked"] { border-color: var(--bad); }
+        .ai-ceo-v3 .loop-ledger li[data-state="sample"] { border-style: dashed; }
+        .ai-ceo-v3 .comparison-table-wrap { width: 100%; overflow: auto; margin-block-start: 10px; }
+        .ai-ceo-v3 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+        .ai-ceo-v3 th,
+        .ai-ceo-v3 td { min-width: 112px; border-block-end: 1px solid var(--line); padding: 9px 8px; text-align: start; vertical-align: top; }
+        .ai-ceo-v3 thead th { color: var(--muted); font-size: 12px; font-weight: 700; }
+        .ai-ceo-v3 tbody th { font-weight: 700; }
+        .ai-ceo-v3 tbody tr[data-selected="true"] { background: var(--fill); }
+        .ai-ceo-v3 .typed-canvas-grid {
           display: grid;
           grid-template-columns: minmax(0, 1.15fr) minmax(260px, .85fr);
           gap: 16px;
         }
-        .ai-ceo-v2 .decision-panel,
-        .ai-ceo-v2 .evidence-panel { min-width: 0; border-block-start: 1px solid var(--line-strong); padding-block-start: 12px; }
-        .ai-ceo-v2 .decision-panel p { font-size: 16px; font-weight: 650; }
-        .ai-ceo-v2 .decision-panel small { color: var(--muted); }
-        .ai-ceo-v2 .evidence-panel ul { list-style: none; margin: 8px 0 0; padding: 0; }
-        .ai-ceo-v2 .evidence-panel li { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 8px; border-block-end: 1px solid var(--line); padding: 8px 0; }
-        .ai-ceo-v2 .evidence-panel span { color: var(--muted); }
-        .ai-ceo-v2 .object-chain {
+        .ai-ceo-v3 .decision-panel,
+        .ai-ceo-v3 .evidence-panel { min-width: 0; border-block-start: 1px solid var(--line-strong); padding-block-start: 12px; }
+        .ai-ceo-v3 .decision-panel p { font-size: 16px; font-weight: 650; }
+        .ai-ceo-v3 .decision-panel small { color: var(--muted); }
+        .ai-ceo-v3 .evidence-panel ul { list-style: none; margin: 8px 0 0; padding: 0; }
+        .ai-ceo-v3 .evidence-panel li { display: grid; grid-template-columns: minmax(120px, .35fr) minmax(0, 1fr); gap: 8px; border-block-end: 1px solid var(--line); padding: 8px 0; }
+        .ai-ceo-v3 .evidence-panel span { color: var(--muted); }
+        .ai-ceo-v3 .object-chain {
           display: grid;
           grid-template-columns: minmax(140px, 1fr) auto minmax(140px, 1fr) auto minmax(120px, .8fr) auto minmax(165px, 1.2fr);
           align-items: center;
@@ -3816,18 +4671,18 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-block-end: 1px solid var(--line-strong);
           padding-block-end: 14px;
         }
-        .ai-ceo-v2 .object-chain > div { min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 9px; }
-        .ai-ceo-v2 .object-chain strong,
-        .ai-ceo-v2 .object-chain div span { display: block; }
-        .ai-ceo-v2 .object-chain div span,
-        .ai-ceo-v2 .object-chain > span { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .people-layout {
+        .ai-ceo-v3 .object-chain > div { min-width: 0; border: 1px solid var(--line); border-radius: 6px; padding: 9px; }
+        .ai-ceo-v3 .object-chain strong,
+        .ai-ceo-v3 .object-chain div span { display: block; }
+        .ai-ceo-v3 .object-chain div span,
+        .ai-ceo-v3 .object-chain > span { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .people-layout {
           display: grid;
           grid-template-columns: 220px minmax(0, 1fr);
           gap: 14px;
         }
-        .ai-ceo-v2 .member-list { border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); padding: 7px; }
-        .ai-ceo-v2 .member-list button {
+        .ai-ceo-v3 .member-list { border: 1px solid var(--line-strong); border-radius: 7px; background: var(--surface); padding: 7px; }
+        .ai-ceo-v3 .member-list button {
           display: flex;
           align-items: center;
           justify-content: space-between;
@@ -3840,62 +4695,62 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           padding: 8px;
           text-align: start;
         }
-        .ai-ceo-v2 .member-list button:hover { background: var(--fill); }
-        .ai-ceo-v2 .member-list button[aria-current="page"] { border-color: var(--line-strong); background: var(--fill-strong); }
-        .ai-ceo-v2 .member-list strong,
-        .ai-ceo-v2 .member-list small { display: block; }
-        .ai-ceo-v2 .member-list small { color: var(--muted); }
-        .ai-ceo-v2 .version-compare {
+        .ai-ceo-v3 .member-list button:hover { background: var(--fill); }
+        .ai-ceo-v3 .member-list button[aria-current="page"] { border-color: var(--line-strong); background: var(--fill-strong); }
+        .ai-ceo-v3 .member-list strong,
+        .ai-ceo-v3 .member-list small { display: block; }
+        .ai-ceo-v3 .member-list small { color: var(--muted); }
+        .ai-ceo-v3 .version-compare {
           display: grid;
           grid-template-columns: repeat(2, minmax(0, 1fr));
           gap: 14px;
           margin-block: 12px;
         }
-        .ai-ceo-v2 .version-compare > div { min-width: 0; border-block: 1px solid var(--line); padding-block: 11px; }
-        .ai-ceo-v2 .version-compare span,
-        .ai-ceo-v2 .version-compare strong { display: block; }
-        .ai-ceo-v2 .version-compare span,
-        .ai-ceo-v2 .version-compare p { color: var(--muted); }
-        .ai-ceo-v2 .version-compare strong { margin-block: 5px; }
-        .ai-ceo-v2 .run-steps,
-        .ai-ceo-v2 .reconcile-path { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
-        .ai-ceo-v2 .reconcile-path { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-        .ai-ceo-v2 .run-steps li[data-state="done"] { border-color: var(--good); }
-        .ai-ceo-v2 .run-steps li[data-state="current"],
-        .ai-ceo-v2 .reconcile-path li[data-state="current"] { border-color: var(--warn); background: var(--fill); }
-        .ai-ceo-v2 .reconcile-path li[data-state="done"] { border-color: var(--info); }
-        .ai-ceo-v2 .memory-record { padding-block-start: 4px; }
-        .ai-ceo-v2 .memory-record > p { color: var(--muted); }
-        .ai-ceo-v2 .memory-record .segmented { margin-block: 12px; }
-        .ai-ceo-v2 .context-budget { display: grid; gap: 9px; padding-block: 12px; }
-        .ai-ceo-v2 .context-budget strong,
-        .ai-ceo-v2 .context-budget span { display: block; }
-        .ai-ceo-v2 .context-budget span { color: var(--muted); }
-        .ai-ceo-v2 .context-ladder { gap: 0; }
-        .ai-ceo-v2 .context-ladder li {
+        .ai-ceo-v3 .version-compare > div { min-width: 0; border-block: 1px solid var(--line); padding-block: 11px; }
+        .ai-ceo-v3 .version-compare span,
+        .ai-ceo-v3 .version-compare strong { display: block; }
+        .ai-ceo-v3 .version-compare span,
+        .ai-ceo-v3 .version-compare p { color: var(--muted); }
+        .ai-ceo-v3 .version-compare strong { margin-block: 5px; }
+        .ai-ceo-v3 .run-steps,
+        .ai-ceo-v3 .reconcile-path { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 7px; }
+        .ai-ceo-v3 .reconcile-path { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+        .ai-ceo-v3 .run-steps li[data-state="done"] { border-color: var(--good); }
+        .ai-ceo-v3 .run-steps li[data-state="current"],
+        .ai-ceo-v3 .reconcile-path li[data-state="current"] { border-color: var(--warn); background: var(--fill); }
+        .ai-ceo-v3 .reconcile-path li[data-state="done"] { border-color: var(--info); }
+        .ai-ceo-v3 .memory-record { padding-block-start: 4px; }
+        .ai-ceo-v3 .memory-record > p { color: var(--muted); }
+        .ai-ceo-v3 .memory-record .segmented { margin-block: 12px; }
+        .ai-ceo-v3 .context-budget { display: grid; gap: 9px; padding-block: 12px; }
+        .ai-ceo-v3 .context-budget strong,
+        .ai-ceo-v3 .context-budget span { display: block; }
+        .ai-ceo-v3 .context-budget span { color: var(--muted); }
+        .ai-ceo-v3 .context-ladder { gap: 0; }
+        .ai-ceo-v3 .context-ladder li {
           display: grid;
           grid-template-columns: 34px minmax(0, 1fr);
           gap: 10px;
           border-block-end: 1px solid var(--line);
           padding: 9px 0;
         }
-        .ai-ceo-v2 .context-ladder li > span { color: var(--muted); }
-        .ai-ceo-v2 .context-ladder strong,
-        .ai-ceo-v2 .context-ladder small { display: block; }
-        .ai-ceo-v2 .context-ladder small { color: var(--muted); }
-        .ai-ceo-v2 .context-ladder li[data-protected="true"] strong::after { content: " · protected"; color: var(--info); font-size: 12px; }
-        .ai-ceo-v2 .connection-layout {
+        .ai-ceo-v3 .context-ladder li > span { color: var(--muted); }
+        .ai-ceo-v3 .context-ladder strong,
+        .ai-ceo-v3 .context-ladder small { display: block; }
+        .ai-ceo-v3 .context-ladder small { color: var(--muted); }
+        .ai-ceo-v3 .context-ladder li[data-protected="true"] strong::after { content: " · protected"; color: var(--info); font-size: 12px; }
+        .ai-ceo-v3 .connection-layout {
           display: grid;
           grid-template-columns: minmax(0, 1.05fr) minmax(300px, .95fr);
           gap: 14px;
         }
-        .ai-ceo-v2 .provider-options {
+        .ai-ceo-v3 .provider-options {
           display: grid;
           grid-template-columns: repeat(3, minmax(0, 1fr));
           gap: 7px;
           margin-block: 12px;
         }
-        .ai-ceo-v2 .provider-options button {
+        .ai-ceo-v3 .provider-options button {
           min-height: 72px;
           border: 1px solid var(--line-strong);
           border-radius: 6px;
@@ -3903,45 +4758,45 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           padding: 10px;
           text-align: start;
         }
-        .ai-ceo-v2 .provider-options strong,
-        .ai-ceo-v2 .provider-options span { display: block; }
-        .ai-ceo-v2 .provider-options span { margin-block-start: 4px; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .custom-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
-        .ai-ceo-v2 .secret-route { display: grid; align-content: center; gap: 5px; min-height: 88px; margin-block-start: 12px; border-block: 1px solid var(--line); }
-        .ai-ceo-v2 .secret-route span { color: var(--muted); }
-        .ai-ceo-v2 .capability-layout {
+        .ai-ceo-v3 .provider-options strong,
+        .ai-ceo-v3 .provider-options span { display: block; }
+        .ai-ceo-v3 .provider-options span { margin-block-start: 4px; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .custom-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; }
+        .ai-ceo-v3 .secret-route { display: grid; align-content: center; gap: 5px; min-height: 88px; margin-block-start: 12px; border-block: 1px solid var(--line); }
+        .ai-ceo-v3 .secret-route span { color: var(--muted); }
+        .ai-ceo-v3 .capability-layout {
           display: grid;
           grid-template-columns: minmax(0, 1.25fr) minmax(270px, .75fr);
           gap: 14px;
         }
-        .ai-ceo-v2 .review-rows { margin-block-start: 9px; }
-        .ai-ceo-v2 .review-rows > div {
+        .ai-ceo-v3 .review-rows { margin-block-start: 9px; }
+        .ai-ceo-v3 .review-rows > div {
           display: grid;
           grid-template-columns: minmax(125px, .28fr) minmax(0, 1fr) minmax(130px, .35fr);
           gap: 10px;
           border-block-end: 1px solid var(--line);
           padding: 8px 0;
         }
-        .ai-ceo-v2 .review-rows span,
-        .ai-ceo-v2 .review-rows small { color: var(--muted); }
-        .ai-ceo-v2 .decision-preview > p,
-        .ai-ceo-v2 .decision-preview output { color: var(--muted); }
-        .ai-ceo-v2 .decision-preview .segmented { display: grid; margin-block: 12px; }
-        .ai-ceo-v2 .decision-preview output { display: block; border-block: 1px solid var(--line); padding-block: 10px; }
-        .ai-ceo-v2 .state-lab-controls { display: grid; grid-template-columns: repeat(2, minmax(160px, 1fr)); gap: 8px; }
-        .ai-ceo-v2 .state-lab-controls label { display: grid; gap: 4px; }
-        .ai-ceo-v2 .state-lab-controls label span { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .additional-states {
+        .ai-ceo-v3 .review-rows span,
+        .ai-ceo-v3 .review-rows small { color: var(--muted); }
+        .ai-ceo-v3 .decision-preview > p,
+        .ai-ceo-v3 .decision-preview output { color: var(--muted); }
+        .ai-ceo-v3 .decision-preview .segmented { display: grid; margin-block: 12px; }
+        .ai-ceo-v3 .decision-preview output { display: block; border-block: 1px solid var(--line); padding-block: 10px; }
+        .ai-ceo-v3 .state-lab-controls { display: grid; grid-template-columns: repeat(2, minmax(160px, 1fr)); gap: 8px; }
+        .ai-ceo-v3 .state-lab-controls label { display: grid; gap: 4px; }
+        .ai-ceo-v3 .state-lab-controls label span { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .additional-states {
           display: grid;
           grid-template-columns: repeat(4, minmax(0, 1fr));
           border-block: 1px solid var(--line);
         }
-        .ai-ceo-v2 .additional-states > div { min-width: 0; border-inline-end: 1px solid var(--line); padding: 11px; }
-        .ai-ceo-v2 .additional-states > div:last-child { border-inline-end: 0; }
-        .ai-ceo-v2 .additional-states strong,
-        .ai-ceo-v2 .additional-states span { display: block; }
-        .ai-ceo-v2 .additional-states span { margin-block-start: 4px; color: var(--muted); }
-        .ai-ceo-v2 .conversation {
+        .ai-ceo-v3 .additional-states > div { min-width: 0; border-inline-end: 1px solid var(--line); padding: 11px; }
+        .ai-ceo-v3 .additional-states > div:last-child { border-inline-end: 0; }
+        .ai-ceo-v3 .additional-states strong,
+        .ai-ceo-v3 .additional-states span { display: block; }
+        .ai-ceo-v3 .additional-states span { margin-block-start: 4px; color: var(--muted); }
+        .ai-ceo-v3 .conversation {
           display: flex;
           flex-direction: column;
           min-width: 0;
@@ -3949,7 +4804,7 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-inline-start: 1px solid var(--line);
           background: var(--surface);
         }
-        .ai-ceo-v2 .conversation > header {
+        .ai-ceo-v3 .conversation > header {
           display: flex;
           align-items: flex-start;
           justify-content: space-between;
@@ -3957,28 +4812,28 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           border-block-end: 1px solid var(--line);
           padding: 12px;
         }
-        .ai-ceo-v2 .conversation > header span { color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .conversation > header h2 { margin: 2px 0 0; font-size: 16px; }
-        .ai-ceo-v2 .participants {
+        .ai-ceo-v3 .conversation > header span { color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .conversation > header h2 { margin: 2px 0 0; font-size: 16px; }
+        .ai-ceo-v3 .participants {
           display: flex;
           flex-wrap: wrap;
           gap: 5px;
           border-block-end: 1px solid var(--line);
           padding: 8px 12px;
         }
-        .ai-ceo-v2 .participants span { border: 1px solid var(--line); border-radius: 999px; padding: 3px 7px; color: var(--muted); font-size: 12px; }
-        .ai-ceo-v2 .messages { flex: 1; min-height: 230px; overflow-y: auto; overscroll-behavior: contain; padding: 12px; }
-        .ai-ceo-v2 .messages article { border-block-end: 1px solid var(--line); margin-block-end: 13px; padding-block-end: 12px; }
-        .ai-ceo-v2 .messages article > span { color: var(--muted); font-size: 12px; font-weight: 680; }
-        .ai-ceo-v2 .messages article p { margin: 4px 0; }
-        .ai-ceo-v2 .messages article small { display: block; color: var(--muted); }
-        .ai-ceo-v2 .messages article .inline-button { margin-block-start: 8px; }
-        .ai-ceo-v2 .messages article[data-author="owner"] p { margin-inline-start: 14px; font-weight: 620; }
-        .ai-ceo-v2 .messages article[data-author="system"] { border: 1px solid var(--line); border-radius: 6px; background: var(--fill); padding: 9px; }
-        .ai-ceo-v2 .composer { display: grid; gap: 8px; border-block-start: 1px solid var(--line); padding: 10px; }
-        .ai-ceo-v2 .composer > label { display: grid; gap: 5px; }
-        .ai-ceo-v2 .composer > label > span { font-weight: 680; }
-        .ai-ceo-v2 .composer textarea {
+        .ai-ceo-v3 .participants span { border: 1px solid var(--line); border-radius: 999px; padding: 3px 7px; color: var(--muted); font-size: 12px; }
+        .ai-ceo-v3 .messages { flex: 1; min-height: 230px; overflow-y: auto; overscroll-behavior: contain; padding: 12px; }
+        .ai-ceo-v3 .messages article { border-block-end: 1px solid var(--line); margin-block-end: 13px; padding-block-end: 12px; }
+        .ai-ceo-v3 .messages article > span { color: var(--muted); font-size: 12px; font-weight: 680; }
+        .ai-ceo-v3 .messages article p { margin: 4px 0; }
+        .ai-ceo-v3 .messages article small { display: block; color: var(--muted); }
+        .ai-ceo-v3 .messages article .inline-button { margin-block-start: 8px; }
+        .ai-ceo-v3 .messages article[data-author="owner"] p { margin-inline-start: 14px; font-weight: 620; }
+        .ai-ceo-v3 .messages article[data-author="system"] { border: 1px solid var(--line); border-radius: 6px; background: var(--fill); padding: 9px; }
+        .ai-ceo-v3 .composer { display: grid; gap: 8px; border-block-start: 1px solid var(--line); padding: 10px; }
+        .ai-ceo-v3 .composer > label { display: grid; gap: 5px; }
+        .ai-ceo-v3 .composer > label > span { font-weight: 680; }
+        .ai-ceo-v3 .composer textarea {
           width: 100%;
           min-height: 96px;
           resize: vertical;
@@ -3987,38 +4842,38 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           background: var(--surface);
           padding: 9px 10px;
         }
-        .ai-ceo-v2 .mention-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
-        .ai-ceo-v2 .mention-buttons button { min-height: 40px; padding: 6px 9px; }
-        .ai-ceo-v2 .composer-actions { display: grid; gap: 6px; }
-        .ai-ceo-v2 .composer-actions small { color: var(--muted); }
-        .ai-ceo-v2 .composer .gap { grid-template-columns: 1fr; gap: 3px; font-size: 12px; }
+        .ai-ceo-v3 .mention-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+        .ai-ceo-v3 .mention-buttons button { min-height: 40px; padding: 6px 9px; }
+        .ai-ceo-v3 .composer-actions { display: grid; gap: 6px; }
+        .ai-ceo-v3 .composer-actions small { color: var(--muted); }
+        .ai-ceo-v3 .composer .gap { grid-template-columns: 1fr; gap: 3px; font-size: 12px; }
         @media (prefers-reduced-motion: reduce) {
-          .ai-ceo-v2 *,
-          .ai-ceo-v2 *::before,
-          .ai-ceo-v2 *::after {
+          .ai-ceo-v3 *,
+          .ai-ceo-v3 *::before,
+          .ai-ceo-v3 *::after {
             animation-duration: .01ms !important;
             transition-duration: .01ms !important;
             scroll-behavior: auto !important;
           }
-          .ai-ceo-v2 button:active:not(:disabled) { transform: none; }
+          .ai-ceo-v3 button:active:not(:disabled) { transform: none; }
         }
         @media (prefers-contrast: more) {
-          .ai-ceo-v2 .work-surface,
-          .ai-ceo-v2 .comparison-surface,
-          .ai-ceo-v2 .decision-packet,
-          .ai-ceo-v2 .outcome-ledger,
-          .ai-ceo-v2 .decision-preview,
-          .ai-ceo-v2 .coverage-matrix,
-          .ai-ceo-v2 .state-panel { border-color: var(--text); }
+          .ai-ceo-v3 .work-surface,
+          .ai-ceo-v3 .comparison-surface,
+          .ai-ceo-v3 .decision-packet,
+          .ai-ceo-v3 .outcome-ledger,
+          .ai-ceo-v3 .decision-preview,
+          .ai-ceo-v3 .coverage-matrix,
+          .ai-ceo-v3 .state-panel { border-color: var(--text); }
         }
       `}</style>
 
-      <a className="skip-link" href="#v2-main">Skip to main workbench</a>
+      <a className="skip-link" href="#v3-main">Skip to main workbench</a>
 
       <header className="prototype-bar">
         <div className="prototype-title">
-          <h1>Personal 2.0 · AI CEO end-to-end prototype V2</h1>
-          <span>Propose in chat · authorize on canvas · verify independently · local state only</span>
+          <h1>Personal 2.0 · AI CEO end-to-end prototype V3</h1>
+          <span>Propose in chat · authorize on canvas · HITL is simulated · local state only</span>
         </div>
         <label className="scenario-select">
           <span>Prototype scenario</span>
@@ -4069,15 +4924,20 @@ export default function Personal20AiCeoE2eOptimizedV2() {
           </button>
         </nav>
 
-        <main className="main-column" id="v2-main">
+        <main className="main-column" id="v3-main">
           <header className="context-header">
             <div>
               <p>{locationLabel}</p>
               <p className="scene-label">{SCENE_TITLES[scene]}</p>
-              <CycleStatus current={loopStepFor(scene, todayMode, xStage, operationsView)} />
+              <CycleStatus
+                current={loopStepFor(scene, todayMode, xStage, operationsView)}
+                onSelect={(step) => setScene(loopTarget(step))}
+              />
             </div>
             <div className="context-tools">
-              <Tag tone="neutral">Windows-local · host online</Tag>
+              <Tag tone={todayMode === "offline" ? "warn" : "neutral"}>
+                {todayMode === "offline" ? "Windows-local · host offline" : "Windows-local · host online"}
+              </Tag>
               <Tag tone="info">{channel === "project" ? "Group conversation" : "Personal Assistant"}</Tag>
             </div>
           </header>
@@ -4123,6 +4983,18 @@ export default function Personal20AiCeoE2eOptimizedV2() {
               setLabSurface={setLabSurface}
               labState={labState}
               setLabState={setLabState}
+              attentionId={attentionId}
+              setAttentionId={setAttentionId}
+              launchFate={launchFate}
+              setLaunchFate={setLaunchFate}
+              hitlIntent={hitlIntent}
+              setHitlIntent={setHitlIntent}
+              previewAge={previewAge}
+              setPreviewAge={setPreviewAge}
+              hitlLog={hitlLog}
+              appendHitl={appendHitl}
+              evidenceLayer={evidenceLayer}
+              setEvidenceLayer={setEvidenceLayer}
             />
           </div>
         </main>

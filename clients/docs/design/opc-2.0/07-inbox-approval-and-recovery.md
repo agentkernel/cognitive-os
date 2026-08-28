@@ -4,10 +4,11 @@
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Product source:
   [Long-running operations](../../../../personal/docs/product/long-running-operations.md)
-- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
-  overwrite; not a v3; not overlay-conversation / stacked-column V2)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+- Status: current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -106,9 +107,13 @@ not fake controls.
 
 The content loop is research -> topic plan -> draft/media artifacts ->
 publication package -> applicable preview -> qualified dispatch -> receipt ->
-metric/comment readback -> reflection -> next cycle. Dispatch and readback are
-separate facts. CAPTCHA, anti-abuse, account lock, UI drift, or unknown result
-fails closed; no evasion or blind retry.
+metric/comment readback -> reflection -> next cycle. Success is the deliverable
+plus an Owner-confirmed dispatch receipt plus a feedback summary; unknown
+metrics stay unknown. Dispatch and readback are separate facts. Comment replies
+are a suggestion pack that still requires the applicable confirm. Manual
+publication is a degraded fallback, not the primary acceptance route. CAPTCHA,
+anti-abuse, account lock, UI drift, or unknown result fails closed; no evasion
+or blind retry.
 
 ## States and capability honesty
 

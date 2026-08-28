@@ -5,13 +5,12 @@
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is the post-workshop canvas. Archived V2
+  is not current chrome. Canvas-only HITL and daemon authority path remain.
 - Existing architecture inputs (pending reconciliation):
   [Agent lifecycle](../architecture/agent-shell-and-agent-lifecycle.md) and
   [Project, Role, and Employee](../architecture/project-role-employee.md)
@@ -32,7 +31,10 @@ Project. An acquired package grants no execution permission.
 
 ## 2. Personal Assistant and Pi
 
-The Personal Assistant is the user-visible system identity. It can:
+The Personal Assistant is the user-visible system identity. It has the highest
+UX privilege: it may see available product facts and initiate every management
+flow. It still writes only through a daemon-issued preview, Owner confirm, and
+receipt. It can:
 
 - inspect available product facts and explain a Project, Member, attention
   item, source, uncertainty, or conflict;
@@ -91,10 +93,12 @@ Assistant. Inside a Project, the primary surface is the group containing
 Owner, manager, and Members. The manager speaks by default. A Member speaks
 proactively only when mentioned, submitting a deliverable, handing off,
 blocked, or requesting a decision. `@manager` can request progress/delegation;
-`@member` can ask or temporarily redirect bounded goal/path.
+`@member` can ask or temporarily redirect bounded goal/path. `@member` creates
+a formal Task revision, not a shadow plan.
 
 Personal also retains scoped Member work conversations as inspectable source
-records. Conversations may contain user messages, bounded retrieved Context,
+records. A Member work conversation is visible to the Owner, the manager, and
+that Member. Conversations may contain user messages, bounded retrieved Context,
 engine output, action proposals, receipts, and source links. The full local
 archive remains inspectable, while an Agent process receives only relevant,
 bounded, redacted, provenance-bearing observations.

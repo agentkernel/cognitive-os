@@ -6,15 +6,15 @@
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Interaction corpus: [clients OPC design](../../../clients/docs/design/opc-2.0/README.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is the post-workshop canvas, not V2
+  CEO-rail / X-hero. Archived V2 is historical. Canvas-only HITL and daemon
+  authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-ai-ceo-e2e-optimized-v2](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+  [personal-20-opc-e2e](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -130,9 +130,10 @@ cost basis, and freshness. Provenance chips are Observed / Proposed / Governed
 
 ### Projects
 
-Uses a stable list and Project operating canvas. A Project opens the stable
-operating-report template first, then the X loop when that Project needs it.
-The default template
+Uses a stable list and Project operating canvas. A Project opens the
+system-default operating-report template first, then the X loop when that
+Project needs it. The manager may version that Project's template. The default
+template
 prioritizes goal hierarchy, current phase, manager summary, today's work,
 Members, attention/approval items, latest openable artifacts/evidence, cost
 basis, and freshness. Package inspect (for example Package A) shows a thread
@@ -161,7 +162,8 @@ executes or expands permission.
 
 Opened from a Project, not first-level navigation. The object chain is Role
 Template → Member → Task → disposable process. Process death does not delete
-the Member. The surface shows the current Project Manager, reusable Role
+the Member. Members are not shared across Projects; only Templates may be
+reused. The surface shows the current Project Manager, reusable Role
 Runtime Templates, and Project Member Runtime definitions with
 goal/responsibility/state/next/accepted-deliverable/cost/freshness facts.
 Activity is Working / Queued / Waiting; queued is not running. Member detail
@@ -217,6 +219,7 @@ and Members' Project group; it is not a single-recipient employee rail:
   handing off, blocked, or requesting a decision;
 - `@manager` can request progress or delegation;
 - `@member` can ask or temporarily redirect work inside the approved boundary;
+  that message creates a formal Task revision, not a shadow plan;
 - work-changing text becomes a formal Task or revision before it has authority;
 - ordinary process traces remain collapsed behind work objects;
 - drafts persist across Project/Assistant context changes and cannot send on

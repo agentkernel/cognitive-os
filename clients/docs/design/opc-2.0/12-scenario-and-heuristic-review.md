@@ -2,10 +2,11 @@
 
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Status: Owner-accepted V2 interaction baseline (2026-08-28 competitive-informed
-  overwrite; not a v3; not overlay-conversation / stacked-column V2)
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
+- Status: current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -54,7 +55,7 @@ visual polish. Findings cite exact scene, step, state, and requirement family.
 | UX-14 | Routine | overlap plus offline missed run | one active, latest queued, coalesced/missed denominator |
 | UX-15 | Model Connection | quota/cost unknown | unknown is not zero; explicit Member selection; no silent binding |
 | UX-16 | cost warning | threshold exceeded | warning visible; Personal does not automatically stop work |
-| UX-17 | Skill/MCP | first MCP install expands permission | exact version/permission confirmation and scoped grant |
+| UX-17 | Skill/MCP | first MCP install expands permission | Skill auto-installs only after review; MCP first install/expansion needs exact version/permission confirmation and a scoped grant |
 | UX-18 | hidden DSH/Pi | engine unqualified/update failed | advanced diagnosis/rollback only; no everyday engine UI |
 | UX-19 | X/Twitter loop | connector drift/CAPTCHA/unknown publish | fail closed, receipt/readback separated, no evasion/retry |
 | UX-20 | archive/delete | same-disk restore only | archive-first, export, impact, second confirm, no backup claim |

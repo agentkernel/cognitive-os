@@ -27,7 +27,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:dab27872206d9e9971071b57034700b95d69235db078d2bdcb1c623ccb3b1b0e"
+fingerprint: "sha256:4c6f71a9d778200d3c67a936cdabf456568e6119e3a512172cc88430552e7ebf"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---

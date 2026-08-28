@@ -4,19 +4,24 @@
 - Change class: `product-semantic`
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Product-direction amendment: owner-confirmed `/grill-me` design tree,
-  2026-08-28. This document owns the amended product intent; architecture and
+  2026-08-28, then journey-subtraction workshop 2026-08-28/29
+  ([workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)).
+  This document owns the amended product intent; architecture and
   implementation-plan reconciliation are explicitly deferred.
 - Requirements baseline:
   [Personal 2.0 OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Exact scope: [Personal 2.0 scope](personal-2.0-scope.md)
 - Ordered behavior: [User journeys](user-journeys.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current product chrome after the 2026-08-28/29
+  journey-subtraction workshop. Visual tokens/components are reused from
+  archived V2 so it still looks like the same product; IA and flow follow
+  five-stage create, process-axis Projects, and Today without a KPI/swimlane
+  wall. V2 CEO-rail / X-hero canvases live in the history folder and are not
+  current chrome. Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -49,12 +54,12 @@ remain hypotheses.
 ## 2. Target user and JTBD
 
 The 2.0 user is one local human Owner: an OPC operator or individual developer
-who understands the business outcome but may not understand Agent technology.
-Example
-work includes content operations, ecommerce operations, AIGC production, and
-software development. The first end-to-end acceptance journey is an X/Twitter
-content-operation Project; other industries use the same Project/Role/Member
-model without implying qualified connectors.
+who understands the business outcome but may not understand Agent technology
+(懂业务的小白). Default UI does not show daemon / DSH / Pi / Harness / Loop;
+runtime method is 执行方式, 周期, and 触发. Example work includes content
+operations, ecommerce operations, AIGC production, and software development.
+P0 publishes complete capabilities only; there is no default or demo Project,
+and X/Twitter is not the first end-to-end acceptance journey.
 
 > When I run a long-lived business Project with digital staff, I want to
 > describe the outcome in business language, let a manager organize the work,
@@ -71,7 +76,9 @@ and relay-based remote control begin in 2.1.
    acceptable deliverables first; state needed to keep the work running
    second; configuration third.
 2. Make the Personal Assistant and Project group conversation the default way
-   to create, operate, redirect, and understand everything.
+   to create, operate, redirect, and understand everything. The Assistant has
+   the highest UX privilege (it may see and initiate every flow) but writes
+   only through preview → Owner confirm → receipt.
 3. Let each Project Manager plan, delegate, verify, reflect, and improve the
    loop inside an Owner-approved autonomy envelope.
 4. Render a flexible canvas from real Project objects and deliverables:
@@ -86,32 +93,32 @@ and relay-based remote control begin in 2.1.
 
 ### P0-1 — Research, design, and activate a viable Project
 
-Project setup follows one resumable sequence:
+Project setup is a resumable **five-stage wizard**. Daily Today is not
+available until all five complete and ⑤ 验收 succeeds:
 
 ```text
-business understanding
-  -> broad automatic web research
-  -> charter
-  -> goal hierarchy and output contracts
-  -> team
-  -> plan and work cycle
-  -> Provider and capabilities
-  -> permissions and HITL
-  -> triggers
-  -> simulate one cycle
-  -> structured launch preview
-  -> confirm
-  -> receipt
+① project init
+     empty Home -> Create Project -> Projects create page
+     business description (chat if a model is bound; else guide to Settings)
+     -> analysis / source-backed research
+     -> item-by-item confirm list (process, per-stage outputs, 执行方式,
+        auto-vs-approve, triggers, cost, rights, 总预览)
+     -> inactive until 总预览; leave saves draft
+② member init (roster, model required, 「确认这个班子」)
+③ process init (one axis, one stage at a time)
+④ per-stage test until expected sub-output is openable and verified
+⑤ joint debug until expected overall outcome -> 「验收，进入 Today」
 ```
 
-Research optimizes for a high-quality design and does not ask permission for
-each ordinary web read. It may use non-secret Project context, but never raw
-credentials, SecretStore material, or third-party data the Owner lacks the
-right to disclose. External text is untrusted and cannot execute, install, or
-expand permission. A Project is inactive until the Owner confirms the exact
-revision.
+Empty Home shows only Create Project in the center; right chat is hidden.
+Until ⑤, Today shows only continue-create; Knowledge unlocks at ③ when input
+is needed (current draft only); Settings may connect models; Projects exposes
+only this incomplete create. Research does not ask permission for each
+ordinary web read. External text is untrusted. Secrets never appear in chat.
+No silent model bind. A copy of a live Project lands as an inactive 副本
+(not from ①); ④⑤ may be spot-checked or skipped after 总预览.
 
-### P0-2 — Operate through group conversation and a flexible canvas
+### P0-2 — Operate through group conversation and a process-axis canvas
 
 The stable anchors are **Today / Projects / Knowledge**, with Settings
 secondary. Team and Inbox are not first-level destinations. The shell locks
@@ -125,22 +132,25 @@ right column. The Owner can `@manager` for a briefing or task assignment and
 `@member` to ask or temporarily redirect bounded work. Every work-changing
 message becomes a formal Task or revision before it has authority. HITL is
 announced in chat and linked to the center-canvas preview; chat has no Approve
-control and no “Don’t ask again” grant. Missing capabilities are labelled
-`Requires-backend` or `Requires-environment`; there are no Connect / Install /
-Confirm fake buttons.
+or 验收 control and no permanent “Don’t ask again” grant. Timeboxed
+「本周同一类对外不再问」 expires and is revocable in Settings. Missing
+capabilities are labelled `Requires-backend` or `Requires-environment`; there
+are no Connect / Install / Confirm fake buttons.
 
 The manager speaks by default. A Member speaks proactively only when
 mentioned, submitting a deliverable, handing off, blocked, or requesting a
 decision. Ordinary process traces remain collapsed.
 
-A Project opens to a stable operating-report template first, then the X loop
-when that Project needs it. The manager may version the template for that
-Project. For an ad-hoc question, the Assistant/manager reads real results and
-composes approved typed components. The canvas is temporary unless pinned or
-saved as a template. It cannot execute generated code or `eval`, invent
-values, or hide goal/acceptance state, failures/not-run work, Owner decisions,
-source, or freshness. A publication package such as Package A is a thread
-preview plus acceptance criteria; planned is not published.
+After ⑤, Today is ① one decision packet ② live-project run overview plus
+counts and a today/week/month toggle ③ assistant. The primary CTA is only on
+the decision packet. Chat may query run data and must not approve. Four
+swimlanes are not default blocks.
+
+A live Project is ① the business-process axis ② this stage (status, member,
+auth/verify marks) ③ project group. There is no visible CEO six-step top
+rail. CEO discipline remains backend: canvas HITL and independent verify.
+Unknown cannot pass or accept. Close-out is openable artifact + verify state
++ 「验收，回 Today」.
 
 ### P0-3 — Create reusable Roles and Project-specific Member Runtimes
 
@@ -153,32 +163,35 @@ permissions, and escalation.
 
 A Project Member is the Project-specific long-lived Runtime definition created
 from one pinned Template revision. Its Provider/model, grants, Memory, and
-permissions remain Project-isolated and are explicit. Executing a Task starts
-a disposable Agent process/Attempt; process exit does not delete the Member,
-Conversation, Memory, artifacts, or evidence.
+permissions remain Project-isolated and are explicit. Members are not shared
+across Projects; only Role Runtime Templates may be reused. Executing a Task
+starts a disposable Agent process/Attempt; process exit does not delete the
+Member, Conversation, Memory, artifacts, or evidence.
 
 ### P0-4 — Remember and compress without losing authority
 
 Personal owns the local Project group archive, Member work conversations,
-admitted Memory, and Obsidian-compatible Markdown Vault; it does not embed or
-require the proprietary Obsidian app. Full source records remain inspectable.
-Each Agent process receives a model-window-aware Context package ordered:
-current Task contract -> fixed decisions -> relevant source/artifact excerpts
--> provenance-linked summaries -> older narrative. Over-limit reduction removes
-older narrative first, never the Task contract or fixed decisions.
+admitted Memory, and a knowledge store that uses Obsidian as 底座; it does
+not require installing the proprietary Obsidian app. Full source records
+remain inspectable. Each Agent process receives a model-window-aware Context
+package ordered: current Task contract -> fixed decisions -> relevant
+source/artifact excerpts -> provenance-linked summaries -> older narrative.
+Over-limit reduction removes older narrative first, never the Task contract
+or fixed decisions.
 
-Ordinary chat does not automatically become Memory. Explicit instructions
-become revisions; “remember” and stable verified facts produce candidates.
-Runtime output can propose Memory but cannot own or admit it. The Owner can
-inspect, correct, promote, and forget; cross-Project promotion requires
-confirmation. Accept/reject/edit/rate actions become Project feedback evidence,
-while one event cannot silently change a global Role.
+Chat auto-admits to inspectable, correctable, and forgettable Memory
+(overrides 2026-08-28 “ordinary chat is not Memory”). The assistant Memory
+architecture is GitHub OpenAI Codex, in 2.0 scope as architecture — not as a
+user-facing execution-engine store. Runtime output cannot own authority.
+Cross-Project promotion requires confirmation. Accept/reject/edit/rate
+actions become Project feedback evidence; one event cannot silently change a
+global Role.
 
 ### P0-5 — Run, recover, and improve long-lived work
 
 DSH is the hidden default Member execution engine and Pi the hidden Personal
-Assistant engine. Engine details appear only in recovery or advanced
-diagnostics. Routines support manual, schedule, accepted-artifact,
+Assistant engine. They are not shown on the 小白 default UI; engine details
+appear only in recovery or advanced diagnostics. Routines support manual, schedule, accepted-artifact,
 Project-state, qualified external-event, and testable-data-condition triggers;
 no overlap, queue-latest, offline/missed/coalesced visibility, expiry-aware
 catch-up, and risk-based resume. Windows host shutdown means no work.
@@ -196,23 +209,25 @@ subagents. They are not Project Members, have no long-lived identity or Memory,
 and return results to the current Member. Project Members collaborate through
 Tasks, artifacts, and handoffs.
 
-### P0-6 — Complete one controlled X/Twitter operating loop
+### P0-6 — P0 is complete capabilities, not a demo or X hero
 
-An X/Twitter Project progresses from source-backed research through planning,
-draft/media deliverables, publication-package review, qualified connector
-dispatch, receipt, interaction readback, manager reflection, and the next-cycle
-plan. Suggested comment replies require applicable review. Manual publication
-is a degraded fallback, not the primary 2.0 acceptance route. No fingerprint
+P0 publishes complete product capabilities only. There is no default Project
+and no demo Project. X/Twitter social-account operations are parked as a
+later industry connector; they are not the 2.0 first-success path. First
+success is ⑤ joint-debug 验收 of the Owner’s own Project. No fingerprint
 evasion, CAPTCHA bypass, anti-abuse avoidance, blind retry, or unlicensed
 copying is permitted.
 
 ### P0-7 — Connect models and acquire capabilities safely
 
-Settings provides **Model Connections** only: mainstream Provider quick
-templates plus advanced custom URL, compatibility mode, key, and model.
-Creating every Member requires the Owner to select a Provider/model explicitly;
-the Assistant may recommend but cannot bind silently. Raw secrets go only to an
-approved SecretStore through a non-logging path.
+Settings provides **Model Connections** only: a dropdown of mainstream
+Provider templates plus advanced custom URL, compatibility mode, key, and
+model. The Owner enters keys; A5 is satisfied by one-way SecretStore
+handoff — the UI shows connected/failed and never echoes the raw secret in
+DOM, chat, or git. Settings also revokes timeboxed 「本周不再问」 and hosts
+notify/recovery. Creating every Member requires the Owner to select a
+Provider/model explicitly; the Assistant may recommend but cannot bind
+silently.
 
 Cost is source-labelled actual, estimated, or unknown and produces warnings;
 Personal 2.0 does not automatically stop work at a product budget threshold.
@@ -234,41 +249,47 @@ and execution traces open as contextual canvas regions rather than permanent
 top-level destinations. Native mobile, pairing, and cloud 24/7 chrome are 2.1
 and are not drawn as current product chrome.
 
-- **Today:** one decision packet (consequence, reversibility, alternatives,
-  kernel truth, why option A is first) plus four exception swimlanes—Needs you
-  / Can continue / Unknown / Missed—not a KPI card wall. Cost is estimated or
-  actual; actual unknown is not zero. Member activity is a Working / Queued /
-  Waiting table; queued is not running.
-- **Projects:** long-lived governed workspaces. A Project opens to its stable
-  operating-report template first, then the X loop. The right column is the
-  Project group conversation.
-- **Knowledge:** Owner-shared knowledge, Project Markdown Vaults, sources,
-  indexing, and admitted Memory. Context shows why each fragment was selected.
-  Memory is not silent auto-ingest. Obsidian is an optional companion and is
-  not an embedded app.
-- **Conversation:** the Personal Assistant is global; inside a Project the
-  group includes Owner, manager, and Members. `@` routes only into the unsent
-  draft and does not bypass Task/revision authority. Chat announces HITL and
-  links to the center preview; it cannot Approve.
-- **Canvas:** standard reports update one Project template; ad-hoc reports are
-  temporary until the Owner pins or saves them. Package inspect shows a thread
-  preview and acceptance; planned is not published. Publish preview is the
-  full AUTONOMY packet; there is no Confirm in chat.
-- **Settings:** Personal Home, model connections, notifications, recovery, and
-  advanced diagnostics. There is no Installed Agent store, subscription/
-  billing product, or broad marketplace/family console. Secrets use
-  SecretStore takeover and never appear in chat.
+- **Today:** after ⑤, one decision packet plus live-project run overview
+  (created / live / blocked counts, today/week/month toggle). Primary CTA
+  only on the decision packet. Chat may query run data and cannot approve.
+  Four swimlanes are not default blocks. Cost unknown is not zero. Incomplete
+  create shows only continue-create. Empty Home (no Project) is Create
+  Project only; chat hidden.
+- **Projects:** long-lived governed workspaces. Empty create jumps here.
+  Live Project: process axis + current stage + project group. Copy-project
+  from a launchable Project produces an inactive 副本. No visible CEO
+  six-step rail. No demo Project.
+- **Knowledge:** current project files, why this fragment, import. Parse
+  failure keeps the original. Chat auto-admits to inspectable Memory.
+  Obsidian is 底座; the Obsidian app is not required. Knowledge stays locked
+  until ③ needs input.
+- **Conversation:** the Personal Assistant is global and has the highest UX
+  privilege (see and initiate every flow) while writing only through preview →
+  Owner confirm → receipt; inside a Project the group includes Owner, manager,
+  and Members. `@` routes only into the unsent draft and does not bypass
+  Task/revision authority. Chat announces HITL and links to the center
+  preview; it cannot Approve or 验收.
+- **Canvas:** current-stage workface and HITL preview live here. Ad-hoc
+  reports are temporary until the Owner pins or saves them. Planned is not
+  published. There is no Confirm in chat and no fake publish on 验收.
+- **Settings:** Model Connections (dropdown + custom; Owner enters keys),
+  revoke timeboxed skips, notify/recovery. No Installed Agent store,
+  subscription/billing, or Inbox. Secrets never appear in chat.
 - **People object chain:** Role Template → Member → Task → disposable process.
-  A dead process does not delete the Member.
-- **Operations:** Working is in-progress observation, not completion. The
-  default working view is Candidate → Intent persisted → Fence → Execute →
-  Independent verify → Receipt.
+  A dead process does not delete the Member. Daily add-member: roster + chat
+  + 「确认加入」; model required; 执行方式 disclosed after confirm; no silent
+  grant.
+- **Operations:** Working is in-progress observation, not completion.
+  Backend default remains Candidate → Intent persisted → Fence → Execute →
+  Independent verify → Receipt. Default UI does not say daemon / DSH / Pi /
+  Harness / Loop.
 
 Default terminology is Project, Role, Member, Goal, Deliverable, Work Plan,
 Routine, and Execution Record. A Role is a reusable Runtime Template; a Member
 is its Project-specific long-lived Runtime definition; an Agent process is one
-disposable execution Attempt. Prompt, Skill, Tool, MCP, Loop, Harness, model
-window, epoch, and digest are progressively disclosed.
+disposable execution Attempt. 执行方式, 周期, and 触发 are the default
+runtime labels. Prompt, Skill, Tool, MCP, and other runtime words are
+progressively disclosed; Harness and Loop are not default chrome.
 
 ## 6. Success measures and counter-measures
 
@@ -305,6 +326,8 @@ still require separate research before numerical claims.
 - all-industry connectors, unsupervised high-risk action, guaranteed business
   outcomes, all-platform publishing, browser/API equivalence, or multi-Agent
   benefit;
+- X/Twitter as P0 hero, a default/demo Project, or a visible CEO six-step
+  rail;
 - a general MCP marketplace/family console: 2.0 includes only Assistant-led,
   security-reviewed, exact Project/Member capability acquisition and grants;
 - disaster backup: same-disk versions are local restore points only.
@@ -314,6 +337,6 @@ still require separate research before numerical claims.
 This document changes product semantics only. Architecture, ADR, formal-plan,
 and handbook reconciliation remain pending by scope. It does not implement
 or qualify Windows, DSH, Pi, Project, Conversation, Vault, Trigger, UI,
-Provider routing, capability acquisition, or X/Twitter connectivity. It creates no
-Gate, release, Profile, market, usability, performance, containment, or
-Agent-benefit evidence.
+Provider routing, capability acquisition, or parked X/Twitter connectivity.
+It creates no Gate, release, Profile, market, usability, performance,
+containment, or Agent-benefit evidence.

@@ -11,22 +11,24 @@
   [Personal 2.0 scope](../../../../personal/docs/product/personal-2.0-scope.md)
 - Product vocabulary:
   [OPC product model](../../../../personal/docs/product/opc-product-model.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is `personal-20-opc-e2e` after the
+  2026-08-28/29 journey-subtraction workshop (five-stage create, process-axis
+  Projects, Today as decision packet + run overview + assistant). Archived V2
+  CEO-rail / X-hero files are historical only. Canvas-only HITL and daemon
+  authority path remain. This is not the pre-overwrite overlay-conversation /
+  stacked-column V2.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-ai-ceo-e2e-optimized-v2](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+  [personal-20-opc-e2e](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
   Gate, release, qualification, or acceptance evidence
-- Preserved superseded prototype/source-review input:
-  [v1 Canvas](personal-2-opc-digital-staff-console-v1.canvas.tsx); it is not a
-  current baseline
+- Archived pre-subtraction prototypes:
+  [2026-08-28 history](history/2026-08-28-pre-subtraction/README.md)
 - Frozen predecessor:
   [2026-08-27 Control Plane corpus](../legacy-control-plane-20260827/README.md)
 
@@ -44,15 +46,15 @@ right column is always the conversation; there is no overlay “open
 conversation” control. Native mobile, pairing, and cloud 24/7 chrome are 2.1
 and are not drawn here.
 
-The workbench exposes a visible CEO loop:
-**Ingest → Decide → Authorize → Execute → Verify → Report**. Today leads with
-one decision packet (consequence, reversibility, alternatives, kernel truth,
-and why option A is first) plus four exception swimlanes, not a KPI card wall.
-Operations defaults to
+The workbench does **not** draw a visible CEO loop. Live Project is the
+business-process axis plus the current stage plus the project group.
+Today, after five-stage create 验收, leads with one decision packet plus
+live-project run overview (counts and period toggle) plus assistant. Four
+exception swimlanes are not default Today blocks. Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
 Receipt**. Project publish preview is the full AUTONOMY packet on the canvas;
 there is no Confirm in chat. Knowledge Context shows why each fragment was
-selected; Memory is not silent auto-ingest. Secrets use SecretStore takeover
+selected; chat auto-admits to inspectable Memory. Secrets use SecretStore takeover
 and never appear in chat. `@` inserts only into the unsent draft.
 
 Outside a Project the global Personal Assistant is the conversation identity.
@@ -92,7 +94,8 @@ do not define current navigation or product objects.
 1. Use only Today, Projects, and Knowledge as first-level anchors; keep Settings
    at the bottom.
 2. Keep `Role Runtime Template -> Project Member Runtime definition -> Task ->
-   Attempt -> disposable Agent process` distinct. “Digital staff” is positioning
+   Attempt -> disposable Agent process` distinct. Members are not shared across
+   Projects; only Templates may be reused. “Digital staff” is positioning
    language, not an extra object.
 3. Conversation proposes; every work-changing message resolves to a daemon-owned
    Task or revision before it has authority.
@@ -120,7 +123,7 @@ still encode the 2026-08-27 model are **pending architecture/plan/handbook
 reconciliation**. They remain dated facts but do not override the current
 product sources listed above.
 
-This corpus and the Owner-accepted V2 interaction baseline are
+This corpus and the current `personal-20-opc-e2e` prototype are
 specifications only. They do not
 prove backend feasibility, Windows integration, DSH/Pi qualification,
 Provider/MCP/X connectivity, accessibility conformance, human usability, market

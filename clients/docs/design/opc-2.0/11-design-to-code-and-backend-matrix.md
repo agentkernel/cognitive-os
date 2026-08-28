@@ -3,11 +3,11 @@
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Status: design trace only; architecture/formal-plan/handbook reconciliation
-  pending; Owner-accepted V2 interaction baseline (2026-08-28
-  competitive-informed overwrite; not a v3; not overlay-conversation /
-  stacked-column V2)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+  pending; current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,

@@ -8,17 +8,19 @@
   [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - 需求基线：
   [Personal 2.0 OPC 需求分析](personal-2.0-opc-requirements-analysis.md)
-- 交互基线：
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- 基线身份：同一份 V2 文件（不是 v3）。Owner 于 2026-08-28 接受本轮有竞争对照的
-  覆盖：可见 CEO 闭环、Today 决策包加四条例外泳道、仅画布 HITL，以及 daemon 授权
-  路径。这不是覆盖前的 overlay 对话 / 拆栏 V2。
+- 当前交互原型：
+  [**personal-20-opc-e2e（旅程减法后）**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- 已归档历史 V2（不是当前 chrome）：
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- 原型身份：当前 chrome 是旅程减法后的画布，不是 V2 的 CEO 轨 / X 英雄圈。
 
 ## 1. Scope
 
 当项目 setup 或运行识别出能力缺口时，Personal 助手可发现 MCP capability。
 安全审查后的 acquisition、exact-version pin 和独立 Project/Member grant 属于
-Personal 2.0 目标，不再整体 deferred。
+Personal 2.0 目标，不再整体 deferred。Skill 路径不同：通过同类 source/prompt-injection
+审查后可自动安装。MCP 更严：首次安装或任何扩权仍需 Owner 确认 exact version 与
+permissions。
 
 保留的底层模型继续区分 server、package、connection、capability、binding、health 与
 quarantine。MCP 不是 Tool alias、Agent、Project object、Provider route 或 host-session

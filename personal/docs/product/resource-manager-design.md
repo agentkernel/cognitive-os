@@ -7,12 +7,12 @@
 - Current-status owner: [PROGRESS.md](../../../docs/plan/PROGRESS.md)
 - Current OPC requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop, Today decision packet plus
-  four exception swimlanes, canvas-only HITL, and daemon authority path. Resource
-  Manager family semantics are unchanged.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is the post-workshop canvas. Archived V2
+  is not current chrome. Resource Manager family semantics are unchanged.
 
 ## 1. Current implementation (Now)
 

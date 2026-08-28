@@ -2,20 +2,21 @@
 
 - Status: adopted full-version target; capability-gated
 - Change class: `product-semantic`
-- Date: 2026-08-28
+- Date: 2026-08-28; scheme snapshot 2026-08-28/29
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Product-direction amendment: owner-confirmed `/grill-me` design tree,
-  2026-08-28; architecture and formal-plan reconciliation are deferred.
+  2026-08-28, then
+  [journey-subtraction workshop](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
+  2026-08-28/29; architecture and formal-plan reconciliation are deferred.
 - Product intent: [Product design](product-design.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is the post-workshop canvas, not V2.
+  Archived V2 is historical. Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -68,12 +69,18 @@ Excluded:
 - global Personal Assistant outside Projects and a Project group conversation
   for Owner, manager, and Members;
 - HITL announced in chat and confirmed on the center-canvas preview; chat has
-  no Approve control and no “Don’t ask again” grant;
+  no Approve control and no permanent “Don’t ask again” grant; optional
+  timeboxed 「本周同一类对外不再问」 expires and is revocable in Settings;
 - `@manager` and `@member` routing with daemon-owned Task/revision effects;
 - manager-default speech; Member proactive speech only when mentioned,
   delivering, handing off, blocked, or requesting a decision;
-- Project operating-report template as the default Project surface, then the
-  X loop when that Project needs it;
+- Project **five-stage create wizard**; daily Today only after ⑤ 验收 of the
+  Owner’s Project (no default/demo Project); empty Home is Create Project
+  only with chat hidden; copy-project from a launchable Project lands as an
+  inactive 副本;
+- live Project default is the business-process axis plus current-stage
+  workface plus project group; there is **no visible CEO six-step top rail**
+  (CEO remains backend discipline: canvas HITL + independent verify);
 - stable routine-report templates plus temporary ad-hoc canvas composition from
   typed, source-linked components and real Project results;
 - temporary canvases are not saved unless pinned or made a template; generated
@@ -83,21 +90,22 @@ Excluded:
   no Confirm in chat;
 - Team and attention/approval surfaces opened contextually, not as permanent
   first-level navigation;
-- visible CEO loop (Ingest → Decide → Authorize → Execute → Verify → Report);
-- Today decision packet plus four exception swimlanes (Needs you / Can
-  continue / Unknown / Missed); cost estimated or actual, with actual unknown
-  never shown as zero; Member activity Working / Queued / Waiting table, where
-  queued is not running;
+- visible CEO loop is **not** product chrome;
+- Today decision packet plus live-project run overview (created/live/blocked
+  counts, period toggle) plus chat; four exception swimlanes are not default
+  blocks; cost estimated or actual, with actual unknown never shown as zero;
 - Operations default working view: Candidate → Intent persisted → Fence →
   Execute → Independent verify → Receipt;
-- Knowledge Context shows why each fragment was selected; Memory is not silent
-  auto-ingest;
+- Knowledge Context shows why each fragment was selected; chat auto-admits to
+  inspectable/forgettable Memory;
 - Secrets use SecretStore takeover and never appear in chat;
 - `@` inserts only into the unsent draft;
 - Role Template → Member → Task → disposable process; process death does not
   delete the Member; Operations Working is not completion;
-- Knowledge Vault is Markdown files; Obsidian is an optional companion and is
-  not an embedded app;
+- Knowledge Vault uses Obsidian as 底座 (Markdown); 2.0 does not require
+  installing the Obsidian app;
+- assistant Memory architecture is GitHub OpenAI Codex, in 2.0 scope as
+  architecture (not a user-facing execution-engine store);
 - absent capabilities are `Requires-backend` / `Requires-environment`; there
   are no Connect / Install / Confirm fake buttons;
 - native mobile, pairing, and cloud 24/7 chrome are 2.1 and are not drawn as
@@ -111,6 +119,8 @@ Excluded:
   triggers;
 - reusable Role Runtime Template -> Project-specific Member Runtime definition
   -> Task -> disposable Agent process/Attempt;
+- Members are not shared across Projects; only Role Runtime Templates may be
+  reused;
 - one current manager per Project;
 - only the base Project Manager Role built in;
 - project-specialized manager and Personal-Assistant-researched Member Roles;
@@ -155,24 +165,26 @@ Excluded:
 - Personal Home with separate `app/` and `data/`;
 - automatic per-Project data directories;
 - Owner-shared knowledge, Project Markdown Vault, and Member-private memory;
-- Obsidian-compatible files and optional companion only;
+- Obsidian as knowledge 底座; the Obsidian app is not required;
 - provenance-preserving import, indexing, reindex, conflict, exclusion, and
   failure handling;
 - scoped episodic conversation archive participating in bounded retrieval;
 - model-window-aware Context assembly that preserves the current Task contract
   and fixed decisions before sourced summaries;
-- full raw conversations retained; ordinary chat not admitted automatically;
-  “remember”/stable verified facts create candidates; feedback remains Project
-  evidence before any versioned Member/global Role proposal;
+- full raw conversations retained; chat auto-admits to inspectable/forgettable
+  Memory; GitHub OpenAI Codex is the assistant memory architecture (in 2.0
+  scope); feedback remains Project evidence before any versioned Member/global
+  Role proposal;
 - redaction, provenance, untrusted-observation labels, semantic admission,
   inspect/correct/promote/forget, with Owner confirmation for cross-Project
   promotion.
 
 ### 3.6 Model connections, capabilities, cost, and external work
 
-- Settings **Model Connections** with mainstream Provider quick templates where
-  the Owner enters a key, plus advanced custom URL/compatibility-mode/key/model
-  input;
+- Settings **Model Connections** with a dropdown of mainstream Provider
+  templates where the Owner enters a key, plus advanced custom
+  URL/compatibility-mode/key/model input; UI shows connected/failed, never
+  the raw secret;
 - no consumer subscription, invoice, or plan-management product;
 - explicit Provider/model selection for every Member; Task temporary override
   only through an admitted revision;
@@ -187,7 +199,8 @@ Excluded:
   exact Owner confirmation before first install or permission expansion;
 - globally reusable, version-pinned capability artifacts with separate
   Project/Member grants, update review, compatibility test, and rollback;
-- first important X/Twitter content-operation acceptance scenario;
+- P0 publishes complete capabilities only; no default or demo Project;
+  X/Twitter social-account operations are not P0 (parked later connector);
 - individually qualified browser/API connectors, rights-safe source handling,
   preview/approval/receipt, and feedback readback.
 
@@ -226,8 +239,10 @@ credential, unmanaged native MCP/base-tool grant, HMR, home patch, authority
 write, Memory ownership, or completion authority.
 
 Personal 2.0 qualifies only DSH as the Member execution engine and Pi as the
-Assistant engine. Hermes, Codex, Cursor, and other engines remain outside 2.0;
-the product has no user-facing adapter marketplace or switching promise.
+Assistant engine. Hermes, Cursor, and other **execution** engines remain
+outside 2.0; the product has no user-facing adapter marketplace or switching
+promise. GitHub OpenAI Codex is in 2.0 scope as the assistant **memory
+architecture**, not as a selectable Member execution engine.
 
 The 2026-08-27 architecture, ADR, formal-plan, and handbook descriptions that
 still expose Installed Agents, top-level Team/Inbox, the prior Role/Employee

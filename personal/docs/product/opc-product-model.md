@@ -5,13 +5,12 @@
 - Scope: [Personal 2.0](personal-2.0-scope.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: current chrome is the post-workshop canvas. Archived V2
+  is not current chrome. Canvas-only HITL and daemon authority path remain.
 - Existing architecture input (pending reconciliation):
   [Project, Role, and Employee](../architecture/project-role-employee.md)
 
@@ -90,8 +89,9 @@ responsibility, subgoal, Provider/model, capability grant, permission, cost
 policy, Context policy, and named Member. The Provider/model choice is explicit
 during Member creation; an Assistant recommendation cannot bind silently. The
 same Template can instantiate several Members, and Projects may pin different
-Template revisions. A global Template upgrade never silently changes existing
-Members.
+Template revisions. A Member Runtime belongs to exactly one Project; Members
+are not shared across Projects. Template reuse is the only cross-Project
+reuse. A global Template upgrade never silently changes existing Members.
 
 ## 4. Project Member Runtime
 
@@ -105,7 +105,8 @@ A Project Member is a Project-specific long-lived Runtime definition with:
   permissions;
 - the exact Runtime recipe used to start disposable Agent processes.
 
-A Member Runtime is not an always-running process. Every Task execution starts
+A Member Runtime is not an always-running process. It belongs to exactly one
+Project and is not shared into another Project. Every Task execution starts
 a separate Agent process/Attempt pinned to an exact Member Runtime revision.
 Process exit, retry, engine update, or quarantine does not erase the Member,
 conversation, Memory, deliverables, or evidence. Cards answer goal,
@@ -141,7 +142,7 @@ The Project group conversation is the primary interaction surface:
 
 - `@manager` requests a briefing or manager-owned Task assignment;
 - `@member` asks or temporarily redirects goal/path inside the approved Task
-  boundary;
+  boundary; that message creates a formal Task revision, not a shadow plan;
 - the manager speaks by default;
 - Members speak proactively only when mentioned, submitting a deliverable,
   handing off, blocked, or requesting a decision;
@@ -152,8 +153,9 @@ Project revision, Task, Handoff, Effect, or verification facts.
 
 ## 6. Canvas and deliverable projection
 
-Every Project owns one versioned routine operating-report template. The manager
-may change that Project's template without creating a global template. An
+Every Project starts from the system-default routine operating-report template.
+The manager may version that Project's template without creating a global
+template. An
 ad-hoc Owner question lets the Assistant/manager compose a temporary canvas
 from approved typed components and real goals, artifacts, evidence, decisions,
 timeline, organization, and cost readings.

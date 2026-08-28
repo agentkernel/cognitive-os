@@ -5,11 +5,11 @@
 - 决策：[ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - 需求基线：
   [Personal 2.0 OPC 需求分析](personal-2.0-opc-requirements-analysis.md)
-- 交互基线：
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- 基线身份：同一份 V2 文件（不是 v3）。Owner 于 2026-08-28 接受本轮有竞争对照的
-  覆盖：可见 CEO 闭环、Today 决策包加四条例外泳道、仅画布 HITL，以及 daemon 授权
-  路径。这不是覆盖前的 overlay 对话 / 拆栏 V2。
+- 当前交互原型：
+  [**personal-20-opc-e2e（旅程减法后）**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- 已归档历史 V2（不是当前 chrome）：
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- 原型身份：当前 chrome 是旅程减法后的画布，不是 V2 的 CEO 轨 / X 英雄圈。
 - 现有架构输入（待协调）：
   [Agent 生命周期](../architecture/agent-shell-and-agent-lifecycle.md) 与
   [项目、角色与员工](../architecture/project-role-employee.md)
@@ -26,10 +26,11 @@
 
 ## 2. Personal 助手与 Pi
 
-Personal 助手是用户看到的系统身份。它可查看当前可用产品事实，解释项目、成员、
-注意事项、来源、不确定性和冲突；导航到对象；开展项目/角色研究；起草 charter、
-计划、角色、Model Connection、capability 或恢复 candidate；发起所有管理流程；
-请求 daemon 的结构化 preview；并解释 receipt。
+Personal Assistant 是用户看到的系统身份。它拥有最高 UX 权限：可查看当前可用
+产品事实并发起所有管理流程，但仍只能通过 daemon 签发的 preview、Owner 确认与
+receipt 写入。它可以解释项目、成员、注意事项、来源、不确定性和冲突；导航到
+对象；开展项目/角色研究；起草 charter、计划、角色、Model Connection、capability
+或恢复 candidate；请求 daemon 的结构化 preview；并解释 receipt。
 
 Pi 可作为精确固定、受管、default-deny 的内部引擎支撑助手，但不进入普通
 导航。Pi 不拥有 authority、Provider Secret、Project、Task、
@@ -69,9 +70,11 @@ sandbox、supply chain 或 2.0 产品体验。
 
 项目外显示全局 Personal 助手；项目内的主会话是 Owner、管理员和成员群聊。管理员默认
 发言；成员只在被 `@`、提交成果、交接、阻塞或需要决策时主动发言。`@manager` 可询问
-进度或要求分配；`@member` 可提问或在批准边界内临时调整目标/路径。
+进度或要求分配；`@member` 可提问或在批准边界内临时调整目标/路径。`@member`
+会形成正式 Task revision，而不是影子计划。
 
-Personal 也保留按 scope 隔离的成员工作会话，作为可检查的完整来源记录。Conversation
+Personal 也保留按 scope 隔离的成员工作会话，作为可检查的完整来源记录。成员工作
+会话对 Owner、管理员和该成员可见。Conversation
 可以包含用户消息、有界检索 Context、engine 输出、Tool/action candidate、receipt 与
 来源。完整原始档案在本地保留；每个 Agent 进程只得到相关、有界、脱敏、带 provenance
 且标记为 untrusted observation 的片段。

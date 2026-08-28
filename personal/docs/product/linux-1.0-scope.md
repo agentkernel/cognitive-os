@@ -16,7 +16,7 @@ and every Gate status remain exclusively in
 > target is owned by [Personal 2.0 requirements](personal-2.0-opc-requirements-analysis.md),
 > [product design](product-design.md), and
 > [Personal 2.0 scope](personal-2.0-scope.md). Interaction chrome is the
-> [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx).
+> [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx).
 > That target does not revise
 > any Linux 1.0 requirement, Pi qualification, six-family fact, Gate result, or
 > release provenance in this document. Older 2.0 summaries here are context

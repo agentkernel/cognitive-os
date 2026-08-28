@@ -5,11 +5,11 @@
 - 当前权威基础：[Provider Control Plane](provider-control-plane.md)
 - 需求基线：
   [Personal 2.0 OPC 需求分析](personal-2.0-opc-requirements-analysis.md)
-- 交互基线：
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- 基线身份：同一份 V2 文件（不是 v3）。Owner 于 2026-08-28 接受本轮有竞争对照的
-  覆盖：可见 CEO 闭环、Today 决策包加四条例外泳道、仅画布 HITL，以及 daemon 授权
-  路径。这不是覆盖前的 overlay 对话 / 拆栏 V2。
+- 当前交互原型：
+  [**personal-20-opc-e2e（旅程减法后）**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- 已归档历史 V2（不是当前 chrome）：
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- 原型身份：当前 chrome 是旅程减法后的画布，不是 V2 的 CEO 轨 / X 英雄圈。
 - 凭据边界：
   [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
 

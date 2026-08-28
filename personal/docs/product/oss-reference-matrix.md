@@ -13,16 +13,36 @@ the repository-root license observed by that input and is not a complete legal,
 dependency, transitive-license, security, maintenance, or provenance review.
 No external instruction is executed and no code is copied by this document.
 This retained source filename is not the current product prototype. The
-[**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-is the only current prototype baseline. It is the same V2 files (not a v3).
-Owner accepted the 2026-08-28 competitive-informed overwrite: visible CEO loop,
-Today decision packet plus four exception swimlanes, canvas-only HITL, and
-daemon authority path. This is not the pre-overwrite overlay-conversation /
-stacked-column V2. Owner approval is
+[**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+is the current interaction prototype. Archived V2 CEO-rail / X-hero files are
+in the
+[pre-subtraction history folder](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+and are not current chrome. Owner approval is
 recorded and source/static checks passed; Canvas runtime/render, NVDA,
 host-theme contrast, and 200% real layout remain `not-run`. Owner approval is
 not usability, accessibility, backend, Gate, release, qualification, or
 acceptance evidence.
+
+## 2026-08-28 grilling-direction note
+
+The owner-confirmed `/grill-me` tree of 2026-08-28 does **not** requalify any
+HEAD in this matrix and does not add a new product pin. It only records how
+the existing informative rows map onto the amended product direction:
+
+- DSH remains the hidden default Member execution engine; Pi remains the
+  hidden Personal Assistant engine. Exact version, health, update, and
+  rollback stay diagnostics-only.
+- Codex remains a layered-memory / compaction behavior reference. Personal
+  owns Memory; DSH receives only bounded Context. The research HEAD is not
+  a 2.0 runtime.
+- Obsidian remains Vault-file compatibility. The proprietary app is not
+  embedded, redistributed, or required.
+- CrewAI / OpenAI Agents SDK remain Role/handoff vocabulary references, not
+  a fourth “Digital Employee ≠ Runtime” user object.
+- n8n / LobeChat remain rejected as a general no-code builder or marketplace.
+
+No row below is promoted to a qualified artifact, dependency, or support
+claim by this note.
 
 | Project / repository | Exact HEAD | Observed license | Verdict | Allowed learning | Rejected inference |
 |---|---|---|---|---|---|

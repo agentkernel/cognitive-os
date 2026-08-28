@@ -6,16 +6,18 @@
 - Prior accepted decision:
   [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Product-direction amendment: owner-confirmed `/grill-me` design tree,
-  2026-08-28
-- Interaction baseline:
-  [**Owner-approved interaction baseline (2026-08-28)**](../../../clients/docs/design/opc-2.0/personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
-- Baseline identity: same V2 files (not a v3). Owner accepted the 2026-08-28
-  competitive-informed overwrite: visible CEO loop (Ingest → Decide →
-  Authorize → Execute → Verify → Report), Today decision packet plus four
-  exception swimlanes, canvas-only HITL, and daemon authority path. This is
-  not the pre-overwrite overlay-conversation / stacked-column V2.
+  2026-08-28, then
+  [journey-subtraction workshop](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
+  2026-08-28/29
+- Current interaction prototype:
+  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
+- Archived historical V2 (not current chrome):
+  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: the current canvas is post journey-subtraction, not V2.
+  Archived V2 is historical chrome in the history folder. Canvas-only HITL and
+  daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-ai-ceo-e2e-optimized-v2](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-ai-ceo-e2e-optimized-v2.canvas.tsx)
+  [personal-20-opc-e2e](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -51,22 +53,25 @@ cloud 24/7 chrome are 2.1 and are not drawn as current product chrome.
 Outside a Project the conversational identity is the global **Personal
 Assistant**; inside a Project it is the Owner, Project Manager, and Members'
 **Project group conversation**. HITL is announced in chat and confirmed on the
-center canvas preview; chat has no Approve control and no “Don’t ask again”
-grant. `@` inserts only into the unsent draft.
+center canvas preview; chat has no Approve control and no permanent “Don’t
+ask again” grant. Timeboxed 「本周同一类对外不再问」 expires and is
+revocable in Settings. `@` inserts only into the unsent draft.
 
-The workbench exposes a visible CEO loop:
-**Ingest → Decide → Authorize → Execute → Verify → Report**. Today leads with
-one decision packet (consequence, reversibility, alternatives, kernel truth,
-and why option A is first) plus four exception swimlanes, not a KPI card wall.
+The workbench does **not** draw a visible CEO six-step rail. Live Project is
+a business-process axis plus the current stage. Today, after five-stage
+create 验收, is one decision packet plus live-project run overview plus
+chat — not a KPI card wall and not four swimlanes as default blocks.
 Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
-Receipt**. Project publish preview is the full AUTONOMY packet on the canvas.
-Knowledge Context shows why each fragment was selected; Memory is not silent
-auto-ingest. Secrets use SecretStore takeover and never appear in chat. The
-prototype is an interactive spec, not daemon `/ui/`.
+Receipt** as backend discipline. Knowledge Context shows why each fragment
+was selected; chat auto-admits to inspectable Memory. Secrets use SecretStore
+takeover and never appear in chat. The prototype is an interactive spec, not
+daemon `/ui/`. P0 is complete capabilities only: no demo Project, no X as
+P0 hero.
 
 A reusable **Role Runtime Template** becomes a Project-specific, long-lived
-**Project Member Runtime definition**. Each Task execution starts a disposable
+**Project Member Runtime definition**. Members are not shared across Projects;
+only Templates may be reused. Each Task execution starts a disposable
 **Agent process/Attempt**. “Digital staff / 数字员工” remains positioning
 language, not an additional product object.
 
@@ -97,10 +102,11 @@ English product documents are canonical where a bilingual pair exists.
 | Document | Responsibility |
 |---|---|
 | [Requirements analysis](personal-2.0-opc-requirements-analysis.md) | complete owner-confirmed problem, JTBD, personas, principles, requirements, authority, metrics, supersession, and traceability |
+| [Journey-subtraction workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md) | verbatim 2026-08-28/29 Q&A plus Keep/Cut/Park scheme snapshot; not Gate or implementation evidence |
 | [Product design / PRD](product-design.md) | stable product thesis, priority, experience model, success measures, exclusions, and non-claims |
 | [Personal 2.0 scope](personal-2.0-scope.md) | exact Windows-local inclusion, capability ledger, version boundary, and 2.1 deferral |
 | [OPC product model](opc-product-model.md) | Project, Role Runtime Template, Project Member Runtime, Agent process/Attempt, Conversation, authority, and terminology |
-| [User journeys](user-journeys.md) | first Project, daily operation, approvals, recovery, knowledge, archive, and X scenario |
+| [User journeys](user-journeys.md) | five-stage first Project, daily Today, process-axis Project, approvals, recovery, knowledge, archive; X parked |
 | [Long-running operations](long-running-operations.md) | Routine/Trigger, no-overlap, queue-latest, offline/missed, background choice, and receipts |
 
 ### Experience surfaces
@@ -124,7 +130,7 @@ object hierarchy, or everyday experience.
 | [Cognitive resource model](cognitive-resource-model.md) | preserved six-family 1.0, capability-family boundary, and why OPC domain objects are not a generic Resource family |
 | [Resource Manager](resource-manager-design.md) | factual common projections, family-native actions, knowledge indexing boundaries, and conflict behavior |
 | [MCP capability governance](mcp-resource-family.md) ([中文](mcp-resource-family.zh-CN.md)) | assistant-led acquisition, review, pinning, per-Project/Member grants, underlying identities, and DSH base-tool prohibition |
-| [Informative OSS matrix](oss-reference-matrix.md) | preserved exact 2026-08-27 research HEADs plus the 2026-08-28 official-evidence refresh and reuse/rejection boundaries |
+| [Informative OSS matrix](oss-reference-matrix.md) | preserved exact 2026-08-27 research HEADs, the 2026-08-28 grilling-direction mapping note, and reuse/rejection boundaries; no new HEAD is qualified |
 
 ## Preserved and frozen material
 
@@ -134,10 +140,12 @@ object hierarchy, or everyday experience.
   preserves the superseded cross-platform/external-Agent 2.0 target and its
   original index. It is not current semantics.
 - Accepted ADR-0056/0058/0059 remain dated decisions. Current product semantics
-  are amended by the 2026-08-28 owner requirements. Architecture, ADR, formal
-  plan, and handbook text that still reflects the 2026-08-27 object model or IA
-  is **pending architecture/plan/handbook reconciliation**; accepted history is
-  not rewritten here.
+  is amended by the 2026-08-28 owner requirements and the 2026-08-28/29
+  workshop scheme. Architecture, ADR, formal plan, and handbook text that still
+  reflects the 2026-08-27 object model or IA, or the V2 CEO-rail chrome, is
+  **pending architecture/plan/handbook reconciliation**; accepted history is
+  not rewritten here. Handbook generated pages were not regenerated in the
+  workshop delivery.
 
 ## Fixed safety and claim boundaries
 
