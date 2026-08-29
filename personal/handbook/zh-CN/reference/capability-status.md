@@ -27,7 +27,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:55b909cffabe4387d2126ef2dcea885be91876a5b027df235247addc4ec1dc6f"
+fingerprint: "sha256:17a9e5afc694537da00c515d51a6182a183c21ddc50bd68150dc13fc7c97b06e"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---

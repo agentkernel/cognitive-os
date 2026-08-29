@@ -29,5 +29,8 @@ cap-fs-ext = "4.0.2"
 same-file = "1.0.6"
 getrandom = "0.4.3"
 
+[dev-dependencies]
+tempfile = { workspace = true }
+
 [lints]
 workspace = true

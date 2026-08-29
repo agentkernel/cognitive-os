@@ -1,0 +1,168 @@
+# P11-T03 Project aggregate walking skeleton — running report
+
+- Task: `P11-T03` / slice `P11-T03/D01` (14 §10 five knives are **internal** steps, not separate branches/PRs/leases)
+- Change class: `implementation-only` (Personal-private tables + private projection; no `core/specs`, no Lane-CTR)
+- Product: CognitiveOS Personal 2.0.0 (v9 is a canvas filename only)
+- Lease: `lease/personal/P11-T03/project-aggregate`
+- Branch: `personal/P11-T03-project-aggregate`
+- Draft PR: pending first push
+- Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
+- Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
+
+## Recovery (2026-08-30 restart)
+
+| Fact | Value |
+|---|---|
+| Git at claim | `main@6092f31abb43e20ac245197d5884e3f118fad4e2` tracking `origin/main`; no prior T03 branch/PR |
+| Worktree | Dirty DOC-owned docs/handbook/skills — **protected, never staged** |
+| Lease at claim | Only DOC `dev-prep` + `OPC-REFRAME`; no P11 implementation lease |
+| Running report | This file created at claim (prior interruption wrote nothing durable) |
+| Guidance present | 13, 14, 15, 16, 17, 18, 21, 22 |
+| Guidance missing | 19, 20, 23, 24, 25, 26; `docs/plan/p11-plan-review-and-optimization.md` |
+
+## Written analysis (required before product code)
+
+### Applicable guidance
+
+| Source | How T03 uses it |
+|---|---|
+| 14 §3 objects / G1 / G2 | Authoritative HOW: new table, not `family=task`; G1 mints Project + confirmed CharterRevision in `creating`; G2 writes AcceptanceFact → `active` |
+| 14 §5 ④⑤ oracle | StageAcceptanceSpec storage; StageTestPassed is a **derived** fact; reuse P2-T14 `acceptance_decision` bytes; LLM-as-judge out of scope |
+| 14 §7.8 | Routes `/management/project/v1/*`; Personal-private; do not touch P7-T05 frozen inventory |
+| 14 §8 | Failure-first negatives N1–N16 (`p11_t03_*`); 22 号 cites these as T03-N1..N16 without renaming |
+| 14 §9 | Rejected shortcuts — deviation requires a written reason **in this report first** |
+| 14 §10 | D01 write order (knives 1–5 + projections + cadence declarations) |
+| 15 号 | Cited only: §13 A5 attempt payload excludes verifier params (field isolation hook). Do not rewrite 15 |
+| 16 号 | Preview-chain consumer only; no T06 assistant body |
+| 17 号 | Employee seam: seated predicate fail-closed; roster projection empty + `employee-authority-not-implemented`. No T04 body |
+| 18 号 | Conversation announcement seam: pending-previews list omits `preview_digest`; digest only on canvas `preview-detail`. No T05 body |
+| 21 号 | Column-level tables, migration drop point, route fields, per-knife close sentences |
+| 22 号 §2 | T03 close sentences per knife; N1–N16 remain 14 §8 text |
+
+### 14 §3 objects this slice MUST land
+
+`Project`, `CharterRevision`, `PlanRevision`, `Stage`, `Gap`
+plus T03-required supporting rows from 14 §6.5 / 21 §2: `Draft`, `Candidate`, `ApprovalPreview` (subject_kind ∈ activation \| plan-change \| acceptance), `StageTestFact`, `AcceptanceFact`.
+
+### 14 §3 objects this slice MUST NOT land
+
+| Object | Owner |
+|---|---|
+| RoleBlueprint / Employee / EmployeeRevision / Grant body | T04 |
+| Conversation new private version | T05 |
+| Hidden Pi assistant | T06 |
+| Hosted DSH engine | T07 |
+| Routine arming / scheduler | T08 (cadence stored as declaration only) |
+| Canvas HITL full text / time-box / narrow / stop | T09 |
+| Vault / Memory admission | T10 / T11 |
+| Full `/ui/` IA | T13 |
+| Honest usage body (beyond unknown≠0 projection hook) | T12 |
+
+### What this slice is NOT
+
+Not a Today page. Not a six-family rename. Not an assistant skin. Not `/work` retrofit. Not Task-row impersonation. Not Vite product origin. Not chat Approve.
+
+### 14 §8 negatives — write first / not this task
+
+| ID | Test name | This task? |
+|---|---|---|
+| N1 | `p11_t03_project_is_not_a_task_row` | yes (knife 1) |
+| N2 | `p11_t03_unconfirmed_activate_rejected` | yes (knife 1) |
+| N3 | `p11_t03_stale_total_preview_rejected` | yes (knife 1 store + knife 2 route) |
+| N4 | `p11_t03_cross_project_write_rejected` | yes (knife 1) |
+| N5 | `p11_t03_gap_stage_cannot_confirm_or_test` | yes (knife 1 half + knife 3 remainder) |
+| N6 | `p11_t03_completion_requires_current_verification` | yes (knife 4) |
+| N7 | `p11_t03_missing_openable_artifact_blocks_pass` | yes (knife 4) |
+| N8 | `p11_t03_unseated_stage_cannot_start_test` | yes (knife 4; empty seat table fail-closed) |
+| N9 | `p11_t03_joint_acceptance_requires_all_stage_facts` | yes (knife 5) |
+| N10 | `p11_t03_superseded_revision_confirm_rejected` | yes (knife 3) |
+| N11 | `p11_t03_secret_shape_rejected_at_registration` | yes (knife 5) |
+| N12 | `p11_t03_non_owner_principal_cannot_confirm` | yes (knife 2) |
+| N13 | `p11_t03_draft_apply_wrong_base_seq_rejected` | yes (knife 2) |
+| N14 | `p11_t03_unknown_cost_never_zero` | yes (knife 5 projection hook; honest usage body = T12) |
+| N15 | `p11_t03_copy_excludes_secrets_and_inflight` | yes (knife 5) |
+| N16 | `p11_t03_preview_survives_process_death` | store-reopen half in knife 5 if min preview table lands; process-death/Pi/DSH half → T09 |
+| 15 A5 | `p11_t03_attempt_payload_excludes_verifier_params` | hook only (15 §13) |
+
+Explicitly **not** done here: T04–T13 A/B/C/D catalogs in 22 号 §3–§12.
+
+### 14 §9 shortcuts — none taken
+
+No `/work` rename, no Task-row Project, no heartbeat authority, no chat Approve, no 0.1 reinterpretation, no Vite shell, no fake buttons.
+
+### Recorded deviations from 21 (not from 14 §9)
+
+1. **Circular FKs omitted** (`p11_project.current_charter_revision_id` ↔ `p11_charter_revision.project_id`). SQLite cannot insert both rows if both FKs are live. Integrity is enforced in the daemon writer. 14 semantics unchanged.
+2. **`inactive` added to Project `state` CHECK.** 14 §3.3 and N15 require copy to land inactive; 21 §2 enum omitted it. Follow 14.
+3. **N6/N7 oracle tests arrange seating facts as a function argument.** Production load of seating is always the empty table (N8). This is not a stub pass: production cannot mint `StageTestFact` without T04 seated rows.
+
+### Path collisions (DOC)
+
+| Path | Owner | T03 action |
+|---|---|---|
+| `docs/plan/PROGRESS.md`, `plan.md`, `PERSONAL-DEVELOPMENT-PLAN.md`, `personal-trace.yaml` | `DOC-PERSONAL-2.0.0/dev-prep` | **blocked_paths** — do not write; status stays DOC-owned until they adopt the lease row |
+| `personal/handbook/` | `DOC-PERSONAL-2.0.0/dev-prep` tree lease | docs-sync-contract §2 required mapped v26/route pages in this changeset (not `DOCS_IMPACT_NONE`). Product/architecture handbook bodies that only fingerprint-drifted because of DOC dirty sources are **not** taken. `PROGRESS.md` still blocked. |
+| `clients/docs/design/opc-2.0/`, `personal/docs/product/` | `DOC-PERSONAL-2.0-OPC-REFRAME` | do not write |
+| `personal/docs/architecture/personal-2.0.0-dev-prep-index.md` | DOC dev-prep | do not write |
+
+### Handbook delta (proposed; DOC must apply)
+
+`personal/handbook/{en,zh-CN}/developer/store-and-migrations.md`: authority map **v1–v25 → v1–v26**; add row “v26 = Personal-private Project aggregate (`p11_project` / charter / plan / stage / gap / draft / candidate / approval_preview / stage_test_fact / acceptance_fact)”; nuance sentence “v18–v25” → “v18–v26”. Other store-mapped pages (memory-skill, operations-recovery, provider-control-plane) need **review, no fact change**.
+
+`daemon-http` pages only if `server.rs` is wired; new file `project_aggregate.rs` is not in that source-map list.
+
+## Recovery (2026-08-30, third session)
+
+Previous subagents left knives 1–5 **implemented and staged, never committed**. This session recovers from disk/git only.
+
+| Fact | Value |
+|---|---|
+| Branch | `personal/P11-T03-project-aggregate` (no upstream at recovery) |
+| HEAD at recovery | `6092f31abb43e20ac245197d5884e3f118fad4e2` = `origin/main` |
+| Draft PR | none at recovery |
+| Lease | `lease/personal/P11-T03/project-aggregate` already in §3 |
+| Evaluation routing | **OFF** |
+| Protected dirty (not staged) | DOC product/architecture/PROGRESS; `.cursor/skills`; untracked skills/commands |
+
+### Recorded deviations (additions)
+
+4. **G2 `acceptance_decision_ref` is a daemon-authored JSON digest** (`schema_version` + `decision=granted` + project/plan ids) stored as `cas:{sha256}`. Walking skeleton does not open the filesystem ArtifactStore inside the SQLite aggregate (tests are layout-only). P2-T14 body shape is reused; full ArtifactStore `put` remains a T03 follow-up if CI proves the digest-only ref insufficient. Not a 14 §9 shortcut.
+5. **Confirm chain is the Personal-private `/management/project/v1/{draft.apply,preview.request,confirm}` triple**, not `/task/intent.record`. 21 §4 forbids reusing P7-T05 inventory and Task intent as Project identity. Discipline (persist candidate → digest preview → admit) is the same; A3 Intent/Effect persist-before-dispatch is not used because G1/G2 are internal authority writes (14 §3).
+6. **Mapped handbook pages + `tools/src/generate-handbook.mjs` are in this changeset** because `cognitive-store/**` and `server.rs` hit source-map (`dev.store-migrations`, `daemon-http`). This is docs-sync-contract §2, not a product-doc rewrite. `PROGRESS.md` / plan cards remain **blocked_paths** (DOC `dev-prep`). Did not fake `DOCS_IMPACT_NONE`.
+
+## Unique next action
+
+Commit + push this branch, open Draft PR, run `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (and exact-revision Linux store tests). DOC still owns `PROGRESS.md`: consistency will stay red until the Current snapshot lists this lease and `P11-T03/D01` is `in-progress`. Do not steal that DOC path. Do not claim T04.
+
+---
+
+## Incremental validation log (TEST-REPORT-INCREMENTAL-01)
+
+Units are appended **immediately** after each finishes. `not-run` is never pass.
+
+| Time | Unit | Result | Env | Revision | Notes |
+|---|---|---|---|---|---|
+| (claim) | written analysis | recorded | docs-only | uncommitted on `personal/P11-T03-project-aggregate` | no product code yet |
+| 2026-08-30 | knife 1–5 store + `/management/project/v1/*` handler | **partial** (implemented; tests not executed) | `DEV-WIN-GNU-01` | uncommitted on `personal/P11-T03-project-aggregate` | `cargo fmt -p cognitive-store -p kernel-server` pass. `cargo test`/`clippy`/`build` **not-run** (`RUST-LINK-DEV-WIN-GNU-01`). Waiting on commit+push for `CI-UBUNTU-01` / `DEV-LINUX-NATIVE-01`. |
+| 2026-08-30 | N1 `p11_t03_project_is_not_a_task_row` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N2 `p11_t03_unconfirmed_activate_rejected` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N3 `p11_t03_stale_total_preview_rejected` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N4 `p11_t03_cross_project_write_rejected` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N5 `p11_t03_gap_stage_cannot_confirm_or_test` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N6 `p11_t03_completion_requires_current_verification` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N7 `p11_t03_missing_openable_artifact_blocks_pass` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N8 `p11_t03_unseated_stage_cannot_start_test` | not-run | `CI-UBUNTU-01` | uncommitted | store test written; production seating = empty table |
+| 2026-08-30 | N9 `p11_t03_joint_acceptance_requires_all_stage_facts` | not-run | `CI-UBUNTU-01` | uncommitted | store test written; G2 positive also written |
+| 2026-08-30 | N10 `p11_t03_superseded_revision_confirm_rejected` | not-run | `CI-UBUNTU-01` | uncommitted | keep/rollback asserted in test |
+| 2026-08-30 | N11 `p11_t03_secret_shape_rejected_at_registration` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N12 `p11_t03_non_owner_principal_cannot_confirm` | not-run | `CI-UBUNTU-01` | uncommitted | store + HTTP task-channel 403 tests written |
+| 2026-08-30 | N13 `p11_t03_draft_apply_wrong_base_seq_rejected` | not-run | `CI-UBUNTU-01` | uncommitted | store test written |
+| 2026-08-30 | N14 `p11_t03_unknown_cost_never_zero` | not-run | `CI-UBUNTU-01` | uncommitted | projection hook only; honest usage body = T12 |
+| 2026-08-30 | N15 `p11_t03_copy_excludes_secrets_and_inflight` | not-run | `CI-UBUNTU-01` | uncommitted | copy lands `inactive` |
+| 2026-08-30 | N16 `p11_t03_preview_survives_process_death` | partial (store-reopen half written) / not-run (Pi/DSH death) | store: `CI-UBUNTU-01`; Pi/DSH: T09 | uncommitted | store reopen test written; process-death/Pi/DSH half **handed to T09** |
+| 2026-08-30 | docs-sync / handbook v26 | **blocked** | `DEV-WIN-GNU-01` | uncommitted | `personal/crates/cognitive-store/**` hits `dev.store-migrations`; `server.rs` hits `daemon-http`. `personal/handbook/` is owned by `DOC-PERSONAL-2.0.0/dev-prep`. Will not fake `DOCS_IMPACT_NONE`. |
+| 2026-08-30 | PROGRESS Active task lease row | **blocked** | docs-only | uncommitted | `check-consistency` requires every active lease in the Current snapshot; `PROGRESS.md` is DOC-owned |
+
+## Non-claims
+
+Not Gate, release, Profile, B01, Windows OPC qualification, Agent-benefit, or live `/ui/` IA. Live `/ui/` remains Linux 1.0 six-family.
