@@ -25,11 +25,12 @@ sources:
   - path: personal/docs/architecture/conversation-memory-vault.md
   - path: personal/docs/architecture/windows-host-background.md
   - path: personal/docs/architecture/routine-trigger-missed-run.md
+  - path: personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:ee5baba324fef04d0e94219d610ded7947d821acf8317ac471849e1938bec269"
+fingerprint: "sha256:d2978c82121157a3ed4e19479040d0b7850d7db155fb4a8537250b013e93fc8c"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -88,9 +89,24 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   billing/quota、budget 与 actual usage 分离。
 - UI 是 Today/Projects/Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
   不是一级导航。2026-08-30 owner 批准的当前交互 chrome 是
-  `personal-20-opc-e2e-optimized-v9`；architecture/formal-plan 协调仍 deferred。
-  单模块维护入口：
+  `personal-20-opc-e2e-optimized-v9`；architecture/formal-plan 用词对账推迟到
+  **完成后**。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
+  Scene → daemon 映射见
+  [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
+  （informative；Owner 批准 ≠ 后端已存在；P11 仍未领取）。
+- 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
+  **Member Runtime**。本页不改写产品旅程。
+- HITL **只**在项目中心画布；Today 用深链进入。不要把独立
+  `#/hitl/:approvalId` 写成产品一级或默认路由。
+- `state-lab` 在 Settings 高级、默认隐藏、非一级，不是纯开发构建开关。
+- Personal Conversation archive：在 **P11-T05 内**做新的 Personal private
+  projection version；禁止重解释 `conversation-projection/0.1`；不要先开
+  独立 Lane-CTR。只有必须改 **core 公共** conversation schema 的那一块才走
+  Lane-CTR；T05 其余私有投影继续。此处不改 `core/specs`。
+- 未开发的 `P11-T02`–`T15` 计划卡 **frozen**。Owner 解冻 P11 实现时，按已批准
+  v9 chrome 重新切分（不以 Team/Inbox 一级或成员级 budget stop 为当前 chrome）。
+  本页不改写 `PERSONAL-DEVELOPMENT-PLAN.md`。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh
 first-conversation-slice 角色，`conversation-projection/0.1` 不重解释。MCP 从 OPC P0

@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:1b4f62292d6513d322310dc11d1886fec3544a2456df34af425f024d44f9e245"
+fingerprint: "sha256:2799ffa1bec4925e04cbabd325c88a2ea4ebe6a90e99271f1a31433b94078c33"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -61,6 +61,11 @@ silently:
 - `personal-2-opc-rebaseline` routes ADR-0059, the Phase 11 formal/support/
   environment sources, focused Project/Conversation/Windows/Routine product
   and architecture chapters, and the current client OPC design corpus.
+- `personal-2-opc-v9-implementation-mapping` routes the owner-approved v9 Scene
+  → daemon mapping
+  (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`)
+  to `dev.architecture-overview` and this page. Informative only; not
+  implementation, support, Gate, or a P11 claim.
 
 For every hit, preserve explicit truth columns: **current Linux 1.0/current
 API**, **adopted Windows OPC target**, **Requires-backend**, and

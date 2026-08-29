@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:1b4f62292d6513d322310dc11d1886fec3544a2456df34af425f024d44f9e245"
+fingerprint: "sha256:2799ffa1bec4925e04cbabd325c88a2ea4ebe6a90e99271f1a31433b94078c33"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -54,6 +54,10 @@ source map 有意让已采纳目标无法静默变化：
 - `personal-2-opc-rebaseline` 路由 ADR-0059、Phase 11 formal/support/environment、
   focused Project/Conversation/Windows/Routine 产品与架构章，以及 current client OPC
   design corpus。
+- `personal-2-opc-v9-implementation-mapping` 路由 owner 批准的 v9 Scene → daemon
+  映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`）
+  到 `dev.architecture-overview` 与本页。仅 informative；不是实现、support、Gate
+  或 P11 领取。
 
 每次命中都必须保留：**当前 Linux 1.0/当前 API**、**已采纳 Windows OPC target**、
 **Requires-backend** 与 **Requires-environment/deferred**。绝不能从 design adoption、

@@ -191,6 +191,14 @@
       "note": "Windows-first OPC target, Project/Role/Employee, Personal Conversation/Vault/Memory, Pi Assistant, preinstalled managed DSH, Routine/Inbox, provider budgets, UI and fixed-denominator validation; design/Requires-backend is not implementation or support"
     },
     {
+      "id": "personal-2-opc-v9-implementation-mapping",
+      "sources": [
+        "personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md"
+      ],
+      "docs": ["dev.architecture-overview", "ai.docs-impact"],
+      "note": "owner-approved v9 Scene → daemon mapping; informative; not implementation, support, Gate, or a P11 claim. Authority object id = Employee; product chrome Member Runtime until post-completion reconciliation. P11-T02–T15 plan cards frozen vs v9."
+    },
+    {
       "id": "dsh-recovery-docs",
       "sources": [
         "docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md",
