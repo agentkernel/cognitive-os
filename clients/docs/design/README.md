@@ -12,7 +12,8 @@
 Windows-first one-person-company product. Maintain one module or feature flow
 from the [00 maintenance index](opc-2.0/00-maintenance-index.md). Current
 chrome is
-[`personal-20-opc-e2e-optimized-v5.canvas.tsx`](opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx).
+[`personal-20-opc-e2e-optimized-v9.canvas.tsx`](opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx).
+v8 is the prior approved baseline (not overwritten).
 It is concise, numbered, and
 self-indexed. It defines target behavior, states, accessibility, component
 composition, and backend gaps without claiming the existing client implements

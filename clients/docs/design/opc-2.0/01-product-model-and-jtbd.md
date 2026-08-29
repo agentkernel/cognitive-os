@@ -5,10 +5,10 @@
 - Product model:
   [OPC product model](../../../../personal/docs/product/opc-product-model.md)
 - Status: current interaction prototype is owner-approved
-  `personal-20-opc-e2e-optimized-v5`; archived pre-v5 and V2 are historical
-  chrome only
+  `personal-20-opc-e2e-optimized-v9`; v8 is the prior approved baseline (not
+  overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
@@ -30,10 +30,14 @@ validation.
 
 Personal 2.0 is an **AI-native digital-staff console** for one local OPC
 Owner-operator or individual developer. “Digital staff” is positioning
-language; it does not add an object between Role and Runtime. The accepted V2
-interaction chrome makes the job visible as Ingest → Decide → Authorize →
-Execute → Verify → Report, with Today as one decision packet plus four
-exception swimlanes. That chrome is UX, not a new domain object.
+language; it does not add an object between Role and Runtime. Current chrome
+(v9) does **not** draw a visible CEO loop. The job is visible as Today
+(decision packet + live-project run overview + assistant) and a live Project’s
+process axis plus four submenus. Ingest → Decide → Authorize → Execute →
+Verify → Report remains backend / operations discipline, not a top rail. Four
+exception swimlanes are not default Today blocks. That chrome is UX, not a
+new domain object. Archived V2 did draw a CEO rail and four swimlanes; those
+files are not current.
 
 > When I run a governed Project, I want to describe goals and acceptable
 > outputs in business language, let a manager organize and improve bounded

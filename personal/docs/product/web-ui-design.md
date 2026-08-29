@@ -7,15 +7,21 @@
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Interaction corpus: [clients OPC design](../../../clients/docs/design/opc-2.0/README.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
+  v5–v7 remain in `clients/docs/design/opc-2.0/` as prior live iterations
+  (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  personal-20-opc-e2e-optimized-v5, not V2 CEO-rail / X-hero. Archived V2
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  personal-20-opc-e2e-optimized-v9, not V2 CEO-rail / X-hero. v8 is the prior
+  approved baseline. Same-day v5 and
+  unapproved v6/v7 are not current. Archived V2
   is historical. Canvas-only HITL and daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e-optimized-v5](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v9](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -42,7 +48,9 @@ the dependency—not a button that pretends to execute.
   afterward.
 - **Frequency/risk:** daily scan plus occasional high-risk approvals, Provider
   changes, publishing, permissions, and deletion.
-- **Pattern:** locked three-column shell; Today exception-first scan; Projects
+- **Pattern:** locked three-column shell; Today decision-packet-first scan
+  (collapse the packet when nothing is pending; live-project rows, not four
+  swimlanes); Projects
   and Knowledge master-detail; Project group always in the right column plus
   governed center canvas; contextual Member/attention inspectors; searchable
   grouped Settings; guided setup with review. Narrow canvas scrolls
@@ -98,8 +106,8 @@ The desktop shell locks three columns:
 
 1. a stable left navigation with Settings anchored at the bottom; Team and
    Inbox are not first-level destinations;
-2. a central source-linked operating canvas (stable Project report by default,
-   then the X loop, setup, People, Operations, or Knowledge as selected);
+2. a central source-linked operating canvas (Today, live Project four
+   submenus, setup, or Knowledge as selected);
 3. a right-column conversation that is always the third column: global Personal
    Assistant outside a Project, Project group inside one.
 
@@ -114,14 +122,13 @@ no Connect / Install / Confirm fake buttons.
 
 ### Today
 
-Today is one decision packet plus four exception swimlanes, not a KPI wall.
-The returning surface opens with consequence, reversibility, alternatives,
-kernel truth, and why option A is first, then orders:
-
-1. **Needs you** — consequential Owner decisions (for example Package A review);
-2. **Can continue** — work that does not require the Owner now;
-3. **Unknown** — missing actuals, Effects, or verification;
-4. **Missed** — offline or coalesced Routine facts.
+Today (after ⑤) is one decision packet plus live-project run overview (one
+row per live Project) plus assistant, not a KPI wall and not four exception
+swimlanes. If nothing is pending, collapse the decision packet and keep the
+overview. The returning surface opens with consequence, reversibility,
+alternatives, kernel truth, and why option A is first. Swimlane semantics
+(Needs you / Can continue / Unknown / Missed) may merge into overview rows;
+they are not default blocks.
 
 Cost is estimated or actual; actual unknown is never shown as zero. Member
 activity is a **Working / Queued / Waiting** table; queued is not running.
@@ -131,10 +138,11 @@ cost basis, and freshness. Provenance chips are Observed / Proposed / Governed
 
 ### Projects
 
-Uses a stable list and Project operating canvas. A Project opens the
-system-default operating-report template first, then the X loop when that
-Project needs it. The manager may version that Project's template. The default
-template
+Uses a stable list and four live-Project submenus (**详情 / 成员 / 运行 /
+产出**). A Project opens to 详情 (read-only process axis plus destinations),
+not a CEO rail and not an X loop. The manager may version that Project's
+routine-report template (template contract, not the default landing). The
+default template
 prioritizes goal hierarchy, current phase, manager summary, today's work,
 Members, attention/approval items, latest openable artifacts/evidence, cost
 basis, and freshness. Package inspect (for example Package A) shows a thread
@@ -150,8 +158,11 @@ freshness are prohibited.
 
 ### Guided setup
 
-Uses broad automatic web research plus conversational and structured sections.
-States are
+Uses the five-stage create ring: ① project → ② process → ③ members → ④
+per-stage test → ⑤ joint (process before members). First success is ⑤
+「验收，进入 Today」. Daily Today is forbidden until then. Broad automatic web
+research plus conversational and structured sections live inside ①–③. States
+are
 `local-draft`, `daemon-draft`, `researching`, `waiting`, `re-preview`,
 `creating`, `failed`, and `active-receipt`. The review screen has editable
 charter/goals/output contracts/team/plan/Provider/capabilities/permissions/
@@ -169,7 +180,11 @@ Runtime Templates, and Project Member Runtime definitions with
 goal/responsibility/state/next/accepted-deliverable/cost/freshness facts.
 Activity is Working / Queued / Waiting; queued is not running. Member detail
 contains work, Conversation, Memory, grants, diagnostics, and history without
-equating Member identity with a process.
+equating Member identity with a process. Management is select-then-configure:
+unselected empty state, no default-first; switching Project clears selection.
+Tabs: 职责 / 输入 / 输出 / 技能 / 工具 / 工作说明 / 周期与触发 / 连接与权限.
+Identity stays in the detail header. Input is the read-only process contract;
+output is the editable 「交出什么」. Chrome object name is Member Runtime.
 
 ### Operations
 

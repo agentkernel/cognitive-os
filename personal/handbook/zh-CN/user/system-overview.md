@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:4cac726b8c188233d1e83a09a52f610d5dd5a9b49aecb6d0e2271fbcabbf907f"
+fingerprint: "sha256:0c57e5e628a34998f5022654b1a0b3f83ee8c44a511f926385d9b12692d499ca"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -82,8 +82,8 @@ Owner
 ```
 
 UI 是 Today / Projects / Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
-不是一级导航。2026-08-29 owner 批准的当前交互原型是
-`personal-20-opc-e2e-optimized-v5`，不是 daemon `/ui/`。创建顺序为项目 → 流程 →
+不是一级导航。2026-08-30 owner 批准的当前交互原型是
+`personal-20-opc-e2e-optimized-v9`，不是 daemon `/ui/`。创建顺序为项目 → 流程 →
 成员 → 分环测试 → 联调。单模块 PM/UI 维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是 preinstalled

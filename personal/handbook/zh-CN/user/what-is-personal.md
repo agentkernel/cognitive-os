@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:477da7187476ee289727a73977f72b0aff61f080de732c03238fa8c5a4411f41"
+fingerprint: "sha256:922d6c9e48d9d94a7231181e5fc75b21e850d8122a430d072a878712bc7108f9"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -79,8 +79,8 @@ Digital Employee。
   candidates。
 - **Deferred：** MCP 保留为 advanced seventh-family target，但不是 OPC P0。native
   mobile、device pairing 与 E2E relay remote 从 Personal 2.1 开始。
-- **当前交互原型（未交付）：** 2026-08-29 owner 批准的 chrome 是
-  `clients/docs/design/opc-2.0/` 下的 `personal-20-opc-e2e-optimized-v5`。这是
+- **当前交互原型（未交付）：** 2026-08-30 owner 批准的 chrome 是
+  `clients/docs/design/opc-2.0/` 下的 `personal-20-opc-e2e-optimized-v9`。这是
   Canvas 规格，不是 daemon `/ui/`。创建顺序为 ① 项目 → ② 流程 → ③ 成员 → ④ 测试 →
   ⑤ 联调。单模块维护入口是
   [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)，

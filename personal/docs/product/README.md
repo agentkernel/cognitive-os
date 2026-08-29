@@ -12,16 +12,22 @@
 - **PM/UI maintenance (one module or flow, not the whole corpus):**
   [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
+  v5–v7 remain in `clients/docs/design/opc-2.0/` as prior live iterations
+  (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  `personal-20-opc-e2e-optimized-v5`. Pre-optimization `personal-20-opc-e2e`
-  and optimized v1–v4 are archived iteration. Archived V2 is historical.
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  `personal-20-opc-e2e-optimized-v9`. Pre-optimization `personal-20-opc-e2e`
+  and optimized v1–v4 are archived iteration. v8 is the prior approved
+  baseline. Same-day v5 and unapproved
+  v6/v7 are not current. Archived V2 is historical.
   Canvas-only HITL and daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e-optimized-v5](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v9](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -65,8 +71,10 @@ The workbench does **not** draw a visible CEO six-step rail. Live Project is
 a business-process axis plus the current stage. Five-stage create is
 ① project → ② process → ③ members → ④ per-stage test → ⑤ joint (owner-confirmed
 2026-08-29 prototype amendment: process before members). Today, after ⑤ 验收,
-is one decision packet plus live-project run overview plus
+is one decision packet plus live-project run overview (one row per live
+Project) plus
 chat — not a KPI card wall and not four swimlanes as default blocks.
+If nothing is pending, collapse the decision packet.
 Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
 Receipt** as backend discipline. Knowledge Context shows why each fragment

@@ -14,13 +14,16 @@
 - Interaction corpus:
   [OPC 2.0 design](../../../clients/docs/design/opc-2.0/README.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  `personal-20-opc-e2e-optimized-v5`. The 2026-08-28/29 workshop remains the
-  scheme snapshot; v5 amends create order to process-before-members. V2
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  `personal-20-opc-e2e-optimized-v9`. The 2026-08-28/29 workshop remains the
+  scheme snapshot; v5 amends create order to process-before-members; v8
+  amends member select-then-configure and Project four work scenes; v9 is
+  current chrome. v8 remains the prior approved baseline (not overwritten).
+  Same-day v5 and unapproved v6/v7 are not current. V2
   CEO-rail / X-hero files are archived and are not current chrome.
   Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
@@ -842,11 +845,11 @@ the following replacements:
 | 15-scene prototype denominator as current product authority | requirement-family and scenario coverage in the current OPC design corpus | formal acceptance denominator is pending plan reconciliation; no old task ID is current product authority |
 | pre-overwrite V2 overlay conversation / stacked columns | locked left / center / right shell; conversation always the third column; narrow canvas scrolls horizontally | no overlay “open conversation”; Team/Inbox stay out of L1; 2.1 mobile/pairing/cloud 24/7 chrome is not drawn |
 | chat Approve / permanent “Don’t ask again” | HITL on the center-canvas preview; optional timeboxed 「本周同一类对外不再问」 (expires; Settings can revoke); `@` only into the unsent draft | chat cannot approve, publish, install, 验收, or grant permanent silence |
-| Today KPI card wall / visible CEO six-step rail / four swimlanes as default blocks | Today = decision packet + live-project run overview (counts + period toggle) + chat; live Project = process axis + current stage + project group | CEO remains backend discipline (canvas HITL + independent verify), not product chrome; swimlane semantics may merge into the overview |
+| Today KPI card wall / visible CEO six-step rail / four swimlanes as default blocks | Today = decision packet + live-project run overview (one row per live Project + counts + period toggle) + chat; collapse packet when nothing is pending; live Project = four submenus (详情 / 成员 / 运行 / 产出); list = one 「打开」 + text links; run 验收 only on last ring | CEO remains backend discipline (canvas HITL + independent verify), not product chrome; swimlane semantics may merge into the overview |
 | X/Twitter as P0 hero / default or demo Project | P0 = complete capabilities only; no demo Project; X parked as a later industry connector | first success is ⑤ joint-debug 验收, not an X loop |
 | ordinary chat is not Memory (2026-08-28 KNOW-04) | chat auto-admits to inspectable/forgettable Memory; Obsidian as knowledge 底座; Codex as assistant memory architecture | Codex is not a user-facing execution-engine store; Obsidian app install is not required |
 | one-shot create then daily Today | five-stage create wizard; daily Today only after ⑤ 验收 | empty Home = Create Project only; chat hidden until create page |
-| superseded post-subtraction `personal-20-opc-e2e` plus optimized v1–v4 as current chrome | owner-approved current chrome is [`personal-20-opc-e2e-optimized-v5`](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx); source and v1–v4 are in [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md); V2 remains in [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md) | Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout remain `not-run`; Owner prototype approval is not usability, accessibility, backend, Gate, release, qualification, or acceptance |
+| superseded post-subtraction `personal-20-opc-e2e` plus optimized v1–v8 as current chrome | owner-approved current chrome is [`personal-20-opc-e2e-optimized-v9`](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx); v8 is the prior approved baseline (not overwritten); v5–v7 remain in the live folder and are not current; source and v1–v4 are in [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md); V2 remains in [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md) | Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout remain `not-run`; Owner prototype approval is not usability, accessibility, backend, Gate, release, qualification, or acceptance |
 | workshop members-then-process as current create order | ① project → ② process → ③ members → ④ per-stage test → ⑤ joint; sequential member init; ④ seated-member gate | workshop Q&A is historical; architecture/formal-plan reconciliation remains deferred |
 
 Accepted 2026-08-27 ADRs and formal-plan records are not rewritten by this map.

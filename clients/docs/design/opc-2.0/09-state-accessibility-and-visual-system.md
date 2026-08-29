@@ -2,9 +2,9 @@
 
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
-- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
+- Status: current interaction prototype is owner-approved v9 (2026-08-30); v8 is the prior approved baseline (not overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
@@ -106,12 +106,14 @@ chrome. Those surfaces are parked and are not drawn as current product chrome.
 
 ## Review boundary
 
-The owner-accepted competitive-informed v2 source review checks navigation,
-the CEO loop rail, decision packet, exception swimlanes, Assistant/Project-group
+The owner-approved v9 source review checks navigation, locked three-column
+shell, Today decision packet plus live-project run overview (no CEO loop
+rail, no four swimlanes as default blocks), Assistant/Project-group
 switching, `@` routing into the unsent draft, typed canvas states,
 setup/recovery states, capability honesty, keyboard order, focus restoration,
 reduced motion, contrast, and long copy. Static review cannot prove rendered
 accessibility conformance, human
 usability, or formal acceptance; those remain future executed evidence under a
 reconciled plan. Canvas runtime/render, NVDA, host-theme contrast, and 200%
-real layout remain `not-run`.
+real layout remain `not-run`. Archived V2 review notes that mentioned a CEO
+loop rail are historical only.

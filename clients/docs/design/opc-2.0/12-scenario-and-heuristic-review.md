@@ -3,11 +3,11 @@
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
-- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
+- Status: current interaction prototype is owner-approved v9 (2026-08-30); v8 is the prior approved baseline (not overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -107,9 +107,11 @@ No lower rung is promoted into a higher claim.
 
 ## Current disposition
 
-The Owner-accepted competitive-informed V2 source exists (same V2 files, not a
-v3). It records the visible CEO loop, Today decision packet plus four
-exception swimlanes, canvas-only HITL, and daemon authority path. Owner
+The Owner-approved current chrome is `personal-20-opc-e2e-optimized-v9`
+(2026-08-30). The competitive-informed V2 source remains historical provenance
+(same V2 files, not a v3). It recorded a visible CEO loop and Today four
+exception swimlanes; those are **not** current chrome. Canvas-only HITL and
+daemon authority path remain. Owner
 acceptance is recorded, and source/static checks passed. Canvas
 runtime/render, NVDA, host-theme contrast, 200% real layout, and all
 backend/external/qualified execution remain `not-run`. Owner approval does

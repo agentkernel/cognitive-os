@@ -14,10 +14,12 @@
   - [Product design](product-design.md)
   - [User journeys](user-journeys.md)
   - Minimal matching sentences in [Personal 2.0 scope](personal-2.0-scope.md)
-- **Superseded as current chrome by v5 on 2026-08-29.** This workshop record
+- **Superseded as current chrome first by v5, then by v8, then by v9
+  (2026-08-30).** This workshop record
   remains the verbatim Q&A + scheme snapshot. It does **not** own current
   chrome. Owner-approved current interaction:
-  [personal-20-opc-e2e-optimized-v5](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx).
+  [personal-20-opc-e2e-optimized-v9](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx).
+  v8 remains the prior approved baseline and must not be overwritten.
   The post-workshop canvas this file named is archived at
   [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/personal-20-opc-e2e.canvas.tsx).
 - Owner-confirmed prototype amendment (2026-08-29; not rewritten below):
@@ -29,7 +31,10 @@
   rail, Today four swimlanes as default blocks, X/Twitter as P0 hero, KNOW-04
   no-auto-memory, and permanent “Don’t ask again”). V2 is archived historical
   baseline, not current product chrome. v5 later superseded this workshop’s
-  canvas as current chrome without changing the Q&A log.
+  canvas as current chrome without changing the Q&A log. v8 later superseded
+  v5 as current chrome (member select-then-configure; Project four work
+  scenes), still without changing this Q&A log. v9 (2026-08-30) is current
+  chrome, still without changing this Q&A log.
 
 Owner close instruction (verbatim): 把本次对话中所有问答的问题和我的回答原文、项目最新方案保存为一份文档。同时可以改文档
 

@@ -3,11 +3,11 @@
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
-- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
+- Status: current interaction prototype is owner-approved v9 (2026-08-30); v8 is the prior approved baseline (not overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -49,9 +49,9 @@ This is design composition, not an implementation module or API contract.
 | Component | Job | Required states |
 |---|---|---|
 | `GoalOutputHeader` | lead with goal, expected result, due/openable deliverable, acceptance | loading, partial, stale, accepted, attention |
-| `AuthoritySpine` | visible CEO loop: Ingest → Decide → Authorize → Execute → Verify → Report | current step, blocked, Requires-backend |
-| `DecisionPacket` | consequence, reversibility, alternatives, kernel truth, why A is first | loading, stale, waiting-owner, receipt |
-| `ExceptionSwimlanes` | Needs you / Can continue / Unknown / Missed | empty, partial, unknown, missed |
+| `AuthoritySpine` | **not default chrome** (archived V2). CEO six-step remains backend discipline, not a top rail | — |
+| `DecisionPacket` | consequence, reversibility, alternatives, kernel truth, why A is first; collapse when nothing is pending | loading, stale, waiting-owner, receipt, collapsed |
+| `ExceptionSwimlanes` | **not default Today blocks**. Needs you / Can continue / Unknown / Missed may merge into live-project overview rows | empty, partial, unknown, missed |
 | `ProjectOperatingCanvas` | render stable source-linked Project report | loading, partial, stale, offline, archived |
 | `TypedCanvasSection` | compose approved goal/artifact/evidence/timeline/decision/cost views | temporary, source-missing, pinned, template-saved |
 | `ProjectGroupThread` | Owner/manager/Members group with bounded proactive speech | loading, offline, permission, failed-draft |
@@ -96,15 +96,16 @@ a Project template.
 
 ## Owner-approved prototype source coverage
 
-Current chrome is `personal-20-opc-e2e-optimized-v5` (2026-08-29). The numbered
+Current chrome is `personal-20-opc-e2e-optimized-v9` (2026-08-30). The numbered
 list below is **archived V2 / pre-subtraction scene coverage**. It does not
 define current create, Today, or live-Project chrome (no visible CEO rail; no
 X/Twitter P0 hero; four swimlanes are not default Today blocks).
 
-The owner-accepted competitive-informed v2 source provided navigation among:
+The owner-accepted competitive-informed v2 source provided navigation among
+**(historical only; not current chrome)**:
 
 1. visible CEO loop and Today decision packet plus four exception swimlanes
-   (Needs you / Can continue / Unknown / Missed);
+   (Needs you / Can continue / Unknown / Missed) — **not** v9 default chrome;
 2. Project stable operating report first, then the X loop, plus right-column
    group conversation;
 3. Project publish preview as the full AUTONOMY packet; no Confirm in chat;

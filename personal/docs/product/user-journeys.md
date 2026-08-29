@@ -9,13 +9,19 @@
 - Workshop record (verbatim Q&A + scheme snapshot):
   [journey-subtraction workshop 2026-08-28](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
+  v5–v7 remain in `clients/docs/design/opc-2.0/` as prior live iterations
+  (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  `personal-20-opc-e2e-optimized-v5`. Pre-optimization `personal-20-opc-e2e`
-  and optimized v1–v4 are archived iteration. Canvas-only HITL and daemon
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  `personal-20-opc-e2e-optimized-v9`. Pre-optimization `personal-20-opc-e2e`
+  and optimized v1–v4 are archived iteration. v8 is the prior approved
+  baseline. Same-day v5 and unapproved
+  v6/v7 are not current. Canvas-only HITL and daemon
   authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
@@ -105,29 +111,35 @@ After ⑤, the returning Owner opens Today as three default blocks:
 1. **Decision packet** — the consequential Owner decision (consequence,
    reversibility, alternatives, kernel truth, why option A is first). This is
    the only primary CTA (去处理这一件拍板).
-2. **Live-project run overview** — current state, today's completed-run
-   count, current stage, elapsed time on current work; plus created / live /
-   blocked project counts; today / week / month toggle. Click a live project
-   for stage name, responsible member, today's complete/fail counts, average
-   duration, and success rate. Four exception swimlanes are not default
-   blocks; their semantics may merge into this overview.
+2. **Live-project run overview** — one row per live Project (current state,
+   today's completed-run count, current stage, elapsed time) plus created /
+   live / blocked project counts; today / week / month toggle. Click a live
+   project row for stage name, responsible member, today's complete/fail
+   counts, average duration, and success rate. Four exception swimlanes are
+   not default blocks; their semantics may merge into this overview.
 3. **Assistant** — natural-language questions about run data and analysis.
    Chat cannot approve. Mis-tapping statistics cannot publish. Decline / later
    leaves the item on Today.
 
-Empty: no pending decision and no live project (incomplete create still shows
-only continue-create). Loading: overview refreshes; the packet stays
+If nothing is pending, collapse the decision packet and keep the run overview.
+Do not draw live Today as Empty Home.
+
+Empty Home (no Project): Create only; chat hidden. Incomplete create still
+shows only continue-create. Loading: overview refreshes; the packet stays
 clickable. Blocked: blocked count is visible; open to handle. Unknown: the
 row says 说不清; unknown cost is never 0. Offline: last-known overview marked
 stale; not current success.
 
 ## 3. Use the Project group and process-axis canvas
 
-A live Project opens to ① the business-process axis ② this stage (status,
-responsible member, auth/verify marks and content) ③ the Owner/manager/Members
-group conversation. There is no visible CEO six-step top rail. Click the axis
-to change stage. When the Owner must act, the primary button is in ②. Chat
-cannot approve.
+A live Project uses four submenus: **详情 / 成员 / 运行 / 产出**. The Projects
+list shows one 「打开」 per row plus text links (not four 「查看」 buttons).
+Detail is a read-only process axis plus destinations. Runs show this stage
+(status, responsible member, auth/verify marks and content); 「验收，回 Today」
+is only on the last ring. Outputs are select-then-view, same as members.
+There is no visible CEO six-step top rail. Click the axis in 运行管理
+to change stage. When the Owner must act, the primary button is on that
+stage. Chat cannot approve.
 
 Empty stage: not started, what is missing. In progress: who, for how long.
 Blocked: needs auth or input; primary button handles it. Unknown: cannot mark
@@ -136,7 +148,8 @@ do not jump ahead.
 
 HITL is announced in chat and linked to the center preview; chat has no
 Approve control and no permanent “Don’t ask again” grant. Close-out is
-openable artifact + verify state + 「验收，回 Today」. Fail stays on the
+openable artifact + verify state + 「验收，回 Today」, and that control is
+only on the last process ring. Fail stays on the
 stage. Chat cannot 验收. There is no Inbox first-level entry and no fake
 publish.
 
@@ -170,9 +183,10 @@ receipt without erasing prior plans or Attempts.
 
 Daily add-member (five-stage create already complete):
 
-1. From the live Project, open the roster. Unique task: add one post (what to
+1. From the live Project, open 成员管理. Unique task: add one post (what to
    do, what to hand over), confirm, then disclose 执行方式. Not “install MCP
-   first” and not “open the engine”.
+   first” and not “open the engine”. The add-member roster is the current
+   Project’s real members, not a global sample list.
 2. Default blocks: existing roster + chat suggesting the new post + 「确认加入」.
    Model is required. Skill/MCP/file permissions wait for 执行方式.
 3. Refuse = not joined. No model = pending; go to Settings. After join,
@@ -184,6 +198,13 @@ Daily add-member (five-stage create already complete):
 A first Task starts a disposable Agent process/Attempt from the exact Member
 revision. Process exit does not delete the Member, Conversation, Memory, or
 evidence. Members are not shared across Projects.
+
+On 成员管理, choose a person before configuration appears. Unselected is
+empty; do not default-select the first row. Switching Project clears
+selection. Tabs are 职责 / 输入 / 输出 / 技能 / 工具 / 工作说明 / 周期与触发
+/ 连接与权限. Identity (model, seating, responsible stage) stays in the
+detail header. Input is the read-only process contract. Output is the
+editable 「交出什么」.
 
 ## 5. Import knowledge and retrieve bounded context
 
@@ -357,16 +378,19 @@ explanation/navigation, not an active-looking button.
 ## 13. Evidence boundary
 
 These journeys are specifications. The
-[**current interaction prototype**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
-is owner-approved optimized v5 (2026-08-29). Pre-optimization
+[**current interaction prototype**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+is owner-approved optimized v9 (2026-08-30). v8 is the prior approved baseline
+and must not be overwritten. Same-day v5 and unapproved v6/v7
+remain in the live folder and are not current. Pre-optimization
 `personal-20-opc-e2e` and optimized v1–v4 are in
 [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md).
 Archived V2 CEO-rail / X-hero files are in the
 [pre-subtraction history folder](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
 and are not current chrome. The 2026-08-28/29
 [workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
-is the scheme snapshot; v5 amends create order to process-before-members
-without rewriting that Q&A. Source/static checks and Owner approval
+is the scheme snapshot; v5 amended create order to process-before-members,
+v8 amended member/project IA, and v9 is current chrome, without rewriting that
+Q&A. Source/static checks and Owner approval
 are not human
 usability, accessibility, backend, Gate, or acceptance evidence. Canvas
 runtime/render, NVDA, host-theme contrast, and 200% real layout remain

@@ -2,7 +2,7 @@
 
 - Status: owner-approved target design; implementation and qualification
   remain capability-gated
-- Date: 2026-08-28; current chrome retarget 2026-08-29
+- Date: 2026-08-28; current chrome retarget 2026-08-30 (v9)
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Canonical product intent:
@@ -14,19 +14,28 @@
 - **Maintenance catalog (PM + UI start here):**
   [00 — module × journey index](00-maintenance-index.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](personal-20-opc-e2e-optimized-v8.canvas.tsx)
+- Prior live iterations (not current chrome; not overwritten): v5–v7 in this
+  folder
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  `personal-20-opc-e2e-optimized-v5` (`opc-e2e-optimized-vN` naming, not
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  `personal-20-opc-e2e-optimized-v9` (`opc-e2e-optimized-vN` naming, not
   `ai-ceo`). Five-stage create uses process before members; sequential member
   init; create/members/test/joint chat defaults to Personal Assistant.
-  Archived V2 CEO-rail / X-hero files are historical only. Canvas-only HITL
-  and daemon authority path remain. This is not the pre-overwrite
-  overlay-conversation / stacked-column V2.
+  Member management is select-then-configure (no default-first). Project work
+  uses four submenus (detail / members / runs / outputs). Today default blocks
+  are decision packet + live-project run overview (rows) + assistant; collapse
+  the packet when nothing is pending. Same-day v5–v8 remain in this folder;
+  v8 is the prior approved baseline and must not be overwritten. Unapproved
+  v6/v7 are not current. Archived V2 CEO-rail / X-hero files are historical
+  only. Canvas-only HITL and daemon authority path remain. This is not the
+  pre-overwrite overlay-conversation / stacked-column V2.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e-optimized-v5](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v9](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -53,8 +62,10 @@ and are not drawn here.
 The workbench does **not** draw a visible CEO loop. Live Project is the
 business-process axis plus the current stage plus the project group.
 Today, after five-stage create 验收, leads with one decision packet plus
-live-project run overview (counts and period toggle) plus assistant. Four
-exception swimlanes are not default Today blocks. Operations defaults to
+live-project run overview (one row per live Project: status, today's completed
+runs, current stage, duration; plus created/live/blocked counts and period
+toggle) plus assistant. If nothing is pending, collapse the decision packet
+and keep the overview. Four exception swimlanes are not default Today blocks. Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
 Receipt**. Project publish preview is the full AUTONOMY packet on the canvas;
 there is no Confirm in chat. Knowledge Context shows why each fragment was
@@ -128,7 +139,7 @@ still encode the 2026-08-27 model are **pending architecture/plan/handbook
 reconciliation**. They remain dated facts but do not override the current
 product sources listed above.
 
-This corpus and the current `personal-20-opc-e2e-optimized-v5` prototype are
+This corpus and the current `personal-20-opc-e2e-optimized-v9` prototype are
 specifications only. They do not
 prove backend feasibility, Windows integration, DSH/Pi qualification,
 Provider/MCP/X connectivity, accessibility conformance, human usability, market

@@ -8,22 +8,30 @@
   2026-08-28, then
   [journey-subtraction workshop](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
   2026-08-28/29, then owner-approved v5 prototype 2026-08-29 (process before
-  members; sequential member init). Architecture and formal-plan reconciliation
-  remain deferred.
+  members; sequential member init), then owner-approved v8 2026-08-29 (member
+  select-then-configure; Project four work scenes), then owner-approved v9
+  2026-08-30 (current chrome). Architecture and
+  formal-plan reconciliation remain deferred.
 - Product intent: [Product design](product-design.md)
 - **PM/UI maintenance entry (do not duplicate the table here):**
   [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
+  v5–v7 remain in `clients/docs/design/opc-2.0/` as prior live iterations
+  (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  `personal-20-opc-e2e-optimized-v5` (`opc-e2e-optimized-vN` naming, not
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  `personal-20-opc-e2e-optimized-v9` (`opc-e2e-optimized-vN` naming, not
   `ai-ceo`). Pre-optimization `personal-20-opc-e2e` and optimized v1–v4 are
-  archived iteration. Canvas-only HITL and daemon authority path remain.
+  archived iteration. v8 is the prior approved baseline. Same-day v5 and
+  unapproved v6/v7 are not current.
+  Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -94,9 +102,18 @@ Excluded:
   edit → Enter → confirm dialog → Owner message in chat; assistant proposes;
   user confirms in chat; then canvas applies. Prototype generation is labelled
   local target-state samples, not daemon writes;
-- live Project default is the business-process axis plus current-stage
-  workface plus project group; there is **no visible CEO six-step top rail**
+- live Project default is four submenus (**详情 / 成员 / 运行 / 产出**);
+  Projects list is one 「打开」 per row plus text links (not four 「查看」
+  buttons); detail is a **read-only** process axis plus destinations to
+  members / runs / outputs; run 验收 is **only on the last ring**; outputs
+  are select-then-view; there is **no visible CEO six-step top rail**
   (CEO remains backend discipline: canvas HITL + independent verify);
+- Member management is select-then-configure: unselected empty state, no
+  default-first; switching Project clears selection; tabs are 职责 / 输入 /
+  输出 / 技能 / 工具 / 工作说明 / 周期与触发 / 连接与权限; identity stays
+  in the detail header; input is the read-only process contract (not a
+  member-private input field); output is the editable 「交出什么」; adding a
+  member uses the current Project’s real roster;
 - stable routine-report templates plus temporary ad-hoc canvas composition from
   typed, source-linked components and real Project results;
 - temporary canvases are not saved unless pinned or made a template; generated
@@ -107,9 +124,12 @@ Excluded:
 - Team and attention/approval surfaces opened contextually, not as permanent
   first-level navigation;
 - visible CEO loop is **not** product chrome;
-- Today decision packet plus live-project run overview (created/live/blocked
-  counts, period toggle) plus chat; four exception swimlanes are not default
-  blocks; cost estimated or actual, with actual unknown never shown as zero;
+- Today decision packet plus live-project run overview (one row per live
+  Project: status, today's completed runs, current stage, duration; plus
+  created/live/blocked counts and period toggle) plus chat. If nothing is
+  pending, collapse the decision packet and keep the overview. Four exception
+  swimlanes are not default blocks; cost estimated or actual, with actual
+  unknown never shown as zero;
 - Operations default working view: Candidate → Intent persisted → Fence →
   Execute → Independent verify → Receipt;
 - Knowledge Context shows why each fragment was selected; chat auto-admits to

@@ -29,7 +29,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:5f00aa383ae4fe70234bdde952ad13adf7a2c28ecac62eb2b5945e5d0bfc2f5c"
+fingerprint: "sha256:ee5baba324fef04d0e94219d610ded7947d821acf8317ac471849e1938bec269"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -94,8 +94,8 @@ authority.
   account, billing/quota, budget and actual usage remain separate.
 - UI is Today/Projects/Knowledge with bottom Settings and one persistent
   right conversation. Team and Inbox are not first-level destinations.
-  Owner-approved current interaction chrome (2026-08-29) is
-  `personal-20-opc-e2e-optimized-v5`; architecture/formal-plan reconciliation
+  Owner-approved current interaction chrome (2026-08-30) is
+  `personal-20-opc-e2e-optimized-v9`; architecture/formal-plan reconciliation
   remains deferred. One-module PM/UI work starts at
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 

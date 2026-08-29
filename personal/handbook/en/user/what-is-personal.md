@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:477da7187476ee289727a73977f72b0aff61f080de732c03238fa8c5a4411f41"
+fingerprint: "sha256:922d6c9e48d9d94a7231181e5fc75b21e850d8122a430d072a878712bc7108f9"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -94,8 +94,8 @@ Keep these two baselines separate:
 - **Deferred:** MCP remains an advanced seventh-family target but is not an OPC
   P0 dependency. Native mobile, device pairing and E2E relay remote begin in
   Personal 2.1.
-- **Current interaction prototype (not shipped):** owner-approved 2026-08-29
-  chrome is `personal-20-opc-e2e-optimized-v5` under
+- **Current interaction prototype (not shipped):** owner-approved 2026-08-30
+  chrome is `personal-20-opc-e2e-optimized-v9` under
   `clients/docs/design/opc-2.0/`. It is a Canvas specification, not daemon
   `/ui/`. Create order is ① project → ② process → ③ members → ④ test → ⑤ joint.
   Maintain one module or flow from

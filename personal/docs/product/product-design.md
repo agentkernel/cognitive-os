@@ -7,25 +7,35 @@
   2026-08-28, then journey-subtraction workshop 2026-08-28/29
   ([workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)),
   then owner-approved v5 prototype 2026-08-29 (process before members;
-  sequential member init). This document owns the amended product intent;
-  architecture and implementation-plan reconciliation remain deferred.
+  sequential member init), then owner-approved v8 2026-08-29 (member
+  select-then-configure; Project four work scenes), then owner-approved v9
+  2026-08-30 (current chrome). This document owns the
+  amended product intent; architecture and implementation-plan reconciliation
+  remain deferred.
 - Requirements baseline:
   [Personal 2.0 OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Exact scope: [Personal 2.0 scope](personal-2.0-scope.md)
 - Ordered behavior: [User journeys](user-journeys.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
+  v5–v7 remain in `clients/docs/design/opc-2.0/` as prior live iterations
+  (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  `personal-20-opc-e2e-optimized-v5` (`opc-e2e-optimized-vN` naming, not
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  `personal-20-opc-e2e-optimized-v9` (`opc-e2e-optimized-vN` naming, not
   `ai-ceo`). Visual tokens/components are reused from archived V2 so it still
   looks like the same product; IA and flow follow five-stage create with
-  **process before members**, process-axis Projects, and Today without a
-  KPI/swimlane wall. Pre-optimization `personal-20-opc-e2e` and optimized
-  v1–v4 are archived iteration. V2 CEO-rail / X-hero canvases remain in
-  pre-subtraction history. Canvas-only HITL and daemon authority path remain.
+  **process before members**, process-axis Projects, Today without a
+  KPI/swimlane wall, member select-then-configure, and Project four submenus
+  (detail / members / runs / outputs). Pre-optimization `personal-20-opc-e2e`
+  and optimized v1–v4 are archived iteration. v8 is the prior approved
+  baseline. Same-day v5 and unapproved v6/v7
+  are not current. V2 CEO-rail / X-hero canvases remain in pre-subtraction
+  history. Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -164,14 +174,18 @@ The manager speaks by default. A Member speaks proactively only when
 mentioned, submitting a deliverable, handing off, blocked, or requesting a
 decision. Ordinary process traces remain collapsed.
 
-After ⑤, Today is ① one decision packet ② live-project run overview plus
-counts and a today/week/month toggle ③ assistant. The primary CTA is only on
-the decision packet. Chat may query run data and must not approve. Four
-swimlanes are not default blocks.
+After ⑤, Today is ① one decision packet ② live-project run overview (one row
+per live Project) plus counts and a today/week/month toggle ③ assistant. The
+primary CTA is only on the decision packet. If nothing is pending, collapse
+the packet and keep the overview. Chat may query run data and must not
+approve. Four swimlanes are not default blocks.
 
-A live Project is ① the business-process axis ② this stage (status, member,
-auth/verify marks) ③ project group. There is no visible CEO six-step top
-rail. CEO discipline remains backend: canvas HITL and independent verify.
+A live Project uses four submenus: **详情 / 成员 / 运行 / 产出**. The Projects
+list shows one 「打开」 per row plus text links to members / runs / outputs
+(not four parallel 「查看」 buttons). Detail is a read-only process axis plus
+those destinations. Runs show the current-stage workface; 「验收，回 Today」
+appears only on the last ring. Outputs are select-then-view. There is no
+visible CEO six-step top rail. CEO discipline remains backend: canvas HITL and independent verify.
 Unknown cannot pass or accept. Close-out is openable artifact + verify state
 + 「验收，回 Today」.
 
@@ -190,6 +204,15 @@ permissions remain Project-isolated and are explicit. Members are not shared
 across Projects; only Role Runtime Templates may be reused. Executing a Task
 starts a disposable Agent process/Attempt; process exit does not delete the
 Member, Conversation, Memory, artifacts, or evidence.
+
+Member management is **select-then-configure**: choose a person, then show
+configuration. Unselected is an empty state (do not default-select the first
+row). Switching Project clears the selection. Configuration tabs are 职责 /
+输入 / 输出 / 技能 / 工具 / 工作说明 / 周期与触发 / 连接与权限. Identity
+(model, seating, responsible stage) stays in the detail header. Input is the
+read-only process contract (previous-stage handoff), not a member-private
+input field. Output is the editable 「交出什么」. Adding a member uses the
+current Project’s real roster, not a global sample list.
 
 ### P0-4 — Remember and compress without losing authority
 
@@ -273,8 +296,9 @@ top-level destinations. Native mobile, pairing, and cloud 24/7 chrome are 2.1
 and are not drawn as current product chrome.
 
 - **Today:** after ⑤, one decision packet plus live-project run overview
-  (created / live / blocked counts, today/week/month toggle). Primary CTA
-  only on the decision packet. Chat may query run data and cannot approve.
+  (one row per live Project; created / live / blocked counts; today/week/month
+  toggle). Primary CTA only on the decision packet. If nothing is pending,
+  collapse the packet. Chat may query run data and cannot approve.
   Four swimlanes are not default blocks. Cost unknown is not zero. Incomplete
   create shows only continue-create. Empty Home (no Project) is Create
   Project only; chat hidden.

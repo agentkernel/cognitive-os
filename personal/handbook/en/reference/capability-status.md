@@ -27,7 +27,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:56859e5598ba59b1abbc96221e30d02287b8da978b2dbb4597a99b98cd5a2fac"
+fingerprint: "sha256:55b909cffabe4387d2126ef2dcea885be91876a5b027df235247addc4ec1dc6f"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -75,7 +75,7 @@ and Agent requires independent qualification.
 | Current six-family resource projection/watch | implemented | management+task channels only; this is not the adopted MCP seventh family |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |
 | Non-Pi agents | designed | Codex fixture qualification only |
-| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level), Project work loop and native Windows host are target-only; current interaction spec is `personal-20-opc-e2e-optimized-v5` (not `/ui/`); one-module catalog [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md); Linux/WSL/CI/Canvas evidence does not transfer |
+| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level), Project work loop and native Windows host are target-only; current interaction spec is `personal-20-opc-e2e-optimized-v9` (not `/ui/`); one-module catalog [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md); Linux/WSL/CI/Canvas evidence does not transfer |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority is reusable, but Project activation, manager envelope, Routine/missed ledger and complete hierarchy do not exist |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | no complete authority/projection; employee identity must remain separate from runtime/process |
 | Pi-backed Personal Assistant | Requires-backend | Pi is the hidden candidate-only target engine; current Pi Shell/Linux qualification does not establish the OPC Assistant |

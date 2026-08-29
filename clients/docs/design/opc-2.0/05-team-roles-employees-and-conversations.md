@@ -4,9 +4,9 @@
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Product model:
   [OPC product model](../../../../personal/docs/product/opc-product-model.md)
-- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
+- Status: current interaction prototype is owner-approved v9 (2026-08-30); v8 is the prior approved baseline (not overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
@@ -27,9 +27,9 @@ The current chain is:
 `Role Runtime Template -> Project-specific Member Runtime definition -> Task
 -> Attempt -> disposable Agent process`
 
-There is no additional employee object. “Digital staff” remains marketing
-positioning only. Members are not shared across Projects; only Role Runtime
-Templates may be reused.
+There is no additional employee object. Chrome object name is **Member
+Runtime**. “Digital staff” remains marketing positioning only. Members are
+not shared across Projects; only Role Runtime Templates may be reused.
 
 ## Role Runtime Template and Member creation
 
@@ -46,7 +46,21 @@ existing Members.
 
 ## Member cards and detail
 
-Cards lead with:
+Current chrome (v9) member management is **select-then-configure**:
+
+- Choose a person in the roster before any configuration appears.
+- Unselected is an empty state. Do not default-select the first row.
+- Switching Project clears the selection.
+- Tabs: 职责 / 输入 / 输出 / 技能 / 工具 / 工作说明 / 周期与触发 / 连接与权限.
+- Identity (model, seating, responsible stage) stays in the detail header;
+  there is no overview tab that restates those six facts.
+- Input is the read-only process contract (previous-stage handoff or project
+  materials). Do not invent member-private input fields.
+- Output is the editable 「交出什么」.
+- Adding a member uses the current Project’s real roster, not a global sample
+  list.
+
+Cards still lead with:
 
 - goal, responsibility, and expected deliverable;
 - current work and next action;

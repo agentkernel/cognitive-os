@@ -3,13 +3,14 @@
 - Archived: 2026-08-29
 - Status: **historical only** — not current product chrome
 - Current interaction prototype:
-  [`personal-20-opc-e2e-optimized-v5.canvas.tsx`](../../personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [`personal-20-opc-e2e-optimized-v9.canvas.tsx`](../../personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Cursor-openable current copy (IDE detection path; not a second baseline):
-  `C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx`
+  `C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v9.canvas.tsx`
 
 This folder holds Personal 2.0 / OPC **e2e canvases from after** the
 2026-08-28/29 journey-subtraction workshop and **before** owner approval of
-optimized v5 as current chrome.
+optimized v5. Current chrome is now v9; v8 is the prior approved baseline
+(not overwritten). v5–v7 remain in the live folder and are not current.
 
 They remain useful as dated design provenance (post-subtraction source, then
 optimization v1–v4). They do **not** define current IA, Today, create, member

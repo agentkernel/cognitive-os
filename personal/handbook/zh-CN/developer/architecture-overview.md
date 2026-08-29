@@ -29,7 +29,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:5f00aa383ae4fe70234bdde952ad13adf7a2c28ecac62eb2b5945e5d0bfc2f5c"
+fingerprint: "sha256:ee5baba324fef04d0e94219d610ded7947d821acf8317ac471849e1938bec269"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -87,8 +87,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
 - Provider binding 按 global→Project→employee→Task；subscription、account、
   billing/quota、budget 与 actual usage 分离。
 - UI 是 Today/Projects/Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
-  不是一级导航。2026-08-29 owner 批准的当前交互 chrome 是
-  `personal-20-opc-e2e-optimized-v5`；architecture/formal-plan 协调仍 deferred。
+  不是一级导航。2026-08-30 owner 批准的当前交互 chrome 是
+  `personal-20-opc-e2e-optimized-v9`；architecture/formal-plan 协调仍 deferred。
   单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 

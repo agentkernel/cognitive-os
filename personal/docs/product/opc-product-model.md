@@ -6,12 +6,15 @@
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Prior approved baseline (not current chrome; **not overwritten**):
+  [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-29 current chrome is
-  personal-20-opc-e2e-optimized-v5. Archived V2 is not current chrome. Canvas-only HITL and daemon authority path remain.
+- Prototype identity: owner-approved 2026-08-30 current chrome is
+  personal-20-opc-e2e-optimized-v9. v8 is the prior approved baseline.
+  Archived V2 is not current chrome. Canvas-only HITL and daemon authority path remain.
 - Existing architecture input (pending reconciliation):
   [Project, Role, and Employee](../architecture/project-role-employee.md)
 
@@ -35,9 +38,11 @@ Owner
 ```
 
 These are product/domain concepts. They do not add a generic Core `Resource`
-family, public DTO, or universal state machine. The visible CEO loop
-(Ingest → Decide → Authorize → Execute → Verify → Report) is Control Plane
-chrome over this chain, not a new domain object.
+family, public DTO, or universal state machine. The CEO loop
+(Ingest → Decide → Authorize → Execute → Verify → Report) is **not** Control
+Plane chrome. It is backend / operations discipline over this chain, not a
+new domain object and not a top rail. Chrome object name for a seated role is
+**Member Runtime**.
 
 ## 2. Project
 

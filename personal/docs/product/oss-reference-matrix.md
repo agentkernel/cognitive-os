@@ -13,8 +13,9 @@ the repository-root license observed by that input and is not a complete legal,
 dependency, transitive-license, security, maintenance, or provenance review.
 No external instruction is executed and no code is copied by this document.
 This retained source filename is not the current product prototype. The
-[**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
-is the current interaction prototype. Pre-optimization
+[**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+is the current interaction prototype. v8 is the prior approved baseline (not
+overwritten). Pre-optimization
 `personal-20-opc-e2e` and optimized v1–v4 are in
 [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md).
 Archived V2 CEO-rail / X-hero files are

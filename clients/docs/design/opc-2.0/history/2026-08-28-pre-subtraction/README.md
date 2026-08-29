@@ -3,9 +3,9 @@
 - Archived: 2026-08-29
 - Status: **historical only** — not current product chrome
 - Current interaction prototype:
-  [`personal-20-opc-e2e-optimized-v5.canvas.tsx`](../../personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [`personal-20-opc-e2e-optimized-v9.canvas.tsx`](../../personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Cursor-openable current copy (IDE detection path; not a second baseline):
-  `C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx`
+  `C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v9.canvas.tsx`
 - Later archived post-subtraction source and optimized v1–v4:
   [2026-08-29 pre-v5-approval](../2026-08-29-pre-v5-approval/README.md)
 
@@ -19,9 +19,10 @@ IA, Today, create, or live-Project chrome.
 The workshop cut: visible CEO six-step rail; four swimlanes as default Today
 blocks; X/Twitter or a demo Project as P0; overlay “open conversation”;
 Team/Inbox as L1. Current chrome is owner-approved
-`personal-20-opc-e2e-optimized-v5`: five-stage create with process before
-members, process-axis Projects, and Today as decision packet + run overview +
-assistant.
+`personal-20-opc-e2e-optimized-v9`: five-stage create with process before
+members, process-axis Projects, Today as decision packet + run overview +
+assistant, member select-then-configure, and Project four submenus. v8 remains
+the prior approved baseline and must not be overwritten.
 
 ## Files in this archive
 

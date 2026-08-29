@@ -21,7 +21,7 @@ Conversations/Vault/Memory; a Pi-backed Personal Assistant; preinstalled
 managed DSH; Provider/budget hierarchy; and one fixed Windows acceptance path.
 The current same-origin `/ui/` is real, but those OPC additions are not.
 The owner-approved interaction prototype is
-`personal-20-opc-e2e-optimized-v5` (Canvas spec, not `/ui/`).
+`personal-20-opc-e2e-optimized-v9` (Canvas spec, not `/ui/`).
 One-module OPC maintenance:
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 

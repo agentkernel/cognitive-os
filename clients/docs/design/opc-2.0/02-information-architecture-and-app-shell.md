@@ -2,9 +2,9 @@
 
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
-- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
+- Status: current interaction prototype is owner-approved v9 (2026-08-30); v8 is the prior approved baseline (not overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
@@ -35,8 +35,11 @@
 /projects
 /projects/:projectId
 /projects/:projectId/setup
-/projects/:projectId/canvas/:viewId?
+/projects/:projectId/detail
 /projects/:projectId/members/:memberId?
+/projects/:projectId/runs/:stageId?
+/projects/:projectId/outputs/:outputId?
+/projects/:projectId/canvas/:viewId?
 /projects/:projectId/attention/:itemId?
 /projects/:projectId/work/:taskId/:attemptId?
 /knowledge
@@ -48,15 +51,17 @@
 /settings/advanced-diagnostics
 ```
 
-These are design routes, not current client/API claims. Member and attention
-routes are contextual deep links, not additional first-level navigation.
+These are design routes, not current client/API claims. Member, run, output,
+and attention routes are contextual deep links, not additional first-level
+navigation. Live Project chrome is four submenus (详情 / 成员 / 运行 / 产出);
+the list uses one 「打开」 plus text links.
 
 ## Desktop shell
 
 | Region | Responsibility |
 |---|---|
 | Left navigation | Today, Projects, Knowledge; Settings at bottom; Team/Inbox are not L1 |
-| Context header | location, selected Project/object, host/offline state, freshness, and the visible CEO loop rail: Ingest → Decide → Authorize → Execute → Verify → Report |
+| Context header | location, selected Project/object, host/offline state, freshness. **No visible CEO six-step rail** (Ingest → Decide → Authorize → Execute → Verify → Report is backend discipline, not product chrome) |
 | Main canvas | goal, openable deliverable, decision packet, plan, or structured preview |
 | Right conversation | always the third column: global Assistant outside a Project; Project group inside |
 | Context inspector | Member, source, evidence, version, authority, cost, or diagnostics inside the center column |

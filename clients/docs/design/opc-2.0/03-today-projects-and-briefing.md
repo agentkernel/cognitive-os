@@ -2,9 +2,9 @@
 
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
-- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
+- Status: current interaction prototype is owner-approved v9 (2026-08-30); v8 is the prior approved baseline (not overwritten); v5–v7 and archived pre-v5 / V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+  [**personal-20-opc-e2e-optimized-v9**](personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Archived (not current chrome):
   [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
@@ -21,10 +21,19 @@ Every surface orders information as:
 2. operational state, exception, missed work, and Owner decision;
 3. configuration, runtime, and diagnostics.
 
-## Today: decision packet plus four exception swimlanes
+## Today: decision packet plus live-project run overview
 
-Today opens with **one decision packet**, then four exception swimlanes. It is
-not a KPI card wall.
+Today (after ⑤ 验收) opens with **three default blocks**. It is not a KPI card
+wall and not four exception swimlanes.
+
+1. **Decision packet** — the one consequential Owner decision. This is the only
+   primary CTA. If nothing is pending, **collapse the packet** and keep the
+   run overview.
+2. **Live-project run overview** — one row per live Project (status, today's
+   completed-run count, current stage, duration) plus created / live / blocked
+   counts and a today / week / month toggle. Click a live-project row to open
+   that Project’s 运行. Blocked counts are clickable.
+3. **Assistant** — questions about run data; chat cannot approve.
 
 The decision packet states:
 
@@ -37,31 +46,46 @@ The decision packet states:
 Provenance chips are Observed / Proposed / Governed / Verified. They describe
 authority relationship, not confidence.
 
-The four swimlanes, in this order, are:
-
-1. **Needs you** — which Owner decision is due (for example Package A review;
-   planned is not published);
-2. **Can continue** — which work proceeds without the Owner now;
-3. **Unknown** — which actuals, Effects, or verification are missing; actual
-   unknown is never shown as zero;
-4. **Missed** — which Routine occurrences were missed or coalesced.
+Swimlane semantics (Needs you / Can continue / Unknown / Missed) may merge
+into overview rows. They are **not** default Today blocks.
 
 Member activity is Working / Queued / Waiting; queued is not running. It is a
 table, not three identical staff cards. Generic KPI tiles, decorative charts,
 welcome heroes, raw execution feeds, and false “all clear” states are rejected.
 A metric appears only with source, freshness, denominator, and decision
-relevance.
+relevance. Actual unknown is never shown as zero.
 
 ## Project cards and list
 
 Each Project card leads with main/period goal and next expected deliverable,
 then shows current manager, state reason, latest accepted result, exception or
-decision, actual/estimated/unknown cost basis, and freshness. Selection opens
-the Project while preserving Today filters and scroll.
+decision, actual/estimated/unknown cost basis, and freshness.
+
+Current chrome (v9): the list is one row per Project with a single 「打开」
+control plus text links to 成员 / 运行 / 产出. Do not restore four parallel
+「查看」 buttons. Selection opens 项目详情 while preserving Today filters
+and scroll.
 
 Projects supports search plus status, due result, Owner-decision, manager, and
 recency filters. Empty, partial, archived, and unavailable results remain
 distinct.
+
+## Current chrome: four Project work scenes (v9)
+
+A live Project is four submenus, not a single operating-report landing:
+
+| Submenu | Job |
+|---|---|
+| 详情 | Read-only charter: name, goal, cycle, read-only process axis, destinations to members / runs / outputs |
+| 成员 | Select-then-configure roster (see 05). Add uses this Project’s real members |
+| 运行 | Current-stage workface. 「验收，回 Today」 only on the last ring |
+| 产出 | Select-then-view artifacts. Unselected is empty |
+
+There is no visible CEO six-step top rail. Chat cannot approve or 验收.
+
+The numbered operating-report regions below remain the **template contract**
+for what a Project must be able to answer. They are not the v9 default
+landing layout (详情 / 成员 / 运行 / 产出).
 
 ## Stable Project operating report
 
@@ -114,8 +138,14 @@ reversibility, and edit/narrow/deny/confirm. A stale preview must be regenerated
 
 ## Owner-approved prototype source coverage
 
-The owner-accepted competitive-informed v2 source is the current interaction
-baseline for:
+Current chrome is `personal-20-opc-e2e-optimized-v9` (2026-08-30). The
+paragraphs below retain **archived V2 / pre-subtraction** scene coverage for
+provenance. They do not define current create, Today, or live-Project chrome
+(no visible CEO rail; no X/Twitter P0 hero; four swimlanes are not default
+Today blocks; Project work is four submenus as above).
+
+The owner-accepted competitive-informed v2 source is retained as historical
+coverage for:
 
 - visible CEO loop: Ingest → Decide → Authorize → Execute → Verify → Report;
 - Today decision packet plus four exception swimlanes (Needs you / Can

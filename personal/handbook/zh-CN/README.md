@@ -19,7 +19,7 @@ Personal-owned Conversation/Vault/Memory、Pi-backed Personal Assistant、preins
 managed DSH、global→Project→employee→Task Provider/budget 与固定 Windows acceptance。
 MCP advanced/deferred；native mobile/E2E relay remote 属于 2.1。上述都不是 current
 implementation 或 Windows/DSH support。owner 批准的当前交互原型是
-`personal-20-opc-e2e-optimized-v5`（Canvas 规格，不是 `/ui/`）。单模块维护入口：
+`personal-20-opc-e2e-optimized-v9`（Canvas 规格，不是 `/ui/`）。单模块维护入口：
 [`00-maintenance-index.md`](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 
 - **[用户指南](user/README.md)** —— 安装、首次对话、CLI、secret、Provider Control
