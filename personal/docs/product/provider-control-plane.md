@@ -9,9 +9,10 @@
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
 - Credential boundary:
   [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
 

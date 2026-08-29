@@ -3,10 +3,11 @@
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
-- Status: current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
+  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
+- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -95,7 +96,12 @@ a Project template.
 
 ## Owner-approved prototype source coverage
 
-The owner-accepted competitive-informed v2 source provides navigation among:
+Current chrome is `personal-20-opc-e2e-optimized-v5` (2026-08-29). The numbered
+list below is **archived V2 / pre-subtraction scene coverage**. It does not
+define current create, Today, or live-Project chrome (no visible CEO rail; no
+X/Twitter P0 hero; four swimlanes are not default Today blocks).
+
+The owner-accepted competitive-informed v2 source provided navigation among:
 
 1. visible CEO loop and Today decision packet plus four exception swimlanes
    (Needs you / Can continue / Unknown / Missed);

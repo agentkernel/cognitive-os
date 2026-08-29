@@ -2,11 +2,12 @@
 
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
-- Status: current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
+- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
+  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -21,6 +22,23 @@ first work cycle, permissions, triggers, and receipt—not a tour or fabricated
 celebration.
 
 ## Setup sequence
+
+Current five-stage interaction (owner-approved v5, 2026-08-29):
+
+```text
+① project init
+  -> ② process init (one axis, one stage at a time)
+  -> ③ member init (roster from process, then one-by-one seating)
+  -> ④ per-stage test (responsible member must be seated)
+  -> ⑤ joint debug -> 「验收，进入 Today」
+```
+
+Process before members is an owner-confirmed prototype amendment over the
+workshop’s members-then-process snapshot. Architecture/formal-plan
+reconciliation remains deferred.
+
+The research-first pattern below remains the capability/content sequence
+inside ①–③; it is not a second wizard and does not restore members-before-process.
 
 ```text
 business understanding

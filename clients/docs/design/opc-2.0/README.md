@@ -2,7 +2,7 @@
 
 - Status: owner-approved target design; implementation and qualification
   remain capability-gated
-- Date: 2026-08-28
+- Date: 2026-08-28; current chrome retarget 2026-08-29
 - Requirements:
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Canonical product intent:
@@ -11,18 +11,22 @@
   [Personal 2.0 scope](../../../../personal/docs/product/personal-2.0-scope.md)
 - Product vocabulary:
   [OPC product model](../../../../personal/docs/product/opc-product-model.md)
+- **Maintenance catalog (PM + UI start here):**
+  [00 — module × journey index](00-maintenance-index.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: current chrome is `personal-20-opc-e2e` after the
-  2026-08-28/29 journey-subtraction workshop (five-stage create, process-axis
-  Projects, Today as decision packet + run overview + assistant). Archived V2
-  CEO-rail / X-hero files are historical only. Canvas-only HITL and daemon
-  authority path remain. This is not the pre-overwrite overlay-conversation /
-  stacked-column V2.
+  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  `personal-20-opc-e2e-optimized-v5` (`opc-e2e-optimized-vN` naming, not
+  `ai-ceo`). Five-stage create uses process before members; sequential member
+  init; create/members/test/joint chat defaults to Personal Assistant.
+  Archived V2 CEO-rail / X-hero files are historical only. Canvas-only HITL
+  and daemon authority path remain. This is not the pre-overwrite
+  overlay-conversation / stacked-column V2.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v5](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -73,6 +77,7 @@ it can neither execute generated code nor invent or hide data.
 
 | # | Document | Responsibility |
 |---:|---|---|
+| 00 | [Maintenance index](00-maintenance-index.md) | one module/flow row for PM and UI; do not reread the whole corpus |
 | 01 | [Product model and JTBD](01-product-model-and-jtbd.md) | jobs, evidence boundary, Role Template/Member/Task/Attempt model, outcomes |
 | 02 | [IA and app shell](02-information-architecture-and-app-shell.md) | three anchors, Settings, Assistant/group workbench, contextual surfaces, routes |
 | 03 | [Today, Projects, and operating canvas](03-today-projects-and-briefing.md) | expected outputs, deliverables, Project template, ad-hoc canvas, reflection |
@@ -123,7 +128,7 @@ still encode the 2026-08-27 model are **pending architecture/plan/handbook
 reconciliation**. They remain dated facts but do not override the current
 product sources listed above.
 
-This corpus and the current `personal-20-opc-e2e` prototype are
+This corpus and the current `personal-20-opc-e2e-optimized-v5` prototype are
 specifications only. They do not
 prove backend feasibility, Windows integration, DSH/Pi qualification,
 Provider/MCP/X connectivity, accessibility conformance, human usability, market

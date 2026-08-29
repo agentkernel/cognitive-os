@@ -27,7 +27,7 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:4c6f71a9d778200d3c67a936cdabf456568e6119e3a512172cc88430552e7ebf"
+fingerprint: "sha256:56859e5598ba59b1abbc96221e30d02287b8da978b2dbb4597a99b98cd5a2fac"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -72,7 +72,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | 当前六族资源投影/watch | implemented | 仅 management+task 通道；不是已采纳的 MCP 第七族 |
 | Agent 生命周期（Pi 获取→sidecar） | implemented | — |
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
-| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）、Project 工作闭环与 native Windows host 均为 target；Linux/WSL/CI/Canvas evidence 不转移 |
+| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）、Project 工作闭环与 native Windows host 均为 target；当前交互规格是 `personal-20-opc-e2e-optimized-v5`（不是 `/ui/`）；单模块目录 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)；Linux/WSL/CI/Canvas evidence 不转移 |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority 可复用，但 Project activation、manager envelope、Routine/missed ledger 与完整 hierarchy 不存在 |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | 没有完整 authority/projection；employee identity 必须与 runtime/process 分离 |
 | Pi-backed Personal Assistant | Requires-backend | Pi 是 hidden、candidate-only target engine；current Pi Shell/Linux qualification 不构成 OPC Assistant |

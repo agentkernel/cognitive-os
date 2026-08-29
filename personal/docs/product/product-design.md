@@ -5,23 +5,27 @@
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Product-direction amendment: owner-confirmed `/grill-me` design tree,
   2026-08-28, then journey-subtraction workshop 2026-08-28/29
-  ([workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)).
-  This document owns the amended product intent; architecture and
-  implementation-plan reconciliation are explicitly deferred.
+  ([workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)),
+  then owner-approved v5 prototype 2026-08-29 (process before members;
+  sequential member init). This document owns the amended product intent;
+  architecture and implementation-plan reconciliation remain deferred.
 - Requirements baseline:
   [Personal 2.0 OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Exact scope: [Personal 2.0 scope](personal-2.0-scope.md)
 - Ordered behavior: [User journeys](user-journeys.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: current product chrome after the 2026-08-28/29
-  journey-subtraction workshop. Visual tokens/components are reused from
-  archived V2 so it still looks like the same product; IA and flow follow
-  five-stage create, process-axis Projects, and Today without a KPI/swimlane
-  wall. V2 CEO-rail / X-hero canvases live in the history folder and are not
-  current chrome. Canvas-only HITL and daemon authority path remain.
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  `personal-20-opc-e2e-optimized-v5` (`opc-e2e-optimized-vN` naming, not
+  `ai-ceo`). Visual tokens/components are reused from archived V2 so it still
+  looks like the same product; IA and flow follow five-stage create with
+  **process before members**, process-axis Projects, and Today without a
+  KPI/swimlane wall. Pre-optimization `personal-20-opc-e2e` and optimized
+  v1–v4 are archived iteration. V2 CEO-rail / X-hero canvases remain in
+  pre-subtraction history. Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -104,16 +108,35 @@ available until all five complete and ⑤ 验收 succeeds:
      -> item-by-item confirm list (process, per-stage outputs, 执行方式,
         auto-vs-approve, triggers, cost, rights, 总预览)
      -> inactive until 总预览; leave saves draft
-② member init (roster, model required, 「确认这个班子」)
-③ process init (one axis, one stage at a time)
+② process init (one axis, one stage at a time; total goal + cycle on the axis)
+③ member init
+     roster from the confirmed process; model required per person
+     then initialize members one-by-one with visible progress
+     Init generates 工作说明 / 工具 / 能力包 / 周期与触发 / 外部连接 / 文档范围
+     (Prompt / Skill / MCP one disclosure deeper; Loop / Harness not default)
+     ③ “当前初始化” shows progress + current item title only
+     Full recipe lives on the shared member config page (create + live maintenance)
+     Sequential seating; all seated before ④
 ④ per-stage test until expected sub-output is openable and verified
+     each stage checks the responsible member is seated (those six slots + model)
+     Block start/pass if not
 ⑤ joint debug until expected overall outcome -> 「验收，进入 Today」
 ```
 
+Owner-confirmed prototype amendment (2026-08-29): **process before members**.
+The 2026-08-28/29 journey-subtraction workshop recorded members then process;
+that Q&A remains historical record and is not rewritten. Architecture and
+formal-plan reconciliation remain deferred.
+
+Create / members / test / joint right chat defaults to Personal Assistant.
+Canvas edit → Enter → confirm dialog → Owner message in chat; assistant
+proposes; user confirms in chat; then canvas applies. Chat has no Approve.
+Prototype generation is labelled local target-state samples, not daemon writes.
+
 Empty Home shows only Create Project in the center; right chat is hidden.
-Until ⑤, Today shows only continue-create; Knowledge unlocks at ③ when input
-is needed (current draft only); Settings may connect models; Projects exposes
-only this incomplete create. Research does not ask permission for each
+Until ⑤, Today shows only continue-create; Knowledge unlocks at ② when process
+input is needed (current draft only); Settings may connect models; Projects
+exposes only this incomplete create. Research does not ask permission for each
 ordinary web read. External text is untrusted. Secrets never appear in chat.
 No silent model bind. A copy of a live Project lands as an inactive 副本
 (not from ①); ④⑤ may be spot-checked or skipped after 总预览.
@@ -262,12 +285,13 @@ and are not drawn as current product chrome.
 - **Knowledge:** current project files, why this fragment, import. Parse
   failure keeps the original. Chat auto-admits to inspectable Memory.
   Obsidian is 底座; the Obsidian app is not required. Knowledge stays locked
-  until ③ needs input.
+  until ② process needs input.
 - **Conversation:** the Personal Assistant is global and has the highest UX
   privilege (see and initiate every flow) while writing only through preview →
-  Owner confirm → receipt; inside a Project the group includes Owner, manager,
-  and Members. `@` routes only into the unsent draft and does not bypass
-  Task/revision authority. Chat announces HITL and links to the center
+  Owner confirm → receipt. Create / members / test / joint right chat defaults
+  to Personal Assistant. Inside a live Project the group includes Owner,
+  manager, and Members. `@` routes only into the unsent draft and does not
+  bypass Task/revision authority. Chat announces HITL and links to the center
   preview; it cannot Approve or 验收.
 - **Canvas:** current-stage workface and HITL preview live here. Ad-hoc
   reports are temporary until the Owner pins or saves them. Planned is not

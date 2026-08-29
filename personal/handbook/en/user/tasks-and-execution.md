@@ -24,7 +24,7 @@ sources:
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:df7255bf4a7d1ee477d691989feb810b5c6ae405d139220bc72e35ea4baf115c"
+fingerprint: "sha256:825bb1e9dcf545168384599c8300f3dcbd23ead00b764501806cc7b4b6bfdad6"
 non_claims:
   - Admission still does not consume the worker authorization or acquire a scheduler lease on the same pass; a later tick does. No Gate, release, Profile, or EVAL promotion.
 ---

@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:0a8ffe55b96cd4972678e5d910cf6000180414836633c30a45099889e2522dad"
+fingerprint: "sha256:4cac726b8c188233d1e83a09a52f610d5dd5a9b49aecb6d0e2271fbcabbf907f"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -84,7 +84,13 @@ Owner
 ```
 
 The UI is Today / Projects / Knowledge, bottom Settings, and a persistent
-right conversation. Team and Inbox are not first-level destinations. Pi is the hidden candidate-only Assistant engine.
+right conversation. Team and Inbox are not first-level destinations. The
+owner-approved current interaction prototype (2026-08-29) is
+`personal-20-opc-e2e-optimized-v5`; it is not daemon `/ui/`. Create order is
+project → process → members → per-stage test → joint. One-module PM/UI
+maintenance starts at
+[`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
+Pi is the hidden candidate-only Assistant engine.
 DSH is the preinstalled managed Installed Agent and default employee runtime,
 using an exact audited artifact, isolated child, stdio broker and daemon
 Provider proxy. Personal owns Conversation, archive/index/retrieval, Memory,

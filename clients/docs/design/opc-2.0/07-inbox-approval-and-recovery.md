@@ -4,11 +4,12 @@
   [OPC requirements analysis](../../../../personal/docs/product/personal-2.0-opc-requirements-analysis.md)
 - Product source:
   [Long-running operations](../../../../personal/docs/product/long-running-operations.md)
-- Status: current interaction prototype is post journey-subtraction; archived V2 is historical chrome only
+- Status: current interaction prototype is owner-approved v5 (2026-08-29); archived pre-v5 and V2 are historical chrome only
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](history/2026-08-28-pre-subtraction/README.md)
+  [**personal-20-opc-e2e-optimized-v5**](personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](history/2026-08-28-pre-subtraction/README.md)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,

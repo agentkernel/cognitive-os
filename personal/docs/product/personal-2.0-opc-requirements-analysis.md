@@ -14,12 +14,15 @@
 - Interaction corpus:
   [OPC 2.0 design](../../../clients/docs/design/opc-2.0/README.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: current chrome is `personal-20-opc-e2e` after the
-  2026-08-28/29 workshop. V2 CEO-rail / X-hero files are archived and are not
-  current chrome. Canvas-only HITL and daemon authority path remain.
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  `personal-20-opc-e2e-optimized-v5`. The 2026-08-28/29 workshop remains the
+  scheme snapshot; v5 amends create order to process-before-members. V2
+  CEO-rail / X-hero files are archived and are not current chrome.
+  Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -301,23 +304,36 @@ the current 2.0 object model. See section L for migration.
   Today is forbidden until all five complete and ⑤ 验收 succeeds:
   ① project init (business description → research → item-by-item confirm
   list → 总预览; inactive until 总预览);
-  ② member init (roster of duties/outputs, explicit model per person,
-  「确认这个班子」);
-  ③ process init (one process axis, one stage at a time, total goal + cycle
+  ② process init (one process axis, one stage at a time, total goal + cycle
   on the axis, 执行方式 disclosure);
-  ④ per-stage test until the expected sub-output is openable and verified;
+  ③ member init (roster from the confirmed process, explicit model per person,
+  then one-by-one init of 工作说明 / 工具 / 能力包 / 周期与触发 / 外部连接 /
+  文档范围 with visible progress; 「当前初始化」 is progress + current item
+  title only; full recipe on the shared member config page; sequential seating;
+  all seated before ④);
+  ④ per-stage test until the expected sub-output is openable and verified
+  (block start/pass unless the responsible member is seated: those six slots +
+  model);
   ⑤ joint debug until the expected overall outcome, then 「验收，进入 Today」.
   Aha is ⑤ accept. Copy-from-live lands as an inactive 副本 and may spot-check
   or skip ④⑤ after 总预览; it does not restart at ①.
+  Owner-confirmed prototype amendment (2026-08-29): **process before members**.
+  The workshop snapshot recorded members then process; that Q&A is unchanged.
+  Architecture and formal-plan reconciliation remain deferred.
 - **PRJ-01a:** Empty Home (no Project): center is only Create Project; right
   chat is hidden. Create Project jumps to the Projects create page. With a
   model, right chat opens as the normal assistant; without a model, chat only
   guides to Settings to bind the assistant. Leave saves draft and resumes.
   Connection failure names the problem. Daemon/runtime chrome is not shown.
 - **PRJ-01b:** Until ⑤ completes, Today is not the daily decision packet (only
-  「继续未完成的创建」). Knowledge opens at ③ when input is needed (current
-  draft only). Settings may connect models. Projects exposes only this
+  「继续未完成的创建」). Knowledge opens at ② (process) when input is needed
+  (current draft only). Settings may connect models. Projects exposes only this
   incomplete create. Knowledge is locked before that.
+  Create / members / test / joint right chat defaults to Personal Assistant.
+  Canvas edit → Enter → confirm dialog → Owner message in chat; assistant
+  proposes; user confirms in chat; then canvas applies. Chat has no Approve.
+  Prototype generation is labelled local target-state samples, not daemon
+  writes.
 - **PRJ-01c:** Default confirm list (chat, item-by-item): business process /
   per-stage outputs / cycle / save format + Skill / tools / MCP / knowledge /
   env / file permissions + auto-vs-approve (including external), triggers,
@@ -830,7 +846,8 @@ the following replacements:
 | X/Twitter as P0 hero / default or demo Project | P0 = complete capabilities only; no demo Project; X parked as a later industry connector | first success is ⑤ joint-debug 验收, not an X loop |
 | ordinary chat is not Memory (2026-08-28 KNOW-04) | chat auto-admits to inspectable/forgettable Memory; Obsidian as knowledge 底座; Codex as assistant memory architecture | Codex is not a user-facing execution-engine store; Obsidian app install is not required |
 | one-shot create then daily Today | five-stage create wizard; daily Today only after ⑤ 验收 | empty Home = Create Project only; chat hidden until create page |
-| superseded external source-review prototype, then pre-overwrite V2, then V2 CEO-rail chrome | [workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md) is the latest scheme snapshot; current chrome is [`personal-20-opc-e2e`](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx); V2 is archived in [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md) | V2 is not current chrome; Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout remain `not-run`; Owner approval is not usability, accessibility, backend, Gate, release, qualification, or acceptance |
+| superseded post-subtraction `personal-20-opc-e2e` plus optimized v1–v4 as current chrome | owner-approved current chrome is [`personal-20-opc-e2e-optimized-v5`](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx); source and v1–v4 are in [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md); V2 remains in [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md) | Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout remain `not-run`; Owner prototype approval is not usability, accessibility, backend, Gate, release, qualification, or acceptance |
+| workshop members-then-process as current create order | ① project → ② process → ③ members → ④ per-stage test → ⑤ joint; sequential member init; ④ seated-member gate | workshop Q&A is historical; architecture/formal-plan reconciliation remains deferred |
 
 Accepted 2026-08-27 ADRs and formal-plan records are not rewritten by this map.
 They are dated inputs awaiting the explicit downstream reconciliation named in

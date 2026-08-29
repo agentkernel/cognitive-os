@@ -9,12 +9,14 @@
 - Workshop record (verbatim Q&A + scheme snapshot):
   [journey-subtraction workshop 2026-08-28](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: current chrome is `personal-20-opc-e2e` after the
-  workshop. Archived V2 is historical, not current chrome. Canvas-only HITL
-  and daemon authority path remain.
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  `personal-20-opc-e2e-optimized-v5`. Pre-optimization `personal-20-opc-e2e`
+  and optimized v1–v4 are archived iteration. Canvas-only HITL and daemon
+  authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -44,18 +46,24 @@ Today is not the daily decision packet.
    总预览. Runtime method is labelled **执行方式** (the word Harness does not
    appear). Secrets never enter chat. No silent model bind. Connection
    failure names the problem. The Project stays inactive until 总预览.
-4. ② Member init: roster (duty / what to hand over) + chat + 「确认这个班子」.
-   Model is required per person; Skill/MCP wait for ③ 执行方式. Refuse = not
-   joined. Missing model = pending, not silent bind.
-5. ③ Process init: one process axis, one stage at a time, total goal + cycle
+4. ② Process init: one process axis, one stage at a time, total goal + cycle
    on the axis, right chat. 「确认这一环」 then the next; after the last
    stage, confirm total goal + project trigger. Unknown gaps stay on the axis
-   and are not marked ready.
+   and are not marked ready. Right chat defaults to Personal Assistant.
+5. ③ Member init: create roster from the confirmed process, then initialize
+   members one-by-one with visible progress. Model is required per person.
+   Init generates 工作说明 / 工具 / 能力包 / 周期与触发 / 外部连接 / 文档范围
+   (Prompt / Skill / MCP one disclosure deeper). 「当前初始化」 shows progress
+   + current item title only; full recipe is on the shared member config page.
+   Sequential seating; all seated before ④. Refuse = not joined. Missing model
+   = pending, not silent bind.
 6. ④ Per-stage test: which stage is under test, openable result + pass/fail,
-   「通过，下一环」. Fail returns to ③ for that stage. Unknown cannot pass.
-   Offline cannot start a test. No process/engine chrome.
+   「通过，下一环」. Each stage checks the responsible member is seated (those
+   six slots + model). Block start/pass if not. Fail returns to ②/③ for that
+   stage. Unknown cannot pass. Offline cannot start a test. No process/engine
+   chrome.
 7. ⑤ Joint debug: where the full flow is, openable overall artifact + verify
-   state, 「验收，进入 Today」. Fail names the stage and returns to ④/③.
+   state, 「验收，进入 Today」. Fail names the stage and returns to ④/②/③.
    Unknown cannot 验收. Offline cannot joint-debug. No fake publish. Aha is
    this 验收.
 8. Copy-project (when a launchable Project exists): from the Projects list or
@@ -66,7 +74,12 @@ Today is not the daily decision packet.
 
 Daily Today is forbidden until all five stages complete. Until then Today
 shows only 「继续未完成的创建」; Projects exposes only this incomplete
-create; Knowledge opens at ③ when input is needed (current draft only).
+create; Knowledge opens at ② when process input is needed (current draft
+only). Create / members / test / joint right chat defaults to Personal
+Assistant. Canvas edit → Enter → confirm dialog → Owner message in chat;
+assistant proposes; user confirms in chat; then canvas applies. Chat has no
+Approve. Prototype generation is labelled local target-state samples, not
+daemon writes.
 
 Required setup states:
 
@@ -175,8 +188,8 @@ evidence. Members are not shared across Projects.
 ## 5. Import knowledge and retrieve bounded context
 
 1. Knowledge offers current project files, **Why this fragment**, and import.
-   Without a Project, Knowledge stays locked. During create, it opens at ③
-   only for the current draft.
+   Without a Project, Knowledge stays locked. During create, it opens at ②
+   (process) only for the current draft.
 2. The Owner imports files, directories, links, images, or video metadata.
 3. Personal copies permitted source material into the selected archive,
    preserves source/provenance, detects duplicates and credentials, and shows
@@ -344,13 +357,16 @@ explanation/navigation, not an active-looking button.
 ## 13. Evidence boundary
 
 These journeys are specifications. The
-[**current interaction prototype**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-is the post journey-subtraction canvas. Archived V2 CEO-rail / X-hero files are
-in the
+[**current interaction prototype**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+is owner-approved optimized v5 (2026-08-29). Pre-optimization
+`personal-20-opc-e2e` and optimized v1–v4 are in
+[pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md).
+Archived V2 CEO-rail / X-hero files are in the
 [pre-subtraction history folder](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
 and are not current chrome. The 2026-08-28/29
 [workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
-is the scheme snapshot that canvas implements. Source/static checks and Owner approval
+is the scheme snapshot; v5 amends create order to process-before-members
+without rewriting that Q&A. Source/static checks and Owner approval
 are not human
 usability, accessibility, backend, Gate, or acceptance evidence. Canvas
 runtime/render, NVDA, host-theme contrast, and 200% real layout remain

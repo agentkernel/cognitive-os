@@ -25,7 +25,7 @@ non_claims:
 3. [`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`](../../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) —— 正式任务、验收、Delivery Slice 与 Gate。
 4. [`docs/plan/PROGRESS.md`](../../../../docs/plan/PROGRESS.md) 的 `Current snapshot` —— 唯一的当前任务/Slice/Gate/claim 事实。每个会话现读，绝不凭记忆或本手册转述。其 `Owner-directed campaign` 行处于 active 时，continuation 一律路由到该评测 campaign 并暂停开发任务领取（Operating Model §2.5）。
 5. [`docs/plan/PARALLEL-LANES.md`](../../../../docs/plan/PARALLEL-LANES.md) 活动 lease 表 —— 当前可写路径。
-6. [`personal/docs/product/`](../../../docs/product/README.md) 与 [`personal/docs/architecture/`](../../../docs/architecture/README.md) —— 稳定设计意图（绝非当前状态）。
+6. [`personal/docs/product/`](../../../docs/product/README.md) 与 [`personal/docs/architecture/`](../../../docs/architecture/README.md) —— 稳定设计意图（绝非当前状态）。维护单个 OPC 模块或 feature flow 时，从 [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md) 开始，不要整份语料重读。
 7. [`docs/checkpoints/`](../../../../docs/checkpoints/TEMPLATE.md) 下最新匹配 handoff —— 仅提供操作连续性。
 8. [`docs/plan/plan.md`](../../../../docs/plan/plan.md) —— 研究细节，绝非状态源。
 

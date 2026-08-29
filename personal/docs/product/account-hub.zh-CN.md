@@ -6,10 +6,11 @@
 - 需求基线：
   [Personal 2.0 OPC 需求分析](personal-2.0-opc-requirements-analysis.md)
 - 当前交互原型：
-  [**personal-20-opc-e2e（旅程减法后）**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- 已归档历史 V2（不是当前 chrome）：
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- 原型身份：当前 chrome 是旅程减法后的画布，不是 V2 的 CEO 轨 / X 英雄圈。
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- 已归档（不是当前 chrome）：
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md)；
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- 原型身份：2026-08-29 owner 批准的当前 chrome 是 personal-20-opc-e2e-optimized-v5。旅程减法源画布与优化 v1–v4 已归档。
 - 凭据边界：
   [ADR-0055](../../../docs/adr/0055-personal-credential-import-boundary-and-a5-revision.md)
 

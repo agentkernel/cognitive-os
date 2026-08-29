@@ -7,14 +7,15 @@
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Interaction corpus: [clients OPC design](../../../clients/docs/design/opc-2.0/README.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: current chrome is the post-workshop canvas, not V2
-  CEO-rail / X-hero. Archived V2 is historical. Canvas-only HITL and daemon
-  authority path remain.
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  personal-20-opc-e2e-optimized-v5, not V2 CEO-rail / X-hero. Archived V2
+  is historical. Canvas-only HITL and daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v5](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,

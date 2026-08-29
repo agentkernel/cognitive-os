@@ -3,9 +3,11 @@
 - Archived: 2026-08-29
 - Status: **historical only** — not current product chrome
 - Current interaction prototype:
-  [`personal-20-opc-e2e.canvas.tsx`](../../personal-20-opc-e2e.canvas.tsx)
+  [`personal-20-opc-e2e-optimized-v5.canvas.tsx`](../../personal-20-opc-e2e-optimized-v5.canvas.tsx)
 - Cursor-openable current copy (IDE detection path; not a second baseline):
-  `C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx`
+  `C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx`
+- Later archived post-subtraction source and optimized v1–v4:
+  [2026-08-29 pre-v5-approval](../2026-08-29-pre-v5-approval/README.md)
 
 This folder holds Personal 2.0 / OPC / AI-CEO **e2e canvases from before** the
 2026-08-28/29 journey-subtraction workshop became the interaction source.
@@ -16,8 +18,10 @@ IA, Today, create, or live-Project chrome.
 
 The workshop cut: visible CEO six-step rail; four swimlanes as default Today
 blocks; X/Twitter or a demo Project as P0; overlay “open conversation”;
-Team/Inbox as L1. Current chrome is five-stage create, process-axis Projects,
-and Today as decision packet + run overview + assistant.
+Team/Inbox as L1. Current chrome is owner-approved
+`personal-20-opc-e2e-optimized-v5`: five-stage create with process before
+members, process-axis Projects, and Today as decision packet + run overview +
+assistant.
 
 ## Files in this archive
 

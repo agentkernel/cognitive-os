@@ -7,16 +7,23 @@
 - Product-direction amendment: owner-confirmed `/grill-me` design tree,
   2026-08-28, then
   [journey-subtraction workshop](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
-  2026-08-28/29; architecture and formal-plan reconciliation are deferred.
+  2026-08-28/29, then owner-approved v5 prototype 2026-08-29 (process before
+  members; sequential member init). Architecture and formal-plan reconciliation
+  remain deferred.
 - Product intent: [Product design](product-design.md)
+- **PM/UI maintenance entry (do not duplicate the table here):**
+  [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: current chrome is the post-workshop canvas, not V2.
-  Archived V2 is historical. Canvas-only HITL and daemon authority path remain.
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  `personal-20-opc-e2e-optimized-v5` (`opc-e2e-optimized-vN` naming, not
+  `ai-ceo`). Pre-optimization `personal-20-opc-e2e` and optimized v1–v4 are
+  archived iteration. Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -74,10 +81,19 @@ Excluded:
 - `@manager` and `@member` routing with daemon-owned Task/revision effects;
 - manager-default speech; Member proactive speech only when mentioned,
   delivering, handing off, blocked, or requesting a decision;
-- Project **five-stage create wizard**; daily Today only after ⑤ 验收 of the
-  Owner’s Project (no default/demo Project); empty Home is Create Project
-  only with chat hidden; copy-project from a launchable Project lands as an
-  inactive 副本;
+- Project **five-stage create wizard** (① project → ② process → ③ members →
+  ④ per-stage test → ⑤ joint). Process before members is an owner-confirmed
+  2026-08-29 prototype amendment over the workshop’s members-then-process
+  snapshot. After roster + models, members initialize one-by-one with visible
+  progress; ③ “当前初始化” is progress + current item title only; full recipe
+  on the shared member config page. ④ blocks start/pass unless the responsible
+  member is seated. Daily Today only after ⑤ 验收 of the Owner’s Project (no
+  default/demo Project); empty Home is Create Project only with chat hidden;
+  copy-project from a launchable Project lands as an inactive 副本;
+  create/members/test/joint right chat defaults to Personal Assistant; canvas
+  edit → Enter → confirm dialog → Owner message in chat; assistant proposes;
+  user confirms in chat; then canvas applies. Prototype generation is labelled
+  local target-state samples, not daemon writes;
 - live Project default is the business-process axis plus current-stage
   workface plus project group; there is **no visible CEO six-step top rail**
   (CEO remains backend discipline: canvas HITL + independent verify);

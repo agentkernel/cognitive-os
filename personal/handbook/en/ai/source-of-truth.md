@@ -25,7 +25,7 @@ When two sources disagree, resolve in this order (from
 3. [`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`](../../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md) — formal tasks, acceptance, Delivery Slices, Gates.
 4. [`docs/plan/PROGRESS.md`](../../../../docs/plan/PROGRESS.md) `Current snapshot` — the only current task/Slice/Gate/claim facts. Read it fresh every session; never quote from memory or from this handbook. Its `Owner-directed campaign` row, when active, routes continuation to that evaluation campaign and suspends development-task claiming (Operating Model §2.5).
 5. [`docs/plan/PARALLEL-LANES.md`](../../../../docs/plan/PARALLEL-LANES.md) active lease table — current writable paths.
-6. [`personal/docs/product/`](../../../docs/product/README.md) and [`personal/docs/architecture/`](../../../docs/architecture/README.md) — stable design intent (never current status).
+6. [`personal/docs/product/`](../../../docs/product/README.md) and [`personal/docs/architecture/`](../../../docs/architecture/README.md) — stable design intent (never current status). For one OPC module or feature flow, start at [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md) rather than rereading the whole corpus.
 7. Latest matching handoff under [`docs/checkpoints/`](../../../../docs/checkpoints/TEMPLATE.md) — operational continuity only.
 8. [`docs/plan/plan.md`](../../../../docs/plan/plan.md) — research detail; never a status source.
 

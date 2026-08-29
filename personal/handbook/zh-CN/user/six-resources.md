@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:fe8f131e44bd33b0403e80210b060e3e5c865ba4f5c33a3fa2c24e01cf0d8d8a"
+fingerprint: "sha256:9bd1e97cb6bd37f8f28a20db358f41a74c478d7007f436932db2bc035efd8356"
 non_claims:
   - 资源族在权威存储中的存在不等于完整的用户工作流；各族缺口见下文与已知限制页。
 ---

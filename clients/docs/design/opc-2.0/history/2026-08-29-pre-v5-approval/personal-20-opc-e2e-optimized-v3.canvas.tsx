@@ -1,5 +1,5 @@
 /**
- * PERSONAL 2.0 OPC INTERACTION PROTOTYPE — current product chrome
+ * PERSONAL 2.0 OPC INTERACTION PROTOTYPE — optimized v3
  *
  * Built-in mock data and local React state only. This Canvas does not connect
  * to a daemon, network, storage, filesystem, Provider, model, Skill, MCP
@@ -8,14 +8,18 @@
  * Memory, or issue receipts. Target-state samples are labelled explicitly.
  * HITL buttons are simulated: they change local prototype state only.
  *
- * Current product chrome after the 2026-08-28/29 journey-subtraction workshop.
- * Not V2 CEO-rail / X-hero chrome. Visual tokens and shell craft are reused
- * from the archived V2 file so this still looks like the same product.
+ * v3 delta: create order is ① project → ② process → ③ members → ④ test → ⑤
+ * joint. Member init shows the process diagram; 「创建成员」 confirms, then
+ * sends Owner chat “根据业务流程创建成员”. Assistant proposes roster from
+ * stage I/O; canvas lists posts and asks Owner to pick a model per member.
+ *
+ * Archived 2026-08-29. Not current product chrome. Current chrome is
+ * personal-20-opc-e2e-optimized-v5.
  *
  * Design artifact:
- * d:\agent-kernel\clients\docs\design\opc-2.0\personal-20-opc-e2e.canvas.tsx
- * Cursor-openable copy (IDE detection path; not a second product baseline):
- * C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx
+ * d:\agent-kernel\clients\docs\design\opc-2.0\history\2026-08-29-pre-v5-approval\personal-20-opc-e2e-optimized-v3.canvas.tsx
+ * Cursor-openable archived copy (IDE detection path; not a second baseline):
+ * C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\history\2026-08-29-pre-v5-approval\personal-20-opc-e2e-optimized-v3.canvas.tsx
  * Hosted and repository copies must stay byte-aligned.
  */
 
@@ -24,7 +28,9 @@ import {
   Select,
   TextArea,
   TextInput,
+  useEffect,
   useHostTheme,
+  useRef,
   useState,
   type CSSProperties,
 } from "cursor/canvas";
@@ -84,10 +90,53 @@ type ConfirmId =
   | "rights"
   | "preview"
   | "method";
+type WizardId = "brief" | ConfirmId;
 type PreviewAge = "fresh" | "stale";
 type HitlFate = "idle" | "approved" | "narrowed" | "rejected" | "stopped";
 type ConnectionStatus = "none" | "connected" | "failed";
-type KnowledgeTab = "files" | "why" | "memory";
+type KnowledgeTab = "files" | "import" | "why" | "memory";
+type KnowledgeScope = "all" | "shared" | "weekly";
+type KnowledgeKind = "all" | "markdown" | "pdf" | "image" | "link";
+type ImportPhase =
+  | "idle"
+  | "importing"
+  | "duplicate"
+  | "parse-fail"
+  | "secret-detected"
+  | "indexed";
+type ImportPolicy = "copy" | "reference";
+type ImportSourceKind = "files" | "link" | "image" | "video";
+type ImportDest = "shared" | "weekly";
+type ChatAuthor = "owner" | "assistant" | "system";
+type FieldProposal = {
+  field: string;
+  label: string;
+  value: string;
+  status: "pending" | "applied" | "dismissed";
+};
+type ChatTurn = {
+  id: number;
+  author: ChatAuthor;
+  label: string;
+  text: string;
+  proposal?: FieldProposal;
+};
+type PendingCommit = {
+  field: string;
+  label: string;
+  previous: string;
+  next: string;
+};
+type StageDraft = { input: string; method: string; rights: string };
+type KnowledgeFile = {
+  id: string;
+  title: string;
+  project: Exclude<KnowledgeScope, "all">;
+  projectLabel: string;
+  kind: Exclude<KnowledgeKind, "all">;
+  statusLabel: string;
+  tone: Tone;
+};
 
 type MemberDraft = {
   id: string;
@@ -114,8 +163,8 @@ type ProcessStage = {
 const SCENES: ReadonlyArray<{ id: Scene; label: string }> = [
   { id: "empty-home", label: "Empty Home · 创建 Project only" },
   { id: "create-init", label: "Create ① project init" },
-  { id: "create-members", label: "Create ② member init" },
-  { id: "create-process", label: "Create ③ process init" },
+  { id: "create-process", label: "Create ② process init" },
+  { id: "create-members", label: "Create ③ member init" },
   { id: "create-test", label: "Create ④ per-stage test" },
   { id: "create-joint", label: "Create ⑤ joint debug" },
   { id: "today-incomplete", label: "Today · continue create only" },
@@ -132,8 +181,8 @@ const SCENES: ReadonlyArray<{ id: Scene; label: string }> = [
 const SCENE_TITLES: Record<Scene, string> = {
   "empty-home": "Today",
   "create-init": "创建 Project · ① 项目初始化",
-  "create-members": "创建 Project · ② 成员初始化",
-  "create-process": "创建 Project · ③ 流程初始化",
+  "create-process": "创建 Project · ② 流程初始化",
+  "create-members": "创建 Project · ③ 成员初始化",
   "create-test": "创建 Project · ④ 分环节测试",
   "create-joint": "创建 Project · ⑤ 联合调试",
   "today-incomplete": "Today",
@@ -164,6 +213,69 @@ const CONFIRM_ITEMS: ReadonlyArray<{ id: ConfirmId; label: string; detail: strin
   { id: "rights", label: "来源权利", detail: "外部文本不可信，不能当指令执行" },
   { id: "preview", label: "总预览", detail: "确认前项目未上线。离开会留草稿。" },
   { id: "method", label: "执行方式", detail: "每环节怎么做、周期、触发。不出现底层引擎名。" },
+];
+
+const WIZARD_STEPS: ReadonlyArray<{
+  id: WizardId;
+  label: string;
+  detail: string;
+  ownerAuthored: boolean;
+}> = [
+  {
+    id: "brief",
+    label: "业务描述",
+    detail: "用业务语言说清楚要办成什么。离开会接续。连接失败要说出问题所在。",
+    ownerAuthored: true,
+  },
+  ...CONFIRM_ITEMS.map((item) => ({ ...item, ownerAuthored: false })),
+];
+
+const KNOWLEDGE_FILES: readonly KnowledgeFile[] = [
+  {
+    id: "follow-md",
+    title: "本周客户跟进.md",
+    project: "weekly",
+    projectLabel: "周报与客户跟进",
+    kind: "markdown",
+    statusLabel: "已索引 · 来源：Owner 导入",
+    tone: "good",
+  },
+  {
+    id: "scan-pdf",
+    title: "扫描件.pdf",
+    project: "weekly",
+    projectLabel: "周报与客户跟进",
+    kind: "pdf",
+    statusLabel: "解析失败。原件保留。",
+    tone: "bad",
+  },
+  {
+    id: "brand-md",
+    title: "品牌口径.md",
+    project: "shared",
+    projectLabel: "Owner 共享",
+    kind: "markdown",
+    statusLabel: "已索引 · 跨项目共享",
+    tone: "good",
+  },
+  {
+    id: "shot-png",
+    title: "竞品截图.png",
+    project: "weekly",
+    projectLabel: "周报与客户跟进",
+    kind: "image",
+    statusLabel: "已索引 · 图片元数据",
+    tone: "info",
+  },
+  {
+    id: "public-link",
+    title: "公开研究笔记",
+    project: "shared",
+    projectLabel: "Owner 共享",
+    kind: "link",
+    statusLabel: "引用 · 未复制原文",
+    tone: "neutral",
+  },
 ];
 
 const PROCESS_STAGES: readonly ProcessStage[] = [
@@ -278,7 +390,7 @@ const SURFACE_CONTEXT: Record<
   },
   create: {
     label: "五段创建",
-    object: "草稿、确认清单、班子、流程轴、可打开测试结果",
+    object: "草稿、确认清单、流程轴、班子、可打开测试结果",
     source: "可恢复的创建草稿",
     firstAction: "用业务语言描述，或去 Settings 绑定助手",
     native: "①–⑤ 均为创建；⑤ 验收前没有日常 Today",
@@ -309,7 +421,7 @@ const SURFACE_CONTEXT: Record<
     object: "项目资料、为什么用这段、可检查的 Memory",
     source: "本地资料与自动承认的对话记忆",
     firstAction: "导入资料，或检查/忘记一条 Memory",
-    native: "无 Project 时锁定。③ 才为当前草稿打开。",
+    native: "无 Project 时锁定。② 流程初始化后才为当前草稿打开。",
   },
   settings: {
     label: "Settings",
@@ -322,11 +434,106 @@ const SURFACE_CONTEXT: Record<
 
 const CREATE_SCENES: readonly Scene[] = [
   "create-init",
-  "create-members",
   "create-process",
+  "create-members",
   "create-test",
   "create-joint",
 ];
+
+const DEFAULT_BRIEF =
+  "每周给自己一份可打开的经营周报，并跟进待回复客户。不要做成社交账号运营。";
+
+function blankWizardValues(brief: string): Record<WizardId, string> {
+  const values = { brief } as Record<WizardId, string>;
+  for (const item of CONFIRM_ITEMS) values[item.id] = "";
+  return values;
+}
+
+function blankWizardFlags(): Record<WizardId, boolean> {
+  const flags = { brief: false } as Record<WizardId, boolean>;
+  for (const item of CONFIRM_ITEMS) flags[item.id] = false;
+  return flags;
+}
+
+function isSetupChat(scene: Scene) {
+  return CREATE_SCENES.includes(scene) || scene === "add-member";
+}
+
+function suggestRevision(label: string, value: string) {
+  const trimmed = value.trim();
+  if (trimmed.length === 0) return `${label}需要可打开、可核对的说法，不能留空。`;
+  if (trimmed.includes("可打开") && trimmed.includes("可核对")) return trimmed;
+  return `${trimmed} 交付须可打开、可核对。`;
+}
+
+function defaultStageDrafts(): Record<string, StageDraft> {
+  const drafts: Record<string, StageDraft> = {};
+  for (const stage of PROCESS_STAGES) {
+    drafts[stage.id] = {
+      input: "上一环产出或本项目知识库摘录。缺口留在轴上，不标已就绪。",
+      method: "本环节怎么做、周期、触发。Skill / 工具 / MCP / 文件权限在此披露。",
+      rights: "只能读本项目资料。对外发送不在这一环自动发生。",
+    };
+  }
+  return drafts;
+}
+
+const TEST_NOTE_DEFAULT = "目标态样品：这一环的子产出可打开，核对标记为通过。";
+const JOINT_NOTE_DEFAULT = "周报 Markdown 可打开。核对通过。不是对外发布。";
+const SETUP_ASSISTANT_INTRO =
+  "右侧对话是创建和改项目 / 成员 / 测试 / 联调的主入口。你在中间画布改完后回车，确认就会以你的名义出现在这里。我可以建议优化；我改画布也要你在对话里点头。聊天不能批准、验收、发布或安装。";
+
+function isStageDraftKey(value: string): value is keyof StageDraft {
+  return value === "input" || value === "method" || value === "rights";
+}
+
+const STAGE_OUTPUTS: Record<string, string> = {
+  collect: "可打开的事实清单",
+  analyze: "可核对的建议稿",
+  draft: "周报草稿",
+  verify: "核对记录",
+  deliver: "可打开周报与决策包",
+};
+
+const OWNER_PROFILES: Record<string, { id: string; name: string }> = {
+  梅: { id: "mei", name: "梅 · 调研" },
+  林: { id: "lin", name: "林 · 经理" },
+  锐: { id: "rui", name: "锐 · 撰稿" },
+};
+
+function proposeMembersFromProcess(drafts: Record<string, StageDraft>): MemberDraft[] {
+  const grouped = new Map<string, ProcessStage[]>();
+  for (const stage of PROCESS_STAGES) {
+    const list = grouped.get(stage.owner) ?? [];
+    list.push(stage);
+    grouped.set(stage.owner, list);
+  }
+  return [...grouped.entries()].map(([owner, stages]) => {
+    const profile = OWNER_PROFILES[owner] ?? { id: owner, name: owner };
+    const duty = stages
+      .map((stage) => {
+        const draft = drafts[stage.id];
+        const method = draft?.method.trim() || "按这一环执行。";
+        const input = draft?.input.trim() || "上一环产出或本项目资料。";
+        return `负责「${stage.label}」。输入：${input} 做法：${method}`;
+      })
+      .join(" ");
+    const handoff = stages.map((stage) => STAGE_OUTPUTS[stage.id] ?? `${stage.label}产出`).join("；");
+    return {
+      id: profile.id,
+      name: profile.name,
+      duty,
+      handoff,
+      model: "unselected",
+      joined: false,
+    };
+  });
+}
+
+function rosterAssistantText(members: readonly MemberDraft[]): string {
+  const lines = members.map((member) => `${member.name}：${member.duty} → 交出 ${member.handoff}`);
+  return `已根据流程轴每个环节的输入与产出配置岗位。\n${lines.join("\n")}\n请在画布为每人选定模型。未选 = 待定，不会静默绑定。聊天不能批准。`;
+}
 
 function stateMessage(surface: SurfaceKey, state: StateKey) {
   const context = SURFACE_CONTEXT[surface];
@@ -424,6 +631,144 @@ function Heading({
   );
 }
 
+function EditConfirmDialog({
+  pending,
+  onConfirm,
+  onCancel,
+}: {
+  pending: PendingCommit;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: { key: string }) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  return (
+    <div className="edit-dialog-scrim">
+      <div className="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="edit-dialog-title" aria-describedby="edit-dialog-copy">
+        <h3 id="edit-dialog-title">确认把这项改动告诉助手？</h3>
+        <p id="edit-dialog-copy">确认后会以你的名义出现在右侧对话。助手可以建议优化；它改画布也要你在对话里再点头。取消则还原画布。</p>
+        <dl className="definition-list">
+          <div>
+            <dt>字段</dt>
+            <dd>{pending.label}</dd>
+          </div>
+          <div>
+            <dt>改为</dt>
+            <dd>{pending.next}</dd>
+          </div>
+        </dl>
+        <div className="flow-actions">
+          <button className="primary-button" type="button" onClick={onConfirm}>
+            确认并告知助手
+          </button>
+          <button className="secondary-button" type="button" onClick={onCancel}>
+            取消并还原
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CreateRosterDialog({
+  replacing,
+  onConfirm,
+  onCancel,
+}: {
+  replacing: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+}) {
+  useEffect(() => {
+    const onKey = (event: { key: string }) => {
+      if (event.key === "Escape") onCancel();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [onCancel]);
+  return (
+    <div className="edit-dialog-scrim">
+      <div className="edit-dialog" role="dialog" aria-modal="true" aria-labelledby="roster-dialog-title" aria-describedby="roster-dialog-copy">
+        <h3 id="roster-dialog-title">{replacing ? "按当前流程重做岗位？" : "根据业务流程创建成员？"}</h3>
+        <p id="roster-dialog-copy">
+          确认后会以你的名义在右侧发送「根据业务流程创建成员」。助手按每环的输入与产出配置岗位，并写到画布。每人仍要你选定模型，不会静默绑定。
+        </p>
+        <div className="flow-actions">
+          <button className="primary-button" type="button" onClick={onConfirm}>
+            确认并告知助手
+          </button>
+          <button className="secondary-button" type="button" onClick={onCancel}>
+            取消
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SyncedField({
+  field,
+  label,
+  value,
+  onChange,
+  onCommit,
+  onFocusField,
+  multiline = false,
+  rows = 3,
+  placeholder,
+  disabled = false,
+}: {
+  field: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  onCommit: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
+  multiline?: boolean;
+  rows?: number;
+  placeholder?: string;
+  disabled?: boolean;
+}) {
+  const snapshot = useRef(value);
+  const onKeyDown = (event: { key: string; shiftKey: boolean; preventDefault: () => void }) => {
+    if (event.key !== "Enter") return;
+    if (multiline && event.shiftKey) return;
+    event.preventDefault();
+    onCommit(field, label, value);
+  };
+  const shared = {
+    name: field,
+    autoComplete: "off" as const,
+    value,
+    disabled,
+    placeholder,
+    onChange: (event: { currentTarget: { value: string } }) => onChange(event.currentTarget.value),
+    onFocus: () => {
+      snapshot.current = value;
+      onFocusField(field, label, value);
+    },
+    onKeyDown,
+  };
+  return multiline ? (
+    <textarea
+      {...shared}
+      rows={rows}
+      aria-label={`${label}。回车告知助手，Shift+回车换行。`}
+    />
+  ) : (
+    <input
+      {...shared}
+      type="text"
+      aria-label={`${label}。回车告知助手。`}
+    />
+  );
+}
+
 function Segmented<T extends string>({
   label,
   value,
@@ -514,31 +859,55 @@ function EmptyHomeScene({
 }
 
 function CreateInitScene({
-  brief,
-  setBrief,
   providerBound,
-  confirmed,
-  toggleConfirm,
+  wizardIndex,
+  setWizardIndex,
+  wizardValues,
+  onEditValue,
+  wizardConfirmed,
+  wizardStale,
+  confirmCurrent,
   onLeaveDraft,
-  onMembers,
+  onProcess,
   goSettings,
+  onCommitField,
+  onFocusField,
 }: {
-  brief: string;
-  setBrief: (value: string) => void;
   providerBound: boolean;
-  confirmed: Record<ConfirmId, boolean>;
-  toggleConfirm: (id: ConfirmId) => void;
+  wizardIndex: number;
+  setWizardIndex: (index: number) => void;
+  wizardValues: Record<WizardId, string>;
+  onEditValue: (id: WizardId, value: string) => void;
+  wizardConfirmed: Record<WizardId, boolean>;
+  wizardStale: Record<WizardId, boolean>;
+  confirmCurrent: () => void;
   onLeaveDraft: () => void;
-  onMembers: () => void;
+  onProcess: () => void;
   goSettings: () => void;
+  onCommitField: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
 }) {
-  const allConfirmed = CONFIRM_ITEMS.every((item) => confirmed[item.id]);
+  const step = WIZARD_STEPS[wizardIndex] ?? WIZARD_STEPS[0];
+  const last = wizardIndex === WIZARD_STEPS.length - 1;
+  const value = wizardValues[step.id];
+  const confirmed = wizardConfirmed[step.id];
+  const stale = Boolean(wizardStale[step.id]);
+  const allConfirmed = WIZARD_STEPS.every((item) => wizardConfirmed[item.id]);
+  const briefReady = wizardConfirmed.brief;
+  const waitingForSuggestion = !step.ownerAuthored && !briefReady;
+  const canConfirm =
+    providerBound &&
+    !confirmed &&
+    value.trim().length > 0 &&
+    !waitingForSuggestion;
   return (
     <div className="scene-stack">
       <section className="setup-header">
         <div>
-          <h2>① 用业务语言说清楚这件事</h2>
-          <p>有模型时右侧是助手。没有模型时，对话只引导去 Settings 绑定助手。</p>
+          <h2>① 逐项确认这件事</h2>
+          <p>
+            右侧助手是主入口。画布可改：回车弹出确认，确认后以你的名义写入对话。换行用 Shift+回车。确认本项后才能下一项。
+          </p>
         </div>
         <div className="header-actions">
           <button className="secondary-button" type="button" onClick={onLeaveDraft}>
@@ -552,67 +921,154 @@ function CreateInitScene({
         </Notice>
       ) : (
         <Notice title="目标态样品" tone="info">
-          助手会分析并联网调研候选 Skill / 工具 / MCP。外部文本不可信。密钥永不进聊天。
+          助手建议是样品，不是 daemon 权威。外部文本不可信。密钥永不进聊天。总预览前项目未上线。
         </Notice>
       )}
-      <section className="work-surface">
-        <Heading title="业务描述" meta="离开会接续。连接失败要说出问题所在。" />
-        <label className="field">
-          <span>你要办成什么</span>
-          <TextArea
-            value={brief}
-            onChange={setBrief}
-            rows={5}
-            placeholder="例如：每周给自己一份可打开的经营周报，并跟进待回复客户。"
-          />
-        </label>
-        {!providerBound ? (
-          <div className="flow-actions">
+      <section className="work-surface wizard-surface">
+        <Heading
+          title={`${wizardIndex + 1} / ${WIZARD_STEPS.length} · ${step.label}`}
+          meta={step.ownerAuthored ? "你来写。确认后才生成后续建议。" : "助手建议。可编辑后确认，或回到上一项。"}
+        />
+        <div className="wizard-dots" role="tablist" aria-label="初始化步骤">
+          {WIZARD_STEPS.map((item, index) => {
+            const reachable =
+              index === 0 ||
+              WIZARD_STEPS.slice(0, index).every((prior) => wizardConfirmed[prior.id]);
+            return (
+              <button
+                key={item.id}
+                type="button"
+                role="tab"
+                className="wizard-dot"
+                aria-selected={index === wizardIndex}
+                aria-label={`${item.label}${wizardConfirmed[item.id] ? " · 已确认" : " · 未确认"}`}
+                disabled={!reachable}
+                onClick={() => setWizardIndex(index)}
+              />
+            );
+          })}
+        </div>
+        <div className="wizard-viewport">
+          <div
+            className="wizard-rail"
+            style={{ ["--wizard-index" as string]: String(wizardIndex) } as CSSProperties}
+          >
+            {WIZARD_STEPS.map((item, index) => {
+              const current = index === wizardIndex;
+              const itemValue = wizardValues[item.id];
+              const itemStale = Boolean(wizardStale[item.id]);
+              const itemWaiting = !item.ownerAuthored && !briefReady;
+              return (
+                <article
+                  key={item.id}
+                  className="wizard-slide"
+                  role="tabpanel"
+                  aria-hidden={!current}
+                  aria-label={item.label}
+                  inert={!current}
+                >
+                  <div className="wizard-card">
+                    <div className="wizard-card-meta">
+                      <Tag tone={wizardConfirmed[item.id] ? "good" : itemStale ? "warn" : "neutral"}>
+                        {wizardConfirmed[item.id]
+                          ? "已确认"
+                          : itemStale
+                            ? "已过时"
+                            : item.ownerAuthored
+                              ? "由你填写"
+                              : itemWaiting
+                                ? "待生成建议"
+                                : "助手建议"}
+                      </Tag>
+                      <small>{item.detail}</small>
+                    </div>
+                    <label className="field">
+                      <span>{item.label}</span>
+                      <SyncedField
+                        field={`wizard:${item.id}`}
+                        label={item.label}
+                        value={itemValue}
+                        onChange={(next) => onEditValue(item.id, next)}
+                        onCommit={onCommitField}
+                        onFocusField={onFocusField}
+                        multiline
+                        rows={8}
+                        placeholder={
+                          item.ownerAuthored
+                            ? "例如：每周给自己一份可打开的经营周报，并跟进待回复客户…"
+                            : itemWaiting
+                              ? "确认业务描述后，这里会出现助手建议…"
+                              : item.detail
+                        }
+                      />
+                    </label>
+                    {itemStale ? (
+                      <Notice title="建议可能过时" tone="warn">
+                        业务描述已改。请核对或改写本项后再确认。过时项不能当成已就绪。
+                      </Notice>
+                    ) : null}
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        </div>
+        <div className="wizard-nav">
+          <button
+            className="secondary-button"
+            type="button"
+            disabled={wizardIndex === 0}
+            onClick={() => setWizardIndex(Math.max(0, wizardIndex - 1))}
+          >
+            上一项
+          </button>
+          {!providerBound && step.id === "brief" ? (
             <button className="primary-button" type="button" onClick={goSettings}>
               去设置连接模型并绑定助手
             </button>
-            <span className="flow-end">没有「继续」——先绑定助手。</span>
-          </div>
-        ) : (
-          <p>右侧对话会逐项确认下面清单。总预览前项目未上线。</p>
-        )}
-      </section>
-      <section className="work-surface">
-        <Heading
-          title="逐项确认清单"
-          meta="执行方式是运行方法的业务说法。不出现 Harness。"
-        />
-        <ul className="confirm-list">
-          {CONFIRM_ITEMS.map((item) => (
-            <li key={item.id}>
-              <div>
-                <strong>{item.label}</strong>
-                <small>{item.detail}</small>
-              </div>
-              <button
-                className="inline-button"
-                type="button"
-                aria-pressed={confirmed[item.id]}
-                onClick={() => toggleConfirm(item.id)}
-              >
-                {confirmed[item.id] ? "已点头" : "待确认"}
-              </button>
-            </li>
-          ))}
-        </ul>
-        <div className="flow-actions">
-          <button
-            className="primary-button"
-            type="button"
-            disabled={!providerBound || !allConfirmed}
-            onClick={onMembers}
-          >
-            总预览后进入 ② 成员初始化
-          </button>
-          <span className="flow-end">
-            {allConfirmed ? "清单已齐。项目仍未上线。" : "未齐项不能当成已就绪。"}
-          </span>
+          ) : last && confirmed ? null : (
+            <button
+              className="primary-button"
+              type="button"
+              disabled={!canConfirm}
+              onClick={confirmCurrent}
+            >
+              确认本项
+            </button>
+          )}
+          {last ? (
+            <button
+              className={confirmed && allConfirmed ? "primary-button" : "secondary-button"}
+              type="button"
+              disabled={!providerBound || !allConfirmed}
+              onClick={onProcess}
+            >
+              总预览后进入 ② 流程初始化
+            </button>
+          ) : (
+            <button
+              className="secondary-button"
+              type="button"
+              disabled={!confirmed}
+              onClick={() => setWizardIndex(wizardIndex + 1)}
+            >
+              下一项
+            </button>
+          )}
         </div>
+        <p className="flow-end wizard-status" aria-live="polite">
+          {!providerBound
+            ? "没有「下一项」——先绑定助手。"
+            : waitingForSuggestion
+              ? "先确认业务描述，才会生成后续建议。"
+              : confirmed
+                ? last
+                  ? allConfirmed
+                    ? "清单已齐。项目仍未上线。"
+                    : "本项已确认。还有未齐项。"
+                  : "本项已确认。「下一项」可用。"
+                : "确认本项后，「下一项」才可用。"}
+        </p>
       </section>
       <Gap>创建、调研、总预览写入权威都需要 daemon。这里只改变本地原型状态。</Gap>
     </div>
@@ -622,59 +1078,132 @@ function CreateInitScene({
 function CreateMembersScene({
   members,
   setModel,
+  setMemberText,
   confirmRoster,
-  onProcess,
+  onTest,
+  onRequestCreate,
+  stageDrafts,
+  onCommitField,
+  onFocusField,
 }: {
   members: readonly MemberDraft[];
   setModel: (id: string, model: string) => void;
+  setMemberText: (id: string, key: "duty" | "handoff", value: string) => void;
   confirmRoster: () => void;
-  onProcess: () => void;
+  onTest: () => void;
+  onRequestCreate: () => void;
+  stageDrafts: Record<string, StageDraft>;
+  onCommitField: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
 }) {
-  const ready = members.every((member) => member.model !== "unselected");
+  const ready = members.length > 0 && members.every((member) => member.model !== "unselected");
   return (
     <div className="scene-stack">
       <section className="setup-header">
         <div>
-          <h2>② 确认这个班子</h2>
-          <p>岗位名单 + 对话建议。每人必须显式选模型。Skill / MCP 放到 ③ 执行方式。</p>
+          <h2>③ 按流程创建这个班子</h2>
+          <p>
+            先看已确认的业务流程。点「创建成员」确认后，会以你的名义请助手按每环输入与产出配岗。岗位出现后请选定模型。
+          </p>
         </div>
       </section>
       <section className="work-surface">
-        <Heading title="岗位名单" meta="拒绝 = 不加入。没选模型 = 待定，不静默绑定。" />
-        <div className="staff-table-wrap" tabIndex={0} aria-label="岗位名单">
-          <table>
-            <caption>目标态班子样品。不是示范产品项目。</caption>
-            <thead>
-              <tr>
-                <th scope="col">岗位</th>
-                <th scope="col">做什么</th>
-                <th scope="col">交出什么</th>
-                <th scope="col">模型</th>
-              </tr>
-            </thead>
-            <tbody>
-              {members.map((member) => (
-                <tr key={member.id}>
-                  <th scope="row">{member.name}</th>
-                  <td>{member.duty}</td>
-                  <td>{member.handoff}</td>
-                  <td>
-                    <Select
-                      value={member.model}
-                      onChange={(next) => setModel(member.id, next)}
-                      options={[
-                        { value: "unselected", label: "未选 · 待定" },
-                        { value: "anthropic", label: "Anthropic · 平衡" },
-                        { value: "openai", label: "OpenAI · 推理" },
-                        { value: "google", label: "Google · 调研" },
-                      ]}
-                    />
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <Heading title="业务流程" meta="只读示意图。改环节请回 ②。入/出取自已确认的流程草稿。" />
+        <div className="process-axis" role="list">
+          {PROCESS_STAGES.map((item) => {
+            const draft = stageDrafts[item.id];
+            return (
+              <div key={item.id} className="process-node" role="listitem">
+                <strong>{item.label}</strong>
+                <small>入：{draft?.input || "未填"}</small>
+                <small>出：{STAGE_OUTPUTS[item.id] ?? "待定产出"}</small>
+              </div>
+            );
+          })}
         </div>
+        <div className="flow-actions">
+          <button
+            className={members.length > 0 ? "secondary-button" : "primary-button"}
+            type="button"
+            onClick={onRequestCreate}
+          >
+            {members.length > 0 ? "按当前流程重做岗位" : "创建成员"}
+          </button>
+        </div>
+      </section>
+      <section className="work-surface">
+        <Heading title="岗位名单" meta="助手按流程写入。没选模型 = 待定，不静默绑定。回车告知助手。" />
+        {members.length === 0 ? (
+          <Notice title="还没有岗位" tone="info">
+            确认「创建成员」后，名单会出现在这里，并请你为每人选定模型。
+          </Notice>
+        ) : (
+          <>
+            <Notice title="请选定模型" tone="warn">
+              岗位已按流程配置。每人必须显式选模型后才能进入测试。聊天不能批准。
+            </Notice>
+            <div className="staff-table-wrap" tabIndex={0} aria-label="岗位名单">
+              <table>
+                <caption>按流程生成的岗位。改动经对话同步。不是示范产品项目。</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">岗位</th>
+                    <th scope="col">做什么</th>
+                    <th scope="col">交出什么</th>
+                    <th scope="col">模型</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {members.map((member) => (
+                    <tr key={member.id}>
+                      <th scope="row">{member.name}</th>
+                      <td>
+                        <label className="field table-field">
+                          <span className="visually-hidden">{member.name} 做什么</span>
+                          <SyncedField
+                            field={`member:${member.id}:duty`}
+                            label={`${member.name} · 做什么`}
+                            value={member.duty}
+                            onChange={(next) => setMemberText(member.id, "duty", next)}
+                            onCommit={onCommitField}
+                            onFocusField={onFocusField}
+                            multiline
+                            rows={3}
+                          />
+                        </label>
+                      </td>
+                      <td>
+                        <label className="field table-field">
+                          <span className="visually-hidden">{member.name} 交出什么</span>
+                          <SyncedField
+                            field={`member:${member.id}:handoff`}
+                            label={`${member.name} · 交出什么`}
+                            value={member.handoff}
+                            onChange={(next) => setMemberText(member.id, "handoff", next)}
+                            onCommit={onCommitField}
+                            onFocusField={onFocusField}
+                          />
+                        </label>
+                      </td>
+                      <td>
+                        <Select
+                          value={member.model}
+                          onChange={(next) => setModel(member.id, next)}
+                          options={[
+                            { value: "unselected", label: "未选 · 待定" },
+                            { value: "anthropic", label: "Anthropic · 平衡" },
+                            { value: "openai", label: "OpenAI · 推理" },
+                            { value: "google", label: "Google · 调研" },
+                          ]}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
+        )}
         <div className="flow-actions">
           <button
             className="primary-button"
@@ -682,15 +1211,21 @@ function CreateMembersScene({
             disabled={!ready}
             onClick={() => {
               confirmRoster();
-              onProcess();
+              onTest();
             }}
           >
-            确认这个班子
+            确认这个班子，进入测试
           </button>
-          <span className="flow-end">{ready ? "可以进入流程初始化。" : "有人还没选模型。"}</span>
+          <span className="flow-end">
+            {members.length === 0
+              ? "先创建成员。"
+              : ready
+                ? "可以进入分环节测试。"
+                : "有人还没选模型。"}
+          </span>
         </div>
       </section>
-      <Gap>成员定义、模型绑定和权限写入需要 daemon。无静默扩权。</Gap>
+      <Gap>成员定义、模型绑定和权限写入需要 daemon。无静默扩权。这里只改变本地原型状态。</Gap>
     </div>
   );
 }
@@ -700,23 +1235,32 @@ function CreateProcessScene({
   setStageId,
   confirmedStages,
   confirmStage,
-  onTest,
+  onMembers,
+  stageDrafts,
+  setStageDraft,
+  onCommitField,
+  onFocusField,
 }: {
   stageId: string;
   setStageId: (id: string) => void;
   confirmedStages: readonly string[];
   confirmStage: (id: string) => void;
-  onTest: () => void;
+  onMembers: () => void;
+  stageDrafts: Record<string, StageDraft>;
+  setStageDraft: (id: string, key: keyof StageDraft, value: string) => void;
+  onCommitField: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
 }) {
   const stage = PROCESS_STAGES.find((item) => item.id === stageId) ?? PROCESS_STAGES[0];
+  const draft = stageDrafts[stage.id] ?? defaultStageDrafts()[stage.id];
   const last = stageId === PROCESS_STAGES[PROCESS_STAGES.length - 1].id;
   const all = PROCESS_STAGES.every((item) => confirmedStages.includes(item.id));
   return (
     <div className="scene-stack">
       <section className="setup-header">
         <div>
-          <h2>③ 一条流程轴，一次只开一环</h2>
-          <p>总目标：每周可打开的经营周报。总周期：周一。Knowledge 现在可为当前草稿打开。</p>
+          <h2>② 一条流程轴，一次只开一环</h2>
+          <p>总目标：每周可打开的经营周报。总周期：周一。轴确认后再按流程创建成员。改输入/执行方式/权限后回车，以你的名义告诉助手。</p>
         </div>
       </section>
       <div className="process-axis" role="list">
@@ -734,21 +1278,46 @@ function CreateProcessScene({
         ))}
       </div>
       <section className="work-surface">
-        <Heading title={`这一环 · ${stage.label}`} meta={`负责：${stage.owner}。权限按业务后果写，不写引擎名。`} />
-        <dl className="definition-list">
-          <div>
-            <dt>输入</dt>
-            <dd>上一环产出或本项目知识库摘录。缺口留在轴上，不标已就绪。</dd>
-          </div>
-          <div>
-            <dt>执行方式</dt>
-            <dd>本环节怎么做、周期、触发。Skill / 工具 / MCP / 文件权限在此披露。</dd>
-          </div>
-          <div>
-            <dt>权限后果</dt>
-            <dd>只能读本项目资料。对外发送不在这一环自动发生。</dd>
-          </div>
-        </dl>
+        <Heading title={`这一环 · ${stage.label}`} meta={`意向岗位：${stage.owner}。③ 会按此环输入产出配岗。回车告知助手，Shift+回车换行。`} />
+        <label className="field">
+          <span>输入</span>
+          <SyncedField
+            field={`process:${stage.id}:input`}
+            label={`${stage.label} · 输入`}
+            value={draft.input}
+            onChange={(next) => setStageDraft(stage.id, "input", next)}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+            multiline
+            rows={3}
+          />
+        </label>
+        <label className="field">
+          <span>执行方式</span>
+          <SyncedField
+            field={`process:${stage.id}:method`}
+            label={`${stage.label} · 执行方式`}
+            value={draft.method}
+            onChange={(next) => setStageDraft(stage.id, "method", next)}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+            multiline
+            rows={3}
+          />
+        </label>
+        <label className="field">
+          <span>权限后果</span>
+          <SyncedField
+            field={`process:${stage.id}:rights`}
+            label={`${stage.label} · 权限后果`}
+            value={draft.rights}
+            onChange={(next) => setStageDraft(stage.id, "rights", next)}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+            multiline
+            rows={3}
+          />
+        </label>
         <div className="flow-actions">
           <button
             className="primary-button"
@@ -756,7 +1325,7 @@ function CreateProcessScene({
             onClick={() => {
               confirmStage(stage.id);
               if (last && [...confirmedStages, stage.id].length >= PROCESS_STAGES.length) {
-                onTest();
+                onMembers();
               } else {
                 const index = PROCESS_STAGES.findIndex((item) => item.id === stage.id);
                 const next = PROCESS_STAGES[index + 1];
@@ -764,9 +1333,9 @@ function CreateProcessScene({
               }
             }}
           >
-            {last ? "确认总目标与项目触发" : "确认这一环"}
+            {last ? "确认总目标，进入成员初始化" : "确认这一环"}
           </button>
-          <span className="flow-end">{all ? "轴已齐，进入分环节测试。" : "拒绝则留在这一环。"}</span>
+          <span className="flow-end">{all ? "轴已齐，进入成员初始化。" : "拒绝则留在这一环。"}</span>
         </div>
       </section>
       <Gap>流程、触发和权限修订需要 daemon 预览。离线能改流程，不能联网补执行方式。</Gap>
@@ -780,12 +1349,20 @@ function CreateTestScene({
   testState,
   setTestState,
   onJoint,
+  testNote,
+  setTestNote,
+  onCommitField,
+  onFocusField,
 }: {
   stageId: string;
   setStageId: (id: string) => void;
   testState: "idle" | "running" | "pass" | "fail" | "unknown";
   setTestState: (value: "idle" | "running" | "pass" | "fail" | "unknown") => void;
   onJoint: () => void;
+  testNote: string;
+  setTestNote: (value: string) => void;
+  onCommitField: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
 }) {
   const stage = PROCESS_STAGES.find((item) => item.id === stageId) ?? PROCESS_STAGES[0];
   return (
@@ -793,7 +1370,7 @@ function CreateTestScene({
       <section className="setup-header">
         <div>
           <h2>④ 测这一环，直到子产出可打开</h2>
-          <p>未知不能通过。离线不能开测。不展示进程或引擎。</p>
+          <p>未知不能通过。离线不能开测。观察记录可改：回车后以你的名义告诉助手。</p>
         </div>
         <Segmented
           label="测试结果样品"
@@ -830,7 +1407,7 @@ function CreateTestScene({
           <p>正在跑这一环。进行中不是完成。</p>
         ) : testState === "fail" ? (
           <Notice title="不通过" tone="bad">
-            回到 ③ 改这一环。不跳下一环。
+            回到 ② 改这一环。不跳下一环。
           </Notice>
         ) : testState === "unknown" ? (
           <Notice title="说不清" tone="bad">
@@ -841,6 +1418,19 @@ function CreateTestScene({
             目标态样品：事实清单已打开，核对标记为通过。
           </Notice>
         )}
+        <label className="field">
+          <span>观察记录</span>
+          <SyncedField
+            field="test:note"
+            label={`${stage.label} · 观察记录`}
+            value={testNote}
+            onChange={setTestNote}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+            multiline
+            rows={3}
+          />
+        </label>
         <div className="flow-actions">
           <button
             className="primary-button"
@@ -864,17 +1454,25 @@ function CreateJointScene({
   jointState,
   setJointState,
   onAccept,
+  jointNote,
+  setJointNote,
+  onCommitField,
+  onFocusField,
 }: {
   jointState: "idle" | "running" | "pass" | "fail" | "unknown";
   setJointState: (value: "idle" | "running" | "pass" | "fail" | "unknown") => void;
   onAccept: () => void;
+  jointNote: string;
+  setJointNote: (value: string) => void;
+  onCommitField: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
 }) {
   return (
     <div className="scene-stack">
       <section className="setup-header">
         <div>
           <h2>⑤ 联合调试 · 第一次成功</h2>
-          <p>打开总成果 + 核对状态。无假发布。未知不能验收。离线不能联合调试。</p>
+          <p>打开总成果 + 核对状态。观察记录回车后告诉助手。无假发布。未知不能验收。</p>
         </div>
         <Segmented
           label="联合结果样品"
@@ -890,7 +1488,7 @@ function CreateJointScene({
         />
       </section>
       <section className="work-surface">
-        <Heading title="全流程走到哪" meta="失败会指出环节并回 ④ / ③" />
+        <Heading title="全流程走到哪" meta="失败会指出环节并回 ④ / ②" />
         <ol className="run-steps">
           {PROCESS_STAGES.map((item, index) => (
             <li key={item.id} data-state={index < 4 ? "done" : jointState === "pass" ? "done" : "current"}>
@@ -914,6 +1512,19 @@ function CreateJointScene({
         ) : (
           <p>还没有可打开的总成果。</p>
         )}
+        <label className="field">
+          <span>总成果观察</span>
+          <SyncedField
+            field="joint:note"
+            label="联合调试 · 总成果观察"
+            value={jointNote}
+            onChange={setJointNote}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+            multiline
+            rows={3}
+          />
+        </label>
         <div className="flow-actions">
           <button
             className="primary-button"
@@ -1290,6 +1901,8 @@ function AddMemberScene({
   setModel,
   joined,
   onJoin,
+  onCommitField,
+  onFocusField,
 }: {
   name: string;
   setName: (value: string) => void;
@@ -1299,13 +1912,15 @@ function AddMemberScene({
   setModel: (value: string) => void;
   joined: boolean;
   onJoin: () => void;
+  onCommitField: (field: string, label: string, next: string) => void;
+  onFocusField: (field: string, label: string, value: string) => void;
 }) {
   return (
     <div className="scene-stack">
       <section className="setup-header">
         <div>
           <h2>给已上线项目补一个岗位</h2>
-          <p>现有班子 + 对话建议 + 确认加入。模型必选。执行方式再披露一层。</p>
+          <p>右侧助手是改岗位的主入口。岗位名 / 职责回车后以你的名义写入对话。模型必选。</p>
         </div>
       </section>
       <section className="work-surface">
@@ -1344,11 +1959,27 @@ function AddMemberScene({
         <Heading title="新岗位" meta="拒绝 = 不加入。没模型 = 待定，去 Settings。" />
         <label className="field">
           <span>岗位名</span>
-          <TextInput value={name} onChange={setName} />
+          <SyncedField
+            field="add-member:name"
+            label="新岗位 · 岗位名"
+            value={name}
+            onChange={setName}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+          />
         </label>
         <label className="field">
           <span>做什么、交出什么</span>
-          <TextArea value={duty} onChange={setDuty} rows={3} />
+          <SyncedField
+            field="add-member:duty"
+            label="新岗位 · 做什么、交出什么"
+            value={duty}
+            onChange={setDuty}
+            onCommit={onCommitField}
+            onFocusField={onFocusField}
+            multiline
+            rows={3}
+          />
         </label>
         <label className="field">
           <span>模型（必选）</span>
@@ -1445,7 +2076,9 @@ function HitlScene({
           <input
             type="checkbox"
             checked={skipWeek}
-            onChange={(event) => setSkipWeek(event.currentTarget.checked)}
+            onChange={(event: { currentTarget: { checked: boolean } }) =>
+              setSkipWeek(event.currentTarget.checked)
+            }
           />
           {" "}本周此类不再问（到期失效，Settings 可收回）
         </label>
@@ -1523,20 +2156,51 @@ function KnowledgeScene({
   setTab,
   memoryForgotten,
   forgetMemory,
+  draftOnly,
+  filesEmpty = false,
+  importPhase,
+  setImportPhase,
 }: {
   locked: boolean;
   tab: KnowledgeTab;
   setTab: (value: KnowledgeTab) => void;
   memoryForgotten: boolean;
   forgetMemory: () => void;
+  draftOnly: boolean;
+  filesEmpty?: boolean;
+  importPhase: ImportPhase;
+  setImportPhase: (value: ImportPhase) => void;
 }) {
+  const [scope, setScope] = useState<KnowledgeScope>("all");
+  const [kind, setKind] = useState<KnowledgeKind>("all");
+  const [query, setQuery] = useState("");
+  const [dest, setDest] = useState<ImportDest>(draftOnly ? "weekly" : "weekly");
+  const [policy, setPolicy] = useState<ImportPolicy>("copy");
+  const [sourceKind, setSourceKind] = useState<ImportSourceKind>("files");
+  const catalog = filesEmpty
+    ? []
+    : KNOWLEDGE_FILES.filter((file) => !draftOnly || file.project === "weekly");
+  const visible = catalog.filter((file) => {
+    if (scope !== "all" && file.project !== scope) return false;
+    if (kind !== "all" && file.kind !== kind) return false;
+    const needle = query.trim().toLowerCase();
+    if (needle.length > 0 && !file.title.toLowerCase().includes(needle)) return false;
+    return true;
+  });
+  const scopeItems: ReadonlyArray<{ id: KnowledgeScope; label: string }> = draftOnly
+    ? [{ id: "weekly", label: "当前草稿" }]
+    : [
+        { id: "all", label: "全部" },
+        { id: "shared", label: "Owner 共享" },
+        { id: "weekly", label: "周报与客户跟进" },
+      ];
   if (locked) {
     return (
       <div className="scene-stack">
         <section className="today-header">
           <div>
             <h2>Knowledge 已锁定</h2>
-            <p>没有 Project 时不能进。创建到 ③ 需要输入时，只为当前草稿打开。</p>
+            <p>没有 Project 时不能进。创建到 ② 流程需要输入时，只为当前草稿打开。</p>
           </div>
         </section>
       </div>
@@ -1554,6 +2218,7 @@ function KnowledgeScene({
           value={tab}
           items={[
             { id: "files", label: "项目资料" },
+            { id: "import", label: "导入" },
             { id: "why", label: "为什么用这段" },
             { id: "memory", label: "Memory" },
           ]}
@@ -1562,29 +2227,195 @@ function KnowledgeScene({
       </section>
       {tab === "files" ? (
         <section className="work-surface">
-          <Heading title="资料" meta="空 = 还没资料 + 导入。无假云导入按钮。" />
-          <ul className="result-list">
-            <li>
-              <div>
-                <strong>本周客户跟进.md</strong>
-                <span>已索引 · 来源：Owner 导入</span>
-              </div>
-              <div>
-                <Tag tone="good">可读</Tag>
-              </div>
-            </li>
-            <li>
-              <div>
-                <strong>扫描件.pdf</strong>
-                <span>解析失败。原件保留。</span>
-              </div>
-              <div>
-                <Tag tone="bad">可重试</Tag>
-              </div>
-            </li>
-          </ul>
-          <p className="settings-note">导入是目标态。此原型不上传文件、不写磁盘。</p>
+          <Heading
+            title="资料"
+            meta={draftOnly ? "只看当前创建草稿。无假云导入。" : "可按全部或具体项目、资料类型和关键词查看。"}
+            action={{ label: "导入资料", onClick: () => setTab("import") }}
+          />
+          <div className="knowledge-filters">
+            <Segmented
+              label="项目范围"
+              value={draftOnly ? "weekly" : scope}
+              items={scopeItems}
+              onChange={(next) => setScope(draftOnly ? "weekly" : next)}
+            />
+            <Segmented
+              label="资料类型"
+              value={kind}
+              items={[
+                { id: "all", label: "全部类型" },
+                { id: "markdown", label: "Markdown" },
+                { id: "pdf", label: "PDF" },
+                { id: "image", label: "图片" },
+                { id: "link", label: "链接" },
+              ]}
+              onChange={setKind}
+            />
+            <label className="field">
+              <span>关键词</span>
+              <TextInput
+                value={query}
+                onChange={setQuery}
+                type="search"
+                placeholder="按标题检索…"
+              />
+            </label>
+          </div>
+          {visible.length === 0 ? (
+            <Notice title={catalog.length === 0 ? "还没资料" : "没有匹配的资料"} tone="info">
+              {catalog.length === 0
+                ? "空 = 还没资料。用导入把文件、链接或图片元数据放进当前范围。此原型不写磁盘。"
+                : "当前范围、类型或关键词没有命中。这不是索引为零。"}
+            </Notice>
+          ) : (
+            <ul className="result-list">
+              {visible.map((file) => (
+                <li key={file.id}>
+                  <div>
+                    <strong>{file.title}</strong>
+                    <span>
+                      {file.projectLabel} · {file.statusLabel}
+                    </span>
+                  </div>
+                  <div>
+                    <Tag tone={file.tone}>
+                      {file.kind === "markdown"
+                        ? "Markdown"
+                        : file.kind === "pdf"
+                          ? "PDF"
+                          : file.kind === "image"
+                            ? "图片"
+                            : "链接"}
+                    </Tag>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          {catalog.length === 0 ? (
+            <div className="flow-actions">
+              <button className="primary-button" type="button" onClick={() => setTab("import")}>
+                导入资料
+              </button>
+              <span className="flow-end">导入是目标态。此原型不上传文件。</span>
+            </div>
+          ) : null}
+          <p className="settings-note">此原型不上传文件、不写磁盘、不建索引。</p>
           <Gap>导入、去重、凭证检测和索引需要 daemon。没有 Install。</Gap>
+        </section>
+      ) : null}
+      {tab === "import" ? (
+        <section className="work-surface">
+          <Heading title="导入资料" meta="选范围、复制或引用、来源种类。不写磁盘。密钥不得进入 Vault。" />
+          <label className="field">
+            <span>目标范围</span>
+            <Select
+              value={dest}
+              onChange={(next) => setDest(next as ImportDest)}
+              options={
+                draftOnly
+                  ? [{ value: "weekly", label: "当前草稿 · 周报与客户跟进" }]
+                  : [
+                      { value: "weekly", label: "周报与客户跟进" },
+                      { value: "shared", label: "Owner 共享" },
+                    ]
+              }
+            />
+          </label>
+          <label className="field">
+            <span>复制或引用</span>
+            <Select
+              value={policy}
+              onChange={(next) => setPolicy(next as ImportPolicy)}
+              options={[
+                { value: "copy", label: "复制到 Vault（须有权复用）" },
+                { value: "reference", label: "引用原件（不复制正文）" },
+              ]}
+            />
+          </label>
+          <label className="field">
+            <span>来源种类</span>
+            <Select
+              value={sourceKind}
+              onChange={(next) => setSourceKind(next as ImportSourceKind)}
+              options={[
+                { value: "files", label: "文件或目录" },
+                { value: "link", label: "链接" },
+                { value: "image", label: "图片" },
+                { value: "video", label: "视频元数据" },
+              ]}
+            />
+          </label>
+          <p className="settings-note">
+            将核对来源权利、解析/OCR 预期和权限。仅 Owner 自有、许可、开源或公有领域可复制复用。离线不能云导入。
+          </p>
+          <div className="flow-actions">
+            <button
+              className="primary-button"
+              type="button"
+              disabled={importPhase === "importing"}
+              onClick={() => setImportPhase("importing")}
+            >
+              开始导入（原型，不写磁盘）
+            </button>
+            <span className="flow-end">
+              {importPhase === "idle"
+                ? "尚未开始"
+                : importPhase === "importing"
+                  ? "进行中 · 进度只是原型文案"
+                  : importPhase === "duplicate"
+                    ? "重复 · 原件保留"
+                    : importPhase === "parse-fail"
+                      ? "解析失败 · 原件保留，可重试"
+                      : importPhase === "secret-detected"
+                        ? "检出密钥形态 · 改走 SecretStore，不进知识库"
+                        : "已索引样品 · 不是磁盘写入"}
+            </span>
+          </div>
+          {importPhase === "importing" || importPhase === "idle" ? null : (
+            <Notice
+              title={
+                importPhase === "secret-detected"
+                  ? "密钥不进 Vault"
+                  : importPhase === "indexed"
+                    ? "样品结果"
+                    : "导入未完成"
+              }
+              tone={
+                importPhase === "indexed"
+                  ? "info"
+                  : importPhase === "secret-detected"
+                    ? "bad"
+                    : "warn"
+              }
+            >
+              {importPhase === "duplicate"
+                ? "同一来源已在范围内。没有覆盖。没有假成功。"
+                : importPhase === "parse-fail"
+                  ? "解析失败。原件保留。可重试。未知不能标已索引。"
+                  : importPhase === "secret-detected"
+                    ? "凭证改走批准的 SecretStore 交接。不进知识库、聊天、Context 或 Memory。"
+                    : "这是目标态样品行，不是文件系统或 daemon 回执。"}
+            </Notice>
+          )}
+          {importPhase === "importing" ? (
+            <div className="prototype-outcomes" role="group" aria-label="原型结果（不是真实导入）">
+              <span>演示下一状态</span>
+              <button className="inline-button" type="button" onClick={() => setImportPhase("duplicate")}>
+                记为重复
+              </button>
+              <button className="inline-button" type="button" onClick={() => setImportPhase("parse-fail")}>
+                解析失败
+              </button>
+              <button className="inline-button" type="button" onClick={() => setImportPhase("secret-detected")}>
+                检出密钥
+              </button>
+              <button className="inline-button" type="button" onClick={() => setImportPhase("indexed")}>
+                记为已索引样品
+              </button>
+            </div>
+          ) : null}
+          <Gap>导入、OCR、去重、索引和 SecretStore 接管需要 daemon。没有云导入按钮。</Gap>
         </section>
       ) : null}
       {tab === "why" ? (
@@ -1771,7 +2602,7 @@ function StateLabScene({
   setSurface: (value: SurfaceKey) => void;
   state: StateKey;
   setState: (value: StateKey) => void;
-  renderNative: (surface: SurfaceKey, state: StateKey) => JSX.Element;
+  renderNative: (surface: SurfaceKey, state: StateKey) => ReturnType<typeof EmptyHomeScene>;
 }) {
   return (
     <div className="scene-stack">
@@ -1819,6 +2650,11 @@ function Conversation({
   status,
   setStatus,
   onOpenHitl,
+  activeField,
+  thread,
+  onSendToAssistant,
+  onApplyProposal,
+  onDismissProposal,
 }: {
   scene: Scene;
   providerBound: boolean;
@@ -1827,17 +2663,15 @@ function Conversation({
   status: string;
   setStatus: (value: string) => void;
   onOpenHitl: () => void;
+  activeField: { field: string; label: string; value: string } | null;
+  thread: readonly ChatTurn[];
+  onSendToAssistant: () => void;
+  onApplyProposal: (turnId: number) => void;
+  onDismissProposal: (turnId: number) => void;
 }) {
-  const project =
-    scene === "project" ||
-    scene === "add-member" ||
-    scene === "hitl" ||
-    scene === "create-members" ||
-    scene === "create-process" ||
-    scene === "create-test" ||
-    scene === "create-joint";
-  const title = project ? "项目群" : "Personal Assistant";
-  const creating = CREATE_SCENES.includes(scene);
+  const setup = isSetupChat(scene);
+  const project = scene === "project" || scene === "hitl";
+  const title = setup || !project ? "Personal Assistant" : "项目群";
   const addMention = (mention: string) => {
     const space = drafts.length > 0 && !drafts.endsWith(" ") ? " " : "";
     setDrafts(`${drafts}${space}${mention} `);
@@ -1847,7 +2681,13 @@ function Conversation({
     <aside className="conversation" id="opc-conversation" aria-label={title}>
       <header>
         <div>
-          <span>{project ? "Owner / 经理 / 成员" : "全局助手 · 最高 UX 特权，写入仍要预览"}</span>
+          <span>
+            {setup
+              ? "创建与编辑的主入口 · 画布同步 · 写入仍要你确认"
+              : project
+                ? "Owner / 经理 / 成员"
+                : "全局助手 · 最高 UX 特权，写入仍要预览"}
+          </span>
           <h2>{title}</h2>
         </div>
       </header>
@@ -1860,7 +2700,14 @@ function Conversation({
         </div>
       ) : null}
       <div className="messages" role="region" aria-label="原型对话样品">
-        {scene === "create-init" && !providerBound ? (
+        {setup && activeField ? (
+          <article data-author="system" className="canvas-mirror">
+            <span>画布当前项 · {activeField.label}</span>
+            <p>{activeField.value.trim().length > 0 ? activeField.value : "（还没有内容）"}</p>
+            <small>画布里回车会先弹确认，再以你的名义发到这里。聊天不能批准、验收或安装。</small>
+          </article>
+        ) : null}
+        {setup && !providerBound ? (
           <>
             <article data-author="assistant">
               <span>助手 · 尚未绑定</span>
@@ -1871,12 +2718,45 @@ function Conversation({
               <p>连接失败会说出问题所在。没有 Connect 假按钮。</p>
             </article>
           </>
-        ) : scene === "create-init" ? (
-          <article data-author="assistant">
-            <span>助手 · 候选</span>
-            <p>请用业务语言描述项目情况和产出目标。我会分析并给出流程与各环节产出，再请你逐项确认。执行方式会写清楚，但不会出现底层引擎名。</p>
-          </article>
-        ) : scene === "today" ? (
+        ) : null}
+        {setup
+          ? thread.map((item) => (
+              <article key={item.id} data-author={item.author}>
+                <span>{item.label}</span>
+                <p>{item.text}</p>
+                {item.proposal ? (
+                  <div className="proposal-card">
+                    <small>
+                      {item.proposal.status === "pending"
+                        ? `建议改「${item.proposal.label}」。确认后才写回画布。`
+                        : item.proposal.status === "applied"
+                          ? `已按你的确认写回画布「${item.proposal.label}」。`
+                          : "这条建议未采用。"}
+                    </small>
+                    {item.proposal.status === "pending" ? (
+                      <div className="flow-actions">
+                        <button
+                          className="primary-button"
+                          type="button"
+                          onClick={() => onApplyProposal(item.id)}
+                        >
+                          确认，写回画布
+                        </button>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={() => onDismissProposal(item.id)}
+                        >
+                          不用
+                        </button>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
+              </article>
+            ))
+          : null}
+        {!setup && scene === "today" ? (
           <>
             <article data-author="assistant">
               <span>助手 · 可查询运行数据</span>
@@ -1891,7 +2771,8 @@ function Conversation({
               </button>
             </article>
           </>
-        ) : project && !creating ? (
+        ) : null}
+        {!setup && project ? (
           <>
             <article data-author="owner">
               <span>Owner</span>
@@ -1909,12 +2790,13 @@ function Conversation({
               </button>
             </article>
           </>
-        ) : (
+        ) : null}
+        {!setup && !project && scene !== "today" ? (
           <article data-author="assistant">
             <span>助手</span>
             <p>我可以解释、调研、起草并发起流程。写入必须经过预览 → 你确认 → 回执。</p>
           </article>
-        )}
+        ) : null}
       </div>
       <div className="composer">
         {project ? (
@@ -1933,10 +2815,26 @@ function Conversation({
               setStatus("未发送草稿。不能在聊天里批准、验收、发布或安装。");
             }}
             rows={4}
-            placeholder={project ? "问经理或有界地改成员工作…" : "问运行情况，或描述一件要办的事…"}
+            placeholder={
+              setup
+                ? "用自然语言改当前项。发给助手后，建议要你在对话里确认才写回画布…"
+                : project
+                  ? "问经理或有界地改成员工作…"
+                  : "问运行情况，或描述一件要办的事…"
+            }
           />
         </label>
         <div className="composer-actions">
+          {setup ? (
+            <button
+              className="primary-button"
+              type="button"
+              disabled={drafts.trim().length === 0 || !providerBound}
+              onClick={onSendToAssistant}
+            >
+              发给助手（原型）
+            </button>
+          ) : null}
           <button
             className="secondary-button"
             type="button"
@@ -1946,31 +2844,28 @@ function Conversation({
           </button>
           <small aria-live="polite">{status}</small>
         </div>
-        <Gap>发送、@ 路由和任务翻译需要 daemon。没有会写入权威的发送键。</Gap>
+        <Gap>真实发送与任务翻译需要 daemon。这里只演示本地对话与画布同步。聊天不能批准。</Gap>
       </div>
     </aside>
   );
 }
 
-export default function Personal20OpcE2e() {
+export default function Personal20OpcE2eOptimizedV3() {
   const theme = useHostTheme();
   const [scene, setScene] = useState<Scene>("empty-home");
-  const [brief, setBrief] = useState(
-    "每周给自己一份可打开的经营周报，并跟进待回复客户。不要做成社交账号运营。",
+  const [wizardIndex, setWizardIndex] = useState(0);
+  const [wizardValues, setWizardValues] = useState<Record<WizardId, string>>(() =>
+    blankWizardValues(DEFAULT_BRIEF),
   );
+  const [wizardConfirmed, setWizardConfirmed] = useState<Record<WizardId, boolean>>(blankWizardFlags);
+  const [wizardStale, setWizardStale] = useState<Record<WizardId, boolean>>(blankWizardFlags);
   const [providerBound, setProviderBound] = useState(false);
-  const [confirmed, setConfirmed] = useState<Record<ConfirmId, boolean>>(() => {
-    const initial = {} as Record<ConfirmId, boolean>;
-    for (const item of CONFIRM_ITEMS) initial[item.id] = false;
-    return initial;
-  });
-  const [members, setMembers] = useState<MemberDraft[]>([
-    { id: "lin", name: "林 · 经理", duty: "计划、分派、核对", handoff: "可打开周报与决策包", model: "unselected", joined: false },
-    { id: "mei", name: "梅 · 调研", duty: "收集本周事实", handoff: "事实清单", model: "unselected", joined: false },
-    { id: "rui", name: "锐 · 撰稿", duty: "起草周报", handoff: "周报草稿", model: "unselected", joined: false },
-  ]);
+  const [members, setMembers] = useState<MemberDraft[]>([]);
   const [processStageId, setProcessStageId] = useState("collect");
   const [confirmedStages, setConfirmedStages] = useState<string[]>([]);
+  const [stageDrafts, setStageDrafts] = useState<Record<string, StageDraft>>(defaultStageDrafts);
+  const [testNote, setTestNote] = useState(TEST_NOTE_DEFAULT);
+  const [jointNote, setJointNote] = useState(JOINT_NOTE_DEFAULT);
   const [testState, setTestState] = useState<"idle" | "running" | "pass" | "fail" | "unknown">("idle");
   const [jointState, setJointState] = useState<"idle" | "running" | "pass" | "fail" | "unknown">("idle");
   const [period, setPeriod] = useState<Period>("today");
@@ -1985,6 +2880,8 @@ export default function Personal20OpcE2e() {
   const [fate, setFate] = useState<HitlFate>("idle");
   const [skipWeek, setSkipWeek] = useState(false);
   const [knowledgeTab, setKnowledgeTab] = useState<KnowledgeTab>("files");
+  const [importPhase, setImportPhase] = useState<ImportPhase>("idle");
+  const [chatOpen, setChatOpen] = useState(false);
   const [memoryForgotten, setMemoryForgotten] = useState(false);
   const [provider, setProvider] = useState("anthropic");
   const [customUrl, setCustomUrl] = useState("https://example.invalid/v1");
@@ -1998,15 +2895,288 @@ export default function Personal20OpcE2e() {
   const [composerStatus, setComposerStatus] = useState("草稿只留在这个原型里。聊天不能批准。");
   const [lifecycle, setLifecycle] = useState<Lifecycle>("empty");
   const [createGate, setCreateGate] = useState(1);
+  const [thread, setThread] = useState<ChatTurn[]>([]);
+  const [pendingCommit, setPendingCommit] = useState<PendingCommit | null>(null);
+  const [pendingRosterCreate, setPendingRosterCreate] = useState(false);
+  const [focusedField, setFocusedField] = useState<{ field: string; label: string } | null>(null);
+  const lastSynced = useRef<Record<string, string>>({});
 
-  const chatHidden = scene === "empty-home";
+  useEffect(() => {
+    if (scene === "knowledge" || scene === "settings") {
+      setChatOpen(false);
+    }
+  }, [scene]);
+
+  useEffect(() => {
+    setFocusedField(null);
+    setPendingCommit(null);
+    setPendingRosterCreate(false);
+  }, [scene]);
+
+  useEffect(() => {
+    if (!isSetupChat(scene)) return;
+    setThread((current) => {
+      if (current.length > 0) return current;
+      return [
+        {
+          id: 1,
+          author: "assistant",
+          label: "助手 · 候选",
+          text: SETUP_ASSISTANT_INTRO,
+        },
+      ];
+    });
+  }, [scene]);
+
+  const chatHidden =
+    scene === "empty-home" ||
+    ((scene === "knowledge" || scene === "settings") && !chatOpen);
+  const currentWizard = WIZARD_STEPS[wizardIndex] ?? WIZARD_STEPS[0];
+  const appendTurns = (...turns: Array<Omit<ChatTurn, "id">>) => {
+    setThread((current) => {
+      let id = current[current.length - 1]?.id ?? 0;
+      return [...current, ...turns.map((item) => ({ ...item, id: ++id }))];
+    });
+  };
+  const setMemberText = (id: string, key: "duty" | "handoff", value: string) => {
+    setMembers((current) =>
+      current.map((member) => (member.id === id ? { ...member, [key]: value } : member)),
+    );
+  };
+  const setStageDraft = (id: string, key: keyof StageDraft, value: string) => {
+    setStageDrafts((current) => ({
+      ...current,
+      [id]: { ...(current[id] ?? defaultStageDrafts()[id]), [key]: value },
+    }));
+  };
+  const liveFieldValue = (field: string): string => {
+    if (field.startsWith("wizard:")) {
+      return wizardValues[field.slice("wizard:".length) as WizardId] ?? "";
+    }
+    if (field.startsWith("member:")) {
+      const [, id, key] = field.split(":");
+      const member = members.find((item) => item.id === id);
+      if (!member) return "";
+      return key === "handoff" ? member.handoff : member.duty;
+    }
+    if (field.startsWith("process:")) {
+      const [, id, key] = field.split(":");
+      const draft = stageDrafts[id];
+      if (!draft || !isStageDraftKey(key)) return "";
+      return draft[key];
+    }
+    if (field === "test:note") return testNote;
+    if (field === "joint:note") return jointNote;
+    if (field === "add-member:name") return newName;
+    if (field === "add-member:duty") return newDuty;
+    return "";
+  };
+  const applyFieldValue = (field: string, value: string) => {
+    if (field.startsWith("wizard:")) {
+      onEditWizardValue(field.slice("wizard:".length) as WizardId, value);
+      return;
+    }
+    if (field.startsWith("member:")) {
+      const [, id, key] = field.split(":");
+      if (key === "duty" || key === "handoff") setMemberText(id, key, value);
+      return;
+    }
+    if (field.startsWith("process:")) {
+      const [, id, key] = field.split(":");
+      if (isStageDraftKey(key)) setStageDraft(id, key, value);
+      return;
+    }
+    if (field === "test:note") setTestNote(value);
+    if (field === "joint:note") setJointNote(value);
+    if (field === "add-member:name") setNewName(value);
+    if (field === "add-member:duty") setNewDuty(value);
+  };
+  const onFocusField = (field: string, label: string, value: string) => {
+    setFocusedField({ field, label });
+    if (!(field in lastSynced.current)) lastSynced.current[field] = value;
+  };
+  const requestCanvasCommit = (field: string, label: string, next: string) => {
+    const previous = lastSynced.current[field] ?? next;
+    if (previous === next) {
+      setComposerStatus("没有改动，未发给助手。");
+      return;
+    }
+    setPendingCommit({ field, label, previous, next });
+  };
+  const confirmPendingCommit = () => {
+    if (!pendingCommit) return;
+    lastSynced.current[pendingCommit.field] = pendingCommit.next;
+    const suggestion = suggestRevision(pendingCommit.label, pendingCommit.next);
+    appendTurns(
+      {
+        author: "owner",
+        label: "你",
+        text: `我把「${pendingCommit.label}」改成了：\n${pendingCommit.next}`,
+      },
+      {
+        author: "assistant",
+        label: "助手 · 候选",
+        text: `收到。建议把「${pendingCommit.label}」收成更可核对的说法。确认后才写回画布。`,
+        proposal: {
+          field: pendingCommit.field,
+          label: pendingCommit.label,
+          value: suggestion,
+          status: "pending",
+        },
+      },
+    );
+    setPendingCommit(null);
+    setComposerStatus("已以你的名义写入对话。助手建议要你确认才改画布。");
+  };
+  const cancelPendingCommit = () => {
+    if (!pendingCommit) return;
+    applyFieldValue(pendingCommit.field, pendingCommit.previous);
+    setPendingCommit(null);
+    setComposerStatus("已还原画布，没有发给助手。");
+  };
+  const confirmRosterCreate = () => {
+    const nextMembers = proposeMembersFromProcess(stageDrafts);
+    setMembers(nextMembers);
+    for (const member of nextMembers) {
+      lastSynced.current[`member:${member.id}:duty`] = member.duty;
+      lastSynced.current[`member:${member.id}:handoff`] = member.handoff;
+    }
+    appendTurns(
+      { author: "owner", label: "你", text: "根据业务流程创建成员" },
+      { author: "assistant", label: "助手 · 候选", text: rosterAssistantText(nextMembers) },
+    );
+    setPendingRosterCreate(false);
+    setComposerStatus("已按流程创建岗位。请选定模型。没有 daemon 写入。");
+  };
+  const sendToAssistant = () => {
+    const text = drafts.trim();
+    if (text.length === 0) return;
+    const target =
+      focusedField ??
+      (scene === "create-init"
+        ? { field: `wizard:${currentWizard.id}`, label: currentWizard.label }
+        : null);
+    appendTurns({ author: "owner", label: "你", text });
+    if (target) {
+      appendTurns({
+        author: "assistant",
+        label: "助手 · 候选",
+        text: `按你的说法，建议改「${target.label}」。确认后写回画布。`,
+        proposal: {
+          field: target.field,
+          label: target.label,
+          value: suggestRevision(target.label, text),
+          status: "pending",
+        },
+      });
+    } else {
+      appendTurns({
+        author: "assistant",
+        label: "助手 · 候选",
+        text: "请先点画布上要改的字段。我不会在聊天里批准、验收或安装。",
+      });
+    }
+    setDrafts("");
+    setComposerStatus("已写入本地对话。没有 daemon 发送，没有权威。");
+  };
+  const applyProposal = (turnId: number) => {
+    const turn = thread.find((item) => item.id === turnId);
+    if (!turn?.proposal || turn.proposal.status !== "pending") return;
+    applyFieldValue(turn.proposal.field, turn.proposal.value);
+    lastSynced.current[turn.proposal.field] = turn.proposal.value;
+    setThread((current) =>
+      current.map((item) =>
+        item.id === turnId && item.proposal
+          ? { ...item, proposal: { ...item.proposal, status: "applied" } }
+          : item,
+      ),
+    );
+    appendTurns({
+      author: "system",
+      label: "画布已同步",
+      text: `「${turn.proposal.label}」已按助手建议更新。聊天不能批准。`,
+    });
+    setComposerStatus("已按你的确认写回画布。");
+  };
+  const dismissProposal = (turnId: number) => {
+    setThread((current) =>
+      current.map((item) =>
+        item.id === turnId && item.proposal
+          ? { ...item, proposal: { ...item.proposal, status: "dismissed" } }
+          : item,
+      ),
+    );
+    setComposerStatus("未采用这条建议。画布未改。");
+  };
+  const pinnedField = (() => {
+    if (focusedField) {
+      return { ...focusedField, value: liveFieldValue(focusedField.field) };
+    }
+    if (scene === "create-init") {
+      return {
+        field: `wizard:${currentWizard.id}`,
+        label: currentWizard.label,
+        value: wizardValues[currentWizard.id],
+      };
+    }
+    return null;
+  })();
+  const moveWizard = (index: number) => {
+    if (index === wizardIndex || index < 0 || index >= WIZARD_STEPS.length) return;
+    const label = WIZARD_STEPS[index].label;
+    setWizardIndex(index);
+    appendTurns({
+      author: "system",
+      label: "画布回执",
+      text: index < wizardIndex ? `回到「${label}」。` : `进入「${label}」。`,
+    });
+  };
+  const onEditWizardValue = (id: WizardId, value: string) => {
+    setWizardValues((current) => ({ ...current, [id]: value }));
+    setWizardConfirmed((current) => (current[id] ? { ...current, [id]: false } : current));
+    if (id === "brief") {
+      setWizardStale((current) => {
+        const next = { ...current, brief: false };
+        for (const item of CONFIRM_ITEMS) next[item.id] = true;
+        return next;
+      });
+    }
+  };
+  const confirmCurrentWizard = () => {
+    const step = currentWizard;
+    if (!providerBound || wizardValues[step.id].trim().length === 0) return;
+    if (step.id === "brief") {
+      setWizardValues((current) => {
+        const next = { ...current };
+        for (const item of CONFIRM_ITEMS) {
+          if (next[item.id].trim().length === 0 || wizardStale[item.id]) {
+            next[item.id] = item.detail;
+          }
+        }
+        return next;
+      });
+      setWizardStale(blankWizardFlags());
+    } else {
+      setWizardStale((current) => ({ ...current, [step.id]: false }));
+    }
+    setWizardConfirmed((current) => ({ ...current, [step.id]: true }));
+    appendTurns({
+      author: "system",
+      label: "画布回执",
+      text:
+        step.id === "preview"
+          ? `已确认「${step.label}」。项目仍未上线。`
+          : `已确认「${step.label}」。下一项可用。`,
+    });
+  };
+
   const projectsCurrent =
     scene === "projects" ||
     CREATE_SCENES.includes(scene) ||
     scene === "project" ||
     scene === "add-member" ||
     scene === "hitl";
-  const knowledgeOk = lifecycle === "live" || (lifecycle === "creating" && createGate >= 3);
+  const knowledgeOk = lifecycle === "live" || (lifecycle === "creating" && createGate >= 2);
   const locationLabel = (() => {
     if (CREATE_SCENES.includes(scene)) return "Projects / 创建中";
     if (scene === "project" || scene === "add-member" || scene === "hitl") return "Projects / 周报与客户跟进";
@@ -2027,8 +3197,8 @@ export default function Personal20OpcE2e() {
     if (CREATE_SCENES.includes(next) || next === "today-incomplete") {
       setLifecycle("creating");
       if (next === "create-init") setCreateGate(Math.max(createGate, 1));
-      if (next === "create-members") setCreateGate(Math.max(createGate, 2));
-      if (next === "create-process") setCreateGate(Math.max(createGate, 3));
+      if (next === "create-process") setCreateGate(Math.max(createGate, 2));
+      if (next === "create-members") setCreateGate(Math.max(createGate, 3));
       if (next === "create-test") setCreateGate(Math.max(createGate, 4));
       if (next === "create-joint") setCreateGate(Math.max(createGate, 5));
       return;
@@ -2071,14 +3241,19 @@ export default function Personal20OpcE2e() {
     if (active === "create-init") {
       return (
         <CreateInitScene
-          brief={brief}
-          setBrief={setBrief}
           providerBound={providerBound}
-          confirmed={confirmed}
-          toggleConfirm={(id) => setConfirmed({ ...confirmed, [id]: !confirmed[id] })}
+          wizardIndex={wizardIndex}
+          setWizardIndex={moveWizard}
+          wizardValues={wizardValues}
+          onEditValue={onEditWizardValue}
+          wizardConfirmed={wizardConfirmed}
+          wizardStale={wizardStale}
+          confirmCurrent={confirmCurrentWizard}
           onLeaveDraft={() => setScene("today-incomplete")}
-          onMembers={() => { setCreateGate(2); setScene("create-members"); }}
+          onProcess={() => { setCreateGate(2); setScene("create-process"); }}
           goSettings={() => setScene("settings")}
+          onCommitField={requestCanvasCommit}
+          onFocusField={onFocusField}
         />
       );
     }
@@ -2089,10 +3264,15 @@ export default function Personal20OpcE2e() {
           setModel={(id, model) =>
             setMembers(members.map((member) => (member.id === id ? { ...member, model } : member)))
           }
+          setMemberText={setMemberText}
           confirmRoster={() =>
             setMembers(members.map((member) => ({ ...member, joined: member.model !== "unselected" })))
           }
-          onProcess={() => { setCreateGate(3); setScene("create-process"); }}
+          onTest={() => { setCreateGate(4); setScene("create-test"); }}
+          onRequestCreate={() => setPendingRosterCreate(true)}
+          stageDrafts={stageDrafts}
+          onCommitField={requestCanvasCommit}
+          onFocusField={onFocusField}
         />
       );
     }
@@ -2105,7 +3285,11 @@ export default function Personal20OpcE2e() {
           confirmStage={(id) =>
             setConfirmedStages(confirmedStages.includes(id) ? confirmedStages : [...confirmedStages, id])
           }
-          onTest={() => { setCreateGate(4); setScene("create-test"); }}
+          onMembers={() => { setCreateGate(3); setScene("create-members"); }}
+          stageDrafts={stageDrafts}
+          setStageDraft={setStageDraft}
+          onCommitField={requestCanvasCommit}
+          onFocusField={onFocusField}
         />
       );
     }
@@ -2117,6 +3301,10 @@ export default function Personal20OpcE2e() {
           testState={testState}
           setTestState={setTestState}
           onJoint={() => { setCreateGate(5); setScene("create-joint"); }}
+          testNote={testNote}
+          setTestNote={setTestNote}
+          onCommitField={requestCanvasCommit}
+          onFocusField={onFocusField}
         />
       );
     }
@@ -2126,6 +3314,10 @@ export default function Personal20OpcE2e() {
           jointState={jointState}
           setJointState={setJointState}
           onAccept={() => { setLifecycle("live"); setScene("today"); }}
+          jointNote={jointNote}
+          setJointNote={setJointNote}
+          onCommitField={requestCanvasCommit}
+          onFocusField={onFocusField}
         />
       );
     }
@@ -2182,6 +3374,8 @@ export default function Personal20OpcE2e() {
           setModel={setNewModel}
           joined={joined}
           onJoin={() => setJoined(true)}
+          onCommitField={requestCanvasCommit}
+          onFocusField={onFocusField}
         />
       );
     }
@@ -2208,6 +3402,9 @@ export default function Personal20OpcE2e() {
           setTab={setKnowledgeTab}
           memoryForgotten={memoryForgotten}
           forgetMemory={() => setMemoryForgotten(true)}
+          draftOnly={lifecycle === "creating"}
+          importPhase={importPhase}
+          setImportPhase={setImportPhase}
         />
       );
     }
@@ -2268,6 +3465,52 @@ export default function Personal20OpcE2e() {
                 setTab={setKnowledgeTab}
                 memoryForgotten={memoryForgotten}
                 forgetMemory={() => setMemoryForgotten(true)}
+                draftOnly={false}
+                importPhase={importPhase}
+                setImportPhase={setImportPhase}
+              />
+            );
+          }
+          if (surface === "knowledge" && state === "working") {
+            return (
+              <KnowledgeScene
+                locked={false}
+                tab="import"
+                setTab={setKnowledgeTab}
+                memoryForgotten={memoryForgotten}
+                forgetMemory={() => setMemoryForgotten(true)}
+                draftOnly={false}
+                importPhase={importPhase === "idle" ? "importing" : importPhase}
+                setImportPhase={setImportPhase}
+              />
+            );
+          }
+          if (surface === "knowledge" && state === "partial") {
+            return (
+              <KnowledgeScene
+                locked={false}
+                tab="files"
+                setTab={setKnowledgeTab}
+                memoryForgotten={memoryForgotten}
+                forgetMemory={() => setMemoryForgotten(true)}
+                draftOnly={false}
+                filesEmpty
+                importPhase={importPhase}
+                setImportPhase={setImportPhase}
+              />
+            );
+          }
+          if (surface === "knowledge" && (state === "success" || state === "loading")) {
+            return (
+              <KnowledgeScene
+                locked={false}
+                tab="files"
+                setTab={setKnowledgeTab}
+                memoryForgotten={memoryForgotten}
+                forgetMemory={() => setMemoryForgotten(true)}
+                draftOnly={false}
+                importPhase={importPhase}
+                setImportPhase={setImportPhase}
               />
             );
           }
@@ -2481,7 +3724,7 @@ export default function Personal20OpcE2e() {
           margin-block-start: 8px;
           padding-block-start: 13px;
         }
-        .opc-e2e .main-column { min-width: 0; }
+        .opc-e2e .main-column { min-width: 0; position: relative; }
         .opc-e2e .context-header {
           display: flex;
           align-items: flex-start;
@@ -2897,7 +4140,57 @@ export default function Personal20OpcE2e() {
         .opc-e2e .field { display: grid; gap: 5px; margin-block-start: 12px; }
         .opc-e2e .field > span { font-weight: 680; }
         .opc-e2e .field > small { color: var(--muted); font-size: 12px; }
+        .opc-e2e .field input,
+        .opc-e2e .field textarea {
+          width: 100%;
+          border: 1px solid var(--line-strong);
+          border-radius: 6px;
+          background: var(--surface);
+          padding: 9px 10px;
+        }
         .opc-e2e .field textarea { min-height: 150px; resize: vertical; }
+        .opc-e2e .table-field { margin-block-start: 0; }
+        .opc-e2e .table-field input,
+        .opc-e2e .table-field textarea { min-height: 72px; }
+        .opc-e2e .visually-hidden {
+          position: absolute;
+          width: 1px;
+          height: 1px;
+          padding: 0;
+          margin: -1px;
+          overflow: hidden;
+          clip: rect(0, 0, 0, 0);
+          white-space: nowrap;
+          border: 0;
+        }
+        .opc-e2e .edit-dialog-scrim {
+          position: absolute;
+          inset: 0;
+          z-index: 6;
+          display: grid;
+          place-items: center;
+          padding: 24px;
+          background: color-mix(in srgb, var(--bg) 58%, transparent);
+          overscroll-behavior: contain;
+        }
+        .opc-e2e .edit-dialog {
+          width: min(100%, 480px);
+          border: 1px solid var(--line-strong);
+          border-radius: 10px;
+          background: var(--surface);
+          padding: 18px 18px 16px;
+          box-shadow: 0 16px 40px color-mix(in srgb, var(--text) 12%, transparent);
+        }
+        .opc-e2e .edit-dialog h3 { margin-block-end: 8px; }
+        .opc-e2e .edit-dialog p { color: var(--muted); }
+        .opc-e2e .proposal-card {
+          margin-block-start: 8px;
+          border: 1px solid var(--line);
+          border-radius: 6px;
+          background: var(--fill);
+          padding: 8px;
+        }
+        .opc-e2e .proposal-card small { margin-block-end: 8px; }
         .opc-e2e .research-summary,
         .opc-e2e .preview-summary,
         .opc-e2e .running-summary,
@@ -3265,7 +4558,8 @@ export default function Personal20OpcE2e() {
           margin: 0 0 14px;
           padding: 0 0 6px;
         }
-        .opc-e2e .process-axis button {
+        .opc-e2e .process-axis button,
+        .opc-e2e .process-axis .process-node {
           display: grid;
           justify-items: start;
           gap: 4px;
@@ -3276,6 +4570,7 @@ export default function Personal20OpcE2e() {
           padding: 8px 10px;
           text-align: start;
         }
+        .opc-e2e .process-axis .process-node { min-height: 96px; }
         .opc-e2e .process-axis button[aria-current="step"] {
           border-color: var(--accent);
           background: var(--fill-strong);
@@ -3324,6 +4619,86 @@ export default function Personal20OpcE2e() {
           border-block-end: 1px solid var(--line);
           padding: 10px 0;
         }
+        .opc-e2e .wizard-dots {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 4px;
+          margin: 0 0 12px;
+        }
+        .opc-e2e .wizard-dot {
+          display: grid;
+          place-items: center;
+          width: 28px;
+          min-height: 44px;
+          padding: 0;
+          border: 0;
+          background: transparent;
+        }
+        .opc-e2e .wizard-dot::before {
+          content: "";
+          width: 8px;
+          height: 8px;
+          border-radius: 99px;
+          background: var(--line-strong);
+        }
+        .opc-e2e .wizard-dot[aria-selected="true"]::before {
+          width: 20px;
+          background: var(--accent);
+        }
+        .opc-e2e .wizard-viewport {
+          overflow: hidden;
+          width: 100%;
+        }
+        .opc-e2e .wizard-rail {
+          display: flex;
+          width: 100%;
+          transform: translateX(calc(-1 * var(--wizard-index, 0) * 100%));
+          transition: transform 280ms ease;
+        }
+        .opc-e2e .wizard-slide {
+          flex: 0 0 100%;
+          min-width: 0;
+          padding-inline-end: 22px;
+          box-sizing: border-box;
+        }
+        .opc-e2e .wizard-card {
+          display: grid;
+          gap: 10px;
+          min-height: 280px;
+          border: 1px solid var(--line-strong);
+          border-radius: 7px;
+          background: var(--fill);
+          padding: 12px;
+        }
+        .opc-e2e .wizard-card-meta {
+          display: grid;
+          gap: 6px;
+        }
+        .opc-e2e .wizard-card-meta small { color: var(--muted); }
+        .opc-e2e .wizard-nav {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 8px;
+          margin-block-start: 14px;
+        }
+        .opc-e2e .wizard-status { margin: 10px 0 0; }
+        .opc-e2e .knowledge-filters {
+          display: grid;
+          gap: 10px;
+          margin: 12px 0;
+        }
+        .opc-e2e .prototype-outcomes {
+          display: flex;
+          flex-wrap: wrap;
+          align-items: center;
+          gap: 8px;
+          margin-block-start: 10px;
+        }
+        .opc-e2e .prototype-outcomes > span { color: var(--muted); font-size: 12px; }
+        .opc-e2e .messages article.canvas-mirror {
+          border: 1px solid var(--line-strong);
+          background: var(--fill-strong);
+        }
         .opc-e2e .hitl-actions { display: flex; flex-wrap: wrap; gap: 8px; }
         .opc-e2e .primary-nav button[aria-disabled="true"] { opacity: .45; }
         .opc-e2e .secret-field input { font-family: ui-monospace, Consolas, monospace; }
@@ -3342,15 +4717,17 @@ export default function Personal20OpcE2e() {
           .opc-e2e .coverage-matrix,
           .opc-e2e .state-panel,
           .opc-e2e .run-counts,
-          .opc-e2e .process-axis button { border-color: var(--text); }
+          .opc-e2e .process-axis button,
+          .opc-e2e .process-axis .process-node,
+          .opc-e2e .wizard-card { border-color: var(--text); }
         }`}</style>
 
       <a className="skip-link" href="#opc-main">Skip to main workbench</a>
 
       <header className="prototype-bar">
         <div className="prototype-title">
-          <h1>Personal 2.0 · OPC 端到端原型 · 旅程减法后</h1>
-          <span>对话提议 · 画布授权 · 独立核对 · 仅本地状态 · 不是 V2 CEO 轨</span>
+          <h1>Personal 2.0 · OPC 端到端原型 · v3</h1>
+          <span>① 项目 → ② 流程 → ③ 成员 · 按流程创建岗位 · 助手对话为主入口</span>
         </div>
         <label className="scenario-select">
           <span>Prototype scenario</span>
@@ -3412,9 +4789,31 @@ export default function Personal20OpcE2e() {
             <div className="context-tools">
               <Tag tone="neutral">Windows 本机 · 在线时工作</Tag>
               <Tag tone="info">{chatHidden ? "对话已隐藏" : projectGroup(scene)}</Tag>
+              {scene === "knowledge" || scene === "settings" ? (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={() => setChatOpen(!chatOpen)}
+                >
+                  {chatOpen ? "收起对话" : "打开对话"}
+                </button>
+              ) : null}
             </div>
           </header>
           <div className="main-content">{renderMain(scene)}</div>
+          {pendingCommit ? (
+            <EditConfirmDialog
+              pending={pendingCommit}
+              onConfirm={confirmPendingCommit}
+              onCancel={cancelPendingCommit}
+            />
+          ) : pendingRosterCreate ? (
+            <CreateRosterDialog
+              replacing={members.length > 0}
+              onConfirm={confirmRosterCreate}
+              onCancel={() => setPendingRosterCreate(false)}
+            />
+          ) : null}
         </main>
 
         {chatHidden ? null : (
@@ -3426,6 +4825,11 @@ export default function Personal20OpcE2e() {
             status={composerStatus}
             setStatus={setComposerStatus}
             onOpenHitl={() => setScene("hitl")}
+            activeField={pinnedField}
+            thread={thread}
+            onSendToAssistant={sendToAssistant}
+            onApplyProposal={applyProposal}
+            onDismissProposal={dismissProposal}
           />
         )}
       </div>
@@ -3434,16 +4838,6 @@ export default function Personal20OpcE2e() {
 }
 
 function projectGroup(scene: Scene): string {
-  if (
-    scene === "project" ||
-    scene === "add-member" ||
-    scene === "hitl" ||
-    scene === "create-members" ||
-    scene === "create-process" ||
-    scene === "create-test" ||
-    scene === "create-joint"
-  ) {
-    return "项目群";
-  }
+  if (scene === "project" || scene === "hitl") return "项目群";
   return "Personal Assistant";
 }

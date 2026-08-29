@@ -9,15 +9,19 @@
   2026-08-28, then
   [journey-subtraction workshop](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
   2026-08-28/29
+- **PM/UI maintenance (one module or flow, not the whole corpus):**
+  [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
 - Current interaction prototype:
-  [**personal-20-opc-e2e (post journey-subtraction)**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e.canvas.tsx)
-- Archived historical V2 (not current chrome):
-  [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: the current canvas is post journey-subtraction, not V2.
-  Archived V2 is historical chrome in the history folder. Canvas-only HITL and
-  daemon authority path remain.
+  [**personal-20-opc-e2e-optimized-v5**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx)
+- Archived (not current chrome):
+  [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
+  [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
+- Prototype identity: owner-approved 2026-08-29 current chrome is
+  `personal-20-opc-e2e-optimized-v5`. Pre-optimization `personal-20-opc-e2e`
+  and optimized v1–v4 are archived iteration. Archived V2 is historical.
+  Canvas-only HITL and daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v5](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v5.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,
@@ -58,8 +62,10 @@ ask again” grant. Timeboxed 「本周同一类对外不再问」 expires and i
 revocable in Settings. `@` inserts only into the unsent draft.
 
 The workbench does **not** draw a visible CEO six-step rail. Live Project is
-a business-process axis plus the current stage. Today, after five-stage
-create 验收, is one decision packet plus live-project run overview plus
+a business-process axis plus the current stage. Five-stage create is
+① project → ② process → ③ members → ④ per-stage test → ⑤ joint (owner-confirmed
+2026-08-29 prototype amendment: process before members). Today, after ⑤ 验收,
+is one decision packet plus live-project run overview plus
 chat — not a KPI card wall and not four swimlanes as default blocks.
 Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
@@ -101,6 +107,7 @@ English product documents are canonical where a bilingual pair exists.
 
 | Document | Responsibility |
 |---|---|
+| [OPC maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md) | **PM start for one-module work** — module × journey catalog; single table lives in the design corpus |
 | [Requirements analysis](personal-2.0-opc-requirements-analysis.md) | complete owner-confirmed problem, JTBD, personas, principles, requirements, authority, metrics, supersession, and traceability |
 | [Journey-subtraction workshop record](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md) | verbatim 2026-08-28/29 Q&A plus Keep/Cut/Park scheme snapshot; not Gate or implementation evidence |
 | [Product design / PRD](product-design.md) | stable product thesis, priority, experience model, success measures, exclusions, and non-claims |

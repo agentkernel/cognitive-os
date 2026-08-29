@@ -9,7 +9,11 @@
   [PROGRESS.md](../../../docs/plan/PROGRESS.md) and the frozen as-built audits
 
 `opc-2.0/` is the current interaction and prototype specification for the
-Windows-first one-person-company product. It is concise, numbered, and
+Windows-first one-person-company product. Maintain one module or feature flow
+from the [00 maintenance index](opc-2.0/00-maintenance-index.md). Current
+chrome is
+[`personal-20-opc-e2e-optimized-v5.canvas.tsx`](opc-2.0/personal-20-opc-e2e-optimized-v5.canvas.tsx).
+It is concise, numbered, and
 self-indexed. It defines target behavior, states, accessibility, component
 composition, and backend gaps without claiming the existing client implements
 them.

@@ -19,6 +19,10 @@ Personal-owned Conversation/Vault/Memory, hidden Pi Assistant engine,
 preinstalled managed DSH child, Provider/budget hierarchy and OPC UI. Every
 missing item is `Requires-backend`/`Requires-environment`, not implementation.
 MCP is advanced/deferred and native mobile/E2E relay remote is 2.1.
+Owner-approved current interaction prototype is
+`personal-20-opc-e2e-optimized-v5` (Canvas spec, not `/ui/`).
+One-module OPC maintenance:
+[`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 
 Orientation:
 

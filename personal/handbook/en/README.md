@@ -21,7 +21,10 @@ Project/Role/Employee/Routine/Attempt authority, Personal-owned Conversations/
 Vault/Memory, Pi-backed Personal Assistant, preinstalled managed DSH,
 global→Project→employee→Task Provider/budgets, and a fixed Windows acceptance
 path. MCP is advanced/deferred; native mobile/E2E relay remote is 2.1. None is
-current implementation or Windows/DSH support.
+current implementation or Windows/DSH support. Owner-approved current
+interaction prototype is `personal-20-opc-e2e-optimized-v5` (Canvas spec, not
+`/ui/`). One-module OPC maintenance:
+[`00-maintenance-index.md`](../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 
 - **[User guide](user/README.md)** — install, first conversation, CLI, secrets,
   Provider Control Plane, the Pi shell, the resource model, operations, security,
