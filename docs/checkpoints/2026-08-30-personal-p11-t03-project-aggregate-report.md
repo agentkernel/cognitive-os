@@ -5,7 +5,8 @@
 - Product: CognitiveOS Personal 2.0.0 (v9 is a canvas filename only)
 - Lease: `lease/personal/P11-T03/project-aggregate`
 - Branch: `personal/P11-T03-project-aggregate`
-- Draft PR: pending first push
+- Draft PR: [#281](https://github.com/agentkernel/cognitive-os/pull/281)
+- HEAD: `7d9f13e4cfca76525672fdabf4f624ca1fe98aee`
 - Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
@@ -132,7 +133,7 @@ Previous subagents left knives 1–5 **implemented and staged, never committed**
 
 ## Unique next action
 
-Commit + push this branch, open Draft PR, run `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (and exact-revision Linux store tests). DOC still owns `PROGRESS.md`: consistency will stay red until the Current snapshot lists this lease and `P11-T03/D01` is `in-progress`. Do not steal that DOC path. Do not claim T04.
+Push the `Cargo.lock` tempfile line so CI `--locked` is green. Then wait for required CI on the new HEAD / PR [#281](https://github.com/agentkernel/cognitive-os/pull/281). DOC still owns `PROGRESS.md`: consistency stays red until Current snapshot lists this lease and `P11-T03/D01` is `in-progress`. Do not steal that DOC path. Do not claim T04. Do not merge while Draft or while consistency/tests are red.
 
 ---
 
@@ -162,6 +163,13 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | N16 `p11_t03_preview_survives_process_death` | partial (store-reopen half written) / not-run (Pi/DSH death) | store: `CI-UBUNTU-01`; Pi/DSH: T09 | uncommitted | store reopen test written; process-death/Pi/DSH half **handed to T09** |
 | 2026-08-30 | docs-sync / handbook v26 | **blocked** | `DEV-WIN-GNU-01` | uncommitted | `personal/crates/cognitive-store/**` hits `dev.store-migrations`; `server.rs` hits `daemon-http`. `personal/handbook/` is owned by `DOC-PERSONAL-2.0.0/dev-prep`. Will not fake `DOCS_IMPACT_NONE`. |
 | 2026-08-30 | PROGRESS Active task lease row | **blocked** | docs-only | uncommitted | `check-consistency` requires every active lease in the Current snapshot; `PROGRESS.md` is DOC-owned |
+| 2026-08-30 | docs-sync / handbook v26 (committed) | **pass** | `DEV-WIN-GNU-01` | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | Mapped handbook + generator in same changeset. pre-commit and pre-push docs-sync-gate OK. |
+| 2026-08-30 | Draft PR [#281](https://github.com/agentkernel/cognitive-os/pull/281) | recorded | github | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | Draft. Do not merge until CI green and PROGRESS lists the lease. |
+| 2026-08-30 | store N1–N15 + G2 positive + cadence + pending-digest | **pass** (19/19) | `DEV-LINUX-NATIVE-01` worktree `/home/wuz/cognitiveos-personal-worktrees/p11-t03-7d9f13e4` | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | `cargo test -p cognitive-store --test p11_t03_project_aggregate` |
+| 2026-08-30 | `p1_t01_layout_migrations` including v26 `p11_project` | **pass** (8/8) | `DEV-LINUX-NATIVE-01` same worktree | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | empty→latest includes 26 |
+| 2026-08-30 | N16 store-reopen half | **pass** | `DEV-LINUX-NATIVE-01` | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | Pi/DSH process-death half remains **not-run** / T09 |
+| 2026-08-30 | HTTP G1/list/roster/N12 task 403/pending-digest | **pass** (6/6) | `DEV-LINUX-NATIVE-01` | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | `cargo test -p kernel-server --bin kernel-server --` named filters |
+| 2026-08-30 | `Cargo.lock` kernel-server tempfile | recorded | `DEV-LINUX-NATIVE-01` | follow-up commit | `--locked` on `7d9f13e4` wanted one tempfile line; follow-up commit carries it |
 
 ## Non-claims
 
