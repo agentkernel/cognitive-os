@@ -6,7 +6,7 @@
 - Lease: `lease/personal/P11-T03/project-aggregate`
 - Branch: `personal/P11-T03-project-aggregate`
 - Draft PR: [#281](https://github.com/agentkernel/cognitive-os/pull/281)
-- HEAD: `7d9f13e4cfca76525672fdabf4f624ca1fe98aee`
+- HEAD: `8374d560cd55e5a4cb322cbf6588218309565ccc`
 - Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
@@ -131,9 +131,44 @@ Previous subagents left knives 1–5 **implemented and staged, never committed**
 5. **Confirm chain is the Personal-private `/management/project/v1/{draft.apply,preview.request,confirm}` triple**, not `/task/intent.record`. 21 §4 forbids reusing P7-T05 inventory and Task intent as Project identity. Discipline (persist candidate → digest preview → admit) is the same; A3 Intent/Effect persist-before-dispatch is not used because G1/G2 are internal authority writes (14 §3).
 6. **Mapped handbook pages + `tools/src/generate-handbook.mjs` are in this changeset** because `cognitive-store/**` and `server.rs` hit source-map (`dev.store-migrations`, `daemon-http`). This is docs-sync-contract §2, not a product-doc rewrite. `PROGRESS.md` / plan cards remain **blocked_paths** (DOC `dev-prep`). Did not fake `DOCS_IMPACT_NONE`.
 
+## Recovery (2026-08-30, parent window after subagent disconnect)
+
+Subagents died (resume-no-progress, connection-failed, then Claude unpaid invoice). This parent window recovered from disk/git only. No product-code rewrite.
+
+| Fact | Value |
+|---|---|
+| Branch / upstream | `personal/P11-T03-project-aggregate` tracks origin at `8374d560` |
+| Draft PR | [#281](https://github.com/agentkernel/cognitive-os/pull/281) still Draft |
+| Evaluation routing | **OFF** |
+| Knives 1–5 + `/management/project/v1/*` | already committed (`7d9f13e4` + tempfile lock `8374d560`) |
+| Protected dirty | DOC product/architecture/PROGRESS; `.cursor/skills`; untracked 13–22 — **not staged** |
+
+### Required CI on `8374d560` (run [33281002286](https://github.com/agentkernel/cognitive-os/actions/runs/33281002286))
+
+**fail** `verify (ubuntu-latest)` / `verify (windows-latest)` / `required-ci` in ~2 min (TypeScript `check-consistency`; Rust workspace tests **not-run** on this job). Five consistency violations:
+
+| # | File | Cause | Owner |
+|---|---|---|---|
+| 1 | `personal/docs/architecture/personal-2.0.0-dev-prep-index.md` | broken link to `opc-2.0/13-…md` (file untracked, not in git) | DOC `dev-prep` + OPC-REFRAME |
+| 2 | `personal/docs/product/README.md` | committed absolute `C:\Users\wuron\.cursor\…v9.canvas.tsx` | OPC-REFRAME (already on `origin/main`) |
+| 3 | `personal/docs/product/web-ui-design.md` | same absolute canvas path | OPC-REFRAME (already on `origin/main`) |
+| 4 | `docs/plan/PROGRESS.md` | `active lease is not referenced: lease/personal/P11-T03/project-aggregate` | DOC `dev-prep` (**blocked_paths**) |
+| 5 | `docs/plan/PROGRESS.md` | `CURRENT_SNAPSHOT_LEASE_MISMATCH`: `P11-T03/D01` is `ready` not `in-progress` | DOC `dev-prep` (**blocked_paths**) |
+
+`origin/main` CI is also **failure** for several DOC commits (same class of product/architecture link defects). T03 cannot uniquely turn required CI green without DOC landing those files **and** the Current snapshot lease/slice rows. This window will not steal `PROGRESS.md`, `PERSONAL-DEVELOPMENT-PLAN.md`, `opc-2.0/`, or `personal/docs/product/`.
+
+### DOC patch needed (T03 status only; do not rewrite 13–26)
+
+Once DOC owns the write, Current snapshot must:
+
+1. Active task lease row also list `` `lease/personal/P11-T03/project-aggregate` `` (keep the two DOC leases).
+2. Layer 2 `` `P11-T03/D01` `` → `in-progress`, evidence = this report + PR #281 + Linux proof at `7d9f13e4`.
+3. Formal plan `P11-T03` `not-started` → `in-progress`, Phase 11 summary `15/1/0/0/14` → `15/1/1/0/13`, 合计 `144/109/0/1/18` → `144/109/1/1/17`, Layer 1 `144/109/0/1/18/35` → `144/109/1/1/17/35` (Remaining = Total − Done, unchanged).
+4. Land `13-…md` (or drop the index link) and replace absolute canvas paths with repo-relative links.
+
 ## Unique next action
 
-Push the `Cargo.lock` tempfile line so CI `--locked` is green. Then wait for required CI on the new HEAD / PR [#281](https://github.com/agentkernel/cognitive-os/pull/281). DOC still owns `PROGRESS.md`: consistency stays red until Current snapshot lists this lease and `P11-T03/D01` is `in-progress`. Do not steal that DOC path. Do not claim T04. Do not merge while Draft or while consistency/tests are red.
+DOC window (or owner releasing those paths) applies the snapshot/link fixes above. Then this task re-runs required CI on the same implementation HEAD (or a docs-only follow-up commit). Do not steal DOC paths. Do not claim T04. Do not merge while Draft or while consistency is red. Owner Stripe invoice at cursor.com/dashboard blocked Claude subagents; parent continues.
 
 ---
 
@@ -169,7 +204,9 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `p1_t01_layout_migrations` including v26 `p11_project` | **pass** (8/8) | `DEV-LINUX-NATIVE-01` same worktree | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | empty→latest includes 26 |
 | 2026-08-30 | N16 store-reopen half | **pass** | `DEV-LINUX-NATIVE-01` | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | Pi/DSH process-death half remains **not-run** / T09 |
 | 2026-08-30 | HTTP G1/list/roster/N12 task 403/pending-digest | **pass** (6/6) | `DEV-LINUX-NATIVE-01` | `7d9f13e4cfca76525672fdabf4f624ca1fe98aee` | `cargo test -p kernel-server --bin kernel-server --` named filters |
-| 2026-08-30 | `Cargo.lock` kernel-server tempfile | recorded | `DEV-LINUX-NATIVE-01` | follow-up commit | `--locked` on `7d9f13e4` wanted one tempfile line; follow-up commit carries it |
+| 2026-08-30 | `Cargo.lock` kernel-server tempfile | recorded | `DEV-LINUX-NATIVE-01` | `8374d560cd55e5a4cb322cbf6588218309565ccc` | `--locked` on `7d9f13e4` wanted one tempfile line; follow-up commit carries it |
+| 2026-08-30 | required CI run [33281002286](https://github.com/agentkernel/cognitive-os/actions/runs/33281002286) | **fail** (consistency) | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `8374d560cd55e5a4cb322cbf6588218309565ccc` | 5 check-consistency violations; Rust tests **not-run** on this job. 2 are T03 lease/snapshot (DOC `PROGRESS.md`). 3 inherited from `origin/main` DOC product/architecture links. |
+| 2026-08-30 | parent recovery after subagent death | recorded | `DEV-WIN-GNU-01` | `8374d560cd55e5a4cb322cbf6588218309565ccc` | No product rewrite. Unique next action = DOC snapshot + link repair. |
 
 ## Non-claims
 
