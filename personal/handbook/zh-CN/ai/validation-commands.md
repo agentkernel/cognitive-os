@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:1682148e6989f91e6a02af05fb3fe97710c682d904b249c1be207f80d36573c6"
+fingerprint: "sha256:d6f50171283f2d13abf45968d81f8ce0851b73875e2f51473e4abb8206145a31"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -27,12 +27,14 @@ non_claims:
 环境路由是前置条件，由
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md) 拥有。
 
-Personal 2.0 Phase 11 新增 Windows OPC 路由：ordinary
-`CI-WINDOWS-MSVC-01` 加 future qualified `DEV-WINDOWS-NATIVE-OPC-01`，用于
-host/DSH/Vault/UI/connector execution；随后在同一 qualified Windows revision 上执行
-preregistered N=15 acceptance。native environment 与 B01-W 尚未 provision。本地
-Windows GNU、WSL、Linux、ordinary CI 与 Canvas 都不能替代；可用前 native cell 记
-`not-run`。
+Personal 2.0 Phase 11（Personal 2.0.0 chrome）把 T03/T04 日常权威测试路由到
+`CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`（需要 native daemon/store 时加 exact-revision
+`DEV-LINUX-NATIVE-01`）。host/DSH 原生 E2E 仍是 future qualified
+`DEV-WINDOWS-NATIVE-OPC-01`（未 provision 则为 `Requires-environment` / `not-run`）。
+parked 的 T15 若解冻仍需同一 qualified Windows revision 上的 preregistered N=15
+acceptance。native environment 与 B01-W 尚未 provision；`B01-DESKTOP-002` 不是
+2.0 日常默认机。本地 Windows GNU、WSL、ordinary CI 与 Canvas 都不能替代
+Gate/release；可用前 native cell 记 `not-run`。`not-run` 永远不是 pass。
 
 ## 全平台安全（含 Windows GNU 主机）
 

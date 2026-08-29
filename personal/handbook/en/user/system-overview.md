@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:902eb0bcc2c424b5e016213e78eeda3dfb992a58f2143df2d462707c00a1d8b1"
+fingerprint: "sha256:e0c5c410cee206ca2b60a97b33310d744b76c780f4de66b85208e8718b0445da"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -85,22 +85,24 @@ Owner
 
 The UI is Today / Projects / Knowledge, bottom Settings, and a persistent
 right conversation. Team and Inbox are not first-level destinations. The
-owner-approved current interaction prototype (2026-08-30) is
-`personal-20-opc-e2e-optimized-v9`; it is not daemon `/ui/`. Create order is
+owner-approved current chrome is **CognitiveOS Personal 2.0.0**; the canvas
+file may keep `personal-20-opc-e2e-optimized-v9` as a historical filename.
+It is not daemon `/ui/`. Create order is
 project → process → members → per-stage test → joint. One-module PM/UI
 maintenance starts at
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 Pi is the hidden candidate-only Assistant engine.
-DSH is the preinstalled managed Installed Agent and default employee runtime,
-using an exact audited artifact, isolated child, stdio broker and daemon
+DSH is the hidden hosted Member execution engine (not a visible Installed
+Agent), using an exact audited artifact, isolated child, stdio broker and daemon
 Provider proxy. Personal owns Conversation, archive/index/retrieval, Memory,
 Task, Effect and completion.
 
 Knowledge separates Owner-shared sources, Project Markdown Vault and employee-
 private Memory. Routines use manual/schedule/qualified-event triggers with no
-overlap, queue-latest and visible missed work. Provider binding resolves global
-to Project to employee to Task; Project/member/Task budgets and actual usage
-remain distinct from Provider quota.
+overlap, queue-latest and visible missed work. HITL is canvas-only. Provider
+binding resolves global to Project to employee to Task; actual usage stays
+distinct from Provider quota; unknown cost is never shown as 0; member-level
+budget is 2.1 / Deferred.
 
 All of this remains target-only. `Requires-backend`/`Requires-environment`
 means it must not be shown as working. MCP stays an advanced deferred seventh

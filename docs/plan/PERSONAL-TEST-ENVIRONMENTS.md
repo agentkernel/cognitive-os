@@ -120,21 +120,24 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 
 ### 5.1 Phase 11 Windows OPC validation route
 
-ADR-0059 makes Windows the Personal 2.0 target, but no current environment is a
-qualified Windows OPC product environment:
+ADR-0059 / Personal 2.0.0 chrome makes Windows the product target, but no
+current environment is a qualified Windows OPC product environment. Do not
+invent environment IDs. `B01-DESKTOP-002` is **not** the 2.0 daily development
+default. This subsection aligns names only; it does not provision hosts.
 
 | Phase 11 work | Required development evidence | Explicit non-substitute |
 |---|---|---|
-| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` plus future qualified `DEV-WINDOWS-NATIVE-OPC-01` install/service/tray/sleep/filesystem/SecretStore execution | `DEV-WIN-GNU-01`, WSL, Linux, Canvas |
-| P11-T03/T04 Project/Employee | required CI plus exact-revision qualified Windows daemon/store/restart E2E | docs/fixtures alone |
-| P11-T05/T06 Conversation/Pi Assistant | required CI plus qualified Windows archive/index/Pi native route | Linux Pi qualification transfer |
-| P11-T07 managed DSH | required CI plus qualified Windows artifact/sandbox/process/stdio/Provider/update/rollback E2E | existing Linux dsh Path B or research HEAD |
-| P11-T08/T09 Routine/Inbox | required CI plus qualified Windows clock/sleep/offline/restart/UI E2E | process exit or synthetic timer only |
-| P11-T10/T11 Knowledge/Memory | required CI plus qualified Windows filesystem/index/privacy/rebuild E2E | proprietary Obsidian app availability |
-| P11-T12 Provider/budgets | required CI plus qualified Windows SecretStore/daemon-proxy/budget/usage route | raw env/plaintext credential or advisory budget |
-| P11-T13 OPC UI | client tests/rendered review plus daemon-served `/ui/` on qualified Windows | Vite preview as product origin |
-| P11-T14 X connector | preregistered qualified Windows connector/account path | CAPTCHA/fingerprint/anti-abuse evasion |
-| P11-T15 fixed acceptance | preregistered `N=15` on one exact qualified Windows revision | ordinary CI, local GNU, Linux, WSL, Canvas |
+| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` compile/test plus future qualified `DEV-WINDOWS-NATIVE-OPC-01` install/service/tray/sleep/filesystem/SecretStore execution (`Requires-environment` / `not-run` until qualified) | `DEV-WIN-GNU-01`, WSL, Linux, Canvas, `B01-DESKTOP-002` as daily default |
+| P11-T03/T04 Project/Employee | daily authority tests: `CI-UBUNTU-01` and `CI-WINDOWS-MSVC-01`; native daemon/store when needed: pushed exact-revision `DEV-LINUX-NATIVE-01` | docs/fixtures alone; GNU Rust link; treating `B01-DESKTOP-002` as daily default |
+| P11-T05/T06 Conversation/Pi Assistant | projection negatives on required CI; Windows archive/index/Pi native route remains unqualified (`not-run`) | Linux Pi qualification transfer |
+| P11-T07 hidden hosted DSH | required CI plus qualified Windows artifact/sandbox/process/stdio/Provider/update/rollback E2E on `DEV-WINDOWS-NATIVE-OPC-01` (`not-run` until qualified) | existing Linux dsh Path B or research HEAD as Windows product; DSH `apps/web` as `/ui/` |
+| P11-T08 Routine | required CI plus qualified Windows clock/sleep/offline/restart E2E when available | process exit or synthetic timer only |
+| P11-T09 HITL canvas (not Inbox) | required CI plus qualified Windows UI/runtime E2E when available; HITL is canvas + Today deep link | first-level Inbox queue; chat Approve |
+| P11-T10/T11 Knowledge/Memory | projection/retrieval negatives on CI; qualified Windows filesystem/index/privacy/rebuild E2E when available | proprietary Obsidian app availability |
+| P11-T12 Provider/honest usage | required CI plus qualified Windows SecretStore/daemon-proxy/usage route; unknown cost ≠ 0; member budget not current chrome | raw env/plaintext credential; member-level budget stop as 2.0.0 chrome |
+| P11-T13 OPC UI | client tests/contract mock/empty states plus daemon-served `/ui/`; NVDA/200%/host-theme contrast hung `not-run`; Dual Track after T03 HTTP stable | Vite preview as product origin; claiming full IA before Project authority |
+| P11-T14 X connector | **parked**; any cell `not-run` | CAPTCHA/fingerprint/anti-abuse evasion |
+| P11-T15 fixed acceptance | **parked**; if later unparked, preregistered `N=15` on one exact qualified Windows revision | ordinary CI, local GNU, Linux, WSL, Canvas |
 
 `DEV-WINDOWS-NATIVE-OPC-01` is a reserved capability requirement, not an
 existing machine or qualification claim. Until provisioned and qualified,

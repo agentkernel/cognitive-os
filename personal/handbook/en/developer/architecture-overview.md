@@ -26,11 +26,12 @@ sources:
   - path: personal/docs/architecture/windows-host-background.md
   - path: personal/docs/architecture/routine-trigger-missed-run.md
   - path: personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md
+  - path: personal/docs/architecture/personal-2.0.0-dev-prep-index.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:d2978c82121157a3ed4e19479040d0b7850d7db155fb4a8537250b013e93fc8c"
+fingerprint: "sha256:4436b3e90e50ed4492dbff1f90a83a68375a4ab6cf79221f9a72f3e92c74c983"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -83,10 +84,11 @@ authority.
 - Project owns Charter, Goal, Plan revision, manager Assignment and employee
   identity; Task/Attempt/Effect/verification remain daemon-governed.
 - Pi is the hidden candidate-only Personal Assistant engine.
-- DSH is the visible preinstalled managed Installed Agent and default employee
-  runtime: exact audited artifact, isolated child, bounded stdio broker, daemon
-  Provider proxy and update/rollback. No native DSH UI/conversation, raw
-  secret, MCP/base tool, HMR or home patch.
+- DSH is the **hidden hosted** Member execution engine (not a visible
+  Installed Agent / native DSH UI / engine store): exact audited artifact,
+  isolated child, bounded stdio broker, daemon Provider proxy and
+  update/rollback. No native DSH UI/conversation, raw secret, MCP/base tool,
+  HMR or home patch.
 - Personal owns scoped Conversation archive/index/retrieval, Project Markdown
   Vault integration and semantic Memory admission/correct/forget.
 - Routine/Trigger uses daemon-owned no-overlap, queue-latest, missed/coalesced
@@ -95,14 +97,20 @@ authority.
   account, billing/quota, budget and actual usage remain separate.
 - UI is Today/Projects/Knowledge with bottom Settings and one persistent
   right conversation. Team and Inbox are not first-level destinations.
-  Owner-approved current interaction chrome (2026-08-30) is
-  `personal-20-opc-e2e-optimized-v9`; architecture/formal-plan reconciliation
-  remains deferred until after implementation close. One-module PM/UI work
-  starts at
+  Design-frozen current chrome (2026-08-30) is **CognitiveOS Personal
+  2.0.0** (os-personal 2.0.0). The canvas file may keep
+  `personal-20-opc-e2e-optimized-v9` as a historical filename; do not call
+  v9 the product version. Architecture/formal-plan reconciliation remains
+  deferred until after implementation close. One-module PM/UI work starts at
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
+  That index also catalogues an informative Design-Agent / Owner-journey
+  hardness assessment (hypothesis; not Gate or a P11 claim).
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  (informative; Owner approval ≠ backend exists; P11 remains unclaimed).
+  (historical path name contains v9; informative; Owner approval ≠ backend
+  exists; P11 implementation remains unclaimed). Development-prep index
+  (plan cards, test/env hard gates, window prompts):
+  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
   **Member Runtime** until post-completion architecture/handbook wording
   reconciliation. This handbook page does not rewrite product journeys.
@@ -116,10 +124,11 @@ authority.
   `conversation-projection/0.1`; do not open a standalone Lane-CTR first.
   Only a required **core public** conversation schema change would be
   Lane-CTR; the rest of T05 stays private. `core/specs` is unchanged here.
-- Undeveloped `P11-T02`–`T15` plan cards are **frozen**. When Owner unfreezes
-  P11 implementation, re-slice against approved v9 chrome (not Team/Inbox
-  first-level or member-level budget stop as current chrome). This page does
-  not rewrite `PERSONAL-DEVELOPMENT-PLAN.md`.
+- `P11-T02`–`T15` plan cards were **aligned to Personal 2.0.0 chrome on
+  2026-08-30** (not Team/Inbox first-level; not member-level budget stop as
+  current chrome). Implementation remains unclaimed until Owner authorizes
+  `P11-T03`. Prep index:
+  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its
 dsh first-conversation-slice role is superseded; `conversation-projection/0.1`

@@ -1425,173 +1425,253 @@ formal acceptance.
 - **Validation:** local Markdown/links/anchors/fences/terminology, Canvas TS,
   consistency, handbook, generator, docs-sync, diff/lint; required CI.
 
-### P11-T02 — Windows host, tray, and background
+### P11-T02 — Windows host, tray, and background (hidden)
 
-- **Vertical path:** inspectable install -> Personal Home `app/`/`data/` ->
-  daemon/tray -> close background-or-pause -> sleep/offline missed facts ->
-  ordered recovery.
-- **Interfaces/data:** Windows host/service/process/filesystem/clock/SecretStore
-  ports; host observations never write authority.
-- **Negatives:** wrong install root, ACL escape, raw secret/env/argv, duplicate
-  daemon, orphan DSH, stale epoch, fake background, restore-as-backup claim.
-- **Validation:** CI-WINDOWS-MSVC plus a future qualified native Windows dev
-  environment; B01-W remains separately provisioned/preregistered.
+- **2.0.0 表面:** 非一级 chrome；隐藏 Windows host 能力。不挡 T03。
+- **依赖:** P11-T01；ADR-0052/P7-T07 fragments。**不**作为 T03 mutex。
+- **垂直切片:** inspectable install → Personal Home `app/`/`data/` → daemon/tray
+  → close background-or-pause → sleep/offline missed → ordered recovery。
+- **Scene:** 无独立一级页；Settings/高级可暴露诊断，默认不画 native DSH UI。
+- **acceptance:** 资格化宿主上的 install/ACL/SecretStore/process 负例绿；否则原生
+  E2E 诚实 `not-run`。
+- **不可做:** 把 GNU/WSL/Linux 写成 Windows 产品；B01-W 当日常开发机；假 background。
+- **本仓 foundation:** 现有 installer/host fragments、SecretStore、daemon 生命周期。
+- **禁止再造:** 第二套凭据平面、把 DSH web 当宿主壳。
+- **validation environment:** `CI-WINDOWS-MSVC-01`。原生 E2E =
+  `DEV-WINDOWS-NATIVE-OPC-01`（未资格化 = `Requires-environment` / `not-run`）。
+  `DEV-WIN-GNU-01` 禁 Rust link。`B01-W` / `B01-DESKTOP-002` 非日常默认。
+- **关闭门:** 资格化 Windows 上证明上述垂直路径；环境缺失不得编造 pass。
+- **漂移检测负例:** 错误安装根、ACL 逃逸、raw secret/env/argv、重复 daemon、orphan
+  DSH、restore-as-backup 声称；secret 不进日志/DOM。
+- **硬门:** 适用 Phase 11 四条 + `TEST-REPORT-INCREMENTAL-01`。
 
-### P11-T03 — Project/Charter/Goal/Plan/Attempt authority
+### P11-T03 — Project aggregate walking skeleton (first knife)
 
-- **Vertical path:** guided daemon draft -> Charter/Goal/Metric/Plan/team/
-  permission/budget/trigger preview -> Owner confirmation -> active Project ->
-  Task/Attempt -> Effect/evidence/verification.
-- **Ownership:** new Project-domain identities; do not retrofit Task rows or
-  create a generic Resource.
-- **Negatives:** unconfirmed activation, stale preview, cross-Project access,
-  Attempt erasure, Agent self-completion, manager boundary expansion.
-- **Validation:** store/application/API/CLI positives and negatives in required
-  CI plus qualified Windows restart/recovery E2E.
+- **2.0.0 表面:** Projects 列表/详情的权威来源；不是完整 Today 页、不是改装 `/work`。
+- **依赖:** P11-T01；Task/Intent/Effect/verification。**不依赖 T02。**
+- **垂直切片:** failure-first 负例 → 真 Project 聚合 → confirm-before-activate →
+  Charter/Goal/Metric/Plan revision → Task/Attempt → Effect/evidence/独立 verification。
+- **Scene:** 五段创建向导的权威后端；无权威则 empty/unavailable。
+- **acceptance:** 真 Project 身份可查询；未确认不能 active；跨项目写失败。
+- **不可做:** 完整 `/ui/` IA、改 canvas、领取 T02、假按钮。
+- **本仓 foundation:** SessionGate、hash `/ui/`、Task/Intent/Effect/verification、
+  SecretStore。外部：不把 Paperclip heartbeat 当权威。
+- **禁止再造:** 通用 Resource 表、第二套完成定义、heartbeat 写权威。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`（+ 需要时
+  exact-revision `DEV-LINUX-NATIVE-01`）。`DEV-WIN-GNU-01` 仅 fmt/docs/TS。
+  `B01-DESKTOP-002` 非日常默认。
+- **关闭门:** 真 Project 聚合（非 Task 行冒充）在登记 CI/Linux 上通过负例与正向权威测试；
+  不是完整 Today 页验收。
+- **漂移检测负例:** 真 Project 而非 Task 行冒充；无权威则 empty、禁止假按钮；完成 ≠
+  模型文本 / HTTP 200 / `agent_end`；未确认激活失败；跨项目写失败；secret 不进
+  日志/argv/SQLite/聊天/DOM。
+- **硬门:** 适用 Phase 11 四条 + `TEST-REPORT-INCREMENTAL-01`。
 
-### P11-T04 — Role Blueprint, Assignment, and Digital Employee
+### P11-T04 — Role Blueprint, Assignment, and Employee
 
-- **Vertical path:** specialize immutable Project Manager base Blueprint ->
-  create Project Assignment -> create Employee -> bind compatible runtime ->
-  explicit Task/artifact/handoff.
-- **Invariants:** one current manager per active Project; Blueprint has no
-  Provider binding; employee survives runtime replacement; upgrades are
-  versioned and per-Project opt-in.
-- **Negatives:** Role=Agent, Employee=process, manager duty deletion, implicit
-  Blueprint upgrade, authority transfer by chat/handoff.
-- **Validation:** required CI and qualified Windows Project/team lifecycle E2E.
+- **2.0.0 表面:** 成员先选后配；权威 id = Employee；chrome 可写 Member Runtime。
+- **依赖:** P11-T03。
+- **垂直切片:** 特化 Project Manager Blueprint → Assignment → Employee → 绑定兼容
+  runtime；每活动 Project 一个 current manager。
+- **Scene:** 项目「成员」子菜单的权威，不是 Agents 六族页改名。
+- **acceptance:** employee≠runtime；Blueprint 无 Provider binding；升级 versioned +
+  per-Project opt-in。
+- **不可做:** Role=Agent 合并、聊天转移权威。
+- **本仓 foundation:** adapter identity、现有 Agent 身份与 SessionGate。
+- **禁止再造:** 第三套权威对象 id。
+- **validation environment:** 同 T03 CI 默认；宿主 E2E 未资格化则 `not-run`。
+- **关闭门:** Employee 身份与 runtime 可替换且不合并；one current manager 可证明。
+- **漂移检测负例:** Role=Agent、Employee=process、聊天/handoff 转移权威、manager
+  删除即丢历史、隐式 Blueprint 升级。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T05 — Personal-owned Conversation archive/index/retrieval
+### P11-T05 — Conversation new private version
 
-- **Vertical path:** append scoped Personal Conversation -> archive/index ->
-  authorized/redacted/provenance retrieval -> bounded Context -> Task/artifact/
-  receipt links; one active composer with per-recipient drafts.
-- **Contract decision:** do not reinterpret ADR-0058
-  `conversation-projection/0.1`; select a new private version or Lane-CTR.
-- **Negatives:** cross-Project/employee read, secret shape, unbounded resume,
-  full-archive injection, Conversation-as-authority/completion, lost draft.
-- **Validation:** required CI plus qualified Windows archive/restart/index E2E.
+- **2.0.0 表面:** 单 composer；聊天无 Approve。
+- **依赖:** P11-T03、P11-T04；ADR-0058。
+- **垂直切片:** 新 Personal-private projection version：append → archive/index →
+  授权检索；禁止重解释 `conversation-projection/0.1`；不先开 Lane-CTR。
+- **Scene:** 项目会话与助手会话分层参考 Codex `codex-rs/memories`（不搬执行引擎）。
+- **acceptance:** 新 identifier；旧 `0.1` 客户端不得被静默 coerce。
+- **不可做:** 把 Conversation 当 Task 完成；core 公共 schema 偷偷改。
+- **本仓 foundation:** ADR-0058 信封、现有 conversation-projection 边界。
+- **禁止再造:** 重解释 `0.1`、浏览器写 SQLite 权威。
+- **validation environment:** 投影/检索负例 → CI；宿主 E2E 未资格化则 `not-run`。
+- **关闭门:** 新 private version 存在且 `0.1` 语义未改；文档若仅契约则显式声明。
+- **漂移检测负例:** 跨项目/员工读、secret-shape、无界 resume、全文档案注入、
+  Conversation-as-completion、重解释 `0.1`。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T06 — Pi-backed Personal Assistant
+### P11-T06 — Hidden Pi Personal Assistant
 
-- **Vertical path:** current object/question -> bounded projection/Context ->
-  exact Pi engine -> source/scope/uncertainty explanation or change candidate ->
-  daemon preview request -> receipt explanation.
-- **Invariants:** Pi hidden from ordinary Installed Agents, candidate-only,
-  default-deny, no authority/Secret/archive/Memory/Task completion.
-- **Negatives:** direct DB/SecretStore/Provider, ambient Tool/shell, fabricated
-  source/confidence, preview bypass, memory write.
-- **Validation:** exact Pi pin, required CI, and qualified Windows native route.
+- **2.0.0 表面:** 右栏助手；Pi 不进 Installed Agents chrome。
+- **依赖:** P11-T03、P11-T05（用户建造顺序未点名，但是已拍板隐藏能力，不可删）。
+- **垂直切片:** 当前对象/问题 → 有界 Context → exact Pi → 解释或变更 candidate →
+  daemon preview。
+- **Scene:** 右栏；candidate-only。
+- **acceptance:** 无 authority/Secret/archive/Memory 写；default-deny tools。
+- **不可做:** Pi Linux 资格转移 Windows；ambient shell。
+- **本仓 foundation:** exact Pi client/Shell。
+- **禁止再造:** 把 Pi 当 Member 执行引擎。
+- **validation environment:** required CI；Linux Pi 不转移；宿主 Pi 路由 `not-run`
+  until qualified。
+- **关闭门:** 隐藏引擎只产 candidate；preview 走 daemon。
+- **漂移检测负例:** 直连 SecretStore/DB、preview bypass、伪造 source、完成自报。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T07 — Preinstalled managed DSH Agent
+### P11-T07 — Hidden hosted DSH engine
 
-- **Vertical path:** exact audited official artifact -> immutable install slot
-  -> isolated child/stdio broker -> daemon-proxied Provider -> bounded
-  Task/Attempt candidate -> health/update/rollback/remove.
-- **Invariants:** visible Installed Agent; no in-process daemon/vendored fork/
-  native UI/conversation ownership; Personal owns Conversation/Memory/Task.
-- **Negatives:** digest/protocol mismatch, ACL escape, env/plaintext secret,
-  native MCP/base tool/HMR/home patch, orphan, stale process, failed rollback,
-  unknown output as success.
-- **Validation:** required CI plus qualified Windows supply-chain/sandbox/
-  process/Provider/restart E2E; only DSH enters 2.0 qualification.
+- **2.0.0 表面:** 不画原生 DSH UI / engine store / 可见 Installed Agents。
+- **依赖:** P11-T03、P11-T04、P11-T12（诚实 usage）。**不**以 T02 为 mutex。
+- **垂直切片:** exact audited artifact → isolated child/stdio broker → daemon
+  Provider proxy → bounded Task candidate → health/update/rollback。
+- **Scene:** 成员运行时的隐藏引擎；诊断可用独立 `cognitive dsh web`（非产品 `/ui/`）。
+- **acceptance:** Personal 拥有 Conversation/Memory/Task/completion。
+- **不可做:** 搬 `apps/web`、插件商店、harness 聊天 Approve、in-process loop 当权威。
+- **本仓 foundation:** dsh Path B、AKP adapter、SecretStore、Provider CP。
+  可借鉴（不可搬权威）：harness `packages/sandbox/sandbox-policy`、
+  `sandbox-local`、`sandbox-windows-acl`、`packages/subprocess/*`、
+  `packages/session/session-persistence-jsonl`。
+- **禁止再造:** heartbeat 写权威、Codex/Claude 当可选 Member 引擎。
+- **validation environment:** required CI。Windows sandbox E2E =
+  `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。Linux Path B 不能冒充 Windows 托管资格。
+- **关闭门:** 隐藏托管引擎可安装/隔离/代理/回滚；默认 chrome 无商店。
+- **漂移检测负例:** digest 不匹配、env secret、native MCP/base tool/HMR、orphan、
+  unknown=success、把 DSH web 嵌进 `/ui/`。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T08 — Routine, Trigger, no-overlap, and missed run
+### P11-T08 — Routine, Trigger, missed run
 
-- **Vertical path:** immutable Routine revision + manual/schedule/qualified
-  event Trigger -> occurrence ledger -> no-overlap/queue-latest -> offline/
-  missed/coalesced -> risk-based catch-up.
-- **Authority:** daemon scheduler/run ledger; no Temporal/workflow-engine second
-  scheduler. Attempt engine checkpoint is recovery input only.
-- **Negatives:** overlapping occurrence, silent drop, stale policy/budget,
-  consequential auto-resume, clock/restart duplicate, checkpoint completion.
-- **Validation:** required CI + qualified Windows clock/sleep/restart E2E.
+- **2.0.0 表面:** 项目运行/例程；不是 Inbox 一级。
+- **依赖:** P11-T03。**不挡 T09。**
+- **垂直切片:** Routine revision + Trigger → no-overlap/queue-latest → missed ledger。
+- **Scene:** 项目「运行」子菜单。
+- **acceptance:** 无第二套 Temporal 调度器；checkpoint 非权威。
+- **不可做:** 把 HITL 做成依赖本任务的 Inbox 一级。
+- **本仓 foundation:** scheduler/Effect/recovery。
+- **禁止再造:** 第二 scheduler。
+- **validation environment:** required CI；clock/sleep E2E 未资格化则 `not-run`。
+- **关闭门:** no-overlap 与可见 missed 可证明。
+- **漂移检测负例:** overlap、静默丢、checkpoint 当完成、consequential auto-resume。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T09 — HITL Inbox, approval, and recovery
+### P11-T09 — HITL on canvas (not Inbox)
 
-- **Vertical path:** aggregate approval/input/permission/failure/unknown/missed/
-  budget facts -> selected current preview -> edit/narrow/reject/confirm ->
-  Intent/Effect/reconcile -> receipt.
-- **Interfaces:** structured preview is confirmable; Conversation explanation is
-  not. Preserve input and originating Project/employee/Task links.
-- **Negatives:** stale/cross-channel preview, chat-only approval, blind retry,
-  lost form input, unknown=success, unavailable control rendered active.
-- **Validation:** required CI + qualified Windows UI/runtime failure matrix.
+- **2.0.0 表面:** HITL 只在项目中心画布；Today 深链进入；聊天无 Approve。
+- **依赖:** P11-T03。**不依赖 T08。**
+- **垂直切片:** 结构化 daemon preview → edit/narrow/reject/confirm → Intent/Effect
+  reconcile → receipt。聚合在画布，不是一级 Inbox queue。
+- **Scene:** 中心画布 HITL + Today 深链；禁止独立 `#/hitl/:approvalId` 一级。
+- **acceptance:** Conversation 只宣布，不批准。
+- **不可做:** 聊天 Approve、假可点按钮、Inbox 一级页。
+- **本仓 foundation:** preview/Effect/alert/recovery。
+- **禁止再造:** harness approval 当产品 HITL。
+- **validation environment:** required CI；宿主 UI E2E 未资格化则 `not-run`。
+- **关闭门:** 画布 HITL 可确认/拒绝并留下 receipt；聊天路径不能完成批准。
+- **漂移检测负例:** 聊天 Approve、stale/跨通道 preview、blind retry、unknown=success、
+  无权威却渲染 active 控件。
+- **硬门:** 适用 Phase 11 四条。
 
 ### P11-T10 — Knowledge and Markdown Vault
 
-- **Vertical path:** Personal Home Project directory -> shared/Project import ->
-  rights/provenance -> parse/OCR/index -> reindex/conflict -> config-like edit
-  candidate -> optional Obsidian-compatible companion.
-- **Ownership:** source/Vault, rebuildable index, Context, Memory, Project
-  authority, and SecretStore remain distinct.
-- **Negatives:** traversal, secret ingestion, rights bypass, silent overwrite,
-  file-as-authority, proprietary app required/bundled.
-- **Validation:** required CI + qualified Windows filesystem/index/conflict E2E.
+- **2.0.0 表面:** Knowledge 一级。
+- **依赖:** P11-T03、P11-T05。
+- **垂直切片:** import → rights/provenance → parse/index → conflict；index 可重建。
+- **Scene:** Knowledge；项目 Vault 与 Owner 共享源分离。
+- **acceptance:** file 不是 Project 权威。
+- **不可做:** 捆绑 Obsidian；越权检索当功能。
+- **本仓 foundation:** Memory/Skill/Context/Artifact。
+- **禁止再造:** 文件当 CAS 权威。
+- **validation environment:** 投影/检索负例 → CI；宿主 filesystem E2E `not-run`
+  until qualified。
+- **关闭门:** import/index/conflict 与越权负例在 CI 绿；宿主 E2E 诚实 `not-run` 若缺环境。
+- **漂移检测负例:** 遍历、secret ingestion、检索越权、secret-shape、last-write-wins
+  无冲突、file-as-authority。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T11 — Memory admission, privacy, correction, and forget
+### P11-T11 — Memory admission, privacy, forget
 
-- **Vertical path:** scoped Conversation/Vault/verified source -> candidate ->
-  deterministic admission -> Context retrieval -> inspect/correct/forget ->
-  index/cache non-resurrection.
-- **Boundaries:** Letta/Mem0 may inform extraction/retrieval only; no direct
-  write, external authority store, env secret, or default telemetry.
-- **Negatives:** cross-scope recall, secret/PII leak, stale/poisoned source,
-  Agent self-admission, full archive injection, tombstone resurrection.
-- **Validation:** required CI + qualified Windows privacy/rebuild/restart E2E.
+- **2.0.0 表面:** 员工私有 Memory，非一级商店。
+- **依赖:** P11-T05、P11-T10。
+- **垂直切片:** candidate → admission → view/correct/forget → 非复活。
+- **Scene:** 可检查 Memory；参考 Codex memories 分层，不搬写权威。
+- **acceptance:** Letta/Mem0 不得直写。
+- **不可做:** 默认 telemetry、env secret。
+- **本仓 foundation:** 现有 Memory admission/forget。
+- **禁止再造:** Agent 自 admission。
+- **validation environment:** required CI；privacy E2E `not-run` until qualified。
+- **关闭门:** admission 与 forget 后 index 不复活可证明。
+- **漂移检测负例:** 跨 scope、secret/PII、poisoning、直写、tombstone 复活。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T12 — Provider routing, budgets, and usage
+### P11-T12 — Provider honest usage (no member budget chrome)
 
-- **Vertical path:** account/auth + model + quota -> global/Project/employee/Task
-  binding -> DSH/Pi daemon-proxied call -> Task/member/Project usage/cost ->
-  budget warning/stop/adjustment Inbox.
-- **Invariants:** subscription/account/billing/quota separate; raw SecretStore
-  material never reaches UI/DSH/Pi; current budgets remain advisory until
-  enforcement passes.
-- **Negatives:** fallback/silent rebind, arbitrary headers, secret in env/log/
-  DB, unknown=0/free, budget bypass, un-reconciled Effect reroute.
-- **Validation:** required CI + qualified Windows SecretStore/Provider route.
+- **2.0.0 表面:** Settings 用量诚实；成员级预算 **不是** 当前 chrome（2.1 / Deferred）。
+- **依赖:** P11-T03、P11-T04、Provider CP。**不依赖 T07。**
+- **垂直切片:** account/quota 分离；binding global→Project→employee→Task；actual
+  usage；unknown≠0。
+- **Scene:** Settings 高级/用量；无成员硬停一级控件。
+- **acceptance:** raw SecretStore 永不进 UI/DSH/Pi。
+- **不可做:** unknown=0、静默 fallback、把成员预算当 2.0.0 关闭门。
+- **本仓 foundation:** Provider Control Plane。
+- **禁止再造:** agent 自停当权威预算。
+- **validation environment:** required CI；宿主 SecretStore 路由 `not-run` until
+  qualified。
+- **关闭门:** 未知费用不显示为 0；binding 可解释。成员预算硬停不是本卡 done。
+- **漂移检测负例:** unknown=0、secret 进 env/log/DB、静默 rebind、依赖 T07 才开始
+  诚实 usage。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T13 — OPC Control Plane
+### P11-T13 — OPC Control Plane IA closure
 
-- **Vertical path:** daemon-served `/ui/` -> Today -> Project briefing/setup ->
-  Team/employee Conversation -> Knowledge import -> Inbox approval/recovery ->
-  Settings Installed Agents/Providers/Usage.
-- **UX:** bottom Settings, right Personal Assistant, one active composer,
-  draft preservation, business terminology, progressive disclosure, every
-  empty/loading/partial/stale/permission/error/unknown/offline/missed/success/
-  archived state.
-- **Negatives:** Vite as product origin, fake Requires-backend action, secret/
-  token DOM/storage leak, Agent self-verified, cross-recipient send.
-- **Validation:** TS/component/a11y tests, rendered keyboard/focus/reduced-
-  motion/narrow-window/state review, required CI, qualified Windows daemon UI.
+- **2.0.0 表面:** Today / Projects / Knowledge + 底栏 Settings + 右栏助手。
+  Team/Inbox **不是一级**。
+- **依赖:** P11-T03 + Visual UI 规格。Dual Track `clients/pc/web` **仅**在 T03
+  投影/HTTP 稳定后另租。完整 IA 收口在本任务；禁止先画完整假壳。
+- **垂直切片:** daemon-served `/ui/` 替换六族 IA；无权威 empty；真实 caller 才可操作。
+- **Scene:** 已定档 chrome；state-lab = Settings 高级默认隐藏。
+- **acceptance:** Requires-backend honesty；Vite 不是产品源。NVDA/200%/host-theme
+  contrast **挂单 `not-run`**。
+- **不可做:** 无 Project 权威时冒充 T13 完成；改 IA；phase 4 重生 canvas。
+- **本仓 foundation:** hash `/ui/`、SessionGate、P7-T05 inventory（不是 OPC 合同）。
+- **禁止再造:** 假六族改名、假按钮。
+- **validation environment:** TS/组件测试 + 合同 mock。产品源 daemon `/ui/`。
+  NVDA/200%/contrast 挂单。`DEV-WINDOWS-NATIVE-OPC-01` 不合格则原生 E2E `not-run`。
+- **关闭门:** 一级导航是 Today/Projects/Knowledge+Settings；无权威无假按钮。完整
+  `/ui/` 不得提前冒充已验收。
+- **漂移检测负例:** Vite 当产品、Team/Inbox 一级、假按钮、secret 进 DOM、Agent
+  自验证、无视觉规格就整页编码。
+- **硬门:** 适用 Phase 11 四条。
 
-### P11-T14 — X/Twitter qualified connector scenario
+### P11-T14 — X/Twitter qualified connector (parked)
 
-- **Vertical path:** confirmed charter/audience/cadence/metrics/rights -> source-
-  backed research -> original content -> publication package -> exact preview
-  -> qualified API/browser dispatch -> Effect reconcile -> metric readback ->
-  independent acceptance.
-- **Safety:** only owned/licensed/open/public-domain material is copied; other
-  sources support analysis/attribution/new creation.
-- **Negatives:** fingerprint/CAPTCHA/anti-abuse evasion, platform drift,
-  wrong account/target, unlicensed copy, blind retry, receipt/self-report as
-  completion.
-- **Validation:** required CI + preregistered qualified Windows connector
-  environment; no business-result or browser-reliability claim.
+- **2.0.0 表面:** parked（M-X/X 不进当前 chrome）。
+- **依赖:** parked。
+- **垂直切片:** parked。
+- **Scene:** parked。
+- **acceptance:** 不得标 done。
+- **不可做:** 解冻前实现或宣称。
+- **本仓 foundation:** n/a。
+- **禁止再造:** CAPTCHA/fingerprint 规避。
+- **validation environment:** parked；任何单元格 `not-run`。
+- **关闭门:** parked（文档-only：本卡保持 parked）。
+- **漂移检测负例:** parked；将来解冻仍禁止 evasion 与 receipt-as-completion。
+- **硬门:** parked 切片不得用 CI 绿冒充产品。
 
-### P11-T15 — Fixed-denominator Windows OPC acceptance
+### P11-T15 — Fixed-denominator Windows OPC acceptance (parked)
 
-- **Manifest:** freeze 15 scenarios matching P11-T02..T14 user-visible paths,
-  exact revision/environment/artifacts/oracles/redaction/cleanup and `retry=0`
-  where Provider/external cells require it.
-- **Accounting:** retain every started scenario as pass/fail/partial/not-run;
-  denominator remains 15; zero critical A1–A8 failures; independent review.
-- **Environment:** qualified Windows native host; ordinary CI/Canvas/Linux/
-  WSL/Win-GNU cannot promote the result.
-- **Claim ceiling:** product acceptance non-claim until separate production
-  signing, B01-W/release evidence, and owner release disposition. 2.1 remote is
-  outside the denominator.
+- **2.0.0 表面:** parked；不自动 release。
+- **依赖:** parked。
+- **垂直切片:** 将来若解冻：N=15、一 exact revision、retain every started cell。
+- **Scene:** parked。
+- **acceptance:** 不得标 done；signing/B01-W/2.1 仍独立。
+- **不可做:** 用 ordinary CI/Linux/WSL/GNU promotion。
+- **本仓 foundation:** Operating Model 固定分母实践。
+- **禁止再造:** 把本卡当当前实现 mutex。
+- **validation environment:** parked。解冻后仅资格化 Windows。
+- **关闭门:** parked（文档-only：本卡保持 parked）。
+- **漂移检测负例:** 把 `not-run` 写成 pass；A7 提升。
+- **硬门:** parked。
 
 ---
 
@@ -1808,27 +1888,33 @@ tasks:
   P11-T02:
     implementation_requires: [P11-T01, ADR-0052, WINDOWS_INSTALL_FRAGMENTS]
     acceptance_requires: [WINDOWS_HOST_TRAY_BACKGROUND_SLEEP_MISSED_RECOVERY]
+    notes: DOES_NOT_BLOCK_P11_T03
   P11-T03:
     implementation_requires: [P11-T01, TASK_INTENT_EFFECT_VERIFICATION_FOUNDATION]
     acceptance_requires: [PROJECT_CHARTER_GOAL_PLAN_TASK_ATTEMPT_AUTHORITY]
+    notes: FIRST_KNIFE_NO_T02_MUTEX
   P11-T04:
     implementation_requires: [P11-T03, AGENT_ADAPTER_IDENTITY_FOUNDATION]
     acceptance_requires: [BLUEPRINT_ASSIGNMENT_EMPLOYEE_MANAGER_HANDOFF]
   P11-T05:
     implementation_requires: [P11-T03, P11-T04, ADR-0058_RETAINED_BOUNDARY]
-    acceptance_requires: [PERSONAL_CONVERSATION_ARCHIVE_INDEX_RETRIEVAL_SINGLE_COMPOSER]
+    acceptance_requires: [PERSONAL_CONVERSATION_NEW_PRIVATE_VERSION]
+    notes: NO_REINTERPRET_0_1_NO_FIRST_LANE_CTR
   P11-T06:
     implementation_requires: [P11-T03, P11-T05, EXACT_PI_FOUNDATION]
     acceptance_requires: [PI_BACKED_PERSONAL_ASSISTANT_CANDIDATE_ONLY]
   P11-T07:
-    implementation_requires: [P11-T02, P11-T03, P11-T04, DSH_ADAPTER_FOUNDATION]
-    acceptance_requires: [MANAGED_DSH_ARTIFACT_ISOLATED_CHILD_PROXY_UPDATE_ROLLBACK]
+    implementation_requires: [P11-T03, P11-T04, P11-T12, DSH_ADAPTER_FOUNDATION]
+    acceptance_requires: [HIDDEN_HOSTED_DSH_ISOLATED_CHILD_PROXY]
+    notes: NOT_VISIBLE_INSTALLED_AGENT_NO_T02_MUTEX
   P11-T08:
     implementation_requires: [P11-T03, SCHEDULER_EFFECT_RECOVERY_FOUNDATION]
     acceptance_requires: [ROUTINE_TRIGGER_NO_OVERLAP_QUEUE_LATEST_MISSED_RESUME]
+    notes: DOES_NOT_BLOCK_P11_T09
   P11-T09:
-    implementation_requires: [P11-T03, P11-T08, PREVIEW_EFFECT_ALERT_RECOVERY_FOUNDATION]
-    acceptance_requires: [INBOX_SERIALIZED_APPROVAL_RECOVERY_RECONCILE]
+    implementation_requires: [P11-T03, PREVIEW_EFFECT_ALERT_RECOVERY_FOUNDATION]
+    acceptance_requires: [HITL_CANVAS_TODAY_DEEP_LINK_NO_CHAT_APPROVE]
+    notes: NO_T08_MUTEX_NOT_INBOX_FIRST_LEVEL
   P11-T10:
     implementation_requires: [P11-T03, P11-T05, MEMORY_SKILL_CONTEXT_ARTIFACT_FOUNDATION]
     acceptance_requires: [KNOWLEDGE_VAULT_IMPORT_INDEX_CONFLICT]
@@ -1836,17 +1922,21 @@ tasks:
     implementation_requires: [P11-T05, P11-T10, MEMORY_ADMISSION_FORGET_FOUNDATION]
     acceptance_requires: [EPISODIC_RETRIEVAL_MEMORY_PRIVACY_CORRECT_FORGET]
   P11-T12:
-    implementation_requires: [P11-T03, P11-T04, P11-T06, P11-T07, PROVIDER_CONTROL_PLANE_FOUNDATION]
-    acceptance_requires: [GLOBAL_PROJECT_EMPLOYEE_TASK_BINDING_BUDGET_USAGE_PROXY]
+    implementation_requires: [P11-T03, P11-T04, PROVIDER_CONTROL_PLANE_FOUNDATION]
+    acceptance_requires: [HONEST_USAGE_UNKNOWN_NEQ_ZERO]
+    notes: NO_T07_MUTEX_MEMBER_BUDGET_DEFERRED_2_1
   P11-T13:
-    implementation_requires: [P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12]
-    acceptance_requires: [TODAY_PROJECTS_TEAM_KNOWLEDGE_INBOX_UI_STATE_MATRIX]
+    implementation_requires: [P11-T03, VISUAL_UI_SPEC_BEFORE_CODING]
+    acceptance_requires: [TODAY_PROJECTS_KNOWLEDGE_SETTINGS_UI]
+    notes: DUAL_TRACK_AFTER_T03_HTTP_STABLE_NVDA_HUNG_NOT_RUN
   P11-T14:
-    implementation_requires: [P11-T03, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13]
-    acceptance_requires: [QUALIFIED_X_CONNECTOR_RIGHTS_PREVIEW_RECEIPT_READBACK]
+    implementation_requires: []
+    acceptance_requires: []
+    disposition: PARKED
   P11-T15:
-    implementation_requires: [P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13, P11-T14, QUALIFIED_WINDOWS_NATIVE_ENVIRONMENT]
-    acceptance_requires: [WINDOWS_OPC_FIXED_DENOMINATOR_15_ZERO_CRITICAL_INDEPENDENT_REVIEW]
+    implementation_requires: []
+    acceptance_requires: []
+    disposition: PARKED
     promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar

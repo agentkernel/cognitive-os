@@ -336,6 +336,69 @@ test("governance lease rejects id/description delivery mismatch", () => {
   );
 });
 
+function injectDocumentationLease(leaseRow, { registerDelivery = true } = {}) {
+  const base = injectEvaluationLease(leaseRow);
+  if (!registerDelivery) {
+    return base;
+  }
+  const leaseId = leaseRow.match(/`(lease\/personal\/[^`]+)`/)?.[1];
+  const deliveryId = leaseId?.match(/^lease\/personal\/(DOC-[^/]+)\//)?.[1];
+  assert.ok(deliveryId, "documentation lease row must carry a lease/personal/DOC-<id>/... id");
+  return {
+    ...base,
+    "docs/plan/PROGRESS.md": (source) => {
+      const withLeaseReference = base["docs/plan/PROGRESS.md"](source);
+      const activeLeaseRow = withLeaseReference
+        .split(/\r?\n/)
+        .find((line) => line.startsWith("| Active task lease |"));
+      assert.ok(activeLeaseRow, "canonical Active task lease row must exist");
+      const registrationRow = `| ${deliveryId} documentation delivery fixture | fixture registration for the injected documentation lease | documentation only | fixture |`;
+      return withLeaseReference.replace(activeLeaseRow, `${activeLeaseRow}\n${registrationRow}`);
+    },
+  };
+}
+
+test("owner-directed documentation lease is accepted without a formal task slice", () => {
+  const result = runConsistencyFailureInjection(
+    injectDocumentationLease(
+      "| `lease/personal/DOC-FIXTURE01/dev-prep` | `DOC-FIXTURE01` owner-directed documentation delivery fixture; no formal task/slice | Lane-DOC | `main` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `tools/src/check-consistency.mjs`; `tools/test/check.test.mjs`; `personal/handbook/en/ai/docs-impact.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
+    ),
+  );
+
+  assert.equal(result.status, 0, result.stderr);
+  assert.match(result.stdout, /check-consistency: OK/);
+});
+
+test("documentation lease rejects unregistered deliveries and product paths", () => {
+  const result = runConsistencyFailureInjection(
+    injectDocumentationLease(
+      "| `lease/personal/DOC-ZZZ9/rogue` | `DOC-ZZZ9` unregistered documentation fixture | Lane-DOC | `main` | `personal/crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
+      { registerDelivery: false },
+    ),
+  );
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /DOC_LEASE_UNREGISTERED: documentation delivery DOC-ZZZ9/);
+  assert.match(
+    result.stderr,
+    /DOC_LEASE_PATH_FORBIDDEN: documentation lease lease\/personal\/DOC-ZZZ9\/rogue .* not personal\/crates\/cognitive-runtime\/src\/lib\.rs/,
+  );
+});
+
+test("documentation lease rejects id/description delivery mismatch", () => {
+  const result = runConsistencyFailureInjection(
+    injectDocumentationLease(
+      "| `lease/personal/DOC-FIXTURE01/mismatched` | owner-directed documentation fixture without a delivery token | Lane-DOC | `main` | `docs/plan/PROGRESS.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
+    ),
+  );
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(
+    result.stderr,
+    /DOC_LEASE_MALFORMED: documentation lease lease\/personal\/DOC-FIXTURE01\/mismatched/,
+  );
+});
+
 test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {
   const result = runConsistencyFailureInjection({
     "docs/plan/PROGRESS.md": (source) =>

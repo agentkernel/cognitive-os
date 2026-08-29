@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:be2d45b22b6656be0222290d93b7f93e6314111b5c54367e02ba0227234c5e08"
+fingerprint: "sha256:9c56811e8673712d176a18a918de5029052052e795bccdd332dab60686e6c75a"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -33,11 +33,15 @@ owns what each environment may claim. Practical routing:
 | `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures; since 2026-08-27 also the owner-authorized Personal 2.0 development-validation host (exact-revision disposable worktrees and task-declared cleanable roots only; frozen while a B01 campaign is active) | guest-baseline, snapshot, or credential changes outside a preregistered B01 campaign lease |
 | `B01-W-DESKTOP-001` | registered-but-not-provisioned Windows Gate guest (B01-W) | anything until provisioned per its preregistration |
 
-Phase 11 uses Windows MSVC CI plus the future qualified native Windows host for
-host/tray/background, DSH sandbox/process, Vault/index, UI and connector work.
-The final N=15 OPC acceptance additionally needs one preregistered qualified
-Windows revision. Local GNU, WSL, Linux, ordinary CI and Canvas are explicit
-non-substitutes; `not-run` remains `not-run`.
+Phase 11 Personal 2.0.0 routing: T03/T04 daily authority tests use
+`CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (plus exact-revision `DEV-LINUX-NATIVE-01`
+when a native daemon/store is required). T02/T07 native host/DSH E2E stay
+`DEV-WINDOWS-NATIVE-OPC-01` = `Requires-environment` / `not-run` until
+qualified. T09 is HITL on canvas, not a first-level Inbox. `B01-DESKTOP-002`
+is campaign-only, not the 2.0 daily default. The parked T15 N=15 acceptance
+would still need one preregistered qualified Windows revision. Local GNU, WSL,
+Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
+`not-run` remains `not-run`.
 
 Toolchain pins: Rust 1.97.1 (`rust-toolchain.toml`), pnpm 10.33.2 + Node ≥22
 (`package.json`), workspace-wide `unsafe_code = "forbid"` and pedantic clippy

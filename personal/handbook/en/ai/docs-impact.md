@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:2799ffa1bec4925e04cbabd325c88a2ea4ebe6a90e99271f1a31433b94078c33"
+fingerprint: "sha256:dfd173bfaa78d959e7029264682d5d25759f8722c71e48426fdb8191cfb5e053"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -61,18 +61,26 @@ silently:
 - `personal-2-opc-rebaseline` routes ADR-0059, the Phase 11 formal/support/
   environment sources, focused Project/Conversation/Windows/Routine product
   and architecture chapters, and the current client OPC design corpus.
-- `personal-2-opc-v9-implementation-mapping` routes the owner-approved v9 Scene
-  → daemon mapping
-  (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`)
+- `personal-2-opc-v9-implementation-mapping` routes the design-frozen
+  Personal 2.0.0 Scene → daemon mapping
+  (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`;
+  historical filename and rule id contain v9 — not a product version)
   to `dev.architecture-overview` and this page. Informative only; not
   implementation, support, Gate, or a P11 claim.
+- `personal-2-0-0-dev-prep` routes the Personal 2.0.0 development-prep index
+  (`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`) to
+  `dev.architecture-overview` and this page. Plan cards aligned 2026-08-30;
+  documentation only; not implementation, thaw, Gate, or a P11 claim.
+  The OPC design corpus (`clients/docs/design/opc-2.0/`, including the
+  maintenance index) catalogues a 2026-08-30 informative Design-Agent /
+  Owner-journey hardness assessment (hypothesis; not Gate).
 
 For every hit, preserve explicit truth columns: **current Linux 1.0/current
 API**, **adopted Windows OPC target**, **Requires-backend**, and
 **Requires-environment/deferred**. Never infer Project/Employee, Personal
-Conversation/Vault/Memory, Pi Assistant, managed DSH, Routine/Inbox, binding/
-budget, OPC UI, X connector, or fixed N=15 acceptance from design adoption,
-Canvas, ordinary CI, Linux, WSL, or Windows GNU evidence. MCP remains an
+Conversation/Vault/Memory, Pi Assistant, hidden hosted DSH, Routine/HITL canvas,
+binding/honest usage, OPC UI, X connector, or fixed N=15 acceptance from design
+adoption, Canvas, ordinary CI, Linux, WSL, or Windows GNU evidence. MCP remains an
 advanced deferred target; 2.1 owns native mobile/E2E relay remote.
 
 The localized canonical design files route to the same bilingual handbook

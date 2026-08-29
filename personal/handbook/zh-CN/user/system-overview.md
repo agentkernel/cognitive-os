@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:902eb0bcc2c424b5e016213e78eeda3dfb992a58f2143df2d462707c00a1d8b1"
+fingerprint: "sha256:e0c5c410cee206ca2b60a97b33310d744b76c780f4de66b85208e8718b0445da"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -82,19 +82,19 @@ Owner
 ```
 
 UI 是 Today / Projects / Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
-不是一级导航。2026-08-30 owner 批准的当前交互原型是
-`personal-20-opc-e2e-optimized-v9`，不是 daemon `/ui/`。创建顺序为项目 → 流程 →
+不是一级导航。2026-08-30 已定档 chrome 是 **CognitiveOS Personal 2.0.0**；canvas
+文件名可保留 `personal-20-opc-e2e-optimized-v9`，不是 daemon `/ui/`。创建顺序为项目 → 流程 →
 成员 → 分环测试 → 联调。单模块 PM/UI 维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
-Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是 preinstalled
-managed Installed Agent 与默认员工 runtime，采用 exact audited artifact、isolated
+Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是隐藏托管 Member 执行引擎
+（不是可见 Installed Agent），采用 exact audited artifact、isolated
 child、stdio broker 与 daemon Provider proxy。Conversation、archive/index/retrieval、
 Memory、Task、Effect 与 completion 属于 Personal。
 
 Knowledge 分开 Owner-shared source、Project Markdown Vault 与 employee-private Memory。
 Routine 支持 manual/schedule/qualified-event Trigger、no-overlap、queue-latest 与 visible
-missed work。Provider binding 按 global→Project→employee→Task 解析；Project/member/Task
-budget 与 actual usage 和 Provider quota 分离。
+missed work。HITL 只在画布。Provider binding 按 global→Project→employee→Task 解析；
+actual usage 与 Provider quota 分离；未知费用不得显示为 0；成员级预算属 2.1 / Deferred。
 
 上述仍只是 target。`Requires-backend`/`Requires-environment` 表示不能展示为可用。
 MCP 保留为 advanced deferred seventh family；native mobile/E2EE relay remote 属于 2.1；

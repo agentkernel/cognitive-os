@@ -85,7 +85,8 @@ Resource family. Engine checkpoints are recovery inputs, not authority.
 |---|---|
 | [System architecture](system-architecture.md) | containers, dependency direction, data ownership, and current/target boundary |
 | [Web UI architecture](web-ui-architecture.md) | daemon-served OPC client, projections, state, and single-composer boundary |
-| [v9 OPC → daemon mapping](personal-2.0-opc-v9-implementation-mapping.md) | owner-approved v9 Scene → current `/ui/` + daemon HTTP mapping; informative; not implementation |
+| [Personal 2.0.0 OPC → daemon mapping](personal-2.0-opc-v9-implementation-mapping.md) | design-frozen Personal 2.0.0 Scene → current `/ui/` + daemon HTTP mapping; historical path name contains v9; informative; not implementation |
+| [Personal 2.0.0 development-prep index](personal-2.0.0-dev-prep-index.md) | plan-card alignment, test/env hard gates, transferable modules, T03/Visual-UI window prompts; documentation only; not implementation |
 | [Project, Role, and Employee](project-role-employee.md) | Project aggregate, manager, Blueprint/Assignment/Employee identities |
 | [Agent Shell and lifecycle](agent-shell-and-agent-lifecycle.md) | Pi Personal Assistant engine, managed DSH child, strict runtime identities |
 | [Agent adapter](agent-adapter-contract.md) | delivered adapter foundation and future qualification boundary |

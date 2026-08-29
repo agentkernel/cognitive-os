@@ -117,18 +117,22 @@
 > 不新增 Gate，也不改变任何既有任务状态、attempt、evidence、Gate 结论或 claim scope。
 >
 > **Personal 2.0 OPC product-semantic rebaseline（2026-08-27，ADR-0059 /
-> DOC-PERSONAL-2.0-OPC）：** owner 批准将 2.0 收敛为 Windows-first、一人公司/
-> 个人开发者的本机数字员工控制台；IA 改为 Today / Projects / Team / Knowledge /
-> Inbox，Settings 固定底部，右侧 Personal Assistant 全局存在。Project、Role Blueprint、
-> Assignment、Digital Employee、Routine/Trigger、Personal-owned Conversation/Vault/
-> Memory 成为 current target；DSH 保留 Installed Agent 语义并作为随产品提供的
-> preinstalled managed Agent（exact audited artifact + isolated child + stdio broker），
-> Pi 仅为 hidden Personal Assistant engine。ADR-0056/0058 由 ADR-0059 精确部分
-> supersede，Linux 1.0 与 MCP private/fail-closed 事实保留。P10-T01/T02 已完成事实不改；
-> P10-T03..T18 不静默改验收，全部在未启动状态下明确 cancelled/disposition，由 Phase 11
-> 或 future advanced track 承接。当前只执行 documentation-only `P11-T01/D01`；
-> P11-T02..T15 不启动。无 code/contract/vector/test、support、Gate、release、Profile、
-> Windows/DSH qualification 或 Agent-benefit claim。
+> DOC-PERSONAL-2.0-OPC）+ 计划卡按 Personal 2.0.0 chrome 对齐（2026-08-30，
+> DOC-PERSONAL-2.0.0）：** owner 批准将 2.0 收敛为 Windows-first、一人公司/
+> 个人开发者的本机数字员工控制台。**已定档 chrome（2026-08-30）：** Today /
+> Projects / Knowledge + 底栏 Settings；五段创建向导；成员先选后配；项目四子菜单；
+> HITL 只在中心画布 + Today 深链；聊天无 Approve；state-lab = Settings 高级默认隐藏。
+> Team / Inbox **不是一级**。Project、Role Blueprint、Assignment、Digital Employee、
+> Routine/Trigger、Personal-owned Conversation/Vault/Memory 仍是 current target。
+> DSH 是**隐藏托管引擎**（exact audited artifact + isolated child + stdio broker），
+> 不是可见 Installed Agent / 原生 DSH UI / engine store。Pi 仅为 hidden Personal
+> Assistant engine。成员级预算不在当前 chrome（2.1 / Deferred）；保留诚实 usage /
+> unknown≠0。ADR-0056/0058 由 ADR-0059 精确部分 supersede，Linux 1.0 与 MCP
+> private/fail-closed 事实保留。P10-T01/T02 已完成事实不改；P10-T03..T18 不静默改验收，
+> 全部在未启动状态下明确 cancelled/disposition。`P11-T01` documentation-only `done`；
+> `P11-T02..T15` 计划卡已按 2.0.0 改写但仍 `not-started`/unclaimed。实现第一刀是
+> owner 授权后的 `P11-T03`。无 support、Gate、release、Profile、Windows/DSH
+> qualification 或 Agent-benefit claim。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -285,7 +289,7 @@
 | P6 | post-1.0 Multi-Agent 可选实验 | 单 Agent benchmark 与明确并行假设 | B11 GO 或合法 NO-GO/disabled | 默认开启 Multi-Agent |
 | P7 | Linux 1.0 Product Operability 与后续 RC | 对应 P1/P2/P3/P4/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
 | P10 | superseded desktop/MCP 计划 | P10-T01/T02 已完成历史事实 | P10-T03..T18 已明确 disposition/cancelled | 静默改旧验收或把 cancelled 写成完成 |
-| P11 | Windows-first OPC 2.0 | P11-T01 docs closure；实现任务按 typed dependency 单独领取 | P11-T15 fixed-denominator Windows OPC acceptance；release/signing/B01-W 仍独立 | 用 docs/Canvas/ordinary CI/Linux/Win-GNU 证据宣称 Windows、DSH、connector 或 release |
+| P11 | Windows-first OPC 2.0（chrome = Personal 2.0.0） | P11-T01 docs closure；实现第一刀 `P11-T03`（不依赖 T02）；按 typed dependency 单独领取 | T14/T15 parked；T13 才完整 daemon `/ui/`；release/signing/B01-W 仍独立 | 用 docs/Canvas/ordinary CI/Linux/Win-GNU 证据宣称 Windows、DSH、connector 或 release；把六族 `/ui/` 写成已是 OPC IA |
 
 ### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
@@ -307,7 +311,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Personal 2.0 MCP seventh family | ADR-0057/0058 retained；future advanced successor | 不阻塞 OPC P0；不自动启用 DSH native MCP/base tools 或 advertised tools |
 | Multi-Agent | P6-T01..T04、B11 | 默认关闭；NO-GO 是合法结果 |
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
-| Personal 2.0 Windows OPC | P11-T01..T15 | current 2.0 target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support |
+| Personal 2.0 Windows OPC | P11-T01 done；T03 first knife after owner auth；T14/T15 parked | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -391,20 +395,20 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Task | implementation_requires | acceptance_requires | promotion_requires |
 |---|---|---|---|
 | P11-T01 | owner-approved OPC baseline；ADR-0059；finalized Linux 1.0/P10 history | current/frozen product + client design + architecture + formal plan/trace/support/environment + bilingual handbook + Canvas prototype；static/docs-sync/required CI；documentation-only | 无；不产生 implementation/support/Gate/release |
-| P11-T02 | P11-T01；既有 ADR-0052/P7-T07 Windows fragments | app/data、installer/host/tray/background/close choice、sleep/offline/missed observation、SecretStore/process/ACL boundaries；focused host negatives | release 另需 production signing + qualified B01-W；普通 CI 不 promotion |
-| P11-T03 | P11-T01；现有 Task/Intent/Effect/evidence/verification application services | Project/Charter/Goal/Metric/Plan revision/Task/Attempt authority；confirm-before-activate；manager autonomy envelope；stale preview/cross-Project/false-completion negatives | 无自动 promotion |
-| P11-T04 | P11-T03；现有 adapter identity foundation | Role Blueprint/Assignment/Digital Employee identities、每项目唯一 current manager、specialization/version/opt-in、employee≠runtime；authority-transfer negatives | 无自动 promotion |
-| P11-T05 | P11-T03、P11-T04；ADR-0058 retained boundary | Personal-owned Conversation archive/index/retrieval、scope/redaction/provenance、single-composer identity；不得重解释 `conversation-projection/0.1`；cross-scope/secret/archive-completion negatives | public shape 如需则新 Lane-CTR |
-| P11-T06 | P11-T03、P11-T05；existing exact Pi client/Shell foundation | Pi-backed Personal Assistant explanation/navigation/research/proposal；hidden engine、candidate-only、no authority/secret/archive/Memory；daemon preview handoff | 无；Pi Linux evidence不转移 Windows OPC |
-| P11-T07 | P11-T02、P11-T03、P11-T04；existing dsh adapter/path facts | preinstalled managed DSH exact artifact、isolated child/stdio broker、daemon Provider proxy、default-deny tool surface、health/update/rollback；Windows sandbox/supply-chain negatives | 独立 DSH/Windows qualification；无其他 Agent transfer |
-| P11-T08 | P11-T03；existing scheduler/Effect/recovery primitives | Routine revision、manual/schedule/qualified-event Trigger、no-overlap、queue-latest、missed/coalesced ledger、risk-based resume、reflection candidate；clock/restart/unknown negatives | 无自动 promotion |
-| P11-T09 | P11-T03、P11-T08；existing preview/Effect/alert/recovery primitives | Inbox approval/input/permission/failure/unknown/missed/budget queue；serialized current preview、edit/narrow/reject/receipt、reconcile-before-retry；channel/stale/false-success negatives | 无自动 promotion |
-| P11-T10 | P11-T03、P11-T05；current Memory/Skill/Context/Artifact foundations | Personal Home Project dirs、shared Knowledge + Markdown Vault、import/rights/provenance/parse/OCR/index/reindex/conflict、config-edit candidate、Obsidian-compatible optional companion | 无；Obsidian app不进入产品/qualification |
-| P11-T11 | P11-T05、P11-T10；current Memory admission/forget | scoped episodic retrieval、semantic Memory admission/privacy/correct/forget、index non-resurrection、DSH bounded Context；Letta/Mem0 no-direct-write negatives | 无自动 promotion |
-| P11-T12 | P11-T03、P11-T04、P11-T06、P11-T07；current Provider Control Plane | subscription/account/billing/quota 分离；global→Project→employee→Task binding；Project/member/Task budgets、actual usage、daemon proxy；unknown!=0/secret/fallback/budget-bypass negatives | Provider/Windows support需独立 qualification |
-| P11-T13 | P11-T02..T12 | Today/Projects/Team/Knowledge/Inbox + bottom Settings + right Assistant；Project briefing、guided setup、single composer、all required states、Requires-backend honesty；daemon-served product origin | rendered/runtime evidence仅 implementation；不自动 Gate/release |
-| P11-T14 | P11-T03、P11-T07..T13 | X/Twitter owned/authorized account scenario：research→original content→review package→qualified connector→receipt→metric readback；rights、drift、CAPTCHA/anti-abuse、unknown Effect negatives | connector/platform独立 qualification；不保证业务结果 |
-| P11-T15 | P11-T02..T14；qualified Windows native environment | preregister fixed denominator 15 OPC scenarios；每项 pass/fail/partial/not-run；exact revision、zero critical A1–A8 failures、independent review、cleanup、non-claim report | release仍需独立 signing/B01-W/owner release disposition；2.1 remote out |
+| P11-T02 | P11-T01；既有 ADR-0052/P7-T07 Windows fragments；**不挡 T03** | app/data、installer/host/tray/background/close choice、sleep/offline/missed observation、SecretStore/process/ACL；focused host negatives。宿主 E2E 待 `DEV-WINDOWS-NATIVE-OPC-01` | release 另需 production signing + qualified B01-W；普通 CI 不 promotion |
+| P11-T03 | P11-T01；现有 Task/Intent/Effect/evidence/verification；**不依赖 T02** | 真 Project 聚合（非 Task 行冒充）；Charter/Goal/Metric/Plan revision；confirm-before-activate；Task/Attempt；独立 verification；stale/cross-Project/false-completion negatives | 无自动 promotion |
+| P11-T04 | P11-T03；现有 adapter identity foundation | Role Blueprint/Assignment/Employee；权威 id = Employee（chrome 可写 Member Runtime）；每项目唯一 current manager；employee≠runtime；authority-transfer negatives | 无自动 promotion |
+| P11-T05 | P11-T03、P11-T04；ADR-0058 retained boundary | **新 Personal private projection version**；禁止重解释 `conversation-projection/0.1`；不先开 Lane-CTR；scoped archive/index/retrieval；cross-scope/secret/archive-completion negatives | 仅 core 公共 schema 才 Lane-CTR |
+| P11-T06 | P11-T03、P11-T05；existing exact Pi client/Shell foundation | 隐藏 Pi Personal Assistant；candidate-only；no authority/secret/archive/Memory；daemon preview handoff | 无；Pi Linux evidence不转移 Windows OPC |
+| P11-T07 | P11-T03、P11-T04、P11-T12；existing dsh Path B；**不依赖 T02 mutex** | **隐藏托管 DSH 引擎**（非可见 Installed Agent / 原生 DSH UI / engine store）；isolated child/stdio；daemon Provider proxy；Windows sandbox E2E = Requires-environment | 独立 DSH/Windows qualification；无其他 Agent transfer |
+| P11-T08 | P11-T03；existing scheduler/Effect/recovery primitives | Routine revision、manual/schedule/qualified-event Trigger、no-overlap、queue-latest、missed/coalesced；clock/restart/unknown negatives。不挡 T09 | 无自动 promotion |
+| P11-T09 | P11-T03；existing preview/Effect/alert/recovery；**不依赖 T08** | HITL **只**在项目中心画布 + Today 深链；聊天无 Approve；非一级 Inbox queue；stale/chat-approval/false-success negatives | 无自动 promotion |
+| P11-T10 | P11-T03、P11-T05；current Memory/Skill/Context/Artifact | Knowledge + Markdown Vault；import/rights/provenance/index/conflict；投影/检索越权与 secret-shape negatives | 无；Obsidian app不进入产品/qualification |
+| P11-T11 | P11-T05、P11-T10；current Memory admission/forget | scoped episodic retrieval、semantic Memory admission/privacy/correct/forget、index non-resurrection；Letta/Mem0 no-direct-write negatives | 无自动 promotion |
+| P11-T12 | P11-T03、P11-T04；current Provider Control Plane；**不依赖 T07** | subscription/account/billing/quota 分离；global→Project→employee→Task binding；**诚实 usage / unknown≠0**；成员级预算 = 2.1 / Deferred（非当前 chrome） | Provider/Windows support需独立 qualification |
+| P11-T13 | P11-T03 + Visual UI 规格；Dual Track 仅在 T03 投影/HTTP 稳定后开 `clients/pc/web` | Today/Projects/Knowledge + 底栏 Settings + 右栏助手；Team/Inbox 不是一级；Requires-backend honesty；daemon-served `/ui/`；NVDA/200%/host-theme **挂单 not-run** | rendered/runtime 仅 implementation；不自动 Gate/release |
+| P11-T14 | parked | X/Twitter connector scenario **parked**；不进入当前建造顺序 | connector/platform独立 qualification；不保证业务结果 |
+| P11-T15 | parked | fixed-denominator Windows OPC acceptance **parked**；不自动形成 release | release仍需独立 signing/B01-W/owner disposition；2.1 remote out |
 
 #### Context MVP authorization scope
 
@@ -479,20 +483,20 @@ formal task acceptance assessment 和收口。
 | `P10-T02/D02` | P10-T02 | focused negatives：Core 无 MCP family / conversation-projection / generic Resource schema；ConversationBinding `additionalProperties: false`；1.0 `RESOURCE_FAMILIES` 仍为六 family 且 `mcp` 走 `RESOURCE_PROJECTION_FAMILY_INVALID`；P5 adapter 仍为 transport-only | `P10-T02/D01` | 本机 Node `tools/test/p10_t02_lane_ctr.test.mjs`；不跑 Rust linking；完成后进入 D03 |
 | `P10-T02/D03` | P10-T02 | 将 ADR-0058 边界同步到 product/architecture/handbook/plan/trace；完整 acceptance mapping、required CI、唯一 closure 与 lease/branch/main 收口 | `P10-T02/D01-D02` | `check:consistency`、handbook/generator/docs-sync、tools suite、`git diff --check` 与 required Ubuntu/Windows CI；无 Gate/release/Profile claim |
 | `P11-T01/D01` | P11-T01 | 完整 OPC documentation-only rebaseline：ADR-0059、current/frozen product/design、Canvas prototype、architecture、P10 disposition/P11 plan/trace/support/environment、双语 handbook 与 deterministic docs closure；不触碰 code/contracts/tests | owner-approved `DOC-PERSONAL-2.0-OPC`；P10-T01/T02 done；finalized Linux 1.0 | local Markdown/link/anchor/fence/terminology、Canvas TS、`check:consistency`、`check:handbook`、generator `--check`、fingerprint、docs-sync、diff/lint；required Ubuntu/Windows CI；documentation-only |
-| `P11-T02/D01` | P11-T02 | Windows host vertical path：install→Personal Home app/data→daemon/tray/background close choice→sleep/offline/missed observation→recover；secret/process/ACL/rollback fail closed | `P11-T01/D01`；ADR-0052/P7-T07 current fragments | failure-first Windows host/process/filesystem/SecretStore negatives；`CI-WINDOWS-MSVC-01` + future qualified native Windows dev environment；B01-W not-run until provisioned |
-| `P11-T03/D01` | P11-T03 | daemon authority vertical path：guided draft→Charter/Goal/Metric/Plan preview→Owner confirm→active Project→Task/Attempt→Effect/evidence/verification；manager envelope | `P11-T01/D01` + current Task/Intent/Effect/verifier services | required Ubuntu/Windows CI + future qualified native Windows E2E；stale preview/cross-Project/unconfirmed activation/attempt erasure/self-report completion negatives |
-| `P11-T04/D01` | P11-T04 | Project Manager Blueprint specialization→Assignment→Employee creation→runtime binding/handoff；one current manager and history preserved | `P11-T03/D01` + current adapter identity foundation | required CI + qualified Windows E2E；Role=Agent/Employee=process/authority transfer/manager removal/implicit upgrade negatives |
-| `P11-T05/D01` | P11-T05 | Personal Conversation append/archive/index/query→bounded authorized retrieval→employee/Task linkage；single active composer/draft preservation；new private version or Lane-CTR before machine shape | `P11-T03/D01`、`P11-T04/D01`、ADR-0058 retained boundary | required CI + qualified Windows E2E；cross-scope, unbounded resume, secret-shape, `0.1` reinterpretation, Conversation-as-completion negatives |
-| `P11-T06/D01` | P11-T06 | Personal Assistant uses exact Pi engine to explain/navigate/research/propose→daemon preview request→receipt explanation while hidden/candidate-only/default-deny | `P11-T03/D01`、`P11-T05/D01` + current exact Pi foundation | required CI + qualified Windows native Pi route；direct authority/SecretStore/archive/Memory/Tool/completion and ambient capability negatives |
-| `P11-T07/D01` | P11-T07 | exact audited DSH artifact→immutable install slot→isolated child/stdio broker→daemon Provider proxy→bounded Task candidate→health/update/rollback/remove | `P11-T02/D01`、`P11-T03/D01`、`P11-T04/D01` + current dsh adapter facts | required CI + qualified Windows sandbox/supply-chain E2E；digest/protocol/ACL/env-secret/native-MCP/base-tool/HMR/home-patch/orphan/rollback/unknown negatives |
-| `P11-T08/D01` | P11-T08 | Routine revision + manual/schedule/qualified-event Trigger→no-overlap/queue-latest→occurrence ledger→sleep/offline missed→risk-based catch-up | `P11-T03/D01` + current scheduler/Effect/recovery primitives | required CI + qualified Windows clock/sleep/restart E2E；overlap, stale policy, coalesced erasure, consequential auto-resume, checkpoint-authority negatives |
-| `P11-T09/D01` | P11-T09 | Inbox combines approval/input/permission/failure/unknown/missed/budget→current daemon preview→edit/narrow/reject/confirm→receipt/reconcile | `P11-T03/D01`、`P11-T08/D01` + current preview/Effect/alert/recovery | required CI + qualified Windows UI/runtime E2E；stale/cross-channel preview, blind retry, lost input, chat approval, unknown-as-success negatives |
-| `P11-T10/D01` | P11-T10 | Personal Home Project dir + shared Knowledge/Markdown Vault import→rights/provenance→parse/OCR/index→reindex/conflict→config-edit candidate | `P11-T03/D01`、`P11-T05/D01` + current Memory/Skill/Context/Artifact | required CI + qualified Windows filesystem/index E2E；secret ingestion, traversal, rights bypass, last-write-wins, file-as-authority, proprietary-app dependency negatives |
-| `P11-T11/D01` | P11-T11 | scoped episodic archive retrieval→redaction/provenance/untrusted Context→semantic Memory candidate/admission→view/correct/forget/non-resurrection | `P11-T05/D01`、`P11-T10/D01` + current Memory admission/forget | required CI + qualified Windows E2E；scope/secret/stale/poisoning/direct Letta-Mem0 write/forgotten resurrection/full-archive injection negatives |
-| `P11-T12/D01` | P11-T12 | account/subscription/billing/quota split + global→Project→employee→Task binding→daemon-proxied DSH/Pi call→actual usage + Project/member/Task budget stop | `P11-T03/D01`、`P11-T04/D01`、`P11-T06/D01`、`P11-T07/D01` + current Provider plane | required CI + qualified Windows SecretStore/Provider route；raw secret/env/fallback/silent rebind/unknown=0/budget bypass and un-reconciled Effect negatives |
-| `P11-T13/D01` | P11-T13 | daemon-served Windows OPC UI across Today/Projects/Team/Knowledge/Inbox/Settings/right Assistant with Project briefing/setup/single composer/all state matrix and real callers only | `P11-T02/D01`–`P11-T12/D01` | TS/component/a11y tests + rendered browser state/keyboard/reduced-motion/narrow-window review + required CI + qualified Windows daemon-served `/ui/`; no Vite-as-product substitution |
-| `P11-T14/D01` | P11-T14 | X/Twitter Project from charter/research/original content→rights check→publication package→qualified connector preview/dispatch/reconcile→metric readback/verification | `P11-T03/D01`、`P11-T07/D01`–`P11-T13/D01` | required CI + preregistered qualified Windows connector environment；fingerprint/CAPTCHA/anti-abuse evasion, rights, drift, target, unknown/retry, false-completion negatives |
-| `P11-T15/D01` | P11-T15 | freeze and execute N=15 Windows OPC scenarios at one exact revision; retain every started case and pass/fail/partial/not-run; zero critical A1–A8 failures; independent review, cleanup, report | `P11-T02/D01`–`P11-T14/D01` + qualified Windows native environment | preregistered fixed denominator; required CI plus qualified Windows execution; release/signing/B01-W/2.1 remain separate and `not-run` unless independently completed |
+| `P11-T02/D01` | P11-T02 | Windows host vertical path（隐藏能力，非 chrome）：install→Personal Home app/data→daemon/tray→close background-or-pause→sleep/offline/missed→recover；secret/process/ACL fail closed。不挡 T03 | `P11-T01/D01`；ADR-0052/P7-T07 current fragments | `CI-WINDOWS-MSVC-01` compile/test；native E2E = `DEV-WINDOWS-NATIVE-OPC-01`（未资格化则 `Requires-environment` / `not-run`）；`B01-W` 非日常默认 |
+| `P11-T03/D01` | P11-T03 | **实现第一刀**：failure-first 负例 → 真 Project 聚合（非 Task 行改装）→ confirm-before-activate → Charter/Goal/Metric/Plan → Task/Attempt → Effect/evidence/independent verification | `P11-T01/D01` + current Task/Intent/Effect/verifier；**不依赖 T02** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`（+ 需要时 exact-revision `DEV-LINUX-NATIVE-01`）；按 TEST-REPORT-INCREMENTAL-01 记账 |
+| `P11-T04/D01` | P11-T04 | Employee 身份：Blueprint specialization→Assignment→Employee→runtime bind；one current manager；employee≠runtime | `P11-T03/D01` + current adapter identity | 同 T03 CI 默认；宿主 E2E 未资格化则 `not-run` |
+| `P11-T05/D01` | P11-T05 | 新 Personal private Conversation version：append/archive/index/query；禁止重解释 `0.1`；不先开 Lane-CTR | `P11-T03/D01`、`P11-T04/D01`、ADR-0058 | 投影负例 → CI；宿主 E2E 未资格化则 `not-run` |
+| `P11-T06/D01` | P11-T06 | 隐藏 Pi Assistant：explain/navigate/research/propose→daemon preview；candidate-only/default-deny | `P11-T03/D01`、`P11-T05/D01` + exact Pi | required CI；Linux Pi qualification 不转移 Windows |
+| `P11-T07/D01` | P11-T07 | 隐藏托管 DSH：exact artifact→isolated child/stdio→daemon Provider proxy；非可见 Installed Agent / 原生 UI / engine store | `P11-T03/D01`、`P11-T04/D01`、`P11-T12/D01` + dsh Path B；**不依赖 T02 mutex** | required CI；Windows sandbox E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run` |
+| `P11-T08/D01` | P11-T08 | Routine + Trigger → no-overlap/queue-latest → missed ledger；不挡 T09 | `P11-T03/D01` + scheduler/Effect/recovery | required CI；clock/sleep E2E 未资格化则 `not-run` |
+| `P11-T09/D01` | P11-T09 | HITL 只在项目中心画布 + Today 深链；聊天无 Approve；非一级 Inbox | `P11-T03/D01` + preview/Effect/alert；**不依赖 T08** | required CI；UI E2E 未资格化则 `not-run` |
+| `P11-T10/D01` | P11-T10 | Knowledge/Markdown Vault import→rights/provenance→index/conflict；投影/检索越权负例 | `P11-T03/D01`、`P11-T05/D01` | 负例 → CI；宿主 filesystem E2E 未资格化则 `not-run` |
+| `P11-T11/D01` | P11-T11 | Memory admission/view/correct/forget/non-resurrection | `P11-T05/D01`、`P11-T10/D01` | required CI；privacy E2E 未资格化则 `not-run` |
+| `P11-T12/D01` | P11-T12 | 诚实 usage / unknown≠0；binding global→Project→employee→Task；成员级预算非当前 chrome | `P11-T03/D01`、`P11-T04/D01` + Provider CP；**不依赖 T07** | required CI；SecretStore/Provider 宿主未资格化则 `not-run` |
+| `P11-T13/D01` | P11-T13 | daemon-served `/ui/` IA：Today/Projects/Knowledge + Settings + 右栏助手；Dual Track 仅 T03 稳定后；完整 IA 收口在 T13 | `P11-T03/D01` + Visual UI 规格；禁止先画完整假壳 | TS/a11y + daemon `/ui/`；NVDA/200%/host-theme **挂单 not-run**；禁止 Vite 冒充产品 |
+| `P11-T14/D01` | P11-T14 | **parked** | parked | parked；`not-run` |
+| `P11-T15/D01` | P11-T15 | **parked** N=15 Windows OPC acceptance | parked | parked；ordinary CI/Linux/WSL/GNU 不能 promotion |
 
 > **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
 > PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`；
@@ -1182,30 +1186,114 @@ Linux 主线，macOS `shelved`（不排期不声明能力），Windows code-sign
 Phase 10 的原 acceptance 保留在上表与 typed-dependency 表中；上述 status/disposition
 不声称它们完成。未启动任务退出 current 2.0 主链后，不登记 G10、B13 或任何 Gate。
 
-### Phase 11 - Personal 2.0 Windows-first OPC
+### Phase 11 - Personal 2.0 Windows-first OPC（chrome = CognitiveOS Personal 2.0.0）
 
-Phase 11 是 ADR-0059 的 current successor plan。`P11-T01` 是当前 docs-only closure；
-`P11-T02..T15` 均未启动、未领取。任何实现必须使用单独 task branch/lease/Draft PR，
-不得从本 docs delivery 自动继续。Windows 2.0 不继承 Linux、WSL、Canvas、ordinary CI
-或本机 GNU evidence；native mobile/E2E relay remote 明确属于 2.1。
+Phase 11 是 ADR-0059 的 current successor plan。`P11-T01` 是已完成的 docs-only
+closure。`P11-T02..T15` 计划卡已于 2026-08-30 按已定档 Personal 2.0.0 chrome
+改写，但仍未启动、未领取。任何实现必须使用单独 task branch/lease/Draft PR。
+实现第一刀是 owner 授权后的 **`P11-T03`**（不依赖 T02）。Windows 2.0 不继承
+Linux、WSL、Canvas、ordinary CI 或本机 GNU evidence 作为 Gate/release/Profile。
+native mobile/E2E relay remote 属于 2.1。T14/T15 **parked**。
+
+**Visual UI 精修**是 Phase 11 内单独设计战役（非新 `P11-T*`、不改 Remaining），
+可与 T03 并行；必须在 **T13 编码前**产出视觉规格；不许改 IA；不跑
+`personal-20-prototype-review` phase 4 重生 canvas。索引与提示词：
+[personal-2.0.0-dev-prep-index.md](../../personal/docs/architecture/personal-2.0.0-dev-prep-index.md)。
+
+建造顺序（实现窗口约束；T06 保留在 T05 之后）：
+
+```mermaid
+flowchart TD
+  vis[VisualUI_design_campaign]
+  T03[T03_Project_aggregate]
+  T04[T04_Employee_runtime]
+  T05[T05_Conversation_new_private]
+  T10[T10_Knowledge_Vault]
+  T11[T11_Memory_admission]
+  T06[T06_hidden_Pi_assistant]
+  T09[T09_HITL_canvas_not_Inbox]
+  T08[T08_Routine]
+  T12[T12_Provider_honest_usage]
+  T07[T07_hosted_DSH_hidden]
+  T02[T02_Windows_host]
+  T13[T13_ui_IA_closure]
+  T14[T14_X_parked]
+  T15[T15_acceptance_parked]
+  vis -.-> T03
+  T03 --> T04
+  T04 --> T05
+  T05 --> T10
+  T05 --> T06
+  T10 --> T11
+  T03 --> T09
+  T03 --> T08
+  T04 --> T12
+  T12 --> T07
+  T03 -.-> T02
+  T03 --> T13
+  vis --> T13
+  T14 -.-> parked1[parked]
+  T15 -.-> parked2[parked]
+```
+
+#### 硬门（每张卡、每个垂直切片；文档-only 出口须在卡上写明）
+
+切片未同时满足下列项，不得标 `done`：
+
+1. 产出用户可见路径、durable 权威事实、真实集成，或可关闭的正确性性质。
+2. focused failure-first 或负例 + 卡上登记的 supported validation **已在该环境实际跑过**。
+3. 结果按 Operating Model `TEST-REPORT-INCREMENTAL-01` 立刻追加进该任务/切片的
+   **单一** running report（`pass` / `fail` / `partial` / `not-run` /
+   `not_available` + 环境 ID + exact revision），再开始下一单元。
+4. 下一刀优先接真实 caller 或 durable 权威结果，禁止连续 helper-only 堆砌。
+
+`RUST-LINK-DEV-WIN-GNU-01` 与 `COMMAND-SHELL-PS51` 记环境 / `not-run`，禁止写成
+产品失败。A6：不得为跑通而削弱合同或负例。A7：本地 / fixture / WSL / ordinary CI
+不升 Gate / release / Profile。`not-run` 永远不是 pass。
+
+#### P11-T02..T15 三栏（缺一栏则开发前期未完成）
 
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
-| P11-T01 | OPC docs/ADR closure | owner-approved OPC baseline；P10-T01/T02 done；finalized Linux 1.0 | ADR-0059；OPC current + legacy frozen product/design；interactive Canvas；architecture；P10 disposition/P11 typed plan/task cards/trace/support/environment；双语 handbook/source-map/fingerprint/generated check；required CI 与 deterministic closure；只含 docs/design/prototype | done | merged PR [#280](https://github.com/agentkernel/cognitive-os/pull/280) at `main@f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`；content CI [33085916115](https://github.com/agentkernel/cognitive-os/actions/runs/33085916115) SUCCESS；final head `b7fb3a14` CI [33087566480](https://github.com/agentkernel/cognitive-os/actions/runs/33087566480) attempt 2 SUCCESS after retained A7 timing failure on attempt 1；lease/branches closed；无 implementation/support/Gate/release/Profile claim |
-| P11-T02 | Windows host/tray/background baseline | P11-T01；ADR-0052/P7-T07 current fragments | Windows app/data、installer/daemon/tray、close background-or-pause、sleep/offline/missed、SecretStore/process/ACL、update/rollback/restore；supported CI + qualified native Windows negatives | not-started | unclaimed；`CI-WINDOWS-MSVC-01` 仅 implementation evidence；B01-W 未 provision |
-| P11-T03 | Project/Charter/Goal/Plan/Attempt authority | P11-T01；current Task/Intent/Effect/evidence/verifier services | guided draft→structured daemon preview→confirm→active Project；Goal/Metric/Plan/Task/Attempt revisions、manager autonomy envelope、Effects/evidence/independent acceptance；stale/cross-project/false-completion negatives | not-started | unclaimed；public shape 如需走 Lane-CTR |
-| P11-T04 | Role Blueprint/Assignment/Digital Employee | P11-T03；current adapter identities | versioned Blueprint→Project Assignment→Employee；only built-in manager base、one current manager、specialization/opt-in、employee≠runtime、Task/artifact/handoff；authority-transfer negatives | not-started | unclaimed |
-| P11-T05 | Personal-owned Conversation archive/index/retrieval | P11-T03、P11-T04；ADR-0058 retained boundary | scoped Conversation append/archive/index/retrieval、redaction/provenance/untrusted observations、single composer/drafts、Task/artifact links；new private version or Lane-CTR；cross-scope/secret/completion negatives | not-started | unclaimed；不得重解释 `conversation-projection/0.1` |
-| P11-T06 | Pi-backed Personal Assistant | P11-T03、P11-T05；current exact Pi foundation | global explain/navigate/research/propose→daemon preview→receipt；Pi hidden/candidate-only/default-deny、无 authority/secret/archive/Memory/Tool/completion | not-started | unclaimed；Pi Linux qualification不转移 |
-| P11-T07 | preinstalled managed DSH Agent | P11-T02、P11-T03、P11-T04；current dsh facts | exact audited artifact、isolated child/stdio broker、daemon Provider proxy、default-deny tools、health/update/rollback/remove；Windows supply-chain/sandbox/secret/orphan/unknown negatives | not-started | unclaimed；2.0 only DSH；Hermes/Codex/Cursor future candidates |
-| P11-T08 | Routine/Trigger/missed/queue-latest | P11-T03；current scheduler/Effect/recovery | revisioned Routine、manual/schedule/qualified-event Trigger、no-overlap、queue-latest、coalesced/missed ledger、risk-based resume、reflection candidates；clock/restart/stale/unknown negatives | not-started | unclaimed；no second scheduler |
-| P11-T09 | HITL Inbox/approval/recovery | P11-T03、P11-T08；current preview/Effect/alert/recovery | approvals/input/permission/failure/unknown/missed/budget priority queue；serialized current preview、edit/narrow/reject/receipt、reconcile-before-retry；channel/stale/lost-input/false-success negatives | not-started | unclaimed |
-| P11-T10 | Knowledge/Vault ingestion/sync/conflict | P11-T03、P11-T05；current Memory/Skill/Context/Artifact | Personal Home project dirs、shared knowledge + Markdown Vault、rights/provenance/import/parse/OCR/index/reindex/conflict、config-edit candidate、Obsidian-compatible optional companion | not-started | unclaimed；proprietary app not bundled/required |
-| P11-T11 | Memory admission/privacy/correct/forget | P11-T05、P11-T10；current Memory admission/forget | scoped episodic retrieval→bounded Context→semantic Memory candidate/admission；privacy/provenance/view/correct/forget/non-resurrection；Letta/Mem0 no-direct-write/full-archive/secret negatives | not-started | unclaimed |
-| P11-T12 | Provider routing/budgets/usage | P11-T03、P11-T04、P11-T06、P11-T07；current Provider plane | subscription/account/billing/quota split；global→Project→employee→Task binding；Project/member/Task budgets + actual usage；DSH/Pi daemon proxy；secret/fallback/silent rebind/unknown=0/budget bypass negatives | not-started | unclaimed；current budgets remain advisory until this task proves enforcement |
-| P11-T13 | Today/Projects/Team/Knowledge/Inbox UI | P11-T02..T12 | daemon-served Windows OPC IA、Project briefing、guided setup、bottom Settings、right Assistant、single composer、all required states、Requires-backend honesty、keyboard/reduced-motion/narrow-window/rendered review | not-started | unclaimed；current P7 UI evidence does not qualify target |
-| P11-T14 | X/Twitter qualified connector scenario | P11-T03、P11-T07..T13 | charter/research/original content/rights check/publication package/preview/qualified dispatch/receipt/metric readback；no fingerprint/CAPTCHA/anti-abuse evasion；drift/rights/unknown/false-completion negatives | not-started | unclaimed；不保证业务结果或浏览器可靠性 |
-| P11-T15 | fixed-denominator Windows OPC acceptance | P11-T02..T14；qualified Windows native environment | preregister N=15 scenarios；retain every started result pass/fail/partial/not-run；exact revision、zero critical A1–A8 failure、independent review、cleanup/non-claim report | not-started | unclaimed；release/signing/B01-W/2.1 remain separate |
+| P11-T01 | OPC docs/ADR closure | owner-approved OPC baseline；P10-T01/T02 done；finalized Linux 1.0 | ADR-0059；OPC current + legacy frozen product/design；interactive Canvas；architecture；P10 disposition/P11 typed plan/task cards/trace/support/environment；双语 handbook/source-map/fingerprint/generated check；required CI 与 deterministic closure；只含 docs/design/prototype | done | merged PR [#280](https://github.com/agentkernel/cognitive-os/pull/280) at `main@f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`；documentation-only；无 implementation/support/Gate/release/Profile claim |
+| P11-T02 | Windows host/tray/background（隐藏） | P11-T01；**不挡 T03** | 见下表三栏 | not-started | unclaimed |
+| P11-T03 | Project 聚合 walking skeleton | P11-T01；**不依赖 T02** | 见下表三栏；实现第一刀 | not-started | unclaimed；等 owner 授权 |
+| P11-T04 | Employee / Member Runtime 身份 | P11-T03 | 见下表三栏 | not-started | unclaimed |
+| P11-T05 | Conversation 新 private version | P11-T03、P11-T04 | 见下表三栏；禁止重解释 `0.1` | not-started | unclaimed |
+| P11-T06 | 隐藏 Pi Assistant | P11-T03、P11-T05 | 见下表三栏 | not-started | unclaimed |
+| P11-T07 | 隐藏托管 DSH | P11-T03、P11-T04、P11-T12 | 见下表三栏；非可见 Installed Agent | not-started | unclaimed |
+| P11-T08 | Routine/Trigger | P11-T03 | 见下表三栏；不挡 T09 | not-started | unclaimed |
+| P11-T09 | HITL 画布（非 Inbox 一级） | P11-T03；**不依赖 T08** | 见下表三栏 | not-started | unclaimed |
+| P11-T10 | Knowledge/Vault | P11-T03、P11-T05 | 见下表三栏 | not-started | unclaimed |
+| P11-T11 | Memory admission | P11-T05、P11-T10 | 见下表三栏 | not-started | unclaimed |
+| P11-T12 | Provider 诚实 usage | P11-T03、P11-T04；**不依赖 T07** | 见下表三栏；成员预算非当前 chrome | not-started | unclaimed |
+| P11-T13 | `/ui/` IA 收口 | P11-T03 + Visual UI 规格 | 见下表三栏；完整 `/ui/` 不提前冒充 | not-started | unclaimed |
+| P11-T14 | X/Twitter connector | **parked** | parked | not-started | parked |
+| P11-T15 | fixed-denominator acceptance | **parked** | parked | not-started | parked |
+
+| ID | validation environment | 关闭门 | 漂移检测负例 |
+|---|---|---|---|
+| P11-T02 | `CI-WINDOWS-MSVC-01`（compile/test）。原生 install/tray/sleep/SecretStore E2E = `DEV-WINDOWS-NATIVE-OPC-01`；未资格化则 `Requires-environment` / `not-run`。`DEV-WIN-GNU-01` 禁 Rust link。`B01-W` / `B01-DESKTOP-002` 非日常默认。 | 在资格化 Windows 宿主上证明 inspectable install → Personal Home `app/`/`data/` → daemon/tray → close background-or-pause → sleep/offline missed → ordered recovery。环境缺失时原生 E2E 诚实 `not-run`，不得编造 pass。 | 错误安装根、ACL 逃逸、raw secret/env/argv、重复 daemon、orphan DSH、假 background、restore-as-backup 声称；secret 不进日志/DOM。 |
+| P11-T03 | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`；需要 native daemon/store 时已 push 的 exact-revision `DEV-LINUX-NATIVE-01`。`DEV-WIN-GNU-01` 仅 fmt/docs/TS。`B01-DESKTOP-002` 非日常默认。 | 真 Project 聚合存在（非 Task 行改名）；confirm-before-activate；Charter/Goal/Metric/Plan revision 是 daemon 权威；Task/Attempt 经 Intent/Effect 与独立 verification。Walking skeleton，不是完整 Today 页。 | 真 Project/Employee 而非 Task 行冒充；无权威则 empty/unavailable、禁止假按钮；完成 ≠ 模型文本 / HTTP 200 / `agent_end`；未确认激活失败；跨项目写失败；secret 不进日志/argv/SQLite/聊天/DOM。 |
+| P11-T04 | 同 T03：`CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`（+ 需要时 `DEV-LINUX-NATIVE-01`）。宿主生命周期 E2E 未资格化则 `not-run`。 | Employee（权威 id）与 runtime 可替换且身份不合并；每活动 Project 恰好一个 current manager；Blueprint 无 Provider binding。 | Role=Agent、Employee=process、聊天/handoff 转移权威、manager 删除即丢历史、隐式 Blueprint 升级。 |
+| P11-T05 | 投影/检索负例 → CI。宿主 archive E2E 未资格化则 `not-run`。 | 新 Personal-private projection version 落地；`conversation-projection/0.1` 字节语义不变；不先开 Lane-CTR（除非发现必须改 core 公共 schema）。 | 跨项目/员工读、secret-shape、无界 resume、全文档案注入、Conversation 当完成、重解释 `0.1`。 |
+| P11-T06 | required CI；Linux Pi pin 不转移 Windows OPC。宿主 Pi 路由未资格化则 `not-run`。 | 隐藏 Pi 只产 candidate；变更走 daemon preview；无 authority/Secret/archive/Memory 写。 | 直连 DB/SecretStore/Provider、ambient Tool/shell、伪造 source/confidence、preview bypass、把 Pi Linux 资格写成 Windows 产品。 |
+| P11-T07 | required CI。Windows sandbox/supply-chain E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。禁止用 Linux Path B 冒充 Windows 托管资格。 | DSH 是隐藏托管引擎：exact artifact + isolated child/stdio + daemon Provider proxy。默认 chrome 无 Installed Agent 商店、无原生 DSH UI。 | digest/protocol 不匹配、ACL/env secret、native MCP/base tool/HMR/home patch、orphan、unknown output 当成功、把 `apps/web` / 插件商店搬进 `/ui/`。 |
+| P11-T08 | required CI。clock/sleep/restart E2E 未资格化则 `not-run`。 | Routine revision + Trigger 产生 no-overlap/queue-latest 与可见 missed；daemon scheduler 是唯一调度权威。 | overlap、静默丢 occurrence、stale policy、checkpoint 当完成、把 T09 挡在 T08 之后实现 Inbox 一级。 |
+| P11-T09 | required CI。宿主 UI E2E 未资格化则 `not-run`。 | HITL 只在项目中心画布；Today 深链进入该画布；聊天无 Approve。关闭门不是「Inbox 一级 queue 绿」。 | 聊天 Approve、独立 `#/hitl` 一级、stale/跨通道 preview、blind retry、unknown=success、无权威却渲染可点按钮。 |
+| P11-T10 | 投影/检索负例 → CI。宿主 filesystem/index E2E 未资格化则 `not-run`。 | Vault/index 可重建且不拥有 Project 权威；import 带 rights/provenance。 | 遍历、secret ingestion、越权检索、last-write-wins 无冲突、file-as-authority、捆绑 Obsidian。 |
+| P11-T11 | required CI。privacy/rebuild E2E 未资格化则 `not-run`。 | Memory 须 admission；forget 后 index/cache 不复活。 | 跨 scope 回忆、secret/PII、Agent 自 admission、Letta/Mem0 直写权威、tombstone 复活。 |
+| P11-T12 | required CI。SecretStore/Provider 宿主未资格化则 `not-run`。 | 诚实 usage；unknown 费用 ≠ 0；binding 可解释。成员级预算硬停 **不是** 当前 chrome 关闭门。 | unknown=0、raw secret 进 env/log/DB/UI、静默 rebind、把成员预算写成 2.0.0 一级能力、依赖 T07 才开始诚实 usage。 |
+| P11-T13 | Dual Track：合同 mock + 无权威空态（TS）。产品源 = daemon `/ui/`。NVDA / 200% 布局 / host-theme contrast **挂单 `not-run`**。`DEV-WINDOWS-NATIVE-OPC-01` 不合格则原生 UI E2E `not-run`。 | Today/Projects/Knowledge + Settings + 右栏助手替换六族 IA；无权威诚实 empty；假按钮 0。完整 `/ui/` 不得在无 Project 权威时冒充已验收。 | Vite 当产品源、Team/Inbox 一级、假 Requires-backend 按钮、secret/token 进 DOM、Agent 自验证、无 Visual UI 规格就编码整页。 |
+| P11-T14 | parked；任何单元格 `not-run` | parked；不得标 done | parked；禁止 fingerprint/CAPTCHA/anti-abuse 规避若将来解冻 |
+| P11-T15 | parked。将来若解冻：资格化 Windows 上一 exact revision，N=15。ordinary CI/Linux/WSL/GNU 不能 promotion。 | parked | parked |
+
+本仓 foundation（各卡复用，禁止再造平行权威）：SessionGate、hash `/ui/`、
+Task/Intent/Effect/verification、Provider Control Plane、Pi client、dsh Path B、
+SecretStore。T07 可借鉴（不可搬权威）harness `packages/sandbox/*` 与
+`packages/subprocess/*`、session JSONL 结构。T05/T11 可借鉴 Codex
+`codex-rs/memories` 分层。禁止结论写成「所以 heartbeat 写权威」。禁止再造：
+第二套 scheduler、engine store、聊天 Approve、Team/Inbox 一级、成员级预算当前 chrome。
 
 ## 5. Gate 与证据要求
 

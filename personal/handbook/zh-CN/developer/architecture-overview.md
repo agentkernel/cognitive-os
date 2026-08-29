@@ -26,11 +26,12 @@ sources:
   - path: personal/docs/architecture/windows-host-background.md
   - path: personal/docs/architecture/routine-trigger-missed-run.md
   - path: personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md
+  - path: personal/docs/architecture/personal-2.0.0-dev-prep-index.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:d2978c82121157a3ed4e19479040d0b7850d7db155fb4a8537250b013e93fc8c"
+fingerprint: "sha256:4436b3e90e50ed4492dbff1f90a83a68375a4ab6cf79221f9a72f3e92c74c983"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -77,10 +78,10 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
 - Project 拥有 Charter、Goal、Plan revision、manager Assignment 与 employee identity；
   Task/Attempt/Effect/verification 仍由 daemon 治理。
 - Pi 是 hidden、candidate-only 的 Personal Assistant engine。
-- DSH 是可见的 preinstalled managed Installed Agent 与默认员工 runtime：exact audited
-  artifact、isolated child、bounded stdio broker、daemon Provider proxy 以及
-  update/rollback。没有 native DSH UI/conversation、raw secret、MCP/base tool、HMR
-  或 home patch。
+- DSH 是**隐藏托管** Member 执行引擎（不是可见 Installed Agent / 原生 DSH UI /
+  engine store）：exact audited artifact、isolated child、bounded stdio broker、
+  daemon Provider proxy 以及 update/rollback。没有 native DSH UI/conversation、
+  raw secret、MCP/base tool、HMR 或 home patch。
 - Personal 拥有 scoped Conversation archive/index/retrieval、Project Markdown Vault
   integration 与 semantic Memory admission/correct/forget。
 - Routine/Trigger 使用 daemon-owned no-overlap、queue-latest、missed/coalesced fact 与
@@ -88,13 +89,17 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
 - Provider binding 按 global→Project→employee→Task；subscription、account、
   billing/quota、budget 与 actual usage 分离。
 - UI 是 Today/Projects/Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
-  不是一级导航。2026-08-30 owner 批准的当前交互 chrome 是
-  `personal-20-opc-e2e-optimized-v9`；architecture/formal-plan 用词对账推迟到
-  **完成后**。单模块维护入口：
+  不是一级导航。2026-08-30 设计定档的当前 chrome 是 **CognitiveOS Personal
+  2.0.0**（os-personal 2.0.0）。canvas 文件名可保留
+  `personal-20-opc-e2e-optimized-v9` 作为历史文件名；勿再称 v9 为产品版本。
+  architecture/formal-plan 用词对账推迟到 **完成后**。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
+  该索引同时收录设计 Agent / Owner 旅程难点研判（hypothesis；不是 Gate、不是 P11 领取）。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  （informative；Owner 批准 ≠ 后端已存在；P11 仍未领取）。
+  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；P11 实现仍未领取）。
+  开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
+  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
 - HITL **只**在项目中心画布；Today 用深链进入。不要把独立
@@ -104,9 +109,10 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   projection version；禁止重解释 `conversation-projection/0.1`；不要先开
   独立 Lane-CTR。只有必须改 **core 公共** conversation schema 的那一块才走
   Lane-CTR；T05 其余私有投影继续。此处不改 `core/specs`。
-- 未开发的 `P11-T02`–`T15` 计划卡 **frozen**。Owner 解冻 P11 实现时，按已批准
-  v9 chrome 重新切分（不以 Team/Inbox 一级或成员级 budget stop 为当前 chrome）。
-  本页不改写 `PERSONAL-DEVELOPMENT-PLAN.md`。
+- `P11-T02`–`T15` 计划卡已于 **2026-08-30 按 Personal 2.0.0 chrome 对齐**
+  （不以 Team/Inbox 一级或成员级 budget stop 为当前 chrome）。实现仍未领取，
+  待 Owner 授权 `P11-T03`。前期索引：
+  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh
 first-conversation-slice 角色，`conversation-projection/0.1` 不重解释。MCP 从 OPC P0

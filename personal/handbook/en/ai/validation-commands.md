@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:1682148e6989f91e6a02af05fb3fe97710c682d904b249c1be207f80d36573c6"
+fingerprint: "sha256:d6f50171283f2d13abf45968d81f8ce0851b73875e2f51473e4abb8206145a31"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -27,12 +27,15 @@ non_claims:
 Environment routing is a precondition, owned by
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
 
-Personal 2.0 Phase 11 adds a Windows OPC route: ordinary
-`CI-WINDOWS-MSVC-01` plus future qualified `DEV-WINDOWS-NATIVE-OPC-01` for
-host/DSH/Vault/UI/connector execution, then a preregistered N=15 acceptance at
-one qualified Windows revision. The native environment and B01-W are not
-provisioned. Local Windows GNU, WSL, Linux, ordinary CI and Canvas cannot
-substitute; record native cells `not-run` until available.
+Personal 2.0 Phase 11 (Personal 2.0.0 chrome) routes daily Project/Employee
+authority tests to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (plus exact-revision
+`DEV-LINUX-NATIVE-01` when a native daemon/store is required). Host/DSH native
+E2E stays future qualified `DEV-WINDOWS-NATIVE-OPC-01` (`Requires-environment` /
+`not-run` until provisioned). Parked T15 would still need a preregistered N=15
+acceptance at one qualified Windows revision. The native environment and B01-W
+are not provisioned; `B01-DESKTOP-002` is not the 2.0 daily default. Local
+Windows GNU, WSL, ordinary CI and Canvas cannot substitute Gate/release;
+record native cells `not-run` until available. `not-run` is never pass.
 
 ## Safe on every platform (including the Windows GNU host)
 

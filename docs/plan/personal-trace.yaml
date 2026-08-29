@@ -381,7 +381,7 @@ personal_requirements:
   # Added 2026-08-27 (ADR-0059 Windows-first OPC rebaseline).
   - id: PERS-PR-039
     classification: product-only
-    statement: Personal 2.0 is a Windows-local operating console for one human Owner, with Today, Projects, Team, Knowledge, Inbox, bottom Settings, and a global right-side candidate-only Personal Assistant; native mobile and E2E relay remote are Personal 2.1.
+    statement: Personal 2.0.0 is a Windows-local operating console for one human Owner, with Today, Projects, Knowledge, bottom Settings, and a global right-side candidate-only Personal Assistant; Team and Inbox are not first-level destinations; native mobile and E2E relay remote are Personal 2.1.
     direct_registry_requirements: []
     tasks: [P11-T01, P11-T02, P11-T13, P11-T15]
     gates: []
@@ -405,7 +405,7 @@ personal_requirements:
 
   - id: PERS-PR-042
     classification: product-only
-    statement: Pi is the hidden candidate-only Personal Assistant engine, while DSH is the preinstalled managed Installed Agent and default employee runtime through an exact audited artifact, isolated child, bounded stdio broker, and daemon Provider proxy; Personal owns Conversation, Memory, Task, and completion.
+    statement: Pi is the hidden candidate-only Personal Assistant engine, while DSH is the hidden hosted Member execution engine through an exact audited artifact, isolated child, bounded stdio broker, and daemon Provider proxy (not a visible Installed Agent, native DSH UI, or engine store); Personal owns Conversation, Memory, Task, and completion.
     direct_registry_requirements: []
     tasks: [P11-T05, P11-T06, P11-T07]
     gates: []
@@ -429,7 +429,7 @@ personal_requirements:
 
   - id: PERS-PR-045
     classification: product-only
-    statement: Subscription, Provider account, API billing and quota, model, binding, budget, and actual usage remain separate; effective binding is global to Project to employee to Task, with Project, member, and Task budgets and no raw secret outside the approved SecretStore/daemon proxy.
+    statement: Subscription, Provider account, API billing and quota, model, binding, and actual usage remain separate; effective binding is global to Project to employee to Task; unknown cost is never displayed as 0; member-level budget hard-stop is Personal 2.1 / Deferred and is not current chrome; raw secret never leaves the approved SecretStore/daemon proxy.
     direct_registry_requirements: []
     tasks: [P11-T12]
     gates: []
@@ -437,7 +437,7 @@ personal_requirements:
 
   - id: PERS-PR-046
     classification: product-only
-    statement: The OPC Control Plane and first X/Twitter scenario expose every required state, structured daemon preview and receipt, rights-safe source handling, qualified connector drift failure, and no fingerprint, CAPTCHA, or anti-abuse evasion; browser or Agent self-report is not completion.
+    statement: HITL lives only on the project-center canvas with a Today deep link; chat has no Approve; the Control Plane exposes required states, structured daemon preview and receipt, and no fake buttons; the first X/Twitter scenario remains parked.
     direct_registry_requirements: []
     tasks: [P11-T09, P11-T13, P11-T14]
     gates: []

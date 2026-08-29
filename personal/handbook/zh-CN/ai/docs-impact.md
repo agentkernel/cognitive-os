@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:2799ffa1bec4925e04cbabd325c88a2ea4ebe6a90e99271f1a31433b94078c33"
+fingerprint: "sha256:dfd173bfaa78d959e7029264682d5d25759f8722c71e48426fdb8191cfb5e053"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -54,16 +54,22 @@ source map 有意让已采纳目标无法静默变化：
 - `personal-2-opc-rebaseline` 路由 ADR-0059、Phase 11 formal/support/environment、
   focused Project/Conversation/Windows/Routine 产品与架构章，以及 current client OPC
   design corpus。
-- `personal-2-opc-v9-implementation-mapping` 路由 owner 批准的 v9 Scene → daemon
-  映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`）
+- `personal-2-opc-v9-implementation-mapping` 路由已定档 Personal 2.0.0 Scene →
+  daemon 映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`；
+  历史文件名与规则 id 含 v9，不是产品版本）
   到 `dev.architecture-overview` 与本页。仅 informative；不是实现、support、Gate
   或 P11 领取。
+- `personal-2-0-0-dev-prep` 路由 Personal 2.0.0 开发前期索引
+  （`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`）到
+  `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；仅文档；
+  不是实现、解冻、Gate 或 P11 领取。OPC 设计语料（`clients/docs/design/opc-2.0/`，
+  含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判（hypothesis；不是 Gate）。
 
 每次命中都必须保留：**当前 Linux 1.0/当前 API**、**已采纳 Windows OPC target**、
 **Requires-backend** 与 **Requires-environment/deferred**。绝不能从 design adoption、
 Canvas、ordinary CI、Linux、WSL 或 Windows GNU evidence 推断 Project/Employee、
-Personal Conversation/Vault/Memory、Pi Assistant、managed DSH、Routine/Inbox、
-binding/budget、OPC UI、X connector 或 fixed N=15 acceptance 已实现。MCP 是 advanced
+Personal Conversation/Vault/Memory、Pi Assistant、隐藏托管 DSH、Routine/HITL 画布、
+binding/诚实 usage、OPC UI、X connector 或 fixed N=15 acceptance 已实现。MCP 是 advanced
 deferred target；native mobile/E2E relay remote 属于 2.1。
 
 本地化 canonical 设计文件路由到相同的双语 handbook `doc_id`。必须同步两个 locale。

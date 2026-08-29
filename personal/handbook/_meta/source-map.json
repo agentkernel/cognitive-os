@@ -188,7 +188,7 @@
         "clients/docs/design/opc-2.0/**"
       ],
       "docs": ["meta.glossary", "index", "user.index", "user.what-is-personal", "user.system-overview", "user.resources-model", "user.tasks-and-execution", "user.provider-and-secrets", "user.provider-control-plane", "user.security-boundaries", "user.limitations", "dev.index", "dev.architecture-overview", "dev.agent-pi-lifecycle", "dev.dev-environments", "ref.capability-status", "ref.compatibility", "ai.docs-impact", "ai.validation-commands"],
-      "note": "Windows-first OPC target, Project/Role/Employee, Personal Conversation/Vault/Memory, Pi Assistant, preinstalled managed DSH, Routine/Inbox, provider budgets, UI and fixed-denominator validation; design/Requires-backend is not implementation or support"
+      "note": "Windows-first OPC target aligned to Personal 2.0.0 chrome (Today/Projects/Knowledge + Settings; HITL canvas not Inbox; hidden hosted DSH; honest usage); design/Requires-backend is not implementation or support"
     },
     {
       "id": "personal-2-opc-v9-implementation-mapping",
@@ -196,7 +196,15 @@
         "personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md"
       ],
       "docs": ["dev.architecture-overview", "ai.docs-impact"],
-      "note": "owner-approved v9 Scene → daemon mapping; informative; not implementation, support, Gate, or a P11 claim. Authority object id = Employee; product chrome Member Runtime until post-completion reconciliation. P11-T02–T15 plan cards frozen vs v9."
+      "note": "CognitiveOS Personal 2.0.0 (os-personal 2.0.0) design-frozen Scene → daemon mapping; historical source filename and rule id contain v9 — not a product version. Informative; not implementation, support, Gate, or a P11 claim. Authority object id = Employee; product chrome Member Runtime until post-completion reconciliation. P11-T02–T15 plan cards aligned 2026-08-30; implementation remains unclaimed."
+    },
+    {
+      "id": "personal-2-0-0-dev-prep",
+      "sources": [
+        "personal/docs/architecture/personal-2.0.0-dev-prep-index.md"
+      ],
+      "docs": ["dev.architecture-overview", "ai.docs-impact"],
+      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only; not implementation, thaw, Gate, or a P11 claim."
     },
     {
       "id": "dsh-recovery-docs",

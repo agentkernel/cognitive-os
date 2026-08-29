@@ -1301,6 +1301,9 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
       const governanceLeaseIdMatch = leaseId.match(/^lease\/personal\/(GOV-[A-Za-z0-9._-]+)\//);
       const governanceDeliveryMatch = taskDescription.match(/\b(GOV-[A-Za-z0-9._-]+)\b/);
       const isGovernanceLease = Boolean(governanceLeaseIdMatch || governanceDeliveryMatch);
+      const documentationLeaseIdMatch = leaseId.match(/^lease\/personal\/(DOC-[A-Za-z0-9._-]+)\//);
+      const documentationDeliveryMatch = taskDescription.match(/\b(DOC-[A-Za-z0-9._-]+)\b/);
+      const isDocumentationLease = Boolean(documentationLeaseIdMatch || documentationDeliveryMatch);
       let leaseTaskSlice;
       if (isEvaluationLease) {
         if (!evaluationLeaseIdMatch || !evaluationCampaignMatch) {
@@ -1375,6 +1378,60 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
             fail(
               "docs/plan/PARALLEL-LANES.md",
               `GOV_LEASE_PATH_FORBIDDEN: governance lease ${leaseId} may own only docs/governance/, docs/adr/, docs/plan/PROGRESS.md, the lease-grammar checker surface (tools/src/check-consistency.mjs, tools/test/check.test.mjs), and mapped handbook pages under personal/handbook/, not ${normalizedGovernancePath}`,
+            );
+          }
+        }
+      } else if (isDocumentationLease) {
+        const snapshotOutsideLeaseReference = currentSnapshot
+          .split(/\r?\n/)
+          .filter(
+            (line) =>
+              !line.startsWith("| Active task lease |") &&
+              !line.startsWith("## Current snapshot"),
+          )
+          .join("\n");
+        if (
+          !documentationLeaseIdMatch ||
+          !documentationDeliveryMatch ||
+          documentationLeaseIdMatch[1] !== documentationDeliveryMatch[1]
+        ) {
+          fail(
+            "docs/plan/PARALLEL-LANES.md",
+            `DOC_LEASE_MALFORMED: documentation lease ${leaseId} must use lease/personal/DOC-<id>/<purpose> and name the same DOC-<id> delivery in its task description`,
+          );
+        } else if (!snapshotOutsideLeaseReference.includes(documentationDeliveryMatch[1])) {
+          fail(
+            "docs/plan/PROGRESS.md",
+            `DOC_LEASE_UNREGISTERED: documentation delivery ${documentationDeliveryMatch[1]} is not registered in the Current snapshot`,
+          );
+        }
+        for (const writablePath of writablePaths) {
+          const normalizedDocumentationPath = writablePath
+            .replace(/\/\*\*$/, "")
+            .replaceAll("\\", "/")
+            .replace(/\/$/, "");
+          const documentationPathAllowed =
+            normalizedDocumentationPath === "docs/plan/PROGRESS.md" ||
+            normalizedDocumentationPath === "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md" ||
+            normalizedDocumentationPath === "docs/plan/plan.md" ||
+            normalizedDocumentationPath === "docs/plan/personal-trace.yaml" ||
+            normalizedDocumentationPath === "docs/plan/PERSONAL-SUPPORT-MATRIX.md" ||
+            normalizedDocumentationPath === "docs/plan/PERSONAL-TEST-ENVIRONMENTS.md" ||
+            normalizedDocumentationPath === "AGENTS.md" ||
+            normalizedDocumentationPath === "tools/src/check-consistency.mjs" ||
+            normalizedDocumentationPath === "tools/test/check.test.mjs" ||
+            normalizedDocumentationPath === "personal/docs" ||
+            normalizedDocumentationPath.startsWith("personal/docs/") ||
+            normalizedDocumentationPath === "personal/handbook" ||
+            normalizedDocumentationPath.startsWith("personal/handbook/") ||
+            normalizedDocumentationPath === "clients/docs/design" ||
+            normalizedDocumentationPath.startsWith("clients/docs/design/") ||
+            normalizedDocumentationPath === ".cursor/rules" ||
+            normalizedDocumentationPath.startsWith(".cursor/rules/");
+          if (!documentationPathAllowed) {
+            fail(
+              "docs/plan/PARALLEL-LANES.md",
+              `DOC_LEASE_PATH_FORBIDDEN: documentation lease ${leaseId} may own only plan/product/architecture/handbook/design docs, AGENTS.md, .cursor/rules/, and the lease-grammar checker surface, not ${normalizedDocumentationPath}`,
             );
           }
         }

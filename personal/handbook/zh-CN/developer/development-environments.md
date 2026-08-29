@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:be2d45b22b6656be0222290d93b7f93e6314111b5c54367e02ba0227234c5e08"
+fingerprint: "sha256:9c56811e8673712d176a18a918de5029052052e795bccdd332dab60686e6c75a"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -33,10 +33,14 @@ non_claims:
 | `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest；自 2026-08-27 起同时为 owner 授权的 Personal 2.0 开发验证主机（仅限 exact-revision 一次性 worktree 与任务声明的可清理目录；B01 campaign 活动期间冻结开发用途） | 在预注册 B01 campaign lease 之外改变 guest 基线、快照或凭据 |
 | `B01-W-DESKTOP-001` | 已注册但未供给的 Windows Gate guest（B01-W） | 按其预注册供给前的一切用途 |
 
-Phase 11 使用 Windows MSVC CI 加 future qualified native Windows host，验证
-host/tray/background、DSH sandbox/process、Vault/index、UI 与 connector。最终 N=15
-OPC acceptance 还需要同一 preregistered qualified Windows revision。本地 GNU、WSL、
-Linux、ordinary CI 与 Canvas 明确不能替代；`not-run` 保持 `not-run`。
+Phase 11 Personal 2.0.0 路由：T03/T04 日常权威测试用 `CI-UBUNTU-01` /
+`CI-WINDOWS-MSVC-01`（需要 native daemon/store 时加已 push 的 exact-revision
+`DEV-LINUX-NATIVE-01`）。T02/T07 原生 host/DSH E2E 仍是
+`DEV-WINDOWS-NATIVE-OPC-01` = `Requires-environment` / `not-run`（未资格化）。
+T09 是画布 HITL，不是一级 Inbox。`B01-DESKTOP-002` 仅 campaign，不是 2.0 日常
+默认机。parked 的 T15 N=15 acceptance 若解冻仍需同一 preregistered qualified
+Windows revision。本地 GNU、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
+Gate/release；`not-run` 保持 `not-run`。
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22
 （`package.json`）、workspace 级 `unsafe_code = "forbid"` 与 pedantic clippy
