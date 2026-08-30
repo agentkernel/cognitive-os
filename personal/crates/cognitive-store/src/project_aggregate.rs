@@ -367,15 +367,14 @@ impl ProjectAggregateStore {
         sources_json: Option<&str>,
     ) -> Result<(String, String), ProjectAggregateError> {
         Self::reject_secret_shape(ops)?;
-        if author == "assistant" && sources_json.is_none() {
-            return Err(ProjectAggregateError::Invalid {
-                detail: "assistant candidate requires sources",
-            });
-        }
         if author != "owner" && author != "assistant" {
             return Err(ProjectAggregateError::Invalid {
                 detail: "candidate author must be owner or assistant",
             });
+        }
+        if author == "assistant" {
+            validate_assistant_provenance(sources_json)?;
+            reject_closed_candidate_schema(ops)?;
         }
         let candidate_id = next_id("candidate")?;
         let ops_digest = Self::digest_hex(ops);
@@ -407,6 +406,11 @@ impl ProjectAggregateStore {
     ) -> Result<(i64, String), ProjectAggregateError> {
         Self::require_owner(caller)?;
         let conn = self.lock()?;
+        if is_authority_object(&conn, draft_id)? {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "draft.apply cannot target authority objects",
+            });
+        }
         let (current_seq, state): (i64, String) = conn
             .query_row(
                 "SELECT base_seq, state FROM p11_draft WHERE draft_id = ?1",
@@ -1593,6 +1597,144 @@ fn compute_stage_digest(spec: &StageSpec, position: i64, input_seam: Option<&str
         spec.cadence_json.as_deref().unwrap_or("")
     );
     ProjectAggregateStore::digest_hex(canonical.as_bytes())
+}
+
+/// Typed assistant provenance: `sources[]` | `owner-stated` | `assistant-assumption`.
+/// A non-null blob is not enough.
+pub fn validate_assistant_provenance(
+    sources_json: Option<&str>,
+) -> Result<(), ProjectAggregateError> {
+    let Some(raw) = sources_json.filter(|value| !value.trim().is_empty()) else {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "assistant candidate requires typed provenance",
+        });
+    };
+    let value: serde_json::Value =
+        serde_json::from_str(raw).map_err(|_| ProjectAggregateError::Invalid {
+            detail: "assistant provenance must be typed JSON, not an unlabeled blob",
+        })?;
+    if value.get("confidence").is_some() {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "forged confidence is rejected; provenance must be typed",
+        });
+    }
+    if let Some(sources) = value.as_array() {
+        return validate_sources_array(sources);
+    }
+    let Some(object) = value.as_object() else {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "assistant provenance must be a typed object, not an unlabeled blob",
+        });
+    };
+    if object.is_empty() {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "unlabeled assistant provenance rejected",
+        });
+    }
+    if let Some(kind) = object.get("kind").and_then(serde_json::Value::as_str) {
+        return match kind {
+            "sources" => object
+                .get("sources")
+                .and_then(serde_json::Value::as_array)
+                .ok_or(ProjectAggregateError::Invalid {
+                    detail: "sources provenance requires a non-empty sources array",
+                })
+                .and_then(validate_sources_array),
+            "owner-stated" | "assistant-assumption" => {
+                if object.len() != 1 {
+                    return Err(ProjectAggregateError::Invalid {
+                        detail: "unlabeled assistant provenance rejected",
+                    });
+                }
+                Ok(())
+            }
+            _ => Err(ProjectAggregateError::Invalid {
+                detail: "assistant provenance kind must be sources, owner-stated, or assistant-assumption",
+            }),
+        };
+    }
+    if let Some(sources) = object.get("sources").and_then(serde_json::Value::as_array) {
+        if object.len() == 1 {
+            return validate_sources_array(sources);
+        }
+    }
+    Err(ProjectAggregateError::Invalid {
+        detail: "unlabeled assistant provenance rejected",
+    })
+}
+
+fn validate_sources_array(sources: &[serde_json::Value]) -> Result<(), ProjectAggregateError> {
+    if sources.is_empty() {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "sources provenance requires a non-empty sources array",
+        });
+    }
+    for source in sources {
+        let uri = source
+            .get("uri")
+            .and_then(serde_json::Value::as_str)
+            .map(str::trim)
+            .filter(|value| !value.is_empty());
+        if uri.is_none() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "each source requires a non-empty uri",
+            });
+        }
+    }
+    Ok(())
+}
+
+/// Assistant candidate ops are a closed JSON object: no grant/secret/trigger-arm.
+pub fn reject_closed_candidate_schema(ops: &[u8]) -> Result<(), ProjectAggregateError> {
+    let value: serde_json::Value =
+        serde_json::from_slice(ops).map_err(|_| ProjectAggregateError::Invalid {
+            detail: "assistant candidate ops must be closed JSON, not an unlabeled blob",
+        })?;
+    if json_contains_forbidden_field(&value) {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "closed candidate schema: grant/secret/trigger-arm fields rejected",
+        });
+    }
+    Ok(())
+}
+
+fn json_contains_forbidden_field(value: &serde_json::Value) -> bool {
+    match value {
+        serde_json::Value::Object(map) => map.iter().any(|(key, child)| {
+            matches!(
+                key.as_str(),
+                "grant"
+                    | "grant_id"
+                    | "secret"
+                    | "secret_ref"
+                    | "trigger-arm"
+                    | "trigger_arm"
+                    | "api_key"
+            ) || json_contains_forbidden_field(child)
+        }),
+        serde_json::Value::Array(items) => items.iter().any(json_contains_forbidden_field),
+        _ => false,
+    }
+}
+
+fn is_authority_object(conn: &Connection, target: &str) -> Result<bool, ProjectAggregateError> {
+    let queries = [
+        "SELECT 1 FROM p11_project WHERE project_id = ?1",
+        "SELECT 1 FROM p11_employee WHERE employee_id = ?1",
+        "SELECT 1 FROM p11_grant WHERE grant_id = ?1",
+        "SELECT 1 FROM p11_charter_revision WHERE charter_revision_id = ?1 AND status = 'confirmed'",
+        "SELECT 1 FROM p11_acceptance_fact WHERE project_id = ?1",
+    ];
+    for sql in queries {
+        let found: Option<i64> = conn
+            .query_row(sql, [target], |row| row.get(0))
+            .optional()
+            .map_err(unavailable("authority object lookup"))?;
+        if found.is_some() {
+            return Ok(true);
+        }
+    }
+    Ok(false)
 }
 
 fn parse_stage_ref(subject_ref: &str) -> Result<(&str, &str), ProjectAggregateError> {

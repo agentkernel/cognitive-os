@@ -16,6 +16,7 @@
 //! the port DTOs.
 
 pub mod artifact_store;
+pub mod assistant;
 pub mod clock;
 pub mod context_store;
 pub mod conversation;
@@ -38,6 +39,10 @@ pub mod sqlite;
 pub mod worker_authorization;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
+pub use assistant::{
+    ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
+    ASSISTANT_RESEARCH_FETCH_FAMILY, AssistantPlane, AssistantTurnOutcome, AssistantTurnSpec,
+};
 pub use clock::SystemClock;
 pub use conversation::{
     ArchiveAppendSpec, ArchiveReadSpec, CONVERSATION_ARCHIVE_PROJECTION_ID,
@@ -87,6 +92,7 @@ pub use project_aggregate::{
     ConfirmCaller, ConfirmResult, GapRow, PROJECT_AGGREGATE_SCHEMA_V26, PendingPreviewRow,
     PreviewDetailRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow, SeatingFacts,
     StageRow, StageSpec, StageTestOracle, project_aggregate_migration_entry,
+    reject_closed_candidate_schema, validate_assistant_provenance,
 };
 pub use provider_control_plane::{
     AgentProviderBindingRecord, BUILTIN_PRICE_TABLE_VERSION, CostOutcome, NewUsageEvent,
