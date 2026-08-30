@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Wait required CI green on the N9 lifetime-bind HEAD after this push (not `04e828bd` — that SHA compile-fails). Parent closes/merges only if required CI is green on **that new** SHA. Do not merge from this worker. Do not claim T11. Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
+Wait required CI green on `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc`, then parent close. Linux native focused vault tests **pass** recorded (store 9/9, HTTP 1/1, P8-T13 sqlite scan 1/1). Do not merge from this worker. Do not claim T11. Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
 
 ## Closed predecessor
 
@@ -81,6 +81,13 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | Ubuntu `verify (ubuntu-latest)` Test Rust workspace | **fail** | `CI-UBUNTU-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | run [33320897378](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378) job [99282573080](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573080). Compile `E0716` in `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import`: `from_utf8_lossy(&std::fs::read(...))` temporary dropped while borrowed (`RUSTFLAGS=-D warnings`). CHECK persist change not reverted. Vault N1–N5 not weakened. |
 | 2026-08-30 | Windows `verify (windows-latest)` Test Rust workspace | **fail** | `CI-WINDOWS-MSVC-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | job [99282573045](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573045); same Test Rust workspace class. `required-ci` job 99283037630 failed because verify jobs failed. |
 | 2026-08-30 | N9 sqlite scan binds file bytes before `from_utf8_lossy` | recorded | `DEV-WIN-GNU-01` | this commit | One-line lifetime bind only. No CHECK/schema rewrite. `DEV-WIN-GNU-01` cargo **not-run**. |
+| 2026-08-31 | Linux focused vault retest on CHECK-fix HEAD `04e828bd` | **not-run** (superseded) | `DEV-LINUX-NATIVE-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | Supersedes the pending 2026-08-30 row. SHA compile-fails N9 `E0716`; focused retest executed on `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` instead. Do not invent pass at `04e828bd`. |
+| 2026-08-31 | `cargo test -p cognitive-store --test p11_t10_vault` | **pass** 9/9 | `DEV-LINUX-NATIVE-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | worktree `/home/wuz/cognitiveos-personal-worktrees/p11-t10-2cfb7ae5`; 0.88s; 9 tests (N9 bind added vs 8 at `62fac6e3`). Host FS E2E not claimed. |
+| 2026-08-31 | `cargo test -p kernel-server --bin kernel-server -- vault_import_index_conflict` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | `personal::project_aggregate::tests::vault_import_index_conflict_and_task_channel_is_forbidden`. |
+| 2026-08-31 | `cargo test -p kernel-server --test p8_t13_provider_control_plane -- create_without_key_preserves_manual_catalog_and_blocks_delete_with_binding` | **pass** | `DEV-LINUX-NATIVE-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | Retest of Ubuntu job 99280877208 fail at `62fac6e3` (`authority sqlite must not contain API key material`). Pass at N9 lifetime-bind HEAD. |
+| 2026-08-31 | Host filesystem / index E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | Card allows `not-run` until the host route is qualified. Never pass. |
+| 2026-08-31 | B01 campaign guest | **not_available** | n/a | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | No B01. Evaluation routing OFF. |
+| 2026-08-31 | Windows OPC vault E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | Not claimed. |
 
 ## Explicit non-claims
 
