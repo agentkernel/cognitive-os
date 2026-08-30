@@ -51,7 +51,7 @@ tests:
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
-fingerprint: "sha256:eb9ed9be194007b6b5f3de39dbd3a9c58db2e224e477dc19e309bdb8dac02a09"
+fingerprint: "sha256:d60bf2408d39d341e64feddc692d15388375b75ba1d40f849f9b5e8da9c4ba08"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---

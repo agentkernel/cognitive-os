@@ -22,6 +22,8 @@ sources:
     symbols: ["HOSTED_DSH_SCHEMA_V31", "HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/crates/cognitive-store/src/vault.rs
     symbols: ["VAULT_SCHEMA_V32", "VaultStore", "VaultImportSpec", "CONTEXT_INJECT_ORDER", "VAULT_PROJECTION_ID"]
+  - path: personal/crates/cognitive-store/src/routine.rs
+    symbols: ["ROUTINE_SCHEMA_V33", "RoutineStore", "ROUTINE_PROJECTION_ID"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -40,12 +42,13 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p11_t10_vault.rs
+  - personal/crates/cognitive-store/tests/p11_t08_routine.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:3ef20288e60487d73b9b965336666f59da76b112df98dbd29bcba77783b295b3"
+fingerprint: "sha256:b734632629db5e62b43773a8f0bd4dddaec7853f6fd6dfa7064b153e4c459368"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---

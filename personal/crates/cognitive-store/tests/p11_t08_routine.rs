@@ -202,11 +202,7 @@ fn p11_t08_silent_drop_is_forbidden() {
     assert_eq!(ledger[0].disposition, "missed");
     assert!(ledger[0].scheduler_task_ref.is_none());
     let resumed = routines
-        .resume_missed(
-            ConfirmCaller::OwnerManagement,
-            &missed.occurrence_id,
-            32,
-        )
+        .resume_missed(ConfirmCaller::OwnerManagement, &missed.occurrence_id, 32)
         .expect("resume internal missed");
     assert_eq!(resumed.disposition, "active");
     assert!(resumed.scheduler_task_ref.is_some());
