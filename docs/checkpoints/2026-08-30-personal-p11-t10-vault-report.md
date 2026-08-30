@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Vault import → rights/provenance → parse/index → conflict on management HTTP. Index is rebuildable and is not Memory FTS. Files are not Project authority. Required CI / Linux store+HTTP still pending. Do not merge until task acceptance.
+Required CI on the post-`sk-` schema fix HEAD (this commit). Do not merge. Host filesystem E2E remains `not-run`. `DEV-WIN-GNU-01` cargo test remains `not-run`.
 
 ## Closed predecessor
 
@@ -62,6 +62,14 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | pass | local Node | this commit | 58×2 locales; coverage/fingerprint OK |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | pass | local Node | this commit | 18 pages byte-identical |
 | 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | pass | local Node | this commit | daemon-http + store source-map groups |
+| 2026-08-30 | `verify (ubuntu-latest)` Test Rust workspace | **fail** | `CI-UBUNTU-01` | `62fac6e364d74462c4be88f92f900a14039c742d` | [job 99280877208](https://github.com/agentkernel/cognitive-os/actions/runs/33320263553/job/99280877208) run [33320263553](https://github.com/agentkernel/cognitive-os/actions/runs/33320263553). Not clippy/fmt/handbook (those steps skipped). First assertion: `p8_t13_provider_control_plane::create_without_key_preserves_manual_catalog_and_blocks_delete_with_binding` panicked at line 381: `authority sqlite must not contain API key material`. `layout_migrations` was already `1..=32` (not this fail). T10 N1–N5 negatives unchanged. |
+| 2026-08-30 | v32 index CHECK omits persist-forbidden inject-order labels | recorded | `DEV-WIN-GNU-01` | this commit | `sqlite_master` stored the Task-contract layer token, whose `sk-` substring is a false-positive for the P8-T13 raw-sqlite scan. CHECK now persists only `sourced-excerpt` / `summary` / `older-narrative`. `CONTEXT_INJECT_ORDER` and HTTP inject_order JSON still include that label. Added store guard `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import`. Secret-shape / file-as-authority / LWW / cross-project / Memory swallow negatives unchanged. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t10_vault` | **not-run** | `DEV-WIN-GNU-01` | this commit | `RUST-LINK-DEV-WIN-GNU-01`; route to CI/Linux |
+| 2026-08-30 | `cargo test -p kernel-server --test p8_t13_provider_control_plane` | **not-run** | `DEV-WIN-GNU-01` | this commit | `RUST-LINK-DEV-WIN-GNU-01`; route to CI/Linux |
+| 2026-08-30 | `cargo fmt --all` | pass | `DEV-WIN-GNU-01` | this commit | formatting only; no link |
+| 2026-08-30 | `node tools/src/fill-handbook-fingerprints.mjs` | pass | local Node | this commit | `dev.store-migrations` both locales (vault.rs source fingerprint) |
+| 2026-08-30 | `node tools/src/check-handbook.mjs` | pass | local Node | this commit | 58×2 locales after fingerprint refresh |
+| 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | pass | local Node | this commit | store source-map group; fingerprint-only `dev.store-migrations` |
 
 ## Explicit non-claims
 

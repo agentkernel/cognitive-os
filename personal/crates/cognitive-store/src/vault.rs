@@ -40,6 +40,12 @@ const RIGHTS_CLASSES: &[&str] = &[
 const SOURCE_KINDS: &[&str] = &["markdown-file", "owner-paste"];
 
 /// Authority migration v32: Vault documents, rebuildable index, conflicts.
+///
+/// The CHECK lists only layers Vault may persist. Inject-order labels for the
+/// Task-contract and fixed-decision layers stay in `CONTEXT_INJECT_ORDER`
+/// (Rust/HTTP) and are never stored: Vault must not persist authority layers,
+/// and the hyphenated Task-contract token contains the secret-shape substring
+/// that P8-T13 scans for in raw authority SQLite bytes.
 pub const VAULT_SCHEMA_V32: &str = "
 CREATE TABLE p11_vault_document (
   document_id TEXT PRIMARY KEY,
@@ -64,7 +70,7 @@ CREATE TABLE p11_vault_index_entry (
   chunk_ordinal INTEGER NOT NULL,
   excerpt TEXT NOT NULL,
   layer TEXT NOT NULL CHECK (layer IN (
-    'task-contract','fixed-decision','sourced-excerpt','summary','older-narrative'
+    'sourced-excerpt','summary','older-narrative'
   )),
   rebuilt_at INTEGER NOT NULL
 ) STRICT;

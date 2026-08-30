@@ -325,6 +325,39 @@ fn p11_t10_conversation_and_cas_are_not_vault_files() {
 }
 
 #[test]
+fn p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import() {
+    let temporary = TempDir::new().expect("temp");
+    let root = temporary.path();
+    let layout = PersonalDataLayout::from_xdg_roots(
+        root.join("config"),
+        root.join("data"),
+        root.join("state"),
+        root.join("cache"),
+        root.join("runtime"),
+    );
+    prepare_personal_databases(&layout).expect("prepare");
+    let path = layout.authority_database_path();
+    let projects = ProjectAggregateStore::open_path(&path).expect("projects");
+    let vault = VaultStore::open_path(&path).expect("vault");
+    let project_id = activate(&projects);
+    vault
+        .import(
+            ConfirmCaller::OwnerManagement,
+            &import_spec(&project_id, "notes/ok.md", "research notes only", None, 60),
+        )
+        .expect("import");
+    vault
+        .rebuild_index(ConfirmCaller::OwnerManagement, &project_id, 61)
+        .expect("rebuild");
+    let haystack = String::from_utf8_lossy(&std::fs::read(&path).expect("sqlite"));
+    assert!(
+        !haystack.contains("sk-"),
+        "authority sqlite must not contain API key material"
+    );
+    assert!(!haystack.contains("Bearer "));
+}
+
+#[test]
 fn p11_t10_path_traversal_is_rejected() {
     let (_tmp, projects, vault) = stores();
     let project_id = activate(&projects);
