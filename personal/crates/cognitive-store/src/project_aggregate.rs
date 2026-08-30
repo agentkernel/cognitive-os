@@ -1653,10 +1653,10 @@ pub fn validate_assistant_provenance(
             }),
         };
     }
-    if let Some(sources) = object.get("sources").and_then(serde_json::Value::as_array) {
-        if object.len() == 1 {
-            return validate_sources_array(sources);
-        }
+    if let Some(sources) = object.get("sources").and_then(serde_json::Value::as_array)
+        && object.len() == 1
+    {
+        return validate_sources_array(sources);
     }
     Err(ProjectAggregateError::Invalid {
         detail: "unlabeled assistant provenance rejected",

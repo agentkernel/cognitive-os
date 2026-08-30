@@ -44,13 +44,16 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `required-ci` | **fail** | required-ci | `38009eae8dad8a09f7c400f399b9640dd4aebd32` | [job 99244980483](https://github.com/agentkernel/cognitive-os/actions/runs/33306830861/job/99244980483). `ROUTE_RESULT=success`, `VERIFY_RESULT=failure` — dependent on the two verify jobs. |
 | 2026-08-30 | rustc E0631 `and_then` type-coercion fix | recorded | `DEV-WIN-GNU-01` | this commit | Wrap `validate_sources_array` in a closure so `&Vec<Value>` coerces to `&[Value]`. Provenance negatives and omit-Approve HTTP test unchanged. `cargo build`/`test`/`clippy` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
 | 2026-08-30 | `fill-handbook-fingerprints` `dev.store-migrations` | pass | local Node | this commit | Fingerprint-only (en + zh-CN) after `project_aggregate.rs` type-coercion; handbook prose unchanged. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t06_assistant` | **pass** 6/6 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t06-38009eae` | `3ff1d615eb1b0c85b0b49113359b5b58c47fa0c2` | Focused store negatives + vertical path. Not host Pi E2E. |
+| 2026-08-30 | kernel-server `assistant_turn_registers_candidate_and_omits_approve` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t06-38009eae` | `3ff1d615eb1b0c85b0b49113359b5b58c47fa0c2` | Registers candidate and omits Approve HTTP. T06 negatives unchanged. |
+| 2026-08-30 | `verify (ubuntu-latest)` Clippy (deny warnings) | **fail** (`clippy::collapsible_if`) | `CI-UBUNTU-01` | `3ff1d615eb1b0c85b0b49113359b5b58c47fa0c2` | [job 99245795674](https://github.com/agentkernel/cognitive-os/actions/runs/33307223076/job/99245795674) run [33307223076](https://github.com/agentkernel/cognitive-os/actions/runs/33307223076), 2m44s. Build + Test Rust **pass**. Clippy `-D warnings` failed at `project_aggregate.rs:1656` nested `if let` + `object.len() == 1`. rustfmt/handbook/codegen **not-run** (clippy failed first). Windows still in progress at log time. |
+| 2026-08-30 | clippy `collapsible_if` let-chain collapse | recorded | `DEV-WIN-GNU-01` | this commit | Collapse nested `if` at `project_aggregate.rs` provenance fallback. Same reject/accept semantics. T06 negatives unchanged. `cargo clippy`/`test` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
+| 2026-08-30 | `fill-handbook-fingerprints` `dev.store-migrations` | pass | local Node | this commit | Fingerprint-only (en + zh-CN) after clippy let-chain; handbook prose unchanged. |
 
 ## Unique next action
 
-Push this rustc E0631 fix and wait for required CI on the new HEAD. Focused
-`p11_t06_assistant` store tests and kernel-server `assistant.turn` HTTP remain
-**not-run** until `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` complete. Do not merge
-from this turn.
+Push this clippy `collapsible_if` collapse and wait for required CI on the new
+HEAD. Do not merge from this turn. Host Pi routing remains **not-run**.
 
 ## Non-claims
 
