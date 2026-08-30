@@ -11,7 +11,7 @@ sources:
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
   - path: personal/crates/cognitive-store/src/project_aggregate.rs
-    symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "ProjectAggregateStore"]
+    symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "APPROVAL_PREVIEW_NARROW_SCHEMA_V29", "ProjectAggregateStore"]
   - path: personal/crates/cognitive-store/src/employee.rs
     symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec"]
   - path: personal/crates/cognitive-store/src/conversation.rs
@@ -32,11 +32,11 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
-  - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
+  - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:62b31ff1106b68af2349949166bee84f505e45320a34936eeda3423e098423f2"
+fingerprint: "sha256:3143885895515724243e6f9e6487814747786f3e88bb125fa37c463d2d54e7af"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -46,10 +46,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v28）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v29）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v28）
+## 权威库迁移图（v1–v29）
 
 | 版本 | 新增 |
 |---|---|
@@ -65,13 +65,16 @@ non_claims:
 | v26 | Personal-private Project 聚合（`p11_draft`、`p11_candidate`、`p11_charter_revision`、`p11_project`、`p11_plan_revision`、`p11_stage`、`p11_gap`、`p11_stage_test_fact`、`p11_acceptance_fact`、`p11_approval_preview`）。新表，不是 `family=task`。 |
 | v27 | Role Blueprint / Assignment / Employee / Grant（`p11_role_blueprint`、`p11_role_blueprint_revision`、`p11_employee`、`p11_employee_revision`、`p11_assignment`、`p11_install_fact`、`p11_grant`、`p11_speech_audit`、`p11_handoff`）。Blueprint 无 Provider binding。权威 id 是 Employee；`runtime_binding_ref` 可替换。Handoff 行保持 `authority_stays=1`；写入走 `HandoffSpec`，聊天不能转移权威。 |
 | v28 | Personal-private 对话档案（`p11_conversation_archive`），新标识 `cognitiveos.personal.conversation-archive/0.1`。白名单投递发言落档案行；owner `append` 接受 `note`/`deliverable`/`handoff`/`blocked`/`decision-request`。chatter 只留 `p11_speech_audit`。索引用 `limit` 1..=32，返回引用（record_id + digest）而不是正文。ADR-0058 `conversation-projection/0.1` 不被 coerce。档案行只是观察；record_id 不能当作 stage-test 完成。 |
+| v29 | ApprovalPreview `superseded_by`（P11-T09 HITL）。改窄签发**新** pending preview，旧行冻结为 `superseded`。拒绝留下 `receipt_ref`。stale 只按机械 `base_state_digest` 不等判定，不是墙钟新鲜度。聊天/task 不能 confirm/reject/narrow。`grant-expansion` subject_kind 与 StandingApprovalPolicy 时间盒不在本迁移。 |
 
 P11-T06 隐藏 Pi Assistant **不新增迁移**。它复用 v26 `p11_candidate` / `p11_approval_preview` 与 T05 只读档案上下文。助手登记必须带 typed 出处（`sources[]` | `owner-stated` | `assistant-assumption`）；非空 blob 不够。封闭候选 JSON 禁止 `grant` / `secret` / `trigger-arm`。`draft.apply` 指向 Project/Employee/Grant/已确认 charter 会被拒。助手平面不能写 archive、SecretStore、Memory，也不能 confirm/apply 权威。工具 default-deny；research 只能点名既有 `HttpFetchReadOnly`。exact Pi `0.81.1` 与 `cognitiveos.private-candidate/1` 是身份钉，不是第二套调度器或 Installed Agent。
+
+P11-T09 HITL 画布（D01）复用 v26 `request_preview` / `confirm_preview` / `p11_approval_preview` 与 v29 `superseded_by`。真实调用者是 management HTTP `preview.reject` / `preview.narrow`；T05 只宣布+深链；T06 `draft.apply` 不是 authority-approve。宿主 UI E2E 为 `not-run`。无第二套调度器、无聊天 Approve、无 Inbox 一级。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；唯一派生表是
 `memory_search_fts`（可重建；检索先跑权威过滤 CTE 再 `MATCH`）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v28 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v29 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

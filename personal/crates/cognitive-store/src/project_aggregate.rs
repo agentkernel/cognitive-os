@@ -137,6 +137,20 @@ pub fn project_aggregate_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(26, PROJECT_AGGREGATE_SCHEMA_V26)
 }
 
+/// Authority migration v29: durable HITL narrow/reject (P11-T09).
+/// `superseded_by` records the replacement preview id when the owner narrows.
+/// Status `superseded` already exists in v26; this column is the mechanical
+/// `narrowed(superseded_by)` link. StandingApprovalPolicy time-box is not
+/// this migration.
+pub const APPROVAL_PREVIEW_NARROW_SCHEMA_V29: &str = "
+ALTER TABLE p11_approval_preview ADD COLUMN superseded_by TEXT;
+";
+
+/// v29 migration entry.
+pub fn approval_preview_narrow_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(29, APPROVAL_PREVIEW_NARROW_SCHEMA_V29)
+}
+
 /// Failures from the Project aggregate store.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProjectAggregateError {
@@ -261,7 +275,7 @@ impl ProjectAggregateStore {
             ConfirmCaller::OwnerManagement => Ok(()),
             ConfirmCaller::TaskChannel | ConfirmCaller::Assistant => {
                 Err(ProjectAggregateError::Forbidden {
-                    detail: "only owner management session may confirm or apply",
+                    detail: "only owner management session may confirm, reject, narrow, or apply",
                 })
             }
         }
@@ -513,12 +527,42 @@ impl ProjectAggregateStore {
                 detail: "pending preview already exists for subject",
             });
         }
-        let base_state_digest = match subject_kind {
-            "activation" => Self::activation_base_digest(&conn, subject_ref)?,
-            "plan-change" => self.plan_change_base_digest_locked(&conn, subject_ref)?,
-            "acceptance" => self.acceptance_base_digest_locked(&conn, subject_ref)?,
-            _ => unreachable!(),
-        };
+        let base_state_digest =
+            self.subject_base_digest_locked(&conn, subject_kind, subject_ref)?;
+        Self::mint_pending_preview_locked(
+            &conn,
+            subject_kind,
+            subject_ref,
+            &base_state_digest,
+            preview_bytes,
+            now_ms,
+        )
+    }
+
+    fn subject_base_digest_locked(
+        &self,
+        conn: &Connection,
+        subject_kind: &str,
+        subject_ref: &str,
+    ) -> Result<String, ProjectAggregateError> {
+        match subject_kind {
+            "activation" => Self::activation_base_digest(conn, subject_ref),
+            "plan-change" => self.plan_change_base_digest_locked(conn, subject_ref),
+            "acceptance" => self.acceptance_base_digest_locked(conn, subject_ref),
+            _ => Err(ProjectAggregateError::Invalid {
+                detail: "unsupported subject_kind",
+            }),
+        }
+    }
+
+    fn mint_pending_preview_locked(
+        conn: &Connection,
+        subject_kind: &str,
+        subject_ref: &str,
+        base_state_digest: &str,
+        preview_bytes: &[u8],
+        now_ms: i64,
+    ) -> Result<(String, String), ProjectAggregateError> {
         let preview_id = next_id("preview")?;
         let preview_bytes_ref = format!("cas:{}", Self::digest_hex(preview_bytes));
         let preview_digest = Self::digest_hex(
@@ -528,8 +572,9 @@ impl ProjectAggregateStore {
         conn.execute(
             "INSERT INTO p11_approval_preview (
                 preview_id, subject_kind, subject_ref, base_state_digest, preview_bytes_ref,
-                preview_digest, status, intent_id, receipt_ref, created_at, decided_at
-             ) VALUES (?1,?2,?3,?4,?5,?6,'pending',NULL,NULL,?7,NULL)",
+                preview_digest, status, intent_id, receipt_ref, created_at, decided_at,
+                superseded_by
+             ) VALUES (?1,?2,?3,?4,?5,?6,'pending',NULL,NULL,?7,NULL,NULL)",
             params![
                 preview_id,
                 subject_kind,
@@ -542,6 +587,31 @@ impl ProjectAggregateStore {
         )
         .map_err(unavailable("insert preview"))?;
         Ok((preview_id, preview_digest))
+    }
+
+    fn load_preview_locked(
+        conn: &Connection,
+        preview_id: &str,
+    ) -> Result<PreviewLookup, ProjectAggregateError> {
+        conn.query_row(
+            "SELECT subject_kind, subject_ref, base_state_digest, preview_digest, status
+               FROM p11_approval_preview WHERE preview_id = ?1",
+            [preview_id],
+            |row| {
+                Ok(PreviewLookup {
+                    subject_kind: row.get(0)?,
+                    subject_ref: row.get(1)?,
+                    base_state_digest: row.get(2)?,
+                    preview_digest: row.get(3)?,
+                    status: row.get(4)?,
+                })
+            },
+        )
+        .optional()
+        .map_err(unavailable("load preview"))?
+        .ok_or(ProjectAggregateError::NotFound {
+            detail: "preview not found",
+        })
     }
 
     fn plan_change_base_digest_locked(
@@ -601,26 +671,7 @@ impl ProjectAggregateStore {
     ) -> Result<ConfirmResult, ProjectAggregateError> {
         Self::require_owner(caller)?;
         let conn = self.lock()?;
-        let preview = conn
-            .query_row(
-                "SELECT subject_kind, subject_ref, base_state_digest, preview_digest, status
-                   FROM p11_approval_preview WHERE preview_id = ?1",
-                [preview_id],
-                |row| {
-                    Ok(PreviewLookup {
-                        subject_kind: row.get(0)?,
-                        subject_ref: row.get(1)?,
-                        base_state_digest: row.get(2)?,
-                        preview_digest: row.get(3)?,
-                        status: row.get(4)?,
-                    })
-                },
-            )
-            .optional()
-            .map_err(unavailable("load preview"))?
-            .ok_or(ProjectAggregateError::NotFound {
-                detail: "preview not found",
-            })?;
+        let preview = Self::load_preview_locked(&conn, preview_id)?;
         if preview.status != "pending" {
             return Err(ProjectAggregateError::Invalid {
                 detail: "preview is not pending",
@@ -631,16 +682,8 @@ impl ProjectAggregateStore {
                 detail: "preview_digest does not match",
             });
         }
-        let current_base = match preview.subject_kind.as_str() {
-            "activation" => Self::activation_base_digest(&conn, &preview.subject_ref)?,
-            "plan-change" => self.plan_change_base_digest_locked(&conn, &preview.subject_ref)?,
-            "acceptance" => self.acceptance_base_digest_locked(&conn, &preview.subject_ref)?,
-            _ => {
-                return Err(ProjectAggregateError::Invalid {
-                    detail: "unsupported subject_kind",
-                });
-            }
-        };
+        let current_base =
+            self.subject_base_digest_locked(&conn, &preview.subject_kind, &preview.subject_ref)?;
         if current_base != preview.base_state_digest {
             conn.execute(
                 "UPDATE p11_approval_preview SET status = 'stale', decided_at = ?1 WHERE preview_id = ?2",
@@ -665,6 +708,112 @@ impl ProjectAggregateStore {
         )
         .map_err(unavailable("consume preview"))?;
         Ok(result)
+    }
+
+    /// Owner reject of a pending preview. Leaves a receipt; the rejected digest
+    /// is never confirmable. Stale is not a time check — reject of a pending
+    /// digest succeeds even after wall-clock delay.
+    pub fn reject_preview(
+        &self,
+        caller: ConfirmCaller,
+        preview_id: &str,
+        preview_digest: &str,
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        let conn = self.lock()?;
+        let preview = Self::load_preview_locked(&conn, preview_id)?;
+        if preview.status != "pending" {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "preview is not pending",
+            });
+        }
+        if preview.preview_digest != preview_digest {
+            return Err(ProjectAggregateError::Stale {
+                detail: "preview_digest does not match",
+            });
+        }
+        let receipt_ref = format!("receipt:reject:{preview_id}");
+        conn.execute(
+            "UPDATE p11_approval_preview
+                SET status = 'rejected', decided_at = ?1, receipt_ref = ?2
+              WHERE preview_id = ?3",
+            params![now_ms, receipt_ref, preview_id],
+        )
+        .map_err(unavailable("reject preview"))?;
+        Ok(receipt_ref)
+    }
+
+    /// Owner narrow: mint a **new** pending preview and freeze the old row as
+    /// `superseded` with `superseded_by`. The old digest is never confirmable.
+    /// Stale is mechanical `base_state_digest` mismatch only.
+    pub fn narrow_preview(
+        &self,
+        caller: ConfirmCaller,
+        preview_id: &str,
+        preview_digest: &str,
+        new_preview_bytes: &[u8],
+        now_ms: i64,
+    ) -> Result<NarrowResult, ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        Self::reject_secret_shape(new_preview_bytes)?;
+        let conn = self.lock()?;
+        let preview = Self::load_preview_locked(&conn, preview_id)?;
+        if preview.status != "pending" {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "preview is not pending",
+            });
+        }
+        if preview.preview_digest != preview_digest {
+            return Err(ProjectAggregateError::Stale {
+                detail: "preview_digest does not match",
+            });
+        }
+        let current_base =
+            self.subject_base_digest_locked(&conn, &preview.subject_kind, &preview.subject_ref)?;
+        if current_base != preview.base_state_digest {
+            conn.execute(
+                "UPDATE p11_approval_preview SET status = 'stale', decided_at = ?1 WHERE preview_id = ?2",
+                params![now_ms, preview_id],
+            )
+            .map_err(unavailable("mark preview stale"))?;
+            return Err(ProjectAggregateError::Stale {
+                detail: "base_state_digest is stale",
+            });
+        }
+        let preview_bytes_ref = format!("cas:{}", Self::digest_hex(new_preview_bytes));
+        let candidate_digest = Self::digest_hex(
+            format!(
+                "{current_base}\n{preview_bytes_ref}\n{}\n{}",
+                preview.subject_kind, preview.subject_ref
+            )
+            .as_bytes(),
+        );
+        if candidate_digest == preview.preview_digest {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "narrow must change preview bytes",
+            });
+        }
+        let (new_preview_id, new_digest) = Self::mint_pending_preview_locked(
+            &conn,
+            &preview.subject_kind,
+            &preview.subject_ref,
+            &current_base,
+            new_preview_bytes,
+            now_ms,
+        )?;
+        conn.execute(
+            "UPDATE p11_approval_preview
+                SET status = 'superseded', decided_at = ?1, superseded_by = ?2
+              WHERE preview_id = ?3",
+            params![now_ms, new_preview_id, preview_id],
+        )
+        .map_err(unavailable("supersede preview"))?;
+        Ok(NarrowResult {
+            preview_id: new_preview_id,
+            preview_digest: new_digest,
+            superseded_preview_id: preview_id.to_owned(),
+        })
     }
 
     fn activate_locked(
@@ -1376,7 +1525,8 @@ impl ProjectAggregateStore {
     ) -> Result<Option<PreviewDetailRow>, ProjectAggregateError> {
         let conn = self.lock()?;
         conn.query_row(
-            "SELECT preview_id, subject_kind, base_state_digest, preview_digest, preview_bytes_ref, status
+            "SELECT preview_id, subject_kind, base_state_digest, preview_digest, preview_bytes_ref,
+                    status, receipt_ref, superseded_by
                FROM p11_approval_preview WHERE preview_id = ?1",
             [preview_id],
             |row| {
@@ -1387,6 +1537,8 @@ impl ProjectAggregateStore {
                     preview_digest: row.get(3)?,
                     preview_bytes_ref: row.get(4)?,
                     status: row.get(5)?,
+                    receipt_ref: row.get(6)?,
+                    superseded_by: row.get(7)?,
                 })
             },
         )
@@ -1474,6 +1626,14 @@ pub struct ConfirmResult {
     pub receipt_ref: String,
 }
 
+/// Owner-narrow outcome: new pending preview plus frozen predecessor.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct NarrowResult {
+    pub preview_id: String,
+    pub preview_digest: String,
+    pub superseded_preview_id: String,
+}
+
 /// Project authority row.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct ProjectRow {
@@ -1543,6 +1703,8 @@ pub struct PreviewDetailRow {
     pub preview_digest: String,
     pub preview_bytes_ref: String,
     pub status: String,
+    pub receipt_ref: Option<String>,
+    pub superseded_by: Option<String>,
 }
 
 struct PreviewLookup {
