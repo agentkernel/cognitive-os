@@ -1,12 +1,13 @@
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 
-//! P11-T05 conversation archive: T04-N9 handoff + T05-N1/N2/N3.
+//! P11-T05 conversation archive: T04-N9 + T05-N1..N6.
 
 use cognitive_store::{
-    CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
-    LEGACY_CONVERSATION_PROJECTION_ID, PersonalDataLayout, ProjectAggregateError,
-    ProjectAggregateStore, RosterProposal, SpeechArchiveSpec, StageSpec,
-    prepare_personal_databases,
+    ArchiveAppendSpec, ArchiveReadSpec, CONVERSATION_ARCHIVE_PROJECTION_ID,
+    CONVERSATION_BODY_LIMIT, CONVERSATION_RESUME_LIMIT, ConfirmCaller, ConversationStore,
+    EmployeeStore, LEGACY_CONVERSATION_PROJECTION_ID, PersonalDataLayout, ProjectAggregateError,
+    ProjectAggregateStore, RosterProposal, SeatingFacts, SpeechArchiveSpec, StageSpec,
+    StageTestOracle, prepare_personal_databases,
 };
 use tempfile::TempDir;
 
@@ -129,6 +130,24 @@ fn spec<'a>(
     }
 }
 
+fn index_spec<'a>(
+    projection_id: &'a str,
+    caller: &'a str,
+    target: &'a str,
+    employee: Option<&'a str>,
+    limit: u32,
+) -> ArchiveReadSpec<'a> {
+    ArchiveReadSpec {
+        projection_id,
+        caller_project_id: caller,
+        target_project_id: target,
+        employee_id: employee,
+        limit,
+        resume_from: None,
+        include_bodies: false,
+    }
+}
+
 #[test]
 fn p11_t05_deliverable_lands_chatter_does_not() {
     let (_tmp, projects, employees, conversations) = stores();
@@ -154,14 +173,15 @@ fn p11_t05_deliverable_lands_chatter_does_not() {
     assert!(chatter.record_id.is_none());
     assert!(!chatter.audit_id.is_empty());
     let after_chatter = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_id,
             &project_id,
             None,
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect("read");
-    assert!(after_chatter.is_empty());
+    assert!(after_chatter.records.is_empty());
     let deliverable = conversations
         .land_speech(
             &employees,
@@ -171,17 +191,28 @@ fn p11_t05_deliverable_lands_chatter_does_not() {
     assert!(deliverable.delivered);
     assert!(deliverable.record_id.is_some());
     let rows = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_id,
             &project_id,
             Some(&ids[1]),
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect("scoped");
-    assert_eq!(rows.len(), 1);
-    assert_eq!(rows[0].kind, "deliverable");
-    assert_eq!(rows[0].body_redacted, "openable note");
-    assert_eq!(rows[0].projection_id, CONVERSATION_ARCHIVE_PROJECTION_ID);
+    assert_eq!(rows.records.len(), 1);
+    assert_eq!(rows.records[0].kind, "deliverable");
+    assert_eq!(
+        rows.records[0].projection_id,
+        CONVERSATION_ARCHIVE_PROJECTION_ID
+    );
+    let fetched = conversations
+        .read_record(
+            CONVERSATION_ARCHIVE_PROJECTION_ID,
+            &project_id,
+            &rows.records[0].record_id,
+        )
+        .expect("record");
+    assert_eq!(fetched.body_redacted, "openable note");
     let project = projects
         .get_project(&project_id)
         .expect("get")
@@ -212,19 +243,26 @@ fn p11_t05_legacy_projection_not_coerced() {
             .expect_err("N1 land");
         assert!(matches!(error, ProjectAggregateError::Invalid { .. }));
         let error = conversations
-            .read_scoped(legacy, &project_id, &project_id, None)
+            .read_index(&index_spec(
+                legacy,
+                &project_id,
+                &project_id,
+                None,
+                CONVERSATION_RESUME_LIMIT,
+            ))
             .expect_err("N1 read");
         assert!(matches!(error, ProjectAggregateError::Invalid { .. }));
     }
     let rows = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_id,
             &project_id,
             None,
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect("empty");
-    assert!(rows.is_empty());
+    assert!(rows.records.is_empty());
 }
 
 #[test]
@@ -257,14 +295,15 @@ fn p11_t05_append_rejects_secret_shape() {
     assert!(matches!(error, ProjectAggregateError::Invalid { .. }));
     assert!(!projects.leak_scan_contains("sk-p11t05").expect("scan"));
     let rows = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_id,
             &project_id,
             None,
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect("empty");
-    assert!(rows.is_empty());
+    assert!(rows.records.is_empty());
 }
 
 #[test]
@@ -301,46 +340,277 @@ fn p11_t05_cross_scope_read_rejected() {
         )
         .expect("land a");
     let cross_project = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_b,
             &project_a,
             None,
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect_err("N3 caller/target");
     assert!(matches!(
         cross_project,
         ProjectAggregateError::Forbidden { .. }
     ));
     let cross_employee = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_b,
             &project_b,
             Some(&ids_a[1]),
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect_err("N3 employee");
     assert!(matches!(
         cross_employee,
         ProjectAggregateError::Forbidden { .. }
     ));
     let b_rows = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_b,
             &project_b,
             None,
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect("b empty");
-    assert!(b_rows.is_empty());
+    assert!(b_rows.records.is_empty());
     let a_rows = conversations
-        .read_scoped(
+        .read_index(&index_spec(
             CONVERSATION_ARCHIVE_PROJECTION_ID,
             &project_a,
             &project_a,
             None,
-        )
+            CONVERSATION_RESUME_LIMIT,
+        ))
         .expect("a");
-    assert_eq!(a_rows.len(), 1);
-    assert_eq!(a_rows[0].body_redacted, "only in a");
+    assert_eq!(a_rows.records.len(), 1);
+    let fetched = conversations
+        .read_record(
+            CONVERSATION_ARCHIVE_PROJECTION_ID,
+            &project_a,
+            &a_rows.records[0].record_id,
+        )
+        .expect("record");
+    assert_eq!(fetched.body_redacted, "only in a");
+}
+
+#[test]
+fn p11_t05_unbounded_resume_rejected() {
+    let (_tmp, projects, employees, conversations) = stores();
+    let project_id = activate(&projects);
+    let plan_id = plan_two_slots(&projects, &project_id);
+    let ids = employees
+        .register_roster(
+            ConfirmCaller::OwnerManagement,
+            &project_id,
+            &plan_id,
+            &proposals(),
+            21,
+        )
+        .expect("roster");
+    seat_manager(&employees, &ids);
+    conversations
+        .land_speech(
+            &employees,
+            &spec(&project_id, &ids[1], "deliverable", "first", 90),
+        )
+        .expect("first");
+    conversations
+        .land_speech(
+            &employees,
+            &spec(&project_id, &ids[1], "deliverable", "second", 91),
+        )
+        .expect("second");
+    conversations
+        .land_speech(
+            &employees,
+            &spec(&project_id, &ids[1], "deliverable", "third", 92),
+        )
+        .expect("third");
+    for bad_limit in [0_u32, CONVERSATION_RESUME_LIMIT + 1] {
+        let error = conversations
+            .read_index(&index_spec(
+                CONVERSATION_ARCHIVE_PROJECTION_ID,
+                &project_id,
+                &project_id,
+                None,
+                bad_limit,
+            ))
+            .expect_err("N4");
+        assert!(matches!(error, ProjectAggregateError::Invalid { .. }));
+        assert!(format!("{error}").contains("unbounded conversation resume"));
+    }
+    let first = conversations
+        .read_index(&index_spec(
+            CONVERSATION_ARCHIVE_PROJECTION_ID,
+            &project_id,
+            &project_id,
+            None,
+            1,
+        ))
+        .expect("page1");
+    assert_eq!(first.records.len(), 1);
+    assert!(first.truncated);
+    let cursor = first.next_cursor.expect("cursor");
+    let mut page2 = index_spec(
+        CONVERSATION_ARCHIVE_PROJECTION_ID,
+        &project_id,
+        &project_id,
+        None,
+        1,
+    );
+    page2.resume_from = Some(&cursor);
+    let second = conversations.read_index(&page2).expect("page2");
+    assert_eq!(second.records.len(), 1);
+    assert_ne!(second.records[0].record_id, first.records[0].record_id);
+}
+
+#[test]
+fn p11_t05_index_does_not_embed_bodies() {
+    let (_tmp, projects, employees, conversations) = stores();
+    let project_id = activate(&projects);
+    let plan_id = plan_two_slots(&projects, &project_id);
+    let ids = employees
+        .register_roster(
+            ConfirmCaller::OwnerManagement,
+            &project_id,
+            &plan_id,
+            &proposals(),
+            21,
+        )
+        .expect("roster");
+    seat_manager(&employees, &ids);
+    let record_id = conversations
+        .append(
+            ConfirmCaller::OwnerManagement,
+            &ArchiveAppendSpec {
+                projection_id: CONVERSATION_ARCHIVE_PROJECTION_ID,
+                project_id: &project_id,
+                employee_id: &ids[1],
+                kind: "note",
+                body: "owner note body",
+                now_ms: 100,
+            },
+        )
+        .expect("append");
+    let chatter = conversations
+        .append(
+            ConfirmCaller::OwnerManagement,
+            &ArchiveAppendSpec {
+                projection_id: CONVERSATION_ARCHIVE_PROJECTION_ID,
+                project_id: &project_id,
+                employee_id: &ids[1],
+                kind: "chatter",
+                body: "must not land",
+                now_ms: 101,
+            },
+        )
+        .expect_err("chatter");
+    assert!(matches!(chatter, ProjectAggregateError::Invalid { .. }));
+    let oversize = "x".repeat(CONVERSATION_BODY_LIMIT + 1);
+    let dumped = conversations
+        .append(
+            ConfirmCaller::OwnerManagement,
+            &ArchiveAppendSpec {
+                projection_id: CONVERSATION_ARCHIVE_PROJECTION_ID,
+                project_id: &project_id,
+                employee_id: &ids[1],
+                kind: "note",
+                body: &oversize,
+                now_ms: 102,
+            },
+        )
+        .expect_err("N5 oversize");
+    assert!(matches!(dumped, ProjectAggregateError::Invalid { .. }));
+    assert!(format!("{dumped}").contains("full-archive injection"));
+    let mut inject = index_spec(
+        CONVERSATION_ARCHIVE_PROJECTION_ID,
+        &project_id,
+        &project_id,
+        None,
+        CONVERSATION_RESUME_LIMIT,
+    );
+    inject.include_bodies = true;
+    let error = conversations.read_index(&inject).expect_err("N5 bodies");
+    assert!(matches!(error, ProjectAggregateError::Invalid { .. }));
+    let page = conversations
+        .read_index(&index_spec(
+            CONVERSATION_ARCHIVE_PROJECTION_ID,
+            &project_id,
+            &project_id,
+            None,
+            CONVERSATION_RESUME_LIMIT,
+        ))
+        .expect("index");
+    assert_eq!(page.records.len(), 1);
+    assert_eq!(page.records[0].record_id, record_id);
+    assert_eq!(page.records[0].body_digest.len(), 64);
+    let encoded = format!("{:?}", page.records[0]);
+    assert!(!encoded.contains("owner note body"));
+    let one = conversations
+        .read_record(CONVERSATION_ARCHIVE_PROJECTION_ID, &project_id, &record_id)
+        .expect("one");
+    assert_eq!(one.body_redacted, "owner note body");
+}
+
+#[test]
+fn p11_t05_archive_is_not_completion() {
+    let (_tmp, projects, employees, conversations) = stores();
+    let project_id = activate(&projects);
+    let plan_id = plan_two_slots(&projects, &project_id);
+    let ids = employees
+        .register_roster(
+            ConfirmCaller::OwnerManagement,
+            &project_id,
+            &plan_id,
+            &proposals(),
+            21,
+        )
+        .expect("roster");
+    seat_manager(&employees, &ids);
+    let landed = conversations
+        .land_speech(
+            &employees,
+            &spec(&project_id, &ids[1], "deliverable", "not a pass", 110),
+        )
+        .expect("land");
+    let record_id = landed.record_id.expect("id");
+    let before = projects
+        .get_project(&project_id)
+        .expect("get")
+        .expect("row");
+    let ring = projects.get_stage(&plan_id, "s1").expect("s").expect("row");
+    projects
+        .confirm_stage(
+            ConfirmCaller::OwnerManagement,
+            &project_id,
+            &plan_id,
+            "s1",
+            &ring.stage_digest,
+        )
+        .expect("confirm");
+    let error = projects
+        .derive_stage_test_passed(&StageTestOracle {
+            project_id: project_id.clone(),
+            plan_revision_id: plan_id,
+            stage_id: "s1".to_owned(),
+            task_ref: "task://personal/p11-t05-n6".to_owned(),
+            seating: SeatingFacts { seated: true },
+            verification_current: true,
+            verification_report_ref: record_id,
+            openable: true,
+            checks_passed: true,
+            effects_closed: true,
+            now_ms: 111,
+        })
+        .expect_err("N6");
+    assert!(matches!(error, ProjectAggregateError::Rejected { .. }));
+    assert!(format!("{error}").contains("observation-only"));
+    let after = projects
+        .get_project(&project_id)
+        .expect("get")
+        .expect("row");
+    assert_eq!(after.state, before.state);
+    assert_eq!(after.accepted_at, before.accepted_at);
 }

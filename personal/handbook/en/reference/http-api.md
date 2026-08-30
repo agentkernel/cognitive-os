@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:e10320e89a4f934a0746dc331e4aaa2a68a155c8e467151faba27c49c3ddacb8"
+fingerprint: "sha256:2dcd7fd5ef8ef9de76d7b6ada820ce39b00864566dd06c40e5510a9af716d445"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -160,7 +160,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/employee.seat.confirm` | management | Owner-management seating confirm. Missing model → pending; reject → refused; project-manager seating requires the unique current-manager slot. |
 | `POST` | `/management/project/v1/employee.runtime.bind` | management | Replace `runtime_binding_ref` without changing `employee_id`. Process death does not delete the Employee. |
 | `POST` | `/management/project/v1/speech.candidate` | management | Speech router plus T05 archive landing: whitelist-filtered delivered kinds persist under `cognitiveos.personal.conversation-archive/0.1`. Chatter stays audit-only. Legacy `conversation-projection/0.1` / `v01` is not coerced. |
-| `GET` | `/management/project/v1/conversation.archive` | management | Scoped read of Personal-private conversation archive rows for one Project. Cross-scope employee ids fail closed. Does not reinterpret ADR-0058 `conversation-projection/0.1`. |
+| `POST` | `/management/project/v1/conversation.append` | management | Owner-management append of one archive record (`note`/`deliverable`/`handoff`/`blocked`/`decision-request`). Chatter and oversize bodies fail closed. Observation-only; not Task/Project completion. Legacy `conversation-projection/0.1` is not coerced. |
+| `GET` | `/management/project/v1/conversation.archive` | management | Bounded scoped index of Personal-private conversation archive refs. Requires `limit` 1..=32; omitted/oversize limit is unbounded resume. `include_bodies` is refused. Returns record_id/digest only. Does not reinterpret ADR-0058 `conversation-projection/0.1`. |
+| `GET` | `/management/project/v1/conversation.record` | management | Single-record body fetch inside one Project. Not a bulk dump. Cross-scope record ids fail closed. |
 | `POST` | `/management/project/v1/handoff.record` | management | Record a handoff row with `authority_stays=1`. Chat cannot transfer authority. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
@@ -173,6 +175,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/project/v1/employee.seat.confirm` | task | Forbidden: Employee seating confirm is management-channel only. |
 | `POST` | `/task/project/v1/employee.runtime.bind` | task | Forbidden: runtime bind is management-channel only. |
 | `POST` | `/task/project/v1/speech.candidate` | task | Forbidden: speech candidate is management-channel only. |
+| `POST` | `/task/project/v1/conversation.append` | task | Forbidden: conversation append is management-channel only. |
 | `GET` | `/task/project/v1/conversation.archive` | task | Forbidden: conversation archive is management-channel only. |
+| `GET` | `/task/project/v1/conversation.record` | task | Forbidden: conversation record fetch is management-channel only. |
 | `POST` | `/task/project/v1/handoff.record` | task | Forbidden: handoff record is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

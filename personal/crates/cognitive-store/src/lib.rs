@@ -40,8 +40,10 @@ pub mod worker_authorization;
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use clock::SystemClock;
 pub use conversation::{
-    CONVERSATION_ARCHIVE_PROJECTION_ID, CONVERSATION_ARCHIVE_SCHEMA_V28, ConversationArchiveRecord,
-    ConversationStore, LEGACY_CONVERSATION_PROJECTION_ID, SpeechArchiveOutcome, SpeechArchiveSpec,
+    ArchiveAppendSpec, ArchiveReadSpec, CONVERSATION_ARCHIVE_PROJECTION_ID,
+    CONVERSATION_ARCHIVE_SCHEMA_V28, CONVERSATION_BODY_LIMIT, CONVERSATION_RESUME_LIMIT,
+    ConversationArchiveRecord, ConversationArchiveRef, ConversationIndexPage, ConversationStore,
+    LEGACY_CONVERSATION_PROJECTION_ID, SpeechArchiveOutcome, SpeechArchiveSpec,
     conversation_migration_entry,
 };
 pub use employee::{

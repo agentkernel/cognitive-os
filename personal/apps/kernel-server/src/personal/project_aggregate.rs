@@ -4,9 +4,9 @@
 //! Task-channel writes are 403 (N12).
 
 use cognitive_store::{
-    CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
-    HandoffSpec, PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
-    RosterProposal, SpeechArchiveSpec, SqliteAuthorityStore,
+    ArchiveAppendSpec, ArchiveReadSpec, CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller,
+    ConversationStore, EmployeeStore, HandoffSpec, PendingPreviewRow, ProjectAggregateError,
+    ProjectAggregateStore, ProjectRow, RosterProposal, SpeechArchiveSpec, SqliteAuthorityStore,
 };
 use serde_json::{Value, json};
 
@@ -28,7 +28,9 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /management/project/v1/employee.seat.confirm",
     "POST /management/project/v1/employee.runtime.bind",
     "POST /management/project/v1/speech.candidate",
+    "POST /management/project/v1/conversation.append",
     "GET /management/project/v1/conversation.archive",
+    "GET /management/project/v1/conversation.record",
     "POST /management/project/v1/handoff.record",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
@@ -41,7 +43,9 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /task/project/v1/employee.seat.confirm",
     "POST /task/project/v1/employee.runtime.bind",
     "POST /task/project/v1/speech.candidate",
+    "POST /task/project/v1/conversation.append",
     "GET /task/project/v1/conversation.archive",
+    "GET /task/project/v1/conversation.record",
     "POST /task/project/v1/handoff.record",
 ];
 
@@ -103,8 +107,14 @@ pub(crate) fn handle(
         "POST /management/project/v1/speech.candidate" => {
             speech_candidate(body, &employees, &conversations)
         }
+        "POST /management/project/v1/conversation.append" => {
+            conversation_append(body, &conversations)
+        }
         "GET /management/project/v1/conversation.archive" => {
             conversation_archive(method_path, &conversations)
+        }
+        "GET /management/project/v1/conversation.record" => {
+            conversation_record(method_path, &conversations)
         }
         "POST /management/project/v1/handoff.record" => handoff_record(body, &employees),
         _ => error(
@@ -517,27 +527,116 @@ fn conversation_archive(
     else {
         return error(400, "PROJECT_ID_REQUIRED", "project_id required");
     };
+    let Some(limit) = query_parameter(method_path, "limit")
+        .filter(|v| !v.is_empty())
+        .and_then(|value| value.parse::<u32>().ok())
+    else {
+        return error(
+            422,
+            "PROJECT_INVALID",
+            "unbounded conversation resume rejected",
+        );
+    };
+    let include_bodies = query_parameter(method_path, "include_bodies")
+        .map(|value| value == "1" || value.eq_ignore_ascii_case("true"))
+        .unwrap_or(false);
     let projection_id = query_parameter(method_path, "projection_id")
         .filter(|v| !v.is_empty())
         .unwrap_or_else(|| CONVERSATION_ARCHIVE_PROJECTION_ID.to_owned());
     let employee_id = query_parameter(method_path, "employee_id").filter(|v| !v.is_empty());
-    match conversations.read_scoped(
-        &projection_id,
-        &project_id,
-        &project_id,
-        employee_id.as_deref(),
-    ) {
-        Ok(rows) => ok(json!({
+    let resume_from = query_parameter(method_path, "resume_from").filter(|v| !v.is_empty());
+    match conversations.read_index(&ArchiveReadSpec {
+        projection_id: &projection_id,
+        caller_project_id: &project_id,
+        target_project_id: &project_id,
+        employee_id: employee_id.as_deref(),
+        limit,
+        resume_from: resume_from.as_deref(),
+        include_bodies,
+    }) {
+        Ok(page) => ok(json!({
             "status": "ok",
             "projection_id": CONVERSATION_ARCHIVE_PROJECTION_ID,
             "project_id": project_id,
-            "records": rows.iter().map(|row| json!({
+            "observation_only": true,
+            "truncated": page.truncated,
+            "next_cursor": page.next_cursor,
+            "records": page.records.iter().map(|row| json!({
                 "record_id": row.record_id,
                 "employee_id": row.employee_id,
                 "kind": row.kind,
                 "body_digest": row.body_digest,
                 "created_at": row.created_at,
             })).collect::<Vec<_>>(),
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn conversation_record(
+    method_path: &str,
+    conversations: &ConversationStore,
+) -> ResourceApiResponse {
+    let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(record_id) = query_parameter(method_path, "record_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "RECORD_ID_REQUIRED", "record_id required");
+    };
+    let projection_id = query_parameter(method_path, "projection_id")
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| CONVERSATION_ARCHIVE_PROJECTION_ID.to_owned());
+    match conversations.read_record(&projection_id, &project_id, &record_id) {
+        Ok(row) => ok(json!({
+            "status": "ok",
+            "observation_only": true,
+            "record_id": row.record_id,
+            "employee_id": row.employee_id,
+            "kind": row.kind,
+            "body_digest": row.body_digest,
+            "body_redacted": row.body_redacted,
+            "created_at": row.created_at,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn conversation_append(body: &[u8], conversations: &ConversationStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let Some(kind) = document.get("kind").and_then(Value::as_str) else {
+        return error(400, "KIND_REQUIRED", "kind required");
+    };
+    let speech_body = document.get("body").and_then(Value::as_str).unwrap_or("");
+    let projection_id = document
+        .get("projection_id")
+        .and_then(Value::as_str)
+        .unwrap_or(CONVERSATION_ARCHIVE_PROJECTION_ID);
+    match conversations.append(
+        ConfirmCaller::OwnerManagement,
+        &ArchiveAppendSpec {
+            projection_id,
+            project_id,
+            employee_id,
+            kind,
+            body: speech_body,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(record_id) => ok(json!({
+            "status": "ok",
+            "archive_record_id": record_id,
+            "observation_only": true,
+            "projection_id": CONVERSATION_ARCHIVE_PROJECTION_ID,
         })),
         Err(error) => store_error(error),
     }
@@ -1102,16 +1201,85 @@ mod tests {
         assert_eq!(deliverable.status, 200, "{}", deliverable.body);
         assert!(deliverable.body.contains("\"delivered\":true"));
         assert!(!deliverable.body.contains("\"archive_record_id\":null"));
-        let listed = handle(
+        let unbounded = handle(
             &format!("GET /management/project/v1/conversation.archive?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(unbounded.status, 422, "{}", unbounded.body);
+        assert!(unbounded.body.contains("unbounded conversation resume"));
+        let inject = handle(
+            &format!(
+                "GET /management/project/v1/conversation.archive?project_id={project_id}&limit=32&include_bodies=1"
+            ),
+            b"",
+            &store,
+        );
+        assert_eq!(inject.status, 422, "{}", inject.body);
+        let listed = handle(
+            &format!(
+                "GET /management/project/v1/conversation.archive?project_id={project_id}&limit=32"
+            ),
             b"",
             &store,
         );
         assert_eq!(listed.status, 200, "{}", listed.body);
         assert!(listed.body.contains(&ids[1]));
         assert!(listed.body.contains("deliverable"));
+        assert!(listed.body.contains("\"observation_only\":true"));
         assert!(!listed.body.contains("openable note"));
         assert!(!listed.body.contains("side talk"));
+        let appended = handle(
+            "POST /management/project/v1/conversation.append",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[1],
+                "kind": "note",
+                "body": "composer note"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(appended.status, 200, "{}", appended.body);
+        assert!(appended.body.contains("\"observation_only\":true"));
+        let listed = handle(
+            &format!(
+                "GET /management/project/v1/conversation.archive?project_id={project_id}&limit=32"
+            ),
+            b"",
+            &store,
+        );
+        assert!(listed.body.contains("note"));
+        assert!(!listed.body.contains("composer note"));
+        let record_id = serde_json::from_str::<Value>(&appended.body)
+            .unwrap()
+            .get("archive_record_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let one = handle(
+            &format!(
+                "GET /management/project/v1/conversation.record?project_id={project_id}&record_id={record_id}"
+            ),
+            b"",
+            &store,
+        );
+        assert_eq!(one.status, 200, "{}", one.body);
+        assert!(one.body.contains("composer note"));
+        let task_append = handle(
+            "POST /task/project/v1/conversation.append",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[1],
+                "kind": "note",
+                "body": "task must fail"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(task_append.status, 403);
         let legacy = handle(
             "POST /management/project/v1/speech.candidate",
             json!({
@@ -1128,7 +1296,7 @@ mod tests {
         assert_eq!(legacy.status, 422, "{}", legacy.body);
         let v01 = handle(
             &format!(
-                "GET /management/project/v1/conversation.archive?project_id={project_id}&projection_id=v01"
+                "GET /management/project/v1/conversation.archive?project_id={project_id}&limit=32&projection_id=v01"
             ),
             b"",
             &store,

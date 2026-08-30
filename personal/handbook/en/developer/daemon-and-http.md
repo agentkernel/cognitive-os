@@ -48,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:7f93e6af9034cad2ece05e07ab9e74dd8897068db991750e4c9146401e8b91f8"
+fingerprint: "sha256:2a2f4dd6e2f5d303ca0e06a3ec801bee1d4afe3803c4e42837a1c86405fd8d68"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -143,7 +143,7 @@ when present and fails closed on mismatch; Pi never reads the Secret Store.
 mismatch is HTTP 409 `PROVIDER_BINDING_REVISION_STALE`. The localhost Web UI
 is a same-origin daemon client (`GET /ui/`) and is not a second writer.
 
-Personal-private Project aggregate routes (`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,confirm,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,conversation.archive,handoff.record}`) require a management bearer. They project the v26 `p11_*` Project tables, v27 Employee/Blueprint/Assignment/Grant tables, and v28 `p11_conversation_archive` under `cognitiveos.personal.conversation-archive/0.1` (not a reinterpretation of ADR-0058 `conversation-projection/0.1`). Not Task-row impersonation and not the P7-T05 frozen inventory. Empty list has no fake buttons; unknown cost is the literal `unknown` and is never serialized as `0`. Empty roster uses `authority_note: empty-roster`; seated members are listed by `employee_id`. Blueprint rows have no Provider binding. Delivered whitelist speech lands an archive row; chatter stays audit-only. Task-channel aliases fail closed (`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`). This is not a Today page and not a full `/ui/` IA.
+Personal-private Project aggregate routes (`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,confirm,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,conversation.append,conversation.archive,conversation.record,handoff.record}`) require a management bearer. They project the v26 `p11_*` Project tables, v27 Employee/Blueprint/Assignment/Grant tables, and v28 `p11_conversation_archive` under `cognitiveos.personal.conversation-archive/0.1` (not a reinterpretation of ADR-0058 `conversation-projection/0.1`). Not Task-row impersonation and not the P7-T05 frozen inventory. Empty list has no fake buttons; unknown cost is the literal `unknown` and is never serialized as `0`. Empty roster uses `authority_note: empty-roster`; seated members are listed by `employee_id`. Blueprint rows have no Provider binding. Delivered whitelist speech lands an archive row; owner `conversation.append` writes `note` and other archive kinds; chatter stays audit-only. Archive index requires `limit` 1..=32 and returns refs only; `include_bodies` and omitted limit fail closed. Single-record body fetch is `conversation.record`. Archive rows are observation-only, not completion. Task-channel aliases fail closed (`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`). This is not a Today page and not a full `/ui/` IA.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.
