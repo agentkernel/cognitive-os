@@ -349,7 +349,8 @@ fn p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import() {
     vault
         .rebuild_index(ConfirmCaller::OwnerManagement, &project_id, 61)
         .expect("rebuild");
-    let haystack = String::from_utf8_lossy(&std::fs::read(&path).expect("sqlite"));
+    let bytes = std::fs::read(&path).expect("sqlite");
+    let haystack = String::from_utf8_lossy(&bytes);
     assert!(
         !haystack.contains("sk-"),
         "authority sqlite must not contain API key material"

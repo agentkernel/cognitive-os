@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Wait required CI green on CHECK-fix HEAD `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8`, then parent close. Do not merge from this worker. Do not claim T11. Ubuntu `verify` at that SHA already **fail** (job 99282573080; failed-log body pending until the Windows job finishes). Linux focused retest on `04e828bd` is a parallel worker — pending, not pass. Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
+Wait required CI green on the N9 lifetime-bind HEAD after this push (not `04e828bd` — that SHA compile-fails). Parent closes/merges only if required CI is green on **that new** SHA. Do not merge from this worker. Do not claim T11. Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
 
 ## Closed predecessor
 
@@ -78,8 +78,9 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | Windows OPC vault E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `62fac6e364d74462c4be88f92f900a14039c742d` | Not claimed. |
 | 2026-08-30 | CHECK-token fix SHA | recorded | docs-only | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | Sibling landed v32 CHECK persist-only `sourced-excerpt` / `summary` / `older-narrative`. Inject-order label stays Rust/HTTP only. This worker did not rewrite schema. |
 | 2026-08-30 | Linux focused vault retest on CHECK-fix HEAD | **pending** | `DEV-LINUX-NATIVE-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | Parallel worker. Do not invent pass. |
-| 2026-08-30 | Ubuntu `verify (ubuntu-latest)` Test Rust workspace | **fail** | `CI-UBUNTU-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | run [33320897378](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378) job [99282573080](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573080). Test Rust workspace failed in ~15s. Failed-log body not yet available (`gh run view --log-failed` refused while Windows job still in progress). Do not invent assertion. |
-| 2026-08-30 | Windows `verify (windows-latest)` | **pending** | `CI-WINDOWS-MSVC-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | job [99282573045](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573045); Test Rust workspace in progress. `required-ci` not yet reported. |
+| 2026-08-30 | Ubuntu `verify (ubuntu-latest)` Test Rust workspace | **fail** | `CI-UBUNTU-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | run [33320897378](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378) job [99282573080](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573080). Compile `E0716` in `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import`: `from_utf8_lossy(&std::fs::read(...))` temporary dropped while borrowed (`RUSTFLAGS=-D warnings`). CHECK persist change not reverted. Vault N1–N5 not weakened. |
+| 2026-08-30 | Windows `verify (windows-latest)` Test Rust workspace | **fail** | `CI-WINDOWS-MSVC-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | job [99282573045](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573045); same Test Rust workspace class. `required-ci` job 99283037630 failed because verify jobs failed. |
+| 2026-08-30 | N9 sqlite scan binds file bytes before `from_utf8_lossy` | recorded | `DEV-WIN-GNU-01` | this commit | One-line lifetime bind only. No CHECK/schema rewrite. `DEV-WIN-GNU-01` cargo **not-run**. |
 
 ## Explicit non-claims
 
