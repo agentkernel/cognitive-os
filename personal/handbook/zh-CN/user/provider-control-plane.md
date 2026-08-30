@@ -13,13 +13,13 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/secret_input.rs
     symbols: ["read_api_key_material"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
-    symbols: ["PI_AGENT", "DSH_AGENT", "set_binding"]
+    symbols: ["PI_AGENT", "DSH_AGENT", "set_binding", "query_usage"]
   - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
   - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
     symbols: ["TrustedEndpoint", "ProviderKind"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
-    symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS"]
+    symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS", "honest_usage_read_model", "labelled_cost_source"]
   - path: personal/docs/product/provider-control-plane.md
   - path: personal/docs/product/account-hub.md
   - path: personal/docs/product/account-hub.zh-CN.md
@@ -29,8 +29,9 @@ tests:
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
+  - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:066dc7a553e670cd2dfb8f14b820de0af859761380997df604f507220f20cdc9"
+fingerprint: "sha256:bc83f3d0e77bdb232af7475ef4432af4455ceb71502851f5cb9bbcb648464334"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与当前 localhost Web UI 路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、Personal 2.0 桌面重设计/Account Hub 导入或 Agent-benefit。
 ---
@@ -241,7 +242,10 @@ cognitive agent binding remove --agent pi
 否则 `models add` 与 `binding set` 以 `PROVIDER_MODEL_ENDPOINT_MISMATCH` 失败闭合。
 HTTP `POST /management/agent-bindings` 接受可选
 整数 `expected_revision`（当前 binding revision，未绑定时为 `0`）。不匹配时 HTTP
-409 `PROVIDER_BINDING_REVISION_STALE`；省略该字段以保持 CLI 兼容。`show` 在解析时
+409 `PROVIDER_BINDING_REVISION_STALE`。未带 `expected_revision` 就改账户或模型是
+HTTP 409 `PROVIDER_SILENT_REBIND_REJECTED`——先 `remove` 再 `set`，或提交匹配的
+`expected_revision`。CLI `binding set` 不发送该字段，因此切换账户/模型走
+`remove` 再 `set`。同一账户+模型刷新仍成功。`show` 在解析时
 要求 `--agent`，但当前调用与 `list` 相同的列表端点（不过滤）。用 `list` 查看两个
 binding。
 
@@ -279,9 +283,17 @@ cognitive audit query
 ```
 
 这两个 CLI 动词在本阶段**没有过滤器**（设计文本里提到的时间范围/账户过滤不是已交付
-标志）。`usage query` 在应用保留策略后返回 `event_id`、`account_id`、`cost_micros`
-与 `cost_status`。`audit query` 返回 `audit_id`、`action`、`outcome` 与脱敏
+标志）。`usage query` 转储 `GET /management/usage`：每条事件含 `event_id`、
+`account_id`、`cost`（`unknown` 或非零微美元数）、`cost_label`
+（`actual` | `estimated` | `unknown`）、`cost_micros`、`cost_status` 与
+`metering_source`。未知费用绝不为 JSON `0` 或 `"0"`。只有确实记录了
+`locally_estimated` 时才标为 `estimated`。同一响应含
+`binding_explanation.layers`，顺序为 global → Project → employee → Task
+（缺失层为 `unbound`，不编造零），以及 `accounts[]` 中分开的 `account` 与
+`quota` 对象（在真实配额源出现前 `quota.status` 为 `unknown`）。不返回
+secret。`audit query` 返回 `audit_id`、`action`、`outcome` 与脱敏
 `detail`。每次调用的用量事件保留 **30 天**；聚合保留 **90 天**。查询用量会运行该
+清理。
 清理。
 
 ## 预算与告警

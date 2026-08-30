@@ -21,6 +21,7 @@ sources:
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
+    symbols: ["honest_usage_read_model", "labelled_cost_source", "honest_unknown_cost", "replace_binding"]
   - path: personal/crates/cognitive-store/src/sqlite/store.rs
     symbols: ["SqliteAuthorityStore"]
   - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -33,10 +34,11 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
+  - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:57999a7bdef7f468682fdea855bd5bf73f8f63f01b0bddc9c660563eab7e1648"
+fingerprint: "sha256:61cc7e181345733591296c880878cbf63e37bd6c96d18fcff9fe4c922256e725"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -71,6 +73,8 @@ non_claims:
 P11-T06 隐藏 Pi Assistant **不新增迁移**。它复用 v26 `p11_candidate` / `p11_approval_preview` 与 T05 只读档案上下文。助手登记必须带 typed 出处（`sources[]` | `owner-stated` | `assistant-assumption`）；非空 blob 不够。封闭候选 JSON 禁止 `grant` / `secret` / `trigger-arm`。`draft.apply` 指向 Project/Employee/Grant/已确认 charter 会被拒。助手平面不能写 archive、SecretStore、Memory，也不能 confirm/apply 权威。工具 default-deny；research 只能点名既有 `HttpFetchReadOnly`。exact Pi `0.81.1` 与 `cognitiveos.private-candidate/1` 是身份钉，不是第二套调度器或 Installed Agent。
 
 P11-T09 HITL 画布复用 v26 `request_preview` / `confirm_preview` / `p11_approval_preview` 与 v29 `superseded_by`、v30 grant-expansion / StandingApprovalPolicy。真实调用者是 management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*`；T05 只宣布+深链；T06 `draft.apply` 不是 authority-approve。宿主 UI E2E 为 `not-run`。Settings chrome 是 T13。无第二套调度器、无聊天 Approve、无 Inbox 一级。
+
+P11-T12 诚实 usage **不新增迁移**。它是对 v25 `llm_usage_events` / `agent_provider_bindings` / `provider_accounts` 的带标签读取：`cost_label` 为 `actual`（`provider_reported`+`priced`）、`estimated`（仅当确实记录了 `locally_estimated`+`priced`）或 `unknown`（序列化绝不为 JSON `0`）。`GET /management/usage` 同时返回四层 binding 说明；Project/employee/Task 层今日显式 `unbound`。账户身份与配额是分开的对象。静默改账户/模型会被拒绝。成员级预算硬停属 2.1 / Deferred。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；唯一派生表是
 `memory_search_fts`（可重建；检索先跑权威过滤 CTE 再 `MATCH`）。

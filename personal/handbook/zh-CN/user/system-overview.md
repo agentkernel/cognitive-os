@@ -112,7 +112,10 @@ future Agent 需要独立 qualification。
 ## 今天应该如何理解它
 
 当前已实现并测试的基础包括 daemon、CLI、secret、Provider 代理、Pi 对话、六类权威
-存储、Task 准入以及资源/任务投影。端到端完全自主执行仍为 `partial`；请使用 Task
+存储、Task 准入以及资源/任务投影。`GET /management/usage` 现返回带标签费用
+（`actual` | `estimated` | `unknown`；unknown 绝不为 `0`）、四层 binding 说明
+（缺失的 Project/employee/Task 层为 unbound），以及分开的账户与配额字段。Settings
+用量 chrome 仍是 T13。端到端完全自主执行仍为 `partial`；请使用 Task
 watch 和 evidence 命令观察持久事实，不要把一次对话回答理解成 Task 已完成。
 
 接下来按[快速上手](getting-started.md)走最短路径；精确命令见[CLI 基础](cli-basics.md)

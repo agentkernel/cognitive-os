@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:696ef79b1f5bed9bcc585892f26fd98d654762bac35604a192df5626378655b0"
+fingerprint: "sha256:302ab49edeffcfbf80f47d238d7db0a1d705cf1acf53234394185d11e5116ef0"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -54,9 +54,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/providers/models/add` | management | Manually add a model (`manually_configured`) with optional per-million prices. |
 | `POST` | `/management/providers/models/set-price` | management | Set a new price version for one model. Historical usage keeps its recorded pricing version. |
 | `GET` | `/management/agent-bindings` | management | List fixed agent account+provider+model bindings (pi and dsh only). |
-| `POST` | `/management/agent-bindings` | management | Set one fixed binding. Optional expected_revision CAS; mismatch is HTTP 409 PROVIDER_BINDING_REVISION_STALE. No auto fallback, load balancing, or implicit model switch. |
+| `POST` | `/management/agent-bindings` | management | Set one fixed binding. Optional expected_revision CAS; mismatch is HTTP 409 PROVIDER_BINDING_REVISION_STALE. Changing account or model without expected_revision is HTTP 409 PROVIDER_SILENT_REBIND_REJECTED. No auto fallback, load balancing, or implicit model switch. |
 | `POST` | `/management/agent-bindings/remove` | management | Remove one agent binding. |
-| `GET` | `/management/usage` | management | Query retained usage events. Unknown token/cost values are never coerced to zero. |
+| `GET` | `/management/usage` | management | Query labelled usage: events with cost_label actual|estimated|unknown (unknown never 0), binding_explanation layers global→Project→employee→Task (missing layers unbound), and account vs quota fields. Secrets omitted. |
 | `GET` | `/management/budgets` | management | List observe-only token/amount budgets. |
 | `POST` | `/management/budgets` | management | Set a monthly token/amount budget for an account or agent. Alerts do not block calls. |
 | `POST` | `/management/budgets/remove` | management | Remove one budget. |

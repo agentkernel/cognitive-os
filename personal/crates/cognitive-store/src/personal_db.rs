@@ -100,6 +100,9 @@ impl PersonalDatabasePrepareReport {
 /// v29 = ApprovalPreview `superseded_by` for HITL narrow (P11-T09), and
 /// v30 = grant-expansion subject_kind plus StandingApprovalPolicy time-box
 /// (`expires_at` required, ≤7d; Settings list/revoke).
+/// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
+/// migration): unknown cost never serializes as 0; Project/employee/Task
+/// Provider bindings are explicit unbound.
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),

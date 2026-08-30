@@ -48,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:de9c34b1b675659724f562ffba7d9cb2e09d0fbdd88dca96845cdfcc75924521"
+fingerprint: "sha256:e5b2a0574c683bddcacbacb1f5b7feeccb6273a7e311747d817cb166e486fd1a"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -126,7 +126,11 @@ Secret Store `secret_ref`。已绑定 Pi 流量走 `POST /provider/v1/chat/compl
 仍使用 `provider.json`。private-candidate 补全在存在 Pi binding 时使用同一 binding，
 模型不符失败闭合；Pi 从不读取 Secret Store。`POST /management/agent-bindings`
 接受可选 `expected_revision`；不匹配时 HTTP 409
-`PROVIDER_BINDING_REVISION_STALE`。localhost Web UI 是同源 daemon 客户端
+`PROVIDER_BINDING_REVISION_STALE`。未带该字段就改账户或模型是 HTTP 409
+`PROVIDER_SILENT_REBIND_REJECTED`。`GET /management/usage` 返回带标签费用
+（`actual` | `estimated` | `unknown`；unknown 序列化绝不为 `0`）、四层
+binding 说明（缺失的 Project/employee/Task 层为 `unbound`），以及省略 secret
+的账户与配额对象。localhost Web UI 是同源 daemon 客户端
 （`GET /ui/`），不是第二个 writer。
 
 Personal-private Project 聚合路由（`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,preview.reject,preview.narrow,confirm,standing-policies,standing-policy.create,standing-policy.revoke,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,conversation.append,conversation.archive,conversation.record,handoff.record,assistant.turn}`）需要 management bearer。它们投影 v26 `p11_*` Project 表、v27 Employee/Blueprint/Assignment/Grant 表、v28 `p11_conversation_archive`（标识 `cognitiveos.personal.conversation-archive/0.1`，不重解释 ADR-0058 `conversation-projection/0.1`）、v29 ApprovalPreview `superseded_by`（HITL reject/narrow），以及 v30 `grant-expansion` 与 StandingApprovalPolicy 时间盒（`expires_at` 必填、≤7 天；Settings 列表/撤销），不是 Task 行冒充，也不动 P7-T05 冻结 inventory。空列表无假按钮；未知费用字面量是 `unknown`，序列化里不出现 `0`。空花名册使用 `authority_note: empty-roster`；已就位成员按 `employee_id` 列出。Blueprint 行无 Provider binding。白名单投递发言落档案行；owner `conversation.append` 写入 `note` 等档案 kind；chatter 仅审计。档案索引用 `limit` 1..=32 且只返回引用；`include_bodies` 与缺省 limit 失败闭合。单条正文走 `conversation.record`。档案行只是观察，不是完成。HITL confirm/reject/narrow 与 standing-policy 签发/撤销仅限 management；聊天/task 别名失败闭合（`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`），不能完成批准。stale 只按机械 `base_state_digest` 不等判定，不是墙钟新鲜度。`preview.request` 返回供画布使用的 `preview_digest`。这不是 Today 页，不是 Inbox 一级，也不是完整 `/ui/` IA。

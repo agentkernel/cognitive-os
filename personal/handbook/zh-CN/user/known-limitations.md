@@ -62,8 +62,9 @@ non_claims:
   usability、adoption、WTP、support、release/Gate readiness 或 Agent benefit。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
-  query` 与 `cognitive audit query` 无过滤器；用量 JSON 只有 `event_id` /
-  `account_id` / `cost_micros` / `cost_status`。
+  query` 与 `cognitive audit query` 无过滤器；用量 JSON 含带标签事件（`cost` /
+  `cost_label` actual|estimated|unknown，绝不为 `0`）、`binding_explanation` 层，
+  以及分开的 `account` 与 `quota` 对象。
 - Pi 对话按次单发（无流式、仅文本、客户端固定 8192/1024 窗口常量）。
 - `TaskApplicationService` 已实现 `control`/`query_intent`，但尚无 HTTP 路由暴露。
 

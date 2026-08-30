@@ -913,16 +913,39 @@ fn set_binding(body: &[u8], plane: &ProviderControlPlaneStore) -> ResourceApiRes
     if !model_servable_on_account(&account, model_id) {
         return model_endpoint_mismatch();
     }
-    match plane.set_binding(
-        &AgentProviderBindingRecord {
-            agent_instance_id: agent.clone(),
-            account_id: account_id.to_owned(),
-            model_id: model_id.to_owned(),
-            revision: 1,
-            status: "active".to_owned(),
-        },
-        now_ms(),
-    ) {
+    let record = AgentProviderBindingRecord {
+        agent_instance_id: agent.clone(),
+        account_id: account_id.to_owned(),
+        model_id: model_id.to_owned(),
+        revision: 1,
+        status: "active".to_owned(),
+    };
+    let current = plane.get_active_binding(&agent).ok().flatten();
+    let target_changed = current
+        .as_ref()
+        .is_some_and(|binding| binding.account_id != account_id || binding.model_id != model_id);
+    if target_changed
+        && document
+            .get("expected_revision")
+            .and_then(Value::as_i64)
+            .is_none()
+    {
+        return error(
+            409,
+            "PROVIDER_SILENT_REBIND_REJECTED",
+            "silent rebind rejected; remove the binding or supply expected_revision",
+        );
+    }
+    let written = if target_changed {
+        let expected = document
+            .get("expected_revision")
+            .and_then(Value::as_i64)
+            .unwrap_or(0);
+        plane.replace_binding(&record, expected, now_ms())
+    } else {
+        plane.set_binding(&record, now_ms())
+    };
+    match written {
         Ok(binding) => {
             let _ = plane.append_audit(
                 &format!("aud-bind-{agent}"),
@@ -956,16 +979,11 @@ fn remove_binding(body: &[u8], plane: &ProviderControlPlaneStore) -> ResourceApi
 
 fn query_usage(plane: &ProviderControlPlaneStore) -> ResourceApiResponse {
     let _ = plane.apply_retention(now_ms());
-    match plane.list_usage_events(0) {
-        Ok(events) => ok(json!({
-            "status": "ok",
-            "events": events.iter().map(|(id, account, cost, status)| json!({
-                "event_id": id,
-                "account_id": account,
-                "cost_micros": cost,
-                "cost_status": status
-            })).collect::<Vec<_>>(),
-        })),
+    match plane.honest_usage_read_model() {
+        Ok(mut body) => {
+            body["status"] = json!("ok");
+            ok(body)
+        }
         Err(error) => store_error(error),
     }
 }
@@ -1318,6 +1336,15 @@ fn trust_error(err: EndpointTrustError) -> ResourceApiResponse {
 
 fn store_error(err: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {
     match err {
+        cognitive_store::ProviderControlPlaneError::Conflict { detail }
+            if detail == "silent rebind rejected" =>
+        {
+            error(
+                409,
+                "PROVIDER_SILENT_REBIND_REJECTED",
+                "silent rebind rejected; remove the binding or supply expected_revision",
+            )
+        }
         cognitive_store::ProviderControlPlaneError::Conflict { detail } => {
             error(409, "PROVIDER_CONTROL_CONFLICT", detail)
         }
@@ -1664,9 +1691,160 @@ pub(crate) fn anthropic_messages_to_openai_chat(body: &[u8]) -> Result<Vec<u8>, 
 }
 
 #[cfg(test)]
-#[allow(clippy::expect_used)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
 mod tests {
     use super::*;
+    use cognitive_store::{
+        CostOutcome, NewUsageEvent, PersonalDataLayout, UsageSample, prepare_personal_databases,
+    };
+    use tempfile::TempDir;
+
+    fn authority() -> (TempDir, SqliteAuthorityStore) {
+        let temporary = TempDir::new().expect("temp");
+        let root = temporary.path();
+        let layout = PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        );
+        prepare_personal_databases(&layout).expect("prepare");
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).expect("open");
+        (temporary, store)
+    }
+
+    fn insert_named_account(plane: &ProviderControlPlaneStore, name: &str) {
+        plane
+            .insert_account(&ProviderAccountRecord {
+                account_id: format!("acct-{name}"),
+                display_name: name.to_owned(),
+                provider_kind: "openai_official".to_owned(),
+                endpoint: "https://api.openai.com/v1".to_owned(),
+                secret_ref: Some("sk-p11t12-http-fixture-not-a-real-key".to_owned()),
+                allow_private_network: false,
+                allow_insecure_http: false,
+                network_scope: "public".to_owned(),
+                status: "active".to_owned(),
+                catalog_revision: 1,
+                last_discovery_error: None,
+                created_at_ms: 1,
+                updated_at_ms: 1,
+            })
+            .expect("account");
+        plane
+            .upsert_manual_model(&ProviderModelRecord {
+                account_id: format!("acct-{name}"),
+                model_id: "gpt-4o".to_owned(),
+                source: "manually_configured".to_owned(),
+                pricing_version: None,
+                price_input_per_million: None,
+                price_output_per_million: None,
+                price_cache_read_per_million: None,
+                price_cache_write_per_million: None,
+                catalog_revision: 1,
+            })
+            .expect("model");
+    }
+
+    #[test]
+    fn http_usage_unknown_cost_never_zero_and_omits_secrets() {
+        let (_tmp, store) = authority();
+        let plane = ProviderControlPlaneStore::from_authority_store(&store);
+        insert_named_account(&plane, "openai-work");
+        plane
+            .record_usage(&NewUsageEvent {
+                event_id: "evt-http-unknown".to_owned(),
+                idempotency_key: "evt-http-unknown".to_owned(),
+                recorded_at_ms: now_ms(),
+                account_id: "acct-openai-work".to_owned(),
+                provider_kind: "openai_official".to_owned(),
+                model_id: "gpt-4o".to_owned(),
+                agent_instance_id: PI_AGENT.to_owned(),
+                sample: UsageSample {
+                    input_tokens: None,
+                    output_tokens: None,
+                    cache_read_tokens: None,
+                    cache_write_tokens: None,
+                },
+                duration_ms: Some(1),
+                outcome: "ok".to_owned(),
+                metering_source: "unavailable".to_owned(),
+                estimation_method: None,
+                cost: CostOutcome {
+                    cost_micros: None,
+                    cost_status: "cost_unavailable",
+                    pricing_version: None,
+                    cache_hit_rate_unknown: true,
+                },
+            })
+            .expect("usage");
+        let response = handle("GET /management/usage", b"", &store);
+        assert_eq!(response.status, 200, "{}", response.body);
+        assert!(response.body.contains("\"cost\":\"unknown\""));
+        assert!(!response.body.contains("\"cost\":0"));
+        assert!(!response.body.contains("\"cost\":\"0\""));
+        assert!(!response.body.contains("sk-p11t12"));
+        assert!(!response.body.contains("secret_ref"));
+        let body: Value = serde_json::from_str(&response.body).expect("json");
+        assert_eq!(body["events"][0]["cost_label"], "unknown");
+        assert_eq!(body["accounts"][0]["quota"]["status"], "unknown");
+        assert!(body["accounts"][0]["quota"]["allowance"].is_null());
+        assert_eq!(body["binding_explanation"]["layers"][1]["layer"], "project");
+        assert_eq!(
+            body["binding_explanation"]["layers"][1]["status"],
+            "unbound"
+        );
+        assert_eq!(
+            body["binding_explanation"]["layers"][2]["status"],
+            "unbound"
+        );
+        assert_eq!(
+            body["binding_explanation"]["layers"][3]["status"],
+            "unbound"
+        );
+    }
+
+    #[test]
+    fn http_silent_rebind_is_rejected() {
+        let (_tmp, store) = authority();
+        let plane = ProviderControlPlaneStore::from_authority_store(&store);
+        insert_named_account(&plane, "openai-work");
+        insert_named_account(&plane, "openai-lab");
+        let first = handle(
+            "POST /management/agent-bindings",
+            json!({
+                "agent": "pi",
+                "account_id": "acct-openai-work",
+                "model_id": "gpt-4o"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(first.status, 200, "{}", first.body);
+        let silent = handle(
+            "POST /management/agent-bindings",
+            json!({
+                "agent": "pi",
+                "account_id": "acct-openai-lab",
+                "model_id": "gpt-4o"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(silent.status, 409, "{}", silent.body);
+        assert!(silent.body.contains("PROVIDER_SILENT_REBIND_REJECTED"));
+        let usage = handle("GET /management/usage", b"", &store);
+        assert_eq!(usage.status, 200, "{}", usage.body);
+        let body: Value = serde_json::from_str(&usage.body).expect("json");
+        assert_eq!(body["binding_explanation"]["layers"][0]["status"], "bound");
+        assert_eq!(
+            body["binding_explanation"]["layers"][0]["bindings"][0]["account_id"],
+            "acct-openai-work"
+        );
+    }
 
     #[test]
     fn rewrite_openai_model_replaces_catalog_id_with_binding() {
