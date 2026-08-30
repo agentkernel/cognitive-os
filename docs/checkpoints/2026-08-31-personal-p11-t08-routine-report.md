@@ -7,7 +7,8 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Lease: `lease/personal/P11-T08/routine`
 - Change class: `implementation-only`
 - Claim commit: `92f8920a` (lease/plan only).
-- Unique next: push D01 implementation; route focused store + HTTP cargo to `DEV-LINUX-NATIVE-01` / required CI. Clock/sleep/restart host E2E remains `not-run`.
+- Implementation commit: `879dff45` (Draft PR [#290](https://github.com/agentkernel/cognitive-os/pull/290)).
+- Unique next: Linux focused `p11_t08_routine` + kernel-server `p11_t08` on the pushed D01 revision; required CI; keep Draft. Clock/sleep/restart host E2E remains `not-run`.
 
 | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|
