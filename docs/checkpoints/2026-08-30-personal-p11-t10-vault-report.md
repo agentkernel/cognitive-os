@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Required CI on the post-`sk-` schema fix HEAD (this commit). Do not merge. Host filesystem E2E remains `not-run`. `DEV-WIN-GNU-01` cargo test remains `not-run`.
+Wait required CI green on CHECK-fix HEAD `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8`, then parent close. Do not merge from this worker. Do not claim T11. Ubuntu `verify` at that SHA already **fail** (job 99282573080; failed-log body pending until the Windows job finishes). Linux focused retest on `04e828bd` is a parallel worker — pending, not pass. Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
 
 ## Closed predecessor
 
@@ -37,6 +37,7 @@ Not Project authority. Not Memory FTS. Not Obsidian. Not T13 `/ui/` IA.
 | N6 | conversation archive and Artifact CAS are not Vault files | store `p11_t10_conversation_and_cas_are_not_vault_files` |
 | N7 | path traversal rejected | store `p11_t10_path_traversal_is_rejected` |
 | N8 | task channel cannot import Vault | HTTP `POST /task/project/v1/vault.import` 403 |
+| N9 | authority SQLite omits secret-shape bytes after import | store `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import` |
 
 ## Vertical slice
 
@@ -70,6 +71,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/fill-handbook-fingerprints.mjs` | pass | local Node | this commit | `dev.store-migrations` both locales (vault.rs source fingerprint) |
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | pass | local Node | this commit | 58×2 locales after fingerprint refresh |
 | 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | pass | local Node | this commit | store source-map group; fingerprint-only `dev.store-migrations` |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t10_vault` | **pass** 8/8 | `DEV-LINUX-NATIVE-01` | `62fac6e364d74462c4be88f92f900a14039c742d` | worktree `/home/wuz/cognitiveos-personal-worktrees/p11-t10-62fac6e` (detached); STORE_TEST=0; 0.85s; FAIL_TAIL empty. 8 tests at this SHA (N9 not yet present). Host FS E2E not claimed. |
+| 2026-08-30 | `cargo test -p kernel-server --bin kernel-server -- vault_import_index_conflict` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `62fac6e364d74462c4be88f92f900a14039c742d` | HTTP_TEST=0; `personal::project_aggregate::tests::vault_import_index_conflict_and_task_channel_is_forbidden`. |
+| 2026-08-30 | Host filesystem / index E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `62fac6e364d74462c4be88f92f900a14039c742d` | Card allows `not-run` until the host route is qualified. Never pass. |
+| 2026-08-30 | B01 campaign guest | **not_available** | n/a | `62fac6e364d74462c4be88f92f900a14039c742d` | No B01. Evaluation routing OFF. |
+| 2026-08-30 | Windows OPC vault E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `62fac6e364d74462c4be88f92f900a14039c742d` | Not claimed. |
+| 2026-08-30 | CHECK-token fix SHA | recorded | docs-only | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | Sibling landed v32 CHECK persist-only `sourced-excerpt` / `summary` / `older-narrative`. Inject-order label stays Rust/HTTP only. This worker did not rewrite schema. |
+| 2026-08-30 | Linux focused vault retest on CHECK-fix HEAD | **pending** | `DEV-LINUX-NATIVE-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | Parallel worker. Do not invent pass. |
+| 2026-08-30 | Ubuntu `verify (ubuntu-latest)` Test Rust workspace | **fail** | `CI-UBUNTU-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | run [33320897378](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378) job [99282573080](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573080). Test Rust workspace failed in ~15s. Failed-log body not yet available (`gh run view --log-failed` refused while Windows job still in progress). Do not invent assertion. |
+| 2026-08-30 | Windows `verify (windows-latest)` | **pending** | `CI-WINDOWS-MSVC-01` | `04e828bd82ef7b0b90f6408788f7bb6a9fd768f8` | job [99282573045](https://github.com/agentkernel/cognitive-os/actions/runs/33320897378/job/99282573045); Test Rust workspace in progress. `required-ci` not yet reported. |
 
 ## Explicit non-claims
 
