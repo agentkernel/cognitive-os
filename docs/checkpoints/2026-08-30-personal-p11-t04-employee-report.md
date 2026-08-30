@@ -5,8 +5,8 @@
 - Product: CognitiveOS Personal 2.0.0 (v9 is a canvas filename only)
 - Lease: `lease/personal/P11-T04/employee`
 - Branch: `personal/P11-T04-employee`
-- PR: (pending)
-- HEAD: (pending first commit)
+- PR: [#282](https://github.com/agentkernel/cognitive-os/pull/282) Draft
+- HEAD: `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` (implementation); Clippy `HandoffSpec` follow-up uncommitted
 - Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
@@ -119,3 +119,11 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 58 docs × 2 locales |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 18 pages byte-identical |
 | 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | **pass** | `DEV-WIN-GNU-01` | uncommitted | store + handbook changeset; no `DOCS_IMPACT_NONE` |
+| 2026-08-30 | Draft PR [#282](https://github.com/agentkernel/cognitive-os/pull/282) | recorded | github | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | Draft. Do not merge until Clippy/CI green. |
+| 2026-08-30 | required CI [33290989251](https://github.com/agentkernel/cognitive-os/actions/runs/33290989251) | **fail** (Clippy) | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | `clippy::too_many_arguments` on `EmployeeStore::record_handoff` (8/7). Tests **not-run** (clippy failed first). |
+| 2026-08-30 | parent recovery after subagent death | recorded | `DEV-WIN-GNU-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | Unique next action = `HandoffSpec` Clippy fix → Linux/CI → close. DOC dirty / untracked 14–22 protected. Never `git add -A`. |
+| 2026-08-30 | `HandoffSpec` Clippy fix | recorded | `DEV-WIN-GNU-01` | uncommitted | `record_handoff` now takes `HandoffSpec`; bilingual store-and-migrations + generated http-api fingerprints. |
+| 2026-08-30 | `cargo fmt --all -- --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted | allowed GNU surface |
+| 2026-08-30 | `node tools/src/check-consistency.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 275 requirements; lease date format restored |
+| 2026-08-30 | `node tools/src/check-handbook.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 58 docs × 2 locales |
+| 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 18 pages byte-identical |

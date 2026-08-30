@@ -39,7 +39,7 @@ pub mod worker_authorization;
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use clock::SystemClock;
 pub use employee::{
-    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, MEMBER_BLUEPRINT_ID,
+    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, MEMBER_BLUEPRINT_ID,
     PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress, SpeechDecision,
     employee_migration_entry,
 };

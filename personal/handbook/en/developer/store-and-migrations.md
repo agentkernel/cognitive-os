@@ -13,7 +13,7 @@ sources:
   - path: personal/crates/cognitive-store/src/project_aggregate.rs
     symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "ProjectAggregateStore"]
   - path: personal/crates/cognitive-store/src/employee.rs
-    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore"]
+    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -30,7 +30,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:93333f5b30e18cfa3c568f2a8a066384549956418952edc6a7f8a5377cd644e0"
+fingerprint: "sha256:66a6ca92e9f759652c0b76da82bd44c8ccfb09028a76986c660663f1fac48f88"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -58,7 +58,7 @@ orders authority first and names the backup path on a second-phase failure.
 | v24 | append-only Memory/Skill consumption records keyed by Task/epoch/request/session |
 | v25 | Provider Control Plane accounts, models, bindings, usage events/aggregates, budgets, alerts, audit |
 | v26 | Personal-private Project aggregate (`p11_draft`, `p11_candidate`, `p11_charter_revision`, `p11_project`, `p11_plan_revision`, `p11_stage`, `p11_gap`, `p11_stage_test_fact`, `p11_acceptance_fact`, `p11_approval_preview`). New tables, not `family=task`. |
-| v27 | Role Blueprint / Assignment / Employee / Grant (`p11_role_blueprint`, `p11_role_blueprint_revision`, `p11_employee`, `p11_employee_revision`, `p11_assignment`, `p11_install_fact`, `p11_grant`, `p11_speech_audit`, `p11_handoff`). No Provider binding on Blueprint. Employee is the authority id; runtime_binding_ref is replaceable. |
+| v27 | Role Blueprint / Assignment / Employee / Grant (`p11_role_blueprint`, `p11_role_blueprint_revision`, `p11_employee`, `p11_employee_revision`, `p11_assignment`, `p11_install_fact`, `p11_grant`, `p11_speech_audit`, `p11_handoff`). No Provider binding on Blueprint. Employee is the authority id; runtime_binding_ref is replaceable. Handoff rows keep `authority_stays=1`; writers take `HandoffSpec` so chat cannot transfer authority. |
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; the only derived table is `memory_search_fts` (rebuildable; searches

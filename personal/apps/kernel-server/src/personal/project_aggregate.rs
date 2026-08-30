@@ -4,8 +4,8 @@
 //! Task-channel writes are 403 (N12).
 
 use cognitive_store::{
-    ConfirmCaller, EmployeeStore, PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore,
-    ProjectRow, RosterProposal, SqliteAuthorityStore,
+    ConfirmCaller, EmployeeStore, HandoffSpec, PendingPreviewRow, ProjectAggregateError,
+    ProjectAggregateStore, ProjectRow, RosterProposal, SqliteAuthorityStore,
 };
 use serde_json::{Value, json};
 
@@ -499,12 +499,14 @@ fn handoff_record(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse
         .unwrap_or("ready");
     match employees.record_handoff(
         ConfirmCaller::OwnerManagement,
-        project_id,
-        source,
-        target,
-        digest,
-        blocked_or_ready,
-        now_ms(),
+        &HandoffSpec {
+            project_id,
+            source_employee_id: source,
+            target_employee_id: target,
+            bounded_work_digest: digest,
+            blocked_or_ready,
+            now_ms: now_ms(),
+        },
     ) {
         Ok(handoff_id) => ok(json!({ "status": "ok", "handoff_id": handoff_id })),
         Err(error) => store_error(error),

@@ -3,8 +3,8 @@
 //! P11-T04 Employee / Blueprint / Assignment: 22 §3 negatives + card extras.
 
 use cognitive_store::{
-    ConfirmCaller, EmployeeStore, PersonalDataLayout, ProjectAggregateError, ProjectAggregateStore,
-    RosterProposal, StageSpec, prepare_personal_databases,
+    ConfirmCaller, EmployeeStore, HandoffSpec, PersonalDataLayout, ProjectAggregateError,
+    ProjectAggregateStore, RosterProposal, StageSpec, prepare_personal_databases,
 };
 use tempfile::TempDir;
 
@@ -524,12 +524,14 @@ fn p11_t04_chat_cannot_transfer_authority() {
     employees
         .record_handoff(
             ConfirmCaller::OwnerManagement,
-            &project_id,
-            &ids[0],
-            &ids[1],
-            &ProjectAggregateStore::digest_hex(b"bounded-work"),
-            "ready",
-            60,
+            &HandoffSpec {
+                project_id: &project_id,
+                source_employee_id: &ids[0],
+                target_employee_id: &ids[1],
+                bounded_work_digest: &ProjectAggregateStore::digest_hex(b"bounded-work"),
+                blocked_or_ready: "ready",
+                now_ms: 60,
+            },
         )
         .expect("handoff");
 }

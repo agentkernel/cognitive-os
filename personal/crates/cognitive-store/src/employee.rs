@@ -146,6 +146,17 @@ pub struct SpeechDecision {
     pub reason: String,
 }
 
+/// Bounded handoff row. Schema forces `authority_stays = 1`; chat cannot transfer authority.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct HandoffSpec<'a> {
+    pub project_id: &'a str,
+    pub source_employee_id: &'a str,
+    pub target_employee_id: &'a str,
+    pub bounded_work_digest: &'a str,
+    pub blocked_or_ready: &'a str,
+    pub now_ms: i64,
+}
+
 /// Durable Employee / Blueprint / Grant store on the authority writer.
 #[derive(Clone)]
 pub struct EmployeeStore {
@@ -1068,15 +1079,10 @@ impl EmployeeStore {
     pub fn record_handoff(
         &self,
         caller: ConfirmCaller,
-        project_id: &str,
-        source_employee_id: &str,
-        target_employee_id: &str,
-        bounded_work_digest: &str,
-        blocked_or_ready: &str,
-        now_ms: i64,
+        spec: &HandoffSpec<'_>,
     ) -> Result<String, ProjectAggregateError> {
         Self::require_owner(caller)?;
-        if bounded_work_digest.len() != 64 {
+        if spec.bounded_work_digest.len() != 64 {
             return Err(ProjectAggregateError::Invalid {
                 detail: "bounded_work_digest must be 64 hex chars",
             });
@@ -1090,12 +1096,12 @@ impl EmployeeStore {
              ) VALUES (?1,?2,?3,?4,?5,?6,1,?7)",
             params![
                 handoff_id,
-                project_id,
-                source_employee_id,
-                target_employee_id,
-                bounded_work_digest,
-                blocked_or_ready,
-                now_ms
+                spec.project_id,
+                spec.source_employee_id,
+                spec.target_employee_id,
+                spec.bounded_work_digest,
+                spec.blocked_or_ready,
+                spec.now_ms
             ],
         )
         .map_err(unavailable("insert handoff"))?;
