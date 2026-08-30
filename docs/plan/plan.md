@@ -1603,7 +1603,7 @@ formal acceptance.
 - **关闭门:** admission 与 forget 后 index 不复活可证明。
 - **漂移检测负例:** 跨 scope、secret/PII、poisoning、直写、tombstone 复活。
 - **硬门:** 适用 Phase 11 四条。
-- **status:** in-progress (`P11-T11/D01`); lease `lease/personal/P11-T11/memory`; unique next = required CI on this push HEAD, then parent close. Linux store 4/4 + HTTP 2/2 at `f1dca3e0`. Claim ceiling `hypothesis`. Do not merge T11.
+- **status:** done (merged PR [#289](https://github.com/agentkernel/cognitive-os/pull/289) at `main@b5084e06`; required CI [33327844743](https://github.com/agentkernel/cognitive-os/actions/runs/33327844743) **SUCCESS** at `60844f51`; Linux store 4/4 + HTTP 2/2 at `f1dca3e0`). Claim ceiling `hypothesis`. Unique next = claim `P11-T08/D01`.
 
 ### P11-T12 — Provider honest usage (no member budget chrome)
 

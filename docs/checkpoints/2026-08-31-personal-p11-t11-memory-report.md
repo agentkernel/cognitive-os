@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Required CI on this push HEAD, then parent close. Do not merge T11. Linux store **pass** 4/4 and HTTP **pass** 2/2 at `f1dca3e038104c0f03879a2a368a635d4b876a2c`. Required CI run [33327289189](https://github.com/agentkernel/cognitive-os/actions/runs/33327289189) **FAILURE** at that SHA (`check-consistency` lease overlap with DOC `dev-prep`; not a Rust/test fail). T11 lease trimmed to T10 shape. `DEV-WIN-GNU-01` cargo remains `not-run`. Host FS / B01 remain `not-run`. Evaluation routing OFF.
+T11 merged PR [#289](https://github.com/agentkernel/cognitive-os/pull/289) at `main@b5084e06`. Close `lease/personal/P11-T11/memory`, then claim `P11-T08/D01`. Linux store **pass** 4/4 and HTTP **pass** 2/2 at `f1dca3e038104c0f03879a2a368a635d4b876a2c`. Workspace `required-ci` on `60844f51` **SUCCESS** run [33327844743](https://github.com/agentkernel/cognitive-os/actions/runs/33327844743) (ubuntu + windows + required-ci). That row is not a pass of host privacy/rebuild E2E. `DEV-WIN-GNU-01` cargo remains `not-run`. Host FS / B01 remain `not-run`. Evaluation routing OFF. Do not auto-claim T02/T13. Do not unpark T14/T15.
 
 ## Closed predecessor
 
@@ -69,3 +69,4 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-31 | B01 campaign guest | **not-run** | n/a | `f1dca3e038104c0f03879a2a368a635d4b876a2c` | No B01. Evaluation routing OFF. |
 | 2026-08-31 | workspace `required-ci` on `f1dca3e0` | **FAILURE** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `f1dca3e038104c0f03879a2a368a635d4b876a2c` | run [33327289189](https://github.com/agentkernel/cognitive-os/actions/runs/33327289189). verify ubuntu + windows + required-ci. Root: `check-consistency.mjs` — 4 PARALLEL-LANES violations: T11 lease overlaps DOC `dev-prep` on `PROGRESS.md`, `PERSONAL-DEVELOPMENT-PLAN.md`, `plan.md`; T11 also claimed `PARALLEL-LANES.md` itself. Not a Rust/test failure. Negatives unchanged. |
 | 2026-08-31 | T11 lease writable paths trimmed to T10 shape | recorded | docs-only | this commit | Removed `PROGRESS.md`, `PERSONAL-DEVELOPMENT-PLAN.md`, `plan.md`, `PARALLEL-LANES.md`, and handbook pages from T11 lease so it no longer overlaps DOC `dev-prep`. Keep: `personal/crates/cognitive-store/`; `personal/apps/kernel-server/`; `docs/checkpoints/2026-08-31-personal-p11-t11-*`; `tools/src/generate-handbook.mjs`. |
+| 2026-08-31 | workspace `required-ci` on `60844f51` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `60844f511a58d537fc68cb4620542cddeac21994` | run [33327844743](https://github.com/agentkernel/cognitive-os/actions/runs/33327844743): resolve **SUCCESS**, verify ubuntu **SUCCESS**, verify windows **SUCCESS**, `required-ci` **SUCCESS**. Not a pass of host privacy/rebuild E2E. |
