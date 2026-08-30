@@ -63,7 +63,9 @@ source map 有意让已采纳目标无法静默变化：
   （`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`）到
   `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；仅文档；
   不是实现、解冻、Gate 或 P11 领取。OPC 设计语料（`clients/docs/design/opc-2.0/`，
-  含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判（hypothesis；不是 Gate）。
+  含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判
+  （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；
+  hypothesis；不是 Gate）。
 
 每次命中都必须保留：**当前 Linux 1.0/当前 API**、**已采纳 Windows OPC target**、
 **Requires-backend** 与 **Requires-environment/deferred**。绝不能从 design adoption、

@@ -73,7 +73,9 @@ silently:
   documentation only; not implementation, thaw, Gate, or a P11 claim.
   The OPC design corpus (`clients/docs/design/opc-2.0/`, including the
   maintenance index) catalogues a 2026-08-30 informative Design-Agent /
-  Owner-journey hardness assessment (hypothesis; not Gate).
+  Owner-journey hardness assessment
+  ([`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md);
+  hypothesis; not Gate).
 
 For every hit, preserve explicit truth columns: **current Linux 1.0/current
 API**, **adopted Windows OPC target**, **Requires-backend**, and

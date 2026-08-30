@@ -21,7 +21,7 @@
   unapproved v6/v7 are not current. Archived V2
   is historical. Canvas-only HITL and daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
-  [personal-20-opc-e2e-optimized-v9](C:\Users\wuron\.cursor\projects\d-agent-kernel\canvases\personal-20-opc-e2e-optimized-v9.canvas.tsx)
+  [personal-20-opc-e2e-optimized-v9](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,

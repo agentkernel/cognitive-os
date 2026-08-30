@@ -166,9 +166,13 @@ Once DOC owns the write, Current snapshot must:
 3. Formal plan `P11-T03` `not-started` → `in-progress`, Phase 11 summary `15/1/0/0/14` → `15/1/1/0/13`, 合计 `144/109/0/1/18` → `144/109/1/1/17`, Layer 1 `144/109/0/1/18/35` → `144/109/1/1/17/35` (Remaining = Total − Done, unchanged).
 4. Land `13-…md` (or drop the index link) and replace absolute canvas paths with repo-relative links.
 
+## Owner supersede (2026-08-30, this window)
+
+Owner ordered continue-until-complete and unblocked T03 writing the minimum status/link paths. This window restores HEAD copies of DOC-dirty plan/product files, then applies T03-only patches: Current snapshot lease + Layer 1/2, formal-plan `P11-T03` `in-progress`, repo-relative canvas links, and the already-written `13-…md` (absolute canvas / untracked Window C links neutralized so CI can resolve). Do not author 14–26. Do not claim T02/T04.
+
 ## Unique next action
 
-DOC window (or owner releasing those paths) applies the snapshot/link fixes above. Then this task re-runs required CI on the same implementation HEAD (or a docs-only follow-up commit). Do not steal DOC paths. Do not claim T04. Do not merge while Draft or while consistency is red. Owner Stripe invoice at cursor.com/dashboard blocked Claude subagents; parent continues.
+Push this corrective commit, wait for required CI SUCCESS on the new HEAD, then ready/merge/lease/branch/main. Do not merge while Draft or while consistency is red.
 
 ---
 
@@ -207,6 +211,9 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `Cargo.lock` kernel-server tempfile | recorded | `DEV-LINUX-NATIVE-01` | `8374d560cd55e5a4cb322cbf6588218309565ccc` | `--locked` on `7d9f13e4` wanted one tempfile line; follow-up commit carries it |
 | 2026-08-30 | required CI run [33281002286](https://github.com/agentkernel/cognitive-os/actions/runs/33281002286) | **fail** (consistency) | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `8374d560cd55e5a4cb322cbf6588218309565ccc` | 5 check-consistency violations; Rust tests **not-run** on this job. 2 are T03 lease/snapshot (DOC `PROGRESS.md`). 3 inherited from `origin/main` DOC product/architecture links. |
 | 2026-08-30 | parent recovery after subagent death | recorded | `DEV-WIN-GNU-01` | `8374d560cd55e5a4cb322cbf6588218309565ccc` | No product rewrite. Unique next action = DOC snapshot + link repair. |
+| 2026-08-30 | owner supersede: T03 writes PROGRESS/plan + inherited link correctives | recorded | `DEV-WIN-GNU-01` | uncommitted on `personal/P11-T03-project-aggregate` | Keep DOC leases. Add existing `13-…md` only. Absolute canvas paths → repo-relative. |
+| 2026-08-30 | `node tools/src/check-consistency.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted on `personal/P11-T03-project-aggregate` | 0 violations after T03 snapshot + 13-assessment + portable canvas links |
+| 2026-08-30 | `check-handbook` + `generate-handbook --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted (13-assessment staged) | 58×2 handbook; 18 generated pages byte-identical |
 
 ## Non-claims
 
