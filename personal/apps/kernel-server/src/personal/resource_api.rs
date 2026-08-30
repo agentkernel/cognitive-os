@@ -24,12 +24,17 @@ use cognitive_kernel::memory_skill_consumption::{
 };
 use cognitive_kernel::ports::{
     Clock, ContextStore, IntentChainStore, MemoryAdmissionDecisionRow, MemoryCandidateRow,
-    MemoryObjectRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow, ProtocolStore,
-    SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow, SkillPackageRow,
-    SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
+    MemoryObjectRow, MemorySearchQuery, MemoryStore, MemoryTombstoneRow, MemoryUpdateRequest,
+    ProtocolStore, SchedulerExecutionPolicyStore, SkillBindingRevocationRow, SkillBindingRow,
+    SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
     WorkspaceContextSourceRow,
 };
-use cognitive_store::{SqliteAuthorityStore, SystemClock, UuidV7Generator, admit_memory_candidate};
+use cognitive_store::{
+    EmployeeStore, EpisodicRecallSpec, ProjectAggregateError, SqliteAuthorityStore, SystemClock,
+    UuidV7Generator, admit_memory_candidate, canonical_episodic_scope, forget_episodic_memory,
+    load_memory_governance_scope, rebuild_episodic_memory_index, recall_episodic_memory,
+    require_employee_in_project, screen_memory_admission,
+};
 use serde_json::{Value, json};
 
 const PROJECTION_VERSION: &str = "personal-resource-projection/1";
@@ -625,11 +630,35 @@ impl ResourceApi {
         body: &[u8],
         store: &SqliteAuthorityStore,
     ) -> ResourceApiResponse {
+        // Task-channel Memory mutation aliases exist as a documented surface and
+        // must fail closed (N6). Literals stay here so handbook extraction sees them.
+        if method_path.starts_with("POST /task/resource/v1/memory/remember")
+            || method_path.starts_with("POST /task/resource/v1/memory/forget")
+            || method_path.starts_with("POST /task/resource/v1/memory/recall")
+            || method_path.starts_with("POST /task/resource/v1/memory/correct")
+            || method_path.starts_with("POST /task/resource/v1/memory/index.rebuild")
+            || method_path.starts_with("POST /task/resource/v1/memory/review")
+        {
+            return error(
+                403,
+                "RESOURCE_MEMORY_CHANNEL_FORBIDDEN",
+                "Memory mutations are management-channel only",
+            );
+        }
         if method_path.starts_with("POST /management/resource/v1/memory/forget") {
             return self.forget_memory(body, store);
         }
         if method_path.starts_with("POST /management/resource/v1/memory/remember") {
             return self.remember_memory(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/memory/recall") {
+            return self.recall_memory(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/memory/correct") {
+            return self.correct_memory(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/memory/index.rebuild") {
+            return self.rebuild_memory_index(store);
         }
         if method_path.starts_with("POST /management/resource/v1/skill/import") {
             return self.import_skill(body, store);
@@ -783,15 +812,48 @@ impl ResourceApi {
                 "unsealed Memory remember requires text",
             );
         };
-        let Some(governance_scope) = string_field(document, "governance_scope") else {
-            return error(
-                400,
-                "RESOURCE_MEMORY_PAYLOAD_INVALID",
-                "unsealed Memory remember requires governance_scope",
-            );
+        if let Err(response) = screen_remember_payload(&text, document) {
+            return response;
+        }
+        let project_id = string_field(document, "project_id");
+        let employee_id = string_field(document, "employee_id");
+        let (governance_scope, target_scope) = match (project_id, employee_id) {
+            (Some(project_id), Some(employee_id)) => {
+                if let Err(response) = require_scoped_employee(store, &project_id, &employee_id) {
+                    return response;
+                }
+                let canonical = canonical_episodic_scope(&project_id, &employee_id);
+                if let Some(provided) = string_field(document, "governance_scope")
+                    && provided != canonical
+                {
+                    return error(
+                        403,
+                        "RESOURCE_MEMORY_SCOPE_FORBIDDEN",
+                        "Memory governance_scope does not match the caller project/employee",
+                    );
+                }
+                (canonical.clone(), canonical)
+            }
+            (None, None) => {
+                let Some(governance_scope) = string_field(document, "governance_scope") else {
+                    return error(
+                        400,
+                        "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                        "unsealed Memory remember requires governance_scope",
+                    );
+                };
+                let target_scope = string_field(document, "target_scope")
+                    .unwrap_or_else(|| governance_scope.clone());
+                (governance_scope, target_scope)
+            }
+            _ => {
+                return error(
+                    400,
+                    "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                    "project_id and employee_id must be supplied together",
+                );
+            }
         };
-        let target_scope =
-            string_field(document, "target_scope").unwrap_or_else(|| governance_scope.clone());
         let purpose =
             string_field(document, "purpose").unwrap_or_else(|| "task_execution".to_owned());
         let Some(retention_expires_at_unix_seconds) =
@@ -951,6 +1013,40 @@ impl ResourceApi {
                 "MemoryCandidate source, scope, purpose, and retention bindings are required",
             );
         };
+        let source_text = source_document
+            .pointer("/body/text")
+            .and_then(Value::as_str)
+            .unwrap_or("");
+        if let Err(response) = screen_remember_payload(source_text, &document) {
+            return response;
+        }
+        if let (Some(project_id), Some(employee_id)) = (
+            string_field(&document, "project_id").or_else(|| string_field(envelope, "project_id")),
+            string_field(&document, "employee_id")
+                .or_else(|| string_field(envelope, "employee_id")),
+        ) {
+            if let Err(response) = require_scoped_employee(store, &project_id, &employee_id) {
+                return response;
+            }
+            let canonical = canonical_episodic_scope(&project_id, &employee_id);
+            if governance_scope != canonical {
+                return error(
+                    403,
+                    "RESOURCE_MEMORY_SCOPE_FORBIDDEN",
+                    "Memory governance_scope does not match the caller project/employee",
+                );
+            }
+        } else if string_field(&document, "project_id").is_some()
+            || string_field(&document, "employee_id").is_some()
+            || string_field(envelope, "project_id").is_some()
+            || string_field(envelope, "employee_id").is_some()
+        {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "project_id and employee_id must be supplied together",
+            );
+        }
         let decision_id = match new_resource_object_id() {
             Ok(identifier) => identifier,
             Err(response) => return response,
@@ -1249,21 +1345,302 @@ impl ResourceApi {
             reason: reason.to_owned(),
             canonical_json,
         };
-        match store.append_memory_tombstone(&tombstone) {
+        let project_id = string_field(&document, "project_id");
+        let employee_id = string_field(&document, "employee_id");
+        let forget_result = match (project_id, employee_id) {
+            (Some(project_id), Some(employee_id)) => {
+                let employees = EmployeeStore::from_authority_store(store);
+                forget_episodic_memory(store, &employees, &project_id, &employee_id, &tombstone)
+                    .map_err(privacy_error)
+            }
+            (None, None) => store
+                .append_memory_tombstone(&tombstone)
+                .map_err(store_memory_error),
+            _ => {
+                return error(
+                    400,
+                    "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                    "project_id and employee_id must be supplied together",
+                );
+            }
+        };
+        match forget_result {
             Ok(()) => json_response(
                 201,
                 json!({"status":"forgotten", "memory_id": tombstone.memory_id.to_string()}),
             ),
-            Err(StorePortError::Conflict { .. }) => error(
-                409,
-                "RESOURCE_MEMORY_CONFLICT",
-                "Memory forget conflicts with existing authority facts",
+            Err(response) => response,
+        }
+    }
+
+    fn recall_memory(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory recall payload is invalid",
+            );
+        };
+        let (
+            Some(caller_project_id),
+            Some(target_project_id),
+            Some(caller_employee_id),
+            Some(target_employee_id),
+            Some(query_text),
+        ) = (
+            string_field(&document, "caller_project_id"),
+            string_field(&document, "target_project_id"),
+            string_field(&document, "caller_employee_id"),
+            string_field(&document, "target_employee_id"),
+            string_field(&document, "query_text"),
+        )
+        else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory recall requires caller and target project/employee plus query_text",
+            );
+        };
+        let purpose =
+            string_field(&document, "purpose").unwrap_or_else(|| "task_execution".to_owned());
+        let employees = EmployeeStore::from_authority_store(store);
+        let spec = EpisodicRecallSpec {
+            caller_project_id: &caller_project_id,
+            target_project_id: &target_project_id,
+            caller_employee_id: &caller_employee_id,
+            target_employee_id: &target_employee_id,
+            query_text: &query_text,
+            purpose: &purpose,
+            observed_at_unix_seconds: now_unix_seconds(),
+            maximum_results: 32,
+        };
+        match recall_episodic_memory(store, &employees, &spec) {
+            Ok(rows) => json_response(
+                200,
+                json!({
+                    "status": "ok",
+                    "candidates": rows.iter().map(|row| json!({
+                        "memory_id": row.memory_id.to_string(),
+                        "source_id": row.source_id.to_string(),
+                        "source_digest": row.source_digest,
+                    })).collect::<Vec<_>>(),
+                }),
             ),
-            Err(StorePortError::Unavailable { .. }) => error(
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn rebuild_memory_index(&self, store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        match rebuild_episodic_memory_index(store) {
+            Ok(()) => json_response(200, json!({"status": "rebuilt", "index": "memory_fts"})),
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn correct_memory(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory correct payload is invalid",
+            );
+        };
+        let (Some(memory_id), Some(project_id), Some(employee_id), Some(text)) = (
+            object_id_field(&document, "memory_id"),
+            string_field(&document, "project_id"),
+            string_field(&document, "employee_id"),
+            public_remember_text(&document),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory correct requires memory_id, project_id, employee_id, and text",
+            );
+        };
+        if let Err(response) = screen_remember_payload(&text, &document) {
+            return response;
+        }
+        if let Err(response) = require_scoped_employee(store, &project_id, &employee_id) {
+            return response;
+        }
+        let canonical = canonical_episodic_scope(&project_id, &employee_id);
+        match load_memory_governance_scope(store, memory_id.as_str()) {
+            Ok(actual) if actual == canonical => {}
+            Ok(_) => {
+                return error(
+                    403,
+                    "RESOURCE_MEMORY_SCOPE_FORBIDDEN",
+                    "Memory governance_scope does not match the caller project/employee",
+                );
+            }
+            Err(error) => return privacy_error(error),
+        }
+        let Some(data_dir) = self.governance_data_dir.as_ref() else {
+            return error(
                 503,
-                "RESOURCE_MEMORY_UNAVAILABLE",
-                "Memory authority store is unavailable",
+                "RESOURCE_MEMORY_GOVERNANCE_UNAVAILABLE",
+                "daemon-owned governance root is unavailable",
+            );
+        };
+        let seed = match super::task_api::personal_governance_seed(
+            data_dir,
+            LOCAL_OWNER_PRINCIPAL,
+            vec!["memory_admission".to_owned()],
+        ) {
+            Ok(seed) => seed,
+            Err(response) => {
+                return error(
+                    if response.status == 403 { 403 } else { 503 },
+                    "RESOURCE_MEMORY_GOVERNANCE_UNAVAILABLE",
+                    "daemon-owned governance root is unavailable",
+                );
+            }
+        };
+        let created_at = match SystemClock.now() {
+            Ok(timestamp) => timestamp,
+            Err(_) => {
+                return error(
+                    503,
+                    "RESOURCE_MEMORY_UNAVAILABLE",
+                    "daemon could not read the wall clock",
+                );
+            }
+        };
+        let source_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let candidate_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let decision_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let replacement_memory_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let lifecycle_id = match new_resource_object_id() {
+            Ok(identifier) => identifier,
+            Err(response) => return response,
+        };
+        let content_bytes = i64::try_from(text.len()).unwrap_or(i64::MAX);
+        let content_tokens = i64::try_from(text.split_whitespace().count()).unwrap_or(i64::MAX);
+        let provenance_ref = "management://personal/memory/correct".to_owned();
+        let source_payload = json!({
+            "tenant_id": "personal",
+            "owner_ref": LOCAL_OWNER_PRINCIPAL,
+            "resource_scope": canonical,
+            "conversation_ref": null,
+            "role": "working",
+            "trust_level": "verified",
+            "representation": "text",
+            "provenance_ref": provenance_ref,
+            "content_bytes": content_bytes,
+            "content_tokens": content_tokens,
+            "body": { "text": text },
+        });
+        let (source, source_digest) = match seal_public_governed_object(
+            &source_id,
+            "WorkspaceContextSource",
+            "cognitiveos.workspace-context-source/0.1",
+            source_payload,
+            &seed,
+            &created_at,
+        ) {
+            Ok(sealed) => sealed,
+            Err(response) => return response,
+        };
+        if let Err(response) = self.admit_context_source(&source, store) {
+            return response;
+        }
+        let observed_at_unix_seconds = now_unix_seconds();
+        let retention_expires_at_unix_seconds =
+            integer_field(&document, "retention_expires_at_unix_seconds")
+                .unwrap_or(observed_at_unix_seconds.saturating_add(31_536_000));
+        let candidate_payload = json!({
+            "source_id": source_id.to_string(),
+            "source_digest": source_digest,
+            "source_provenance_ref": provenance_ref,
+            "governance_scope": canonical,
+            "target_scope": canonical,
+            "purpose": "task_execution",
+            "retention_expires_at_unix_seconds": retention_expires_at_unix_seconds,
+            "observed_at_unix_seconds": observed_at_unix_seconds,
+        });
+        let (candidate_document, candidate_digest) = match seal_public_governed_object(
+            &candidate_id,
+            "MemoryCandidate",
+            "cognitiveos.memory/0.1",
+            candidate_payload,
+            &seed,
+            &created_at,
+        ) {
+            Ok(sealed) => sealed,
+            Err(response) => return response,
+        };
+        let expected_version = integer_field(&document, "expected_version").unwrap_or(1);
+        let update = MemoryUpdateRequest {
+            previous_memory_id: memory_id.clone(),
+            expected_version,
+            candidate: MemoryCandidateRow {
+                candidate_id: candidate_id.clone(),
+                candidate_digest: candidate_digest.clone(),
+                source_id: source_id.clone(),
+                source_digest,
+                source_provenance_ref: provenance_ref,
+                governance_scope: canonical.clone(),
+                target_scope: canonical,
+                purpose: "task_execution".to_owned(),
+                retention_expires_at_unix_seconds,
+                observed_at_unix_seconds,
+                canonical_json: candidate_document.to_string(),
+            },
+            decision: MemoryAdmissionDecisionRow {
+                decision_id: decision_id.clone(),
+                candidate_id: candidate_id.clone(),
+                candidate_digest,
+                decision: "admit".to_owned(),
+                policy_version: 1,
+                reason_codes_json: "[\"MEMORY_UPDATE_ACCEPTED\"]".to_owned(),
+                canonical_json: json!({
+                    "decision_id": decision_id.to_string(),
+                    "decision": "admit",
+                    "reason_codes": ["MEMORY_UPDATE_ACCEPTED"],
+                })
+                .to_string(),
+            },
+            replacement: MemoryObjectRow {
+                memory_id: replacement_memory_id.clone(),
+                candidate_id,
+                decision_id,
+                canonical_json: json!({
+                    "memory_id": replacement_memory_id.to_string(),
+                    "supersedes": memory_id.to_string(),
+                })
+                .to_string(),
+            },
+            supersede_tombstone: MemoryTombstoneRow {
+                lifecycle_id,
+                memory_id,
+                action: "supersede".to_owned(),
+                occurred_at_unix_seconds: observed_at_unix_seconds,
+                reason: "owner corrected Memory".to_owned(),
+                canonical_json: "{\"action\":\"supersede\"}".to_owned(),
+            },
+        };
+        match store.append_memory_update(&update) {
+            Ok(()) => json_response(
+                201,
+                json!({
+                    "status": "corrected",
+                    "memory_id": replacement_memory_id.to_string(),
+                    "supersedes": update.previous_memory_id.to_string(),
+                }),
             ),
+            Err(error) => store_memory_error(error),
         }
     }
 
@@ -1574,7 +1951,10 @@ fn family_projection(family: &str) -> Value {
                 "remember": "/management/resource/v1/memory/remember",
                 "remember_input": "unsealed public fields (daemon-composed sealed headers) or sealed source + sealed candidate envelope",
                 "review": "/management/resource/v1/memory/object?id={memory_id}",
+                "recall": "/management/resource/v1/memory/recall",
+                "correct": "/management/resource/v1/memory/correct",
                 "forget": "/management/resource/v1/memory/forget",
+                "index_rebuild": "/management/resource/v1/memory/index.rebuild",
             },
             "resources": [],
             "authority_side_effects": false,
@@ -1842,4 +2222,367 @@ fn error(status: u16, code: &str, message: &str) -> ResourceApiResponse {
         status,
         json!({"status":"error", "code": code, "message": message}),
     )
+}
+
+fn screen_remember_payload(text: &str, document: &Value) -> Result<(), ResourceApiResponse> {
+    screen_memory_admission(text, &document.to_string()).map_err(privacy_error)
+}
+
+fn require_scoped_employee(
+    store: &SqliteAuthorityStore,
+    project_id: &str,
+    employee_id: &str,
+) -> Result<(), ResourceApiResponse> {
+    let employees = EmployeeStore::from_authority_store(store);
+    require_employee_in_project(&employees, project_id, employee_id).map_err(privacy_error)
+}
+
+fn privacy_error(cause: ProjectAggregateError) -> ResourceApiResponse {
+    match cause {
+        ProjectAggregateError::Forbidden { detail } => {
+            error(403, "RESOURCE_MEMORY_SCOPE_FORBIDDEN", detail)
+        }
+        ProjectAggregateError::NotFound { detail } => {
+            error(404, "RESOURCE_MEMORY_NOT_FOUND", detail)
+        }
+        ProjectAggregateError::Conflict { detail } => {
+            error(409, "RESOURCE_MEMORY_CONFLICT", detail)
+        }
+        ProjectAggregateError::Invalid { detail } => {
+            error(422, "RESOURCE_MEMORY_PRIVACY_REJECTED", detail)
+        }
+        ProjectAggregateError::Unavailable { .. } => error(
+            503,
+            "RESOURCE_MEMORY_UNAVAILABLE",
+            "Memory authority store is unavailable",
+        ),
+        ProjectAggregateError::Stale { detail }
+        | ProjectAggregateError::Unconfirmed { detail }
+        | ProjectAggregateError::Rejected { detail } => {
+            error(422, "RESOURCE_MEMORY_PRIVACY_REJECTED", detail)
+        }
+    }
+}
+
+fn store_memory_error(cause: StorePortError) -> ResourceApiResponse {
+    match cause {
+        StorePortError::Conflict { .. } => error(
+            409,
+            "RESOURCE_MEMORY_CONFLICT",
+            "Memory admission conflicts with existing authority facts",
+        ),
+        StorePortError::Unavailable { .. } => error(
+            503,
+            "RESOURCE_MEMORY_UNAVAILABLE",
+            "Memory authority store is unavailable",
+        ),
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
+mod p11_t11_tests {
+    use super::*;
+    use cognitive_store::{
+        ConfirmCaller, EmployeeStore, PersonalDataLayout, ProjectAggregateStore, RosterProposal,
+        StageSpec, prepare_personal_databases,
+    };
+    use tempfile::TempDir;
+
+    fn authority() -> (
+        TempDir,
+        SqliteAuthorityStore,
+        ResourceApi,
+        std::path::PathBuf,
+    ) {
+        let temporary = TempDir::new().expect("temp");
+        let root = temporary.path();
+        let layout = PersonalDataLayout::from_xdg_roots(
+            root.join("config"),
+            root.join("data"),
+            root.join("state"),
+            root.join("cache"),
+            root.join("runtime"),
+        );
+        prepare_personal_databases(&layout).expect("prepare");
+        let data_dir = layout.data_dir().to_path_buf();
+        let store = SqliteAuthorityStore::open(&layout.authority_database_path()).expect("open");
+        let api = ResourceApi::with_governance_data_dir(Some(data_dir.clone()));
+        (temporary, store, api, data_dir)
+    }
+
+    fn stage(id: &str, title: &str, slot: &str) -> StageSpec {
+        StageSpec {
+            stage_id: id.to_owned(),
+            title: title.to_owned(),
+            objective: format!("{title} objective"),
+            output_contract_digest: ProjectAggregateStore::digest_hex(
+                format!("out-{id}").as_bytes(),
+            ),
+            acceptance_spec_ref: Some(format!("cas:spec-{id}")),
+            cadence_json: Some(r#"{"kind":"manual"}"#.to_owned()),
+            responsible_slot: slot.to_owned(),
+            blocking_gap: None,
+        }
+    }
+
+    fn activate_project(store: &SqliteAuthorityStore) -> String {
+        let plane = ProjectAggregateStore::from_authority_store(store);
+        let (draft_id, _) = plane.create_draft(b"charter-v1", 10).unwrap();
+        plane
+            .put_draft_charter(&draft_id, b"charter-body-v1", 11)
+            .unwrap();
+        let (preview_id, preview_digest) = plane
+            .request_preview("activation", &draft_id, b"activation-preview", 12)
+            .unwrap();
+        plane
+            .confirm_preview(
+                ConfirmCaller::OwnerManagement,
+                &preview_id,
+                &preview_digest,
+                13,
+            )
+            .unwrap()
+            .new_ref
+    }
+
+    fn roster(store: &SqliteAuthorityStore, project_id: &str) -> Vec<String> {
+        let projects = ProjectAggregateStore::from_authority_store(store);
+        let employees = EmployeeStore::from_authority_store(store);
+        let plan_id = projects
+            .apply_plan_revision(
+                project_id,
+                project_id,
+                &[
+                    stage("s1", "Manage", "manager"),
+                    stage("s2", "Research", "researcher"),
+                ],
+                20,
+            )
+            .unwrap();
+        employees
+            .register_roster(
+                ConfirmCaller::OwnerManagement,
+                project_id,
+                &plan_id,
+                &[
+                    RosterProposal {
+                        slot: "manager".to_owned(),
+                        specialization: "project-manager".to_owned(),
+                        prompt: "coordinate".to_owned(),
+                        tools_declared: vec!["workspace-write".to_owned()],
+                    },
+                    RosterProposal {
+                        slot: "researcher".to_owned(),
+                        specialization: "member".to_owned(),
+                        prompt: "file notes".to_owned(),
+                        tools_declared: vec!["workspace-write".to_owned()],
+                    },
+                ],
+                21,
+            )
+            .unwrap()
+    }
+
+    fn remember_body(project_id: &str, employee_id: &str, text: &str) -> String {
+        json!({
+            "text": text,
+            "project_id": project_id,
+            "employee_id": employee_id,
+            "retention_expires_at_unix_seconds": 4_000_000_000i64,
+        })
+        .to_string()
+    }
+
+    #[test]
+    fn p11_t11_scoped_recall_privacy_forget_and_task_channel() {
+        let (_tmp, store, api, _data_dir) = authority();
+        let project_a = activate_project(&store);
+        let project_b = activate_project(&store);
+        let ids_a = roster(&store, &project_a);
+        let ids_b = roster(&store, &project_b);
+
+        for path in [
+            "POST /task/resource/v1/memory/remember",
+            "POST /task/resource/v1/memory/forget",
+            "POST /task/resource/v1/memory/recall",
+            "POST /task/resource/v1/memory/correct",
+            "POST /task/resource/v1/memory/index.rebuild",
+            "POST /task/resource/v1/memory/review",
+        ] {
+            let task = api.handle_authority_or_mutation(
+                path,
+                remember_body(&project_a, &ids_a[1], "lantern hangs east").as_bytes(),
+                &store,
+            );
+            assert_eq!(task.status, 403, "{path}: {}", task.body);
+            assert!(
+                task.body.contains("RESOURCE_MEMORY_CHANNEL_FORBIDDEN"),
+                "{path}: {}",
+                task.body
+            );
+        }
+
+        let secret = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/remember",
+            remember_body(&project_a, &ids_a[1], "api_key=sk-p11t11-http-fixture").as_bytes(),
+            &store,
+        );
+        assert_eq!(secret.status, 422, "{}", secret.body);
+
+        let letta = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/remember",
+            json!({
+                "text": "ordinary lantern",
+                "project_id": project_a,
+                "employee_id": ids_a[1],
+                "engine": "letta",
+                "admitted_by": "agent",
+                "retention_expires_at_unix_seconds": 4_000_000_000i64,
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(letta.status, 422, "{}", letta.body);
+
+        let remembered = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/remember",
+            remember_body(&project_a, &ids_a[1], "lantern hangs east").as_bytes(),
+            &store,
+        );
+        assert_eq!(remembered.status, 201, "{}", remembered.body);
+        let memory_id = serde_json::from_str::<Value>(&remembered.body)
+            .unwrap()
+            .get("memory_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let viewed = api.handle_authority(
+            &format!("GET /management/resource/v1/memory/object?id={memory_id}"),
+            &store,
+        );
+        assert_eq!(viewed.status, 200, "{}", viewed.body);
+
+        let same = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/recall",
+            json!({
+                "caller_project_id": project_a,
+                "target_project_id": project_a,
+                "caller_employee_id": ids_a[1],
+                "target_employee_id": ids_a[1],
+                "query_text": "lantern",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(same.status, 200, "{}", same.body);
+        assert!(same.body.contains(&memory_id));
+
+        let cross = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/recall",
+            json!({
+                "caller_project_id": project_b,
+                "target_project_id": project_a,
+                "caller_employee_id": ids_b[1],
+                "target_employee_id": ids_a[1],
+                "query_text": "lantern",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(cross.status, 403, "{}", cross.body);
+
+        let forgotten = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/forget",
+            json!({
+                "memory_id": memory_id,
+                "project_id": project_a,
+                "employee_id": ids_a[1],
+                "reason": "owner forgot scoped Memory",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(forgotten.status, 201, "{}", forgotten.body);
+        let rebuilt = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/index.rebuild",
+            b"{}",
+            &store,
+        );
+        assert_eq!(rebuilt.status, 200, "{}", rebuilt.body);
+        let after = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/recall",
+            json!({
+                "caller_project_id": project_a,
+                "target_project_id": project_a,
+                "caller_employee_id": ids_a[1],
+                "target_employee_id": ids_a[1],
+                "query_text": "lantern",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(after.status, 200, "{}", after.body);
+        assert!(!after.body.contains(&memory_id));
+        assert!(
+            after.body.contains("\"candidates\":[]") || after.body.contains("\"candidates\": []")
+        );
+    }
+
+    #[test]
+    fn p11_t11_management_correct_is_fail_closed_for_cross_scope_and_secret() {
+        let (_tmp, store, api, _data_dir) = authority();
+        let project_a = activate_project(&store);
+        let project_b = activate_project(&store);
+        let ids_a = roster(&store, &project_a);
+        let ids_b = roster(&store, &project_b);
+
+        let remembered = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/remember",
+            remember_body(&project_a, &ids_a[1], "lantern hangs east").as_bytes(),
+            &store,
+        );
+        assert_eq!(remembered.status, 201, "{}", remembered.body);
+        let memory_id = serde_json::from_str::<Value>(&remembered.body)
+            .unwrap()
+            .get("memory_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+
+        let secret = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/correct",
+            json!({
+                "memory_id": memory_id,
+                "project_id": project_a,
+                "employee_id": ids_a[1],
+                "text": "api_key=sk-p11t11-correct-fixture",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(secret.status, 422, "{}", secret.body);
+        assert!(secret.body.contains("RESOURCE_MEMORY_PRIVACY_REJECTED"));
+
+        let cross = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/correct",
+            json!({
+                "memory_id": memory_id,
+                "project_id": project_b,
+                "employee_id": ids_b[1],
+                "text": "compass now points west",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(cross.status, 403, "{}", cross.body);
+        assert!(cross.body.contains("RESOURCE_MEMORY_SCOPE_FORBIDDEN"));
+    }
 }

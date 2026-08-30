@@ -51,7 +51,7 @@ tests:
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
-fingerprint: "sha256:4c2930b51c606b15ed880b1b04e2db548620d9a7a33b3431e21528d1b05dd106"
+fingerprint: "sha256:561b63434939854960ee74a0c60a0bf4f193e516150ccc6540521194dbfa4291"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -105,10 +105,11 @@ readiness 声明。路由是对 `METHOD /path` 字符
 必须在启动后显式激活；daemon 重启后会话被遗忘并失败闭合。Workspace* candidate 复用
 既有 public candidate admission。dsh 响应绝不完成 Task。
 
-management Resource 表面提供只读生命周期前置条件、Memory remember/review/forget，
+management Resource 表面提供只读生命周期前置条件、Memory remember/recall/correct/forget/index.rebuild，
 Skill import/inspect/bind/supersede/revoke，以及通用 Resource Manager 信封
 （`GET/POST /management/resource/v1/{list,inspect,bind,unbind,enable,disable,revoke}`）。
-generic create/install/execute/complete 与 task 通道上的相同路径失败闭合。watch 仍走
+generic create/install/execute/complete、task 通道 Memory 别名
+（`/task/resource/v1/memory/*`）与 task 通道上的相同 Resource Manager 路径失败闭合。watch 仍走
 `GET /resource/v1/watch`。公开 remember 接受未封存的 owner
 字段，由 daemon 用持久 `GovernanceSeed` 组合封存 header；带封存
 source+candidate 的信封仍然有效。未封存路径上调用方不得自行铸造 header。

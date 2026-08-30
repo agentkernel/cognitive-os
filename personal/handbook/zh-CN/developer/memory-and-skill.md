@@ -9,6 +9,8 @@ sources:
   - path: personal/crates/cognitive-store/src/sqlite/memory.rs
   - path: personal/crates/cognitive-store/src/memory_admission.rs
     symbols: ["admit_memory_candidate"]
+  - path: personal/crates/cognitive-store/src/memory_privacy.rs
+    symbols: ["screen_memory_admission", "recall_episodic_memory", "forget_episodic_memory"]
   - path: core/crates/cognitive-kernel/src/memory_admission.rs
     symbols: ["decide_memory_admission"]
   - path: personal/crates/cognitive-store/src/sqlite/harness_skill.rs
@@ -23,7 +25,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:8d488463a4a97229be07eb298e9d5ed5dbf8308ae487407be56f133f15c596f5"
+fingerprint: "sha256:117a1d28236becb092105d8b9a350f5c74360daa41e288ae64f774eab83dfca9"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -45,7 +47,9 @@ expected-version CAS 下的版本化替换（`UNIQUE(supersedes_memory_id)` 谱�
 
 检索（`search_memory_candidates`）先跑权威过滤 CTE（admit 决定、无 tombstone、精确
 scope+purpose、retention 未过期、source 绑定现时），之后才 `MATCH`，按 `bm25` 排序
-并稳定破平。
+并稳定破平。有界 episodic 回忆（`recall_episodic_memory`）还要求 caller 与 target
+的 `opc://project/{id}/employee/{id}` 在查阅索引前一致；`screen_memory_admission`
+拒绝 secret/PII 形态正文与 Letta/Mem0/Agent 自写入信封。没有第二套 Memory store。
 
 ## Skill：不可变包、精确 pin
 
@@ -57,7 +61,9 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 ## HTTP 可及面
 
 management 通道发布生命周期前置条件，并在不直连 SQLite 的情况下完成 Memory
-remember/review/forget 与 Skill import/revision-inspect/bind/supersede/revoke。
+remember/recall/correct/forget/index.rebuild 与 Skill
+import/revision-inspect/bind/supersede/revoke。task 通道 Memory 变更别名
+（`/task/resource/v1/memory/*`）返回 `403 RESOURCE_MEMORY_CHANNEL_FORBIDDEN`。
 通用 Resource Manager（`GET /management/resource/v1/list|inspect`）从同一权威行投影
 未墓碑 Memory 对象与 Skill binding；它不是通用 Resource 表，Memory forget 仍是族
 `forget` 动词而不是 Manager `revoke`。

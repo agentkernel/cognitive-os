@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:25381fb6cdc4849321c94b23a06ffe438065be906d12deace20fe8081d0b6256"
+fingerprint: "sha256:b25105d23b4dcbdc2da2f9092634134c0939b22867c17be2ff18b96f0851152e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -101,8 +101,17 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/context-authorization/revocations` | management | 追加 Context 撤销事实（推进租户撤销 epoch）。 |
 | `GET` | `/management/resource/v1/memory/object` | management | 按 id 读取一个不可变 Memory 对象。 |
 | `GET` | `/management/resource/v1/skill/binding/explain` | management | 解释一个 Skill binding（package、revision、撤销状态）。 |
-| `POST` | `/management/resource/v1/memory/remember` | management | 显式 remember：创建 Memory candidate 并执行确定性 admission。 |
-| `POST` | `/management/resource/v1/memory/forget` | management | 通过持久 tombstone 遗忘已接纳的 Memory 对象。 |
+| `POST` | `/management/resource/v1/memory/remember` | management | 显式 remember：创建 Memory candidate 并执行确定性 admission。secret/PII 形态正文与 Letta/Mem0/Agent 自写入失败闭合。可选 project_id+employee_id 绑定规范 episodic scope。 |
+| `POST` | `/management/resource/v1/memory/forget` | management | 通过持久 tombstone 遗忘已接纳的 Memory 对象。带 project_id+employee_id 时跨 scope forget 被禁止。 |
+| `POST` | `/management/resource/v1/memory/recall` | management | 有界 episodic 回忆。caller 与 target 的 project/employee 必须一致；FTS 不能返回其他 Project 或 Employee 的 Memory。 |
+| `POST` | `/management/resource/v1/memory/correct` | management | Owner management 更正：在同一 episodic scope 内对一条 Memory 做版本化 supersede。secret/PII 与跨 scope 失败闭合。 |
+| `POST` | `/management/resource/v1/memory/index.rebuild` | management | 从已接纳且未 tombstone 的对象重建 Memory FTS。forget tombstone 不能复活。 |
+| `POST` | `/task/resource/v1/memory/remember` | task | 禁止：Memory remember 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/forget` | task | 禁止：Memory forget 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/recall` | task | 禁止：Memory recall 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/correct` | task | 禁止：Memory correct 仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/index.rebuild` | task | 禁止：Memory 索引重建仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/review` | task | 禁止：Memory review/变更别名仅限 management 通道。 |
 | `POST` | `/management/resource/v1/skill/import` | management | 导入不可变的本地 Skill package/revision。 |
 | `POST` | `/management/resource/v1/skill/bind` | management | 将兼容的 Skill revision 绑定到目标 scope。 |
 | `POST` | `/management/resource/v1/skill/binding/revoke` | management | 追加不可变的 Skill binding 撤销记录。 |

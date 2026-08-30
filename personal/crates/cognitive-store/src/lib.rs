@@ -27,6 +27,7 @@ pub mod ids;
 pub mod installation;
 pub mod layout;
 pub mod memory_admission;
+pub mod memory_privacy;
 pub mod memory_skill_consumption;
 pub mod memory_store;
 pub mod migration;
@@ -76,6 +77,11 @@ pub use layout::{
     PersonalDataLayout, PersonalLayoutError,
 };
 pub use memory_admission::admit_memory_candidate;
+pub use memory_privacy::{
+    EpisodicRecallSpec, canonical_episodic_scope, forget_episodic_memory,
+    load_memory_governance_scope, rebuild_episodic_memory_index, recall_episodic_memory,
+    require_employee_in_project, require_episodic_recall_scope, screen_memory_admission,
+};
 pub use migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,

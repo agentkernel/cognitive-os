@@ -214,8 +214,8 @@
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
-| Phase 11 - Windows OPC 2.0 | 15 | 9 | 0 | 0 | 6 | P11-T15 fixed-denominator acceptance；不自动形成 release |
-| **合计** | **144** | **117** | **0** | **1** | **10** | 另有 16 cancelled；无新 Gate pass |
+| Phase 11 - Windows OPC 2.0 | 15 | 9 | 1 | 0 | 5 | P11-T15 fixed-denominator acceptance；不自动形成 release |
+| **合计** | **144** | **117** | **1** | **1** | **9** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -1267,7 +1267,7 @@ flowchart TD
 | P11-T08 | Routine/Trigger | P11-T03 | 见下表三栏；不挡 T09 | not-started | unclaimed |
 | P11-T09 | HITL 画布（非 Inbox 一级） | P11-T03；**不依赖 T08** | 见下表三栏 | done | merged PR [#285](https://github.com/agentkernel/cognitive-os/pull/285) at `main@5374509e`; [report](../checkpoints/2026-08-30-personal-p11-t09-hitl-canvas-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t09-hitl-canvas-closure.md) |
 | P11-T10 | Knowledge/Vault | P11-T03、P11-T05 | 见下表三栏 | done | merged PR [#288](https://github.com/agentkernel/cognitive-os/pull/288) at `main@e51b616e`; required CI [33321852981](https://github.com/agentkernel/cognitive-os/actions/runs/33321852981) **SUCCESS** at `64734a13`; Linux store 9/9 + HTTP conflict + P8-T13 at `2cfb7ae5`; [report](../checkpoints/2026-08-30-personal-p11-t10-vault-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t10-vault-closure.md) |
-| P11-T11 | Memory admission | P11-T05、P11-T10 | 见下表三栏 | not-started | unclaimed |
+| P11-T11 | Memory admission | P11-T05、P11-T10 | 见下表三栏 | in-progress | `lease/personal/P11-T11/memory` D01 |
 | P11-T12 | Provider 诚实 usage | P11-T03、P11-T04；**不依赖 T07** | 见下表三栏；成员预算非当前 chrome | done | merged PR [#286](https://github.com/agentkernel/cognitive-os/pull/286) at `main@9e9b18b690cfe63aaedc457bf06d0763965a80fd`; [report](../checkpoints/2026-08-30-personal-p11-t12-usage-report.md) |
 | P11-T13 | `/ui/` IA 收口 | P11-T03 + Visual UI 规格 | 见下表三栏；完整 `/ui/` 不提前冒充 | not-started | unclaimed |
 | P11-T14 | X/Twitter connector | **parked** | parked | not-started | parked |
