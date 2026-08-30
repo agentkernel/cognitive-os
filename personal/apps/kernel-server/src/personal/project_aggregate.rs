@@ -5,11 +5,13 @@
 
 use cognitive_store::{
     ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL, ArchiveAppendSpec,
-    ArchiveReadSpec, AssistantPlane, AssistantTurnSpec, CONVERSATION_ARCHIVE_PROJECTION_ID,
-    ConfirmCaller, ConversationStore, EmployeeStore, HOSTED_DSH_ARTIFACT_DIGEST,
-    HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec, HostedDshPlane, HostedDshStartSpec,
-    PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow, RosterProposal,
-    SpeechArchiveSpec, SqliteAuthorityStore, reject_closed_candidate_schema,
+    ArchiveReadSpec, AssistantPlane, AssistantTurnSpec, CONTEXT_INJECT_ORDER,
+    CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
+    HOSTED_DSH_ARTIFACT_DIGEST, HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec,
+    HostedDshPlane, HostedDshStartSpec, PendingPreviewRow, ProjectAggregateError,
+    ProjectAggregateStore, ProjectRow, RosterProposal, SpeechArchiveSpec, SqliteAuthorityStore,
+    VAULT_PROJECTION_ID, VaultImportSpec, VaultReadSpec, VaultStore,
+    reject_closed_candidate_schema,
 };
 use serde_json::{Value, json};
 
@@ -43,6 +45,11 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /management/project/v1/assistant.turn",
     "POST /management/project/v1/dsh.hosted.start",
     "POST /management/project/v1/dsh.hosted.observe-exit",
+    "POST /management/project/v1/vault.import",
+    "POST /management/project/v1/vault.index.rebuild",
+    "GET /management/project/v1/vault.index",
+    "GET /management/project/v1/vault.conflicts",
+    "POST /management/project/v1/vault.apply-authority",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/preview.request",
@@ -66,6 +73,11 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /task/project/v1/assistant.turn",
     "POST /task/project/v1/dsh.hosted.start",
     "POST /task/project/v1/dsh.hosted.observe-exit",
+    "POST /task/project/v1/vault.import",
+    "POST /task/project/v1/vault.index.rebuild",
+    "GET /task/project/v1/vault.index",
+    "GET /task/project/v1/vault.conflicts",
+    "POST /task/project/v1/vault.apply-authority",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -150,6 +162,11 @@ pub(crate) fn handle(
         "POST /management/project/v1/dsh.hosted.observe-exit" => {
             dsh_hosted_observe_exit(body, store)
         }
+        "POST /management/project/v1/vault.import" => vault_import(body, store),
+        "POST /management/project/v1/vault.index.rebuild" => vault_index_rebuild(body, store),
+        "GET /management/project/v1/vault.index" => vault_index(method_path, store),
+        "GET /management/project/v1/vault.conflicts" => vault_conflicts(method_path, store),
+        "POST /management/project/v1/vault.apply-authority" => vault_apply_authority(body, store),
         _ => error(
             404,
             "PROJECT_AGGREGATE_ROUTE_NOT_FOUND",
@@ -930,6 +947,159 @@ fn dsh_hosted_observe_exit(body: &[u8], store: &SqliteAuthorityStore) -> Resourc
             "terminal_kind": "exited",
             "employee_preserved": true,
         })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn vault_import(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(relative_path) = document.get("relative_path").and_then(Value::as_str) else {
+        return error(400, "PATH_REQUIRED", "relative_path required");
+    };
+    let Some(rights_class) = document.get("rights_class").and_then(Value::as_str) else {
+        return error(400, "RIGHTS_REQUIRED", "rights_class required");
+    };
+    let provenance_json = match document.get("provenance") {
+        Some(value) => value.to_string(),
+        None => {
+            return error(400, "PROVENANCE_REQUIRED", "provenance required");
+        }
+    };
+    let source_kind = document
+        .get("source_kind")
+        .and_then(Value::as_str)
+        .unwrap_or("markdown-file");
+    let markdown = document.get("body").and_then(Value::as_str).unwrap_or("");
+    let cas_ref = document.get("cas_ref").and_then(Value::as_str);
+    let conflict_policy = document.get("conflict_policy").and_then(Value::as_str);
+    let vault = VaultStore::from_authority_store(store);
+    match vault.import(
+        ConfirmCaller::OwnerManagement,
+        &VaultImportSpec {
+            project_id,
+            relative_path,
+            rights_class,
+            provenance_json: &provenance_json,
+            source_kind,
+            body: markdown,
+            cas_ref,
+            conflict_policy,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(document_id) => ok(json!({
+            "status": "ok",
+            "document_id": document_id,
+            "projection_id": VAULT_PROJECTION_ID,
+            "is_authority": false,
+            "host_fs_e2e": "not-run",
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn vault_index_rebuild(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let vault = VaultStore::from_authority_store(store);
+    match vault.rebuild_index(ConfirmCaller::OwnerManagement, project_id, now_ms()) {
+        Ok(written) => ok(json!({
+            "status": "ok",
+            "written": written,
+            "memory_fts": "untouched",
+            "projection_id": VAULT_PROJECTION_ID,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn vault_index(method_path: &str, store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let caller_project_id = query_parameter(method_path, "caller_project_id")
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| project_id.clone());
+    let vault = VaultStore::from_authority_store(store);
+    let spec = VaultReadSpec {
+        caller_project_id: &caller_project_id,
+        target_project_id: &project_id,
+    };
+    match vault.read_index(&spec) {
+        Ok(entries) => {
+            let plan = vault.assemble_context_inject_order(&spec).ok();
+            ok(json!({
+                "status": "ok",
+                "projection_id": VAULT_PROJECTION_ID,
+                "is_authority": false,
+                "inject_order": CONTEXT_INJECT_ORDER,
+                "dropped_layers": plan.as_ref().map(|row| &row.dropped_layers),
+                "entries": entries.iter().map(|entry| json!({
+                    "entry_id": entry.entry_id,
+                    "document_id": entry.document_id,
+                    "layer": entry.layer,
+                    "chunk_ordinal": entry.chunk_ordinal,
+                    "excerpt": entry.excerpt,
+                })).collect::<Vec<_>>(),
+            }))
+        }
+        Err(error) => store_error(error),
+    }
+}
+
+fn vault_conflicts(method_path: &str, store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let caller_project_id = query_parameter(method_path, "caller_project_id")
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| project_id.clone());
+    let vault = VaultStore::from_authority_store(store);
+    match vault.list_conflicts(&VaultReadSpec {
+        caller_project_id: &caller_project_id,
+        target_project_id: &project_id,
+    }) {
+        Ok(rows) => ok(json!({
+            "status": "ok",
+            "projection_id": VAULT_PROJECTION_ID,
+            "conflicts": rows.iter().map(|row| json!({
+                "conflict_id": row.conflict_id,
+                "relative_path": row.relative_path,
+                "incumbent_document_id": row.incumbent_document_id,
+                "incoming_document_id": row.incoming_document_id,
+                "incoming_digest": row.incoming_digest,
+                "resolution": row.resolution,
+            })).collect::<Vec<_>>(),
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn vault_apply_authority(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(document_id) = document.get("document_id").and_then(Value::as_str) else {
+        return error(400, "DOCUMENT_ID_REQUIRED", "document_id required");
+    };
+    let vault = VaultStore::from_authority_store(store);
+    match vault.apply_as_project_authority(document_id) {
+        Ok(()) => error(
+            500,
+            "PROJECT_UNAVAILABLE",
+            "vault authority apply must fail closed",
+        ),
         Err(error) => store_error(error),
     }
 }
@@ -2243,5 +2413,141 @@ mod tests {
             &store,
         );
         assert_eq!(task_exit.status, 403);
+    }
+
+    fn activate_project(store: &SqliteAuthorityStore) -> String {
+        let plane = ProjectAggregateStore::from_authority_store(store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 4)
+            .unwrap()
+            .new_ref
+    }
+
+    #[test]
+    fn vault_import_index_conflict_and_task_channel_is_forbidden() {
+        let (_tmp, store) = authority();
+        let project_id = activate_project(&store);
+        let forbidden = handle(
+            "POST /task/project/v1/vault.import",
+            json!({
+                "project_id": project_id,
+                "relative_path": "notes/a.md",
+                "rights_class": "owner-owned",
+                "provenance": {"source_uri": "owner-paste"},
+                "body": "hello"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(forbidden.status, 403);
+        let secret = handle(
+            "POST /management/project/v1/vault.import",
+            json!({
+                "project_id": project_id,
+                "relative_path": "notes/secret.md",
+                "rights_class": "owner-owned",
+                "provenance": {"source_uri": "owner-paste"},
+                "body": "api_key=sk-p11t10-http-fixture"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(secret.status, 422, "{}", secret.body);
+        let imported = handle(
+            "POST /management/project/v1/vault.import",
+            json!({
+                "project_id": project_id,
+                "relative_path": "notes/a.md",
+                "rights_class": "owner-owned",
+                "provenance": {"source_uri": "owner-paste"},
+                "body": "version one"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(imported.status, 200, "{}", imported.body);
+        assert!(imported.body.contains(VAULT_PROJECTION_ID));
+        assert!(imported.body.contains("\"is_authority\":false"));
+        let document_id = serde_json::from_str::<Value>(&imported.body)
+            .unwrap()
+            .get("document_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let lww = handle(
+            "POST /management/project/v1/vault.import",
+            json!({
+                "project_id": project_id,
+                "relative_path": "notes/a.md",
+                "rights_class": "owner-owned",
+                "provenance": {"source_uri": "owner-paste"},
+                "body": "version two",
+                "conflict_policy": "last-write-wins"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(lww.status, 422, "{}", lww.body);
+        let recorded = handle(
+            "POST /management/project/v1/vault.import",
+            json!({
+                "project_id": project_id,
+                "relative_path": "notes/a.md",
+                "rights_class": "owner-owned",
+                "provenance": {"source_uri": "owner-paste"},
+                "body": "version two",
+                "conflict_policy": "record"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(recorded.status, 200, "{}", recorded.body);
+        let rebuilt = handle(
+            "POST /management/project/v1/vault.index.rebuild",
+            json!({"project_id": project_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(rebuilt.status, 200, "{}", rebuilt.body);
+        assert!(rebuilt.body.contains("memory_fts"));
+        let index = handle(
+            &format!("GET /management/project/v1/vault.index?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(index.status, 200, "{}", index.body);
+        assert!(index.body.contains("task-contract"));
+        assert!(index.body.contains("sourced-excerpt"));
+        let overreach = handle(
+            &format!(
+                "GET /management/project/v1/vault.index?project_id={project_id}&caller_project_id=task://personal/other"
+            ),
+            b"",
+            &store,
+        );
+        assert_eq!(overreach.status, 403, "{}", overreach.body);
+        let conflicts = handle(
+            &format!("GET /management/project/v1/vault.conflicts?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(conflicts.status, 200, "{}", conflicts.body);
+        assert!(conflicts.body.contains("open"));
+        let apply = handle(
+            "POST /management/project/v1/vault.apply-authority",
+            json!({"document_id": document_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(apply.status, 422, "{}", apply.body);
+        assert!(apply.body.contains("not Project authority"));
     }
 }

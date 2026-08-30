@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:b47cc4dfde5afe180df6575833dffc475d4eed44818002ec6f2ec9d6da02aebb"
+fingerprint: "sha256:25381fb6cdc4849321c94b23a06ffe438065be906d12deace20fe8081d0b6256"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -172,6 +172,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/assistant.turn` | management | Hidden Pi Personal Assistant (exact Pi 0.81.1 / `cognitiveos.private-candidate/1`): explain/navigate/research/propose registers a digest-bound draft candidate with typed provenance (`sources` | `owner-stated` | `assistant-assumption`) and, for research/propose, a daemon preview announcement. Candidate-only: no Approve, no archive/SecretStore/Memory/authority write, default-deny tools except research `HttpFetchReadOnly`. Pi is not an Installed Agent. Closed schema rejects grant/secret/trigger-arm fields. |
 | `POST` | `/management/project/v1/dsh.hosted.start` | management | Hidden hosted DSH Attempt-runner start: persist a managed child identity (artifact digest / protocol / optional observed pid) onto Employee `runtime_binding_ref`. Reuses Path B `POST /provider/v1/dsh/chat/completions` as the only secret-bearing path. Isolated spawn fail-closes on Windows GNU. Not Installed Agent chrome. Windows OPC E2E is `not-run`. |
 | `POST` | `/management/project/v1/dsh.hosted.observe-exit` | management | Observe hosted DSH child exit. Clears pid observation. Does not delete Employee, conversation archive, or Memory. |
+| `POST` | `/management/project/v1/vault.import` | management | Import one Markdown Vault file with rights and provenance. Secret-shape, path traversal, conversation-archive-as-Vault, CAS-only blobs, and last-write-wins without a conflict record fail closed. Files are not Project authority. Host filesystem E2E is `not-run`. |
+| `POST` | `/management/project/v1/vault.index.rebuild` | management | Rebuild the derived Vault index from stored documents. Does not write Memory FTS. Index is not Project authority. |
+| `GET` | `/management/project/v1/vault.index` | management | Query the rebuildable Vault index for one Project. Cross-project `caller_project_id` is retrieval overreach. Returns documented Context inject order (task contract → fixed decisions → sourced excerpts → summaries → older narrative). |
+| `GET` | `/management/project/v1/vault.conflicts` | management | List open Vault conflicts for one Project. Silent last-write-wins is not a resolver. |
+| `POST` | `/management/project/v1/vault.apply-authority` | management | Always rejected: a Vault file cannot confirm or apply Project authority. Research notes and decisions stay on draft/authority SQLite. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
@@ -195,4 +200,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/project/v1/assistant.turn` | task | Forbidden: hidden assistant is management-channel only. |
 | `POST` | `/task/project/v1/dsh.hosted.start` | task | Forbidden: hosted DSH process bind is management-channel only. |
 | `POST` | `/task/project/v1/dsh.hosted.observe-exit` | task | Forbidden: hosted DSH exit observation is management-channel only. |
+| `POST` | `/task/project/v1/vault.import` | task | Forbidden: Vault import is management-channel only. |
+| `POST` | `/task/project/v1/vault.index.rebuild` | task | Forbidden: Vault index rebuild is management-channel only. |
+| `GET` | `/task/project/v1/vault.index` | task | Forbidden: Vault index query is management-channel only. |
+| `GET` | `/task/project/v1/vault.conflicts` | task | Forbidden: Vault conflict query is management-channel only. |
+| `POST` | `/task/project/v1/vault.apply-authority` | task | Forbidden: Vault authority apply is management-channel only (and is always rejected even there). |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

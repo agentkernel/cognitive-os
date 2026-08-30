@@ -37,6 +37,7 @@ pub mod provider_control_plane;
 pub mod scheduler;
 pub mod skill_store;
 pub mod sqlite;
+pub mod vault;
 pub mod worker_authorization;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
@@ -111,6 +112,11 @@ pub use provider_control_plane::{
     usage_from_anthropic_json, usage_from_openai_json,
 };
 pub use sqlite::SqliteAuthorityStore;
+pub use vault::{
+    CONTEXT_INJECT_ORDER, ContextInjectPlan, VAULT_BODY_LIMIT, VAULT_CONTEXT_BUDGET_BYTES,
+    VAULT_PROJECTION_ID, VAULT_SCHEMA_V32, VaultConflict, VaultDocument, VaultImportSpec,
+    VaultIndexEntry, VaultReadSpec, VaultStore, vault_migration_entry,
+};
 
 /// Authority store backend implemented by this crate (ADR-0002).
 pub const STORE_BACKEND: &str = "sqlite-wal";

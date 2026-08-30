@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:b47cc4dfde5afe180df6575833dffc475d4eed44818002ec6f2ec9d6da02aebb"
+fingerprint: "sha256:25381fb6cdc4849321c94b23a06ffe438065be906d12deace20fe8081d0b6256"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -172,6 +172,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/project/v1/assistant.turn` | management | 隐藏 Pi Personal Assistant（exact Pi 0.81.1 / `cognitiveos.private-candidate/1`）：explain/navigate/research/propose 把带 digest 的草稿候选登记进 daemon，并强制 typed 出处（`sources` | `owner-stated` | `assistant-assumption`）；research/propose 另发 daemon preview 宣布。只产 candidate：无 Approve、无 archive/SecretStore/Memory/权威写；除 research 的 `HttpFetchReadOnly` 外 default-deny。Pi 不是 Installed Agent。封闭 schema 拒绝 grant/secret/trigger-arm 字段。 |
 | `POST` | `/management/project/v1/dsh.hosted.start` | management | 隐藏托管 DSH Attempt-runner start：把托管子进程身份（artifact digest / protocol / 可选观测 pid）持久绑定到 Employee `runtime_binding_ref`。复用 Path B `POST /provider/v1/dsh/chat/completions` 作为唯一持 secret 路径。Windows GNU 上 isolated spawn 失败闭合。不是 Installed Agent chrome。Windows OPC E2E 为 `not-run`。 |
 | `POST` | `/management/project/v1/dsh.hosted.observe-exit` | management | 观察托管 DSH 子进程退出。清除 pid 观测。不删除 Employee、对话档案或 Memory。 |
+| `POST` | `/management/project/v1/vault.import` | management | 导入一份带 rights/provenance 的 Markdown Vault 文件。secret-shape、路径遍历、把对话档案当 Vault、仅 CAS blob、以及无冲突记录的 last-write-wins 失败闭合。文件不是 Project 权威。宿主文件系统 E2E 为 `not-run`。 |
+| `POST` | `/management/project/v1/vault.index.rebuild` | management | 从已存文档重建派生 Vault 索引。不写入 Memory FTS。索引不是 Project 权威。 |
+| `GET` | `/management/project/v1/vault.index` | management | 查询一个 Project 的可重建 Vault 索引。跨项目 `caller_project_id` 视为检索越权。返回已文档化的 Context 注入顺序（当前 Task 合同 → 已固定决定 → 带出处摘录 → 摘要 → 旧叙述）。 |
+| `GET` | `/management/project/v1/vault.conflicts` | management | 列出一个 Project 的 Vault 冲突。静默 last-write-wins 不是解决器。 |
+| `POST` | `/management/project/v1/vault.apply-authority` | management | 一律拒绝：Vault 文件不能确认或应用 Project 权威。调研笔记与决定留在草稿/权威 SQLite。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
@@ -195,4 +200,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/project/v1/assistant.turn` | task | 禁止：隐藏助手仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.start` | task | 禁止：托管 DSH 进程绑定仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.observe-exit` | task | 禁止：托管 DSH 退出观察仅限 management 通道。 |
+| `POST` | `/task/project/v1/vault.import` | task | 禁止：Vault 导入仅限 management 通道。 |
+| `POST` | `/task/project/v1/vault.index.rebuild` | task | 禁止：Vault 索引重建仅限 management 通道。 |
+| `GET` | `/task/project/v1/vault.index` | task | 禁止：Vault 索引查询仅限 management 通道。 |
+| `GET` | `/task/project/v1/vault.conflicts` | task | 禁止：Vault 冲突查询仅限 management 通道。 |
+| `POST` | `/task/project/v1/vault.apply-authority` | task | 禁止：Vault 权威应用仅限 management 通道（即便在 management 也一律拒绝）。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |
