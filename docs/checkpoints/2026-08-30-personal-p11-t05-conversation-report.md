@@ -61,10 +61,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `aeae75f221881be55ff284f206f219c1a43a39a3` | Same run job [99236045082](https://github.com/agentkernel/cognitive-os/actions/runs/33303578323/job/99236045082), 3m33s. Independently confirmed. |
 | 2026-08-30 | `verify (windows-latest)` | **in-progress** | `CI-WINDOWS-MSVC-01` | `aeae75f221881be55ff284f206f219c1a43a39a3` | Same run job [99236045046](https://github.com/agentkernel/cognitive-os/actions/runs/33303578323/job/99236045046). Observed mid-job at Test Rust workspace. Not a pass. |
 | 2026-08-30 | `required-ci` | **not-run** | GitHub Actions | `aeae75f221881be55ff284f206f219c1a43a39a3` | Windows still in-progress on this SHA; do not infer required-ci. |
+| 2026-08-30 | `verify (ubuntu-latest)` | **pass** 5m1s | `CI-UBUNTU-01` | `02476d60178ca9e6f708dc897cb22cada4391f7f` | [job 99237534399](https://github.com/agentkernel/cognitive-os/actions/runs/33304121486/job/99237534399) run [33304121486](https://github.com/agentkernel/cognitive-os/actions/runs/33304121486). One-shot SUCCESS; independently confirmed. |
+| 2026-08-30 | `verify (windows-latest)` | **pass** 15m15s | `CI-WINDOWS-MSVC-01` | `02476d60178ca9e6f708dc897cb22cada4391f7f` | [job 99237534446](https://github.com/agentkernel/cognitive-os/actions/runs/33304121486/job/99237534446). Independently confirmed. |
+| 2026-08-30 | `required-ci` | **pass** 2s | GitHub Actions | `02476d60178ca9e6f708dc897cb22cada4391f7f` | [job 99239185986](https://github.com/agentkernel/cognitive-os/actions/runs/33304121486/job/99239185986). Required after ubuntu+windows SUCCESS. This docs commit is a new merge HEAD. |
+| 2026-08-30 | Host archive E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `02476d60178ca9e6f708dc897cb22cada4391f7f` | Unqualified host / Requires-environment. Not a pass. |
+| 2026-08-30 | `cargo test` / Clippy / link | **not-run** | `DEV-WIN-GNU-01` | `02476d60178ca9e6f708dc897cb22cada4391f7f` | `RUST-LINK-DEV-WIN-GNU-01`. Not a pass. |
 
 ## Unique next action
 
-A docs-only append after this table is a new merge HEAD. Record that SHA's required CI honestly. Host archive E2E remains `not-run` (not qualified). `DEV-WIN-GNU-01` cargo test remains not-run. READY_TO_MERGE is false until required-ci SUCCESS on the actual merge HEAD plus the already-mapped T05 acceptance (D01+D02 negatives; host E2E stays `not-run`).
+`02476d60` required-ci is **pass**. This checkpoint commit is a new merge HEAD; parent polls that SHA's required-ci then ready+merge. Host archive E2E remains `not-run`. `DEV-WIN-GNU-01` cargo remains not-run. Do not merge from this turn.
 
 ## Non-claims
 
