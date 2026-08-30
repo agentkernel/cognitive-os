@@ -8,7 +8,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Change class: `implementation-only`
 - Claim commit: `92f8920a` (lease/plan only).
 - Implementation commit: `879dff45` (Draft PR [#290](https://github.com/agentkernel/cognitive-os/pull/290)).
-- Unique next: Linux focused `p11_t08_routine` + kernel-server `p11_t08` on the pushed D01 revision; required CI; keep Draft. Clock/sleep/restart host E2E remains `not-run`.
+- Unique next: required CI on Draft PR [#290](https://github.com/agentkernel/cognitive-os/pull/290) head `98bd61de`. Clock/sleep/restart host E2E remains `not-run`. Keep Draft until full T08 acceptance.
 
 | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|
@@ -24,6 +24,8 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | B01 campaign guest | **not-run** | evaluation routing OFF | — | |
 | Windows OPC Routine chrome | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | — | T13 / T02 not claimed |
 | `DEV-WIN-GNU-01` cargo test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | — | not a product fail |
+| store `p11_t08_routine` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t08-98bd61de` | `98bd61deeb32f4d0f537bd1efcbb8f4becbca604` | overlap, silent-drop, stale, checkpoint, consequential resume, secret-shape, queue-latest + `scheduler_entries` |
+| kernel-server `p11_t08_routine_trigger_negatives_and_task_channel_is_forbidden` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `98bd61deeb32f4d0f537bd1efcbb8f4becbca604` | overlap 409, missed visible, checkpoint-as-completion 422, consequential resume 403, task-channel 403 |
 
 ## Non-claims
 
