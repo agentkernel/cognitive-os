@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Linux focused tests on the pushed SHA: `cargo test -p cognitive-store --test p11_t11_memory` and `cargo test -p kernel-server --bin kernel-server -- p11_t11`. Do not merge T11. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
+Linux retest `cargo test -p kernel-server --bin kernel-server -- p11_t11` on the **new** pushed SHA after the HTTP remember-fixture retention fix (this commit). Store 4/4 at `9b549272` already **pass** — reconfirm if convenient. Do not merge T11. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
 
 ## Closed predecessor
 
@@ -59,3 +59,7 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-31 | `cargo build` / Clippy | **not-run** | `DEV-WIN-GNU-01` | this commit | `RUST-LINK-DEV-WIN-GNU-01` |
 | 2026-08-31 | privacy/rebuild host E2E | **not-run** | unqualified | this commit | Card allows `not-run` until the host route is qualified |
 | 2026-08-31 | Letta/Mem0 product write path / Agent self-admission / Vault-as-Memory / Team/Inbox L1 | **not-run** / out of scope | n/a | this commit | Do not claim |
+| 2026-08-31 | `cargo test -p cognitive-store --test p11_t11_memory` | **pass** 4/4 | `DEV-LINUX-NATIVE-01` | `9b5492728cca8caa15a451aa654ee435afc476df` | Store N1–N4 pass. N5 remains T10 `p11_t10_memory_admission_cannot_swallow_vault_files`. |
+| 2026-08-31 | `cargo test -p kernel-server --bin kernel-server -- p11_t11` | **fail** 0/2 exit 101 | `DEV-LINUX-NATIVE-01` | `9b5492728cca8caa15a451aa654ee435afc476df` | Both happy-path `remember` expected **201**, got **409** `RESOURCE_MEMORY_CONFLICT` / `"Memory admission conflicts with existing authority facts"`: `p11_t11_scoped_recall_privacy_forget_and_task_channel` (`resource_api.rs:2454`); `p11_t11_management_correct_is_fail_closed_for_cross_scope_and_secret` (`resource_api.rs:2550`). N1–N6 assertions not run to completion. |
+| 2026-08-31 | `cargo test` / Clippy / build | **not-run** | `DEV-WIN-GNU-01` | `9b5492728cca8caa15a451aa654ee435afc476df` | `RUST-LINK-DEV-WIN-GNU-01`; still not-run after the Linux HTTP fail |
+| 2026-08-31 | HTTP remember fixture: bound retention (`now+3600`) instead of `4_000_000_000` | recorded (cargo **not-run** locally) | `DEV-WIN-GNU-01` | this commit | Root cause: unsealed remember fixture expiry exceeded HTTP `MemoryAdmissionPolicy.maximum_retention_seconds` (31_536_000), so daemon-derived outcome was Reject vs requested Admit → generic 409. Product 409 conflict check (P4) unchanged. N1–N6 status/code assertions unchanged. |

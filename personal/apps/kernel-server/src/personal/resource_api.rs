@@ -2385,11 +2385,15 @@ mod p11_t11_tests {
     }
 
     fn remember_body(project_id: &str, employee_id: &str, text: &str) -> String {
+        // HTTP remember runs admit_memory_candidate with maximum_retention_seconds
+        // 31_536_000. A far-future 4_000_000_000 expiry is a correct 409 policy
+        // mismatch (Reject vs requested Admit), not a happy-path 201. P4 409
+        // conflict checks stay on product paths; this is fixture setup only.
         json!({
             "text": text,
             "project_id": project_id,
             "employee_id": employee_id,
-            "retention_expires_at_unix_seconds": 4_000_000_000i64,
+            "retention_expires_at_unix_seconds": now_unix_seconds() + 3_600,
         })
         .to_string()
     }
@@ -2412,7 +2416,7 @@ mod p11_t11_tests {
         ] {
             let task = api.handle_authority_or_mutation(
                 path,
-                remember_body(&project_a, &ids_a[1], "lantern hangs east").as_bytes(),
+                remember_body(&project_a, &ids_a[1], "p11t11-task lantern hangs east").as_bytes(),
                 &store,
             );
             assert_eq!(task.status, 403, "{path}: {}", task.body);
@@ -2448,7 +2452,7 @@ mod p11_t11_tests {
 
         let remembered = api.handle_authority_or_mutation(
             "POST /management/resource/v1/memory/remember",
-            remember_body(&project_a, &ids_a[1], "lantern hangs east").as_bytes(),
+            remember_body(&project_a, &ids_a[1], "p11t11-scoped lantern hangs east").as_bytes(),
             &store,
         );
         assert_eq!(remembered.status, 201, "{}", remembered.body);
@@ -2544,7 +2548,7 @@ mod p11_t11_tests {
 
         let remembered = api.handle_authority_or_mutation(
             "POST /management/resource/v1/memory/remember",
-            remember_body(&project_a, &ids_a[1], "lantern hangs east").as_bytes(),
+            remember_body(&project_a, &ids_a[1], "p11t11-correct lantern hangs east").as_bytes(),
             &store,
         );
         assert_eq!(remembered.status, 201, "{}", remembered.body);

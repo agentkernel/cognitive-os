@@ -25,7 +25,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:117a1d28236becb092105d8b9a350f5c74360daa41e288ae64f774eab83dfca9"
+fingerprint: "sha256:07bec088a18aea59ae1127b8333c88f026976ba7e3e3601d4112102d7da42a98"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
