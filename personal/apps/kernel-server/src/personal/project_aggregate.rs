@@ -4,8 +4,8 @@
 //! Task-channel writes are 403 (N12).
 
 use cognitive_store::{
-    ConfirmCaller, PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
-    SqliteAuthorityStore,
+    ConfirmCaller, EmployeeStore, HandoffSpec, PendingPreviewRow, ProjectAggregateError,
+    ProjectAggregateStore, ProjectRow, RosterProposal, SqliteAuthorityStore,
 };
 use serde_json::{Value, json};
 
@@ -16,15 +16,30 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/detail",
     "GET /management/project/v1/axis",
     "GET /management/project/v1/roster",
+    "GET /management/project/v1/employee.catalog",
     "GET /management/project/v1/pending-previews",
     "GET /management/project/v1/preview-detail",
     "POST /management/project/v1/draft.apply",
     "POST /management/project/v1/preview.request",
     "POST /management/project/v1/confirm",
+    "POST /management/project/v1/roster.register",
+    "POST /management/project/v1/employee.seat.request",
+    "POST /management/project/v1/employee.seat.confirm",
+    "POST /management/project/v1/employee.runtime.bind",
+    "POST /management/project/v1/speech.candidate",
+    "POST /management/project/v1/handoff.record",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/preview.request",
     "POST /task/project/v1/confirm",
+    "GET /task/project/v1/roster",
+    "GET /task/project/v1/employee.catalog",
+    "POST /task/project/v1/roster.register",
+    "POST /task/project/v1/employee.seat.request",
+    "POST /task/project/v1/employee.seat.confirm",
+    "POST /task/project/v1/employee.runtime.bind",
+    "POST /task/project/v1/speech.candidate",
+    "POST /task/project/v1/handoff.record",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -65,16 +80,24 @@ pub(crate) fn handle(
         return channel_forbidden();
     }
     let plane = ProjectAggregateStore::from_authority_store(store);
+    let employees = EmployeeStore::from_authority_store(store);
     match literal {
         "GET /management/project/v1/list" => list_projects(method_path, &plane),
         "GET /management/project/v1/detail" => detail(method_path, &plane),
-        "GET /management/project/v1/axis" => axis(method_path, &plane),
-        "GET /management/project/v1/roster" => roster(method_path, &plane),
+        "GET /management/project/v1/axis" => axis(method_path, &plane, &employees),
+        "GET /management/project/v1/roster" => roster(method_path, &plane, &employees),
+        "GET /management/project/v1/employee.catalog" => employee_catalog(method_path, &employees),
         "GET /management/project/v1/pending-previews" => pending_previews(method_path, &plane),
         "GET /management/project/v1/preview-detail" => preview_detail(method_path, &plane),
         "POST /management/project/v1/draft.apply" => draft_apply(body, &plane),
         "POST /management/project/v1/preview.request" => preview_request(body, &plane),
         "POST /management/project/v1/confirm" => confirm(body, &plane),
+        "POST /management/project/v1/roster.register" => roster_register(body, &employees),
+        "POST /management/project/v1/employee.seat.request" => seat_request(body, &employees),
+        "POST /management/project/v1/employee.seat.confirm" => seat_confirm(body, &employees),
+        "POST /management/project/v1/employee.runtime.bind" => runtime_bind(body, &employees),
+        "POST /management/project/v1/speech.candidate" => speech_candidate(body, &employees),
+        "POST /management/project/v1/handoff.record" => handoff_record(body, &employees),
         _ => error(
             404,
             "PROJECT_AGGREGATE_ROUTE_NOT_FOUND",
@@ -176,7 +199,11 @@ fn detail(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiRespon
     }
 }
 
-fn axis(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiResponse {
+fn axis(
+    method_path: &str,
+    plane: &ProjectAggregateStore,
+    employees: &EmployeeStore,
+) -> ResourceApiResponse {
     let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
     else {
         return error(400, "PROJECT_ID_REQUIRED", "axis requires project_id");
@@ -217,7 +244,9 @@ fn axis(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiResponse
                             },
                             "acceptance_spec_present": stage.acceptance_spec_ref.is_some(),
                             "responsible_slot": stage.responsible_slot,
-                            "seated": false,
+                            "seated": employees
+                                .stage_is_seated(&project_id, &plan_id, &stage.stage_id)
+                                .unwrap_or(false),
                             "cadence_json": stage.cadence_json,
                             "gaps": plane.list_gaps(&plan_id, &stage.stage_id).unwrap_or_else(|_| Vec::new()).iter().map(|gap| json!({
                                 "gap_id": gap.gap_id,
@@ -235,19 +264,251 @@ fn axis(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiResponse
     }
 }
 
-fn roster(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiResponse {
+fn roster(
+    method_path: &str,
+    plane: &ProjectAggregateStore,
+    employees: &EmployeeStore,
+) -> ResourceApiResponse {
     let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
     else {
         return error(400, "PROJECT_ID_REQUIRED", "roster requires project_id");
     };
     match plane.get_project(&project_id) {
         Ok(None) => error(404, "PROJECT_NOT_FOUND", "project not found"),
-        Ok(Some(_)) => ok(json!({
+        Ok(Some(_)) => match employees.list_roster(&project_id) {
+            Ok(rows) => {
+                let progress = employees.seating_progress(&project_id).ok();
+                ok(json!({
+                    "status": "ok",
+                    "projection": "personal-private",
+                    "roster": rows.iter().map(|row| json!({
+                        "employee_id": row.employee_id,
+                        "state": row.state,
+                        "responsible_stage_ids": serde_json::from_str::<Value>(
+                            &row.responsible_stage_ids_json,
+                        )
+                        .unwrap_or(Value::Array(vec![])),
+                        "model_bound": row.provider_model_binding.is_some(),
+                        "is_current_manager": row.is_current_manager,
+                        "runtime_binding_ref": row.runtime_binding_ref,
+                    })).collect::<Vec<_>>(),
+                    "authority_note": if rows.is_empty() { "empty-roster" } else { "employee" },
+                    "seated": progress.map(|p| p.seated),
+                    "roster_count": progress.map(|p| p.roster),
+                }))
+            }
+            Err(error) => store_error(error),
+        },
+        Err(error) => store_error(error),
+    }
+}
+
+fn employee_catalog(method_path: &str, employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "PROJECT_ID_REQUIRED", "catalog requires project_id");
+    };
+    let Some(employee_id) = query_parameter(method_path, "employee_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "catalog requires employee_id");
+    };
+    match employees.tool_catalog(&project_id, &employee_id) {
+        Ok(catalog) => ok(json!({
             "status": "ok",
             "projection": "personal-private",
-            "roster": [],
-            "authority_note": "employee-authority-not-implemented",
+            "catalog": catalog,
         })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn roster_register(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(plan_revision_id) = document.get("plan_revision_id").and_then(Value::as_str) else {
+        return error(
+            400,
+            "PLAN_REVISION_ID_REQUIRED",
+            "plan_revision_id required",
+        );
+    };
+    let Some(items) = document.get("proposals").and_then(Value::as_array) else {
+        return error(400, "PROPOSALS_REQUIRED", "proposals required");
+    };
+    let mut proposals = Vec::new();
+    for item in items {
+        let Some(slot) = item.get("slot").and_then(Value::as_str) else {
+            return error(400, "SLOT_REQUIRED", "proposal.slot required");
+        };
+        let Some(specialization) = item.get("specialization").and_then(Value::as_str) else {
+            return error(
+                400,
+                "SPECIALIZATION_REQUIRED",
+                "proposal.specialization required",
+            );
+        };
+        let prompt = item
+            .get("prompt")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned();
+        let tools_declared = item
+            .get("tools_declared")
+            .and_then(Value::as_array)
+            .map(|values| {
+                values
+                    .iter()
+                    .filter_map(Value::as_str)
+                    .map(str::to_owned)
+                    .collect::<Vec<_>>()
+            })
+            .unwrap_or_default();
+        proposals.push(RosterProposal {
+            slot: slot.to_owned(),
+            specialization: specialization.to_owned(),
+            prompt,
+            tools_declared,
+        });
+    }
+    match employees.register_roster(
+        ConfirmCaller::OwnerManagement,
+        project_id,
+        plan_revision_id,
+        &proposals,
+        now_ms(),
+    ) {
+        Ok(ids) => ok(json!({ "status": "ok", "employee_ids": ids })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn seat_request(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    match employees.request_seating(ConfirmCaller::OwnerManagement, employee_id, now_ms()) {
+        Ok(()) => ok(json!({ "status": "ok", "state": "seating" })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn seat_confirm(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let model = document.get("model_binding").and_then(Value::as_str);
+    let accept = document
+        .get("accept")
+        .and_then(Value::as_bool)
+        .unwrap_or(true);
+    match employees.confirm_seating(
+        ConfirmCaller::OwnerManagement,
+        employee_id,
+        model,
+        accept,
+        now_ms(),
+    ) {
+        Ok(state) => ok(json!({ "status": "ok", "state": state })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn runtime_bind(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let Some(runtime_binding_ref) = document.get("runtime_binding_ref").and_then(Value::as_str)
+    else {
+        return error(
+            400,
+            "RUNTIME_BINDING_REQUIRED",
+            "runtime_binding_ref required",
+        );
+    };
+    match employees.bind_runtime(
+        ConfirmCaller::OwnerManagement,
+        employee_id,
+        runtime_binding_ref,
+        now_ms(),
+    ) {
+        Ok(()) => ok(json!({ "status": "ok" })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn speech_candidate(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let kind = document
+        .get("kind")
+        .and_then(Value::as_str)
+        .unwrap_or("chatter");
+    let mentioned = document
+        .get("mentioned")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    match employees.route_speech(project_id, employee_id, kind, mentioned, now_ms()) {
+        Ok(decision) => ok(json!({
+            "status": "ok",
+            "delivered": decision.delivered,
+            "reason": decision.reason,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn handoff_record(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(source) = document.get("source_employee_id").and_then(Value::as_str) else {
+        return error(400, "SOURCE_REQUIRED", "source_employee_id required");
+    };
+    let Some(target) = document.get("target_employee_id").and_then(Value::as_str) else {
+        return error(400, "TARGET_REQUIRED", "target_employee_id required");
+    };
+    let Some(digest) = document.get("bounded_work_digest").and_then(Value::as_str) else {
+        return error(400, "DIGEST_REQUIRED", "bounded_work_digest required");
+    };
+    let blocked_or_ready = document
+        .get("blocked_or_ready")
+        .and_then(Value::as_str)
+        .unwrap_or("ready");
+    match employees.record_handoff(
+        ConfirmCaller::OwnerManagement,
+        &HandoffSpec {
+            project_id,
+            source_employee_id: source,
+            target_employee_id: target,
+            bounded_work_digest: digest,
+            blocked_or_ready,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(handoff_id) => ok(json!({ "status": "ok", "handoff_id": handoff_id })),
         Err(error) => store_error(error),
     }
 }
@@ -545,7 +806,7 @@ mod tests {
     }
 
     #[test]
-    fn roster_is_empty_before_t04() {
+    fn roster_is_empty_before_employees() {
         let (_tmp, store) = authority();
         let plane = ProjectAggregateStore::from_authority_store(&store);
         let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
@@ -566,6 +827,91 @@ mod tests {
             &store,
         );
         assert!(response.body.contains("\"roster\":[]"));
-        assert!(response.body.contains("employee-authority-not-implemented"));
+        assert!(response.body.contains("empty-roster"));
+        assert!(!response.body.contains("employee-authority-not-implemented"));
+    }
+
+    #[test]
+    fn roster_register_and_seat_via_http() {
+        use cognitive_store::StageSpec;
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let project_id = plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 4)
+            .unwrap()
+            .new_ref;
+        let plan_id = plane
+            .apply_plan_revision(
+                &project_id,
+                &project_id,
+                &[StageSpec {
+                    stage_id: "s1".to_owned(),
+                    title: "Manage".to_owned(),
+                    objective: "manage".to_owned(),
+                    output_contract_digest: ProjectAggregateStore::digest_hex(b"out"),
+                    acceptance_spec_ref: Some("cas:spec".to_owned()),
+                    cadence_json: None,
+                    responsible_slot: "manager".to_owned(),
+                    blocking_gap: None,
+                }],
+                20,
+            )
+            .unwrap();
+        let body = json!({
+            "project_id": project_id,
+            "plan_revision_id": plan_id,
+            "proposals": [{
+                "slot": "manager",
+                "specialization": "project-manager",
+                "prompt": "coordinate",
+                "tools_declared": ["workspace-write"]
+            }]
+        })
+        .to_string();
+        let registered = handle(
+            "POST /management/project/v1/roster.register",
+            body.as_bytes(),
+            &store,
+        );
+        assert_eq!(registered.status, 200, "{}", registered.body);
+        let employee_id = serde_json::from_str::<Value>(&registered.body)
+            .unwrap()
+            .get("employee_ids")
+            .and_then(Value::as_array)
+            .and_then(|ids| ids[0].as_str())
+            .unwrap()
+            .to_owned();
+        let seat = handle(
+            "POST /management/project/v1/employee.seat.request",
+            json!({"employee_id": employee_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(seat.status, 200, "{}", seat.body);
+        let confirm = handle(
+            "POST /management/project/v1/employee.seat.confirm",
+            json!({"employee_id": employee_id, "model_binding": "flash", "accept": true})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirm.status, 200, "{}", confirm.body);
+        let roster = handle(
+            &format!("GET /management/project/v1/roster?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert!(roster.body.contains(&employee_id));
+        assert!(roster.body.contains("\"is_current_manager\":true"));
+        let task = handle(
+            "POST /task/project/v1/roster.register",
+            body.as_bytes(),
+            &store,
+        );
+        assert_eq!(task.status, 403);
     }
 }

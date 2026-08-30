@@ -48,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:f74979ea62f575c15db6305c1c3d750fe43867d8b307a6d26d05d9aee3547b79"
+fingerprint: "sha256:fb880c60ac1a69b09d0f632263b829cee985901e347d697938b06a33f919b290"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -143,7 +143,7 @@ when present and fails closed on mismatch; Pi never reads the Secret Store.
 mismatch is HTTP 409 `PROVIDER_BINDING_REVISION_STALE`. The localhost Web UI
 is a same-origin daemon client (`GET /ui/`) and is not a second writer.
 
-Personal-private Project aggregate routes (`/management/project/v1/{list,detail,axis,roster,pending-previews,preview-detail,draft.apply,preview.request,confirm}`) require a management bearer. They project the v26 `p11_*` tables, not Task-row impersonation and not the P7-T05 frozen inventory. Empty list has no fake buttons; unknown cost is the literal `unknown` and is never serialized as `0`. Roster is empty with `employee-authority-not-implemented` until T04. Pending-previews omit `preview_digest`; digest is only on `preview-detail`. Task-channel aliases fail closed (`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`). This is not a Today page and not a full `/ui/` IA.
+Personal-private Project aggregate routes (`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,confirm,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,handoff.record}`) require a management bearer. They project the v26 `p11_*` Project tables and v27 Employee/Blueprint/Assignment/Grant tables, not Task-row impersonation and not the P7-T05 frozen inventory. Empty list has no fake buttons; unknown cost is the literal `unknown` and is never serialized as `0`. Empty roster uses `authority_note: empty-roster`; seated members are listed by `employee_id`. Blueprint rows have no Provider binding. Task-channel aliases fail closed (`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`). This is not a Today page and not a full `/ui/` IA.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.

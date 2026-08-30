@@ -18,6 +18,7 @@
 pub mod artifact_store;
 pub mod clock;
 pub mod context_store;
+pub mod employee;
 pub mod faults;
 pub mod ids;
 pub mod installation;
@@ -37,6 +38,11 @@ pub mod worker_authorization;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use clock::SystemClock;
+pub use employee::{
+    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, MEMBER_BLUEPRINT_ID,
+    PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress, SpeechDecision,
+    employee_migration_entry,
+};
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
 pub use ids::UuidV7Generator;
 pub use installation::{

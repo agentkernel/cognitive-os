@@ -12,6 +12,8 @@ sources:
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
   - path: personal/crates/cognitive-store/src/project_aggregate.rs
     symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "ProjectAggregateStore"]
+  - path: personal/crates/cognitive-store/src/employee.rs
+    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -24,10 +26,11 @@ sources:
 tests:
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
+  - personal/crates/cognitive-store/tests/p11_t04_employee.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:76953ecf17d0615eba5f76359d056724f94ffd7dbe486356eb939809489ce193"
+fingerprint: "sha256:66a6ca92e9f759652c0b76da82bd44c8ccfb09028a76986c660663f1fac48f88"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -37,10 +40,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v26）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v27）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v26）
+## 权威库迁移图（v1–v27）
 
 | 版本 | 新增 |
 |---|---|
@@ -54,11 +57,12 @@ non_claims:
 | v24 | 按 Task/epoch/request/session 绑定的只追加 Memory/Skill 消费记录 |
 | v25 | Provider Control Plane 账户、模型、binding、用量事件/聚合、预算、告警、审计 |
 | v26 | Personal-private Project 聚合（`p11_draft`、`p11_candidate`、`p11_charter_revision`、`p11_project`、`p11_plan_revision`、`p11_stage`、`p11_gap`、`p11_stage_test_fact`、`p11_acceptance_fact`、`p11_approval_preview`）。新表，不是 `family=task`。 |
+| v27 | Role Blueprint / Assignment / Employee / Grant（`p11_role_blueprint`、`p11_role_blueprint_revision`、`p11_employee`、`p11_employee_revision`、`p11_assignment`、`p11_install_fact`、`p11_grant`、`p11_speech_audit`、`p11_handoff`）。Blueprint 无 Provider binding。权威 id 是 Employee；`runtime_binding_ref` 可替换。Handoff 行保持 `authority_stays=1`；写入走 `HandoffSpec`，聊天不能转移权威。 |
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；唯一派生表是
 `memory_search_fts`（可重建；检索先跑权威过滤 CTE 再 `MATCH`）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v26 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v27 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 
