@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Honest usage unknown≠0: store + management `GET /management/usage` returns source-labelled `actual | estimated | unknown` costs; binding explanation global→Project→employee→Task as durable facts (Project/employee/Task unbound today); silent rebind rejected; secrets never in usage HTTP. Required CI retry after `clippy::redundant_guards` at `453ffc37`. `DEV-WIN-GNU-01` cargo test **not-run**.
+Workspace `required-ci` **pass** on `60c310ae` (run [33315265506](https://github.com/agentkernel/cognitive-os/actions/runs/33315265506)). Host SecretStore/Provider E2E **not-run**; Settings chrome is T13; member-level budget hard-stop is 2.1 / Deferred; `DEV-WIN-GNU-01` cargo **not-run**. Closure records the pass; parent ready/merge of [#286](https://github.com/agentkernel/cognitive-os/pull/286) is not this commit. [2026-08-30-personal-p11-t12-usage-closure.md](2026-08-30-personal-p11-t12-usage-closure.md).
 
 ## Closed predecessor
 
@@ -37,10 +37,13 @@ Reuse `ProviderControlPlaneStore` (v25), `record_usage` / `compute_cost` / `GET 
 | Unit | Result | Env | Revision |
 |---|---|---|---|
 | store + in-process HTTP focused tests | **pass** (6/6 + 1/1 + 1/1) | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` |
-| `check-consistency` / handbook / generate `--check` / docs-sync-gate | pending commit | `DEV-WIN-GNU-01` | this slice |
-| SecretStore/Provider host E2E | **not-run** | unqualified | this slice |
-| Settings chrome / member budget stop | **not-run** | 2.1 / T13 / Deferred | this slice |
-| required CI | pending push | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | this slice |
+| `cargo clippy -p kernel-server --all-targets -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t12-eb27cb86` | `60c310ae34596fdc55875b6c53aade0b7897b823` |
+| `cargo clippy -p cognitive-store --all-targets -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t12-eb27cb86` | `60c310ae34596fdc55875b6c53aade0b7897b823` |
+| `check-consistency` / handbook / generate `--check` / docs-sync-gate | pass (recorded with D01 commits) | `DEV-WIN-GNU-01` | through `60c310ae` |
+| SecretStore/Provider host E2E | **not-run** | unqualified | `60c310ae` |
+| Settings chrome / member budget stop | **not-run** | T13 / 2.1 Deferred | `60c310ae` |
+| `DEV-WIN-GNU-01` cargo test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | `60c310ae` |
+| workspace `required-ci` (Clippy source of truth) | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `60c310ae` |
 
 ## Incremental validation log (TEST-REPORT-INCREMENTAL-01)
 
@@ -62,6 +65,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `fill-handbook-fingerprints` + `generate-handbook --check` + `check-handbook` | pass | local Node | this commit | Fingerprint-only (en + zh-CN: daemon-and-http, provider-control-plane, provider-and-secrets, generated http-api). Handbook prose unchanged. 58×2 locales; 18 generated pages byte-identical. |
 | 2026-08-30 | `cargo clippy -p kernel-server --all-targets -- -D warnings` | **fail** (`clippy::redundant_guards`) | `DEV-LINUX-NATIVE-01` | `453ffc371d498cb17be91a71cc395983db497403` | Same lint as Ubuntu job 99265864818: `store_error` match guard `if detail == "silent rebind rejected"`. cognitive-store clippy **pass**; `p11_t12_honest_usage` **6/6 pass** — not re-run this turn. |
 | 2026-08-30 | `cargo clippy -p cognitive-store` / `p11_t12_honest_usage` | **pass** (recorded; not re-run) | `DEV-LINUX-NATIVE-01` | `453ffc371d498cb17be91a71cc395983db497403` | Owner-directed skip of re-run. Unknown≠0 negatives unchanged. |
+| 2026-08-30 | `cargo clippy -p kernel-server --all-targets -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t12-eb27cb86` | `60c310ae34596fdc55875b6c53aade0b7897b823` | Crate-scoped clippy after `redundant_guards` pattern match (`3aaac23d`). Workspace CI clippy remains the required-ci source of truth. |
+| 2026-08-30 | `cargo clippy -p cognitive-store --all-targets -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t12-eb27cb86` | `60c310ae34596fdc55875b6c53aade0b7897b823` | Crate-scoped clippy. Workspace CI clippy remains the required-ci source of truth. |
+| 2026-08-30 | SecretStore/Provider host E2E | **not-run** | unqualified | `60c310ae34596fdc55875b6c53aade0b7897b823` | Card allows `not-run` until the host route is qualified. |
+| 2026-08-30 | Settings chrome / member-level budget hard-stop | **not-run** | T13 / 2.1 Deferred | `60c310ae34596fdc55875b6c53aade0b7897b823` | Not current chrome; not a T12 close-gate item. |
+| 2026-08-30 | `cargo` build/test/clippy | **not-run** | `DEV-WIN-GNU-01` | `60c310ae34596fdc55875b6c53aade0b7897b823` | `RUST-LINK-DEV-WIN-GNU-01`. |
+| 2026-08-30 | workspace `required-ci` | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `60c310ae34596fdc55875b6c53aade0b7897b823` | Run [33315265506](https://github.com/agentkernel/cognitive-os/actions/runs/33315265506). All-green: required-ci + ubuntu + windows. |
+| 2026-08-30 | `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `60c310ae34596fdc55875b6c53aade0b7897b823` | [job 99267396578](https://github.com/agentkernel/cognitive-os/actions/runs/33315265506/job/99267396578), 3m42s. Workspace Clippy/test/fmt/handbook. |
+| 2026-08-30 | `verify (windows-latest)` | **pass** | `CI-WINDOWS-MSVC-01` | `60c310ae34596fdc55875b6c53aade0b7897b823` | [job 99267396612](https://github.com/agentkernel/cognitive-os/actions/runs/33315265506/job/99267396612), 13m33s. Workspace Clippy/test/fmt/handbook + conformance. |
+| 2026-08-30 | `required-ci` | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `60c310ae34596fdc55875b6c53aade0b7897b823` | [job 99269075926](https://github.com/agentkernel/cognitive-os/actions/runs/33315265506/job/99269075926), 3s. Required rollup after ubuntu+windows SUCCESS. |
 
 ## Explicit non-claims
 
