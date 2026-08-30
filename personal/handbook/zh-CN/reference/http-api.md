@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:2dcd7fd5ef8ef9de76d7b6ada820ce39b00864566dd06c40e5510a9af716d445"
+fingerprint: "sha256:8f497f5924bcc86d59feed30beef17274ea17e8ce674db03ad3c7f2760e78922"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -164,6 +164,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/conversation.archive` | management | 有界按 Project 索引 Personal-private 对话档案引用。必须带 `limit` 1..=32；缺省或超限视为无界 resume。`include_bodies` 拒绝。只返回 record_id/digest。不重解释 ADR-0058 `conversation-projection/0.1`。 |
 | `GET` | `/management/project/v1/conversation.record` | management | 在同一 Project 内读取单条档案正文。不是整库倾倒。跨范围 record_id 失败闭合。 |
 | `POST` | `/management/project/v1/handoff.record` | management | 记录 `authority_stays=1` 的 handoff 行。聊天不能转移权威。 |
+| `POST` | `/management/project/v1/assistant.turn` | management | 隐藏 Pi Personal Assistant（exact Pi 0.81.1 / `cognitiveos.private-candidate/1`）：explain/navigate/research/propose 把带 digest 的草稿候选登记进 daemon，并强制 typed 出处（`sources` | `owner-stated` | `assistant-assumption`）；research/propose 另发 daemon preview 宣布。只产 candidate：无 Approve、无 archive/SecretStore/Memory/权威写；除 research 的 `HttpFetchReadOnly` 外 default-deny。Pi 不是 Installed Agent。封闭 schema 拒绝 grant/secret/trigger-arm 字段。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
@@ -179,4 +180,5 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/conversation.archive` | task | 禁止：对话档案仅限 management 通道。 |
 | `GET` | `/task/project/v1/conversation.record` | task | 禁止：对话单条读取仅限 management 通道。 |
 | `POST` | `/task/project/v1/handoff.record` | task | 禁止：handoff 记录仅限 management 通道。 |
+| `POST` | `/task/project/v1/assistant.turn` | task | 禁止：隐藏助手仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

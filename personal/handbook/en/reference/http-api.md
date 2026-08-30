@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:2dcd7fd5ef8ef9de76d7b6ada820ce39b00864566dd06c40e5510a9af716d445"
+fingerprint: "sha256:8f497f5924bcc86d59feed30beef17274ea17e8ce674db03ad3c7f2760e78922"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -164,6 +164,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/conversation.archive` | management | Bounded scoped index of Personal-private conversation archive refs. Requires `limit` 1..=32; omitted/oversize limit is unbounded resume. `include_bodies` is refused. Returns record_id/digest only. Does not reinterpret ADR-0058 `conversation-projection/0.1`. |
 | `GET` | `/management/project/v1/conversation.record` | management | Single-record body fetch inside one Project. Not a bulk dump. Cross-scope record ids fail closed. |
 | `POST` | `/management/project/v1/handoff.record` | management | Record a handoff row with `authority_stays=1`. Chat cannot transfer authority. |
+| `POST` | `/management/project/v1/assistant.turn` | management | Hidden Pi Personal Assistant (exact Pi 0.81.1 / `cognitiveos.private-candidate/1`): explain/navigate/research/propose registers a digest-bound draft candidate with typed provenance (`sources` | `owner-stated` | `assistant-assumption`) and, for research/propose, a daemon preview announcement. Candidate-only: no Approve, no archive/SecretStore/Memory/authority write, default-deny tools except research `HttpFetchReadOnly`. Pi is not an Installed Agent. Closed schema rejects grant/secret/trigger-arm fields. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
@@ -179,4 +180,5 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/conversation.archive` | task | Forbidden: conversation archive is management-channel only. |
 | `GET` | `/task/project/v1/conversation.record` | task | Forbidden: conversation record fetch is management-channel only. |
 | `POST` | `/task/project/v1/handoff.record` | task | Forbidden: handoff record is management-channel only. |
+| `POST` | `/task/project/v1/assistant.turn` | task | Forbidden: hidden assistant is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

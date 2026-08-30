@@ -4,9 +4,11 @@
 //! Task-channel writes are 403 (N12).
 
 use cognitive_store::{
-    ArchiveAppendSpec, ArchiveReadSpec, CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller,
-    ConversationStore, EmployeeStore, HandoffSpec, PendingPreviewRow, ProjectAggregateError,
-    ProjectAggregateStore, ProjectRow, RosterProposal, SpeechArchiveSpec, SqliteAuthorityStore,
+    ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL, ArchiveAppendSpec,
+    ArchiveReadSpec, AssistantPlane, AssistantTurnSpec, CONVERSATION_ARCHIVE_PROJECTION_ID,
+    ConfirmCaller, ConversationStore, EmployeeStore, HandoffSpec, PendingPreviewRow,
+    ProjectAggregateError, ProjectAggregateStore, ProjectRow, RosterProposal, SpeechArchiveSpec,
+    SqliteAuthorityStore, reject_closed_candidate_schema,
 };
 use serde_json::{Value, json};
 
@@ -32,6 +34,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/conversation.archive",
     "GET /management/project/v1/conversation.record",
     "POST /management/project/v1/handoff.record",
+    "POST /management/project/v1/assistant.turn",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/preview.request",
@@ -47,6 +50,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /task/project/v1/conversation.archive",
     "GET /task/project/v1/conversation.record",
     "POST /task/project/v1/handoff.record",
+    "POST /task/project/v1/assistant.turn",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -117,6 +121,7 @@ pub(crate) fn handle(
             conversation_record(method_path, &conversations)
         }
         "POST /management/project/v1/handoff.record" => handoff_record(body, &employees),
+        "POST /management/project/v1/assistant.turn" => assistant_turn(body, store),
         _ => error(
             404,
             "PROJECT_AGGREGATE_ROUTE_NOT_FOUND",
@@ -674,6 +679,89 @@ fn handoff_record(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse
         },
     ) {
         Ok(handoff_id) => ok(json!({ "status": "ok", "handoff_id": handoff_id })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn assistant_turn(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    if reject_closed_candidate_schema(body).is_err() {
+        return error(
+            422,
+            "ASSISTANT_SCHEMA_CLOSED",
+            "closed candidate schema: grant/secret/trigger-arm fields rejected",
+        );
+    }
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(kind) = document.get("kind").and_then(Value::as_str) else {
+        return error(400, "ASSISTANT_KIND_REQUIRED", "kind required");
+    };
+    let Some(draft_id) = document.get("draft_id").and_then(Value::as_str) else {
+        return error(400, "DRAFT_ID_REQUIRED", "draft_id required");
+    };
+    let Some(object_kind) = document.get("object_kind").and_then(Value::as_str) else {
+        return error(400, "OBJECT_KIND_REQUIRED", "object_kind required");
+    };
+    let payload = document
+        .get("payload")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    let provenance_json = match document.get("provenance") {
+        Some(Value::Object(_)) => document
+            .get("provenance")
+            .cloned()
+            .and_then(|value| serde_json::to_string(&value).ok()),
+        Some(Value::String(raw)) => Some(raw.clone()),
+        Some(_) | None => None,
+    };
+    let Some(provenance_json) = provenance_json else {
+        return error(
+            422,
+            "ASSISTANT_PROVENANCE_REQUIRED",
+            "typed provenance required (sources | owner-stated | assistant-assumption)",
+        );
+    };
+    let project_id = document
+        .get("project_id")
+        .and_then(Value::as_str)
+        .filter(|value| !value.is_empty());
+    let tool_owned: Vec<String> = document
+        .get("tools")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect()
+        })
+        .unwrap_or_default();
+    let tools: Vec<&str> = tool_owned.iter().map(String::as_str).collect();
+    let plane = AssistantPlane::from_authority_store(store);
+    match plane.run_turn(&AssistantTurnSpec {
+        kind,
+        draft_id,
+        object_kind,
+        payload: &payload,
+        provenance_json: &provenance_json,
+        project_id,
+        tools: &tools,
+        now_ms: now_ms(),
+    }) {
+        Ok(outcome) => ok(json!({
+            "status": "ok",
+            "engine": ASSISTANT_ENGINE_ID,
+            "pi_pin": ASSISTANT_PI_PIN,
+            "protocol": ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
+            "installed_agent": false,
+            "candidate_id": outcome.candidate_id,
+            "candidate_digest": outcome.candidate_digest,
+            "preview_id": outcome.preview_id,
+            "object_kind": outcome.object_kind,
+            "context_refs": outcome.context_refs,
+            "observation_only": true,
+        })),
         Err(error) => store_error(error),
     }
 }
@@ -1308,5 +1396,111 @@ mod tests {
             &store,
         );
         assert_eq!(task.status, 403);
+    }
+
+    #[test]
+    fn assistant_turn_registers_candidate_and_omits_approve() {
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        let unlabeled = handle(
+            "POST /management/project/v1/assistant.turn",
+            json!({
+                "kind": "propose",
+                "draft_id": draft_id,
+                "object_kind": "charter",
+                "payload": {"title": "x"},
+                "provenance": "notes"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(unlabeled.status, 422, "{}", unlabeled.body);
+        let closed = handle(
+            "POST /management/project/v1/assistant.turn",
+            json!({
+                "kind": "propose",
+                "draft_id": draft_id,
+                "object_kind": "recipe",
+                "payload": {"title": "x"},
+                "provenance": {"kind": "owner-stated"},
+                "grant": "workspace-write"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(closed.status, 422, "{}", closed.body);
+        let ambient = handle(
+            "POST /management/project/v1/assistant.turn",
+            json!({
+                "kind": "explain",
+                "draft_id": draft_id,
+                "object_kind": "business-brief",
+                "payload": {"title": "x"},
+                "provenance": {"kind": "assistant-assumption"},
+                "tools": ["bash"]
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(ambient.status, 403, "{}", ambient.body);
+        let task = handle(
+            "POST /task/project/v1/assistant.turn",
+            json!({
+                "kind": "propose",
+                "draft_id": draft_id,
+                "object_kind": "charter",
+                "provenance": {"kind": "owner-stated"}
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(task.status, 403);
+        let proposed = handle(
+            "POST /management/project/v1/assistant.turn",
+            json!({
+                "kind": "propose",
+                "draft_id": draft_id,
+                "object_kind": "charter",
+                "payload": {"title": "research charter"},
+                "provenance": {"kind": "owner-stated"}
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(proposed.status, 200, "{}", proposed.body);
+        assert!(proposed.body.contains("candidate_digest"));
+        assert!(proposed.body.contains("preview_id"));
+        assert!(proposed.body.contains(ASSISTANT_ENGINE_ID));
+        assert!(proposed.body.contains("\"installed_agent\":false"));
+        assert!(!proposed.body.contains("Approve"));
+        assert!(!proposed.body.contains("preview_digest"));
+        let (g1_draft, _) = plane.create_draft(b"g1", 2).unwrap();
+        plane.put_draft_charter(&g1_draft, b"charter", 3).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &g1_draft, b"bytes", 4)
+            .unwrap();
+        let project_id = plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 5)
+            .unwrap()
+            .new_ref;
+        let authority_apply = handle(
+            "POST /management/project/v1/draft.apply",
+            json!({
+                "draft_id": project_id,
+                "base_seq": 0,
+                "candidate_digest": "abcd"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(authority_apply.status, 422, "{}", authority_apply.body);
+        assert!(authority_apply.body.contains("authority"));
     }
 }
