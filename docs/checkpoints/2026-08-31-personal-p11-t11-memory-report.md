@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Linux retest `cargo test -p kernel-server --bin kernel-server -- p11_t11` on the **new** pushed SHA after the HTTP remember-fixture retention fix (this commit). Store 4/4 at `9b549272` already **pass** — reconfirm if convenient. Do not merge T11. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
+Linux retest `cargo test -p kernel-server --bin kernel-server -- p11_t11` on `eb6ee7d6d8c4871d20746f7cdd6708f30489b7e1`. Store 4/4 at `9b549272` already **pass** — reconfirm if convenient. Do not merge T11. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
 
 ## Closed predecessor
 
