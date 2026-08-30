@@ -9,6 +9,7 @@ use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
     scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
 };
+use crate::conversation::conversation_migration_entry;
 use crate::employee::employee_migration_entry;
 use crate::installation::{
     INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3, INSTALLATION_SCHEMA_V4,
@@ -90,7 +91,9 @@ impl PersonalDatabasePrepareReport {
 /// alerts, and redacted audit facts (no secret columns), and v26 = Personal-private
 /// Project aggregate (Project / CharterRevision / PlanRevision / Stage / Gap /
 /// Draft / Candidate / ApprovalPreview / StageTestFact / AcceptanceFact), and
-/// v27 = Role Blueprint / Assignment / Employee / Grant (P11-T04).
+/// v27 = Role Blueprint / Assignment / Employee / Grant (P11-T04), and
+/// v28 = Personal-private conversation archive (P11-T05; new identifier, not
+/// a reinterpretation of `conversation-projection/0.1`).
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -120,6 +123,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         provider_control_plane_migration_entry(),
         project_aggregate_migration_entry(),
         employee_migration_entry(),
+        conversation_migration_entry(),
     ]
 }
 

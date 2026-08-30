@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:980e8a4027115a15dd211bb9ed89f0d4a62a566e4742108177e9a271c7997e1e"
+fingerprint: "sha256:e10320e89a4f934a0746dc331e4aaa2a68a155c8e467151faba27c49c3ddacb8"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -159,7 +159,8 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/project/v1/employee.seat.request` | management | 开始一名 Employee 的顺序就位。另一名仍在 seating 时冲突。 |
 | `POST` | `/management/project/v1/employee.seat.confirm` | management | Owner management 就位确认。无模型 → pending；拒绝 → refused；project-manager 就位占用唯一 current-manager 槽。 |
 | `POST` | `/management/project/v1/employee.runtime.bind` | management | 替换 `runtime_binding_ref` 且不改 `employee_id`。进程退出不删除 Employee。 |
-| `POST` | `/management/project/v1/speech.candidate` | management | 发言路由骨架：白名单 kind 与经理默认投递。档案落地属 T05。 |
+| `POST` | `/management/project/v1/speech.candidate` | management | 发言路由加 T05 档案落地：白名单投递 kind 写入 `cognitiveos.personal.conversation-archive/0.1`。chatter 仅审计。旧 `conversation-projection/0.1` / `v01` 不被 coerce。 |
+| `GET` | `/management/project/v1/conversation.archive` | management | 按 Project 范围读取 Personal-private 对话档案。跨范围 employee 失败闭合。不重解释 ADR-0058 `conversation-projection/0.1`。 |
 | `POST` | `/management/project/v1/handoff.record` | management | 记录 `authority_stays=1` 的 handoff 行。聊天不能转移权威。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
@@ -172,5 +173,6 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/project/v1/employee.seat.confirm` | task | 禁止：Employee 就位确认仅限 management 通道。 |
 | `POST` | `/task/project/v1/employee.runtime.bind` | task | 禁止：runtime bind 仅限 management 通道。 |
 | `POST` | `/task/project/v1/speech.candidate` | task | 禁止：speech candidate 仅限 management 通道。 |
+| `GET` | `/task/project/v1/conversation.archive` | task | 禁止：对话档案仅限 management 通道。 |
 | `POST` | `/task/project/v1/handoff.record` | task | 禁止：handoff 记录仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

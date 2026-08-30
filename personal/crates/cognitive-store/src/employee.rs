@@ -139,9 +139,10 @@ pub struct SeatingProgress {
     pub roster: i64,
 }
 
-/// Speech router decision (archive landing is T05).
+/// Speech router decision. Durable archive landing is ConversationStore (P11-T05).
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SpeechDecision {
+    pub audit_id: String,
     pub delivered: bool,
     pub reason: String,
 }
@@ -1019,7 +1020,7 @@ impl EmployeeStore {
         })
     }
 
-    /// Member proactive speech is whitelist-only. Archive landing is T05.
+    /// Member proactive speech is whitelist-only. Writes `p11_speech_audit` only.
     pub fn route_speech(
         &self,
         project_id: &str,
@@ -1071,6 +1072,7 @@ impl EmployeeStore {
         )
         .map_err(unavailable("speech audit"))?;
         Ok(SpeechDecision {
+            audit_id,
             delivered,
             reason: reason.to_owned(),
         })

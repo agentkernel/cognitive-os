@@ -48,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:fb880c60ac1a69b09d0f632263b829cee985901e347d697938b06a33f919b290"
+fingerprint: "sha256:7f93e6af9034cad2ece05e07ab9e74dd8897068db991750e4c9146401e8b91f8"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -129,7 +129,7 @@ Secret Store `secret_ref`。已绑定 Pi 流量走 `POST /provider/v1/chat/compl
 `PROVIDER_BINDING_REVISION_STALE`。localhost Web UI 是同源 daemon 客户端
 （`GET /ui/`），不是第二个 writer。
 
-Personal-private Project 聚合路由（`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,confirm,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,handoff.record}`）需要 management bearer。它们投影 v26 `p11_*` Project 表与 v27 Employee/Blueprint/Assignment/Grant 表，不是 Task 行冒充，也不动 P7-T05 冻结 inventory。空列表无假按钮；未知费用字面量是 `unknown`，序列化里不出现 `0`。空花名册使用 `authority_note: empty-roster`；已就位成员按 `employee_id` 列出。Blueprint 行无 Provider binding。task 通道别名失败闭合（`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`）。这不是 Today 页，也不是完整 `/ui/` IA。
+Personal-private Project 聚合路由（`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,confirm,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,conversation.archive,handoff.record}`）需要 management bearer。它们投影 v26 `p11_*` Project 表、v27 Employee/Blueprint/Assignment/Grant 表，以及 v28 `p11_conversation_archive`（标识 `cognitiveos.personal.conversation-archive/0.1`，不重解释 ADR-0058 `conversation-projection/0.1`），不是 Task 行冒充，也不动 P7-T05 冻结 inventory。空列表无假按钮；未知费用字面量是 `unknown`，序列化里不出现 `0`。空花名册使用 `authority_note: empty-roster`；已就位成员按 `employee_id` 列出。Blueprint 行无 Provider binding。白名单投递发言落档案行；chatter 仅审计。task 通道别名失败闭合（`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`）。这不是 Today 页，也不是完整 `/ui/` IA。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

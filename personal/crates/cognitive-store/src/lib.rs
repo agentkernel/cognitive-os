@@ -18,6 +18,7 @@
 pub mod artifact_store;
 pub mod clock;
 pub mod context_store;
+pub mod conversation;
 pub mod employee;
 pub mod faults;
 pub mod ids;
@@ -38,6 +39,11 @@ pub mod worker_authorization;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use clock::SystemClock;
+pub use conversation::{
+    CONVERSATION_ARCHIVE_PROJECTION_ID, CONVERSATION_ARCHIVE_SCHEMA_V28, ConversationArchiveRecord,
+    ConversationStore, LEGACY_CONVERSATION_PROJECTION_ID, SpeechArchiveOutcome, SpeechArchiveSpec,
+    conversation_migration_entry,
+};
 pub use employee::{
     EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, MEMBER_BLUEPRINT_ID,
     PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress, SpeechDecision,

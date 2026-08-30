@@ -172,6 +172,10 @@ fn empty_layout_migrates_both_databases_to_latest() {
         "p11_employee"
     ));
     assert!(table_exists(
+        &layout.authority_database_path(),
+        "p11_conversation_archive"
+    ));
+    assert!(table_exists(
         &layout.installation_database_path(),
         "installations"
     ));

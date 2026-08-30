@@ -4,8 +4,9 @@
 //! Task-channel writes are 403 (N12).
 
 use cognitive_store::{
-    ConfirmCaller, EmployeeStore, HandoffSpec, PendingPreviewRow, ProjectAggregateError,
-    ProjectAggregateStore, ProjectRow, RosterProposal, SqliteAuthorityStore,
+    CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
+    HandoffSpec, PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
+    RosterProposal, SpeechArchiveSpec, SqliteAuthorityStore,
 };
 use serde_json::{Value, json};
 
@@ -27,6 +28,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /management/project/v1/employee.seat.confirm",
     "POST /management/project/v1/employee.runtime.bind",
     "POST /management/project/v1/speech.candidate",
+    "GET /management/project/v1/conversation.archive",
     "POST /management/project/v1/handoff.record",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
@@ -39,6 +41,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /task/project/v1/employee.seat.confirm",
     "POST /task/project/v1/employee.runtime.bind",
     "POST /task/project/v1/speech.candidate",
+    "GET /task/project/v1/conversation.archive",
     "POST /task/project/v1/handoff.record",
 ];
 
@@ -81,6 +84,7 @@ pub(crate) fn handle(
     }
     let plane = ProjectAggregateStore::from_authority_store(store);
     let employees = EmployeeStore::from_authority_store(store);
+    let conversations = ConversationStore::from_authority_store(store);
     match literal {
         "GET /management/project/v1/list" => list_projects(method_path, &plane),
         "GET /management/project/v1/detail" => detail(method_path, &plane),
@@ -96,7 +100,12 @@ pub(crate) fn handle(
         "POST /management/project/v1/employee.seat.request" => seat_request(body, &employees),
         "POST /management/project/v1/employee.seat.confirm" => seat_confirm(body, &employees),
         "POST /management/project/v1/employee.runtime.bind" => runtime_bind(body, &employees),
-        "POST /management/project/v1/speech.candidate" => speech_candidate(body, &employees),
+        "POST /management/project/v1/speech.candidate" => {
+            speech_candidate(body, &employees, &conversations)
+        }
+        "GET /management/project/v1/conversation.archive" => {
+            conversation_archive(method_path, &conversations)
+        }
         "POST /management/project/v1/handoff.record" => handoff_record(body, &employees),
         _ => error(
             404,
@@ -449,7 +458,11 @@ fn runtime_bind(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
     }
 }
 
-fn speech_candidate(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+fn speech_candidate(
+    body: &[u8],
+    employees: &EmployeeStore,
+    conversations: &ConversationStore,
+) -> ResourceApiResponse {
     let Some(document) = parse_json(body) else {
         return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
     };
@@ -467,11 +480,64 @@ fn speech_candidate(body: &[u8], employees: &EmployeeStore) -> ResourceApiRespon
         .get("mentioned")
         .and_then(Value::as_bool)
         .unwrap_or(false);
-    match employees.route_speech(project_id, employee_id, kind, mentioned, now_ms()) {
-        Ok(decision) => ok(json!({
+    let projection_id = document
+        .get("projection_id")
+        .and_then(Value::as_str)
+        .unwrap_or(CONVERSATION_ARCHIVE_PROJECTION_ID);
+    let speech_body = document.get("body").and_then(Value::as_str).unwrap_or("");
+    match conversations.land_speech(
+        employees,
+        &SpeechArchiveSpec {
+            projection_id,
+            project_id,
+            employee_id,
+            kind,
+            mentioned,
+            body: speech_body,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(outcome) => ok(json!({
             "status": "ok",
-            "delivered": decision.delivered,
-            "reason": decision.reason,
+            "delivered": outcome.delivered,
+            "reason": outcome.reason,
+            "audit_id": outcome.audit_id,
+            "archive_record_id": outcome.record_id,
+            "projection_id": CONVERSATION_ARCHIVE_PROJECTION_ID,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn conversation_archive(
+    method_path: &str,
+    conversations: &ConversationStore,
+) -> ResourceApiResponse {
+    let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let projection_id = query_parameter(method_path, "projection_id")
+        .filter(|v| !v.is_empty())
+        .unwrap_or_else(|| CONVERSATION_ARCHIVE_PROJECTION_ID.to_owned());
+    let employee_id = query_parameter(method_path, "employee_id").filter(|v| !v.is_empty());
+    match conversations.read_scoped(
+        &projection_id,
+        &project_id,
+        &project_id,
+        employee_id.as_deref(),
+    ) {
+        Ok(rows) => ok(json!({
+            "status": "ok",
+            "projection_id": CONVERSATION_ARCHIVE_PROJECTION_ID,
+            "project_id": project_id,
+            "records": rows.iter().map(|row| json!({
+                "record_id": row.record_id,
+                "employee_id": row.employee_id,
+                "kind": row.kind,
+                "body_digest": row.body_digest,
+                "created_at": row.created_at,
+            })).collect::<Vec<_>>(),
         })),
         Err(error) => store_error(error),
     }
@@ -910,6 +976,167 @@ mod tests {
         let task = handle(
             "POST /task/project/v1/roster.register",
             body.as_bytes(),
+            &store,
+        );
+        assert_eq!(task.status, 403);
+    }
+
+    #[test]
+    fn delivered_speech_lands_in_archive_via_http() {
+        use cognitive_store::StageSpec;
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let project_id = plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 4)
+            .unwrap()
+            .new_ref;
+        let plan_id = plane
+            .apply_plan_revision(
+                &project_id,
+                &project_id,
+                &[
+                    StageSpec {
+                        stage_id: "s1".to_owned(),
+                        title: "Manage".to_owned(),
+                        objective: "manage".to_owned(),
+                        output_contract_digest: ProjectAggregateStore::digest_hex(b"out"),
+                        acceptance_spec_ref: Some("cas:spec".to_owned()),
+                        cadence_json: None,
+                        responsible_slot: "manager".to_owned(),
+                        blocking_gap: None,
+                    },
+                    StageSpec {
+                        stage_id: "s2".to_owned(),
+                        title: "Research".to_owned(),
+                        objective: "research".to_owned(),
+                        output_contract_digest: ProjectAggregateStore::digest_hex(b"out2"),
+                        acceptance_spec_ref: Some("cas:spec2".to_owned()),
+                        cadence_json: None,
+                        responsible_slot: "researcher".to_owned(),
+                        blocking_gap: None,
+                    },
+                ],
+                20,
+            )
+            .unwrap();
+        let registered = handle(
+            "POST /management/project/v1/roster.register",
+            json!({
+                "project_id": project_id,
+                "plan_revision_id": plan_id,
+                "proposals": [
+                    {
+                        "slot": "manager",
+                        "specialization": "project-manager",
+                        "prompt": "coordinate",
+                        "tools_declared": ["workspace-write"]
+                    },
+                    {
+                        "slot": "researcher",
+                        "specialization": "member",
+                        "prompt": "notes",
+                        "tools_declared": ["workspace-write"]
+                    }
+                ]
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(registered.status, 200, "{}", registered.body);
+        let ids = serde_json::from_str::<Value>(&registered.body)
+            .unwrap()
+            .get("employee_ids")
+            .and_then(Value::as_array)
+            .unwrap()
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        let seat = handle(
+            "POST /management/project/v1/employee.seat.request",
+            json!({"employee_id": ids[0]}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(seat.status, 200, "{}", seat.body);
+        let confirm = handle(
+            "POST /management/project/v1/employee.seat.confirm",
+            json!({"employee_id": ids[0], "model_binding": "flash", "accept": true})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirm.status, 200, "{}", confirm.body);
+        let chatter = handle(
+            "POST /management/project/v1/speech.candidate",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[1],
+                "kind": "chatter",
+                "body": "side talk"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(chatter.status, 200, "{}", chatter.body);
+        assert!(chatter.body.contains("\"delivered\":false"));
+        assert!(chatter.body.contains("\"archive_record_id\":null"));
+        let deliverable = handle(
+            "POST /management/project/v1/speech.candidate",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[1],
+                "kind": "deliverable",
+                "body": "openable note"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(deliverable.status, 200, "{}", deliverable.body);
+        assert!(deliverable.body.contains("\"delivered\":true"));
+        assert!(!deliverable.body.contains("\"archive_record_id\":null"));
+        let listed = handle(
+            &format!("GET /management/project/v1/conversation.archive?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(listed.status, 200, "{}", listed.body);
+        assert!(listed.body.contains(&ids[1]));
+        assert!(listed.body.contains("deliverable"));
+        assert!(!listed.body.contains("openable note"));
+        assert!(!listed.body.contains("side talk"));
+        let legacy = handle(
+            "POST /management/project/v1/speech.candidate",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[1],
+                "kind": "deliverable",
+                "projection_id": "cognitiveos.personal.conversation-projection/0.1",
+                "body": "must not coerce"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(legacy.status, 422, "{}", legacy.body);
+        let v01 = handle(
+            &format!(
+                "GET /management/project/v1/conversation.archive?project_id={project_id}&projection_id=v01"
+            ),
+            b"",
+            &store,
+        );
+        assert_eq!(v01.status, 422, "{}", v01.body);
+        let task = handle(
+            &format!("GET /task/project/v1/conversation.archive?project_id={project_id}"),
+            b"",
             &store,
         );
         assert_eq!(task.status, 403);
