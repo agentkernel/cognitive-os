@@ -2,6 +2,10 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { NotFound } from "./shell/NotFound";
 import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
+import { KnowledgePage } from "./views/opc/KnowledgePage";
+import { ProjectsPage } from "./views/opc/ProjectsPage";
+import { SettingsPage } from "./views/opc/SettingsPage";
+import { TodayPage } from "./views/opc/TodayPage";
 import { HomePage } from "./views/home/HomePage";
 import { ProviderDetailPage } from "./views/providers/ProviderDetailPage";
 import { ProvidersPage } from "./views/providers/ProvidersPage";
@@ -18,17 +22,11 @@ import { ActivityPage } from "./views/activity/ActivityPage";
 import { SystemPage } from "./views/system/SystemPage";
 
 /**
- * Route map — docs/design/06. Seven frozen spaces + session (utility) +
- * designed 404. Home is the W3 attention surface; Providers is the W2
- * redesign (accounts master + five-section detail); Bindings folded into
- * Providers (DD-04) and redirects there. Work is the W4 inventory plus the
- * governed creation flow, and /work/:taskRef is the W5 detail view. Agents is
- * the W6 inventory plus dossier. Resources is the W7 family hub plus the
- * Memory, Skills and Tools family pages. Activity is the W8 evidence stream.
- * System is the W9 readiness/doctor/stewardship/session/about surface.
- * ⌘K is the W10 command layer (chrome, not a space).
- * The static /work/new segment is matched ahead of the dynamic one. Retired
- * hashes redirect: /bindings → /providers, /tasks → /work.
+ * Route map — Personal 2.0 L1 is Today / Projects / Knowledge; Settings is
+ * chrome. Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
+ * Activity/System stay as real secondary routes. Bindings folded into
+ * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox are not
+ * routes.
  */
 export function AppRoutes() {
   return (
@@ -36,6 +34,38 @@ export function AppRoutes() {
       <Route path="/session" element={<SessionPage />} />
       <Route
         path="/"
+        element={
+          <SessionGate channel="management" title="Today">
+            <TodayPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects"
+        element={
+          <SessionGate channel="management" title="Projects">
+            <ProjectsPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/knowledge"
+        element={
+          <SessionGate channel="management" title="Knowledge">
+            <KnowledgePage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <SessionGate channel="management" title="Settings">
+            <SettingsPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/home"
         element={
           <SessionGate channel="management" title="Home">
             <HomePage />

@@ -1,13 +1,19 @@
 import { NavLink } from "react-router-dom";
 
 /**
- * Primary navigation — the seven frozen spaces (owner-frozen labels,
- * docs/design/06 DD-02/DD-06). Session is chrome (status strip), never a
- * peer. Counts are shown only when they change behavior and are backed by
- * real data (none in W1 — alerts live in the strip).
+ * Personal 2.0 L1: Today / Projects / Knowledge. Settings lives in the
+ * side-foot, not L1. Linux 1.0 six-family routes remain reachable as
+ * secondary destinations (Settings hub + palette), not as Team/Inbox.
  */
 export const PRIMARY_NAV = [
-  ["/", "Home"],
+  ["/", "Today"],
+  ["/projects", "Projects"],
+  ["/knowledge", "Knowledge"],
+] as const;
+
+/** Linux 1.0 spaces kept as real routes, not L1 chrome. */
+export const LINUX_1_0_NAV = [
+  ["/home", "Home"],
   ["/work", "Work"],
   ["/agents", "Agents"],
   ["/providers", "Providers"],
@@ -44,6 +50,9 @@ export function PrimaryNav({
         </ul>
       </nav>
       <div className="cp-side-foot">
+        <p>
+          <NavLink to="/settings">Settings</NavLink>
+        </p>
         <p>
           <button
             type="button"

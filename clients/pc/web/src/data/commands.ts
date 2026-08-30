@@ -12,7 +12,7 @@ import { type BindingView, type ProviderAccount, type ProviderAlertView } from "
 import { resourceListKey, type ResourceListView } from "./projections/resources";
 import { TOOL_CATALOG_KEY, type ToolCatalogView } from "./projections/tools";
 import { WORK_TASKS_KEY } from "./projections/work";
-import { PRIMARY_NAV } from "../shell/PrimaryNav";
+import { LINUX_1_0_NAV, PRIMARY_NAV } from "../shell/PrimaryNav";
 import type { ProjectionStore } from "./store";
 
 const HOME_ALERTS_KEY = "home:alerts";
@@ -138,7 +138,7 @@ const HELP: CommandItem = {
 };
 
 function destinations(): CommandItem[] {
-  const spaces = PRIMARY_NAV.map(([to, label]) => ({
+  const spaces = [...PRIMARY_NAV, ...LINUX_1_0_NAV].map(([to, label]) => ({
     id: `dest:${to}`,
     kind: "destination" as const,
     execution: "navigate" as const,
@@ -149,6 +149,15 @@ function destinations(): CommandItem[] {
   }));
   return [
     ...spaces,
+    {
+      id: "dest:/settings",
+      kind: "destination",
+      execution: "navigate",
+      label: "Settings",
+      detail: "Navigate",
+      keywords: ["settings", "go", "space"],
+      href: "/settings",
+    },
     {
       id: "dest:system-doctor",
       kind: "destination",

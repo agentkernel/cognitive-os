@@ -36,11 +36,11 @@ describe("shell accessibility and structure (W1)", () => {
   });
 
   it("marks the current nav item with aria-current and others without", () => {
-    const { host, root } = renderApp("#/providers");
+    const { host, root } = renderApp("#/projects");
     const current = host.querySelector('nav[aria-label="Primary"] a[aria-current="page"]');
-    expect(current?.textContent).toBe("Providers");
+    expect(current?.textContent).toBe("Projects");
     const all = [...host.querySelectorAll('nav[aria-label="Primary"] a')];
-    expect(all.length).toBe(7);
+    expect(all.length).toBe(3);
     expect(all.filter((a) => a.hasAttribute("aria-current")).length).toBe(1);
     act(() => root.unmount());
     host.remove();

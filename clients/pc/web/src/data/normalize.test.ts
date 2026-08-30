@@ -105,6 +105,7 @@ describe("200-stub detection (R-1)", () => {
 describe("route whitelist (R-1)", () => {
   it("accepts known routes with query strings", () => {
     expect(isKnownRoute("GET", "/management/providers/accounts")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/list")).toBe(true);
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
     expect(isKnownRoute("POST", "/management/agent-bindings/remove")).toBe(true);
   });

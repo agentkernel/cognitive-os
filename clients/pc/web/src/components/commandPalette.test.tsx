@@ -219,7 +219,7 @@ describe("command palette (W10)", () => {
         });
       }),
     );
-    const { host, root } = renderAppAt("#/");
+    const { host, root } = renderAppAt("#/home");
     await flush();
     await openPalette(host);
     const input = host.querySelector(".cp-palette-input") as HTMLInputElement;

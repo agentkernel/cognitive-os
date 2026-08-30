@@ -2,7 +2,8 @@
  * Shell keyboard — docs/design/12. Chords and list motion observe the current
  * document; they never mint authority.
  *
- * `g` then h/w/a/p/r/c/s jumps the seven spaces. `/` opens the palette.
+ * `g` then t/p/n/s jumps Today/Projects/Knowledge/Settings; w/a/h/v/r/c keep
+ * Work/Agents/Home/Providers/Resources/Activity. `/` opens the palette.
  * `j`/`k` move the selected master row. Enter inspects, then opens detail.
  * `[`/`]` walk Work-detail sections, or the master list when there is no
  * section navigator. Escape unwinds one layer: palette (its own handler) →
@@ -10,13 +11,16 @@
  */
 
 export const SPACE_CHORDS: Record<string, string> = {
-  h: "/",
+  t: "/",
+  p: "/projects",
+  n: "/knowledge",
+  s: "/settings",
+  h: "/home",
   w: "/work",
   a: "/agents",
-  p: "/providers",
+  v: "/providers",
   r: "/resources",
   c: "/activity",
-  s: "/system",
 };
 
 export const G_CHORD_MS = 800;

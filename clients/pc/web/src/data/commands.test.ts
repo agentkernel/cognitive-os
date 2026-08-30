@@ -18,6 +18,8 @@ describe("command catalog (W10)", () => {
   it("indexes destinations and class-A landings without class-C verbs", () => {
     const items = buildCommandCatalog(createProjectionStore());
     expect(items.some((item) => item.label === "Work")).toBe(true);
+    expect(items.some((item) => item.label === "Today")).toBe(true);
+    expect(items.some((item) => item.href === "/settings")).toBe(true);
     expect(items.some((item) => item.href === "/work/new")).toBe(true);
     expect(items.some((item) => item.href === "/providers")).toBe(true);
     expect(catalogHasClassC(items)).toBe(false);
