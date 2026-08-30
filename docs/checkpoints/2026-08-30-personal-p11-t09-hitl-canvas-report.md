@@ -60,16 +60,22 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | **pass** | `DEV-WIN-GNU-01` | this commit | 58×2 locales |
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | **pass** | `DEV-WIN-GNU-01` | this commit | after D02 plan/PROGRESS/lease rows |
 | 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | **pass** | `DEV-WIN-GNU-01` | this commit | store + kernel-server + handbook + report |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t09_hitl_canvas` | **pass** 11/11 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t09-381e14c8` | `381e14c8161ebb65dac3e44785af6bd1213a255e` | D01+D02 store filter at D02 SHA |
+| 2026-08-30 | `http_grant_expansion_confirm_returns_digest_on_canvas_path` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t09-381e14c8` | `381e14c8161ebb65dac3e44785af6bd1213a255e` | canvas-path `preview.request` returns `preview_digest`; task-channel confirm 403 in the same unit |
+| 2026-08-30 | Host UI E2E | **not-run** | n/a | `381e14c8161ebb65dac3e44785af6bd1213a255e` | T13 chrome; formal card allows `not-run` |
+| 2026-08-30 | Settings chrome | **not-run** | n/a | `381e14c8161ebb65dac3e44785af6bd1213a255e` | T13; list/revoke is management HTTP only |
+| 2026-08-30 | `cargo test` / Clippy / build | **not-run** | `DEV-WIN-GNU-01` | `381e14c8161ebb65dac3e44785af6bd1213a255e` | `RUST-LINK-DEV-WIN-GNU-01` |
+| 2026-08-30 | required CI on `381e14c8` (run [33311296122](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122)) | **PENDING** | GitHub Actions | `381e14c8161ebb65dac3e44785af6bd1213a255e` | observed: `resolve validation route` **SUCCESS** [99256719910](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256719910); `verify (ubuntu-latest)` **SUCCESS** [99256728125](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728125); `verify (windows-latest)` **pending** [99256728174](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728174); `required-ci` not completed. Do **not** invent green. Do **not** merge |
+| 2026-08-30 | `verify (windows-latest)` on `381e14c8` | **pass** | `CI-WINDOWS-MSVC-01` | `381e14c8161ebb65dac3e44785af6bd1213a255e` | job [99256728174](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728174) on run [33311296122](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122) |
+| 2026-08-30 | `required-ci` on `381e14c8` | **pass** | GitHub Actions | `381e14c8161ebb65dac3e44785af6bd1213a255e` | job [99258078729](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99258078729); ubuntu [99256728125](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728125); windows [99256728174](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728174). Hypothesis only — this turn does **not** merge |
 
 ## Unique next action
 
-Push D02 on Draft PR [#285](https://github.com/agentkernel/cognitive-os/pull/285).
-Required CI on the **new** SHA (supersedes `8ea2a25b`). Do **not** merge
-`8ea2a25b` as T09 close. `DEV-WIN-GNU-01` cargo test remains **not-run**.
+`required-ci` on D02 HEAD `381e14c8` is **SUCCESS** on run [33311296122](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122) (ubuntu [99256728125](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728125); windows [99256728174](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99256728174); required-ci [99258078729](https://github.com/agentkernel/cognitive-os/actions/runs/33311296122/job/99258078729)). This report does **not** flip ready/merge on PR [#285](https://github.com/agentkernel/cognitive-os/pull/285). Host UI E2E / Settings chrome / `DEV-WIN-GNU-01` cargo remain **not-run**. Closure: [2026-08-30-personal-p11-t09-hitl-canvas-closure.md](2026-08-30-personal-p11-t09-hitl-canvas-closure.md). After parent ready+merge, claim the next ready non-overlapping P11 task (typically `P11-T12` if ready; `P11-T14`/`P11-T15` parked — do not unpark).
 
 ## Non-claims
 
 Not T02/T05/T06 redo/T13 chrome. Not Inbox L1, chat Approve, second scheduler,
 Vite-as-product, or Lane-CTR. Settings list/revoke is HTTP only. No
 Gate/release/Profile/B01/Agent-benefit claim. `8ea2a25b` CI green is D01-only
-and is not T09 merge HEAD once D02 is pushed.
+and is not T09 merge HEAD. `381e14c8` required-ci green is hypothesis only (A7), not Gate; this turn does not merge.
