@@ -1542,6 +1542,7 @@ formal acceptance.
 
 ### P11-T08 — Routine, Trigger, missed run
 
+- **status:** in-progress (`P11-T08/D01` on `personal/P11-T08-routine` / `lease/personal/P11-T08/routine`). v33 + management `routine.*`. Claim ceiling `hypothesis`. Unique next = Linux/CI focused store+HTTP.
 - **2.0.0 表面:** 项目运行/例程；不是 Inbox 一级。
 - **依赖:** P11-T03。**不挡 T09。**
 - **垂直切片:** Routine revision + Trigger → no-overlap/queue-latest → missed ledger。
@@ -1603,7 +1604,7 @@ formal acceptance.
 - **关闭门:** admission 与 forget 后 index 不复活可证明。
 - **漂移检测负例:** 跨 scope、secret/PII、poisoning、直写、tombstone 复活。
 - **硬门:** 适用 Phase 11 四条。
-- **status:** done (merged PR [#289](https://github.com/agentkernel/cognitive-os/pull/289) at `main@b5084e06`; required CI [33327844743](https://github.com/agentkernel/cognitive-os/actions/runs/33327844743) **SUCCESS** at `60844f51`; Linux store 4/4 + HTTP 2/2 at `f1dca3e0`). Claim ceiling `hypothesis`. Unique next = claim `P11-T08/D01`.
+- **status:** done (merged PR [#289](https://github.com/agentkernel/cognitive-os/pull/289) at `main@b5084e06`; required CI [33327844743](https://github.com/agentkernel/cognitive-os/actions/runs/33327844743) **SUCCESS** at `60844f51`; Linux store 4/4 + HTTP 2/2 at `f1dca3e0`). Claim ceiling `hypothesis`. T08 claimed in the same session.
 
 ### P11-T12 — Provider honest usage (no member budget chrome)
 
