@@ -36,11 +36,26 @@ Reuse `ProviderControlPlaneStore` (v25), `record_usage` / `compute_cost` / `GET 
 
 | Unit | Result | Env | Revision |
 |---|---|---|---|
-| store + in-process HTTP focused tests | **not-run** | `DEV-WIN-GNU-01` (`RUST-LINK-DEV-WIN-GNU-01`) | this slice |
+| store + in-process HTTP focused tests | **pass** (6/6 + 1/1 + 1/1) | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` |
 | `check-consistency` / handbook / generate `--check` / docs-sync-gate | pending commit | `DEV-WIN-GNU-01` | this slice |
 | SecretStore/Provider host E2E | **not-run** | unqualified | this slice |
 | Settings chrome / member budget stop | **not-run** | 2.1 / T13 / Deferred | this slice |
 | required CI | pending push | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | this slice |
+
+## Incremental validation log (TEST-REPORT-INCREMENTAL-01)
+
+Units are appended **immediately** after each finishes. `not-run` is never pass.
+
+| Time | Unit | Result | Env | Revision | Notes |
+|---|---|---|---|---|---|
+| 2026-08-30 | `verify (ubuntu-latest)` Clippy (deny warnings) | **fail** (`clippy::collapsible_if`) | `CI-UBUNTU-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` | [job 99264539781](https://github.com/agentkernel/cognitive-os/actions/runs/33314217245/job/99264539781) run [33314217245](https://github.com/agentkernel/cognitive-os/actions/runs/33314217245), ~2m43s. Build + Test Rust **pass**. Clippy `-D warnings` failed at `personal/crates/cognitive-store/src/provider_control_plane.rs:688` nested `if let` + `status == "active"` silent-rebind guard. rustfmt/handbook/codegen **not-run** (clippy failed first). Windows still in progress at log time. |
+| 2026-08-30 | clippy `collapsible_if` let-chain collapse | recorded | `DEV-WIN-GNU-01` | this commit | Collapse nested `if` in `write_binding`. Same silent-rebind reject/accept semantics. `p11_t12_honest_usage` and HTTP unknown≠0 / silent-rebind tests unchanged. `cargo clippy`/`test` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
+| 2026-08-30 | `cargo fmt --all` | pass | `DEV-WIN-GNU-01` | this commit | formatting only; no link |
+| 2026-08-30 | `fill-handbook-fingerprints` `dev.store-migrations` + `user.provider-control-plane` | pass | local Node | this commit | Fingerprint-only (en + zh-CN, 4 pages) after `provider_control_plane.rs` let-chain; handbook prose unchanged. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t12_honest_usage` | **pass** 6/6 | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` | Recorded; not re-run this turn. Focused store negatives + labelled read. |
+| 2026-08-30 | kernel-server `http_usage_unknown_cost_never_zero` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` | Recorded; not re-run this turn. Unknown≠0 HTTP. |
+| 2026-08-30 | kernel-server `http_silent_rebind_is_rejected` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` | Recorded; not re-run this turn. Silent rebind → `PROVIDER_SILENT_REBIND_REJECTED`. |
+| 2026-08-30 | `check-handbook` / `generate-handbook --check` | pass | local Node | this commit | 58×2 locales; 18 generated pages byte-identical. |
 
 ## Explicit non-claims
 

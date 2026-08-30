@@ -685,15 +685,14 @@ impl ProviderControlPlaneStore {
             )
             .optional()
             .map_err(unavailable("read binding"))?;
-        if let Some((account_id, model_id, status, _)) = existing.as_ref() {
-            if status == "active"
-                && !explicit_rebind
-                && (account_id != &binding.account_id || model_id != &binding.model_id)
-            {
-                return Err(ProviderControlPlaneError::Conflict {
-                    detail: "silent rebind rejected",
-                });
-            }
+        if let Some((account_id, model_id, status, _)) = existing.as_ref()
+            && status == "active"
+            && !explicit_rebind
+            && (account_id != &binding.account_id || model_id != &binding.model_id)
+        {
+            return Err(ProviderControlPlaneError::Conflict {
+                detail: "silent rebind rejected",
+            });
         }
         let revision = existing.map(|row| row.3).unwrap_or(0) + 1;
         conn.execute(

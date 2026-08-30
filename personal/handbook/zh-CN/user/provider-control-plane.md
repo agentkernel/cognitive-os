@@ -31,7 +31,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:bc83f3d0e77bdb232af7475ef4432af4455ceb71502851f5cb9bbcb648464334"
+fingerprint: "sha256:7fe42c9b18c6bdca38722b29e36c8d6fb33b9ef1fca2493b76f38cba9b5dfc31"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与当前 localhost Web UI 路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、Personal 2.0 桌面重设计/Account Hub 导入或 Agent-benefit。
 ---
