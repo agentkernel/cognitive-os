@@ -210,6 +210,7 @@ pub use sandbox::{
 pub use scheduler_service::{
     SchedulerCeilingDispatch, SchedulerCeilingDispatchError, SchedulerCeilingFacts,
     SchedulerDispatch, SchedulerService, SchedulerServiceError, SchedulerStopReason,
+    routine_occurrence_work_key,
 };
 pub use shell::{ShellError, ShellPhase, ShellService};
 pub use store_access::{

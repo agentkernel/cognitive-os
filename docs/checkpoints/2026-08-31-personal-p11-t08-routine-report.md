@@ -6,7 +6,8 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Branch: `personal/P11-T08-routine`
 - Lease: `lease/personal/P11-T08/routine`
 - Change class: `implementation-only`
-- Unique next: push this branch; route focused store + HTTP cargo to `DEV-LINUX-NATIVE-01` / required CI. Clock/sleep/restart host E2E remains `not-run`.
+- Claim commit: `92f8920a` (lease/plan only).
+- Unique next: push D01 implementation; route focused store + HTTP cargo to `DEV-LINUX-NATIVE-01` / required CI. Clock/sleep/restart host E2E remains `not-run`.
 
 | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|

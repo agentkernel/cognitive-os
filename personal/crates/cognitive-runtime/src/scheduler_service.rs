@@ -11,10 +11,20 @@ use cognitive_kernel::harness::{CeilingStopReason, LoopDriver};
 use cognitive_kernel::ports::{
     AuthorityStore, Clock, HarnessStore, IdGenerator, IntentChainStore, ProtocolStore,
 };
+use cognitive_store::routine_scheduler_task_ref;
 use cognitive_store::scheduler::{SchedulerRepository, SchedulerRepositoryError, SchedulerWorkKey};
 use thiserror::Error;
 use time::format_description::well_known::Rfc3339;
 use time::{Duration, OffsetDateTime};
+
+/// Daemon scheduler work key for one P11-T08 Routine occurrence.
+/// Reuses `scheduler_entries`. This is not a second scheduler.
+pub fn routine_occurrence_work_key(occurrence_id: &str) -> SchedulerWorkKey {
+    SchedulerWorkKey {
+        task_ref: routine_scheduler_task_ref(occurrence_id),
+        contract_epoch: 1,
+    }
+}
 
 /// A durable lease the caller may use to start a bounded worker attempt.
 #[derive(Debug, Clone, PartialEq, Eq)]

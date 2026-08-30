@@ -35,6 +35,7 @@ pub mod personal_backup;
 pub mod personal_db;
 pub mod project_aggregate;
 pub mod provider_control_plane;
+pub mod routine;
 pub mod scheduler;
 pub mod skill_store;
 pub mod sqlite;
@@ -116,6 +117,11 @@ pub use provider_control_plane::{
     USAGE_EVENT_RETENTION_MS, UsageSample, apply_builtin_prices, compute_cost, honest_unknown_cost,
     labelled_cost_source, now_ms, provider_control_plane_migration_entry,
     usage_from_anthropic_json, usage_from_openai_json,
+};
+pub use routine::{
+    ROUTINE_PROJECTION_ID, ROUTINE_SCHEMA_V33, RoutineOccurrence, RoutineRevision,
+    RoutineRevisionSpec, RoutineStore, RoutineTriggerSpec, routine_migration_entry,
+    routine_scheduler_task_ref,
 };
 pub use sqlite::SqliteAuthorityStore;
 pub use vault::{

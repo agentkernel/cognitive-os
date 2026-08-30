@@ -34,12 +34,14 @@ tests:
   - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:ea35417917e202163d9d9b3f790d7a545d0c401ae45397ef8d47568025ef8784"
+fingerprint: "sha256:d2660c9133be046c69fd5a95f0b0bf26120c4687a79ec6b97faec8cea19626e8"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
 
 # Operations and recovery
+
+A missed Routine occurrence is a visible ledger row (`GET /management/project/v1/routine.ledger`), not a silent drop. Clock/sleep/restart host E2E remains `not-run`.
 
 ## Daily checks — `implemented`
 

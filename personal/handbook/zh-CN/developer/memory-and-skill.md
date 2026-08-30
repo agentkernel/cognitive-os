@@ -32,6 +32,8 @@ non_claims:
 
 # Memory 与 Skill
 
+Routine/Trigger（P11-T08）是项目运行子菜单，不是 Memory 写路径。
+
 ## Memory：candidate → decision → object
 
 没有任何路径直接写 `MemoryObject`。服务接缝（`admit_memory_candidate`，daemon 唯一

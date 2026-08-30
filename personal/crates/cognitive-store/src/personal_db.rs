@@ -31,6 +31,7 @@ use crate::project_aggregate::{
     standing_approval_policy_migration_entry,
 };
 use crate::provider_control_plane::provider_control_plane_migration_entry;
+use crate::routine::routine_migration_entry;
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
 use crate::skill_store::{
     skill_binding_revocation_migration_entry, skill_package_migration_entry,
@@ -103,7 +104,9 @@ impl PersonalDatabasePrepareReport {
 /// v30 = grant-expansion subject_kind plus StandingApprovalPolicy time-box
 /// (`expires_at` required, ≤7d; Settings list/revoke), and
 /// v31 = hidden hosted DSH managed child (`p11_hosted_dsh_child`; P11-T07), and
-/// v32 = Markdown Vault documents / rebuildable index / conflicts (P11-T10).
+/// v32 = Markdown Vault documents / rebuildable index / conflicts (P11-T10),
+/// and v33 = Routine revision / Trigger occurrence ledger (P11-T08; reuses
+/// `scheduler_entries`, no second scheduler).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -141,6 +144,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         standing_approval_policy_migration_entry(),
         hosted_dsh_migration_entry(),
         vault_migration_entry(),
+        routine_migration_entry(),
     ]
 }
 

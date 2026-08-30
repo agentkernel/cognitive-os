@@ -38,6 +38,8 @@ non_claims:
 
 # Provider Control Plane
 
+P11-T08 Routine admission does not mint Provider bindings or member-level budgets.
+
 `partial`: the daemon management API and the `cognitive` CLI callers below are
 implemented and covered by focused tests. A localhost-only Web UI in this
 repository at `clients/pc/web/`, served same-origin from `GET /ui/`, is a

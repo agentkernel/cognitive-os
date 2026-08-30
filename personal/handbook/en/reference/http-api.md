@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:1f9f113acaf43767b1cf2dcf28b84bddc48c5b2746f1a872ac6c7853d9f1f611"
+fingerprint: "sha256:ed35440cbf86a3514ebab1493cece8a15599471bff6dba48e12b56826b43b2e9"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -186,6 +186,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/vault.index` | management | Query the rebuildable Vault index for one Project. Cross-project `caller_project_id` is retrieval overreach. Returns documented Context inject order (task contract → fixed decisions → sourced excerpts → summaries → older narrative). |
 | `GET` | `/management/project/v1/vault.conflicts` | management | List open Vault conflicts for one Project. Silent last-write-wins is not a resolver. |
 | `POST` | `/management/project/v1/vault.apply-authority` | management | Always rejected: a Vault file cannot confirm or apply Project authority. Research notes and decisions stay on draft/authority SQLite. |
+| `POST` | `/management/project/v1/routine.revision` | management | Daemon-authored Routine revision (P11-T08). Overlap policy is no-overlap-queue-latest. Reuses `scheduler_entries`; not a second Temporal scheduler. Clock/sleep/restart E2E is `not-run`. |
+| `POST` | `/management/project/v1/routine.trigger` | management | Admit a manual / schedule / qualified-event Trigger. Overlap is rejected or queued as latest; host-unavailable records a visible missed row. Stale revision fail-closes. Silent drop is forbidden. |
+| `GET` | `/management/project/v1/routine.ledger` | management | List active / queued / missed / coalesced occurrences for one Routine. Not Inbox L1. Requires project_id and routine_id. |
+| `POST` | `/management/project/v1/routine.checkpoint` | management | Persist recovery checkpoint bytes. Completing from a checkpoint is rejected (`checkpoint is not completion`). |
+| `POST` | `/management/project/v1/routine.resume` | management | Resume a missed internal occurrence onto the daemon scheduler. Consequential auto-resume fail-closes. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
@@ -214,4 +219,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/vault.index` | task | Forbidden: Vault index query is management-channel only. |
 | `GET` | `/task/project/v1/vault.conflicts` | task | Forbidden: Vault conflict query is management-channel only. |
 | `POST` | `/task/project/v1/vault.apply-authority` | task | Forbidden: Vault authority apply is management-channel only (and is always rejected even there). |
+| `POST` | `/task/project/v1/routine.revision` | task | Forbidden: Routine revision is management-channel only. |
+| `POST` | `/task/project/v1/routine.trigger` | task | Forbidden: Routine Trigger admission is management-channel only. |
+| `GET` | `/task/project/v1/routine.ledger` | task | Forbidden: Routine ledger is management-channel only. |
+| `POST` | `/task/project/v1/routine.checkpoint` | task | Forbidden: Routine checkpoint is management-channel only. |
+| `POST` | `/task/project/v1/routine.resume` | task | Forbidden: Routine resume is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

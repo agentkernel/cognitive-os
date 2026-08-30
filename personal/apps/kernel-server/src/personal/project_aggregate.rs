@@ -9,9 +9,9 @@ use cognitive_store::{
     CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
     HOSTED_DSH_ARTIFACT_DIGEST, HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec,
     HostedDshPlane, HostedDshStartSpec, PendingPreviewRow, ProjectAggregateError,
-    ProjectAggregateStore, ProjectRow, RosterProposal, SpeechArchiveSpec, SqliteAuthorityStore,
-    VAULT_PROJECTION_ID, VaultImportSpec, VaultReadSpec, VaultStore,
-    reject_closed_candidate_schema,
+    ProjectAggregateStore, ProjectRow, ROUTINE_PROJECTION_ID, RosterProposal, RoutineRevisionSpec,
+    RoutineStore, RoutineTriggerSpec, SpeechArchiveSpec, SqliteAuthorityStore, VAULT_PROJECTION_ID,
+    VaultImportSpec, VaultReadSpec, VaultStore, reject_closed_candidate_schema,
 };
 use serde_json::{Value, json};
 
@@ -50,6 +50,11 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/vault.index",
     "GET /management/project/v1/vault.conflicts",
     "POST /management/project/v1/vault.apply-authority",
+    "POST /management/project/v1/routine.revision",
+    "POST /management/project/v1/routine.trigger",
+    "GET /management/project/v1/routine.ledger",
+    "POST /management/project/v1/routine.checkpoint",
+    "POST /management/project/v1/routine.resume",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/preview.request",
@@ -78,6 +83,11 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /task/project/v1/vault.index",
     "GET /task/project/v1/vault.conflicts",
     "POST /task/project/v1/vault.apply-authority",
+    "POST /task/project/v1/routine.revision",
+    "POST /task/project/v1/routine.trigger",
+    "GET /task/project/v1/routine.ledger",
+    "POST /task/project/v1/routine.checkpoint",
+    "POST /task/project/v1/routine.resume",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -167,6 +177,11 @@ pub(crate) fn handle(
         "GET /management/project/v1/vault.index" => vault_index(method_path, store),
         "GET /management/project/v1/vault.conflicts" => vault_conflicts(method_path, store),
         "POST /management/project/v1/vault.apply-authority" => vault_apply_authority(body, store),
+        "POST /management/project/v1/routine.revision" => routine_revision(body, store),
+        "POST /management/project/v1/routine.trigger" => routine_trigger(body, store),
+        "GET /management/project/v1/routine.ledger" => routine_ledger(method_path, store),
+        "POST /management/project/v1/routine.checkpoint" => routine_checkpoint(body, store),
+        "POST /management/project/v1/routine.resume" => routine_resume(body, store),
         _ => error(
             404,
             "PROJECT_AGGREGATE_ROUTE_NOT_FOUND",
@@ -1102,6 +1117,182 @@ fn vault_apply_authority(body: &[u8], store: &SqliteAuthorityStore) -> ResourceA
         ),
         Err(error) => store_error(error),
     }
+}
+
+fn routine_revision(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(body_json) = document.get("body").and_then(Value::as_object) else {
+        return error(400, "ROUTINE_BODY_REQUIRED", "body object required");
+    };
+    let risk_class = document
+        .get("risk_class")
+        .and_then(Value::as_str)
+        .unwrap_or("internal");
+    let routine_id = document.get("routine_id").and_then(Value::as_str);
+    let encoded = match serde_json::to_string(body_json) {
+        Ok(value) => value,
+        Err(_) => return error(400, "ROUTINE_BODY_INVALID", "body must serialize"),
+    };
+    let routines = RoutineStore::from_authority_store(store);
+    match routines.publish_revision(
+        ConfirmCaller::OwnerManagement,
+        &RoutineRevisionSpec {
+            project_id,
+            routine_id,
+            body_json: &encoded,
+            risk_class,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(published) => ok(json!({
+            "status": "ok",
+            "projection_id": ROUTINE_PROJECTION_ID,
+            "routine_id": published.routine_id,
+            "revision_id": published.revision_id,
+            "seq": published.seq,
+            "policy_digest": published.policy_digest,
+            "risk_class": published.risk_class,
+            "overlap_policy": "no-overlap-queue-latest",
+            "is_authority": true,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn routine_trigger(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(routine_id) = document.get("routine_id").and_then(Value::as_str) else {
+        return error(400, "ROUTINE_ID_REQUIRED", "routine_id required");
+    };
+    let Some(revision_id) = document.get("revision_id").and_then(Value::as_str) else {
+        return error(400, "REVISION_ID_REQUIRED", "revision_id required");
+    };
+    let trigger_kind = document
+        .get("trigger_kind")
+        .and_then(Value::as_str)
+        .unwrap_or("manual");
+    let trigger_source = document
+        .get("trigger_source")
+        .and_then(Value::as_str)
+        .unwrap_or("owner-run");
+    let force_parallel = document
+        .get("force_parallel")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let host_unavailable = document
+        .get("host_unavailable")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let routines = RoutineStore::from_authority_store(store);
+    match routines.admit_trigger(
+        ConfirmCaller::OwnerManagement,
+        &RoutineTriggerSpec {
+            routine_id,
+            revision_id,
+            trigger_kind,
+            trigger_source,
+            force_parallel,
+            host_unavailable,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(occurrence) => ok(occurrence_json(&occurrence)),
+        Err(error) => store_error(error),
+    }
+}
+
+fn routine_ledger(method_path: &str, store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(project_id) = query_parameter(method_path, "project_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(routine_id) = query_parameter(method_path, "routine_id").filter(|v| !v.is_empty())
+    else {
+        return error(400, "ROUTINE_ID_REQUIRED", "routine_id required");
+    };
+    let routines = RoutineStore::from_authority_store(store);
+    match routines.list_ledger(&project_id, &routine_id) {
+        Ok(rows) => ok(json!({
+            "status": "ok",
+            "projection_id": ROUTINE_PROJECTION_ID,
+            "occurrences": rows.iter().map(occurrence_json).collect::<Vec<_>>(),
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn routine_checkpoint(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(occurrence_id) = document.get("occurrence_id").and_then(Value::as_str) else {
+        return error(400, "OCCURRENCE_ID_REQUIRED", "occurrence_id required");
+    };
+    let checkpoint = document
+        .get("checkpoint")
+        .cloned()
+        .unwrap_or_else(|| json!({}));
+    let encoded = match serde_json::to_string(&checkpoint) {
+        Ok(value) => value,
+        Err(_) => return error(400, "CHECKPOINT_INVALID", "checkpoint must serialize"),
+    };
+    let complete = document
+        .get("complete")
+        .and_then(Value::as_bool)
+        .unwrap_or(false);
+    let routines = RoutineStore::from_authority_store(store);
+    match routines.record_checkpoint(
+        ConfirmCaller::OwnerManagement,
+        occurrence_id,
+        &encoded,
+        complete,
+    ) {
+        Ok(occurrence) => ok(occurrence_json(&occurrence)),
+        Err(error) => store_error(error),
+    }
+}
+
+fn routine_resume(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(occurrence_id) = document.get("occurrence_id").and_then(Value::as_str) else {
+        return error(400, "OCCURRENCE_ID_REQUIRED", "occurrence_id required");
+    };
+    let routines = RoutineStore::from_authority_store(store);
+    match routines.resume_missed(ConfirmCaller::OwnerManagement, occurrence_id, now_ms()) {
+        Ok(occurrence) => ok(occurrence_json(&occurrence)),
+        Err(error) => store_error(error),
+    }
+}
+
+fn occurrence_json(row: &cognitive_store::RoutineOccurrence) -> Value {
+    json!({
+        "status": "ok",
+        "projection_id": ROUTINE_PROJECTION_ID,
+        "occurrence_id": row.occurrence_id,
+        "routine_id": row.routine_id,
+        "revision_id": row.revision_id,
+        "project_id": row.project_id,
+        "trigger_kind": row.trigger_kind,
+        "trigger_source": row.trigger_source,
+        "requested_at": row.requested_at,
+        "disposition": row.disposition,
+        "coalesced_by": row.coalesced_by,
+        "miss_reason": row.miss_reason,
+        "policy_digest": row.policy_digest,
+        "scheduler_task_ref": row.scheduler_task_ref,
+        "checkpoint_json": row.checkpoint_json,
+        "recorded_at": row.recorded_at,
+        "is_authority": true,
+    })
 }
 
 fn pending_previews(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiResponse {
@@ -2549,5 +2740,180 @@ mod tests {
         );
         assert_eq!(apply.status, 422, "{}", apply.body);
         assert!(apply.body.contains("not Project authority"));
+    }
+
+    #[test]
+    fn p11_t08_routine_trigger_negatives_and_task_channel_is_forbidden() {
+        let (_tmp, store) = authority();
+        let project_id = activate_project(&store);
+        let forbidden = handle(
+            "POST /task/project/v1/routine.trigger",
+            json!({
+                "routine_id": "routine-x",
+                "revision_id": "rrev-x",
+                "trigger_kind": "manual"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(forbidden.status, 403);
+        assert!(
+            forbidden
+                .body
+                .contains("PROJECT_AGGREGATE_CHANNEL_FORBIDDEN")
+        );
+        let published = handle(
+            "POST /management/project/v1/routine.revision",
+            json!({
+                "project_id": project_id,
+                "risk_class": "internal",
+                "body": {"cadence": "manual", "title": "nightly"}
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(published.status, 200, "{}", published.body);
+        assert!(published.body.contains(ROUTINE_PROJECTION_ID));
+        let secret = handle(
+            "POST /management/project/v1/routine.revision",
+            json!({
+                "project_id": project_id,
+                "risk_class": "internal",
+                "body": {"title": "x", "api_key": "sk-http"}
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(secret.status, 422, "{}", secret.body);
+        let body = serde_json::from_str::<Value>(&published.body).unwrap();
+        let routine_id = body["routine_id"].as_str().unwrap();
+        let revision_id = body["revision_id"].as_str().unwrap();
+        let first = handle(
+            "POST /management/project/v1/routine.trigger",
+            json!({
+                "routine_id": routine_id,
+                "revision_id": revision_id,
+                "trigger_kind": "manual",
+                "trigger_source": "owner-run"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(first.status, 200, "{}", first.body);
+        assert!(first.body.contains("\"disposition\":\"active\""));
+        let overlap = handle(
+            "POST /management/project/v1/routine.trigger",
+            json!({
+                "routine_id": routine_id,
+                "revision_id": revision_id,
+                "trigger_kind": "manual",
+                "force_parallel": true
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(overlap.status, 409, "{}", overlap.body);
+        assert!(overlap.body.contains("overlap rejected"));
+        let stale = handle(
+            "POST /management/project/v1/routine.trigger",
+            json!({
+                "routine_id": routine_id,
+                "revision_id": "rrev-stale",
+                "trigger_kind": "schedule"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(stale.status, 409, "{}", stale.body);
+        let missed = handle(
+            "POST /management/project/v1/routine.trigger",
+            json!({
+                "project_id": project_id,
+                "routine_id": routine_id,
+                "revision_id": revision_id,
+                "trigger_kind": "qualified-event",
+                "host_unavailable": true
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        // active already exists; host_unavailable still records missed, not silent drop
+        assert_eq!(missed.status, 200, "{}", missed.body);
+        assert!(missed.body.contains("\"disposition\":\"missed\""));
+        let occurrence_id = serde_json::from_str::<Value>(&first.body).unwrap()["occurrence_id"]
+            .as_str()
+            .unwrap()
+            .to_owned();
+        let complete = handle(
+            "POST /management/project/v1/routine.checkpoint",
+            json!({
+                "occurrence_id": occurrence_id,
+                "checkpoint": {"step": 1},
+                "complete": true
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(complete.status, 422, "{}", complete.body);
+        assert!(complete.body.contains("checkpoint is not completion"));
+        let consequential = handle(
+            "POST /management/project/v1/routine.revision",
+            json!({
+                "project_id": project_id,
+                "risk_class": "consequential",
+                "body": {"cadence": "manual", "title": "pay invoice"}
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(consequential.status, 200, "{}", consequential.body);
+        let consequential_body = serde_json::from_str::<Value>(&consequential.body).unwrap();
+        let missed_consequential = handle(
+            "POST /management/project/v1/routine.trigger",
+            json!({
+                "routine_id": consequential_body["routine_id"],
+                "revision_id": consequential_body["revision_id"],
+                "trigger_kind": "manual",
+                "host_unavailable": true
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(
+            missed_consequential.status, 200,
+            "{}",
+            missed_consequential.body
+        );
+        let resume = handle(
+            "POST /management/project/v1/routine.resume",
+            json!({
+                "occurrence_id": serde_json::from_str::<Value>(&missed_consequential.body).unwrap()["occurrence_id"]
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(resume.status, 403, "{}", resume.body);
+        assert!(resume.body.contains("consequential auto-resume"));
+        let ledger = handle(
+            &format!(
+                "GET /management/project/v1/routine.ledger?project_id={project_id}&routine_id={routine_id}"
+            ),
+            b"",
+            &store,
+        );
+        assert_eq!(ledger.status, 200, "{}", ledger.body);
+        assert!(ledger.body.contains("missed"));
+        assert!(ledger.body.contains(ROUTINE_PROJECTION_ID));
     }
 }

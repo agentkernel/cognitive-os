@@ -24,6 +24,8 @@ non_claims:
 
 # Validation commands
 
+P11-T08 focused store/HTTP tests route to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` or exact-revision `DEV-LINUX-NATIVE-01`. `DEV-WIN-GNU-01` cargo link is `not-run`. Clock/sleep/restart host E2E is `not-run`.
+
 Environment routing is a precondition, owned by
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md).
 

@@ -32,6 +32,8 @@ non_claims:
 
 # Memory and Skill
 
+Routine/Trigger (P11-T08) is a Project run submenu, not a Memory write path.
+
 ## Memory: candidate → decision → object
 
 Nothing writes a `MemoryObject` directly. The service seam
