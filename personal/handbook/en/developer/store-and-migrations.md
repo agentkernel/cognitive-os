@@ -18,6 +18,8 @@ sources:
     symbols: ["CONVERSATION_ARCHIVE_SCHEMA_V28", "ConversationStore", "CONVERSATION_ARCHIVE_PROJECTION_ID", "ArchiveReadSpec", "ArchiveAppendSpec"]
   - path: personal/crates/cognitive-store/src/assistant.rs
     symbols: ["AssistantPlane", "AssistantTurnSpec", "ASSISTANT_ENGINE_ID", "ASSISTANT_PI_PIN"]
+  - path: personal/crates/cognitive-store/src/hosted_dsh.rs
+    symbols: ["HOSTED_DSH_SCHEMA_V31", "HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -33,12 +35,14 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
+  - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
+  - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:dba7370440377590ef5f801794889330021cd41efd866fd8afd205a003051076"
+fingerprint: "sha256:b7706d844aa298113b4d99884100c04994a97df6c514f07e033a54e2d5ef1a51"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -48,11 +52,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v30) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v31) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v30)
+## Authority migration map (v1–v31)
 
 | Versions | Adds |
 |---|---|
@@ -70,10 +74,13 @@ orders authority first and names the backup path on a second-phase failure.
 | v28 | Personal-private conversation archive (`p11_conversation_archive`) under new identifier `cognitiveos.personal.conversation-archive/0.1`. Delivered whitelist speech lands a row; owner `append` accepts `note`/`deliverable`/`handoff`/`blocked`/`decision-request`. Chatter stays audit-only. Index requires `limit` 1..=32 and returns refs (record_id + digest), not bodies. ADR-0058 `conversation-projection/0.1` is not coerced. Archive rows are observation-only; a record_id cannot satisfy stage-test completion. |
 | v29 | ApprovalPreview `superseded_by` (P11-T09 HITL). Narrow mints a **new** pending preview and freezes the old row as `superseded`. Reject leaves a `receipt_ref`. Stale is mechanical `base_state_digest` mismatch only — not wall-clock freshness. Chat/task cannot confirm, reject, or narrow. |
 | v30 | `grant-expansion` subject_kind plus StandingApprovalPolicy time-box (`p11_standing_approval_policy`). `expires_at` is required and ≤7 days. Settings list/revoke is management HTTP. Chat cannot mint. Rebuilds `p11_approval_preview` CHECK. |
+| v31 | Hidden hosted DSH managed child (`p11_hosted_dsh_child`). `runtime_binding_ref` binds to `hosted-dsh:<artifact>:<child_id>` (pid/digest/artifact). Process exit clears pid and marks `exited`; it does not delete Employee, conversation archive, or Memory. Isolated spawn fail-closes on Windows GNU. Windows OPC E2E is `not-run`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
 P11-T09 HITL canvas reuses v26 `request_preview` / `confirm_preview` / `p11_approval_preview` plus v29 `superseded_by` and v30 grant-expansion / StandingApprovalPolicy. Management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*` are the durable caller; T05 announce+deep-link only; T06 `draft.apply` is not authority-approve. Host UI E2E is `not-run`. Settings chrome is T13. No second scheduler, no chat Approve, no Inbox L1.
+
+P11-T07 hidden hosted DSH adds v31 `p11_hosted_dsh_child`. The Attempt-runner `start` caller is management HTTP `dsh.hosted.start`; task-channel aliases are 403. Digest/protocol mismatch, env/argv secrets, Pi-as-member-engine, Installed Agent chrome, and unknown child output (`success`/`ok`/`agent_end`) fail closed. Daemon Provider proxy `POST /provider/v1/dsh/chat/completions` remains the only secret-bearing path. Linux Path B is not Windows hosted qualification.
 
 P11-T12 honest usage adds **no new migration**. It is a labelled read of v25 `llm_usage_events` / `agent_provider_bindings` / `provider_accounts`: `cost_label` is `actual` (`provider_reported`+`priced`), `estimated` (`locally_estimated`+`priced`, only when that source was recorded), or `unknown` (never JSON `0`). `GET /management/usage` also returns a four-layer binding explanation; Project/employee/Task layers are explicit `unbound` today. Account identity and quota are separate objects. Silent account/model rebind is rejected. Member-level budget hard-stop is 2.1 / Deferred.
 
@@ -82,7 +89,7 @@ Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 run an authority-filter CTE before `MATCH`).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v30 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v31 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

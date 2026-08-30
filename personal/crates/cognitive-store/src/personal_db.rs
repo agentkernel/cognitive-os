@@ -11,6 +11,7 @@ use crate::context_store::{
 };
 use crate::conversation::conversation_migration_entry;
 use crate::employee::employee_migration_entry;
+use crate::hosted_dsh::hosted_dsh_migration_entry;
 use crate::installation::{
     INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3, INSTALLATION_SCHEMA_V4,
 };
@@ -99,7 +100,8 @@ impl PersonalDatabasePrepareReport {
 /// a reinterpretation of `conversation-projection/0.1`), and
 /// v29 = ApprovalPreview `superseded_by` for HITL narrow (P11-T09), and
 /// v30 = grant-expansion subject_kind plus StandingApprovalPolicy time-box
-/// (`expires_at` required, ≤7d; Settings list/revoke).
+/// (`expires_at` required, ≤7d; Settings list/revoke), and
+/// v31 = hidden hosted DSH managed child (`p11_hosted_dsh_child`; P11-T07).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -135,6 +137,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         conversation_migration_entry(),
         approval_preview_narrow_migration_entry(),
         standing_approval_policy_migration_entry(),
+        hosted_dsh_migration_entry(),
     ]
 }
 

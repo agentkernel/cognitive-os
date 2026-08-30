@@ -192,7 +192,11 @@ impl EmployeeStore {
             })
     }
 
-    fn require_owner(caller: ConfirmCaller) -> Result<(), ProjectAggregateError> {
+    pub(crate) fn conn_arc(&self) -> Arc<Mutex<Connection>> {
+        Arc::clone(&self.conn)
+    }
+
+    pub(crate) fn require_owner(caller: ConfirmCaller) -> Result<(), ProjectAggregateError> {
         match caller {
             ConfirmCaller::OwnerManagement => Ok(()),
             ConfirmCaller::TaskChannel | ConfirmCaller::Assistant => {
@@ -732,6 +736,8 @@ impl EmployeeStore {
                 detail: "Role must not be merged with Agent",
             });
         }
+        reject_pi_member_engine(runtime_binding_ref)?;
+        reject_installed_agent_chrome(runtime_binding_ref)?;
         let conn = self.lock()?;
         let updated = conn
             .execute(
@@ -748,11 +754,36 @@ impl EmployeeStore {
     }
 
     /// Attempt/process death observer: Employee authority is not a process.
+    /// Records hosted DSH child exit. Does not delete Employee, conversation, or Memory.
     pub fn observe_attempt_process_exit(
         &self,
-        _employee_id: &str,
+        employee_id: &str,
     ) -> Result<(), ProjectAggregateError> {
+        let conn = self.lock()?;
+        conn.execute(
+            "UPDATE p11_hosted_dsh_child
+                SET pid = NULL, state = 'exited', terminal_kind = 'exited'
+              WHERE employee_id = ?1 AND state = 'bound'",
+            [employee_id],
+        )
+        .map_err(unavailable("observe hosted dsh exit"))?;
         Ok(())
+    }
+
+    /// Latest EmployeeRevision id for Attempt-runner start.
+    pub fn latest_revision_id(
+        &self,
+        employee_id: &str,
+    ) -> Result<Option<String>, ProjectAggregateError> {
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT employee_revision_id FROM p11_employee_revision
+              WHERE employee_id = ?1 ORDER BY seq DESC LIMIT 1",
+            [employee_id],
+            |row| row.get(0),
+        )
+        .optional()
+        .map_err(unavailable("latest employee revision"))
     }
 
     /// Refuse to reuse an Employee id in another Project. Only Blueprint is reusable.
@@ -1188,6 +1219,37 @@ fn map_employee_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<EmployeeRow> {
         state: row.get(6)?,
         is_current_manager: manager == 1,
     })
+}
+
+pub(crate) fn reject_pi_member_engine(value: &str) -> Result<(), ProjectAggregateError> {
+    let lowered = value.to_ascii_lowercase();
+    if lowered.starts_with("pi:")
+        || lowered.contains("earendil.pi")
+        || lowered.contains("hidden-pi-assistant")
+        || lowered.contains("agent://personal/pi")
+        || lowered.contains("cognitiveos.private-candidate/1")
+    {
+        return Err(ProjectAggregateError::Rejected {
+            detail: "Pi is not the Member execution engine",
+        });
+    }
+    Ok(())
+}
+
+pub(crate) fn reject_installed_agent_chrome(value: &str) -> Result<(), ProjectAggregateError> {
+    let lowered = value.to_ascii_lowercase();
+    if lowered.contains("installed-agent")
+        || lowered.contains("/ui/")
+        || lowered.contains("apps/web")
+        || lowered.contains("plugin-store")
+        || lowered.contains("dsh-web")
+        || lowered.contains("engine-store")
+    {
+        return Err(ProjectAggregateError::Rejected {
+            detail: "Installed Agent chrome is not the hosted DSH engine",
+        });
+    }
+    Ok(())
 }
 
 fn next_id(prefix: &str) -> Result<String, ProjectAggregateError> {
