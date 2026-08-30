@@ -1088,6 +1088,19 @@ impl ProjectAggregateStore {
                 detail: "completion requires current verification",
             });
         }
+        let archive_as_completion: Option<String> = conn
+            .query_row(
+                "SELECT record_id FROM p11_conversation_archive WHERE record_id = ?1",
+                [&oracle.verification_report_ref],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(unavailable("archive is not completion"))?;
+        if archive_as_completion.is_some() {
+            return Err(ProjectAggregateError::Rejected {
+                detail: "conversation archive is observation-only, not completion",
+            });
+        }
         if !oracle.openable {
             return Err(ProjectAggregateError::Rejected {
                 detail: "missing openable artifact blocks pass",
