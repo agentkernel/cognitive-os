@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Wait required CI green on `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc`, then parent close. Linux native focused vault tests **pass** recorded (store 9/9, HTTP 1/1, P8-T13 sqlite scan 1/1). Do not merge from this worker. Do not claim T11. Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
+`P11-T10` **done**. Merged PR [#288](https://github.com/agentkernel/cognitive-os/pull/288) at `main@e51b616e`. Required CI [33321852981](https://github.com/agentkernel/cognitive-os/actions/runs/33321852981) **SUCCESS** at `64734a13`. Linux native focused **pass** at `2cfb7ae5`. Lease closed. Unique next: parent claims `P11-T11/D01` (T11 lease left unclaimed this turn). Host filesystem E2E / B01 / Windows OPC remain `not-run`. `DEV-WIN-GNU-01` cargo remains `not-run`. Evaluation routing OFF.
 
 ## Closed predecessor
 
@@ -88,6 +88,10 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-31 | Host filesystem / index E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | Card allows `not-run` until the host route is qualified. Never pass. |
 | 2026-08-31 | B01 campaign guest | **not_available** | n/a | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | No B01. Evaluation routing OFF. |
 | 2026-08-31 | Windows OPC vault E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `2cfb7ae53fdd8939ed8d3cd1f8991698893affbc` | Not claimed. |
+| 2026-08-31 | workspace `required-ci` on PR head `64734a13` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `64734a135d094dde12237c9ecd2b3586935f7766` | run [33321852981](https://github.com/agentkernel/cognitive-os/actions/runs/33321852981): ubuntu [99285144577](https://github.com/agentkernel/cognitive-os/actions/runs/33321852981/job/99285144577) 3m53s; windows [99285144546](https://github.com/agentkernel/cognitive-os/actions/runs/33321852981/job/99285144546) 13m51s; required-ci [99286886862](https://github.com/agentkernel/cognitive-os/actions/runs/33321852981/job/99286886862). PR [#288](https://github.com/agentkernel/cognitive-os/pull/288) merged `main@e51b616e`. |
+| 2026-08-31 | Host filesystem / index E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `64734a13` | Still unqualified. Never pass. |
+| 2026-08-31 | B01 campaign guest | **not-run** | n/a | `64734a13` | Evaluation routing OFF. |
+| 2026-08-31 | Windows OPC vault E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `64734a13` | Not claimed. |
 
 ## Explicit non-claims
 
