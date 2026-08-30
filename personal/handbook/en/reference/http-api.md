@@ -9,6 +9,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/observation.rs
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -17,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:00b63cca974a11ec333b0b7340f84244e0a84cf635220dc0a9d7b909eff12105"
+fingerprint: "sha256:fe12895b02b0e79e967bcec01fc82dc6ae05b485bf921d8b1e13058adefb8f2d"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -144,4 +145,17 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/resource/v1/restore` | task | Forbidden: backup/restore are management-channel only. |
 | `POST` | `/task/backup` | task | Forbidden alias of the management backup writer. |
 | `POST` | `/task/restore` | task | Forbidden alias of the management restore writer. |
+| `GET` | `/management/project/v1/list` | management | Personal-private Project list from v26 `p11_project` rows. Empty list has no fake buttons. Cost is `unknown` and is never serialized as 0. Not Task-row impersonation and not P7-T05 inventory. |
+| `GET` | `/management/project/v1/detail` | management | Personal-private Project detail. A Task ref is not a Project id (404). Unconfirmed drafts have no Project row. |
+| `GET` | `/management/project/v1/axis` | management | Current PlanRevision axis (stages, gap flags, confirm_status). Missing plan is empty/unavailable, not a fake wizard. |
+| `GET` | `/management/project/v1/roster` | management | Employee roster seam. T04 facts are absent, so the projection is empty with `employee-authority-not-implemented`. |
+| `GET` | `/management/project/v1/pending-previews` | management | Pending ApprovalPreview announcement list. Omits `preview_digest` (conversation/canvas announcement seam). |
+| `GET` | `/management/project/v1/preview-detail` | management | Canvas preview-detail: includes `preview_digest` for management confirm. Not a chat Approve control. |
+| `POST` | `/management/project/v1/draft.apply` | management | Apply a candidate onto an open draft at exact `base_seq`. Wrong seq is conflict (N13). |
+| `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance). Secret-shaped bytes are rejected at registration. |
+| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`. Stale digest is rejected. |
+| `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
+| `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
+| `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
+| `POST` | `/task/project/v1/confirm` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

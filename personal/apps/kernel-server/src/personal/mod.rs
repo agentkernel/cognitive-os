@@ -20,6 +20,7 @@ mod operability_doctor;
 mod p2_t17_a7_failure_first;
 mod pi_runtime;
 mod pinned_https;
+mod project_aggregate;
 mod provider_control_plane;
 mod provider_proxy;
 mod readiness;

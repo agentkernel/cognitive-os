@@ -31,7 +31,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:4436b3e90e50ed4492dbff1f90a83a68375a4ab6cf79221f9a72f3e92c74c983"
+fingerprint: "sha256:b198c09bd06acd6d0e504f8b5a468195a7b310902b5d95536561c27ec17316af"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -104,11 +104,13 @@ authority.
   deferred until after implementation close. One-module PM/UI work starts at
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
   That index also catalogues an informative Design-Agent / Owner-journey
-  hardness assessment (hypothesis; not Gate or a P11 claim).
+  hardness assessment
+  ([`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md);
+  hypothesis; not Gate or a P11 claim).
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; P11 implementation remains unclaimed). Development-prep index
+  exists; `P11-T03` is in-progress, `P11-T02`/`T04`–`T15` remain unclaimed). Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
@@ -126,8 +128,8 @@ authority.
   Lane-CTR; the rest of T05 stays private. `core/specs` is unchanged here.
 - `P11-T02`–`T15` plan cards were **aligned to Personal 2.0.0 chrome on
   2026-08-30** (not Team/Inbox first-level; not member-level budget stop as
-  current chrome). Implementation remains unclaimed until Owner authorizes
-  `P11-T03`. Prep index:
+  current chrome). `P11-T03` is in-progress (Draft PR 281); `P11-T02` and
+  `P11-T04`–`T15` remain unclaimed. Prep index:
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its

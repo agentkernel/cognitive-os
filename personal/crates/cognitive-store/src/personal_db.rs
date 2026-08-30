@@ -23,6 +23,7 @@ use crate::migration::{
     MigrationExecutionMode, MigrationExecutionReport, MigrationPlanEntry, SqliteMigrationError,
     execute_sqlite_migration_plan,
 };
+use crate::project_aggregate::project_aggregate_migration_entry;
 use crate::provider_control_plane::provider_control_plane_migration_entry;
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
 use crate::skill_store::{
@@ -85,7 +86,9 @@ impl PersonalDatabasePrepareReport {
 /// daemon-admitted append-only workspace Context sources, and v24 =
 /// append-only Memory/Skill consumption records keyed by Task/epoch/request/session,
 /// and v25 = Provider Control Plane accounts, catalog, bindings, usage, budgets,
-/// alerts, and redacted audit facts (no secret columns).
+/// alerts, and redacted audit facts (no secret columns), and v26 = Personal-private
+/// Project aggregate (Project / CharterRevision / PlanRevision / Stage / Gap /
+/// Draft / Candidate / ApprovalPreview / StageTestFact / AcceptanceFact).
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -113,6 +116,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         skill_revision_lineage_migration_entry(),
         memory_skill_consumption_migration_entry(),
         provider_control_plane_migration_entry(),
+        project_aggregate_migration_entry(),
     ]
 }
 

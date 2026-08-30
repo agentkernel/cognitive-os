@@ -34,6 +34,7 @@ use super::bounds::{
 use super::fault_profile;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::pinned_https;
+use super::project_aggregate;
 use super::provider_control_plane;
 use super::provider_proxy::{
     ProviderProxyError, ProviderProxyService, RustlsProviderTransport, SseToolCallNormalizer,
@@ -706,6 +707,16 @@ fn dispatch_http_route(
             headers,
             body,
             layout,
+            authority,
+            authority_store,
+        );
+    }
+    if project_aggregate::matches(&method_path) {
+        return handle_project_aggregate_route(
+            stream,
+            &method_path,
+            headers,
+            body,
             authority,
             authority_store,
         );
@@ -1649,6 +1660,55 @@ fn handle_provider_control_plane_route(
     if response.status < 300 && dsh_web_overlay_should_sync(method_path) {
         let _ = sync_dsh_web_control_plane_overlay(layout, authority_store.as_ref(), false);
     }
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_project_aggregate_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if project_aggregate::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = project_aggregate::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = project_aggregate::handle(method_path, body, authority_store.as_ref());
     write_response(
         stream,
         response.status,

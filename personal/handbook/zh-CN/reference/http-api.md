@@ -9,6 +9,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/observation.rs
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
+  - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -17,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:00b63cca974a11ec333b0b7340f84244e0a84cf635220dc0a9d7b909eff12105"
+fingerprint: "sha256:fe12895b02b0e79e967bcec01fc82dc6ae05b485bf921d8b1e13058adefb8f2d"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -144,4 +145,17 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/resource/v1/restore` | task | 禁止：backup/restore 仅限 management 通道。 |
 | `POST` | `/task/backup` | task | 禁止：management 备份写入器的 task 别名。 |
 | `POST` | `/task/restore` | task | 禁止：management 恢复写入器的 task 别名。 |
+| `GET` | `/management/project/v1/list` | management | 从 v26 `p11_project` 行投影的 Personal-private Project 列表。空列表无假按钮。费用为 `unknown`，序列化里不出现 0。不是 Task 行冒充，也不动 P7-T05 inventory。 |
+| `GET` | `/management/project/v1/detail` | management | Personal-private Project 详情。Task ref 不是 Project id（404）。未确认草稿没有 Project 行。 |
+| `GET` | `/management/project/v1/axis` | management | 当前 PlanRevision 流程轴（环、gap 标记、confirm_status）。无计划时为空/unavailable，不是假向导。 |
+| `GET` | `/management/project/v1/roster` | management | 员工花名册接缝。T04 事实尚未落地，投影为空并带 `employee-authority-not-implemented`。 |
+| `GET` | `/management/project/v1/pending-previews` | management | 待批 ApprovalPreview 宣布列表。省略 `preview_digest`（对话/画布宣布接缝）。 |
+| `GET` | `/management/project/v1/preview-detail` | management | 画布 preview-detail：含供 management 确认的 `preview_digest`。不是聊天 Approve 控件。 |
+| `POST` | `/management/project/v1/draft.apply` | management | 按精确 `base_seq` 把候选应用到未关闭草稿。错误 seq 为冲突（N13）。 |
+| `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance）。secret 形态字节在登记时拒绝。 |
+| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`。过期 digest 拒绝。 |
+| `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
+| `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
+| `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
+| `POST` | `/task/project/v1/confirm` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

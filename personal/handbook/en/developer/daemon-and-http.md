@@ -30,6 +30,8 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
     symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
+    symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -46,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:3f6363989e4a7ee5896230b4ee9f4e13c8331d81e25836622c641d77f4c9b4d6"
+fingerprint: "sha256:f74979ea62f575c15db6305c1c3d750fe43867d8b307a6d26d05d9aee3547b79"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -102,7 +104,7 @@ code. `GET /ui` serves the pinned static bundle from `data_dir()/ui` with CSP
 `default-src 'self'`; a missing bundle is `503` `not_available`
 (`LOCAL_UI_BUNDLE_UNAVAILABLE`) and is not a readiness claim. Routing is handwritten prefix
 matching on `METHOD /path` strings across `server.rs`, `task_api.rs`,
-`resource_api.rs`, and `resource_manager.rs` (the generated [HTTP reference](../reference/http-api.md)
+`resource_api.rs`, `resource_manager.rs`, and `project_aggregate.rs` (the generated [HTTP reference](../reference/http-api.md)
 enumerates the full table and channels). Authenticated `POST /task/akp/dsh`
 is a candidate-only DeepSeek Harness front door: sessions are process-local
 and must be activated after start; daemon restart forgets them and fails
@@ -140,6 +142,8 @@ when present and fails closed on mismatch; Pi never reads the Secret Store.
 `POST /management/agent-bindings` accepts optional `expected_revision`; a
 mismatch is HTTP 409 `PROVIDER_BINDING_REVISION_STALE`. The localhost Web UI
 is a same-origin daemon client (`GET /ui/`) and is not a second writer.
+
+Personal-private Project aggregate routes (`/management/project/v1/{list,detail,axis,roster,pending-previews,preview-detail,draft.apply,preview.request,confirm}`) require a management bearer. They project the v26 `p11_*` tables, not Task-row impersonation and not the P7-T05 frozen inventory. Empty list has no fake buttons; unknown cost is the literal `unknown` and is never serialized as `0`. Roster is empty with `employee-authority-not-implemented` until T04. Pending-previews omit `preview_digest`; digest is only on `preview-detail`. Task-channel aliases fail closed (`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`). This is not a Today page and not a full `/ui/` IA.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.

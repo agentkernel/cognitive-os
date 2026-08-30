@@ -31,7 +31,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:4436b3e90e50ed4492dbff1f90a83a68375a4ab6cf79221f9a72f3e92c74c983"
+fingerprint: "sha256:b198c09bd06acd6d0e504f8b5a468195a7b310902b5d95536561c27ec17316af"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -94,10 +94,12 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   `personal-20-opc-e2e-optimized-v9` 作为历史文件名；勿再称 v9 为产品版本。
   architecture/formal-plan 用词对账推迟到 **完成后**。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
-  该索引同时收录设计 Agent / Owner 旅程难点研判（hypothesis；不是 Gate、不是 P11 领取）。
+  该索引同时收录设计 Agent / Owner 旅程难点研判
+  （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；
+  hypothesis；不是 Gate、不是 P11 领取）。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；P11 实现仍未领取）。
+  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；`P11-T03` 进行中，`P11-T02`/`T04`–`T15` 仍未领取）。
   开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
@@ -110,8 +112,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   独立 Lane-CTR。只有必须改 **core 公共** conversation schema 的那一块才走
   Lane-CTR；T05 其余私有投影继续。此处不改 `core/specs`。
 - `P11-T02`–`T15` 计划卡已于 **2026-08-30 按 Personal 2.0.0 chrome 对齐**
-  （不以 Team/Inbox 一级或成员级 budget stop 为当前 chrome）。实现仍未领取，
-  待 Owner 授权 `P11-T03`。前期索引：
+  （不以 Team/Inbox 一级或成员级 budget stop 为当前 chrome）。`P11-T03` 进行中（Draft PR 281）；
+  `P11-T02` 与 `P11-T04`–`T15` 仍未领取。前期索引：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh

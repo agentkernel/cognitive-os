@@ -28,6 +28,7 @@ pub mod memory_store;
 pub mod migration;
 pub mod personal_backup;
 pub mod personal_db;
+pub mod project_aggregate;
 pub mod provider_control_plane;
 pub mod scheduler;
 pub mod skill_store;
@@ -67,6 +68,11 @@ pub use personal_backup::{
 pub use personal_db::{
     PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,
     installation_migration_plan, prepare_personal_databases,
+};
+pub use project_aggregate::{
+    ConfirmCaller, ConfirmResult, GapRow, PROJECT_AGGREGATE_SCHEMA_V26, PendingPreviewRow,
+    PreviewDetailRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow, SeatingFacts,
+    StageRow, StageSpec, StageTestOracle, project_aggregate_migration_entry,
 };
 pub use provider_control_plane::{
     AgentProviderBindingRecord, BUILTIN_PRICE_TABLE_VERSION, CostOutcome, NewUsageEvent,

@@ -10,6 +10,8 @@ sources:
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive"]
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
+  - path: personal/crates/cognitive-store/src/project_aggregate.rs
+    symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "ProjectAggregateStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -21,10 +23,11 @@ sources:
     symbols: ["SchedulerRepository", "acquire_eligible_lease"]
 tests:
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
+  - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:1427222bbb2f4cf3873cc9af6067e4ec3e38d0aed97adc4a1c51b2ceb6b30bf5"
+fingerprint: "sha256:76953ecf17d0615eba5f76359d056724f94ffd7dbe486356eb939809489ce193"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -34,11 +37,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v25) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v26) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v25)
+## Authority migration map (v1–v26)
 
 | Versions | Adds |
 |---|---|
@@ -51,13 +54,14 @@ orders authority first and names the backup path on a second-phase failure.
 | v21–v23 | Skill packages/revisions/bindings, binding revocations, revision lineage |
 | v24 | append-only Memory/Skill consumption records keyed by Task/epoch/request/session |
 | v25 | Provider Control Plane accounts, models, bindings, usage events/aggregates, budgets, alerts, audit |
+| v26 | Personal-private Project aggregate (`p11_draft`, `p11_candidate`, `p11_charter_revision`, `p11_project`, `p11_plan_revision`, `p11_stage`, `p11_gap`, `p11_stage_test_fact`, `p11_acceptance_fact`, `p11_approval_preview`). New tables, not `family=task`. |
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; the only derived table is `memory_search_fts` (rebuildable; searches
 run an authority-filter CTE before `MATCH`).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v25 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v26 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

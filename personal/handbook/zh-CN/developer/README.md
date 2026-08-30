@@ -31,7 +31,7 @@ native mobile/E2E relay remote 属于 2.1。owner 批准的当前交互原型是
 权威内核：
 
 5. [权威内核](authority-kernel.md) —— 转移门、intent chain、预算、恢复
-6. [存储与迁移](store-and-migrations.md) —— SQLite 布局 v1–v25
+6. [存储与迁移](store-and-migrations.md) —— SQLite 布局 v1–v26
 7. [Task 流水线](task-pipeline.md) —— record → interpret → preview → admit → watch
 8. [执行链状态](execution-chain-status.md) —— 什么已接线、什么没有
 

@@ -30,6 +30,8 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
     symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
+    symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -46,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:3f6363989e4a7ee5896230b4ee9f4e13c8331d81e25836622c641d77f4c9b4d6"
+fingerprint: "sha256:f74979ea62f575c15db6305c1c3d750fe43867d8b307a6d26d05d9aee3547b79"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -94,7 +96,7 @@ worker。仍没有 HTTP shutdown 路由（见[执行链状态](execution-chain-s
 缺少 bundle 时为 `503` `not_available`（`LOCAL_UI_BUNDLE_UNAVAILABLE`），不构成
 readiness 声明。路由是对 `METHOD /path` 字符
 串的手写前缀匹配，分布在 `server.rs`、`task_api.rs`、`resource_api.rs`、
-`resource_manager.rs`（生成的
+`resource_manager.rs`、`project_aggregate.rs`（生成的
 [HTTP 参考](../reference/http-api.md)枚举完整表与通道）。已认证的
 `POST /task/akp/dsh` 是仅 candidate 的 DeepSeek Harness 前门：会话只存在于进程内，
 必须在启动后显式激活；daemon 重启后会话被遗忘并失败闭合。Workspace* candidate 复用
@@ -126,6 +128,8 @@ Secret Store `secret_ref`。已绑定 Pi 流量走 `POST /provider/v1/chat/compl
 接受可选 `expected_revision`；不匹配时 HTTP 409
 `PROVIDER_BINDING_REVISION_STALE`。localhost Web UI 是同源 daemon 客户端
 （`GET /ui/`），不是第二个 writer。
+
+Personal-private Project 聚合路由（`/management/project/v1/{list,detail,axis,roster,pending-previews,preview-detail,draft.apply,preview.request,confirm}`）需要 management bearer。它们投影 v26 `p11_*` 表，不是 Task 行冒充，也不动 P7-T05 冻结 inventory。空列表无假按钮；未知费用字面量是 `unknown`，序列化里不出现 `0`。花名册在 T04 前为空并带 `employee-authority-not-implemented`。pending-previews 省略 `preview_digest`；digest 只在 `preview-detail`。task 通道别名失败闭合（`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`）。这不是 Today 页，也不是完整 `/ui/` IA。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

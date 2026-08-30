@@ -187,6 +187,7 @@ function buildHttpApi(readSource, trackedPaths) {
     "personal/apps/kernel-server/src/personal/resource_api.rs",
     "personal/apps/kernel-server/src/personal/resource_manager.rs",
     "personal/apps/kernel-server/src/personal/provider_control_plane.rs",
+    "personal/apps/kernel-server/src/personal/project_aggregate.rs",
   ];
   const corpusSources = [
     ...definitionSources,
