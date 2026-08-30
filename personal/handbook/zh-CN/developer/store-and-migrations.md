@@ -36,7 +36,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:1a447ae1d8a79027972a5e1b88f0cb02daa775556e6f6e61730154b0a523dc9d"
+fingerprint: "sha256:3790e467e808caf3014e27911cfdf20d3680ad003454100893d373d16e98e662"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---

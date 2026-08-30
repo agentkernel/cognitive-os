@@ -1639,7 +1639,7 @@ pub fn validate_assistant_provenance(
                 .ok_or(ProjectAggregateError::Invalid {
                     detail: "sources provenance requires a non-empty sources array",
                 })
-                .and_then(validate_sources_array),
+                .and_then(|sources| validate_sources_array(sources)),
             "owner-stated" | "assistant-assumption" => {
                 if object.len() != 1 {
                     return Err(ProjectAggregateError::Invalid {

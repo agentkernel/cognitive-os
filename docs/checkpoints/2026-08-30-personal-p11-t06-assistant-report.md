@@ -38,12 +38,19 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | pass | local Node | this commit | Personal plan/leases OK including `P11-T06/D01` |
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | pass | local Node | this commit | 58×2 locales; coverage/fingerprint OK |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | pass | local Node | this commit | 18 pages byte-identical |
+| 2026-08-30 | `cargo build -p cognitive-store` (rustc 1.97.1) | **fail** (E0631) | `DEV-LINUX-NATIVE-01` | `38009eae8dad8a09f7c400f399b9640dd4aebd32` | `project_aggregate.rs:1642` `.and_then(validate_sources_array)`: expected `fn(&Vec<Value>)`, found `fn(&[Value])`. Compile failed; tests **not-run**. Same root cause as required CI below. |
+| 2026-08-30 | `verify (ubuntu-latest)` Build Rust workspace | **fail** (rustc E0631) | `CI-UBUNTU-01` | `38009eae8dad8a09f7c400f399b9640dd4aebd32` | [job 99244764101](https://github.com/agentkernel/cognitive-os/actions/runs/33306830861/job/99244764101) run [33306830861](https://github.com/agentkernel/cognitive-os/actions/runs/33306830861), 56s. Fast fail at `cargo build --workspace --locked` (`RUSTFLAGS=-D warnings`). `project_aggregate.rs:1642` `Result::and_then(validate_sources_array)`: expected `fn(&Vec<Value>)`, found `fn(&[Value])`. Tests/clippy/fmt/handbook **not-run** (build failed first). |
+| 2026-08-30 | `verify (windows-latest)` Build Rust workspace | **fail** (rustc E0631) | `CI-WINDOWS-MSVC-01` | `38009eae8dad8a09f7c400f399b9640dd4aebd32` | [job 99244764064](https://github.com/agentkernel/cognitive-os/actions/runs/33306830861/job/99244764064) run [33306830861](https://github.com/agentkernel/cognitive-os/actions/runs/33306830861), 2m. Same E0631 at `project_aggregate.rs:1642`. Tests **not-run**. |
+| 2026-08-30 | `required-ci` | **fail** | required-ci | `38009eae8dad8a09f7c400f399b9640dd4aebd32` | [job 99244980483](https://github.com/agentkernel/cognitive-os/actions/runs/33306830861/job/99244980483). `ROUTE_RESULT=success`, `VERIFY_RESULT=failure` — dependent on the two verify jobs. |
+| 2026-08-30 | rustc E0631 `and_then` type-coercion fix | recorded | `DEV-WIN-GNU-01` | this commit | Wrap `validate_sources_array` in a closure so `&Vec<Value>` coerces to `&[Value]`. Provenance negatives and omit-Approve HTTP test unchanged. `cargo build`/`test`/`clippy` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
+| 2026-08-30 | `fill-handbook-fingerprints` `dev.store-migrations` | pass | local Node | this commit | Fingerprint-only (en + zh-CN) after `project_aggregate.rs` type-coercion; handbook prose unchanged. |
 
 ## Unique next action
 
-Focused `p11_t06_assistant` store tests and kernel-server `assistant.turn` HTTP on
-CI/Linux. `DEV-WIN-GNU-01` cargo remains not-run. Host Pi routing remains not-run.
-Do not merge from this turn.
+Push this rustc E0631 fix and wait for required CI on the new HEAD. Focused
+`p11_t06_assistant` store tests and kernel-server `assistant.turn` HTTP remain
+**not-run** until `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` complete. Do not merge
+from this turn.
 
 ## Non-claims
 
