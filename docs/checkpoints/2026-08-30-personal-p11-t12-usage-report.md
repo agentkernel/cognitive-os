@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Honest usage unknown≠0: store + management `GET /management/usage` returns source-labelled `actual | estimated | unknown` costs; binding explanation global→Project→employee→Task as durable facts (Project/employee/Task unbound today); silent rebind rejected; secrets never in usage HTTP. `DEV-WIN-GNU-01` cargo test **not-run**.
+Honest usage unknown≠0: store + management `GET /management/usage` returns source-labelled `actual | estimated | unknown` costs; binding explanation global→Project→employee→Task as durable facts (Project/employee/Task unbound today); silent rebind rejected; secrets never in usage HTTP. Required CI retry after `clippy::redundant_guards` at `453ffc37`. `DEV-WIN-GNU-01` cargo test **not-run**.
 
 ## Closed predecessor
 
@@ -56,6 +56,10 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | kernel-server `http_usage_unknown_cost_never_zero` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` | Recorded; not re-run this turn. Unknown≠0 HTTP. |
 | 2026-08-30 | kernel-server `http_silent_rebind_is_rejected` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `eb27cb8625cd2cde2494b451547a2984f126feee` | Recorded; not re-run this turn. Silent rebind → `PROVIDER_SILENT_REBIND_REJECTED`. |
 | 2026-08-30 | `check-handbook` / `generate-handbook --check` | pass | local Node | this commit | 58×2 locales; 18 generated pages byte-identical. |
+| 2026-08-30 | `verify (ubuntu-latest)` Clippy (deny warnings) | **fail** (`clippy::redundant_guards`) | `CI-UBUNTU-01` | `453ffc371d498cb17be91a71cc395983db497403` | [job 99265864818](https://github.com/agentkernel/cognitive-os/actions/runs/33314703597/job/99265864818) run [33314703597](https://github.com/agentkernel/cognitive-os/actions/runs/33314703597), 2m58s. Build + Test Rust **pass**. Clippy `-D warnings` failed at `personal/apps/kernel-server/src/personal/provider_control_plane.rs:1340` `store_error` match guard `if detail == "silent rebind rejected"`. rustfmt/handbook/codegen **not-run** (clippy failed first). Windows still in progress at log time. Scanned remaining usage handlers: `write_binding` let-chain already collapsed; no other `==` match guards; no `dead_code` on labelled usage helpers. Unknown≠0 negatives unchanged. |
+| 2026-08-30 | clippy `redundant_guards` pattern match | recorded | `DEV-WIN-GNU-01` | this commit | `store_error` matches `Conflict { detail: "silent rebind rejected" }`. Same 409 `PROVIDER_SILENT_REBIND_REJECTED`. Store test asserts the exact detail literal (stronger than `contains`). `cargo clippy`/`test` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
+| 2026-08-30 | `cargo fmt --all -- --check` | pass | `DEV-WIN-GNU-01` | this commit | formatting only; no link |
+| 2026-08-30 | `fill-handbook-fingerprints` + `generate-handbook --check` + `check-handbook` | pass | local Node | this commit | Fingerprint-only (en + zh-CN: daemon-and-http, provider-control-plane, provider-and-secrets, generated http-api). Handbook prose unchanged. 58×2 locales; 18 generated pages byte-identical. |
 
 ## Explicit non-claims
 

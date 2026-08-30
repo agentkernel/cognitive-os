@@ -1336,15 +1336,13 @@ fn trust_error(err: EndpointTrustError) -> ResourceApiResponse {
 
 fn store_error(err: cognitive_store::ProviderControlPlaneError) -> ResourceApiResponse {
     match err {
-        cognitive_store::ProviderControlPlaneError::Conflict { detail }
-            if detail == "silent rebind rejected" =>
-        {
-            error(
-                409,
-                "PROVIDER_SILENT_REBIND_REJECTED",
-                "silent rebind rejected; remove the binding or supply expected_revision",
-            )
-        }
+        cognitive_store::ProviderControlPlaneError::Conflict {
+            detail: "silent rebind rejected",
+        } => error(
+            409,
+            "PROVIDER_SILENT_REBIND_REJECTED",
+            "silent rebind rejected; remove the binding or supply expected_revision",
+        ),
         cognitive_store::ProviderControlPlaneError::Conflict { detail } => {
             error(409, "PROVIDER_CONTROL_CONFLICT", detail)
         }

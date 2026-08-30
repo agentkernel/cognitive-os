@@ -48,7 +48,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
-fingerprint: "sha256:e5b2a0574c683bddcacbacb1f5b7feeccb6273a7e311747d817cb166e486fd1a"
+fingerprint: "sha256:b10917bad7f3b2e70c49a8ce42f41816ccd6df296689e198cb5dc2c2de89171e"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---

@@ -250,7 +250,9 @@ fn p11_t12_silent_rebind_is_rejected() {
         .expect_err("silent rebind");
     assert!(matches!(
         error,
-        ProviderControlPlaneError::Conflict { detail } if detail.contains("silent rebind")
+        ProviderControlPlaneError::Conflict {
+            detail: "silent rebind rejected"
+        }
     ));
     let kept = store
         .get_active_binding("agent://personal/pi")
