@@ -3,10 +3,10 @@
 - Task: `P11-T03` / slice `P11-T03/D01` (14 §10 five knives are **internal** steps, not separate branches/PRs/leases)
 - Change class: `implementation-only` (Personal-private tables + private projection; no `core/specs`, no Lane-CTR)
 - Product: CognitiveOS Personal 2.0.0 (v9 is a canvas filename only)
-- Lease: `lease/personal/P11-T03/project-aggregate`
-- Branch: `personal/P11-T03-project-aggregate`
-- Draft PR: [#281](https://github.com/agentkernel/cognitive-os/pull/281)
-- HEAD: `8374d560cd55e5a4cb322cbf6588218309565ccc`
+- Lease: closed (`lease/personal/P11-T03/project-aggregate` → PARALLEL-LANES §3.1)
+- Branch: `personal/P11-T03-project-aggregate` (merged; delete after this commit)
+- PR: [#281](https://github.com/agentkernel/cognitive-os/pull/281) **merged** as `main@46407380`
+- HEAD: `main@464073809ffadf1f2c08e7391bbac5b4b2c0ed8b` (implementation `7d9f13e4`; tempfile `8374d560`; CI-unblock `aef5574e`; merge PR 281)
 - Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
@@ -172,7 +172,7 @@ Owner ordered continue-until-complete and unblocked T03 writing the minimum stat
 
 ## Unique next action
 
-Push this corrective commit, wait for required CI SUCCESS on the new HEAD, then ready/merge/lease/branch/main. Do not merge while Draft or while consistency is red.
+`P11-T03` is closed: required CI SUCCESS on `aef5574e`, PR [#281](https://github.com/agentkernel/cognitive-os/pull/281) merged as `main@46407380`, lease moved to §3.1. Do not auto-claim `P11-T04`.
 
 ---
 
@@ -214,6 +214,8 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | owner supersede: T03 writes PROGRESS/plan + inherited link correctives | recorded | `DEV-WIN-GNU-01` | uncommitted on `personal/P11-T03-project-aggregate` | Keep DOC leases. Add existing `13-…md` only. Absolute canvas paths → repo-relative. |
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted on `personal/P11-T03-project-aggregate` | 0 violations after T03 snapshot + 13-assessment + portable canvas links |
 | 2026-08-30 | `check-handbook` + `generate-handbook --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted (13-assessment staged) | 58×2 handbook; 18 generated pages byte-identical |
+| 2026-08-30 | required CI run [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `aef5574e3a4c76a5b5e0e19fe4ed4ab0b0872e88` | resolve 3s; Ubuntu 3m32s (Rust workspace + consistency + handbook); Windows 11m56s; `required-ci` |
+| 2026-08-30 | PR [#281](https://github.com/agentkernel/cognitive-os/pull/281) ready + merge | recorded | github | `main@464073809ffadf1f2c08e7391bbac5b4b2c0ed8b` | merge commit; task branch delete follows this status/closure commit |
 
 ## Non-claims
 

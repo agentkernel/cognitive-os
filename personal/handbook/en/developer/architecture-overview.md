@@ -110,7 +110,7 @@ authority.
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; `P11-T03` is in-progress, `P11-T02`/`T04`–`T15` remain unclaimed). Development-prep index
+  exists; Project aggregate walking skeleton is Personal-private; `P11-T02`/`T04`–`T15` remain separate claims). Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
@@ -128,8 +128,8 @@ authority.
   Lane-CTR; the rest of T05 stays private. `core/specs` is unchanged here.
 - `P11-T02`–`T15` plan cards were **aligned to Personal 2.0.0 chrome on
   2026-08-30** (not Team/Inbox first-level; not member-level budget stop as
-  current chrome). `P11-T03` is in-progress (Draft PR 281); `P11-T02` and
-  `P11-T04`–`T15` remain unclaimed. Prep index:
+  current chrome). Project aggregate walking skeleton is Personal-private;
+  `P11-T02` and `P11-T04`–`T15` remain separate claims. Prep index:
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its
