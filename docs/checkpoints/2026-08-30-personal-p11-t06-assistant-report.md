@@ -49,11 +49,21 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `verify (ubuntu-latest)` Clippy (deny warnings) | **fail** (`clippy::collapsible_if`) | `CI-UBUNTU-01` | `3ff1d615eb1b0c85b0b49113359b5b58c47fa0c2` | [job 99245795674](https://github.com/agentkernel/cognitive-os/actions/runs/33307223076/job/99245795674) run [33307223076](https://github.com/agentkernel/cognitive-os/actions/runs/33307223076), 2m44s. Build + Test Rust **pass**. Clippy `-D warnings` failed at `project_aggregate.rs:1656` nested `if let` + `object.len() == 1`. rustfmt/handbook/codegen **not-run** (clippy failed first). Windows still in progress at log time. |
 | 2026-08-30 | clippy `collapsible_if` let-chain collapse | recorded | `DEV-WIN-GNU-01` | this commit | Collapse nested `if` at `project_aggregate.rs` provenance fallback. Same reject/accept semantics. T06 negatives unchanged. `cargo clippy`/`test` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
 | 2026-08-30 | `fill-handbook-fingerprints` `dev.store-migrations` | pass | local Node | this commit | Fingerprint-only (en + zh-CN) after clippy let-chain; handbook prose unchanged. |
+| 2026-08-30 | `cargo clippy -p cognitive-store --all-targets -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t06-38009eae` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | Crate-scoped clippy after `collapsible_if` collapse. Workspace CI clippy remains the required-ci source of truth. |
+| 2026-08-30 | `cargo clippy -p kernel-server --all-targets -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t06-38009eae` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | Crate-scoped clippy. Workspace CI clippy remains the required-ci source of truth. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t06_assistant` | **pass** 6/6 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t06-38009eae` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | Reconfirm at clippy-fix HEAD. Focused store negatives + vertical path. Not host Pi E2E. |
+| 2026-08-30 | Host Pi routing / live Pi 0.81.1 E2E | **not-run** | `DEV-LINUX-NATIVE-01` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | Card allows `not-run` until host Pi routing is qualified. Identity pin only; not Windows OPC. |
+| 2026-08-30 | `cargo` build/test/clippy | **not-run** | `DEV-WIN-GNU-01` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | `RUST-LINK-DEV-WIN-GNU-01` |
+
+| 2026-08-30 | `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | [job 99246714983](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027/job/99246714983) run [33307554027](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027), 3m39s. |
+| 2026-08-30 | `verify (windows-latest)` | **pass** | `CI-WINDOWS-MSVC-01` | `845442eac1b8499dec60363f02ffc8d5bae79a85` | [job 99246715047](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027/job/99246715047) run [33307554027](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027), 17m59s. |
+| 2026-08-30 | `required-ci` | **pass** | required-ci | `845442eac1b8499dec60363f02ffc8d5bae79a85` | [job 99248695647](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027/job/99248695647) run [33307554027](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027), 4s. |
 
 ## Unique next action
 
-Push this clippy `collapsible_if` collapse and wait for required CI on the new
-HEAD. Do not merge from this turn. Host Pi routing remains **not-run**.
+Required CI on `845442eac1b8499dec60363f02ffc8d5bae79a85` is **pass**
+(run 33307554027). Parent may flip ready/merge. This turn does not merge.
+Host Pi routing remains **not-run**.
 
 ## Non-claims
 
