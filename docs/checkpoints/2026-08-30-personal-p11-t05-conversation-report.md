@@ -33,10 +33,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | pass | local Node | uncommitted | Personal plan/leases OK |
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | pass | local Node | uncommitted | 58×2 locales; coverage/fingerprint OK |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | pass | local Node | uncommitted | 18 pages byte-identical |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t05_conversation` | **pass** 4/4 | `DEV-LINUX-NATIVE-01` | `90f1ba4b6017058c4d233534eaed200cb6b9264a` | T05-N1..N3 focused store negatives. Do not re-run. |
+| 2026-08-30 | `delivered_speech_lands_in_archive_via_http` | **pass** | `DEV-LINUX-NATIVE-01` | `90f1ba4b6017058c4d233534eaed200cb6b9264a` | kernel-server conversation HTTP. Do not re-run. |
+| 2026-08-30 | `p11_conversation_archive` migration filter | recorded 0 matches | `DEV-LINUX-NATIVE-01` | `90f1ba4b6017058c4d233534eaed200cb6b9264a` | Filter match count 0 is not a fail (table created by v28; no leftover unscoped rows). |
+| 2026-08-30 | `verify (ubuntu-latest)` Test Rust workspace | **fail** | `CI-UBUNTU-01` | `90f1ba4b6017058c4d233534eaed200cb6b9264a` | [job 99232758075](https://github.com/agentkernel/cognitive-os/actions/runs/33302362722/job/99232758075) run [33302362722](https://github.com/agentkernel/cognitive-os/actions/runs/33302362722). Not clippy/fmt/handbook (those steps skipped). `p1_t01_layout_migrations` 3 failed: expected authority versions 1..=27, applied 1..=28. Workspace `p11_t05_conversation` 4/4 ok on the same job. |
+| 2026-08-30 | layout expected-version bump to v28 | recorded | `DEV-WIN-GNU-01` | this commit | Align `p1_t01_layout_migrations` applied/recorded version vectors with `conversation_migration_entry` v28. T05-N1..N3 and T04-N9 archive negatives unchanged. |
 
 ## Unique next action
 
-Run focused cargo test -p cognitive-store --test p11_t05_conversation and kernel-server conversation HTTP tests on DEV-LINUX-NATIVE-01 / CI-UBUNTU-01 / CI-WINDOWS-MSVC-01; DEV-WIN-GNU-01 cargo test remains not-run.
+Push this v28 expected-version fix and wait for required CI on the new HEAD; `DEV-WIN-GNU-01` cargo test remains not-run.
 
 ## Non-claims
 
