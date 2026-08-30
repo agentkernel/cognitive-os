@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:25381fb6cdc4849321c94b23a06ffe438065be906d12deace20fe8081d0b6256"
+fingerprint: "sha256:1f9f113acaf43767b1cf2dcf28b84bddc48c5b2746f1a872ac6c7853d9f1f611"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -101,8 +101,17 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/context-authorization/revocations` | management | Append a Context revocation fact (advances tenant revocation epoch). |
 | `GET` | `/management/resource/v1/memory/object` | management | Load one immutable Memory object by id. |
 | `GET` | `/management/resource/v1/skill/binding/explain` | management | Explain one Skill binding (package, revision, revocation state). |
-| `POST` | `/management/resource/v1/memory/remember` | management | Explicit remember: creates a Memory candidate and runs deterministic admission. |
-| `POST` | `/management/resource/v1/memory/forget` | management | Forget an admitted Memory object via a durable tombstone. |
+| `POST` | `/management/resource/v1/memory/remember` | management | Explicit remember: creates a Memory candidate and runs deterministic admission. Secret/PII-shaped text and Letta/Mem0/Agent-self writes fail closed. Optional project_id+employee_id bind the canonical episodic scope. |
+| `POST` | `/management/resource/v1/memory/forget` | management | Forget an admitted Memory object via a durable tombstone. With project_id+employee_id, cross-scope forget is forbidden. |
+| `POST` | `/management/resource/v1/memory/recall` | management | Scoped episodic recall. Caller and target project/employee must match; FTS cannot return another Project or Employee's Memory. |
+| `POST` | `/management/resource/v1/memory/correct` | management | Owner-management correction: versioned supersede of one Memory object inside the same episodic scope. Secret/PII and cross-scope fail closed. |
+| `POST` | `/management/resource/v1/memory/index.rebuild` | management | Rebuild Memory FTS from admitted, non-tombstoned objects. Forget tombstones cannot resurrect. |
+| `POST` | `/task/resource/v1/memory/remember` | task | Forbidden: Memory remember is management-channel only. |
+| `POST` | `/task/resource/v1/memory/forget` | task | Forbidden: Memory forget is management-channel only. |
+| `POST` | `/task/resource/v1/memory/recall` | task | Forbidden: Memory recall is management-channel only. |
+| `POST` | `/task/resource/v1/memory/correct` | task | Forbidden: Memory correct is management-channel only. |
+| `POST` | `/task/resource/v1/memory/index.rebuild` | task | Forbidden: Memory index rebuild is management-channel only. |
+| `POST` | `/task/resource/v1/memory/review` | task | Forbidden: Memory review/mutation aliases are management-channel only. |
 | `POST` | `/management/resource/v1/skill/import` | management | Import an immutable local Skill package/revision. |
 | `POST` | `/management/resource/v1/skill/bind` | management | Bind a compatible Skill revision to a scope target. |
 | `POST` | `/management/resource/v1/skill/binding/revoke` | management | Append an immutable Skill binding revocation. |

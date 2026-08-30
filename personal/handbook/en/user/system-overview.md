@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:5c53cf56656a2232af4b637d137a47dc325a34d6c616626c20782bd4f5badb3d"
+fingerprint: "sha256:add78b1853e41200db854d78d6aa190bbea8d69d9bd0da61d9b7efafdeaa7562"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.

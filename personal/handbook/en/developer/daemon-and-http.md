@@ -51,7 +51,7 @@ tests:
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
-fingerprint: "sha256:4c2930b51c606b15ed880b1b04e2db548620d9a7a33b3431e21528d1b05dd106"
+fingerprint: "sha256:561b63434939854960ee74a0c60a0bf4f193e516150ccc6540521194dbfa4291"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -115,11 +115,13 @@ closed. Workspace* candidates reuse the existing public candidate admission
 path. A dsh response never completes a Task.
 
 The management Resource surface exposes a read-only lifecycle-preconditions
-document, Memory remember/review/forget, Skill import/inspect/bind/supersede/
-revoke, and the common Resource Manager envelope (`GET/POST
+document, Memory remember/recall/correct/forget/index.rebuild, Skill
+import/inspect/bind/supersede/revoke, and the common Resource Manager envelope
+(`GET/POST
 /management/resource/v1/{list,inspect,bind,unbind,enable,disable,revoke}`).
-Generic create/install/execute/complete and the same paths on the task channel
-fail closed. Watch stays on `GET /resource/v1/watch`. Public remember accepts unsealed owner fields and the daemon
+Generic create/install/execute/complete, task-channel Memory aliases
+(`/task/resource/v1/memory/*`), and the same Resource Manager paths on the
+task channel fail closed. Watch stays on `GET /resource/v1/watch`. Public remember accepts unsealed owner fields and the daemon
 composes sealed headers from its persisted `GovernanceSeed`; a sealed
 source+candidate envelope remains valid. Callers must not mint sealed headers
 on the unsealed path. Mutations require a management

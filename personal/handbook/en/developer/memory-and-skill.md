@@ -9,6 +9,8 @@ sources:
   - path: personal/crates/cognitive-store/src/sqlite/memory.rs
   - path: personal/crates/cognitive-store/src/memory_admission.rs
     symbols: ["admit_memory_candidate"]
+  - path: personal/crates/cognitive-store/src/memory_privacy.rs
+    symbols: ["screen_memory_admission", "recall_episodic_memory", "forget_episodic_memory"]
   - path: core/crates/cognitive-kernel/src/memory_admission.rs
     symbols: ["decide_memory_admission"]
   - path: personal/crates/cognitive-store/src/sqlite/harness_skill.rs
@@ -23,7 +25,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:8d488463a4a97229be07eb298e9d5ed5dbf8308ae487407be56f133f15c596f5"
+fingerprint: "sha256:07bec088a18aea59ae1127b8333c88f026976ba7e3e3601d4112102d7da42a98"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -49,7 +51,10 @@ tombstoned Memory can never resurrect through the index.
 Retrieval (`search_memory_candidates`) runs the authority filter CTE first
 (admitted decision, no tombstone, exact scope+purpose, unexpired retention,
 current source binding) and only then `MATCH`, ranked by `bm25` with stable
-tie-breaks.
+tie-breaks. Scoped episodic recall (`recall_episodic_memory`) additionally
+requires caller and target `opc://project/{id}/employee/{id}` to match before
+the index is consulted; `screen_memory_admission` rejects secret/PII-shaped
+text and Letta/Mem0/Agent-self envelopes. There is no second Memory store.
 
 ## Skill: immutable packages, exact pins
 
@@ -63,8 +68,10 @@ bindings keep their exact pins — they never drift to a successor.
 ## HTTP reach
 
 The management channel publishes lifecycle preconditions, admits Memory
-remember/review/forget plus Skill import/revision-inspect/bind/supersede/revoke
-without direct SQLite access. The common Resource Manager (`GET
+remember/recall/correct/forget/index.rebuild plus Skill
+import/revision-inspect/bind/supersede/revoke without direct SQLite access.
+Task-channel Memory mutation aliases (`/task/resource/v1/memory/*`) return
+`403 RESOURCE_MEMORY_CHANNEL_FORBIDDEN`. The common Resource Manager (`GET
 /management/resource/v1/list|inspect`) projects non-tombstoned Memory objects
 and Skill bindings from those same authority rows; it is not a generic Resource
 table, and Memory forget remains the family `forget` verb rather than Manager

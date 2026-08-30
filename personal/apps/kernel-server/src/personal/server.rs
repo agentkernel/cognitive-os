@@ -909,6 +909,11 @@ fn dispatch_http_route(
             resource_api,
         );
     }
+    if method_path.starts_with("POST /task/resource/v1/memory/")
+        || method_path.starts_with("GET /task/resource/v1/memory/")
+    {
+        return handle_task_memory_forbidden(stream, headers, authority);
+    }
     if resource_manager::matches(&method_path) {
         return handle_resource_manager_route(
             stream,
@@ -1493,6 +1498,39 @@ fn handle_management_user_backup_route(
         response.status,
         "application/json",
         response.body.as_bytes(),
+    )
+}
+
+fn handle_task_memory_forbidden(
+    stream: &mut TcpStream,
+    headers: &str,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+) -> Result<(), String> {
+    let Some(token) = extract_bearer_token(headers) else {
+        return write_error_response(
+            stream,
+            401,
+            LocalAuthError::Unauthorized.code(),
+            "authorization bearer required",
+        );
+    };
+    let mut authority_guard = authority
+        .lock()
+        .map_err(|_| "session authority lock poisoned".to_owned())?;
+    if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+        let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+            403
+        } else {
+            401
+        };
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    drop(authority_guard);
+    write_error_response(
+        stream,
+        403,
+        "RESOURCE_MEMORY_CHANNEL_FORBIDDEN",
+        "Memory mutations are management-channel only",
     )
 }
 
