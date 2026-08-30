@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01 documentation-only OPC rebaseline `done`；P11-T03 `done`；P11-T04 `done`；P11-T05 `done`；P11-T06 `in-progress`；P11-T02 与 P11-T07..T15 仍 `not-started`/unclaimed；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01 documentation-only OPC rebaseline `done`；P11-T03 `done`；P11-T04 `done`；P11-T05 `done`；P11-T06 `done`；P11-T09 `in-progress`；P11-T02 与 P11-T07/`T08`/`T10`..T15 仍 `not-started`/unclaimed；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-30**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -131,7 +131,7 @@
 > private/fail-closed 事实保留。P10-T01/T02 已完成事实不改；P10-T03..T18 不静默改验收，
 > 全部在未启动状态下明确 cancelled/disposition。`P11-T01` documentation-only `done`；
 > `P11-T03` `done`（PR [#281](https://github.com/agentkernel/cognitive-os/pull/281)；required CI [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) **SUCCESS** at `aef5574e`）；
-> `P11-T04` `done`；`P11-T05` `done`；`P11-T06` `in-progress`；`P11-T02` 与 `P11-T07..T15` 计划卡已按 2.0.0 改写但仍 `not-started`/unclaimed。无 support、Gate、release、Profile、Windows/DSH
+> `P11-T04` `done`；`P11-T05` `done`；`P11-T06` `done`；`P11-T09` `in-progress`；`P11-T02` 与 `P11-T07`/`T08`/`T10`..`T15` 计划卡已按 2.0.0 改写但仍 `not-started`/unclaimed。无 support、Gate、release、Profile、Windows/DSH
 > qualification 或 Agent-benefit claim。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
@@ -214,8 +214,8 @@
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
-| Phase 11 - Windows OPC 2.0 | 15 | 4 | 1 | 0 | 10 | P11-T15 fixed-denominator acceptance；不自动形成 release |
-| **合计** | **144** | **112** | **1** | **1** | **14** | 另有 16 cancelled；无新 Gate pass |
+| Phase 11 - Windows OPC 2.0 | 15 | 5 | 1 | 0 | 9 | P11-T15 fixed-denominator acceptance；不自动形成 release |
+| **合计** | **144** | **113** | **1** | **1** | **13** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -492,6 +492,7 @@ formal task acceptance assessment 和收口。
 | `P11-T07/D01` | P11-T07 | 隐藏托管 DSH：exact artifact→isolated child/stdio→daemon Provider proxy；非可见 Installed Agent / 原生 UI / engine store | `P11-T03/D01`、`P11-T04/D01`、`P11-T12/D01` + dsh Path B；**不依赖 T02 mutex** | required CI；Windows sandbox E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run` |
 | `P11-T08/D01` | P11-T08 | Routine + Trigger → no-overlap/queue-latest → missed ledger；不挡 T09 | `P11-T03/D01` + scheduler/Effect/recovery | required CI；clock/sleep E2E 未资格化则 `not-run` |
 | `P11-T09/D01` | P11-T09 | HITL 只在项目中心画布 + Today 深链；聊天无 Approve；非一级 Inbox | `P11-T03/D01` + preview/Effect/alert；**不依赖 T08** | required CI；UI E2E 未资格化则 `not-run` |
+| `P11-T09/D02` | P11-T09 | StandingApprovalPolicy 时间盒（`expires_at` 必填、≤7d、Settings HTTP 列表/撤销）+ `grant-expansion` subject_kind；复用 request_preview/confirm；无 Inbox L1、无聊天 Approve、无 T13 整页 IA | `P11-T09/D01` | required CI；宿主 UI E2E / Settings chrome 未资格化则 `not-run` |
 | `P11-T10/D01` | P11-T10 | Knowledge/Markdown Vault import→rights/provenance→index/conflict；投影/检索越权负例 | `P11-T03/D01`、`P11-T05/D01` | 负例 → CI；宿主 filesystem E2E 未资格化则 `not-run` |
 | `P11-T11/D01` | P11-T11 | Memory admission/view/correct/forget/non-resurrection | `P11-T05/D01`、`P11-T10/D01` | required CI；privacy E2E 未资格化则 `not-run` |
 | `P11-T12/D01` | P11-T12 | 诚实 usage / unknown≠0；binding global→Project→employee→Task；成员级预算非当前 chrome | `P11-T03/D01`、`P11-T04/D01` + Provider CP；**不依赖 T07** | required CI；SecretStore/Provider 宿主未资格化则 `not-run` |
@@ -1190,8 +1191,8 @@ Phase 10 的原 acceptance 保留在上表与 typed-dependency 表中；上述 s
 ### Phase 11 - Personal 2.0 Windows-first OPC（chrome = CognitiveOS Personal 2.0.0）
 
 Phase 11 是 ADR-0059 的 current successor plan。`P11-T01` 是已完成的 docs-only
-closure。`P11-T02` 与 `P11-T07..T15` 计划卡已于 2026-08-30 按已定档 Personal 2.0.0 chrome
-改写，但仍未启动、未领取。`P11-T03`、`P11-T04` 与 `P11-T05` 已完成。`P11-T06` 正在实现。任何其余实现必须使用单独 task branch/lease/Draft PR。
+closure。`P11-T03`、`P11-T04`、`P11-T05` 与 `P11-T06` 已完成。`P11-T09` 正在实现。`P11-T02` 与 `P11-T07`/`T08`/`T10`..`T15` 计划卡已于 2026-08-30 按已定档 Personal 2.0.0 chrome
+改写，但仍未启动、未领取。任何其余实现必须使用单独 task branch/lease/Draft PR。
 实现第一刀是 owner 授权后的 **`P11-T03`**（不依赖 T02）。Windows 2.0 不继承
 Linux、WSL、Canvas、ordinary CI 或本机 GNU evidence 作为 Gate/release/Profile。
 native mobile/E2E relay remote 属于 2.1。T14/T15 **parked**。
@@ -1261,10 +1262,10 @@ flowchart TD
 | P11-T03 | Project 聚合 walking skeleton | P11-T01；**不依赖 T02** | 见下表三栏；实现第一刀 | done | merged PR [#281](https://github.com/agentkernel/cognitive-os/pull/281) at `main@46407380`; required CI [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) **SUCCESS** at `aef5574e`; Linux store 19/19 + HTTP 6/6 at `7d9f13e4`; [report](../checkpoints/2026-08-30-personal-p11-t03-project-aggregate-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t03-project-aggregate-closure.md) |
 | P11-T04 | Employee / Member Runtime 身份 | P11-T03 | 见下表三栏 | done | merged PR [#282](https://github.com/agentkernel/cognitive-os/pull/282) at `main@ab36a444`; required CI [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146) **SUCCESS** at `62840c9b`; [report](../checkpoints/2026-08-30-personal-p11-t04-employee-report.md) |
 | P11-T05 | Conversation 新 private version | P11-T03、P11-T04 | 见下表三栏；禁止重解释 `0.1` | done | merged PR [#283](https://github.com/agentkernel/cognitive-os/pull/283) at `main@b6182510`; [report](../checkpoints/2026-08-30-personal-p11-t05-conversation-report.md) |
-| P11-T06 | 隐藏 Pi Assistant | P11-T03、P11-T05 | 见下表三栏 | in-progress | `P11-T06/D01` on `lease/personal/P11-T06/assistant`; [report](../checkpoints/2026-08-30-personal-p11-t06-assistant-report.md) |
+| P11-T06 | 隐藏 Pi Assistant | P11-T03、P11-T05 | 见下表三栏 | done | merged PR [#284](https://github.com/agentkernel/cognitive-os/pull/284) at `main@a66faae9`; required CI [33307554027](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027) **SUCCESS** at `845442ea`; [report](../checkpoints/2026-08-30-personal-p11-t06-assistant-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t06-assistant-closure.md) |
 | P11-T07 | 隐藏托管 DSH | P11-T03、P11-T04、P11-T12 | 见下表三栏；非可见 Installed Agent | not-started | unclaimed |
 | P11-T08 | Routine/Trigger | P11-T03 | 见下表三栏；不挡 T09 | not-started | unclaimed |
-| P11-T09 | HITL 画布（非 Inbox 一级） | P11-T03；**不依赖 T08** | 见下表三栏 | not-started | unclaimed |
+| P11-T09 | HITL 画布（非 Inbox 一级） | P11-T03；**不依赖 T08** | 见下表三栏 | in-progress | `P11-T09/D02` on `lease/personal/P11-T09/hitl-canvas`; [report](../checkpoints/2026-08-30-personal-p11-t09-hitl-canvas-report.md) |
 | P11-T10 | Knowledge/Vault | P11-T03、P11-T05 | 见下表三栏 | not-started | unclaimed |
 | P11-T11 | Memory admission | P11-T05、P11-T10 | 见下表三栏 | not-started | unclaimed |
 | P11-T12 | Provider 诚实 usage | P11-T03、P11-T04；**不依赖 T07** | 见下表三栏；成员预算非当前 chrome | not-started | unclaimed |

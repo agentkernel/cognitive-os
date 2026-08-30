@@ -24,7 +24,12 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/preview-detail",
     "POST /management/project/v1/draft.apply",
     "POST /management/project/v1/preview.request",
+    "POST /management/project/v1/preview.reject",
+    "POST /management/project/v1/preview.narrow",
     "POST /management/project/v1/confirm",
+    "GET /management/project/v1/standing-policies",
+    "POST /management/project/v1/standing-policy.create",
+    "POST /management/project/v1/standing-policy.revoke",
     "POST /management/project/v1/roster.register",
     "POST /management/project/v1/employee.seat.request",
     "POST /management/project/v1/employee.seat.confirm",
@@ -38,7 +43,12 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/preview.request",
+    "POST /task/project/v1/preview.reject",
+    "POST /task/project/v1/preview.narrow",
     "POST /task/project/v1/confirm",
+    "GET /task/project/v1/standing-policies",
+    "POST /task/project/v1/standing-policy.create",
+    "POST /task/project/v1/standing-policy.revoke",
     "GET /task/project/v1/roster",
     "GET /task/project/v1/employee.catalog",
     "POST /task/project/v1/roster.register",
@@ -103,7 +113,16 @@ pub(crate) fn handle(
         "GET /management/project/v1/preview-detail" => preview_detail(method_path, &plane),
         "POST /management/project/v1/draft.apply" => draft_apply(body, &plane),
         "POST /management/project/v1/preview.request" => preview_request(body, &plane),
+        "POST /management/project/v1/preview.reject" => preview_reject(body, &plane),
+        "POST /management/project/v1/preview.narrow" => preview_narrow(body, &plane),
         "POST /management/project/v1/confirm" => confirm(body, &plane),
+        "GET /management/project/v1/standing-policies" => standing_policies(&plane),
+        "POST /management/project/v1/standing-policy.create" => {
+            standing_policy_create(body, &plane)
+        }
+        "POST /management/project/v1/standing-policy.revoke" => {
+            standing_policy_revoke(body, &plane)
+        }
         "POST /management/project/v1/roster.register" => roster_register(body, &employees),
         "POST /management/project/v1/employee.seat.request" => seat_request(body, &employees),
         "POST /management/project/v1/employee.seat.confirm" => seat_confirm(body, &employees),
@@ -815,6 +834,8 @@ fn preview_detail(method_path: &str, plane: &ProjectAggregateStore) -> ResourceA
             "preview_digest": detail.preview_digest,
             "preview_bytes_ref": detail.preview_bytes_ref,
             "status": detail.status,
+            "receipt_ref": detail.receipt_ref,
+            "superseded_by": detail.superseded_by,
         })),
         Err(error) => store_error(error),
     }
@@ -865,10 +886,127 @@ fn preview_request(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiRes
     };
     let preview_bytes = format!("{subject_kind}\n{subject_ref}").into_bytes();
     match plane.request_preview(subject_kind, subject_ref, &preview_bytes, now_ms()) {
-        Ok((preview_id, _)) => ok(json!({
+        Ok((preview_id, preview_digest)) => ok(json!({
             "status": "ok",
             "preview_id": preview_id,
+            "preview_digest": preview_digest,
             "created_at": now_ms(),
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn standing_policies(plane: &ProjectAggregateStore) -> ResourceApiResponse {
+    match plane.list_standing_policies(now_ms()) {
+        Ok(policies) => ok(json!({
+            "status": "ok",
+            "projection": "personal-private",
+            "policies": policies.iter().map(|row| json!({
+                "policy_id": row.policy_id,
+                "subject_class": row.subject_class,
+                "subject_ref": row.subject_ref,
+                "expires_at": row.expires_at,
+                "created_at": row.created_at,
+                "active": row.active,
+            })).collect::<Vec<_>>(),
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn standing_policy_create(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(subject_class) = document.get("subject_class").and_then(Value::as_str) else {
+        return error(400, "SUBJECT_CLASS_REQUIRED", "subject_class required");
+    };
+    let Some(subject_ref) = document.get("subject_ref").and_then(Value::as_str) else {
+        return error(400, "SUBJECT_REF_REQUIRED", "subject_ref required");
+    };
+    let expires_at = document.get("expires_at").and_then(Value::as_i64);
+    match plane.create_standing_policy(
+        ConfirmCaller::OwnerManagement,
+        subject_class,
+        subject_ref,
+        expires_at,
+        now_ms(),
+    ) {
+        Ok(policy_id) => ok(json!({
+            "status": "ok",
+            "policy_id": policy_id,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn standing_policy_revoke(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(policy_id) = document.get("policy_id").and_then(Value::as_str) else {
+        return error(400, "POLICY_ID_REQUIRED", "policy_id required");
+    };
+    match plane.revoke_standing_policy(ConfirmCaller::OwnerManagement, policy_id, now_ms()) {
+        Ok(()) => ok(json!({
+            "status": "ok",
+            "result": "revoked",
+            "policy_id": policy_id,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn preview_reject(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(preview_id) = document.get("preview_id").and_then(Value::as_str) else {
+        return error(400, "PREVIEW_ID_REQUIRED", "preview_id required");
+    };
+    let Some(preview_digest) = document.get("preview_digest").and_then(Value::as_str) else {
+        return error(400, "PREVIEW_DIGEST_REQUIRED", "preview_digest required");
+    };
+    match plane.reject_preview(
+        ConfirmCaller::OwnerManagement,
+        preview_id,
+        preview_digest,
+        now_ms(),
+    ) {
+        Ok(receipt_ref) => ok(json!({
+            "status": "ok",
+            "result": "rejected",
+            "receipt_ref": receipt_ref,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn preview_narrow(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(preview_id) = document.get("preview_id").and_then(Value::as_str) else {
+        return error(400, "PREVIEW_ID_REQUIRED", "preview_id required");
+    };
+    let Some(preview_digest) = document.get("preview_digest").and_then(Value::as_str) else {
+        return error(400, "PREVIEW_DIGEST_REQUIRED", "preview_digest required");
+    };
+    let Some(preview_bytes) = document.get("preview_bytes").and_then(Value::as_str) else {
+        return error(400, "PREVIEW_BYTES_REQUIRED", "preview_bytes required");
+    };
+    match plane.narrow_preview(
+        ConfirmCaller::OwnerManagement,
+        preview_id,
+        preview_digest,
+        preview_bytes.as_bytes(),
+        now_ms(),
+    ) {
+        Ok(result) => ok(json!({
+            "status": "ok",
+            "preview_id": result.preview_id,
+            "preview_digest": result.preview_digest,
+            "superseded_preview_id": result.superseded_preview_id,
         })),
         Err(error) => store_error(error),
     }
@@ -977,17 +1115,140 @@ mod tests {
     #[test]
     fn task_channel_confirm_is_forbidden() {
         let (_tmp, store) = authority();
-        let response = handle(
+        for path in [
             "POST /task/project/v1/confirm",
-            br#"{"preview_id":"x","preview_digest":"y"}"#,
+            "POST /task/project/v1/preview.reject",
+            "POST /task/project/v1/preview.narrow",
+            "POST /task/project/v1/standing-policy.create",
+            "POST /task/project/v1/standing-policy.revoke",
+            "GET /task/project/v1/standing-policies",
+        ] {
+            let response = handle(
+                path,
+                br#"{"preview_id":"x","preview_digest":"y","preview_bytes":"z"}"#,
+                &store,
+            );
+            assert_eq!(response.status, 403, "{path}");
+            assert!(
+                response
+                    .body
+                    .contains("PROJECT_AGGREGATE_CHANNEL_FORBIDDEN")
+            );
+            assert!(!response.body.contains("Approve"));
+        }
+    }
+
+    #[test]
+    fn http_reject_leaves_receipt_and_blocks_old_digest() {
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let body = json!({"preview_id": preview_id, "preview_digest": digest}).to_string();
+        let rejected = handle(
+            "POST /management/project/v1/preview.reject",
+            body.as_bytes(),
             &store,
         );
-        assert_eq!(response.status, 403);
-        assert!(
-            response
-                .body
-                .contains("PROJECT_AGGREGATE_CHANNEL_FORBIDDEN")
+        assert_eq!(rejected.status, 200, "{}", rejected.body);
+        assert!(rejected.body.contains("rejected"));
+        assert!(rejected.body.contains("receipt_ref"));
+        assert!(!rejected.body.contains("Approve"));
+        let confirm = handle(
+            "POST /management/project/v1/confirm",
+            body.as_bytes(),
+            &store,
         );
+        assert_eq!(confirm.status, 422, "{}", confirm.body);
+        let detail = handle(
+            &format!("GET /management/project/v1/preview-detail?preview_id={preview_id}"),
+            b"",
+            &store,
+        );
+        assert!(detail.body.contains("\"rejected\""));
+        assert!(detail.body.contains("receipt_ref"));
+    }
+
+    #[test]
+    fn http_narrow_supersedes_old_and_confirm_works_for_new() {
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (old_id, old_digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let narrow_body = json!({
+            "preview_id": old_id,
+            "preview_digest": old_digest,
+            "preview_bytes": "narrowed-bytes"
+        })
+        .to_string();
+        let narrowed = handle(
+            "POST /management/project/v1/preview.narrow",
+            narrow_body.as_bytes(),
+            &store,
+        );
+        assert_eq!(narrowed.status, 200, "{}", narrowed.body);
+        assert!(narrowed.body.contains("superseded_preview_id"));
+        assert!(!narrowed.body.contains("Approve"));
+        let old_confirm = handle(
+            "POST /management/project/v1/confirm",
+            json!({"preview_id": old_id, "preview_digest": old_digest})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(old_confirm.status, 422, "{}", old_confirm.body);
+        let new_id = serde_json::from_str::<Value>(&narrowed.body)
+            .unwrap()
+            .get("preview_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let new_digest = serde_json::from_str::<Value>(&narrowed.body)
+            .unwrap()
+            .get("preview_digest")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let confirmed = handle(
+            "POST /management/project/v1/confirm",
+            json!({"preview_id": new_id, "preview_digest": new_digest})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        assert!(confirmed.body.contains("activated"));
+    }
+
+    #[test]
+    fn http_wrong_digest_fail_closed() {
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, _) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let wrong = json!({
+            "preview_id": preview_id,
+            "preview_digest": "0".repeat(64),
+            "preview_bytes": "nope"
+        })
+        .to_string();
+        for path in [
+            "POST /management/project/v1/confirm",
+            "POST /management/project/v1/preview.reject",
+            "POST /management/project/v1/preview.narrow",
+        ] {
+            let response = handle(path, wrong.as_bytes(), &store);
+            assert_eq!(response.status, 409, "{path} {}", response.body);
+        }
     }
 
     #[test]
@@ -1033,6 +1294,182 @@ mod tests {
             &store,
         );
         assert!(detail.body.contains(&digest));
+    }
+
+    #[test]
+    fn http_standing_policy_missing_expires_at_is_rejected() {
+        let (_tmp, store) = authority();
+        let missing = handle(
+            "POST /management/project/v1/standing-policy.create",
+            br#"{"subject_class":"outbound","subject_ref":"grant-expansion"}"#,
+            &store,
+        );
+        assert_eq!(missing.status, 422, "{}", missing.body);
+        assert!(missing.body.contains("expires_at required"));
+        let too_long = cognitive_store::now_ms() + cognitive_store::STANDING_POLICY_MAX_TTL_MS + 1;
+        let over = handle(
+            "POST /management/project/v1/standing-policy.create",
+            json!({
+                "subject_class": "outbound",
+                "subject_ref": "grant-expansion",
+                "expires_at": too_long
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(over.status, 422, "{}", over.body);
+        assert!(over.body.contains("7-day"));
+    }
+
+    #[test]
+    fn http_standing_policy_list_and_revoke() {
+        let (_tmp, store) = authority();
+        let expires = cognitive_store::now_ms() + 3 * 24 * 60 * 60 * 1000;
+        let created = handle(
+            "POST /management/project/v1/standing-policy.create",
+            json!({
+                "subject_class": "outbound",
+                "subject_ref": "grant-expansion",
+                "expires_at": expires
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(created.status, 200, "{}", created.body);
+        let policy_id = serde_json::from_str::<Value>(&created.body)
+            .unwrap()
+            .get("policy_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let listed = handle("GET /management/project/v1/standing-policies", b"", &store);
+        assert_eq!(listed.status, 200, "{}", listed.body);
+        assert!(listed.body.contains(&policy_id));
+        assert!(listed.body.contains("\"active\":true"));
+        assert!(!listed.body.contains("Approve"));
+        let revoked = handle(
+            "POST /management/project/v1/standing-policy.revoke",
+            json!({"policy_id": policy_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(revoked.status, 200, "{}", revoked.body);
+        let empty = handle("GET /management/project/v1/standing-policies", b"", &store);
+        assert!(!empty.body.contains(&policy_id));
+    }
+
+    #[test]
+    fn http_grant_expansion_confirm_returns_digest_on_canvas_path() {
+        use cognitive_store::{EmployeeStore, RosterProposal, StageSpec};
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let employees = EmployeeStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let project_id = plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 4)
+            .unwrap()
+            .new_ref;
+        let plan_id = plane
+            .apply_plan_revision(
+                &project_id,
+                &project_id,
+                &[StageSpec {
+                    stage_id: "s1".to_owned(),
+                    title: "Manage".to_owned(),
+                    objective: "manage".to_owned(),
+                    output_contract_digest: ProjectAggregateStore::digest_hex(b"out"),
+                    acceptance_spec_ref: Some("cas:spec".to_owned()),
+                    cadence_json: None,
+                    responsible_slot: "manager".to_owned(),
+                    blocking_gap: None,
+                }],
+                20,
+            )
+            .unwrap();
+        let ids = employees
+            .register_roster(
+                ConfirmCaller::OwnerManagement,
+                &project_id,
+                &plan_id,
+                &[RosterProposal {
+                    slot: "manager".to_owned(),
+                    specialization: "project-manager".to_owned(),
+                    prompt: "coordinate".to_owned(),
+                    tools_declared: vec!["workspace-write".to_owned()],
+                }],
+                21,
+            )
+            .unwrap();
+        employees
+            .request_seating(ConfirmCaller::OwnerManagement, &ids[0], 30)
+            .unwrap();
+        employees
+            .confirm_seating(
+                ConfirmCaller::OwnerManagement,
+                &ids[0],
+                Some("flash"),
+                true,
+                31,
+            )
+            .unwrap();
+        employees
+            .record_install_fact("mcp:search", "1.0.0", 32)
+            .unwrap();
+        let subject = json!({
+            "project_id": project_id,
+            "employee_id": ids[0],
+            "capability_ref": "mcp:search",
+            "scope": "project-a"
+        })
+        .to_string();
+        let minted = handle(
+            "POST /management/project/v1/preview.request",
+            json!({"subject_kind": "grant-expansion", "subject_ref": subject})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(minted.status, 200, "{}", minted.body);
+        let minted_json = serde_json::from_str::<Value>(&minted.body).unwrap();
+        let grant_preview_id = minted_json
+            .get("preview_id")
+            .and_then(Value::as_str)
+            .unwrap();
+        let grant_digest = minted_json
+            .get("preview_digest")
+            .and_then(Value::as_str)
+            .expect("canvas HTTP returns digest");
+        let chat = handle(
+            "POST /task/project/v1/confirm",
+            json!({"preview_id": grant_preview_id, "preview_digest": grant_digest})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(chat.status, 403);
+        let confirmed = handle(
+            "POST /management/project/v1/confirm",
+            json!({"preview_id": grant_preview_id, "preview_digest": grant_digest})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        assert!(confirmed.body.contains("granted"));
+        let catalog = handle(
+            &format!(
+                "GET /management/project/v1/employee.catalog?project_id={project_id}&employee_id={}",
+                ids[0]
+            ),
+            b"",
+            &store,
+        );
+        assert!(catalog.body.contains("mcp:search"), "{}", catalog.body);
     }
 
     #[test]

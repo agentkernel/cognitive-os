@@ -89,10 +89,12 @@ pub use personal_db::{
     installation_migration_plan, prepare_personal_databases,
 };
 pub use project_aggregate::{
-    ConfirmCaller, ConfirmResult, GapRow, PROJECT_AGGREGATE_SCHEMA_V26, PendingPreviewRow,
-    PreviewDetailRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow, SeatingFacts,
-    StageRow, StageSpec, StageTestOracle, project_aggregate_migration_entry,
-    reject_closed_candidate_schema, validate_assistant_provenance,
+    ConfirmCaller, ConfirmResult, GapRow, NarrowResult, PROJECT_AGGREGATE_SCHEMA_V26,
+    PendingPreviewRow, PreviewDetailRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
+    STANDING_POLICY_MAX_TTL_MS, SeatingFacts, StageRow, StageSpec, StageTestOracle,
+    StandingPolicyRow, approval_preview_narrow_migration_entry, project_aggregate_migration_entry,
+    reject_closed_candidate_schema, standing_approval_policy_migration_entry,
+    validate_assistant_provenance,
 };
 pub use provider_control_plane::{
     AgentProviderBindingRecord, BUILTIN_PRICE_TABLE_VERSION, CostOutcome, NewUsageEvent,
