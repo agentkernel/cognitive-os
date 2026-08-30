@@ -37,6 +37,8 @@ non_claims:
 
 # 系统总览
 
+Routine 是项目运行子菜单（P11-T08 walking skeleton），不是 Inbox 一级，也不是 Team。
+
 CognitiveOS Personal 是本地、单一 Owner 的受治理 Agent 工作系统。当前 Linux 1.0
 管理六个认知资源族；Personal 2.0 目标新增 Windows-first OPC 业务控制台，让 Owner
 运营 Project 与 Digital Employee。Rust daemon 拥有 authority；UI、Assistant、engine、

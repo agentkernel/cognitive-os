@@ -34,12 +34,14 @@ tests:
   - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:ea35417917e202163d9d9b3f790d7a545d0c401ae45397ef8d47568025ef8784"
+fingerprint: "sha256:5e01fe19574ab23a92e831ee9196296645621ff048a470b7d5e4bddccdf14256"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
 
 # 运维与恢复
+
+missed Routine occurrence 是可见 ledger 行（`GET /management/project/v1/routine.ledger`），不是静默丢弃。clock/sleep/restart 宿主 E2E 仍为 `not-run`。
 
 ## 日常检查 —— `implemented`
 

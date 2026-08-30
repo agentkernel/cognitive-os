@@ -38,6 +38,8 @@ non_claims:
 
 # Provider Control Plane
 
+P11-T08 Routine 受理不签发 Provider binding，也不设成员级预算。
+
 `partial`：下面的 daemon management API 与 `cognitive` CLI 调用方已经实现，并有聚焦
 测试覆盖。localhost-only Web UI 位于本仓库 `clients/pc/web/`，由 `GET /ui/` 同源
 提供，是同一套 management 路由的 daemon 客户端：命名账户、SecretStore 密钥交接、

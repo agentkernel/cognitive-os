@@ -22,6 +22,8 @@ sources:
     symbols: ["HOSTED_DSH_SCHEMA_V31", "HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/crates/cognitive-store/src/vault.rs
     symbols: ["VAULT_SCHEMA_V32", "VaultStore", "VaultImportSpec", "CONTEXT_INJECT_ORDER", "VAULT_PROJECTION_ID"]
+  - path: personal/crates/cognitive-store/src/routine.rs
+    symbols: ["ROUTINE_SCHEMA_V33", "RoutineStore", "ROUTINE_PROJECTION_ID"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -40,12 +42,13 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p11_t10_vault.rs
+  - personal/crates/cognitive-store/tests/p11_t08_routine.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:348d3091b81d0f3c0f227ce0908935d1d199446c1caf5c666634f9912b988e8f"
+fingerprint: "sha256:b734632629db5e62b43773a8f0bd4dddaec7853f6fd6dfa7064b153e4c459368"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -55,11 +58,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v32) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v33) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v32)
+## Authority migration map (v1–v33)
 
 | Versions | Adds |
 |---|---|
@@ -79,6 +82,7 @@ orders authority first and names the backup path on a second-phase failure.
 | v30 | `grant-expansion` subject_kind plus StandingApprovalPolicy time-box (`p11_standing_approval_policy`). `expires_at` is required and ≤7 days. Settings list/revoke is management HTTP. Chat cannot mint. Rebuilds `p11_approval_preview` CHECK. |
 | v31 | Hidden hosted DSH managed child (`p11_hosted_dsh_child`). `runtime_binding_ref` binds to `hosted-dsh:<artifact>:<child_id>` (pid/digest/artifact). Process exit clears pid and marks `exited`; it does not delete Employee, conversation archive, or Memory. Isolated spawn fail-closes on Windows GNU. Windows OPC E2E is `not-run`. |
 | v32 | Markdown Vault (`p11_vault_document`, rebuildable `p11_vault_index_entry`, `p11_vault_conflict`) under `cognitiveos.personal.markdown-vault/0.1`. Import requires rights/provenance. Files are not Project authority (`is_authority=0`). Index is not Memory FTS. Last-write-wins without a conflict row is rejected. Host filesystem E2E is `not-run`. |
+| v33 | Routine revision / Trigger occurrence ledger (`p11_routine`, `p11_routine_revision`, `p11_routine_occurrence`) under `cognitiveos.personal.routine/0.1`. Overlap policy is `no-overlap-queue-latest`. Missed/coalesced rows are visible. Active occurrences reuse `scheduler_entries` (`task://personal/routine/{occurrence_id}`). Checkpoint is not completion. No Temporal / second scheduler table. Clock/sleep/restart E2E is `not-run`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
@@ -88,6 +92,8 @@ P11-T07 hidden hosted DSH adds v31 `p11_hosted_dsh_child`. The Attempt-runner `s
 
 P11-T12 honest usage adds **no new migration**. It is a labelled read of v25 `llm_usage_events` / `agent_provider_bindings` / `provider_accounts`: `cost_label` is `actual` (`provider_reported`+`priced`), `estimated` (`locally_estimated`+`priced`, only when that source was recorded), or `unknown` (never JSON `0`). `GET /management/usage` also returns a four-layer binding explanation; Project/employee/Task layers are explicit `unbound` today. Account identity and quota are separate objects. Silent account/model rebind is rejected. Member-level budget hard-stop is 2.1 / Deferred.
 
+P11-T08 Routine/Trigger adds v33. Management HTTP `routine.revision` / `routine.trigger` / `routine.ledger` / `routine.checkpoint` / `routine.resume` is the real caller. Task-channel aliases are 403. Overlap is rejected or queued as latest; host-unavailable records a visible missed row; stale revision fail-closes; completing from a checkpoint is rejected; consequential auto-resume fail-closes. HITL remains T09 canvas (not Inbox L1). Clock/sleep/restart host E2E is `not-run`.
+
 P11-T10 Markdown Vault adds v32. Management HTTP `vault.import` / `vault.index.rebuild` / `vault.index` / `vault.conflicts` is the real caller. Context inject order is a documented store helper (current Task contract → fixed decisions → sourced excerpts → summaries → older narrative; over-limit drops older narrative first). Vault files cannot confirm/apply Project authority. Memory admission cannot swallow Vault files. Conversation archive and Artifact CAS blobs are not Vault files. Obsidian is not bundled. Host filesystem E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
@@ -95,7 +101,7 @@ Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 (rebuildable; Vault searches do not use Memory FTS).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v32 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v33 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

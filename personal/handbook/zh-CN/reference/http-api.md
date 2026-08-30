@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:1f9f113acaf43767b1cf2dcf28b84bddc48c5b2746f1a872ac6c7853d9f1f611"
+fingerprint: "sha256:dc3cb3c0e203d7dc8cced94b0ae1d2f6932f2797ca14350e61cd27494328bc05"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -186,6 +186,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/vault.index` | management | 查询一个 Project 的可重建 Vault 索引。跨项目 `caller_project_id` 视为检索越权。返回已文档化的 Context 注入顺序（当前 Task 合同 → 已固定决定 → 带出处摘录 → 摘要 → 旧叙述）。 |
 | `GET` | `/management/project/v1/vault.conflicts` | management | 列出一个 Project 的 Vault 冲突。静默 last-write-wins 不是解决器。 |
 | `POST` | `/management/project/v1/vault.apply-authority` | management | 一律拒绝：Vault 文件不能确认或应用 Project 权威。调研笔记与决定留在草稿/权威 SQLite。 |
+| `POST` | `/management/project/v1/routine.revision` | management | Daemon 撰写 Routine revision（P11-T08）。重叠策略为 no-overlap-queue-latest。复用 `scheduler_entries`，不是第二套 Temporal 调度器。clock/sleep/restart E2E 为 `not-run`。 |
+| `POST` | `/management/project/v1/routine.trigger` | management | 受理 manual / schedule / qualified-event Trigger。重叠被拒绝或按 queue-latest 排队；host-unavailable 记入可见 missed。过期 revision 失败闭合。禁止静默丢 occurrence。 |
+| `GET` | `/management/project/v1/routine.ledger` | management | 列出一条 Routine 的 active / queued / missed / coalesced occurrence。不是 Inbox 一级。需要 project_id 与 routine_id。 |
+| `POST` | `/management/project/v1/routine.checkpoint` | management | 持久化恢复 checkpoint。用 checkpoint 当完成一律拒绝（`checkpoint is not completion`）。 |
+| `POST` | `/management/project/v1/routine.resume` | management | 把 missed 的 internal occurrence 恢复到 daemon scheduler。consequential 自动恢复失败闭合。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
@@ -214,4 +219,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/vault.index` | task | 禁止：Vault 索引查询仅限 management 通道。 |
 | `GET` | `/task/project/v1/vault.conflicts` | task | 禁止：Vault 冲突查询仅限 management 通道。 |
 | `POST` | `/task/project/v1/vault.apply-authority` | task | 禁止：Vault 权威应用仅限 management 通道（即便在 management 也一律拒绝）。 |
+| `POST` | `/task/project/v1/routine.revision` | task | 禁止：Routine revision 仅限 management 通道。 |
+| `POST` | `/task/project/v1/routine.trigger` | task | 禁止：Routine Trigger 受理仅限 management 通道。 |
+| `GET` | `/task/project/v1/routine.ledger` | task | 禁止：Routine ledger 仅限 management 通道。 |
+| `POST` | `/task/project/v1/routine.checkpoint` | task | 禁止：Routine checkpoint 仅限 management 通道。 |
+| `POST` | `/task/project/v1/routine.resume` | task | 禁止：Routine resume 仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

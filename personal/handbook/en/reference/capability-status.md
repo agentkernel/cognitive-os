@@ -83,7 +83,7 @@ and Agent requires independent qualification.
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive and single composer are absent; ADR-0058 `conversation-projection/0.1` must not be reinterpreted |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | no OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion product path |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget exists, but Conversation/Vault extraction/retrieval integration and privacy matrix do not |
-| Routine/Trigger/Inbox/offline-missed recovery | Requires-backend | scheduler/Effect/preview foundations exist; no full no-overlap/queue-latest/missed/approval product path |
+| Routine/Trigger/Inbox/offline-missed recovery | partial (walking skeleton) + Requires-backend | v33 + management `routine.*` prove no-overlap/queue-latest and a visible missed ledger; daemon `scheduler_entries` is the only schedule authority. Chrome / T13 `/ui/` IA, clock/sleep/restart host E2E, and Inbox L1 remain absent (HITL is T09 canvas). |
 | Provider global→Project→employee→Task binding and hard budgets | Requires-backend | current fixed Agent binding and advisory budgets remain partial; DSH/Pi raw-secret-free daemon proxy is required |
 | X/Twitter qualified connector scenario | Requires-backend + Requires-environment | no connector/platform qualification or business outcome is claimed; evasion is forbidden |
 | Existing MCP Tool transport + bounded dynamic-Tool MVP | implemented for its accepted P5-T03/P5-T04 scope | interop produces Tool candidates; it has no Personal 2.0 server/package/connection/binding/health/quarantine family lifecycle |

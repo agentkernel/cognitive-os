@@ -30,6 +30,8 @@ non_claims:
 
 # Task 流水线
 
+P11-T08 Routine Trigger 受理仅限 management 通道（`/management/project/v1/routine.*`）；task 通道别名 403。
+
 HTTP（`TaskApi`，task 通道）→ `KernelTaskApplicationService` → kernel intent
 chain → SQLite，线上使用生成的 request/result DTO。
 

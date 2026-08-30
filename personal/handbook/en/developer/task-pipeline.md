@@ -30,6 +30,8 @@ non_claims:
 
 # Task pipeline
 
+P11-T08 Routine Trigger admission is management-channel only (`/management/project/v1/routine.*`); task-channel aliases are 403.
+
 HTTP (`TaskApi`, task channel) → `KernelTaskApplicationService` → kernel intent
 chain → SQLite, with generated request/result DTOs at the wire.
 

@@ -80,7 +80,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive 与 single composer 不存在；不得重解释 ADR-0058 `conversation-projection/0.1` |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget 已有，但 Conversation/Vault extraction/retrieval 与 privacy matrix 不存在 |
-| Routine/Trigger/Inbox/offline-missed recovery | Requires-backend | scheduler/Effect/preview foundation 已有；没有完整 no-overlap/queue-latest/missed/approval 产品路径 |
+| Routine/Trigger/Inbox/offline-missed recovery | partial（walking skeleton）+ Requires-backend | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；daemon `scheduler_entries` 是唯一调度权威。Chrome / T13 `/ui/` IA、clock/sleep/restart 宿主 E2E 与 Inbox 一级仍缺（HITL 是 T09 画布）。 |
 | Provider global→Project→employee→Task binding 与 hard budget | Requires-backend | current fixed Agent binding 与 advisory budget 保持 partial；DSH/Pi 必须经 no-raw-secret daemon proxy |
 | X/Twitter qualified connector scenario | Requires-backend + Requires-environment | 不声明 connector/platform qualification 或业务结果；禁止 evasion |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |

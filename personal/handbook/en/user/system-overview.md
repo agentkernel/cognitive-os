@@ -37,6 +37,8 @@ non_claims:
 
 # System overview
 
+Routine is a Project run submenu (P11-T08 walking skeleton), not Inbox L1 and not Team.
+
 CognitiveOS Personal is a local, single-owner system for governed Agent work.
 The current Linux 1.0 product manages six cognitive-resource families. The
 Personal 2.0 target adds a Windows-first OPC business console where the Owner

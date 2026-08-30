@@ -50,6 +50,8 @@ non_claims:
 
 # 执行链状态
 
+P11-T08 Routine occurrence 复用本 daemon 调度器（`scheduler_entries`，`task://personal/routine/{occurrence_id}`）。没有第二套 Temporal 调度器。
+
 全手册最怕漂移的一页。设计链路：
 
 调度 lease → 封存 Context → Pi candidate → candidate 准入（Intent + Effect + 一次

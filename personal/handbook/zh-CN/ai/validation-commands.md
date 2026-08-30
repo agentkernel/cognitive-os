@@ -24,6 +24,8 @@ non_claims:
 
 # 验证命令
 
+P11-T08 聚焦 store/HTTP 测试路由到 `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` 或 exact-revision `DEV-LINUX-NATIVE-01`。`DEV-WIN-GNU-01` cargo link 为 `not-run`。clock/sleep/restart 宿主 E2E 为 `not-run`。
+
 环境路由是前置条件，由
 [`PERSONAL-TEST-ENVIRONMENTS.md`](../../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md) 拥有。
 

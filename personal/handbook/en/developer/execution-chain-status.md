@@ -50,6 +50,8 @@ non_claims:
 
 # Execution-chain status
 
+P11-T08 Routine occurrences reuse this daemon scheduler (`scheduler_entries` via `task://personal/routine/{occurrence_id}`). There is no second Temporal scheduler.
+
 The single most drift-sensitive handbook page. Designed chain:
 
 scheduler lease → sealed Context → Pi candidate → candidate admission
