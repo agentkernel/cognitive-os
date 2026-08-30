@@ -100,8 +100,9 @@ pub use provider_control_plane::{
     AgentProviderBindingRecord, BUILTIN_PRICE_TABLE_VERSION, CostOutcome, NewUsageEvent,
     PROVIDER_CONTROL_PLANE_SCHEMA_V25, ProviderAccountRecord, ProviderControlPlaneError,
     ProviderControlPlaneStore, ProviderModelRecord, USAGE_AGGREGATE_RETENTION_MS,
-    USAGE_EVENT_RETENTION_MS, UsageSample, apply_builtin_prices, compute_cost, now_ms,
-    provider_control_plane_migration_entry, usage_from_anthropic_json, usage_from_openai_json,
+    USAGE_EVENT_RETENTION_MS, UsageSample, apply_builtin_prices, compute_cost, honest_unknown_cost,
+    labelled_cost_source, now_ms, provider_control_plane_migration_entry,
+    usage_from_anthropic_json, usage_from_openai_json,
 };
 pub use sqlite::SqliteAuthorityStore;
 

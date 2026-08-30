@@ -21,6 +21,7 @@ sources:
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
+    symbols: ["honest_usage_read_model", "labelled_cost_source", "honest_unknown_cost", "replace_binding"]
   - path: personal/crates/cognitive-store/src/sqlite/store.rs
     symbols: ["SqliteAuthorityStore"]
   - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
@@ -33,10 +34,11 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
+  - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:57999a7bdef7f468682fdea855bd5bf73f8f63f01b0bddc9c660563eab7e1648"
+fingerprint: "sha256:dba7370440377590ef5f801794889330021cd41efd866fd8afd205a003051076"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -72,6 +74,8 @@ orders authority first and names the backup path on a second-phase failure.
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
 P11-T09 HITL canvas reuses v26 `request_preview` / `confirm_preview` / `p11_approval_preview` plus v29 `superseded_by` and v30 grant-expansion / StandingApprovalPolicy. Management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*` are the durable caller; T05 announce+deep-link only; T06 `draft.apply` is not authority-approve. Host UI E2E is `not-run`. Settings chrome is T13. No second scheduler, no chat Approve, no Inbox L1.
+
+P11-T12 honest usage adds **no new migration**. It is a labelled read of v25 `llm_usage_events` / `agent_provider_bindings` / `provider_accounts`: `cost_label` is `actual` (`provider_reported`+`priced`), `estimated` (`locally_estimated`+`priced`, only when that source was recorded), or `unknown` (never JSON `0`). `GET /management/usage` also returns a four-layer binding explanation; Project/employee/Task layers are explicit `unbound` today. Account identity and quota are separate objects. Silent account/model rebind is rejected. Member-level budget hard-stop is 2.1 / Deferred.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; the only derived table is `memory_search_fts` (rebuildable; searches

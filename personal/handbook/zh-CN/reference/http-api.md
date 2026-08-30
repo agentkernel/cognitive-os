@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:696ef79b1f5bed9bcc585892f26fd98d654762bac35604a192df5626378655b0"
+fingerprint: "sha256:96945c9d051ae6bc21a358e334b9514303b4fb1e9bbe455c4a519a05a0506dec"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -54,9 +54,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/providers/models/add` | management | 手动添加模型（`manually_configured`），可选百万 token 单价。 |
 | `POST` | `/management/providers/models/set-price` | management | 为一个模型设置新的价格版本。历史用量保留其记录的定价版本。 |
 | `GET` | `/management/agent-bindings` | management | 列出固定的 agent 账户+provider+model binding（仅 pi 与 dsh）。 |
-| `POST` | `/management/agent-bindings` | management | 设置一个固定 binding。可选 expected_revision CAS；不匹配时 HTTP 409 PROVIDER_BINDING_REVISION_STALE。无自动回退、负载均衡或隐式模型切换。 |
+| `POST` | `/management/agent-bindings` | management | 设置一个固定 binding。可选 expected_revision CAS；不匹配时 HTTP 409 PROVIDER_BINDING_REVISION_STALE。未带 expected_revision 就改账户或模型时 HTTP 409 PROVIDER_SILENT_REBIND_REJECTED。无自动回退、负载均衡或隐式模型切换。 |
 | `POST` | `/management/agent-bindings/remove` | management | 移除一个 agent binding。 |
-| `GET` | `/management/usage` | management | 查询保留的用量事件。未知 token/成本值绝不会被当成 0。 |
+| `GET` | `/management/usage` | management | 查询带标签的用量：事件含 cost_label actual|estimated|unknown（unknown 绝不为 0）、binding_explanation 层 global→Project→employee→Task（缺失层 unbound），以及账户与配额字段分离。不返回 secret。 |
 | `GET` | `/management/budgets` | management | 列出仅观察的 token/金额预算。 |
 | `POST` | `/management/budgets` | management | 为账户或 agent 设置月度 token/金额预算。告警不阻断调用。 |
 | `POST` | `/management/budgets/remove` | management | 移除一个预算。 |

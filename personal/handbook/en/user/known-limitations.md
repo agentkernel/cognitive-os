@@ -75,8 +75,9 @@ current fact of the code.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no
-  filters; the usage JSON is `event_id` / `account_id` / `cost_micros` /
-  `cost_status` only.
+  filters; usage JSON includes labelled events (`cost` / `cost_label`
+  actual|estimated|unknown, never `0`), `binding_explanation` layers, and
+  separated `account` vs `quota` objects.
 - Pi conversations are one-shot per exchange (no streaming, text only, fixed
   8192/1024 window constants at the client).
 - `TaskApplicationService` implements `control`/`query_intent`, but no HTTP route

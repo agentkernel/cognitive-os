@@ -1875,10 +1875,10 @@ impl ProjectAggregateStore {
         .map_err(unavailable("get charter"))
     }
 
-    /// Honest usage hook (N14): unknown cost serializes as the literal
-    /// `unknown`, never as 0. Honest usage body is T12.
+    /// Honest usage hook (N14/T12): unknown cost serializes as the literal
+    /// `unknown`, never as 0. Project-layer Provider binding is unbound today.
     pub fn unknown_cost_projection() -> serde_json::Value {
-        serde_json::json!({"cost":"unknown","metering":"not-implemented"})
+        crate::provider_control_plane::honest_unknown_cost("project")
     }
 
     pub fn leak_scan_contains(&self, needle: &str) -> Result<bool, ProjectAggregateError> {

@@ -24,7 +24,7 @@ non_claims:
 | `crates/cognitive-contracts` | canonical JSON/digest、schema codegen、53 个生成 Rust 绑定、55 码错误注册表、golden 奇偶 | `canonical.rs`、`bin/contracts-codegen.rs`、`generated/mod.rs` |
 | `crates/cognitive-domain` | ID、capability 算术、内嵌转移表、版本 | `transitions.rs`（`table`、`find_edge`）、`capability.rs`（`intersect_chain`） |
 | `crates/cognitive-kernel` | 确定性权威内核：10 步转移门、intent chain、context 管线/缓存、Effect 协议、loop/WIA/continuation、恢复、tool registry、ports | `engine.rs`（`TransitionEngine`）、`intent_chain.rs`、`effects.rs`（`EffectProtocol`）、`harness.rs`（`LoopDriver`）、`ports.rs` |
-| `crates/cognitive-store` | SQLite WAL 适配器：迁移 v1–v25（安装库 v1–v4）、调度 lease、Memory/Skill/Context/Artifact 存储、Provider Control Plane、排除 secret 的备份归档 | `sqlite/`、`migration.rs`、`personal_db.rs`（`prepare_personal_databases`）、`scheduler.rs`、`provider_control_plane.rs`、`personal_backup.rs` |
+| `crates/cognitive-store` | SQLite WAL 适配器：迁移 v1–v30（安装库 v1–v4）、调度 lease、Memory/Skill/Context/Artifact 存储、Provider Control Plane（v25 带标签用量读取）、排除 secret 的备份归档 | `sqlite/`、`migration.rs`、`personal_db.rs`（`prepare_personal_databases`）、`scheduler.rs`、`provider_control_plane.rs`、`personal_backup.rs` |
 | `crates/cognitive-runtime` | 执行层：Linux bundle 校验/安装/服务、Pi 获取/注册/生命周期、adapter/hook/压缩/学习规划器、性能面 | `installer.rs`、`linux_bundle*.rs`、`agent_registration.rs`、`scheduler_service.rs`、`perf.rs` |
 | `crates/cognitive-management` | 确定性管理面（inspect/stop/revoke/reconcile）、特权会话、R1 审批、审计端口、TaskApplicationService | `plane.rs`（`ManagementPlane`）、`session.rs`、`task_application.rs` |
 | `crates/cognitive-secret` | SecretStore 后端（Linux Secret Service；Windows Credential Manager；其余 fail-closed）、Provider 配置/发现/传输、端点信任 | `store.rs`（`SecretStore`）、`backend_select.rs`、`provider_service.rs`、`provider_transport.rs`、`endpoint_trust.rs` |

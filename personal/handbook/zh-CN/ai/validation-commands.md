@@ -126,6 +126,10 @@ P7-T06 Personal Linux RC 合成器是
 P7-T05/D08 binding CAS 是 `POST /management/agent-bindings` 上的
 `expected_revision`，不匹配时 409 `PROVIDER_BINDING_REVISION_STALE`
 （`personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs`；仅 Linux/CI）。
+P11-T12 诚实 usage 是 `personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs`
+以及 `personal/apps/kernel-server/src/personal/provider_control_plane.rs` 内
+进程 HTTP 测试（unknown≠0、labelled actual|estimated|unknown、静默 rebind
+`PROVIDER_SILENT_REBIND_REJECTED`、省略 secret；仅 Linux/CI；Windows GNU `not-run`）。
 SPA 单元测试在外部 clients checkout `pc/web`（`vitest run`）；它们不是 kernel CI，
 也不是 live SecretStore 证明。
 

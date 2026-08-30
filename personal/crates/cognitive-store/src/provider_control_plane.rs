@@ -7,6 +7,7 @@
 use crate::migration::MigrationPlanEntry;
 use crate::sqlite::SqliteAuthorityStore;
 use rusqlite::{Connection, OptionalExtension, params};
+use serde_json::{Value, json};
 use std::sync::{Arc, Mutex};
 use std::time::{SystemTime, UNIX_EPOCH};
 
@@ -647,16 +648,53 @@ impl ProviderControlPlaneStore {
         binding: &AgentProviderBindingRecord,
         now_ms: i64,
     ) -> Result<AgentProviderBindingRecord, ProviderControlPlaneError> {
+        self.write_binding(binding, now_ms, false)
+    }
+
+    /// Explicit rebind after CAS. Silent account/model switch is rejected by
+    /// [`Self::set_binding`].
+    pub fn replace_binding(
+        &self,
+        binding: &AgentProviderBindingRecord,
+        expected_revision: i64,
+        now_ms: i64,
+    ) -> Result<AgentProviderBindingRecord, ProviderControlPlaneError> {
+        let current = self.get_active_binding(&binding.agent_instance_id)?;
+        let current_revision = current.as_ref().map(|row| row.revision).unwrap_or(0);
+        if current_revision != expected_revision {
+            return Err(ProviderControlPlaneError::Conflict {
+                detail: "expected_revision does not match the current binding revision",
+            });
+        }
+        self.write_binding(binding, now_ms, true)
+    }
+
+    fn write_binding(
+        &self,
+        binding: &AgentProviderBindingRecord,
+        now_ms: i64,
+        explicit_rebind: bool,
+    ) -> Result<AgentProviderBindingRecord, ProviderControlPlaneError> {
         let conn = self.lock()?;
-        let existing_revision: Option<i64> = conn
+        let existing: Option<(String, String, String, i64)> = conn
             .query_row(
-                "SELECT revision FROM agent_provider_bindings WHERE agent_instance_id = ?1",
+                "SELECT account_id, model_id, status, revision
+                   FROM agent_provider_bindings WHERE agent_instance_id = ?1",
                 [&binding.agent_instance_id],
-                |row| row.get(0),
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?, row.get(3)?)),
             )
             .optional()
             .map_err(unavailable("read binding"))?;
-        let revision = existing_revision.unwrap_or(0) + 1;
+        if let Some((account_id, model_id, status, _)) = existing.as_ref()
+            && status == "active"
+            && !explicit_rebind
+            && (account_id != &binding.account_id || model_id != &binding.model_id)
+        {
+            return Err(ProviderControlPlaneError::Conflict {
+                detail: "silent rebind rejected",
+            });
+        }
+        let revision = existing.map(|row| row.3).unwrap_or(0) + 1;
         conn.execute(
             "INSERT INTO agent_provider_bindings (
                 agent_instance_id, account_id, model_id, revision, status, created_at_ms, updated_at_ms
@@ -848,6 +886,46 @@ impl ProviderControlPlaneStore {
             .map_err(unavailable("list usage query"))?;
         rows.collect::<Result<Vec<_>, _>>()
             .map_err(unavailable("list usage rows"))
+    }
+
+    /// Source-labelled usage/account/binding read model. Unknown cost is never
+    /// a JSON `0`. Account identity is separate from quota. Missing binding
+    /// layers are explicit `unbound`, not invented zeros.
+    pub fn honest_usage_read_model(&self) -> Result<Value, ProviderControlPlaneError> {
+        let events = self.list_labelled_usage_events(0)?;
+        let bindings = self.list_bindings()?;
+        let accounts = self.list_accounts()?;
+        Ok(json!({
+            "events": events.iter().map(labelled_usage_event_json).collect::<Vec<_>>(),
+            "binding_explanation": binding_explanation_json(&bindings),
+            "accounts": accounts.iter().map(account_quota_json).collect::<Vec<_>>(),
+        }))
+    }
+
+    fn list_labelled_usage_events(
+        &self,
+        since_ms: i64,
+    ) -> Result<Vec<LabelledUsageEvent>, ProviderControlPlaneError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare(
+                "SELECT event_id, account_id, cost_micros, cost_status, metering_source
+                   FROM llm_usage_events WHERE recorded_at_ms >= ?1 ORDER BY recorded_at_ms",
+            )
+            .map_err(unavailable("list labelled usage"))?;
+        let rows = statement
+            .query_map([since_ms], |row| {
+                Ok(LabelledUsageEvent {
+                    event_id: row.get(0)?,
+                    account_id: row.get(1)?,
+                    cost_micros: row.get(2)?,
+                    cost_status: row.get(3)?,
+                    metering_source: row.get(4)?,
+                })
+            })
+            .map_err(unavailable("list labelled usage query"))?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("list labelled usage rows"))
     }
 
     pub fn apply_retention(
@@ -1141,6 +1219,117 @@ impl ProviderControlPlaneStore {
         }
         Ok(false)
     }
+}
+
+struct LabelledUsageEvent {
+    event_id: String,
+    account_id: String,
+    cost_micros: Option<i64>,
+    cost_status: String,
+    metering_source: String,
+}
+
+/// Map ledger enums to the product label `actual | estimated | unknown`.
+/// `locally_estimated` is never inferred; unused metering stays `unknown`.
+pub fn labelled_cost_source(metering_source: &str, cost_status: &str) -> &'static str {
+    match (metering_source, cost_status) {
+        ("provider_reported", "priced") => "actual",
+        ("locally_estimated", "priced") => "estimated",
+        _ => "unknown",
+    }
+}
+
+/// Honest unknown cost object. Never serializes as JSON `0` or `"0"`.
+pub fn honest_unknown_cost(binding_layer: &str) -> Value {
+    json!({
+        "cost": "unknown",
+        "cost_label": "unknown",
+        "metering_source": "unavailable",
+        "binding_layer": binding_layer,
+        "binding_status": "unbound"
+    })
+}
+
+fn labelled_usage_event_json(event: &LabelledUsageEvent) -> Value {
+    let label = labelled_cost_source(&event.metering_source, &event.cost_status);
+    let unknown =
+        label == "unknown" || event.cost_status != "priced" || event.cost_micros.is_none();
+    json!({
+        "event_id": event.event_id,
+        "account_id": event.account_id,
+        "cost": if unknown { json!("unknown") } else { json!(event.cost_micros) },
+        "cost_label": label,
+        "cost_micros": if unknown { Value::Null } else { json!(event.cost_micros) },
+        "cost_status": event.cost_status,
+        "metering_source": event.metering_source
+    })
+}
+
+fn binding_explanation_json(bindings: &[AgentProviderBindingRecord]) -> Value {
+    let active: Vec<&AgentProviderBindingRecord> = bindings
+        .iter()
+        .filter(|binding| binding.status == "active")
+        .collect();
+    let global = if active.is_empty() {
+        json!({
+            "layer": "global",
+            "status": "unbound",
+            "reason": "no_global_agent_binding",
+            "bindings": []
+        })
+    } else {
+        json!({
+            "layer": "global",
+            "status": "bound",
+            "bindings": active.iter().map(|binding| json!({
+                "agent_instance_id": binding.agent_instance_id,
+                "account_id": binding.account_id,
+                "model_id": binding.model_id,
+                "revision": binding.revision,
+                "status": binding.status
+            })).collect::<Vec<_>>()
+        })
+    };
+    json!({
+        "layers": [
+            global,
+            json!({
+                "layer": "project",
+                "status": "unbound",
+                "reason": "no_project_provider_binding"
+            }),
+            json!({
+                "layer": "employee",
+                "status": "unbound",
+                "reason": "no_employee_provider_binding"
+            }),
+            json!({
+                "layer": "task",
+                "status": "unbound",
+                "reason": "no_task_provider_binding"
+            })
+        ]
+    })
+}
+
+fn account_quota_json(account: &ProviderAccountRecord) -> Value {
+    json!({
+        "account": {
+            "id": account.account_id,
+            "display_name": account.display_name,
+            "provider_kind": account.provider_kind,
+            "endpoint": account.endpoint,
+            "status": account.status,
+            "network_scope": account.network_scope
+        },
+        "quota": {
+            "status": "unknown",
+            "source": "unavailable",
+            "allowance": Value::Null,
+            "remaining": Value::Null,
+            "reset_at": Value::Null
+        }
+    })
 }
 
 /// Compute cost. Unknown tokens are never treated as zero.

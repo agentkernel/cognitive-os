@@ -132,6 +132,11 @@ enabled P6, and production publication fail closed). It does not set Gate state.
 P7-T05/D08 binding CAS is `expected_revision` on
 `POST /management/agent-bindings` with 409 `PROVIDER_BINDING_REVISION_STALE`
 (`personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs`; Linux/CI only).
+P11-T12 honest usage is `personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs`
+plus in-process HTTP tests in
+`personal/apps/kernel-server/src/personal/provider_control_plane.rs`
+(unknown≠0, labelled actual|estimated|unknown, silent rebind
+`PROVIDER_SILENT_REBIND_REJECTED`, secrets omitted; Linux/CI only; Windows GNU `not-run`).
 SPA unit tests live in the external clients checkout `pc/web` (`vitest run`);
 they are not kernel CI and not live SecretStore proof.
 

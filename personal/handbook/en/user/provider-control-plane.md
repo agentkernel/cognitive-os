@@ -13,13 +13,13 @@ sources:
   - path: personal/apps/admin-cli/src/personal_cli/secret_input.rs
     symbols: ["read_api_key_material"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
-    symbols: ["PI_AGENT", "DSH_AGENT", "set_binding"]
+    symbols: ["PI_AGENT", "DSH_AGENT", "set_binding", "query_usage"]
   - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
   - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
     symbols: ["TrustedEndpoint", "ProviderKind"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
-    symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS"]
+    symbols: ["USAGE_EVENT_RETENTION_MS", "USAGE_AGGREGATE_RETENTION_MS", "honest_usage_read_model", "labelled_cost_source"]
   - path: personal/docs/product/provider-control-plane.md
   - path: personal/docs/product/account-hub.md
   - path: personal/docs/product/account-hub.zh-CN.md
@@ -29,8 +29,9 @@ tests:
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-secret/tests/p8_t13_endpoint_trust.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
+  - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:066dc7a553e670cd2dfb8f14b820de0af859761380997df604f507220f20cdc9"
+fingerprint: "sha256:d87eae91c8bf8e2e5291fa03ac783a7f18e33a84eba0e95abf99bee7455902b4"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and current localhost Web UI path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, the Personal 2.0 desktop redesign/Account Hub import, or Agent-benefit.
 ---
@@ -272,8 +273,11 @@ servable on a non-DeepSeek `openai_compatible` account (for example xAI).
 `PROVIDER_MODEL_ENDPOINT_MISMATCH` otherwise. HTTP `POST
 /management/agent-bindings` accepts optional integer `expected_revision`
 (current binding revision, or `0` when unbound). A mismatch is HTTP 409
-`PROVIDER_BINDING_REVISION_STALE`; omit the field to keep CLI compatibility.
-`show` requires `--agent` at parse time but currently calls the same list
+`PROVIDER_BINDING_REVISION_STALE`. Changing account or model without
+`expected_revision` is HTTP 409 `PROVIDER_SILENT_REBIND_REJECTED` — remove
+the binding first, or send a matching `expected_revision`. The CLI `binding
+set` omits that field, so a switch is `remove` then `set`. Same
+account+model refresh still succeeds. `show` requires `--agent` at parse time but currently calls the same list
 endpoint as `list` (it does not filter). Use `list` to inspect both bindings.
 
 Pi traffic uses `POST /provider/v1/chat/completions`. DeepSeek harness traffic
@@ -317,8 +321,16 @@ cognitive audit query
 
 Those two CLI verbs take **no filters** in this phase (the design text that
 mentions time-range/account filters is not a shipped flag). `usage query`
-returns `event_id`, `account_id`, `cost_micros`, and `cost_status` after
-applying retention. `audit query` returns `audit_id`, `action`, `outcome`, and
+dumps `GET /management/usage`: each event has `event_id`, `account_id`,
+`cost` (`unknown` or a non-zero micro-USD number), `cost_label`
+(`actual` | `estimated` | `unknown`), `cost_micros`, `cost_status`, and
+`metering_source`. Unknown cost is never JSON `0` or `"0"`.
+`locally_estimated` is mapped to `estimated` only when that metering_source
+was recorded. The same body includes `binding_explanation.layers` in order
+global → Project → employee → Task (missing layers are `unbound`, not
+invented zeros) and `accounts[]` with separate `account` vs `quota` objects
+(`quota.status` is `unknown` until a real quota source exists). Secret
+handles are omitted. `audit query` returns `audit_id`, `action`, `outcome`, and
 a redacted `detail`. Per-call usage events are retained **30 days**;
 aggregates **90 days**. Querying usage runs that cleanup.
 

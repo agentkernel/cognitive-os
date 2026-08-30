@@ -127,7 +127,11 @@ qualification.
 
 The installed and tested foundation includes the daemon, CLI, secret handling,
 Provider proxy, Pi conversation path, six authority stores, task admission, and
-resource/task projections. The end-to-end autonomous execution path is still
+resource/task projections. `GET /management/usage` now returns source-labelled
+costs (`actual` | `estimated` | `unknown`; unknown is never `0`), a four-layer
+binding explanation with missing Project/employee/Task layers unbound, and
+separated account vs quota fields. Settings usage chrome remains T13. The
+end-to-end autonomous execution path is still
 `partial`; use the task watch and evidence commands to inspect durable facts,
 and do not interpret an interactive answer as a completed task.
 
