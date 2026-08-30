@@ -60,6 +60,8 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | clippy `redundant_guards` pattern match | recorded | `DEV-WIN-GNU-01` | this commit | `store_error` matches `Conflict { detail: "silent rebind rejected" }`. Same 409 `PROVIDER_SILENT_REBIND_REJECTED`. Store test asserts the exact detail literal (stronger than `contains`). `cargo clippy`/`test` **not-run** locally (`RUST-LINK-DEV-WIN-GNU-01`). |
 | 2026-08-30 | `cargo fmt --all -- --check` | pass | `DEV-WIN-GNU-01` | this commit | formatting only; no link |
 | 2026-08-30 | `fill-handbook-fingerprints` + `generate-handbook --check` + `check-handbook` | pass | local Node | this commit | Fingerprint-only (en + zh-CN: daemon-and-http, provider-control-plane, provider-and-secrets, generated http-api). Handbook prose unchanged. 58×2 locales; 18 generated pages byte-identical. |
+| 2026-08-30 | `cargo clippy -p kernel-server --all-targets -- -D warnings` | **fail** (`clippy::redundant_guards`) | `DEV-LINUX-NATIVE-01` | `453ffc371d498cb17be91a71cc395983db497403` | Same lint as Ubuntu job 99265864818: `store_error` match guard `if detail == "silent rebind rejected"`. cognitive-store clippy **pass**; `p11_t12_honest_usage` **6/6 pass** — not re-run this turn. |
+| 2026-08-30 | `cargo clippy -p cognitive-store` / `p11_t12_honest_usage` | **pass** (recorded; not re-run) | `DEV-LINUX-NATIVE-01` | `453ffc371d498cb17be91a71cc395983db497403` | Owner-directed skip of re-run. Unknown≠0 negatives unchanged. |
 
 ## Explicit non-claims
 
