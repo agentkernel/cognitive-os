@@ -9,6 +9,7 @@ use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
     scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
 };
+use crate::employee::employee_migration_entry;
 use crate::installation::{
     INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3, INSTALLATION_SCHEMA_V4,
 };
@@ -88,7 +89,8 @@ impl PersonalDatabasePrepareReport {
 /// and v25 = Provider Control Plane accounts, catalog, bindings, usage, budgets,
 /// alerts, and redacted audit facts (no secret columns), and v26 = Personal-private
 /// Project aggregate (Project / CharterRevision / PlanRevision / Stage / Gap /
-/// Draft / Candidate / ApprovalPreview / StageTestFact / AcceptanceFact).
+/// Draft / Candidate / ApprovalPreview / StageTestFact / AcceptanceFact), and
+/// v27 = Role Blueprint / Assignment / Employee / Grant (P11-T04).
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -117,6 +119,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         memory_skill_consumption_migration_entry(),
         provider_control_plane_migration_entry(),
         project_aggregate_migration_entry(),
+        employee_migration_entry(),
     ]
 }
 

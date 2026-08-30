@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:fe12895b02b0e79e967bcec01fc82dc6ae05b485bf921d8b1e13058adefb8f2d"
+fingerprint: "sha256:6d23edf61e41fc0e0041f4ee9f028254ab7eba94b4d80ee52913debdbb1bcdc1"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -148,14 +148,29 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/list` | management | Personal-private Project list from v26 `p11_project` rows. Empty list has no fake buttons. Cost is `unknown` and is never serialized as 0. Not Task-row impersonation and not P7-T05 inventory. |
 | `GET` | `/management/project/v1/detail` | management | Personal-private Project detail. A Task ref is not a Project id (404). Unconfirmed drafts have no Project row. |
 | `GET` | `/management/project/v1/axis` | management | Current PlanRevision axis (stages, gap flags, confirm_status). Missing plan is empty/unavailable, not a fake wizard. |
-| `GET` | `/management/project/v1/roster` | management | Employee roster seam. T04 facts are absent, so the projection is empty with `employee-authority-not-implemented`. |
+| `GET` | `/management/project/v1/roster` | management | Employee roster. Empty projection uses `authority_note: empty-roster`. Seated members list `employee_id`, state, responsible stages, model_bound, and current-manager flag. Not a third identity besides Employee. |
+| `GET` | `/management/project/v1/employee.catalog` | management | Grant catalog for one Employee in one Project. Recipe mention is not a grant. |
 | `GET` | `/management/project/v1/pending-previews` | management | Pending ApprovalPreview announcement list. Omits `preview_digest` (conversation/canvas announcement seam). |
 | `GET` | `/management/project/v1/preview-detail` | management | Canvas preview-detail: includes `preview_digest` for management confirm. Not a chat Approve control. |
 | `POST` | `/management/project/v1/draft.apply` | management | Apply a candidate onto an open draft at exact `base_seq`. Wrong seq is conflict (N13). |
 | `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance). Secret-shaped bytes are rejected at registration. |
 | `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`. Stale digest is rejected. |
+| `POST` | `/management/project/v1/roster.register` | management | Register one Employee per PlanRevision responsible_slot. Missing or extra slots are rejected. Not a Role=Agent merge. |
+| `POST` | `/management/project/v1/employee.seat.request` | management | Begin sequential seating for one Employee. A second seating while another is seating is conflict. |
+| `POST` | `/management/project/v1/employee.seat.confirm` | management | Owner-management seating confirm. Missing model → pending; reject → refused; project-manager seating requires the unique current-manager slot. |
+| `POST` | `/management/project/v1/employee.runtime.bind` | management | Replace `runtime_binding_ref` without changing `employee_id`. Process death does not delete the Employee. |
+| `POST` | `/management/project/v1/speech.candidate` | management | Speech-router skeleton: whitelist kinds plus manager default. Archive landing is T05. |
+| `POST` | `/management/project/v1/handoff.record` | management | Record a handoff row with `authority_stays=1`. Chat cannot transfer authority. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/confirm` | task | Forbidden: Project aggregate is management-channel only. |
+| `GET` | `/task/project/v1/roster` | task | Forbidden: Employee/roster reads are management-channel only. |
+| `GET` | `/task/project/v1/employee.catalog` | task | Forbidden: Employee catalog is management-channel only. |
+| `POST` | `/task/project/v1/roster.register` | task | Forbidden: Employee/roster writers are management-channel only. |
+| `POST` | `/task/project/v1/employee.seat.request` | task | Forbidden: Employee seating is management-channel only. |
+| `POST` | `/task/project/v1/employee.seat.confirm` | task | Forbidden: Employee seating confirm is management-channel only. |
+| `POST` | `/task/project/v1/employee.runtime.bind` | task | Forbidden: runtime bind is management-channel only. |
+| `POST` | `/task/project/v1/speech.candidate` | task | Forbidden: speech candidate is management-channel only. |
+| `POST` | `/task/project/v1/handoff.record` | task | Forbidden: handoff record is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

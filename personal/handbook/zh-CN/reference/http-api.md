@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:fe12895b02b0e79e967bcec01fc82dc6ae05b485bf921d8b1e13058adefb8f2d"
+fingerprint: "sha256:6d23edf61e41fc0e0041f4ee9f028254ab7eba94b4d80ee52913debdbb1bcdc1"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -148,14 +148,29 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/list` | management | 从 v26 `p11_project` 行投影的 Personal-private Project 列表。空列表无假按钮。费用为 `unknown`，序列化里不出现 0。不是 Task 行冒充，也不动 P7-T05 inventory。 |
 | `GET` | `/management/project/v1/detail` | management | Personal-private Project 详情。Task ref 不是 Project id（404）。未确认草稿没有 Project 行。 |
 | `GET` | `/management/project/v1/axis` | management | 当前 PlanRevision 流程轴（环、gap 标记、confirm_status）。无计划时为空/unavailable，不是假向导。 |
-| `GET` | `/management/project/v1/roster` | management | 员工花名册接缝。T04 事实尚未落地，投影为空并带 `employee-authority-not-implemented`。 |
+| `GET` | `/management/project/v1/roster` | management | 员工花名册。空投影使用 `authority_note: empty-roster`。已就位成员列出 `employee_id`、state、负责环、model_bound 与 current-manager 标记。不是 Employee 之外的第三套身份。 |
+| `GET` | `/management/project/v1/employee.catalog` | management | 一个 Project 内一名 Employee 的 Grant 目录。配方提及不是授权。 |
 | `GET` | `/management/project/v1/pending-previews` | management | 待批 ApprovalPreview 宣布列表。省略 `preview_digest`（对话/画布宣布接缝）。 |
 | `GET` | `/management/project/v1/preview-detail` | management | 画布 preview-detail：含供 management 确认的 `preview_digest`。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/draft.apply` | management | 按精确 `base_seq` 把候选应用到未关闭草稿。错误 seq 为冲突（N13）。 |
 | `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance）。secret 形态字节在登记时拒绝。 |
 | `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`。过期 digest 拒绝。 |
+| `POST` | `/management/project/v1/roster.register` | management | 按 PlanRevision 每个 responsible_slot 登记一名 Employee。缺槽或多成员拒绝。不是 Role=Agent 合并。 |
+| `POST` | `/management/project/v1/employee.seat.request` | management | 开始一名 Employee 的顺序就位。另一名仍在 seating 时冲突。 |
+| `POST` | `/management/project/v1/employee.seat.confirm` | management | Owner management 就位确认。无模型 → pending；拒绝 → refused；project-manager 就位占用唯一 current-manager 槽。 |
+| `POST` | `/management/project/v1/employee.runtime.bind` | management | 替换 `runtime_binding_ref` 且不改 `employee_id`。进程退出不删除 Employee。 |
+| `POST` | `/management/project/v1/speech.candidate` | management | 发言路由骨架：白名单 kind 与经理默认投递。档案落地属 T05。 |
+| `POST` | `/management/project/v1/handoff.record` | management | 记录 `authority_stays=1` 的 handoff 行。聊天不能转移权威。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/confirm` | task | 禁止：Project 聚合仅限 management 通道。 |
+| `GET` | `/task/project/v1/roster` | task | 禁止：Employee/花名册读取仅限 management 通道。 |
+| `GET` | `/task/project/v1/employee.catalog` | task | 禁止：Employee catalog 仅限 management 通道。 |
+| `POST` | `/task/project/v1/roster.register` | task | 禁止：Employee/花名册写入仅限 management 通道。 |
+| `POST` | `/task/project/v1/employee.seat.request` | task | 禁止：Employee 就位仅限 management 通道。 |
+| `POST` | `/task/project/v1/employee.seat.confirm` | task | 禁止：Employee 就位确认仅限 management 通道。 |
+| `POST` | `/task/project/v1/employee.runtime.bind` | task | 禁止：runtime bind 仅限 management 通道。 |
+| `POST` | `/task/project/v1/speech.candidate` | task | 禁止：speech candidate 仅限 management 通道。 |
+| `POST` | `/task/project/v1/handoff.record` | task | 禁止：handoff 记录仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |
