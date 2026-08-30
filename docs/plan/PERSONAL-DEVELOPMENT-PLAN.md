@@ -1260,7 +1260,7 @@ flowchart TD
 | P11-T02 | Windows host/tray/background（隐藏） | P11-T01；**不挡 T03** | 见下表三栏 | not-started | unclaimed |
 | P11-T03 | Project 聚合 walking skeleton | P11-T01；**不依赖 T02** | 见下表三栏；实现第一刀 | done | merged PR [#281](https://github.com/agentkernel/cognitive-os/pull/281) at `main@46407380`; required CI [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) **SUCCESS** at `aef5574e`; Linux store 19/19 + HTTP 6/6 at `7d9f13e4`; [report](../checkpoints/2026-08-30-personal-p11-t03-project-aggregate-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t03-project-aggregate-closure.md) |
 | P11-T04 | Employee / Member Runtime 身份 | P11-T03 | 见下表三栏 | done | merged PR [#282](https://github.com/agentkernel/cognitive-os/pull/282) at `main@ab36a444`; required CI [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146) **SUCCESS** at `62840c9b`; [report](../checkpoints/2026-08-30-personal-p11-t04-employee-report.md) |
-| P11-T05 | Conversation 新 private version | P11-T03、P11-T04 | 见下表三栏；禁止重解释 `0.1` | in-progress | `P11-T05/D01` on `lease/personal/P11-T05/conversation`; [report](../checkpoints/2026-08-30-personal-p11-t05-conversation-report.md) |
+| P11-T05 | Conversation 新 private version | P11-T03、P11-T04 | 见下表三栏；禁止重解释 `0.1` | in-progress | `P11-T05/D02` on `lease/personal/P11-T05/conversation`; [report](../checkpoints/2026-08-30-personal-p11-t05-conversation-report.md) |
 | P11-T06 | 隐藏 Pi Assistant | P11-T03、P11-T05 | 见下表三栏 | not-started | unclaimed |
 | P11-T07 | 隐藏托管 DSH | P11-T03、P11-T04、P11-T12 | 见下表三栏；非可见 Installed Agent | not-started | unclaimed |
 | P11-T08 | Routine/Trigger | P11-T03 | 见下表三栏；不挡 T09 | not-started | unclaimed |

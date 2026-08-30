@@ -54,10 +54,17 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | pass | local Node | this commit | Personal plan/leases OK including `P11-T05/D02` |
 | 2026-08-30 | `cargo test -p cognitive-store --test p11_t05_conversation` | **not-run** | `DEV-WIN-GNU-01` | this commit | `RUST-LINK-DEV-WIN-GNU-01`; D02 now 7 store tests. Route to CI/Linux. |
 | 2026-08-30 | kernel-server conversation HTTP (bounded archive + append + record) | **not-run** | `DEV-WIN-GNU-01` | this commit | `RUST-LINK-DEV-WIN-GNU-01`; route to CI/Linux. |
+| 2026-08-30 | D02 commit pushed | recorded | Git | `aeae75f221881be55ff284f206f219c1a43a39a3` | PR [#283](https://github.com/agentkernel/cognitive-os/pull/283) still Draft. `66b18a14` is no longer the merge HEAD. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t05_conversation` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t05-90f1ba4b` | `aeae75f221881be55ff284f206f219c1a43a39a3` | T04-N9 + T05-N1..N6. GitHub fetch from the host timed out; objects transferred from the already-pushed Windows worktree over SSH. HEAD verified `aeae75f2`. |
+| 2026-08-30 | `delivered_speech_lands_in_archive_via_http` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t05-90f1ba4b` | `aeae75f221881be55ff284f206f219c1a43a39a3` | Bounded archive, owner append, record, unbounded/include_bodies 422, task-channel 403. Filter `conversation` only hits readiness tests; this is the HTTP caller. |
+| 2026-08-30 | `resolve validation route` | pass | GitHub Actions | `aeae75f221881be55ff284f206f219c1a43a39a3` | Run [33303578323](https://github.com/agentkernel/cognitive-os/actions/runs/33303578323) job [99236031759](https://github.com/agentkernel/cognitive-os/actions/runs/33303578323/job/99236031759), 3s. Independently confirmed. A later docs append push makes `aeae75f2` not the merge HEAD. |
+| 2026-08-30 | `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `aeae75f221881be55ff284f206f219c1a43a39a3` | Same run job [99236045082](https://github.com/agentkernel/cognitive-os/actions/runs/33303578323/job/99236045082), 3m33s. Independently confirmed. |
+| 2026-08-30 | `verify (windows-latest)` | **in-progress** | `CI-WINDOWS-MSVC-01` | `aeae75f221881be55ff284f206f219c1a43a39a3` | Same run job [99236045046](https://github.com/agentkernel/cognitive-os/actions/runs/33303578323/job/99236045046). Observed mid-job at Test Rust workspace. Not a pass. |
+| 2026-08-30 | `required-ci` | **not-run** | GitHub Actions | `aeae75f221881be55ff284f206f219c1a43a39a3` | Windows still in-progress on this SHA; do not infer required-ci. |
 
 ## Unique next action
 
-Push this D02 commit. Route focused `p11_t05_conversation` and kernel-server conversation HTTP tests to `DEV-LINUX-NATIVE-01` / required CI on the new HEAD. `66b18a14` is then no longer the merge HEAD. `DEV-WIN-GNU-01` cargo test remains not-run. READY_TO_MERGE is false until D02 is evidenced on that new HEAD.
+A docs-only append after this table is a new merge HEAD. Record that SHA's required CI honestly. Host archive E2E remains `not-run` (not qualified). `DEV-WIN-GNU-01` cargo test remains not-run. READY_TO_MERGE is false until required-ci SUCCESS on the actual merge HEAD plus the already-mapped T05 acceptance (D01+D02 negatives; host E2E stays `not-run`).
 
 ## Non-claims
 
