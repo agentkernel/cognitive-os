@@ -11,7 +11,7 @@ sources:
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["authority_migration_plan", "prepare_personal_databases"]
   - path: personal/crates/cognitive-store/src/project_aggregate.rs
-    symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "APPROVAL_PREVIEW_NARROW_SCHEMA_V29", "ProjectAggregateStore"]
+    symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "APPROVAL_PREVIEW_NARROW_SCHEMA_V29", "STANDING_APPROVAL_POLICY_SCHEMA_V30", "ProjectAggregateStore"]
   - path: personal/crates/cognitive-store/src/employee.rs
     symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec"]
   - path: personal/crates/cognitive-store/src/conversation.rs
@@ -36,7 +36,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:3143885895515724243e6f9e6487814747786f3e88bb125fa37c463d2d54e7af"
+fingerprint: "sha256:57999a7bdef7f468682fdea855bd5bf73f8f63f01b0bddc9c660563eab7e1648"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -46,11 +46,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v29) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v30) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v29)
+## Authority migration map (v1–v30)
 
 | Versions | Adds |
 |---|---|
@@ -66,18 +66,19 @@ orders authority first and names the backup path on a second-phase failure.
 | v26 | Personal-private Project aggregate (`p11_draft`, `p11_candidate`, `p11_charter_revision`, `p11_project`, `p11_plan_revision`, `p11_stage`, `p11_gap`, `p11_stage_test_fact`, `p11_acceptance_fact`, `p11_approval_preview`). New tables, not `family=task`. |
 | v27 | Role Blueprint / Assignment / Employee / Grant (`p11_role_blueprint`, `p11_role_blueprint_revision`, `p11_employee`, `p11_employee_revision`, `p11_assignment`, `p11_install_fact`, `p11_grant`, `p11_speech_audit`, `p11_handoff`). No Provider binding on Blueprint. Employee is the authority id; runtime_binding_ref is replaceable. Handoff rows keep `authority_stays=1`; writers take `HandoffSpec` so chat cannot transfer authority. |
 | v28 | Personal-private conversation archive (`p11_conversation_archive`) under new identifier `cognitiveos.personal.conversation-archive/0.1`. Delivered whitelist speech lands a row; owner `append` accepts `note`/`deliverable`/`handoff`/`blocked`/`decision-request`. Chatter stays audit-only. Index requires `limit` 1..=32 and returns refs (record_id + digest), not bodies. ADR-0058 `conversation-projection/0.1` is not coerced. Archive rows are observation-only; a record_id cannot satisfy stage-test completion. |
-| v29 | ApprovalPreview `superseded_by` (P11-T09 HITL). Narrow mints a **new** pending preview and freezes the old row as `superseded`. Reject leaves a `receipt_ref`. Stale is mechanical `base_state_digest` mismatch only — not wall-clock freshness. Chat/task cannot confirm, reject, or narrow. `grant-expansion` subject_kind and StandingApprovalPolicy time-box are not this migration. |
+| v29 | ApprovalPreview `superseded_by` (P11-T09 HITL). Narrow mints a **new** pending preview and freezes the old row as `superseded`. Reject leaves a `receipt_ref`. Stale is mechanical `base_state_digest` mismatch only — not wall-clock freshness. Chat/task cannot confirm, reject, or narrow. |
+| v30 | `grant-expansion` subject_kind plus StandingApprovalPolicy time-box (`p11_standing_approval_policy`). `expires_at` is required and ≤7 days. Settings list/revoke is management HTTP. Chat cannot mint. Rebuilds `p11_approval_preview` CHECK. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
-P11-T09 HITL canvas (D01) reuses v26 `request_preview` / `confirm_preview` / `p11_approval_preview` plus v29 `superseded_by`. Management HTTP `preview.reject` / `preview.narrow` are the durable caller; T05 announce+deep-link only; T06 `draft.apply` is not authority-approve. Host UI E2E is `not-run`. No second scheduler, no chat Approve, no Inbox L1.
+P11-T09 HITL canvas reuses v26 `request_preview` / `confirm_preview` / `p11_approval_preview` plus v29 `superseded_by` and v30 grant-expansion / StandingApprovalPolicy. Management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*` are the durable caller; T05 announce+deep-link only; T06 `draft.apply` is not authority-approve. Host UI E2E is `not-run`. Settings chrome is T13. No second scheduler, no chat Approve, no Inbox L1.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; the only derived table is `memory_search_fts` (rebuildable; searches
 run an authority-filter CTE before `MATCH`).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v29 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v30 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

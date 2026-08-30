@@ -492,6 +492,7 @@ formal task acceptance assessment 和收口。
 | `P11-T07/D01` | P11-T07 | 隐藏托管 DSH：exact artifact→isolated child/stdio→daemon Provider proxy；非可见 Installed Agent / 原生 UI / engine store | `P11-T03/D01`、`P11-T04/D01`、`P11-T12/D01` + dsh Path B；**不依赖 T02 mutex** | required CI；Windows sandbox E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run` |
 | `P11-T08/D01` | P11-T08 | Routine + Trigger → no-overlap/queue-latest → missed ledger；不挡 T09 | `P11-T03/D01` + scheduler/Effect/recovery | required CI；clock/sleep E2E 未资格化则 `not-run` |
 | `P11-T09/D01` | P11-T09 | HITL 只在项目中心画布 + Today 深链；聊天无 Approve；非一级 Inbox | `P11-T03/D01` + preview/Effect/alert；**不依赖 T08** | required CI；UI E2E 未资格化则 `not-run` |
+| `P11-T09/D02` | P11-T09 | StandingApprovalPolicy 时间盒（`expires_at` 必填、≤7d、Settings HTTP 列表/撤销）+ `grant-expansion` subject_kind；复用 request_preview/confirm；无 Inbox L1、无聊天 Approve、无 T13 整页 IA | `P11-T09/D01` | required CI；宿主 UI E2E / Settings chrome 未资格化则 `not-run` |
 | `P11-T10/D01` | P11-T10 | Knowledge/Markdown Vault import→rights/provenance→index/conflict；投影/检索越权负例 | `P11-T03/D01`、`P11-T05/D01` | 负例 → CI；宿主 filesystem E2E 未资格化则 `not-run` |
 | `P11-T11/D01` | P11-T11 | Memory admission/view/correct/forget/non-resurrection | `P11-T05/D01`、`P11-T10/D01` | required CI；privacy E2E 未资格化则 `not-run` |
 | `P11-T12/D01` | P11-T12 | 诚实 usage / unknown≠0；binding global→Project→employee→Task；成员级预算非当前 chrome | `P11-T03/D01`、`P11-T04/D01` + Provider CP；**不依赖 T07** | required CI；SecretStore/Provider 宿主未资格化则 `not-run` |
@@ -1264,7 +1265,7 @@ flowchart TD
 | P11-T06 | 隐藏 Pi Assistant | P11-T03、P11-T05 | 见下表三栏 | done | merged PR [#284](https://github.com/agentkernel/cognitive-os/pull/284) at `main@a66faae9`; required CI [33307554027](https://github.com/agentkernel/cognitive-os/actions/runs/33307554027) **SUCCESS** at `845442ea`; [report](../checkpoints/2026-08-30-personal-p11-t06-assistant-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t06-assistant-closure.md) |
 | P11-T07 | 隐藏托管 DSH | P11-T03、P11-T04、P11-T12 | 见下表三栏；非可见 Installed Agent | not-started | unclaimed |
 | P11-T08 | Routine/Trigger | P11-T03 | 见下表三栏；不挡 T09 | not-started | unclaimed |
-| P11-T09 | HITL 画布（非 Inbox 一级） | P11-T03；**不依赖 T08** | 见下表三栏 | in-progress | `P11-T09/D01` on `lease/personal/P11-T09/hitl-canvas`; [report](../checkpoints/2026-08-30-personal-p11-t09-hitl-canvas-report.md) |
+| P11-T09 | HITL 画布（非 Inbox 一级） | P11-T03；**不依赖 T08** | 见下表三栏 | in-progress | `P11-T09/D02` on `lease/personal/P11-T09/hitl-canvas`; [report](../checkpoints/2026-08-30-personal-p11-t09-hitl-canvas-report.md) |
 | P11-T10 | Knowledge/Vault | P11-T03、P11-T05 | 见下表三栏 | not-started | unclaimed |
 | P11-T11 | Memory admission | P11-T05、P11-T10 | 见下表三栏 | not-started | unclaimed |
 | P11-T12 | Provider 诚实 usage | P11-T03、P11-T04；**不依赖 T07** | 见下表三栏；成员预算非当前 chrome | not-started | unclaimed |

@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3cceefe7ca40d8e67f6cb2d512b45b7267d467b49c781d0cd616aa588fdc12eb"
+fingerprint: "sha256:696ef79b1f5bed9bcc585892f26fd98d654762bac35604a192df5626378655b0"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -153,10 +153,13 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/pending-previews` | management | 待批 ApprovalPreview 宣布列表。省略 `preview_digest`（对话/画布宣布接缝）。 |
 | `GET` | `/management/project/v1/preview-detail` | management | 画布 preview-detail：含供 management 确认/拒绝/改窄的 `preview_digest`、`receipt_ref`、`superseded_by`。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/draft.apply` | management | 按精确 `base_seq` 把候选应用到未关闭草稿。错误 seq 为冲突（N13）。 |
-| `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance）。secret 形态字节在登记时拒绝。 |
+| `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance / grant-expansion）。响应含供画布确认的 `preview_digest`。secret 形态字节在登记时拒绝。 |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner management 拒绝待批 ApprovalPreview。留下 receipt。被拒 digest 永不可确认。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner management 改窄：签发新的 pending preview，旧行 `superseded`（`superseded_by`）。旧 digest 永不可确认。stale 只按机械 `base_state_digest` 不等判定。 |
-| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`。过期 digest 拒绝。 |
+| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`；grant-expansion 写入 Grant。过期 digest 拒绝。 |
+| `GET` | `/management/project/v1/standing-policies` | management | Settings 列出未撤销的 StandingApprovalPolicy（时间盒 ≤7 天）。聊天不能签发。不是 Inbox 一级。 |
+| `POST` | `/management/project/v1/standing-policy.create` | management | 签发有时限的 StandingApprovalPolicy。`expires_at` 必填且距现在 ≤7 天。缺省或超长失败闭合。 |
+| `POST` | `/management/project/v1/standing-policy.revoke` | management | Settings 撤销一条 StandingApprovalPolicy。聊天/task 别名为 403。 |
 | `POST` | `/management/project/v1/roster.register` | management | 按 PlanRevision 每个 responsible_slot 登记一名 Employee。缺槽或多成员拒绝。不是 Role=Agent 合并。 |
 | `POST` | `/management/project/v1/employee.seat.request` | management | 开始一名 Employee 的顺序就位。另一名仍在 seating 时冲突。 |
 | `POST` | `/management/project/v1/employee.seat.confirm` | management | Owner management 就位确认。无模型 → pending；拒绝 → refused；project-manager 就位占用唯一 current-manager 槽。 |
@@ -173,6 +176,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/project/v1/preview.reject` | task | 禁止：HITL reject 仅限 management 通道。聊天不能完成批准。 |
 | `POST` | `/task/project/v1/preview.narrow` | task | 禁止：HITL 改窄仅限 management 通道。聊天不能完成批准。 |
 | `POST` | `/task/project/v1/confirm` | task | 禁止：Project 聚合仅限 management 通道。 |
+| `GET` | `/task/project/v1/standing-policies` | task | 禁止：StandingApprovalPolicy 列表仅限 management 通道。 |
+| `POST` | `/task/project/v1/standing-policy.create` | task | 禁止：StandingApprovalPolicy 签发仅限 management 通道。聊天不能签发时间盒。 |
+| `POST` | `/task/project/v1/standing-policy.revoke` | task | 禁止：StandingApprovalPolicy 撤销仅限 management 通道。 |
 | `GET` | `/task/project/v1/roster` | task | 禁止：Employee/花名册读取仅限 management 通道。 |
 | `GET` | `/task/project/v1/employee.catalog` | task | 禁止：Employee catalog 仅限 management 通道。 |
 | `POST` | `/task/project/v1/roster.register` | task | 禁止：Employee/花名册写入仅限 management 通道。 |

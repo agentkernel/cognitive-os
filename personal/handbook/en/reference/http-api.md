@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3cceefe7ca40d8e67f6cb2d512b45b7267d467b49c781d0cd616aa588fdc12eb"
+fingerprint: "sha256:696ef79b1f5bed9bcc585892f26fd98d654762bac35604a192df5626378655b0"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -153,10 +153,13 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/pending-previews` | management | Pending ApprovalPreview announcement list. Omits `preview_digest` (conversation/canvas announcement seam). |
 | `GET` | `/management/project/v1/preview-detail` | management | Canvas preview-detail: includes `preview_digest`, `receipt_ref`, and `superseded_by` for management confirm/reject/narrow. Not a chat Approve control. |
 | `POST` | `/management/project/v1/draft.apply` | management | Apply a candidate onto an open draft at exact `base_seq`. Wrong seq is conflict (N13). |
-| `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance). Secret-shaped bytes are rejected at registration. |
+| `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance / grant-expansion). Response includes `preview_digest` for canvas confirm. Secret-shaped bytes are rejected at registration. |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner-management reject of a pending ApprovalPreview. Leaves a receipt. The rejected digest is never confirmable. Not a chat Approve control. |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner-management narrow: mint a new pending preview and freeze the old row as superseded (`superseded_by`). Old digest is never confirmable. Stale is mechanical `base_state_digest` mismatch only. |
-| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`. Stale digest is rejected. |
+| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. Stale digest is rejected. |
+| `GET` | `/management/project/v1/standing-policies` | management | Settings list of non-revoked StandingApprovalPolicy rows (time-box ≤7d). Chat cannot mint. Not Inbox L1. |
+| `POST` | `/management/project/v1/standing-policy.create` | management | Mint a time-boxed StandingApprovalPolicy. `expires_at` is required and must be ≤7 days from now. Missing or over-long expiry fails closed. |
+| `POST` | `/management/project/v1/standing-policy.revoke` | management | Settings revoke of one StandingApprovalPolicy. Chat/task aliases are 403. |
 | `POST` | `/management/project/v1/roster.register` | management | Register one Employee per PlanRevision responsible_slot. Missing or extra slots are rejected. Not a Role=Agent merge. |
 | `POST` | `/management/project/v1/employee.seat.request` | management | Begin sequential seating for one Employee. A second seating while another is seating is conflict. |
 | `POST` | `/management/project/v1/employee.seat.confirm` | management | Owner-management seating confirm. Missing model → pending; reject → refused; project-manager seating requires the unique current-manager slot. |
@@ -173,6 +176,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/project/v1/preview.reject` | task | Forbidden: HITL reject is management-channel only. Chat cannot complete approval. |
 | `POST` | `/task/project/v1/preview.narrow` | task | Forbidden: HITL narrow is management-channel only. Chat cannot complete approval. |
 | `POST` | `/task/project/v1/confirm` | task | Forbidden: Project aggregate is management-channel only. |
+| `GET` | `/task/project/v1/standing-policies` | task | Forbidden: StandingApprovalPolicy list is management-channel only. |
+| `POST` | `/task/project/v1/standing-policy.create` | task | Forbidden: StandingApprovalPolicy create is management-channel only. Chat cannot mint a time-box. |
+| `POST` | `/task/project/v1/standing-policy.revoke` | task | Forbidden: StandingApprovalPolicy revoke is management-channel only. |
 | `GET` | `/task/project/v1/roster` | task | Forbidden: Employee/roster reads are management-channel only. |
 | `GET` | `/task/project/v1/employee.catalog` | task | Forbidden: Employee catalog is management-channel only. |
 | `POST` | `/task/project/v1/roster.register` | task | Forbidden: Employee/roster writers are management-channel only. |

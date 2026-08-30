@@ -151,6 +151,55 @@ pub fn approval_preview_narrow_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(29, APPROVAL_PREVIEW_NARROW_SCHEMA_V29)
 }
 
+/// Maximum StandingApprovalPolicy TTL: 7 days (product 「本周」 time-box).
+pub const STANDING_POLICY_MAX_TTL_MS: i64 = 7 * 24 * 60 * 60 * 1000;
+
+/// Authority migration v30: grant-expansion subject_kind + StandingApprovalPolicy.
+/// Rebuilds `p11_approval_preview` so CHECK can name `grant-expansion`.
+/// Settings list/revoke is HTTP; Control Plane chrome is T13.
+pub const STANDING_APPROVAL_POLICY_SCHEMA_V30: &str = "
+CREATE TABLE p11_approval_preview_v30 (
+  preview_id TEXT PRIMARY KEY,
+  subject_kind TEXT NOT NULL CHECK (subject_kind IN (
+    'activation','plan-change','acceptance','grant-expansion'
+  )),
+  subject_ref TEXT NOT NULL,
+  base_state_digest TEXT NOT NULL CHECK (length(base_state_digest) = 64),
+  preview_bytes_ref TEXT NOT NULL,
+  preview_digest TEXT NOT NULL UNIQUE CHECK (length(preview_digest) = 64),
+  status TEXT NOT NULL CHECK (status IN (
+    'pending','approved','rejected','stale','consumed','superseded'
+  )),
+  intent_id TEXT,
+  receipt_ref TEXT,
+  created_at INTEGER NOT NULL,
+  decided_at INTEGER,
+  superseded_by TEXT
+) STRICT;
+INSERT INTO p11_approval_preview_v30 (
+  preview_id, subject_kind, subject_ref, base_state_digest, preview_bytes_ref,
+  preview_digest, status, intent_id, receipt_ref, created_at, decided_at, superseded_by
+) SELECT
+  preview_id, subject_kind, subject_ref, base_state_digest, preview_bytes_ref,
+  preview_digest, status, intent_id, receipt_ref, created_at, decided_at, superseded_by
+FROM p11_approval_preview;
+DROP TABLE p11_approval_preview;
+ALTER TABLE p11_approval_preview_v30 RENAME TO p11_approval_preview;
+CREATE TABLE p11_standing_approval_policy (
+  policy_id TEXT PRIMARY KEY,
+  subject_class TEXT NOT NULL,
+  subject_ref TEXT NOT NULL,
+  expires_at INTEGER NOT NULL,
+  created_at INTEGER NOT NULL,
+  revoked_at INTEGER
+) STRICT;
+";
+
+/// v30 migration entry.
+pub fn standing_approval_policy_migration_entry() -> MigrationPlanEntry {
+    MigrationPlanEntry::new(30, STANDING_APPROVAL_POLICY_SCHEMA_V30)
+}
+
 /// Failures from the Project aggregate store.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum ProjectAggregateError {
@@ -508,7 +557,10 @@ impl ProjectAggregateStore {
         now_ms: i64,
     ) -> Result<(String, String), ProjectAggregateError> {
         Self::reject_secret_shape(preview_bytes)?;
-        if !matches!(subject_kind, "activation" | "plan-change" | "acceptance") {
+        if !matches!(
+            subject_kind,
+            "activation" | "plan-change" | "acceptance" | "grant-expansion"
+        ) {
             return Err(ProjectAggregateError::Invalid {
                 detail: "unsupported subject_kind",
             });
@@ -549,6 +601,7 @@ impl ProjectAggregateStore {
             "activation" => Self::activation_base_digest(conn, subject_ref),
             "plan-change" => self.plan_change_base_digest_locked(conn, subject_ref),
             "acceptance" => self.acceptance_base_digest_locked(conn, subject_ref),
+            "grant-expansion" => Self::grant_expansion_base_digest_locked(conn, subject_ref),
             _ => Err(ProjectAggregateError::Invalid {
                 detail: "unsupported subject_kind",
             }),
@@ -662,6 +715,124 @@ impl ProjectAggregateStore {
         ))
     }
 
+    fn grant_expansion_base_digest_locked(
+        conn: &Connection,
+        subject_ref: &str,
+    ) -> Result<String, ProjectAggregateError> {
+        let spec = parse_grant_expansion_ref(subject_ref)?;
+        let exists: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM p11_employee WHERE employee_id = ?1 AND project_id = ?2",
+                params![spec.employee_id, spec.project_id],
+                |row| row.get(0),
+            )
+            .map_err(unavailable("employee for grant-expansion"))?;
+        if exists == 0 {
+            return Err(ProjectAggregateError::NotFound {
+                detail: "employee not found",
+            });
+        }
+        let mut statement = conn
+            .prepare(
+                "SELECT capability_ref, scope FROM p11_grant
+                  WHERE project_id = ?1 AND employee_id = ?2
+                  ORDER BY capability_ref, scope",
+            )
+            .map_err(unavailable("grant catalog for preview"))?;
+        let rows = statement
+            .query_map(params![spec.project_id, spec.employee_id], |row| {
+                Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?))
+            })
+            .map_err(unavailable("grant catalog query"))?;
+        let mut catalog = String::new();
+        for row in rows {
+            let (capability, scope) = row.map_err(unavailable("grant catalog row"))?;
+            catalog.push_str(&format!("{capability}={scope}\n"));
+        }
+        Ok(Self::digest_hex(
+            format!(
+                "grant-expansion\n{}\n{}\n{}\n{}\n{catalog}",
+                spec.project_id, spec.employee_id, spec.capability_ref, spec.scope
+            )
+            .as_bytes(),
+        ))
+    }
+
+    fn grant_expansion_locked(
+        conn: &Connection,
+        subject_ref: &str,
+        now_ms: i64,
+    ) -> Result<ConfirmResult, ProjectAggregateError> {
+        let spec = parse_grant_expansion_ref(subject_ref)?;
+        let employee_project: String = conn
+            .query_row(
+                "SELECT project_id FROM p11_employee WHERE employee_id = ?1",
+                [&spec.employee_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(unavailable("employee for grant confirm"))?
+            .ok_or(ProjectAggregateError::NotFound {
+                detail: "employee not found",
+            })?;
+        if employee_project != spec.project_id {
+            return Err(ProjectAggregateError::Forbidden {
+                detail: "cross-project write rejected",
+            });
+        }
+        let installed: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM p11_install_fact WHERE capability_ref = ?1",
+                [&spec.capability_ref],
+                |row| row.get(0),
+            )
+            .map_err(unavailable("install fact for grant-expansion"))?;
+        if installed == 0 {
+            return Err(ProjectAggregateError::Rejected {
+                detail: "grant requires an InstallFact",
+            });
+        }
+        let already: i64 = conn
+            .query_row(
+                "SELECT COUNT(*) FROM p11_grant
+                  WHERE project_id = ?1 AND employee_id = ?2
+                    AND capability_ref = ?3 AND scope = ?4",
+                params![
+                    spec.project_id,
+                    spec.employee_id,
+                    spec.capability_ref,
+                    spec.scope
+                ],
+                |row| row.get(0),
+            )
+            .map_err(unavailable("duplicate grant"))?;
+        if already > 0 {
+            return Err(ProjectAggregateError::Conflict {
+                detail: "grant already exists for subject",
+            });
+        }
+        let grant_id = next_id("grant")?;
+        conn.execute(
+            "INSERT INTO p11_grant (grant_id, project_id, employee_id, capability_ref, scope, created_at)
+             VALUES (?1,?2,?3,?4,?5,?6)",
+            params![
+                grant_id,
+                spec.project_id,
+                spec.employee_id,
+                spec.capability_ref,
+                spec.scope,
+                now_ms
+            ],
+        )
+        .map_err(unavailable("insert grant-expansion"))?;
+        let receipt_ref = format!("receipt:grant:{grant_id}");
+        Ok(ConfirmResult {
+            kind: "granted",
+            new_ref: grant_id,
+            receipt_ref,
+        })
+    }
+
     pub fn confirm_preview(
         &self,
         caller: ConfirmCaller,
@@ -698,7 +869,12 @@ impl ProjectAggregateStore {
             "activation" => self.activate_locked(&conn, &preview.subject_ref, now_ms)?,
             "plan-change" => self.confirm_stage_from_preview_locked(&conn, &preview.subject_ref)?,
             "acceptance" => self.accept_locked(&conn, &preview.subject_ref, now_ms)?,
-            _ => unreachable!(),
+            "grant-expansion" => Self::grant_expansion_locked(&conn, &preview.subject_ref, now_ms)?,
+            _ => {
+                return Err(ProjectAggregateError::Invalid {
+                    detail: "unsupported subject_kind",
+                });
+            }
         };
         conn.execute(
             "UPDATE p11_approval_preview
@@ -1546,6 +1722,122 @@ impl ProjectAggregateStore {
         .map_err(unavailable("preview detail"))
     }
 
+    /// Time-boxed 「本周同一类对外不再问」. `expires_at` is required and must be
+    /// strictly after `now_ms` and at most 7 days later. Chat/task cannot mint.
+    pub fn create_standing_policy(
+        &self,
+        caller: ConfirmCaller,
+        subject_class: &str,
+        subject_ref: &str,
+        expires_at: Option<i64>,
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        Self::reject_secret_shape(subject_class.as_bytes())?;
+        Self::reject_secret_shape(subject_ref.as_bytes())?;
+        if subject_class.is_empty() || subject_ref.is_empty() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "subject_class and subject_ref required",
+            });
+        }
+        let Some(expires_at) = expires_at else {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "expires_at required",
+            });
+        };
+        if expires_at <= now_ms {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "expires_at must be in the future",
+            });
+        }
+        if expires_at - now_ms > STANDING_POLICY_MAX_TTL_MS {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "expires_at exceeds 7-day maximum",
+            });
+        }
+        let conn = self.lock()?;
+        let policy_id = next_id("policy")?;
+        conn.execute(
+            "INSERT INTO p11_standing_approval_policy (
+                policy_id, subject_class, subject_ref, expires_at, created_at, revoked_at
+             ) VALUES (?1,?2,?3,?4,?5,NULL)",
+            params![policy_id, subject_class, subject_ref, expires_at, now_ms],
+        )
+        .map_err(unavailable("insert standing policy"))?;
+        Ok(policy_id)
+    }
+
+    /// Settings list: non-revoked policies. `active` is `expires_at > now_ms`.
+    pub fn list_standing_policies(
+        &self,
+        now_ms: i64,
+    ) -> Result<Vec<StandingPolicyRow>, ProjectAggregateError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare(
+                "SELECT policy_id, subject_class, subject_ref, expires_at, created_at, revoked_at
+                   FROM p11_standing_approval_policy
+                  WHERE revoked_at IS NULL
+                  ORDER BY created_at",
+            )
+            .map_err(unavailable("list standing policies"))?;
+        let rows = statement
+            .query_map([], |row| {
+                let expires_at: i64 = row.get(3)?;
+                Ok(StandingPolicyRow {
+                    policy_id: row.get(0)?,
+                    subject_class: row.get(1)?,
+                    subject_ref: row.get(2)?,
+                    expires_at,
+                    created_at: row.get(4)?,
+                    revoked_at: row.get(5)?,
+                    active: expires_at > now_ms,
+                })
+            })
+            .map_err(unavailable("standing policy query"))?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("standing policy rows"))
+    }
+
+    /// Settings revoke. Chat/task cannot revoke. Already-revoked is invalid.
+    pub fn revoke_standing_policy(
+        &self,
+        caller: ConfirmCaller,
+        policy_id: &str,
+        now_ms: i64,
+    ) -> Result<(), ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        let conn = self.lock()?;
+        let revoked_at: Option<i64> = conn
+            .query_row(
+                "SELECT revoked_at FROM p11_standing_approval_policy WHERE policy_id = ?1",
+                [policy_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(unavailable("load standing policy"))?
+            .ok_or(ProjectAggregateError::NotFound {
+                detail: "standing policy not found",
+            })?;
+        if revoked_at.is_some() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "standing policy already revoked",
+            });
+        }
+        let updated = conn
+            .execute(
+                "UPDATE p11_standing_approval_policy SET revoked_at = ?1 WHERE policy_id = ?2",
+                params![now_ms, policy_id],
+            )
+            .map_err(unavailable("revoke standing policy"))?;
+        if updated != 1 {
+            return Err(ProjectAggregateError::Unavailable {
+                detail: "standing policy revoke did not update one row".to_owned(),
+            });
+        }
+        Ok(())
+    }
+
     pub fn get_draft_seq(&self, draft_id: &str) -> Result<i64, ProjectAggregateError> {
         let conn = self.lock()?;
         conn.query_row(
@@ -1598,6 +1890,7 @@ impl ProjectAggregateStore {
             "SELECT title, objective, cadence_json FROM p11_stage",
             "SELECT description FROM p11_gap",
             "SELECT preview_bytes_ref FROM p11_approval_preview",
+            "SELECT subject_class, subject_ref FROM p11_standing_approval_policy",
         ];
         for sql in tables {
             let mut statement = conn.prepare(sql).map_err(unavailable("leak scan"))?;
@@ -1705,6 +1998,18 @@ pub struct PreviewDetailRow {
     pub status: String,
     pub receipt_ref: Option<String>,
     pub superseded_by: Option<String>,
+}
+
+/// Settings-list StandingApprovalPolicy row (time-box; no chat mint).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct StandingPolicyRow {
+    pub policy_id: String,
+    pub subject_class: String,
+    pub subject_ref: String,
+    pub expires_at: i64,
+    pub created_at: i64,
+    pub revoked_at: Option<i64>,
+    pub active: bool,
 }
 
 struct PreviewLookup {
@@ -1905,6 +2210,38 @@ fn parse_stage_ref(subject_ref: &str) -> Result<(&str, &str), ProjectAggregateEr
         .ok_or(ProjectAggregateError::Invalid {
             detail: "plan-change subject_ref must be project_id#stage_id",
         })
+}
+
+struct GrantExpansionSpec {
+    project_id: String,
+    employee_id: String,
+    capability_ref: String,
+    scope: String,
+}
+
+fn parse_grant_expansion_ref(
+    subject_ref: &str,
+) -> Result<GrantExpansionSpec, ProjectAggregateError> {
+    let value: serde_json::Value =
+        serde_json::from_str(subject_ref).map_err(|_| ProjectAggregateError::Invalid {
+            detail: "grant-expansion subject_ref must be JSON",
+        })?;
+    let required = |key: &str| -> Result<String, ProjectAggregateError> {
+        value
+            .get(key)
+            .and_then(serde_json::Value::as_str)
+            .filter(|text| !text.is_empty())
+            .map(str::to_owned)
+            .ok_or(ProjectAggregateError::Invalid {
+                detail: "grant-expansion subject_ref missing field",
+            })
+    };
+    Ok(GrantExpansionSpec {
+        project_id: required("project_id")?,
+        employee_id: required("employee_id")?,
+        capability_ref: required("capability_ref")?,
+        scope: required("scope")?,
+    })
 }
 
 fn next_id(prefix: &str) -> Result<String, ProjectAggregateError> {

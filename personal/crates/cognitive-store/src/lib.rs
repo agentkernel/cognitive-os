@@ -91,8 +91,9 @@ pub use personal_db::{
 pub use project_aggregate::{
     ConfirmCaller, ConfirmResult, GapRow, NarrowResult, PROJECT_AGGREGATE_SCHEMA_V26,
     PendingPreviewRow, PreviewDetailRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
-    SeatingFacts, StageRow, StageSpec, StageTestOracle, approval_preview_narrow_migration_entry,
-    project_aggregate_migration_entry, reject_closed_candidate_schema,
+    STANDING_POLICY_MAX_TTL_MS, SeatingFacts, StageRow, StageSpec, StageTestOracle,
+    StandingPolicyRow, approval_preview_narrow_migration_entry, project_aggregate_migration_entry,
+    reject_closed_candidate_schema, standing_approval_policy_migration_entry,
     validate_assistant_provenance,
 };
 pub use provider_control_plane::{

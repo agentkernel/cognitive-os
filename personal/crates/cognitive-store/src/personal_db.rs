@@ -27,6 +27,7 @@ use crate::migration::{
 };
 use crate::project_aggregate::{
     approval_preview_narrow_migration_entry, project_aggregate_migration_entry,
+    standing_approval_policy_migration_entry,
 };
 use crate::provider_control_plane::provider_control_plane_migration_entry;
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
@@ -96,7 +97,9 @@ impl PersonalDatabasePrepareReport {
 /// v27 = Role Blueprint / Assignment / Employee / Grant (P11-T04), and
 /// v28 = Personal-private conversation archive (P11-T05; new identifier, not
 /// a reinterpretation of `conversation-projection/0.1`), and
-/// v29 = ApprovalPreview `superseded_by` for HITL narrow (P11-T09).
+/// v29 = ApprovalPreview `superseded_by` for HITL narrow (P11-T09), and
+/// v30 = grant-expansion subject_kind plus StandingApprovalPolicy time-box
+/// (`expires_at` required, ≤7d; Settings list/revoke).
 pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
     vec![
         MigrationPlanEntry::new(1, AUTHORITY_SCHEMA_V1),
@@ -128,6 +131,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         employee_migration_entry(),
         conversation_migration_entry(),
         approval_preview_narrow_migration_entry(),
+        standing_approval_policy_migration_entry(),
     ]
 }
 
