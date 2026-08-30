@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Hidden hosted DSH isolated child + daemon Provider proxy: durable `runtime_binding_ref` bind to managed child identity (`hosted-dsh:<digest>:<child_id>`), fail-closed GNU spawn fence, process-exit observer that does not delete Employee / conversation / Memory. Required CI is the Rust source of truth. Do not merge until task acceptance.
+Required CI on `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` is **SUCCESS** (run [33317772618](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618)). `DEV-WINDOWS-NATIVE-OPC-01` hosted E2E remains **not-run**. Linux Path B ≠ Windows hosted qualification. Closure records the pass; this checkpoint commit moves HEAD off `21c03171` and the new SHA needs its own required-ci. This turn does not merge [#287](https://github.com/agentkernel/cognitive-os/pull/287). [2026-08-30-personal-p11-t07-dsh-closure.md](2026-08-30-personal-p11-t07-dsh-closure.md).
 
 ## Closed predecessor
 
@@ -61,6 +61,14 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | pass | local Node | this commit | Personal plan/leases OK including `P11-T07/D01` |
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | pass | local Node | this commit | 58×2 locales; coverage/fingerprint OK |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | pass | local Node | this commit | 18 pages byte-identical |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t07_hosted_dsh` | **pass** 8/8 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t07-21c03171` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | Digest/protocol/secret/unknown-output/Pi/task-channel/process-death/GNU-fence. Not B01. Linux Path B ≠ Windows hosted qualification |
+| 2026-08-30 | `cargo test -p kernel-server --bin kernel-server -- hosted_dsh_start_persists_binding_and_task_channel_is_forbidden` | **pass** | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t07-21c03171` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | Management start persists binding; task channel 403; observe-exit HTTP; unknown `child_output: success` 422 |
+| 2026-08-30 | Windows hosted sandbox / supply-chain E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | Card allows `not-run` until the host route is qualified. Do not claim Windows sandbox pass |
+| 2026-08-30 | `cargo` build/test/clippy | **not-run** | `DEV-WIN-GNU-01` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | `RUST-LINK-DEV-WIN-GNU-01` |
+| 2026-08-30 | B01 guest | **not-run** | `B01-Desktop-Linux-002` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | Evaluation routing OFF; not a B01 campaign |
+| 2026-08-30 | `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | [job 99274255908](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618/job/99274255908) run [33317772618](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618). Build/Test Rust, Clippy `-D warnings`, rustfmt, handbook, consistency **SUCCESS** |
+| 2026-08-30 | `verify (windows-latest)` | **pass** | `CI-WINDOWS-MSVC-01` | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | [job 99274255912](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618/job/99274255912) run [33317772618](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618) |
+| 2026-08-30 | `required-ci` | **pass** | required-ci | `21c03171b1f5caa7fdcd231abaadaaa988cbe1e6` | [job 99275908890](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618/job/99275908890) run [33317772618](https://github.com/agentkernel/cognitive-os/actions/runs/33317772618). All-green: required-ci + ubuntu + windows |
 
 ## Explicit non-claims
 
