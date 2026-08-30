@@ -6,7 +6,7 @@
 - Lease: `lease/personal/P11-T04/employee`
 - Branch: `personal/P11-T04-employee`
 - PR: [#282](https://github.com/agentkernel/cognitive-os/pull/282) Draft
-- HEAD: `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` (implementation); Clippy `HandoffSpec` follow-up uncommitted
+- HEAD: `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` (Clippy `HandoffSpec`); Linux store/HTTP proof at `3c7a4190`
 - Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
@@ -118,7 +118,11 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | T04-only status rows + lease |
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 58 docs × 2 locales |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 18 pages byte-identical |
-| 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | **pass** | `DEV-WIN-GNU-01` | uncommitted | store + handbook changeset; no `DOCS_IMPACT_NONE` |
+| 2026-08-30 | `node tools/src/docs-sync-gate.mjs --staged` | **pass** | `DEV-WIN-GNU-01` | `3c7a4190` | store + handbook changeset; no `DOCS_IMPACT_NONE` |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t04_employee` | **pass** (16/16) | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t04-3c7a4190` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | T04-N1..N11 + Role≠Agent + Blueprint no Provider + history + seated predicate + task-channel 403 |
+| 2026-08-30 | `cargo test -p cognitive-store --test p1_t01_layout_migrations` | **pass** (8/8) | `DEV-LINUX-NATIVE-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | v27 additive; `p11_employee` present |
+| 2026-08-30 | `cargo test -p kernel-server --bin kernel-server -- project_aggregate` | **pass** (7/7) | `DEV-LINUX-NATIVE-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | empty-roster, register+seat HTTP, T03 G1/N12 retained |
+| 2026-08-30 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **fail** | `DEV-LINUX-NATIVE-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | `clippy::too_many_arguments` on `record_handoff` (8/7). Superseded by `9cb1b6dc` `HandoffSpec`. |
 | 2026-08-30 | Draft PR [#282](https://github.com/agentkernel/cognitive-os/pull/282) | recorded | github | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | Draft. Do not merge until Clippy/CI green. |
 | 2026-08-30 | required CI [33290989251](https://github.com/agentkernel/cognitive-os/actions/runs/33290989251) | **fail** (Clippy) | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | `clippy::too_many_arguments` on `EmployeeStore::record_handoff` (8/7). Tests **not-run** (clippy failed first). |
 | 2026-08-30 | parent recovery after subagent death | recorded | `DEV-WIN-GNU-01` | `3c7a419080f8e5702a99f5b8746b8f7415a47aa0` | Unique next action = `HandoffSpec` Clippy fix → Linux/CI → close. DOC dirty / untracked 14–22 protected. Never `git add -A`. |
