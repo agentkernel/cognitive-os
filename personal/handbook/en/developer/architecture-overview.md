@@ -110,7 +110,7 @@ authority.
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is in progress on this branch (reuses daemon `scheduler_entries`; not Inbox L1); `P11-T02`/`T13` remain separate claims). Development-prep index
+  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); `P11-T02`/`T13` remain separate claims). Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
@@ -131,7 +131,7 @@ authority.
   current chrome). Project aggregate walking skeleton is Personal-private;
   Markdown Vault D01 is on `main` (files are not Project authority);
   scoped Memory admission D01 is on `main`;
-  Routine/Trigger walking skeleton (`P11-T08`) is in progress on this branch;
+  Routine/Trigger walking skeleton (`P11-T08`) is on `main`;
   `P11-T02`/`T13` remain separate claims. Prep index:
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 

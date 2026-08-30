@@ -1542,7 +1542,7 @@ formal acceptance.
 
 ### P11-T08 — Routine, Trigger, missed run
 
-- **status:** in-progress (`P11-T08/D01` on `personal/P11-T08-routine` / `lease/personal/P11-T08/routine`). v33 + management `routine.*`. Claim ceiling `hypothesis`. Unique next = Linux/CI focused store+HTTP.
+- **status:** done (merged PR [#290](https://github.com/agentkernel/cognitive-os/pull/290) at `main@bda740f6`; required CI [33340492220](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220) **SUCCESS** at `7182a4fb`; Linux store 7/7 + HTTP 1/1 at `98bd61de`). Claim ceiling `hypothesis`. Unique next = claim `P11-T13/D01`.
 - **2.0.0 表面:** 项目运行/例程；不是 Inbox 一级。
 - **依赖:** P11-T03。**不挡 T09。**
 - **垂直切片:** Routine revision + Trigger → no-overlap/queue-latest → missed ledger。

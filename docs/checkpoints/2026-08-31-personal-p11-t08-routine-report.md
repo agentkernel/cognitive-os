@@ -8,7 +8,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Change class: `implementation-only`
 - Claim commit: `92f8920a` (lease/plan only).
 - Implementation commit: `879dff45` (Draft PR [#290](https://github.com/agentkernel/cognitive-os/pull/290)).
-- Unique next: parent ready/merge of Draft PR [#290](https://github.com/agentkernel/cognitive-os/pull/290). Do not merge in this session. Clock/sleep/restart host E2E remains `not-run`.
+- Unique next: claim `P11-T13/D01`. PR [#290](https://github.com/agentkernel/cognitive-os/pull/290) merged as `main@bda740f6`. Clock/sleep/restart host E2E remains `not-run`.
 
 | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|
@@ -32,6 +32,11 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | `verify (ubuntu-latest)` | **SUCCESS** | `CI-UBUNTU-01` [99332001416](https://github.com/agentkernel/cognitive-os/actions/runs/33339331049/job/99332001416) | `98bd61deeb32f4d0f537bd1efcbb8f4becbca604` | ~3m22s |
 | `verify (windows-latest)` | **SUCCESS** | `CI-WINDOWS-MSVC-01` [99332001465](https://github.com/agentkernel/cognitive-os/actions/runs/33339331049/job/99332001465) | `98bd61deeb32f4d0f537bd1efcbb8f4becbca604` | ~14m24s |
 | workspace `required-ci` | **SUCCESS** | GitHub Actions [99333727774](https://github.com/agentkernel/cognitive-os/actions/runs/33339331049/job/99333727774) | `98bd61deeb32f4d0f537bd1efcbb8f4becbca604` | run [33339331049](https://github.com/agentkernel/cognitive-os/actions/runs/33339331049). Not a pass of clock/sleep/restart E2E. A7: CI ≠ Gate. |
+| `resolve validation route` on `7182a4fb` | **SUCCESS** | GitHub Actions [99335161155](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220/job/99335161155) | `7182a4fbbd44cae1a571a1d3c5411234b36481e8` | ~4s; docs-head run [33340492220](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220) |
+| `verify (ubuntu-latest)` on `7182a4fb` | **SUCCESS** | `CI-UBUNTU-01` [99335175657](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220/job/99335175657) | `7182a4fbbd44cae1a571a1d3c5411234b36481e8` | ~3m57s; docs-only head after `98bd61de` required-ci |
+| `verify (windows-latest)` on `7182a4fb` | **SUCCESS** | `CI-WINDOWS-MSVC-01` [99335175719](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220/job/99335175719) | `7182a4fbbd44cae1a571a1d3c5411234b36481e8` | ~14m12s |
+| workspace `required-ci` on `7182a4fb` | **SUCCESS** | GitHub Actions [99336927238](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220/job/99336927238) | `7182a4fbbd44cae1a571a1d3c5411234b36481e8` | run [33340492220](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220). Not a pass of clock/sleep/restart E2E. A7: CI ≠ Gate. |
+| PR [#290](https://github.com/agentkernel/cognitive-os/pull/290) merge | **merged** | GitHub | `bda740f670e5736c05d9330410bfc1b51d94d784` | merge commit of `7182a4fb`; not Gate |
 
 ## Non-claims
 
