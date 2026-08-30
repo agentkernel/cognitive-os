@@ -22,6 +22,7 @@ pub mod context_store;
 pub mod conversation;
 pub mod employee;
 pub mod faults;
+pub mod hosted_dsh;
 pub mod ids;
 pub mod installation;
 pub mod layout;
@@ -57,6 +58,11 @@ pub use employee::{
     employee_migration_entry,
 };
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
+pub use hosted_dsh::{
+    HOSTED_DSH_ARTIFACT_DIGEST, HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PATH_B_AGENT, HOSTED_DSH_PROTOCOL,
+    HOSTED_DSH_PROVIDER_PROXY, HOSTED_DSH_SCHEMA_V31, HOSTED_DSH_WIN_GNU_FENCE,
+    HostedDshObservation, HostedDshPlane, HostedDshStartSpec, hosted_dsh_migration_entry,
+};
 pub use ids::UuidV7Generator;
 pub use installation::{
     AgentActivationCommit, AgentHealthObservation, AgentLifecycleFenceCommit,

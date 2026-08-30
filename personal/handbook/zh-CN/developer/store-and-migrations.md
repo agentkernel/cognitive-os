@@ -18,6 +18,8 @@ sources:
     symbols: ["CONVERSATION_ARCHIVE_SCHEMA_V28", "ConversationStore", "CONVERSATION_ARCHIVE_PROJECTION_ID", "ArchiveReadSpec", "ArchiveAppendSpec"]
   - path: personal/crates/cognitive-store/src/assistant.rs
     symbols: ["AssistantPlane", "AssistantTurnSpec", "ASSISTANT_ENGINE_ID", "ASSISTANT_PI_PIN"]
+  - path: personal/crates/cognitive-store/src/hosted_dsh.rs
+    symbols: ["HOSTED_DSH_SCHEMA_V31", "HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -33,12 +35,14 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
+  - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
+  - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:dba7370440377590ef5f801794889330021cd41efd866fd8afd205a003051076"
+fingerprint: "sha256:b7706d844aa298113b4d99884100c04994a97df6c514f07e033a54e2d5ef1a51"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -48,10 +52,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v30）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v31）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v30）
+## 权威库迁移图（v1–v31）
 
 | 版本 | 新增 |
 |---|---|
@@ -69,6 +73,9 @@ non_claims:
 | v28 | Personal-private 对话档案（`p11_conversation_archive`），新标识 `cognitiveos.personal.conversation-archive/0.1`。白名单投递发言落档案行；owner `append` 接受 `note`/`deliverable`/`handoff`/`blocked`/`decision-request`。chatter 只留 `p11_speech_audit`。索引用 `limit` 1..=32，返回引用（record_id + digest）而不是正文。ADR-0058 `conversation-projection/0.1` 不被 coerce。档案行只是观察；record_id 不能当作 stage-test 完成。 |
 | v29 | ApprovalPreview `superseded_by`（P11-T09 HITL）。改窄签发**新** pending preview，旧行冻结为 `superseded`。拒绝留下 `receipt_ref`。stale 只按机械 `base_state_digest` 不等判定，不是墙钟新鲜度。聊天/task 不能 confirm/reject/narrow。 |
 | v30 | `grant-expansion` subject_kind 与 StandingApprovalPolicy 时间盒（`p11_standing_approval_policy`）。`expires_at` 必填且 ≤7 天。Settings 列表/撤销是 management HTTP。聊天不能签发。重建 `p11_approval_preview` CHECK。 |
+| v31 | 隐藏托管 DSH 子进程（`p11_hosted_dsh_child`）。`runtime_binding_ref` 绑到 `hosted-dsh:<artifact>:<child_id>`（pid/digest/artifact）。进程退出清除 pid 并标 `exited`；不删除 Employee、对话档案或 Memory。Windows GNU 上 isolated spawn 失败闭合。Windows OPC E2E 为 `not-run`。 |
+
+P11-T07 隐藏托管 DSH 新增 v31 `p11_hosted_dsh_child`。Attempt-runner `start` 的真实调用者是 management HTTP `dsh.hosted.start`；task 通道别名 403。digest/protocol 不匹配、env/argv 含 secret、Pi 作 Member 引擎、Installed Agent chrome、未知子进程输出（`success`/`ok`/`agent_end`）一律失败闭合。daemon Provider 代理 `POST /provider/v1/dsh/chat/completions` 仍是唯一持 secret 路径。Linux Path B 不等于 Windows 托管资格。
 
 P11-T06 隐藏 Pi Assistant **不新增迁移**。它复用 v26 `p11_candidate` / `p11_approval_preview` 与 T05 只读档案上下文。助手登记必须带 typed 出处（`sources[]` | `owner-stated` | `assistant-assumption`）；非空 blob 不够。封闭候选 JSON 禁止 `grant` / `secret` / `trigger-arm`。`draft.apply` 指向 Project/Employee/Grant/已确认 charter 会被拒。助手平面不能写 archive、SecretStore、Memory，也不能 confirm/apply 权威。工具 default-deny；research 只能点名既有 `HttpFetchReadOnly`。exact Pi `0.81.1` 与 `cognitiveos.private-candidate/1` 是身份钉，不是第二套调度器或 Installed Agent。
 
@@ -79,7 +86,7 @@ P11-T12 诚实 usage **不新增迁移**。它是对 v25 `llm_usage_events` / `a
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；唯一派生表是
 `memory_search_fts`（可重建；检索先跑权威过滤 CTE 再 `MATCH`）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v30 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v31 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

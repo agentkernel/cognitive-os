@@ -18,7 +18,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:96945c9d051ae6bc21a358e334b9514303b4fb1e9bbe455c4a519a05a0506dec"
+fingerprint: "sha256:b47cc4dfde5afe180df6575833dffc475d4eed44818002ec6f2ec9d6da02aebb"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -170,6 +170,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/conversation.record` | management | Single-record body fetch inside one Project. Not a bulk dump. Cross-scope record ids fail closed. |
 | `POST` | `/management/project/v1/handoff.record` | management | Record a handoff row with `authority_stays=1`. Chat cannot transfer authority. |
 | `POST` | `/management/project/v1/assistant.turn` | management | Hidden Pi Personal Assistant (exact Pi 0.81.1 / `cognitiveos.private-candidate/1`): explain/navigate/research/propose registers a digest-bound draft candidate with typed provenance (`sources` | `owner-stated` | `assistant-assumption`) and, for research/propose, a daemon preview announcement. Candidate-only: no Approve, no archive/SecretStore/Memory/authority write, default-deny tools except research `HttpFetchReadOnly`. Pi is not an Installed Agent. Closed schema rejects grant/secret/trigger-arm fields. |
+| `POST` | `/management/project/v1/dsh.hosted.start` | management | Hidden hosted DSH Attempt-runner start: persist a managed child identity (artifact digest / protocol / optional observed pid) onto Employee `runtime_binding_ref`. Reuses Path B `POST /provider/v1/dsh/chat/completions` as the only secret-bearing path. Isolated spawn fail-closes on Windows GNU. Not Installed Agent chrome. Windows OPC E2E is `not-run`. |
+| `POST` | `/management/project/v1/dsh.hosted.observe-exit` | management | Observe hosted DSH child exit. Clears pid observation. Does not delete Employee, conversation archive, or Memory. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
@@ -191,4 +193,6 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/conversation.record` | task | Forbidden: conversation record fetch is management-channel only. |
 | `POST` | `/task/project/v1/handoff.record` | task | Forbidden: handoff record is management-channel only. |
 | `POST` | `/task/project/v1/assistant.turn` | task | Forbidden: hidden assistant is management-channel only. |
+| `POST` | `/task/project/v1/dsh.hosted.start` | task | Forbidden: hosted DSH process bind is management-channel only. |
+| `POST` | `/task/project/v1/dsh.hosted.observe-exit` | task | Forbidden: hosted DSH exit observation is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

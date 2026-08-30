@@ -6,9 +6,10 @@
 use cognitive_store::{
     ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL, ArchiveAppendSpec,
     ArchiveReadSpec, AssistantPlane, AssistantTurnSpec, CONVERSATION_ARCHIVE_PROJECTION_ID,
-    ConfirmCaller, ConversationStore, EmployeeStore, HandoffSpec, PendingPreviewRow,
-    ProjectAggregateError, ProjectAggregateStore, ProjectRow, RosterProposal, SpeechArchiveSpec,
-    SqliteAuthorityStore, reject_closed_candidate_schema,
+    ConfirmCaller, ConversationStore, EmployeeStore, HOSTED_DSH_ARTIFACT_DIGEST,
+    HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec, HostedDshPlane, HostedDshStartSpec,
+    PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow, RosterProposal,
+    SpeechArchiveSpec, SqliteAuthorityStore, reject_closed_candidate_schema,
 };
 use serde_json::{Value, json};
 
@@ -40,6 +41,8 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/conversation.record",
     "POST /management/project/v1/handoff.record",
     "POST /management/project/v1/assistant.turn",
+    "POST /management/project/v1/dsh.hosted.start",
+    "POST /management/project/v1/dsh.hosted.observe-exit",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/preview.request",
@@ -61,6 +64,8 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /task/project/v1/conversation.record",
     "POST /task/project/v1/handoff.record",
     "POST /task/project/v1/assistant.turn",
+    "POST /task/project/v1/dsh.hosted.start",
+    "POST /task/project/v1/dsh.hosted.observe-exit",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -141,6 +146,10 @@ pub(crate) fn handle(
         }
         "POST /management/project/v1/handoff.record" => handoff_record(body, &employees),
         "POST /management/project/v1/assistant.turn" => assistant_turn(body, store),
+        "POST /management/project/v1/dsh.hosted.start" => dsh_hosted_start(body, store),
+        "POST /management/project/v1/dsh.hosted.observe-exit" => {
+            dsh_hosted_observe_exit(body, store)
+        }
         _ => error(
             404,
             "PROJECT_AGGREGATE_ROUTE_NOT_FOUND",
@@ -780,6 +789,146 @@ fn assistant_turn(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiRespo
             "object_kind": outcome.object_kind,
             "context_refs": outcome.context_refs,
             "observation_only": true,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn dsh_hosted_start(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let employees = EmployeeStore::from_authority_store(store);
+    let latest_revision = match employees.latest_revision_id(employee_id) {
+        Ok(Some(revision)) => revision,
+        Ok(None) => {
+            return error(404, "PROJECT_NOT_FOUND", "employee revision not found");
+        }
+        Err(error) => return store_error(error),
+    };
+    let employee_revision_id = document
+        .get("employee_revision_id")
+        .and_then(Value::as_str)
+        .unwrap_or(latest_revision.as_str());
+    let Some(task_ref) = document.get("task_ref").and_then(Value::as_str) else {
+        return error(400, "TASK_REF_REQUIRED", "task_ref required");
+    };
+    let bounded_context = document
+        .get("bounded_context")
+        .and_then(Value::as_str)
+        .unwrap_or("sha256:bounded-context");
+    let artifact_digest = document
+        .get("artifact_digest")
+        .and_then(Value::as_str)
+        .unwrap_or(HOSTED_DSH_ARTIFACT_DIGEST);
+    let protocol = document
+        .get("protocol")
+        .and_then(Value::as_str)
+        .unwrap_or(HOSTED_DSH_PROTOCOL);
+    let engine_id = document
+        .get("engine_id")
+        .and_then(Value::as_str)
+        .unwrap_or(HOSTED_DSH_ENGINE_ID);
+    let observed_pid = document
+        .get("observed_pid")
+        .and_then(Value::as_u64)
+        .and_then(|value| u32::try_from(value).ok());
+    let argv_owned: Vec<String> = document
+        .get("argv")
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(ToOwned::to_owned)
+                .collect()
+        })
+        .unwrap_or_default();
+    let argv: Vec<&str> = argv_owned.iter().map(String::as_str).collect();
+    let env_owned: Vec<(String, String)> = document
+        .get("env")
+        .and_then(Value::as_object)
+        .map(|object| {
+            object
+                .iter()
+                .filter_map(|(key, value)| value.as_str().map(|raw| (key.clone(), raw.to_owned())))
+                .collect()
+        })
+        .unwrap_or_default();
+    let env_pairs: Vec<(&str, &str)> = env_owned
+        .iter()
+        .map(|(key, value)| (key.as_str(), value.as_str()))
+        .collect();
+    let child_output = document.get("child_output").and_then(Value::as_str);
+    let plane = HostedDshPlane::from_authority_store(store);
+    match plane.start(
+        ConfirmCaller::OwnerManagement,
+        &HostedDshStartSpec {
+            employee_id,
+            employee_revision_id,
+            task_ref,
+            bounded_context,
+            artifact_digest,
+            protocol,
+            engine_id,
+            observed_pid,
+            argv: &argv,
+            env_pairs: &env_pairs,
+            child_output,
+            now_ms: now_ms(),
+        },
+    ) {
+        Ok(outcome) => ok(json!({
+            "status": "ok",
+            "child_id": outcome.child_id,
+            "employee_id": outcome.employee_id,
+            "runtime_binding_ref": outcome.runtime_binding_ref,
+            "artifact_digest": outcome.artifact_digest,
+            "protocol": outcome.protocol,
+            "pid": outcome.pid,
+            "spawn_kind": outcome.spawn_kind,
+            "state": outcome.state,
+            "terminal_kind": outcome.terminal_kind,
+            "provider_proxy": outcome.provider_proxy,
+            "path_b_agent": outcome.path_b_agent,
+            "secret_bearer": outcome.secret_bearer,
+            "engine": HOSTED_DSH_ENGINE_ID,
+            "installed_agent": outcome.installed_agent,
+            "pi_member_engine": outcome.pi_member_engine,
+            "windows_opc_e2e": "not-run",
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn dsh_hosted_observe_exit(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let plane = HostedDshPlane::from_authority_store(store);
+    match plane.observe_exit(employee_id) {
+        Ok(Some(outcome)) => ok(json!({
+            "status": "ok",
+            "child_id": outcome.child_id,
+            "employee_id": outcome.employee_id,
+            "runtime_binding_ref": outcome.runtime_binding_ref,
+            "state": outcome.state,
+            "terminal_kind": outcome.terminal_kind,
+            "pid": outcome.pid,
+            "installed_agent": false,
+            "pi_member_engine": false,
+        })),
+        Ok(None) => ok(json!({
+            "status": "ok",
+            "state": "no-hosted-child",
+            "terminal_kind": "exited",
+            "employee_preserved": true,
         })),
         Err(error) => store_error(error),
     }
@@ -1939,5 +2088,160 @@ mod tests {
         );
         assert_eq!(authority_apply.status, 422, "{}", authority_apply.body);
         assert!(authority_apply.body.contains("authority"));
+    }
+
+    #[test]
+    fn hosted_dsh_start_persists_binding_and_task_channel_is_forbidden() {
+        use cognitive_store::{
+            HOSTED_DSH_ARTIFACT_DIGEST, HOSTED_DSH_ENGINE_ID, HostedDshPlane, StageSpec,
+        };
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let project_id = plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 4)
+            .unwrap()
+            .new_ref;
+        let plan_id = plane
+            .apply_plan_revision(
+                &project_id,
+                &project_id,
+                &[StageSpec {
+                    stage_id: "s1".to_owned(),
+                    title: "Manage".to_owned(),
+                    objective: "manage".to_owned(),
+                    output_contract_digest: ProjectAggregateStore::digest_hex(b"out"),
+                    acceptance_spec_ref: Some("cas:spec".to_owned()),
+                    cadence_json: None,
+                    responsible_slot: "manager".to_owned(),
+                    blocking_gap: None,
+                }],
+                20,
+            )
+            .unwrap();
+        let registered = handle(
+            "POST /management/project/v1/roster.register",
+            json!({
+                "project_id": project_id,
+                "plan_revision_id": plan_id,
+                "proposals": [{
+                    "slot": "manager",
+                    "specialization": "project-manager",
+                    "prompt": "coordinate",
+                    "tools_declared": ["workspace-write"]
+                }]
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(registered.status, 200, "{}", registered.body);
+        let employee_id = serde_json::from_str::<Value>(&registered.body)
+            .unwrap()
+            .get("employee_ids")
+            .and_then(Value::as_array)
+            .and_then(|ids| ids[0].as_str())
+            .unwrap()
+            .to_owned();
+        let seat = handle(
+            "POST /management/project/v1/employee.seat.request",
+            json!({"employee_id": employee_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(seat.status, 200, "{}", seat.body);
+        let confirm = handle(
+            "POST /management/project/v1/employee.seat.confirm",
+            json!({"employee_id": employee_id, "model_binding": "flash", "accept": true})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirm.status, 200, "{}", confirm.body);
+        let task = handle(
+            "POST /task/project/v1/dsh.hosted.start",
+            json!({
+                "employee_id": employee_id,
+                "task_ref": "task://personal/hosted-dsh",
+                "bounded_context": "sha256:ctx"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(task.status, 403);
+        let started = handle(
+            "POST /management/project/v1/dsh.hosted.start",
+            json!({
+                "employee_id": employee_id,
+                "task_ref": "task://personal/hosted-dsh",
+                "bounded_context": "sha256:ctx",
+                "observed_pid": 4242,
+                "argv": ["--isolated"],
+                "env": {"PATH": "/usr/bin"}
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        if HostedDshPlane::isolated_spawn_is_fenced() {
+            assert_eq!(started.status, 422, "{}", started.body);
+            assert!(started.body.contains("DEV-WIN-GNU-01"));
+            return;
+        }
+        assert_eq!(started.status, 200, "{}", started.body);
+        assert!(started.body.contains("hosted-dsh:"));
+        assert!(started.body.contains(HOSTED_DSH_ARTIFACT_DIGEST));
+        assert!(
+            started.body.contains(HOSTED_DSH_ENGINE_ID) || started.body.contains("identity-bound")
+        );
+        assert!(started.body.contains("daemon-proxy-only"));
+        assert!(started.body.contains("\"installed_agent\":false"));
+        assert!(started.body.contains("\"pi_member_engine\":false"));
+        assert!(started.body.contains("\"terminal_kind\":\"started\""));
+        assert!(!started.body.contains("sk-"));
+        assert!(!started.body.to_ascii_lowercase().contains("api_key"));
+        let mismatch = handle(
+            "POST /management/project/v1/dsh.hosted.start",
+            json!({
+                "employee_id": employee_id,
+                "task_ref": "task://personal/hosted-dsh",
+                "bounded_context": "sha256:ctx",
+                "artifact_digest": "deadbeefdeadbeefdeadbeefdeadbeefdeadbeef"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(mismatch.status, 422, "{}", mismatch.body);
+        let unknown = handle(
+            "POST /management/project/v1/dsh.hosted.start",
+            json!({
+                "employee_id": employee_id,
+                "task_ref": "task://personal/hosted-dsh",
+                "bounded_context": "sha256:ctx",
+                "child_output": "success"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(unknown.status, 422, "{}", unknown.body);
+        let exited = handle(
+            "POST /management/project/v1/dsh.hosted.observe-exit",
+            json!({"employee_id": employee_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(exited.status, 200, "{}", exited.body);
+        assert!(exited.body.contains("\"state\":\"exited\""));
+        let task_exit = handle(
+            "POST /task/project/v1/dsh.hosted.observe-exit",
+            json!({"employee_id": employee_id}).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(task_exit.status, 403);
     }
 }
