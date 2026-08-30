@@ -6,7 +6,7 @@
 - Lease: `lease/personal/P11-T04/employee`
 - Branch: `personal/P11-T04-employee`
 - PR: [#282](https://github.com/agentkernel/cognitive-os/pull/282) Draft
-- HEAD: `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` (Clippy `HandoffSpec`); Linux store/HTTP proof at `3c7a4190`
+- HEAD: `62840c9b076c4095817660575d3392a3c43e2d69` (even with origin; Clippy `HandoffSpec` at `9cb1b6dc`; Linux store/HTTP proof at `3c7a4190`)
 - Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
@@ -131,3 +131,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-08-30 | `node tools/src/check-consistency.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 275 requirements; lease date format restored |
 | 2026-08-30 | `node tools/src/check-handbook.mjs` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 58 docs × 2 locales |
 | 2026-08-30 | `node tools/src/generate-handbook.mjs --check` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 18 pages byte-identical |
+| 2026-08-30 | Clippy-fix commit+push | recorded | github | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | PR [#282](https://github.com/agentkernel/cognitive-os/pull/282) head. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t04_employee` | **pass** (16/16) | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t04-9cb1b6dc` | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | T04-N1..N11 + Role≠Agent + Blueprint no Provider + history + seated predicate + task-channel. |
+| 2026-08-30 | `cargo test -p cognitive-store --test p1_t01_layout_migrations` | **pass** (8/8) | `DEV-LINUX-NATIVE-01` | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | v27 additive |
+| 2026-08-30 | `cargo test -p cognitive-store --test p11_t03_project_aggregate` | **pass** (19/19) | `DEV-LINUX-NATIVE-01` | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | T03 N1–N15 + G2 retained |
+| 2026-08-30 | `cargo test -p kernel-server --bin kernel-server -- project_aggregate` | **pass** (7/7) | `DEV-LINUX-NATIVE-01` | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | empty-roster, register+seat HTTP, T03 G1/N12 retained |
+| 2026-08-30 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | `HandoffSpec` clears too_many_arguments |
+| 2026-08-30 | required CI [33292087129](https://github.com/agentkernel/cognitive-os/actions/runs/33292087129) Ubuntu | **pass** (Ubuntu); Windows **cancelled** / superseded | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `9cb1b6dcf15964b3107f4e4baf4aca17decfa3c4` | Ubuntu completed (Clippy deny-warnings, rustfmt, consistency, handbook, workspace tests). Prior Windows-in-progress cell superseded by HEAD `62840c9b076c4095817660575d3392a3c43e2d69` (run [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146)); do not treat the cancelled Windows job as pass or fail. |
+| 2026-08-30 | resolve validation route | **pass** | required CI [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146) | `62840c9b076c4095817660575d3392a3c43e2d69` | 3s. [job 99206325918](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146/job/99206325918) |
+| 2026-08-30 | `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `62840c9b076c4095817660575d3392a3c43e2d69` | 3m37s. [job 99206335343](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146/job/99206335343) |
+| 2026-08-30 | `verify (windows-latest)` | **pass** | `CI-WINDOWS-MSVC-01` | `62840c9b076c4095817660575d3392a3c43e2d69` | 11m9s. [job 99206335378](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146/job/99206335378) |
+| 2026-08-30 | `required-ci` aggregator | **pass** | required CI [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146) | `62840c9b076c4095817660575d3392a3c43e2d69` | 2s. [job 99207425741](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146/job/99207425741) |
+| 2026-08-30 | required CI run [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146) | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `62840c9b076c4095817660575d3392a3c43e2d69` | resolve 3s; Ubuntu 3m37s; Windows 11m9s; `required-ci`. Host E2E / `DEV-WINDOWS-NATIVE-OPC-01` remains **not-run**. |
