@@ -105,6 +105,10 @@ describe("200-stub detection (R-1)", () => {
 describe("route whitelist (R-1)", () => {
   it("accepts known routes with query strings", () => {
     expect(isKnownRoute("GET", "/management/providers/accounts")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/list")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/pending-previews?subject_ref=proj-1")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/vault.index?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
     expect(isKnownRoute("POST", "/management/agent-bindings/remove")).toBe(true);
   });
@@ -112,6 +116,8 @@ describe("route whitelist (R-1)", () => {
   it("rejects unknown and forbidden routes", () => {
     expect(isKnownRoute("POST", "/task/cancel")).toBe(false);
     expect(isKnownRoute("POST", "/task/complete")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/vault.apply-authority")).toBe(false);
     expect(isKnownRoute("POST", "/management/agent/transition")).toBe(false);
     expect(isKnownRoute("GET", "/management/providers/accounts/../../etc")).toBe(false);
     expect(isKnownRoute("DELETE", "/management/providers/accounts")).toBe(false);

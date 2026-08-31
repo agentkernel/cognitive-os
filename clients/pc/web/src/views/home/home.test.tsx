@@ -157,7 +157,7 @@ async function renderHome(overrides: Record<string, RouteHandler> = {}, withTask
     rememberBearer("task", "test-task-bearer");
   }
   const calls = installFetch(homeRoutes(overrides));
-  const view = renderAppAt("#/");
+  const view = renderAppAt("#/home");
   await flush();
   return { ...view, calls };
 }
@@ -885,7 +885,7 @@ describe("Home failure honesty", () => {
         });
       }),
     );
-    const { host, root } = renderAppAt("#/");
+    const { host, root } = renderAppAt("#/home");
     await flush();
     expect(region(host, "home-work-title").textContent).toContain("contract epoch 7");
 

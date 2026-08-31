@@ -25,15 +25,18 @@ afterEach(() => {
 });
 
 describe("shell keyboard helpers (W12)", () => {
-  it("maps g-chords onto the seven spaces", () => {
+  it("maps g-chords onto Personal 2.0 L1 plus kept Linux 1.0 spaces", () => {
     expect(SPACE_CHORDS).toEqual({
-      h: "/",
+      t: "/",
+      p: "/projects",
+      n: "/knowledge",
+      s: "/settings",
+      h: "/home",
       w: "/work",
       a: "/agents",
-      p: "/providers",
+      v: "/providers",
       r: "/resources",
       c: "/activity",
-      s: "/system",
     });
   });
 

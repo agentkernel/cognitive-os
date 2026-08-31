@@ -52,20 +52,13 @@ describe("Shell identity and navigation", () => {
     expect(headings[0].textContent).toBe("CognitiveOS Personal");
     const nav = host.querySelector('nav[aria-label="Primary"]');
     expect(nav).not.toBeNull();
-    // Frozen redesign IA (docs/design/06, owner-frozen labels): seven spaces.
-    // Bindings folds into Providers (DD-04); Session is chrome (DD-05);
-    // Tasks is renamed Work (DD-06).
-    for (const label of [
-      "Home",
-      "Work",
-      "Agents",
-      "Providers",
-      "Resources",
-      "Activity",
-      "System",
-    ]) {
+    // Personal 2.0 L1 (P11-T13): Today / Projects / Knowledge. Team/Inbox
+    // are not L1. Linux 1.0 spaces remain as secondary routes.
+    for (const label of ["Today", "Projects", "Knowledge"]) {
       expect(nav?.textContent).toContain(label);
     }
+    expect(nav?.textContent).not.toContain("Team");
+    expect(nav?.textContent).not.toContain("Inbox");
     expect(nav?.textContent).not.toContain("Bindings");
     expect(nav?.textContent).not.toContain("Tasks");
     act(() => {
@@ -77,7 +70,7 @@ describe("Shell identity and navigation", () => {
   it("shows an in-place session gate for the dashboard when unauthenticated", () => {
     const { host, root } = renderApp("#/");
     expect(host.querySelector("[data-page='session-gate']")).not.toBeNull();
-    expect(host.querySelector("main h2")?.textContent).toBe("Home");
+    expect(host.querySelector("main h2")?.textContent).toBe("Today");
     expect(host.textContent).toMatch(/not a Provider LLM API key/i);
     expect(host.textContent).toMatch(/local-bootstrap\.secret/);
     act(() => {
@@ -89,8 +82,7 @@ describe("Shell identity and navigation", () => {
   it("emits hash hrefs, not pathname routes that the daemon 404s", () => {
     const { host, root } = renderApp("#/session");
     const links = [...host.querySelectorAll("nav a")];
-    // Frozen IA has 7 spaces (was 8 with Bindings/Session as peers).
-    expect(links.length).toBeGreaterThanOrEqual(7);
+    expect(links.length).toBeGreaterThanOrEqual(3);
     for (const link of links) {
       const href = link.getAttribute("href") ?? "";
       expect(href.startsWith("#"), `href ${href}`).toBe(true);

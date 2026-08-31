@@ -99,7 +99,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   hypothesis；不是 Gate、不是 P11 领取）。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；`P11-T02`/`T13` 仍单独领取）。
+  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；Dual Track `/ui/` IA（`P11-T13`）在 `clients/pc/web` 上 in-progress（无权威诚实空态；不是完整 IA 验收）；`P11-T02` 仍单独领取）。
   开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
@@ -116,7 +116,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   为 Personal-private；Markdown Vault D01 已在 `main`（文件不是 Project 权威）；
   scoped Memory admission D01 已在 `main`；
   Routine/Trigger walking skeleton（`P11-T08`）已在 `main`；
-  `P11-T02`/`T13` 仍单独领取。前期索引：
+  Dual Track `/ui/` IA（`P11-T13`）在 `clients/pc/web` 上 in-progress；
+  `P11-T02` 仍单独领取。前期索引：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh

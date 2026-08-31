@@ -1,14 +1,14 @@
 import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { CommandPalette } from "../components/CommandPalette";
+import { AssistantRail } from "./AssistantRail";
 import { PrimaryNav } from "./PrimaryNav";
 import { StatusStrip } from "./StatusStrip";
 import { useShellKeyboard } from "./useShellKeyboard";
 
 /**
- * App shell — docs/design/12. Status strip (top, full width) + primary nav
- * (left) + main region. Three content layouts are sanctioned (MI / MID / CS);
- * the shell provides the frame only. ⌘K is chrome, not a space.
+ * App shell — Personal 2.0: strip + L1 + main + assistant rail.
+ * ⌘K is chrome, not a space. The rail never Approves.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -43,6 +43,7 @@ export function AppShell({ children }: { children: ReactNode }) {
       <main id="main" className="cp-main" tabIndex={-1}>
         {children}
       </main>
+      <AssistantRail />
       <CommandPalette open={paletteOpen} onClose={() => setPaletteOpen(false)} />
     </div>
   );
