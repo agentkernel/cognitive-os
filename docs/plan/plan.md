@@ -1812,7 +1812,7 @@ formal acceptance.
 
 ### P12-T09 — Right-rail edit → confirm → write canvas (no Approve)
 
-- **status:** `in-progress` on `personal/P12-T09-rail-write` / `lease/personal/P12-T09/rail-write`. Draft PR [#302](https://github.com/agentkernel/cognitive-os/pull/302). Unique next = required CI.
+- **status:** `done` pending merge PR [#302](https://github.com/agentkernel/cognitive-os/pull/302). Required CI [33427885119](https://github.com/agentkernel/cognitive-os/actions/runs/33427885119) **SUCCESS** at `e0343853`. Dual Track TS web **417/417**. Unique next = merge (P12 Remaining = 0); do not auto-claim `P11-T15`.
 - **2.0.0 表面:** 右栏「编辑 → 确认 → 写画布」无 Approve。empty-home 可藏聊天。
 - **依赖:** P12-T01；P11-T05/T06。
 - **垂直切片:** candidate 编辑 → 确认 → 写画布；无 authority/Secret 写。
