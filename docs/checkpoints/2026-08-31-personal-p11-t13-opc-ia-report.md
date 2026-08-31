@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) until this docs-head also has required-ci green, then ready/merge. L1 Dual Track close-gate evidence is on `e86ddd7b` (Settings Advanced collapsed; Today → Projects HITL canvas; rail announce-only; Vitest **340/340**; required-ci **SUCCESS** run [33345249452](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452)). Remaining on the product claim: host UI E2E **not-run**; NVDA/200%/host-theme hung **not-run**. Do not auto-claim T02. Do not unpark T14/T15.
+Keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291). Docs-head `0608e44e` required-ci [33346409425](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425) **SUCCESS**. Do not merge: browser click-through / NVDA / 200% / host-theme remain hung **not-run**; not complete `/ui/` acceptance. Disposable T13 daemon `/ui/` **listens** on `DEV-LINUX-NATIVE-01` `127.0.0.1:48691` (not B01, not host `:48181`). Do not auto-claim T02. Do not unpark T14/T15.
 
 ## Closed predecessor
 
@@ -79,6 +79,14 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | Host UI E2E vs daemon `/ui/` at `e86ddd7b` | `DEV-LINUX-NATIVE-01` `wuz@192.168.1.2` | **not-run** (`git fetch` GitHub `:443` timeout; no copied uncommitted tree; B01 guest `hal9001@192.168.123.160` unused) |
 | NVDA / 200% layout / host-theme contrast | hung | **not-run** |
 | Rust cargo | `DEV-WIN-GNU-01` | **not-run** (`RUST-LINK-DEV-WIN-GNU-01`) |
+| HTTPS `git push` `0608e44e` | `DEV-WIN-GNU-01` | **pass** docs-head (required-ci ledger) → `origin/personal/P11-T13-opc-ia` |
+| `resolve validation route` on `0608e44e` | GitHub Actions run [33346409425](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425) | **pass** job [99351289463](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425/job/99351289463) |
+| `verify (ubuntu-latest)` on `0608e44e` | `CI-UBUNTU-01` run [33346409425](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425) | **pass** job [99351298285](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425/job/99351298285) (3m46s) |
+| `verify (windows-latest)` on `0608e44e` | `CI-WINDOWS-MSVC-01` run [33346409425](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425) | **pass** job [99351298238](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425/job/99351298238) (13m3s) |
+| `required-ci` on `0608e44e` | GitHub Actions run [33346409425](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425) | **pass** job [99353211074](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425/job/99353211074) |
+| Host daemon `GET /ui/` at `0608e44e` | `DEV-LINUX-NATIVE-01` `wuz@192.168.1.2` `127.0.0.1:48691` | **pass** listen + 200 HTML (`index-eaQPggwn.js`); `#/hitl`/`#/inbox`/`#/team` 0; Vite preview 0; Approve strings are deny-copy; existing `:48181` pid `1200310` untouched; B01 unused |
+| Host browser click-through E2E | hung (no owner forward session yet) | **not-run** |
+| NVDA / 200% layout / host-theme contrast | hung | **not-run** |
 
 ## Non-claims
 
