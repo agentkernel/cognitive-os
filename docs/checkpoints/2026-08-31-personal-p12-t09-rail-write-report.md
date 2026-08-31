@@ -6,7 +6,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Branch: `personal/P12-T09-rail-write`
 - Lease: `lease/personal/P12-T09/rail-write`
 - Change class: `implementation-only` (daemon-served `/ui/` right-rail write; no new authority writer; no `core/specs`)
-- Unique next: wait required CI on #302 after A7 fixture-socket fix (P12 Remaining = 0); do not auto-claim `P11-T15`
+- Unique next: P12 Remaining = 0; wait for a fresh owner delivery instruction. Do not auto-claim `P11-T15`
 
 Product origin is daemon-served `/ui/`. Vite/canvas is not the product. The rail walks edit → review → POST `/management/project/v1/assistant.turn` (candidate propose) then POST `/management/project/v1/draft.apply` (owner management write). Chat has no Approve. HITL Confirm stays on the Projects canvas (T06). Empty home / wizard / creating-only Today hide the rail. The rail does not write SecretStore, archive, or authority-confirm. Preview announce is not Approve. Preview bypass is refused: Write to canvas exists only after review. Dual Track: 0 fake Create/Activate/Approve. Pi Linux qualification does not transfer. Not T15. NVDA/200%/host-theme remain hung. Native UI E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`. `DEV-WIN-GNU-01` cargo is `not-run`.
 
@@ -25,3 +25,6 @@ Product origin is daemon-served `/ui/`. Vite/canvas is not the product. The rail
 | `DEV-WIN-GNU-01` cargo test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | — | route to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` |
 | Required CI [33429998983](https://github.com/agentkernel/cognitive-os/actions/runs/33429998983) at `2f0e675e` | **fail** | `CI-WINDOWS-MSVC-01` | `2f0e675e` | ubuntu SUCCESS 3m47s; windows FAIL 11m30s: `personal::p2_t17_a7_failure_first::restart_replays_only_the_original_key_and_keeps_mutation_count_one` (`Indeterminate` vs `InjectedCrash(MutationAfterReceiptBefore)`). Docs-only HEAD; same A7 fixture-socket flake as PR #280 attempt 1. `required-ci` FAIL. |
 | A7 fixture accepted-socket blocking + client IO timeout | **written** | `DEV-WIN-GNU-01` | uncommitted | `set_nonblocking(false)` on accepted fixture sockets; drop `shutdown(Write)` before read; 2s IO timeout + connect retry. Assertions unchanged. GNU cargo **not-run**. Unique next = push and wait required CI; do not merge. |
+| Closed-lease snapshot fix `f8581747` | **pass** | `DEV-WIN-GNU-01` | `f8581747` | Dropped closed `lease/personal/P12-T09/rail-write` backticks from Active task lease. Local `check:consistency` OK. |
+| Required CI [33432849969](https://github.com/agentkernel/cognitive-os/actions/runs/33432849969) | **pass** | GitHub | `f8581747` | resolve 4s SUCCESS; ubuntu 3m42s SUCCESS; windows 14m51s SUCCESS; required-ci 2s SUCCESS. |
+| Merge PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) | **pass** | GitHub | `main@3a563e7c` | Remote `personal/P12-T09-rail-write` deleted. Unique next = P12 Remaining = 0; wait for a fresh owner delivery instruction; do not auto-claim `P11-T15`. |
