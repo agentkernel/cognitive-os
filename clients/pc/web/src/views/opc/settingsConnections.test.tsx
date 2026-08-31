@@ -98,7 +98,8 @@ function fakeActionLabels(host: HTMLElement): string[] {
         node.closest("[data-region='opc-hitl-actions']") ||
         node.closest("[data-region='opc-vault-ingest']") ||
         node.closest("[data-region='opc-standing-policies']") ||
-        node.closest("[data-region='opc-close-background']")
+        node.closest("[data-region='opc-close-background']") ||
+        node.closest("[data-region='opc-rail-write']")
       ) {
         continue;
       }

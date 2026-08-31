@@ -106,7 +106,11 @@ function fakeActionLabels(host: HTMLElement): string[] {
   const labels: string[] = [];
   for (const scope of scopes) {
     for (const node of scope.querySelectorAll("button, a.cp-button")) {
-      if (node.closest("[data-region='opc-hitl-actions']") || node.closest("[data-region='opc-vault-ingest']")) {
+      if (
+        node.closest("[data-region='opc-hitl-actions']") ||
+        node.closest("[data-region='opc-vault-ingest']") ||
+        node.closest("[data-region='opc-rail-write']")
+      ) {
         continue;
       }
       const label = (node.textContent ?? "").trim();
