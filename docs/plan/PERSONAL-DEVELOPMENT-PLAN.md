@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01 documentation-only OPC rebaseline `done`；P11-T03 `done`；P11-T04 `done`；P11-T05 `done`；P11-T06 `done`；P11-T07 `done`；P11-T09 `done`；P11-T12 `done`；P11-T10 `done`；P11-T11 `done`；P11-T08 `done`；P11-T13 `done`；`P11-T02` 仍 `not-started`/unclaimed；`P11-T14`/`T15` parked；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01 documentation-only OPC rebaseline `done`；P11-T03 `done`；P11-T04 `done`；P11-T05 `done`；P11-T06 `done`；P11-T07 `done`；P11-T09 `done`；P11-T12 `done`；P11-T10 `done`；P11-T11 `done`；P11-T08 `done`；P11-T13 `done`；`P11-T02` `in-progress`（2026-08-31 owner 指令领取）；`P11-T14`/`T15` 已 unpark（同日 owner 指令；各自领取时细化卡片）；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-31**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -131,7 +131,7 @@
 > private/fail-closed 事实保留。P10-T01/T02 已完成事实不改；P10-T03..T18 不静默改验收，
 > 全部在未启动状态下明确 cancelled/disposition。`P11-T01` documentation-only `done`；
 > `P11-T03` `done`（PR [#281](https://github.com/agentkernel/cognitive-os/pull/281)；required CI [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) **SUCCESS** at `aef5574e`）；
-> `P11-T04` `done`；`P11-T05` `done`；`P11-T06` `done`；`P11-T07` `done`；`P11-T09` `done`；`P11-T12` `done`；`P11-T10` `done`；`P11-T11` `done`；`P11-T08` `done`；`P11-T13` `done`；`P11-T02` 仍 `not-started`/unclaimed；`P11-T14`/`T15` parked。无 support、Gate、release、Profile、Windows/DSH
+> `P11-T04` `done`；`P11-T05` `done`；`P11-T06` `done`；`P11-T07` `done`；`P11-T09` `done`；`P11-T12` `done`；`P11-T10` `done`；`P11-T11` `done`；`P11-T08` `done`；`P11-T13` `done`；`P11-T02` `in-progress`；`P11-T14`/`T15` 已 unpark（2026-08-31 owner 指令）。无 support、Gate、release、Profile、Windows/DSH
 > qualification 或 Agent-benefit claim。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
@@ -214,8 +214,8 @@
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
-| Phase 11 - Windows OPC 2.0 | 15 | 12 | 0 | 0 | 3 | P11-T15 fixed-denominator acceptance；不自动形成 release |
-| **合计** | **144** | **120** | **0** | **1** | **7** | 另有 16 cancelled；无新 Gate pass |
+| Phase 11 - Windows OPC 2.0 | 15 | 12 | 1 | 0 | 2 | P11-T15 fixed-denominator acceptance；不自动形成 release |
+| **合计** | **144** | **120** | **1** | **1** | **6** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -1258,7 +1258,7 @@ flowchart TD
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P11-T01 | OPC docs/ADR closure | owner-approved OPC baseline；P10-T01/T02 done；finalized Linux 1.0 | ADR-0059；OPC current + legacy frozen product/design；interactive Canvas；architecture；P10 disposition/P11 typed plan/task cards/trace/support/environment；双语 handbook/source-map/fingerprint/generated check；required CI 与 deterministic closure；只含 docs/design/prototype | done | merged PR [#280](https://github.com/agentkernel/cognitive-os/pull/280) at `main@f71941e85b15c6c7c3fb8e7a65e68f517ad1834e`；documentation-only；无 implementation/support/Gate/release/Profile claim |
-| P11-T02 | Windows host/tray/background（隐藏） | P11-T01；**不挡 T03** | 见下表三栏 | not-started | unclaimed |
+| P11-T02 | Windows host/tray/background（隐藏） | P11-T01；**不挡 T03** | 见下表三栏 | in-progress | claimed 2026-08-31 by owner instruction; `lease/personal/P11-T02/windows-host`; branch `personal/P11-T02-windows-host` |
 | P11-T03 | Project 聚合 walking skeleton | P11-T01；**不依赖 T02** | 见下表三栏；实现第一刀 | done | merged PR [#281](https://github.com/agentkernel/cognitive-os/pull/281) at `main@46407380`; required CI [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) **SUCCESS** at `aef5574e`; Linux store 19/19 + HTTP 6/6 at `7d9f13e4`; [report](../checkpoints/2026-08-30-personal-p11-t03-project-aggregate-report.md); [closure](../checkpoints/2026-08-30-personal-p11-t03-project-aggregate-closure.md) |
 | P11-T04 | Employee / Member Runtime 身份 | P11-T03 | 见下表三栏 | done | merged PR [#282](https://github.com/agentkernel/cognitive-os/pull/282) at `main@ab36a444`; required CI [33292431146](https://github.com/agentkernel/cognitive-os/actions/runs/33292431146) **SUCCESS** at `62840c9b`; [report](../checkpoints/2026-08-30-personal-p11-t04-employee-report.md) |
 | P11-T05 | Conversation 新 private version | P11-T03、P11-T04 | 见下表三栏；禁止重解释 `0.1` | done | merged PR [#283](https://github.com/agentkernel/cognitive-os/pull/283) at `main@b6182510`; [report](../checkpoints/2026-08-30-personal-p11-t05-conversation-report.md) |
@@ -1270,8 +1270,8 @@ flowchart TD
 | P11-T11 | Memory admission | P11-T05、P11-T10 | 见下表三栏 | done | merged PR [#289](https://github.com/agentkernel/cognitive-os/pull/289) at `main@b5084e06`; required CI [33327844743](https://github.com/agentkernel/cognitive-os/actions/runs/33327844743) **SUCCESS** at `60844f51`; Linux store 4/4 + HTTP 2/2 at `f1dca3e0`; [report](../checkpoints/2026-08-31-personal-p11-t11-memory-report.md); [closure](../checkpoints/2026-08-31-personal-p11-t11-memory-closure.md) |
 | P11-T12 | Provider 诚实 usage | P11-T03、P11-T04；**不依赖 T07** | 见下表三栏；成员预算非当前 chrome | done | merged PR [#286](https://github.com/agentkernel/cognitive-os/pull/286) at `main@9e9b18b690cfe63aaedc457bf06d0763965a80fd`; [report](../checkpoints/2026-08-30-personal-p11-t12-usage-report.md) |
 | P11-T13 | `/ui/` IA 收口 | P11-T03 + Visual UI 规格 | 见下表三栏；完整 `/ui/` 不提前冒充 | done | merged PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) at `main@46eebeca`; required CI [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) **SUCCESS** at `e4f00179`; Dual Track L1; NVDA/200%/host-theme **not-run**; [report](../checkpoints/2026-08-31-personal-p11-t13-opc-ia-report.md); [closure](../checkpoints/2026-08-31-personal-p11-t13-opc-ia-closure.md) |
-| P11-T14 | X/Twitter connector | **parked** | parked | not-started | parked |
-| P11-T15 | fixed-denominator acceptance | **parked** | parked | not-started | parked |
+| P11-T14 | X/Twitter connector | **unparked**（2026-08-31 owner 指令；卡片在领取时细化） | 领取时细化 | not-started | unparked; claim after P11-T02 |
+| P11-T15 | fixed-denominator acceptance | **unparked**（2026-08-31 owner 指令；卡片在领取时细化） | 领取时细化；N=15、一 exact qualified Windows revision | not-started | unparked; claim after P11-T14 |
 
 | ID | validation environment | 关闭门 | 漂移检测负例 |
 |---|---|---|---|

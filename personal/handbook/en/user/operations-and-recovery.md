@@ -26,6 +26,8 @@ sources:
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive", "plan_personal_lifecycle"]
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
+  - path: personal/crates/cognitive-store/src/windows_host.rs
+    symbols: ["WindowsHostStore", "WAKE_RECOVERY_STEPS"]
   - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
@@ -34,14 +36,15 @@ tests:
   - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:5e01fe19574ab23a92e831ee9196296645621ff048a470b7d5e4bddccdf14256"
+  - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
+fingerprint: "sha256:c83ad5a7e777f182823aaf44972eb257d13d2b7ee5721d04aeee89a8201c4dba"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
 
 # Operations and recovery
 
-A missed Routine occurrence is a visible ledger row (`GET /management/project/v1/routine.ledger`), not a silent drop. Clock/sleep/restart host E2E remains `not-run`.
+A missed Routine occurrence is a visible ledger row (`GET /management/project/v1/routine.ledger`), not a silent drop. Sleep/shutdown/daemon-stop/network-loss/locked SecretStore/Provider outage also become explicit Windows host offline/missed facts (`POST /management/host/v1/offline.record`). Clock/sleep/restart host E2E remains `not-run`.
 
 ## Daily checks — `implemented`
 

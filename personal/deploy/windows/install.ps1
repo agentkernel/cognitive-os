@@ -8,6 +8,15 @@
 # HTTPS-only downloads through the absolute System32 curl.exe, digest
 # verification of the downloaded installer, and delegation to that verified
 # installer. This bootstrap never reads, writes, or receives secret material.
+#
+# P11-T02 host layout policy (inspectable, not a rendered installer):
+# Personal Home/app/ is replaceable application bytes; Personal Home/data/ is
+# retained across upgrades. This template is not a second credential plane
+# (Windows Credential Manager remains the approved backend). DSH web is not
+# the host shell. A tray icon is not proof of work. Close may ask
+# background-or-pause only if the daemon can honor it. Same-disk automatic
+# versions are local restore points, not disaster backups. GNU/WSL/Linux
+# evidence is not a Windows product host.
 
 param([string]$RequestedVersion)
 

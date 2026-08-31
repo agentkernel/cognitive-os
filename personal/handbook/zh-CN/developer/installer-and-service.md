@@ -13,12 +13,15 @@ sources:
   - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["install_linux_bundle_single_service", "render_personal_user_service_unit"]
   - path: personal/deploy/linux/install.sh
+  - path: personal/deploy/windows/install.ps1
+  - path: personal/deploy/windows/cognitiveos-personal-task.xml
   - path: personal/crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs
 tests:
   - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - personal/crates/cognitive-runtime/tests/linux_bundle_installation.rs
-fingerprint: "sha256:1f54bbef780b30b3f4e7bd7219d2746ddfeee04ac34ad0ce7ee204ae9f9ddbf6"
+  - personal/crates/cognitive-runtime/tests/p7_t07_windows_install_surface.rs
+fingerprint: "sha256:560cfed37bee8fa0ebe05630ade5dafb91a77de31e978e979187c8a2c990718f"
 non_claims:
   - campaign 构建器使用实验签名密钥；此处不做生产签名仪式、GitHub Release 或 B01 声明。
 ---
@@ -56,3 +59,7 @@ Rust 安装器——无 `curl | sh`、无 sudo、无内嵌 secret。构建器
 （`linux_bundle_builder`）组装 daemon+CLI+installer bundle 并用**实验**密钥签名；
 release-manifest 校验（`release_manifest.rs`）作为独立的 P7-T01 门覆盖 manifest 身
 份/digest/工具链 pin。
+
+## Windows 可检查宿主布局（P11-T02）
+
+`personal/deploy/windows/install.ps1` 是可检查的安装面，不是已签名 Windows 产品安装器，也不是把 GNU/WSL/Linux 写成 Windows。Personal Home 是 `…/Personal Home/app/`（可替换的应用字节）加 `…/Personal Home/data/`（升级时保留）。计划任务 XML 的 `MultipleInstancesPolicy IgnoreNew` 拒绝重复 daemon。secret 仍走 Windows Credential Manager；此脚本不是第二套凭据平面，也不把 DSH web 当宿主壳。原生 tray/ACL/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。

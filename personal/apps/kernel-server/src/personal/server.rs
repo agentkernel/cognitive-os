@@ -54,6 +54,7 @@ use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_na
 use super::tool_lifecycle;
 use super::user_backup;
 use super::verification_executor::open_daemon_artifact_store;
+use super::windows_host;
 
 const ENDPOINT_FILE_NAME: &str = "daemon-endpoint.json";
 const SCHEDULER_TICK_INTERVAL: Duration = Duration::from_millis(250);
@@ -713,6 +714,16 @@ fn dispatch_http_route(
     }
     if project_aggregate::matches(&method_path) {
         return handle_project_aggregate_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            authority,
+            authority_store,
+        );
+    }
+    if windows_host::matches(&method_path) {
+        return handle_windows_host_route(
             stream,
             &method_path,
             headers,
@@ -1747,6 +1758,55 @@ fn handle_project_aggregate_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let response = project_aggregate::handle(method_path, body, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_windows_host_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if windows_host::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = windows_host::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = windows_host::handle(method_path, body, authority_store.as_ref());
     write_response(
         stream,
         response.status,

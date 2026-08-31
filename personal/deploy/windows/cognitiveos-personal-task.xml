@@ -6,6 +6,10 @@
   per-user, least-privilege, interactive-token, loopback-only daemon start
   with restart-on-failure. It never elevates, never stores credentials, and
   never runs as SYSTEM.
+  P11-T02: MultipleInstancesPolicy IgnoreNew refuses a duplicate daemon.
+  This task is not a DSH web host shell and not a second credential plane.
+  Tray presence is not proof of work. Same-disk automatic versions are
+  local restore points, not disaster backups.
 -->
 <Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
   <RegistrationInfo>

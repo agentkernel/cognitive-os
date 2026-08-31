@@ -13,12 +13,15 @@ sources:
   - path: personal/crates/cognitive-runtime/src/linux_bundle_service.rs
     symbols: ["install_linux_bundle_single_service", "render_personal_user_service_unit"]
   - path: personal/deploy/linux/install.sh
+  - path: personal/deploy/windows/install.ps1
+  - path: personal/deploy/windows/cognitiveos-personal-task.xml
   - path: personal/crates/cognitive-runtime/src/bin/linux_bundle_campaign_builder.rs
 tests:
   - personal/crates/cognitive-runtime/tests/linux_bundle_single_service.rs
   - personal/crates/cognitive-runtime/tests/linux_installer_bootstrap.rs
   - personal/crates/cognitive-runtime/tests/linux_bundle_installation.rs
-fingerprint: "sha256:1f54bbef780b30b3f4e7bd7219d2746ddfeee04ac34ad0ce7ee204ae9f9ddbf6"
+  - personal/crates/cognitive-runtime/tests/p7_t07_windows_install_surface.rs
+fingerprint: "sha256:560cfed37bee8fa0ebe05630ade5dafb91a77de31e978e979187c8a2c990718f"
 non_claims:
   - The campaign builder uses an experimental signing key; no production signing ceremony, GitHub Release, or B01 claim is made here.
 ---
@@ -62,3 +65,14 @@ to the Rust installer — no `curl | sh`, no sudo, no embedded secrets. The buil
 (`linux_bundle_campaign_builder`) assembles daemon+CLI+installer bundles and signs with an
 **experimental** key; release-manifest verification (`release_manifest.rs`)
 covers manifest identity/digests/toolchain pins as a separate P7-T01 gate.
+
+## Windows inspectable host layout (P11-T02)
+
+`personal/deploy/windows/install.ps1` is an inspectable install surface, not a
+signed Windows product installer and not GNU/WSL/Linux written as Windows.
+Personal Home is `…/Personal Home/app/` (replaceable application bytes) plus
+`…/Personal Home/data/` (preserved across upgrades). The scheduled task XML
+`MultipleInstancesPolicy IgnoreNew` refuses a duplicate daemon. Secrets stay in
+Windows Credential Manager; this script is not a second credential plane and
+does not embed DSH web as the host shell. Native tray/ACL/sleep/SecretStore E2E
+is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`.
