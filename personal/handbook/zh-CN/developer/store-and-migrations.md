@@ -26,6 +26,8 @@ sources:
     symbols: ["ROUTINE_SCHEMA_V33", "RoutineStore", "ROUTINE_PROJECTION_ID"]
   - path: personal/crates/cognitive-store/src/windows_host.rs
     symbols: ["WINDOWS_HOST_SCHEMA_V34", "WindowsHostStore", "WINDOWS_HOST_PROJECTION_ID", "WAKE_RECOVERY_STEPS"]
+  - path: personal/crates/cognitive-store/src/x_connector.rs
+    symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore", "X_CONNECTOR_PROJECTION_ID"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -46,12 +48,13 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t10_vault.rs
   - personal/crates/cognitive-store/tests/p11_t08_routine.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
+  - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:343873f702b70676d81493d55f91c46c3f500cf7df8e7e23fc64c7c83c7d89db"
+fingerprint: "sha256:7605e61b1427f9af331b0220795744da7fefa1222f8a356bd933d1a9d36a3eda"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -61,10 +64,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v34）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v35）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v34）
+## 权威库迁移图（v1–v35）
 
 | 版本 | 新增 |
 |---|---|
@@ -86,6 +89,7 @@ non_claims:
 | v32 | Markdown Vault（`p11_vault_document`、可重建 `p11_vault_index_entry`、`p11_vault_conflict`），标识 `cognitiveos.personal.markdown-vault/0.1`。导入必须带 rights/provenance。文件不是 Project 权威（`is_authority=0`）。索引不是 Memory FTS。无冲突记录的 last-write-wins 被拒绝。宿主文件系统 E2E 为 `not-run`。 |
 | v33 | Routine revision / Trigger occurrence 台账（`p11_routine`、`p11_routine_revision`、`p11_routine_occurrence`），标识 `cognitiveos.personal.routine/0.1`。重叠策略为 `no-overlap-queue-latest`。missed/coalesced 行可见。active occurrence 复用 `scheduler_entries`（`task://personal/routine/{occurrence_id}`）。checkpoint 不是完成。无 Temporal / 第二套调度表。clock/sleep/restart E2E 为 `not-run`。 |
 | v34 | Windows host Personal Home / 生命周期 / missed / 有序恢复（`p11_windows_host_home`、`p11_windows_host_daemon`、`p11_windows_host_dsh_child`、`p11_windows_host_offline_segment`、`p11_windows_host_recovery`、`p11_windows_host_restore_point`），标识 `cognitiveos.personal.windows-host/0.1`。布局为 `Personal Home/app/` + `Personal Home/data/`；升级替换 app、保留 data。托盘只观察与请求，不写权威。daemon 不能兑现时拒绝 close background-or-pause。同盘版本是本地 restore point，不是备份。原生 tray/ACL/sleep/SecretStore E2E 为 `not-run`。 |
+| v35 | X/Twitter connector 账户 / preview / 发布台账（`p11_x_connector_account`、`p11_x_connector_preview`、`p11_x_connector_publish`），标识 `cognitiveos.personal.x-connector/0.1`。仅 SecretStore `secret_ref`。`is_p0_hero` 与 `platform_qualified` CHECK=0。impressions 保持字面量 `unknown`。receipt 不是完成。live X API E2E 为 `not-run`。 |
 
 P11-T07 隐藏托管 DSH 新增 v31 `p11_hosted_dsh_child`。Attempt-runner `start` 的真实调用者是 management HTTP `dsh.hosted.start`；task 通道别名 403。digest/protocol 不匹配、env/argv 含 secret、Pi 作 Member 引擎、Installed Agent chrome、未知子进程输出（`success`/`ok`/`agent_end`）一律失败闭合。daemon Provider 代理 `POST /provider/v1/dsh/chat/completions` 仍是唯一持 secret 路径。Linux Path B 不等于 Windows 托管资格。
 
@@ -101,10 +105,12 @@ P11-T10 Markdown Vault 新增 v32。真实调用者是 management HTTP `vault.im
 
 P11-T02 Windows host / tray / background 新增 v34。真实调用者是 management HTTP `host.home.admit` / `host.daemon.bind` / `host.close.request` / `host.offline.record` / `host.dsh.bind` / `host.recovery.run` / `host.recovery.advance` / `host.restore-point.record` / `GET host.status`。task 通道别名 403。错误安装根、ACL 逃逸、raw secret env/argv、重复 daemon、孤儿 DSH、假 background、把 restore 当 backup、跳步恢复一律失败闭合。wake/restart 跑完七步有序恢复且只恢复合格工作。不是第二套凭据平面。不是把 DSH web 当宿主壳。原生 Windows install/tray/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。
 
+P11-T14 X/Twitter connector 新增 v35。真实调用者是 management HTTP `connector/x/v1/{account.bind,preview.request,preview.confirm,publish.dispatch}` 与 `GET connector/x/v1/status`。task 通道别名 403。raw secret env/argv/body、evasion、抓取内容、聊天 Approve、未确认就发布、把 receipt 当完成、unknown 指标写成 `0`、把 X 当 P0 hero 一律失败闭合。先持久化 Intent 再标记 dispatched。status 不返回 `secret_ref`。live X/CAPTCHA/platform qualification 为 `not-run`。不是 chrome。不是业务结果。
+
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v34 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v35 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

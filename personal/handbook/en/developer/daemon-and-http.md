@@ -34,6 +34,8 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/windows_host.rs
     symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/x_connector.rs
+    symbols: ["handle", "matches"]
   - path: personal/crates/cognitive-store/src/hosted_dsh.rs
     symbols: ["HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/apps/kernel-server/src/personal/task_api.rs
@@ -54,7 +56,8 @@ tests:
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
-fingerprint: "sha256:82c87a5e514b92e0a6b9906d0c2f43100b1d7281d451723e195caf4292c0c7ab"
+  - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
+fingerprint: "sha256:0e9993862521d3c64b8ead2cb8f47f7a115663015e0de589a994addc730281eb"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -159,6 +162,8 @@ is a same-origin daemon client (`GET /ui/`) and is not a second writer.
 Personal-private Project aggregate routes (`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,preview.reject,preview.narrow,confirm,standing-policies,standing-policy.create,standing-policy.revoke,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,conversation.append,conversation.archive,conversation.record,handoff.record,assistant.turn,dsh.hosted.start,dsh.hosted.observe-exit,vault.import,vault.index.rebuild,vault.index,vault.conflicts,vault.apply-authority,routine.revision,routine.trigger,routine.ledger,routine.checkpoint,routine.resume}`) require a management bearer. They project the v26 `p11_*` Project tables, v27 Employee/Blueprint/Assignment/Grant tables, v28 `p11_conversation_archive` under `cognitiveos.personal.conversation-archive/0.1` (not a reinterpretation of ADR-0058 `conversation-projection/0.1`), v29 ApprovalPreview `superseded_by` for HITL reject/narrow, v30 `grant-expansion` plus StandingApprovalPolicy time-box (`expires_at` required, ≤7d; Settings list/revoke), v31 hidden hosted DSH managed child (`p11_hosted_dsh_child`; `dsh.hosted.start` binds `runtime_binding_ref` to `hosted-dsh:<digest>:<child_id>`; isolated spawn fail-closes on Windows GNU; Windows OPC E2E is `not-run`; not Installed Agent chrome; Pi is not the Member execution engine), v32 Markdown Vault (`p11_vault_document` / rebuildable `p11_vault_index_entry` / `p11_vault_conflict` under `cognitiveos.personal.markdown-vault/0.1`; files are not Project authority; Memory FTS is not the Vault index; last-write-wins without a conflict record is rejected; host filesystem E2E is `not-run`), and v33 Routine/Trigger (`p11_routine` / `p11_routine_revision` / `p11_routine_occurrence` under `cognitiveos.personal.routine/0.1`; no-overlap-queue-latest; missed/coalesced visible; reuses `scheduler_entries`; checkpoint is not completion; no Temporal; clock/sleep/restart E2E is `not-run`). Not Task-row impersonation and not the P7-T05 frozen inventory. Empty list has no fake buttons; unknown cost is the literal `unknown` and is never serialized as `0`. Empty roster uses `authority_note: empty-roster`; seated members are listed by `employee_id`. Blueprint rows have no Provider binding. Delivered whitelist speech lands an archive row; owner `conversation.append` writes `note` and other archive kinds; chatter stays audit-only. Archive index requires `limit` 1..=32 and returns refs only; `include_bodies` and omitted limit fail closed. Single-record body fetch is `conversation.record`. Archive rows are observation-only, not completion. HITL confirm/reject/narrow and standing-policy mint/revoke are management-only; chat/task aliases fail closed (`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`) and never complete approval. Stale is mechanical `base_state_digest` mismatch, not time freshness. `preview.request` returns `preview_digest` for canvas. This is not a Today page, not Inbox L1, and not a full `/ui/` IA.
 
 Windows host hidden-capability routes (`/management/host/v1/{home.admit,daemon.bind,close.request,offline.record,dsh.bind,recovery.run,recovery.advance,restore-point.record}` and `GET /management/host/v1/status`) require a management bearer. They persist v34 Personal Home `app/`+`data/`, daemon bind, orphan-DSH rejection, close background-or-pause honesty, visible offline/missed segments, ordered seven-step wake/restart, and restore points that are not backups. Task-channel aliases fail closed (`WINDOWS_HOST_CHANNEL_FORBIDDEN`). Tray observes and requests; it does not write authority. Native tray/ACL/sleep/SecretStore E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`.
+
+X/Twitter connector walking-skeleton routes (`/management/connector/x/v1/{account.bind,preview.request,preview.confirm,publish.dispatch}` and `GET /management/connector/x/v1/status`) require a management bearer. They persist v35 SecretStore-only bind, digest-bound original preview, HITL confirm, persist-before-dispatch publish, and honest `unknown` readback. Task-channel aliases fail closed (`X_CONNECTOR_CHANNEL_FORBIDDEN`). Status omits `secret_ref`. Not P0 hero chrome. Not a business result. Live X API E2E is `not-run`.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.

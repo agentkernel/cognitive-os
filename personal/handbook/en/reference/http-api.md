@@ -17,9 +17,10 @@ sources:
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/windows_host.rs
+  - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:0c2f2ebbf29f12ef64d3888dc782f049ec8c7fdb3d3bfabc4823b6f6bbabadf3"
+fingerprint: "sha256:5791bebb6d5d20b8e87111f0e8086b29cebc20c925b549499af1c6340c0ffac7"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -201,6 +202,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/host/v1/recovery.advance` | management | Advance the current recovery by one ordered step. Out-of-order advance fails closed. |
 | `POST` | `/management/host/v1/restore-point.record` | management | Record a same-disk local restore point. Claiming it as a disaster backup fails closed. |
 | `GET` | `/management/host/v1/status` | management | Observe Home/daemon/offline/recovery status. Secrets are omitted. Tray icon is not proof of work. |
+| `POST` | `/management/connector/x/v1/account.bind` | management | Bind one owner-consented X/Twitter account per Project (P11-T14). SecretStore `secret_ref` only. Hero/default-demo/P0-success-path, evasion, platform-qualified claims, and raw secret env/argv fail closed. Live X API is `not-run`. |
+| `POST` | `/management/connector/x/v1/preview.request` | management | Mint a digest-bound preview of original rights-safe content. Scraped/stolen content, chat Approve, evasion, and secret-shaped bodies fail closed. |
+| `POST` | `/management/connector/x/v1/preview.confirm` | management | Owner-management HITL confirm of one preview digest. Chat Approve is forbidden. Digest mismatch is stale. |
+| `POST` | `/management/connector/x/v1/publish.dispatch` | management | Persist-before-dispatch publish ledger. Unconfirmed preview, receipt-as-completion, and unknown metrics as `0` fail closed. Readback stays `unknown` until a qualified live observation exists. |
+| `GET` | `/management/connector/x/v1/status` | management | Redacted connector status. `secret_ref` is omitted. `is_p0_hero` and `platform_qualified` are false. Impressions stay `unknown`. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
@@ -243,4 +249,9 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/host/v1/recovery.advance` | task | Forbidden: Windows host recovery advance is management-channel only. |
 | `POST` | `/task/host/v1/restore-point.record` | task | Forbidden: Windows host restore-point is management-channel only. |
 | `GET` | `/task/host/v1/status` | task | Forbidden: Windows host status is management-channel only. |
+| `POST` | `/task/connector/x/v1/account.bind` | task | Forbidden: X connector bind is management-channel only. |
+| `POST` | `/task/connector/x/v1/preview.request` | task | Forbidden: X connector preview is management-channel only. |
+| `POST` | `/task/connector/x/v1/preview.confirm` | task | Forbidden: X connector confirm is management-channel only. |
+| `POST` | `/task/connector/x/v1/publish.dispatch` | task | Forbidden: X connector dispatch is management-channel only. |
+| `GET` | `/task/connector/x/v1/status` | task | Forbidden: X connector status is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

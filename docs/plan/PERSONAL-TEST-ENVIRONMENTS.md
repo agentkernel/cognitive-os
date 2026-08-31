@@ -136,7 +136,7 @@ default. This subsection aligns names only; it does not provision hosts.
 | P11-T10/T11 Knowledge/Memory | projection/retrieval negatives on CI; qualified Windows filesystem/index/privacy/rebuild E2E when available | proprietary Obsidian app availability |
 | P11-T12 Provider/honest usage | required CI plus qualified Windows SecretStore/daemon-proxy/usage route; unknown cost ≠ 0; member budget not current chrome | raw env/plaintext credential; member-level budget stop as 2.0.0 chrome |
 | P11-T13 OPC UI | client tests/contract mock/empty states plus daemon-served `/ui/`; NVDA/200%/host-theme contrast hung `not-run`; Dual Track after T03 HTTP stable | Vite preview as product origin; claiming full IA before Project authority |
-| P11-T14 X connector | **parked**; any cell `not-run` | CAPTCHA/fingerprint/anti-abuse evasion |
+| P11-T14 X connector | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` plus exact-revision `DEV-LINUX-NATIVE-01` store/HTTP. Live X/Twitter API/account/CAPTCHA/platform qualification = `Requires-environment` / `not-run` | CAPTCHA/fingerprint/anti-abuse evasion; Linux CI as platform qualification |
 | P11-T15 fixed acceptance | **parked**; if later unparked, preregistered `N=15` on one exact qualified Windows revision | ordinary CI, local GNU, Linux, WSL, Canvas |
 
 `DEV-WINDOWS-NATIVE-OPC-01` is a reserved capability requirement, not an

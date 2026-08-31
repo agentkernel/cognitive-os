@@ -42,6 +42,7 @@ pub mod sqlite;
 pub mod vault;
 pub mod windows_host;
 pub mod worker_authorization;
+pub mod x_connector;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use assistant::{
@@ -134,6 +135,11 @@ pub use windows_host::{
     CloseRequestSpec, DaemonBindSpec, HomeAdmitSpec, WAKE_RECOVERY_STEPS,
     WINDOWS_HOST_PROJECTION_ID, WINDOWS_HOST_SCHEMA_V34, WindowsHostDaemon, WindowsHostHome,
     WindowsHostRecovery, WindowsHostStatus, WindowsHostStore, windows_host_migration_entry,
+};
+pub use x_connector::{
+    X_CONNECTOR_PROJECTION_ID, X_CONNECTOR_SCHEMA_V35, XConnectorAccount, XConnectorBindSpec,
+    XConnectorConfirmSpec, XConnectorDispatchSpec, XConnectorPreview, XConnectorPreviewSpec,
+    XConnectorPublish, XConnectorStatus, XConnectorStore, x_connector_migration_entry,
 };
 
 /// Authority store backend implemented by this crate (ADR-0002).

@@ -1647,20 +1647,24 @@ formal acceptance.
   自验证、无视觉规格就整页编码。
 - **硬门:** 适用 Phase 11 四条。
 
-### P11-T14 — X/Twitter qualified connector (parked)
+### P11-T14 — X/Twitter connector walking skeleton
 
-- **2.0.0 表面:** parked（M-X/X 不进当前 chrome）。
-- **依赖:** parked。
-- **垂直切片:** parked。
-- **Scene:** parked。
-- **acceptance:** 不得标 done。
-- **不可做:** 解冻前实现或宣称。
-- **本仓 foundation:** n/a。
-- **禁止再造:** CAPTCHA/fingerprint 规避。
-- **validation environment:** parked；任何单元格 `not-run`。
-- **关闭门:** parked（文档-only：本卡保持 parked）。
-- **漂移检测负例:** parked；将来解冻仍禁止 evasion 与 receipt-as-completion。
-- **硬门:** parked 切片不得用 CI 绿冒充产品。
+- **2.0.0 表面:** 隐藏能力，不是 chrome，**不是** P0 hero / default demo Project。
+- **依赖:** P11-T03 Project、P11-T09 HITL confirm、P11-T12 honest unknown≠0。
+- **垂直切片:** SecretStore-only bind → rights-safe original → digest preview →
+  HITL confirm → persist-before-dispatch → readback or honest unknown。
+- **Scene:** 非 v9 M-X chrome；无默认 X 项目。
+- **acceptance:** Linux store/HTTP 负例 + required CI。live X API 可 `not-run`。
+- **不可做:** fingerprint/CAPTCHA/anti-abuse 规避；raw secret；无 HITL 即 publish；
+  receipt-as-completion；unknown=0；scraped content；把 Linux CI 写成平台资格。
+- **本仓 foundation:** SecretStore、HITL preview/confirm、Provider unknown≠0。
+- **禁止再造:** 第二套 credential plane、聊天 Approve、业务结果承诺。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`；native
+  store/HTTP = `DEV-LINUX-NATIVE-01`。live X = `Requires-environment` / `not-run`。
+- **关闭门:** daemon-owned walking skeleton 如上；live X E2E 可诚实 `not-run`。
+- **漂移检测负例:** evasion、raw token、无 HITL publish、receipt-as-completion、
+  unknown metrics=0、scraped、P0 hero、secret 进日志/DOM。
+- **硬门:** 适用 Phase 11 四条。
 
 ### P11-T15 — Fixed-denominator Windows OPC acceptance (parked)
 
@@ -1934,9 +1938,9 @@ tasks:
     acceptance_requires: [TODAY_PROJECTS_KNOWLEDGE_SETTINGS_UI]
     notes: DUAL_TRACK_AFTER_T03_HTTP_STABLE_NVDA_HUNG_NOT_RUN
   P11-T14:
-    implementation_requires: []
-    acceptance_requires: []
-    disposition: PARKED
+    implementation_requires: [P11-T03, P11-T09, P11-T12]
+    acceptance_requires: [X_CONNECTOR_WALKING_SKELETON_HITL_UNKNOWN_READBACK]
+    notes: NOT_P0_HERO_LIVE_X_API_NOT_RUN
   P11-T15:
     implementation_requires: []
     acceptance_requires: []

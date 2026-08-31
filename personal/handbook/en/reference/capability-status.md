@@ -29,7 +29,10 @@ sources:
   - path: personal/docs/architecture/windows-host-background.md
   - path: personal/crates/cognitive-store/src/windows_host.rs
     symbols: ["WINDOWS_HOST_SCHEMA_V34", "WindowsHostStore", "WAKE_RECOVERY_STEPS"]
-fingerprint: "sha256:a2ef88691e02688d6f7a6af71edd28f06475a252e646680a905ea0b10c2485cc"
+  - path: personal/docs/architecture/x-twitter-connector.md
+  - path: personal/crates/cognitive-store/src/x_connector.rs
+    symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
+fingerprint: "sha256:45992e27d8b59d1a5b22645ea71b794c90898fc036e638011314d04086122fac"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -88,7 +91,7 @@ and Agent requires independent qualification.
 | Routine/Trigger/Inbox/offline-missed recovery | partial (walking skeleton) + Requires-backend | v33 + management `routine.*` prove no-overlap/queue-latest and a visible missed ledger; daemon `scheduler_entries` is the only schedule authority. Dual Track L1 chrome is on `main` (`P11-T13`); clock/sleep/restart host E2E and Inbox L1 remain absent (HITL is T09 canvas). |
 | Windows host/tray/background (hidden) | partial (walking skeleton) + Requires-environment | v34 + management `host.*` prove Personal Home `app/`/`data/`, close honesty, missed segments, and ordered seven-step recovery. Not chrome. Not a second credential plane. Native install/tray/ACL/sleep/SecretStore E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`. |
 | Provider global→Project→employee→Task binding and hard budgets | Requires-backend | current fixed Agent binding and advisory budgets remain partial; DSH/Pi raw-secret-free daemon proxy is required |
-| X/Twitter qualified connector scenario | Requires-backend + Requires-environment | no connector/platform qualification or business outcome is claimed; evasion is forbidden |
+| X/Twitter connector (hidden) | partial (walking skeleton) + Requires-environment | v35 + management `connector/x.*` prove SecretStore-only bind, original digest-bound preview, HITL confirm, persist-before-dispatch, and honest unknown readback. Not P0 hero. Not a business result. Evasion forbidden. Live X API / CAPTCHA / platform qualification is `not-run`. |
 | Existing MCP Tool transport + bounded dynamic-Tool MVP | implemented for its accepted P5-T03/P5-T04 scope | interop produces Tool candidates; it has no Personal 2.0 server/package/connection/binding/health/quarantine family lifecycle |
 | Personal MCP seventh family | deferred / Requires-backend | ADR-0057/0058 retained advanced private target; not OPC P0, no current family API, and DSH native MCP/base tools remain disabled |
 | Windows OPC fixed-denominator acceptance | Requires-environment / not-run | future N=15 at one qualified Windows revision; required CI/Canvas does not execute it; signing/B01-W/release remain separate |

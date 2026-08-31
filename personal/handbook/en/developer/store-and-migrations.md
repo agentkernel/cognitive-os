@@ -26,6 +26,8 @@ sources:
     symbols: ["ROUTINE_SCHEMA_V33", "RoutineStore", "ROUTINE_PROJECTION_ID"]
   - path: personal/crates/cognitive-store/src/windows_host.rs
     symbols: ["WINDOWS_HOST_SCHEMA_V34", "WindowsHostStore", "WINDOWS_HOST_PROJECTION_ID", "WAKE_RECOVERY_STEPS"]
+  - path: personal/crates/cognitive-store/src/x_connector.rs
+    symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore", "X_CONNECTOR_PROJECTION_ID"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -46,12 +48,13 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t10_vault.rs
   - personal/crates/cognitive-store/tests/p11_t08_routine.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
+  - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
   - personal/crates/cognitive-store/tests/p11_t09_hitl_canvas.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:343873f702b70676d81493d55f91c46c3f500cf7df8e7e23fc64c7c83c7d89db"
+fingerprint: "sha256:7605e61b1427f9af331b0220795744da7fefa1222f8a356bd933d1a9d36a3eda"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -61,11 +64,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v34) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v35) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v34)
+## Authority migration map (v1–v35)
 
 | Versions | Adds |
 |---|---|
@@ -87,6 +90,7 @@ orders authority first and names the backup path on a second-phase failure.
 | v32 | Markdown Vault (`p11_vault_document`, rebuildable `p11_vault_index_entry`, `p11_vault_conflict`) under `cognitiveos.personal.markdown-vault/0.1`. Import requires rights/provenance. Files are not Project authority (`is_authority=0`). Index is not Memory FTS. Last-write-wins without a conflict row is rejected. Host filesystem E2E is `not-run`. |
 | v33 | Routine revision / Trigger occurrence ledger (`p11_routine`, `p11_routine_revision`, `p11_routine_occurrence`) under `cognitiveos.personal.routine/0.1`. Overlap policy is `no-overlap-queue-latest`. Missed/coalesced rows are visible. Active occurrences reuse `scheduler_entries` (`task://personal/routine/{occurrence_id}`). Checkpoint is not completion. No Temporal / second scheduler table. Clock/sleep/restart E2E is `not-run`. |
 | v34 | Windows host Personal Home / lifecycle / missed / ordered recovery (`p11_windows_host_home`, `p11_windows_host_daemon`, `p11_windows_host_dsh_child`, `p11_windows_host_offline_segment`, `p11_windows_host_recovery`, `p11_windows_host_restore_point`) under `cognitiveos.personal.windows-host/0.1`. Layout is `Personal Home/app/` + `Personal Home/data/`; upgrade replaces app and preserves data. Tray observes and requests; it does not write authority. Close background-or-pause is rejected unless the daemon can honor it. Same-disk versions are local restore points, not backups. Native tray/ACL/sleep/SecretStore E2E is `not-run`. |
+| v35 | X/Twitter connector account / preview / publish ledger (`p11_x_connector_account`, `p11_x_connector_preview`, `p11_x_connector_publish`) under `cognitiveos.personal.x-connector/0.1`. SecretStore `secret_ref` only. `is_p0_hero` and `platform_qualified` CHECK=0. Impressions stay the literal `unknown`. Receipt is not completion. Live X API E2E is `not-run`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
@@ -102,12 +106,14 @@ P11-T10 Markdown Vault adds v32. Management HTTP `vault.import` / `vault.index.r
 
 P11-T02 Windows host / tray / background adds v34. Management HTTP `host.home.admit` / `host.daemon.bind` / `host.close.request` / `host.offline.record` / `host.dsh.bind` / `host.recovery.run` / `host.recovery.advance` / `host.restore-point.record` / `GET host.status` is the real caller. Task-channel aliases are 403. Wrong install root, ACL escape, raw secret env/argv, duplicate daemon, orphan DSH, fake background, restore-as-backup, and skip-step recovery fail closed. Wake/restart runs seven ordered steps and resumes only eligible work. Not a second credential plane. Not DSH web as host shell. Native Windows install/tray/sleep/SecretStore E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`.
 
+P11-T14 X/Twitter connector adds v35. Management HTTP `connector/x/v1/{account.bind,preview.request,preview.confirm,publish.dispatch}` and `GET connector/x/v1/status` is the real caller. Task-channel aliases are 403. Raw secret env/argv/body, evasion, scraped content, chat Approve, publish-without-HITL, receipt-as-completion, unknown metrics as `0`, and X-as-P0-hero fail closed. Persist Intent then mark dispatched. Status omits `secret_ref`. Live X/CAPTCHA/platform qualification is `not-run`. Not chrome. Not a business result.
+
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`
 (rebuildable; Vault searches do not use Memory FTS).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v34 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v35 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

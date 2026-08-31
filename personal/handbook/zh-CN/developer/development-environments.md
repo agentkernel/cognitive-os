@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:9c56811e8673712d176a18a918de5029052052e795bccdd332dab60686e6c75a"
+fingerprint: "sha256:75f81edaeae31a1997fba92f475510b22e0bb57209d4a7e3faebfd506fa7f654"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---

@@ -17,9 +17,10 @@ sources:
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/windows_host.rs
+  - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:0c2f2ebbf29f12ef64d3888dc782f049ec8c7fdb3d3bfabc4823b6f6bbabadf3"
+fingerprint: "sha256:5791bebb6d5d20b8e87111f0e8086b29cebc20c925b549499af1c6340c0ffac7"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -201,6 +202,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/host/v1/recovery.advance` | management | 按序推进当前恢复一步。乱序推进失败闭合。 |
 | `POST` | `/management/host/v1/restore-point.record` | management | 记录同盘本地 restore point。把它声明为灾难备份失败闭合。 |
 | `GET` | `/management/host/v1/status` | management | 观察 Home/daemon/offline/recovery 状态。不返回 secret。托盘图标不是工作证明。 |
+| `POST` | `/management/connector/x/v1/account.bind` | management | 每个 Project 绑定一个 owner-consented X/Twitter 账户（P11-T14）。仅 SecretStore `secret_ref`。hero/default-demo/P0-success-path、evasion、platform-qualified 声称与 raw secret env/argv 失败闭合。live X API 为 `not-run`。 |
+| `POST` | `/management/connector/x/v1/preview.request` | management | 签发原创、权利安全内容的 digest 绑定 preview。抓取/盗用内容、聊天 Approve、evasion 与 secret-shape 正文失败闭合。 |
+| `POST` | `/management/connector/x/v1/preview.confirm` | management | Owner management HITL 确认一条 preview digest。禁止聊天 Approve。digest 不匹配视为 stale。 |
+| `POST` | `/management/connector/x/v1/publish.dispatch` | management | persist-before-dispatch 发布台账。未确认 preview、把 receipt 当完成、unknown 指标写成 `0` 失败闭合。在合格 live observation 之前 readback 保持 `unknown`。 |
+| `GET` | `/management/connector/x/v1/status` | management | 脱敏 connector 状态。不返回 `secret_ref`。`is_p0_hero` 与 `platform_qualified` 为 false。impressions 保持 `unknown`。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
@@ -243,4 +249,9 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/host/v1/recovery.advance` | task | 禁止：Windows host recovery 推进一步仅限 management 通道。 |
 | `POST` | `/task/host/v1/restore-point.record` | task | 禁止：Windows host restore-point 仅限 management 通道。 |
 | `GET` | `/task/host/v1/status` | task | 禁止：Windows host status 仅限 management 通道。 |
+| `POST` | `/task/connector/x/v1/account.bind` | task | 禁止：X connector bind 仅限 management 通道。 |
+| `POST` | `/task/connector/x/v1/preview.request` | task | 禁止：X connector preview 仅限 management 通道。 |
+| `POST` | `/task/connector/x/v1/preview.confirm` | task | 禁止：X connector confirm 仅限 management 通道。 |
+| `POST` | `/task/connector/x/v1/publish.dispatch` | task | 禁止：X connector dispatch 仅限 management 通道。 |
+| `GET` | `/task/connector/x/v1/status` | task | 禁止：X connector status 仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

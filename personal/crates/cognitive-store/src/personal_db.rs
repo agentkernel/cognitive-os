@@ -47,6 +47,7 @@ use crate::worker_authorization::{
     worker_iteration_authorization_consumption_migration_entry,
     worker_iteration_authorization_migration_entry,
 };
+use crate::x_connector::x_connector_migration_entry;
 use rusqlite::Connection;
 use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf};
@@ -109,7 +110,9 @@ impl PersonalDatabasePrepareReport {
 /// and v33 = Routine revision / Trigger occurrence ledger (P11-T08; reuses
 /// `scheduler_entries`, no second scheduler), and
 /// v34 = Windows host Personal Home / lifecycle / missed / ordered recovery
-/// (P11-T02; not a second credential plane; native E2E remains not-run).
+/// (P11-T02; not a second credential plane; native E2E remains not-run), and
+/// v35 = X/Twitter connector account / preview / publish ledger (P11-T14;
+/// live X API remains not-run; not a P0 hero path).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -149,6 +152,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         vault_migration_entry(),
         routine_migration_entry(),
         windows_host_migration_entry(),
+        x_connector_migration_entry(),
     ]
 }
 
