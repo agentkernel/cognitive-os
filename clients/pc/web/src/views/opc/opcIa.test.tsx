@@ -72,6 +72,9 @@ function fakeActionLabels(host: HTMLElement): string[] {
   const labels: string[] = [];
   for (const scope of scopes) {
     for (const node of scope.querySelectorAll("button, a.cp-button")) {
+      if (node.closest("[data-region='opc-hitl-actions']")) {
+        continue;
+      }
       const label = (node.textContent ?? "").trim();
       if (FAKE_ACTION.test(label)) {
         labels.push(label);
@@ -184,6 +187,9 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(isKnownRoute("GET", "/management/project/v1/vault.index")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/preview-detail")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/preview.reject")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/preview.narrow")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/draft.create")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/preview.request")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/employee.catalog")).toBe(true);
@@ -486,7 +492,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
   });
 
   it("lands Today deep-links on the Projects canvas without making Inbox or #/hitl L1", async () => {
-    const { host, root } = await renderOpc("#/projects?preview=prev-1", READY_LIST, {
+    const { host, root, calls } = await renderOpc("#/projects?preview=prev-1", READY_LIST, {
       "GET /management/project/v1/pending-previews": {
         status: 200,
         body: {
@@ -509,6 +515,12 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
     );
     expect(host.querySelector("nav[aria-label='Primary']")?.textContent).not.toMatch(/Team|Inbox/);
     expect(host.querySelector("a[href*='#/hitl']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-hitl-actions']")).not.toBeNull();
+    expect(host.querySelector("[data-hitl-blocked='unknown']")).not.toBeNull();
+    expect(
+      calls.some((call) => call.pathname === "/management/project/v1/preview-detail"),
+    ).toBe(true);
+    expect(calls.some((call) => call.method === "POST")).toBe(false);
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });

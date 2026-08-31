@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06..T09` `not-started`；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07..T09` `not-started`；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-08-31**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -131,7 +131,7 @@
 > private/fail-closed 事实保留。P10-T01/T02 已完成事实不改；P10-T03..T18 不静默改验收，
 > 全部在未启动状态下明确 cancelled/disposition。`P11-T01` documentation-only `done`；
 > `P11-T03` `done`（PR [#281](https://github.com/agentkernel/cognitive-os/pull/281)；required CI [33288037382](https://github.com/agentkernel/cognitive-os/actions/runs/33288037382) **SUCCESS** at `aef5574e`）；
-> `P11-T04` `done`；`P11-T05` `done`；`P11-T06` `done`；`P11-T07` `done`；`P11-T09` `done`；`P11-T12` `done`；`P11-T10` `done`；`P11-T11` `done`；`P11-T08` `done`；`P11-T13` `done`；`P11-T02` `done`；`P11-T14` `done`；`P11-T15` 已 unpark（领取在 T14 之后；**不是** prototype completeness mutex）。**Phase 12（2026-08-31 owner 授权）**登记在本文件内：把冻结 prototype 的默认可走场景接到 daemon `/ui/`（非像素复制、非 2.1）；`P12-T01` documentation-only **done**（PR [#294](https://github.com/agentkernel/cognitive-os/pull/294)）；`P12-T02` 空 Home + 五段向导 **done**（PR [#295](https://github.com/agentkernel/cognitive-os/pull/295)）；`P12-T03` Project 四子菜单 **done**（PR [#296](https://github.com/agentkernel/cognitive-os/pull/296)）；`P12-T04` 先选后配 + 八标签 + 加成员 **done**（PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) at `main@8c413648`）；`P12-T05` Today 决策包 **done** pending merge PR [#298](https://github.com/agentkernel/cognitive-os/pull/298)；`P12-T06..T09` 为实现卡。无 support、Gate、release、Profile、Windows/DSH
+> `P11-T04` `done`；`P11-T05` `done`；`P11-T06` `done`；`P11-T07` `done`；`P11-T09` `done`；`P11-T12` `done`；`P11-T10` `done`；`P11-T11` `done`；`P11-T08` `done`；`P11-T13` `done`；`P11-T02` `done`；`P11-T14` `done`；`P11-T15` 已 unpark（领取在 T14 之后；**不是** prototype completeness mutex）。**Phase 12（2026-08-31 owner 授权）**登记在本文件内：把冻结 prototype 的默认可走场景接到 daemon `/ui/`（非像素复制、非 2.1）；`P12-T01` documentation-only **done**（PR [#294](https://github.com/agentkernel/cognitive-os/pull/294)）；`P12-T02` 空 Home + 五段向导 **done**（PR [#295](https://github.com/agentkernel/cognitive-os/pull/295)）；`P12-T03` Project 四子菜单 **done**（PR [#296](https://github.com/agentkernel/cognitive-os/pull/296)）；`P12-T04` 先选后配 + 八标签 + 加成员 **done**（PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) at `main@8c413648`）；`P12-T05` Today 决策包 **done**（PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) at `main@bfc9aad6`）；`P12-T06` HITL Confirm **done** pending merge PR [#299](https://github.com/agentkernel/cognitive-os/pull/299)；`P12-T07..T09` 为实现卡。无 support、Gate、release、Profile、Windows/DSH
 > qualification 或 Agent-benefit claim。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
@@ -215,8 +215,8 @@
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked（非 P12 mutex） |
-| Phase 12 - frozen-prototype `/ui/` completeness | 9 | 5 | 0 | 0 | 4 | P12-T01/T02/T03/T04/T05 done；T06–T09 not-started |
-| **合计** | **153** | **127** | **0** | **1** | **9** | 另有 16 cancelled；无新 Gate pass |
+| Phase 12 - frozen-prototype `/ui/` completeness | 9 | 6 | 0 | 0 | 3 | P12-T01/T02/T03/T04/T05/T06 done；T07–T09 not-started |
+| **合计** | **153** | **128** | **0** | **1** | **8** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -1393,8 +1393,8 @@ flowchart TD
 | P12-T02 | 五段创建向导 + 空 Home 只创建 | P12-T01；P11-T03/T04/T12/T13 | 见下表三栏；Scenes `empty-home`、`create-init`…`create-joint` | done | merged PR [#295](https://github.com/agentkernel/cognitive-os/pull/295)；Dual Track TS + required CI；NVDA/200%/host-theme hung |
 | P12-T03 | Project 四子菜单 | P12-T01；P11-T03/T04/T08/T13；**不挡 T02** | 见下表三栏；`projects` / `project-detail` / `members` / `runs` / `outputs` | done | merged PR [#296](https://github.com/agentkernel/cognitive-os/pull/296) at `main@1e736aae`；Dual Track TS **358/358** + required CI；NVDA/200%/host-theme hung |
 | P12-T04 | 先选后配 + 八标签 + 加成员 | P12-T03；P11-T04 | 见下表三栏；`add-member`、`member-config` | done | merged PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) at `main@8c413648`；Dual Track TS **367/367** + required CI；NVDA/200%/host-theme hung |
-| P12-T05 | Today 决策包 | P12-T01；P11-T03/T09/T13 | 见下表三栏；`today-incomplete`、`today`；T13 明确未做 packet | done | Draft PR [#298](https://github.com/agentkernel/cognitive-os/pull/298)；required CI [33389046120](https://github.com/agentkernel/cognitive-os/actions/runs/33389046120) **SUCCESS** at `e4176c35`；Dual Track TS **373/373**；NVDA/200%/host-theme hung |
-| P12-T06 | HITL 画布 Confirm | P12-T03；P11-T09；**不依赖 T08** | 见下表三栏；批准/改窄/拒绝/停；聊天无 Approve | not-started | unclaimed |
+| P12-T05 | Today 决策包 | P12-T01；P11-T03/T09/T13 | 见下表三栏；`today-incomplete`、`today`；T13 明确未做 packet | done | merged PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) at `main@bfc9aad6`；Dual Track TS **373/373** + required CI；NVDA/200%/host-theme hung |
+| P12-T06 | HITL 画布 Confirm | P12-T03；P11-T09；**不依赖 T08** | 见下表三栏；批准/改窄/拒绝/停；聊天无 Approve | done | Draft PR [#299](https://github.com/agentkernel/cognitive-os/pull/299)；required CI [33394249597](https://github.com/agentkernel/cognitive-os/actions/runs/33394249597) **SUCCESS** at `00349b4c`；Dual Track TS **381/381**；NVDA/200%/host-theme hung |
 | P12-T07 | Knowledge ingest UI | P12-T01；P11-T10/T13 | 见下表三栏；ingest / Why this fragment；T13 现为只读 | not-started | unclaimed |
 | P12-T08 | Settings 连接表 + 本周不再问 + CloseBackground | P12-T01；P11-T02/T12/T13 | 见下表三栏；T12 list-only；native E2E 可 not-run | not-started | unclaimed |
 | P12-T09 | 右栏编辑→确认→写画布 | P12-T01；P11-T05/T06 | 见下表三栏；无 Approve；empty-home 可藏聊天 | not-started | unclaimed |

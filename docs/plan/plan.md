@@ -1755,7 +1755,7 @@ formal acceptance.
 
 ### P12-T05 — Today decision packets
 
-- **status:** `done` pending merge PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) at `e4176c35`; required CI [33389046120](https://github.com/agentkernel/cognitive-os/actions/runs/33389046120) **SUCCESS**. Dual Track TS **373/373**. Creating-only = continue-create; live = pending-previews packets deep-linked to `/projects/:id?preview=`. No KPI wall. Chat has no Approve. Not T06 Confirm. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T06`.
+- **status:** `done` merged PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) at `main@bfc9aad6`; required CI [33391494827](https://github.com/agentkernel/cognitive-os/actions/runs/33391494827) **SUCCESS** at `c576e2f5`. Dual Track TS **373/373**. Creating-only = continue-create; live = pending-previews packets deep-linked to `/projects/:id?preview=`. No KPI wall. Chat has no Approve. Not T06 Confirm. Claim ceiling `hypothesis`.
 - **2.0.0 表面:** `today-incomplete`、`today`。T13 明确未验收 packet canvas。
 - **依赖:** P12-T01；P11-T03/T09/T13。
 - **垂直切片:** 未验收只「继续创建」→ 已上线才日常决策包 → 拍板深链 HITL 画布。
@@ -1768,6 +1768,7 @@ formal acceptance.
 
 ### P12-T06 — HITL canvas Confirm
 
+- **status:** `done` pending merge PR [#299](https://github.com/agentkernel/cognitive-os/pull/299) at `00349b4c`; required CI [33394249597](https://github.com/agentkernel/cognitive-os/actions/runs/33394249597) **SUCCESS**. Dual Track TS **381/381**. Digest-bound Confirm/Narrow/Reject; Stop honest; chat has no Approve. Not T07 ingest. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T07`.
 - **2.0.0 表面:** 画布批准 / 改窄 / 拒绝 / 停。聊天无 Approve。
 - **依赖:** P12-T03；P11-T09 preview 权威。**不依赖 T08。**
 - **垂直切片:** 画布 Confirm → persist-before-dispatch → stale/unknown 不能批。
