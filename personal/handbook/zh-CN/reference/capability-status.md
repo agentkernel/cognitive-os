@@ -80,7 +80,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive 与 single composer 不存在；不得重解释 ADR-0058 `conversation-projection/0.1` |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget 已有，但 Conversation/Vault extraction/retrieval 与 privacy matrix 不存在 |
-| Routine/Trigger/Inbox/offline-missed recovery | partial（walking skeleton）+ Requires-backend | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；daemon `scheduler_entries` 是唯一调度权威。Chrome / T13 `/ui/` IA、clock/sleep/restart 宿主 E2E 与 Inbox 一级仍缺（HITL 是 T09 画布）。 |
+| Routine/Trigger/Inbox/offline-missed recovery | partial（walking skeleton）+ Requires-backend | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；daemon `scheduler_entries` 是唯一调度权威。Dual Track L1 chrome 已在 `main`（`P11-T13`）；clock/sleep/restart 宿主 E2E 与 Inbox 一级仍缺（HITL 是 T09 画布）。 |
 | Provider global→Project→employee→Task binding 与 hard budget | Requires-backend | current fixed Agent binding 与 advisory budget 保持 partial；DSH/Pi 必须经 no-raw-secret daemon proxy |
 | X/Twitter qualified connector scenario | Requires-backend + Requires-environment | 不声明 connector/platform qualification 或业务结果；禁止 evasion |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |
@@ -88,7 +88,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Windows OPC fixed-denominator acceptance | Requires-environment / not-run | future N=15、同一 qualified Windows revision；required CI/Canvas 不执行；signing/B01-W/release 分离 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
 | 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
-| 当前 Web UI / Console | partial | daemon 同源 `/ui/` 位于 `clients/pc/web/`；OPC IA/Project/Conversation/Agent/background target 未实现 |
+| 当前 Web UI / Console | partial | daemon 同源 `/ui/` Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）位于 `clients/pc/web/`；无权威诚实空态；不是完整 IA；Linux 1.0 六族仍在高级/二级；不是 Windows OPC |
 | 当前 Windows 产品 | unavailable | installer/credential fragment 与 ordinary CI 不是 Windows OPC host/DSH/UI support；qualified native environment 与 B01-W 均不存在 |
 | Personal 2.1 native mobile/E2E relay remote | deferred | 仅 host-online；device-bound key/revocation/short session/preview/audit/no secret downlink 为 future controls |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |

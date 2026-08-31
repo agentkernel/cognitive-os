@@ -21,9 +21,9 @@
 Design-frozen chrome: **Today / Projects / Knowledge** + bottom **Settings**;
 five-step create wizard; members selected then configured; project four
 sub-menus; HITL only on the center canvas + Today deep link; chat has no
-Approve; `state-lab` = Settings → Advanced, hidden by default. Live `/ui/` is
-still Linux 1.0 six-family (Home/Work/Agents/…). Do not pretend it is already
-OPC IA.
+Approve; `state-lab` = Settings → Advanced, hidden by default. Live `/ui/` L1
+is Dual Track OPC chrome (`P11-T13` **done**); Linux 1.0 six-family pages
+remain Advanced/secondary. Do not claim complete `/ui/` acceptance.
 
 Authority object English id = **Employee**. Product chrome may still say
 **Member Runtime** until post-completion reconciliation.

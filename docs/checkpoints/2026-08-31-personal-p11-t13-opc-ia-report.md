@@ -6,12 +6,12 @@
 - Lease: `lease/personal/P11-T13/opc-ia`
 - Branch: `personal/P11-T13-opc-ia`
 - Worktree: `D:\agent-kernel-wt-P11-T05` (original `d:\agent-kernel` left untouched)
-- Claim ceiling: `hypothesis` (A7: local/CI is not Gate/release/Profile; NVDA / 200% / host-theme / host UI E2E are `not-run`)
+- Claim ceiling: `hypothesis` (A7: local/CI/host dump-dom is not Gate/release/Profile; NVDA / 200% / host-theme hung `not-run`; CDP Settings **partial**)
 - Evaluation routing: **OFF** (`PERSONAL-PERF-EVAL-015` closed)
 
 ## Unique next action
 
-Keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291). Docs-head `0608e44e` required-ci [33346409425](https://github.com/agentkernel/cognitive-os/actions/runs/33346409425) **SUCCESS**. Do not merge: browser click-through / NVDA / 200% / host-theme remain hung **not-run**; not complete `/ui/` acceptance. Disposable T13 daemon `/ui/` **listens** on `DEV-LINUX-NATIVE-01` `127.0.0.1:48691` (not B01, not host `:48181`). Do not auto-claim T02. Do not unpark T14/T15.
+Task **done**: merged PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) at `main@46eebeca`. Closure: [P11-T13 closure](2026-08-31-personal-p11-t13-opc-ia-closure.md). Do not auto-claim T02. Do not unpark T14/T15. Evaluation routing OFF.
 
 ## Closed predecessor
 
@@ -87,6 +87,16 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | Host daemon `GET /ui/` at `0608e44e` | `DEV-LINUX-NATIVE-01` `wuz@192.168.1.2` `127.0.0.1:48691` | **pass** listen + 200 HTML (`index-eaQPggwn.js`); `#/hitl`/`#/inbox`/`#/team` 0; Vite preview 0; Approve strings are deny-copy; existing `:48181` pid `1200310` untouched; B01 unused |
 | Host browser click-through E2E | hung (no owner forward session yet) | **not-run** |
 | NVDA / 200% layout / host-theme contrast | hung | **not-run** |
+| HTTPS `git push` `e4f00179` | `DEV-WIN-GNU-01` | **pass** docs-head (host listen ledger) → `origin/personal/P11-T13-opc-ia` |
+| `resolve validation route` on `e4f00179` | GitHub Actions run [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) | **pass** job [99353906862](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125/job/99353906862) |
+| `verify (ubuntu-latest)` on `e4f00179` | `CI-UBUNTU-01` run [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) | **pass** job [99353917907](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125/job/99353917907) (~3m40s) |
+| `verify (windows-latest)` on `e4f00179` | `CI-WINDOWS-MSVC-01` run [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) | **pass** job [99353917842](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125/job/99353917842) (~12m17s) |
+| `required-ci` on `e4f00179` | GitHub Actions run [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) | **pass** job [99355676396](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125/job/99355676396) |
+| Host dump-dom L1 chrome | `DEV-LINUX-NATIVE-01` `:48182` and `:48691` at `e4f00179` | **pass** Today/Projects/Knowledge/Settings present; Team=0; Inbox=0; Vite preview 0; `#/hitl`/`#/inbox`/`#/team` 0 |
+| Host CDP click-through | `DEV-LINUX-NATIVE-01` `:48182` at `e4f00179` | **partial** L1 / empty honesty / no fake main actions / projects / knowledge **pass**; Settings click `TimeoutError` (hung, not a product fail). `:48691` `POST /local/session` 401 vs the runtime bootstrap file (two daemons shared runtime-root) |
+| NVDA / 200% layout / host-theme contrast | hung | **not-run** |
+| Windows native OPC E2E | `DEV-WINDOWS-NATIVE-OPC-01` unqualified | **not-run** |
+| PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) ready + merge | GitHub | **pass** merged `main@46eebeca` 2026-08-31 |
 
 ## Non-claims
 

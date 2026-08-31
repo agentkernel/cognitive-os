@@ -1542,7 +1542,7 @@ formal acceptance.
 
 ### P11-T08 — Routine, Trigger, missed run
 
-- **status:** done (merged PR [#290](https://github.com/agentkernel/cognitive-os/pull/290) at `main@bda740f6`; required CI [33340492220](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220) **SUCCESS** at `7182a4fb`; Linux store 7/7 + HTTP 1/1 at `98bd61de`). Claim ceiling `hypothesis`. Unique next = claim `P11-T13/D01`.
+- **status:** done (merged PR [#290](https://github.com/agentkernel/cognitive-os/pull/290) at `main@bda740f6`; required CI [33340492220](https://github.com/agentkernel/cognitive-os/actions/runs/33340492220) **SUCCESS** at `7182a4fb`; Linux store 7/7 + HTTP 1/1 at `98bd61de`). Claim ceiling `hypothesis`. Unique next = `P11-T13` is **done** (PR [#291](https://github.com/agentkernel/cognitive-os/pull/291)); do not auto-claim T02.
 - **2.0.0 表面:** 项目运行/例程；不是 Inbox 一级。
 - **依赖:** P11-T03。**不挡 T09。**
 - **垂直切片:** Routine revision + Trigger → no-overlap/queue-latest → missed ledger。
@@ -1626,7 +1626,7 @@ formal acceptance.
 
 ### P11-T13 — OPC Control Plane IA closure
 
-- **status:** in-progress (`P11-T13/D01` Dual Track L1 honesty on `clients/pc/web`; Settings Advanced collapsed; Today → Projects HITL canvas; content `e86ddd7b` + docs `0608e44e` required-ci SUCCESS; host daemon `GET /ui/` listens `127.0.0.1:48691`). Claim ceiling `hypothesis`. Unique next = keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291); browser E2E / NVDA hung **not-run**.
+- **status:** done (merged PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) at `main@46eebeca`; required CI [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) **SUCCESS** at `e4f00179`; Dual Track L1; host dump-dom L1 **pass**; CDP Settings **partial**; NVDA/200%/host-theme hung **not-run**). Claim ceiling `hypothesis`. Unique next = do not auto-claim T02; do not unpark T14/T15.
 - **2.0.0 表面:** Today / Projects / Knowledge + 底栏 Settings + 右栏助手。
   Team/Inbox **不是一级**。
 - **依赖:** P11-T03 + Visual UI 规格。Dual Track `clients/pc/web` **仅**在 T03
