@@ -177,6 +177,9 @@ describe("P11-T13 OPC IA chrome", () => {
   it("whitelists the Project list route used by Dual Track", () => {
     expect(isKnownRoute("GET", "/management/project/v1/list")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/list")).toBe(false);
+    expect(isKnownRoute("GET", "/management/project/v1/detail")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/axis")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/roster")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/pending-previews")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/vault.index")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);

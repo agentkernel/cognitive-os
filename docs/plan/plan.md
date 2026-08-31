@@ -1704,7 +1704,7 @@ formal acceptance.
 
 ### P12-T02 — Five-step create wizard + empty home only-create
 
-- **status:** `done` pending merge PR [#295](https://github.com/agentkernel/cognitive-os/pull/295); required CI [33373453242](https://github.com/agentkernel/cognitive-os/actions/runs/33373453242) **SUCCESS** at `69f5edb0`; Dual Track TS web **344/344**. Claim ceiling `hypothesis`. Unique next = merge #295 then claim `P12-T03`.
+- **status:** `done` (merged PR [#295](https://github.com/agentkernel/cognitive-os/pull/295) at `main@23646a84`; required CI [33373453242](https://github.com/agentkernel/cognitive-os/actions/runs/33373453242) **SUCCESS** at `69f5edb0`; Dual Track TS web **344/344**). Claim ceiling `hypothesis`. Unique next = `P12-T03` in-progress.
 
 - **2.0.0 表面:** Scenes `empty-home`、`create-init`…`create-joint`。空 Home
   只创建、藏右栏。
@@ -1724,6 +1724,8 @@ formal acceptance.
 - **硬门:** 适用 Phase 12 四条 + Dual Track。
 
 ### P12-T03 — Project four submenus
+
+- **status:** `done` pending merge PR [#296](https://github.com/agentkernel/cognitive-os/pull/296) @ `43b3f092`; required CI [33378377579](https://github.com/agentkernel/cognitive-os/actions/runs/33378377579) **SUCCESS**. Dual Track TS **358/358**. Not T04 eight-tabs. Not T06 Confirm. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T04`.
 
 - **2.0.0 表面:** `projects` / `project-detail` / `members` / `runs` / `outputs`。
 - **依赖:** P12-T01；P11-T03/T04/T08 权威；P11-T13 L1。**不依赖 T02 mutex。**
