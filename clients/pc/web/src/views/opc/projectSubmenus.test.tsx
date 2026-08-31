@@ -71,6 +71,9 @@ function fakeActionLabels(host: HTMLElement): string[] {
   for (const scope of scopes) {
     for (const node of scope.querySelectorAll("button, a.cp-button")) {
       const label = (node.textContent ?? "").trim();
+      if (node.closest("[data-region='opc-rail-write']")) {
+        continue;
+      }
       if (FAKE_ACTION.test(label)) {
         labels.push(label);
       }

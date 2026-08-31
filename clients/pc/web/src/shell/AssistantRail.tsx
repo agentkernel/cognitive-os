@@ -2,10 +2,11 @@ import { Link } from "react-router-dom";
 import { hitlCanvasPath, HITL_KEY, type PendingPreviewRow } from "../data/projections/hitl";
 import { useProjection } from "../data/useProjection";
 import { HonestyNote } from "../state/HonestyNote";
+import { RailCanvasWrite } from "./RailCanvasWrite";
 
 /**
- * Assistant rail — Personal 2.0 chrome. Announce-only for pending HITL
- * already loaded in this tab (T09). Candidate-only; no Approve control.
+ * Assistant rail — Personal 2.0 chrome. HITL announce-only plus P12-T09
+ * edit → review → write canvas. Candidate-only; no Approve control.
  */
 export function AssistantRail() {
   const hitl = useProjection<PendingPreviewRow[]>(HITL_KEY);
@@ -16,8 +17,9 @@ export function AssistantRail() {
     <aside data-rail="assistant" className="cp-rail" aria-label="Assistant">
       <h2>Assistant</h2>
       <HonestyNote>
-        Candidate-only. This rail does not Approve, persist, or complete a
-        Project. Chat Approve is not a Control Plane control.
+        Candidate-only. This rail does not Approve, persist a Project, or write
+        SecretStore or archive. Chat Approve is not a Control Plane control.
+        HITL Confirm stays on management HTTP.
       </HonestyNote>
       {first ? (
         <p className="cp-quiet" data-region="opc-rail-hitl">
@@ -32,6 +34,7 @@ export function AssistantRail() {
           authority writer.
         </p>
       )}
+      <RailCanvasWrite />
     </aside>
   );
 }

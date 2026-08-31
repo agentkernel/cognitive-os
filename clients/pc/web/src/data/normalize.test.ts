@@ -130,6 +130,10 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/project/v1/preview.reject")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/preview.narrow")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/draft.create")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/draft.apply")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/assistant.turn")).toBe(true);
+    expect(isKnownRoute("POST", "/task/project/v1/assistant.turn")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/conversation.archive")).toBe(false);
     expect(isKnownRoute("POST", "/management/project/v1/preview.request")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/employee.catalog?project_id=proj-1&employee_id=emp-1")).toBe(
       true,

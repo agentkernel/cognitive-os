@@ -76,7 +76,8 @@ function fakeActionLabels(host: HTMLElement): string[] {
         node.closest("[data-region='opc-hitl-actions']") ||
         node.closest("[data-region='opc-vault-ingest']") ||
         node.closest("[data-region='opc-standing-policies']") ||
-        node.closest("[data-region='opc-close-background']")
+        node.closest("[data-region='opc-close-background']") ||
+        node.closest("[data-region='opc-rail-write']")
       ) {
         continue;
       }
@@ -213,6 +214,9 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(isKnownRoute("POST", "/management/project/v1/preview.reject")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/preview.narrow")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/draft.create")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/draft.apply")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/assistant.turn")).toBe(true);
+    expect(isKnownRoute("POST", "/task/project/v1/assistant.turn")).toBe(false);
     expect(isKnownRoute("POST", "/management/project/v1/preview.request")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/employee.catalog")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/roster.register")).toBe(true);
@@ -483,7 +487,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
       },
     });
     expect(host.querySelector("[data-row-key='pol-1']")).not.toBeNull();
-    expect(host.querySelector("input")).toBeNull();
+    expect(host.querySelector("[data-page='opc-settings'] input")).toBeNull();
     expect(host.textContent).toMatch(/2\.1 \/ Deferred/);
     const settingsLinks = [...host.querySelectorAll("[data-page='opc-settings'] a")].map(
       (node) => (node.textContent ?? "").trim(),

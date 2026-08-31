@@ -1796,7 +1796,7 @@ formal acceptance.
 
 ### P12-T08 — Settings connections + don't-ask-again + CloseBackground
 
-- **status:** `done` pending merge PR [#301](https://github.com/agentkernel/cognitive-os/pull/301). Required CI [33418686755](https://github.com/agentkernel/cognitive-os/actions/runs/33418686755) **SUCCESS** at `21036106`. Dual Track TS web **405/405**. Unique next = merge then claim `P12-T09`.
+- **status:** `done` (merged PR [#301](https://github.com/agentkernel/cognitive-os/pull/301) at `main@4afc28b9`). Required CI [33418686755](https://github.com/agentkernel/cognitive-os/actions/runs/33418686755) **SUCCESS** at `21036106`. Dual Track TS web **405/405**.
 
 - **2.0.0 表面:** 连接表 + 「本周不再问」可收回 + CloseBackgroundDialog。
   T12 list-only；T02 close-background 权威已存在。
@@ -1812,6 +1812,7 @@ formal acceptance.
 
 ### P12-T09 — Right-rail edit → confirm → write canvas (no Approve)
 
+- **status:** `in-progress` on `personal/P12-T09-rail-write` / `lease/personal/P12-T09/rail-write`. Unique next = Dual Track TS + Draft PR + required CI.
 - **2.0.0 表面:** 右栏「编辑 → 确认 → 写画布」无 Approve。empty-home 可藏聊天。
 - **依赖:** P12-T01；P11-T05/T06。
 - **垂直切片:** candidate 编辑 → 确认 → 写画布；无 authority/Secret 写。
