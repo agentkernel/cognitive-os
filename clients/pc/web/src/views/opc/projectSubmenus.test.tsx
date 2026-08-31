@@ -230,7 +230,7 @@ describe("P12-T03 Project four submenus", () => {
     unmount(host, root);
   });
 
-  it("keeps empty roster honest and does not offer Install or Add", async () => {
+  it("keeps empty roster honest, offers Add member, and does not offer Install", async () => {
     const { host, root, calls } = await renderWork("#/projects/proj-1/members", {
       "GET /management/project/v1/roster": EMPTY_ROSTER,
     });
@@ -238,6 +238,7 @@ describe("P12-T03 Project four submenus", () => {
     expect(page).not.toBeNull();
     expect(page?.textContent).toMatch(/empty roster/i);
     expect(page?.textContent).toMatch(/empty-roster/);
+    expect(host.querySelector("a[href='#/projects/proj-1/members/new']")).not.toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     expect(calls.some((call) => call.pathname === "/management/project/v1/roster")).toBe(true);
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index")).toBe(false);
@@ -246,18 +247,12 @@ describe("P12-T03 Project four submenus", () => {
 
   it("does not default the first Employee until a row is chosen", async () => {
     const { host, root } = await renderWork("#/projects/proj-1/members");
-    expect(host.textContent).toMatch(/no member selected/i);
+    expect(host.querySelector("[data-page='opc-member-config']")).toBeNull();
+    expect(host.querySelector("[role='tablist']")).toBeNull();
     expect(host.querySelector("[data-region='opc-member-selected']")).toBeNull();
-    const button = [...host.querySelectorAll("button")].find(
-      (candidate) => (candidate.textContent ?? "").trim() === "emp-1",
+    expect(host.querySelector("a[href='#/projects/proj-1/members/emp-1']")?.textContent).toContain(
+      "emp-1",
     );
-    expect(button).toBeTruthy();
-    await act(async () => {
-      button?.click();
-    });
-    const selected = host.querySelector("[data-region='opc-member-selected']");
-    expect(selected?.textContent).toContain("emp-1");
-    expect(selected?.textContent).not.toMatch(/duty|skills|prompt|Install/i);
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });
