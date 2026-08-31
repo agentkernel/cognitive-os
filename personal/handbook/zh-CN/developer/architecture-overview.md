@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:d08507651d814ac1b11931e754299bda4090a0481a098cb3e3f1a97a9cd05ea7"
+fingerprint: "sha256:9331ae27cd3b7df8973acb2cdcfa52dcff93816f2a3f9d11b44e9b84488a447b"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -100,8 +100,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   hypothesis；不是 Gate、不是 P11 领取）。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`）；X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X API E2E `not-run`；不是 P0 hero））。
-  开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
+  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；  Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`）；X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X API E2E `not-run`；不是 P0 hero）。Phase 12 已在正式计划登记：冻结 prototype 的功能完备接到 daemon `/ui/`（非像素复制、非 2.1、非 T15）。开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
@@ -119,7 +118,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   Routine/Trigger walking skeleton（`P11-T08`）已在 `main`；
   Dual Track `/ui/` IA（`P11-T13`）已在 `main`；
   Windows host walking skeleton（`P11-T02`）已在 `main`（原生 E2E `not-run`）；
-  X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X `not-run`；不是 P0 hero）。前期索引：
+  X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X `not-run`；不是 P0 hero）。Phase 12 已在正式计划登记（冻结 prototype `/ui/` 完备；不是 T15）。前期索引：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh
@@ -128,7 +127,7 @@ deferred 为 advanced。
 
 全部缺失能力仍为 `Requires-backend`；Windows host/DSH/connector validation 还
 `Requires-environment`。native mobile/E2E relay remote 属于 2.1。future fixed
-denominator 是 N=15，在 qualified Windows revision 执行前不构成任何证据。
+denominator 是 N=15，在 qualified Windows revision 执行前不构成任何证据。该卡不是 prototype completeness mutex。
 
 ## 解释"意外"的设计决策
 

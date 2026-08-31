@@ -1667,20 +1667,149 @@ formal acceptance.
   unknown metrics=0、scraped、P0 hero、secret 进日志/DOM。
 - **硬门:** 适用 Phase 11 四条。
 
-### P11-T15 — Fixed-denominator Windows OPC acceptance (parked)
+### P11-T15 — Fixed-denominator Windows OPC acceptance (unparked; not P12 mutex)
 
-- **2.0.0 表面:** parked；不自动 release。
-- **依赖:** parked。
-- **垂直切片:** 将来若解冻：N=15、一 exact revision、retain every started cell。
-- **Scene:** parked。
-- **acceptance:** 不得标 done；signing/B01-W/2.1 仍独立。
-- **不可做:** 用 ordinary CI/Linux/WSL/GNU promotion。
+- **2.0.0 表面:** unparked；领取时细化 N=15 固定分母。**不是** Phase 12
+  prototype completeness mutex。不自动 release。
+- **依赖:** 领取时细化。可与 P12 非重叠 lease 并行。
+- **垂直切片:** N=15、一 exact qualified Windows revision、retain every started cell。
+- **Scene:** 固定分母场景；环境未资格化则诚实 `not-run`。
+- **acceptance:** signing/B01-W/2.1 仍独立。T15 done ≠ prototype done。
+- **不可做:** 用 ordinary CI/Linux/WSL/GNU promotion；把本卡当 P12 mutex。
 - **本仓 foundation:** Operating Model 固定分母实践。
-- **禁止再造:** 把本卡当当前实现 mutex。
-- **validation environment:** parked。解冻后仅资格化 Windows。
-- **关闭门:** parked（文档-only：本卡保持 parked）。
-- **漂移检测负例:** 把 `not-run` 写成 pass；A7 提升。
-- **硬门:** parked。
+- **禁止再造:** 把本卡当当前实现 mutex；把 `not-run` 写成 pass。
+- **validation environment:** 仅资格化 Windows。`DEV-WINDOWS-NATIVE-OPC-01`
+  未资格化 = `Requires-environment` / `not-run`。
+- **关闭门:** 领取时细化；环境缺失不得编造 pass。
+- **漂移检测负例:** 把 `not-run` 写成 pass；A7 提升；把 T15 写成 prototype done。
+- **硬门:** 适用 Phase 11 四条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P12-T01 — Phase 12 docs/plan registration (documentation-only)
+
+- **Outcome:** Phase 12 + `P12-T02..T09` registered inside the existing
+  `PERSONAL-DEVELOPMENT-PLAN.md` (three columns, negatives, Slices,
+  `implementation_requires`); plan.md/trace/PROGRESS/handbook synced.
+  Frozen-prototype **functional completeness** on daemon `/ui/`; not
+  pixel-replica; not 2.1; not T15.
+- **Boundaries:** documentation/plan only; no product code, contracts,
+  negatives, tests, support, Gate, or qualification.
+- **Acceptance:** Phase 12 cards complete; `check:consistency` /
+  handbook / docs-sync / required CI; documentation-only.
+- **Validation:** local Markdown/link/anchor/fence/terminology,
+  `check:consistency`, `check:handbook`, generator `--check`, fingerprint,
+  docs-sync, diff/lint; required Ubuntu/Windows CI.
+- **不可做:** 新开平行计划/PRD；把 T15 写成 prototype mutex；把 T13 L1
+  写成完整 `/ui/`；canvas/Vite 当产品源。
+- **硬门:** documentation-only 出口写明；不触碰 code/contracts/tests。
+
+### P12-T02 — Five-step create wizard + empty home only-create
+
+- **2.0.0 表面:** Scenes `empty-home`、`create-init`…`create-joint`。空 Home
+  只创建、藏右栏。
+- **依赖:** P12-T01；P11-T03/T04/T12 权威；P11-T13 Dual Track L1。
+- **垂直切片:** 空 Home 诚实只创建 → 五段向导接到既有 confirm-before-activate
+  preview → 无权威不写 Project。
+- **acceptance:** 0 假 Create/Activate；confirm-before-activate 走既有 preview。
+- **不可做:** 假 Create/Activate；向导绕过 preview 写权威；空 Home 画假决策包；
+  Vite 当产品源；secret 进 DOM。
+- **validation environment:** Dual Track TS（`DEV-WIN-GNU-01` 允许面）+
+  `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`。产品源 = daemon `/ui/`。NVDA/200%/
+  host-theme **挂单 not-run**。`DEV-WINDOWS-NATIVE-OPC-01` 不合格则原生 UI
+  E2E `not-run`。`DEV-WIN-GNU-01` 禁 Rust link。
+- **关闭门:** 空 Home 只创建、藏右栏；五段向导接到既有 preview；无权威不写 Project。
+- **漂移检测负例:** 假 Create/Activate；preview bypass；空 Home 假决策包；Vite
+  当产品源；secret 进 DOM。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T03 — Project four submenus
+
+- **2.0.0 表面:** `projects` / `project-detail` / `members` / `runs` / `outputs`。
+- **依赖:** P12-T01；P11-T03/T04/T08 权威；P11-T13 L1。**不依赖 T02 mutex。**
+- **垂直切片:** Projects 列表 → 四子菜单走 daemon Project 聚合 → 无权威诚实 empty。
+- **acceptance:** 非 Task 行改名；无权威诚实 empty。
+- **不可做:** `#/work` 改名冒充 Projects；无权威却渲染可点按钮；Team/Inbox 一级。
+- **validation environment:** 同 T02 Dual Track + required CI。原生 UI E2E =
+  `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。
+- **关闭门:** 四子菜单走真实 Project 聚合。
+- **漂移检测负例:** Task 行冒充；无权威可点按钮；Team/Inbox 一级。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T04 — Select-then-configure + eight tabs + add member
+
+- **2.0.0 表面:** `add-member`、`member-config`（八标签：duty/input/output/
+  skills/tools/prompt/loop/perms）。
+- **依赖:** P12-T03；P11-T04 Employee 权威。
+- **垂直切片:** 先选后看 → 八标签 → 确认加入 = Intent；拒绝 = 未加入。
+- **acceptance:** 无 Install 商店；成员级预算非 chrome。
+- **不可做:** 未选即配置；Install 商店；成员级预算 chrome；Role=Agent 合并。
+- **validation environment:** 同 T02 Dual Track + required CI。
+- **关闭门:** 先选后看；确认加入 = Intent。
+- **漂移检测负例:** 未选即配置；Install 商店；成员预算 chrome。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T05 — Today decision packets
+
+- **2.0.0 表面:** `today-incomplete`、`today`。T13 明确未验收 packet canvas。
+- **依赖:** P12-T01；P11-T03/T09/T13。
+- **垂直切片:** 未验收只「继续创建」→ 已上线才日常决策包 → 拍板深链 HITL 画布。
+- **acceptance:** 无 KPI 墙；无权威假包。
+- **不可做:** 把 T13 empty chrome 写成 packet 已验收；KPI 墙；无权威假包。
+- **validation environment:** 同 T02 Dual Track + required CI。
+- **关闭门:** 未验收只继续创建；已上线才日常包；拍板深链 HITL。
+- **漂移检测负例:** T13 冒充 packet 已验收；KPI 墙；无权威假包。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T06 — HITL canvas Confirm
+
+- **2.0.0 表面:** 画布批准 / 改窄 / 拒绝 / 停。聊天无 Approve。
+- **依赖:** P12-T03；P11-T09 preview 权威。**不依赖 T08。**
+- **垂直切片:** 画布 Confirm → persist-before-dispatch → stale/unknown 不能批。
+- **acceptance:** 聊天无 Approve；独立 `#/hitl` 不是一级。
+- **不可做:** 聊天 Approve；stale 仍批；unknown=success；无权威可点 Confirm。
+- **validation environment:** 同 T02 Dual Track + required CI。confirm 走既有
+  management HTTP。
+- **关闭门:** 画布四动作；聊天无 Approve；stale/unknown 不能批。
+- **漂移检测负例:** 聊天 Approve；独立 `#/hitl` 一级；stale 仍批；unknown=success。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T07 — Knowledge ingest UI
+
+- **2.0.0 表面:** ingest / Why this fragment。T13 现为只读 Knowledge。
+- **依赖:** P12-T01；P11-T10 Vault 权威；P11-T13。
+- **垂直切片:** ingest UI → Why this fragment 走 Vault 权威 → 导入失败保留原件。
+- **acceptance:** files ≠ Project 权威；Obsidian 不进产品。
+- **不可做:** 只读页假装 ingest；file-as-authority；secret ingestion。
+- **validation environment:** 同 T02 Dual Track + required CI。宿主 FS E2E
+  未资格化则 `not-run`。
+- **关闭门:** ingest / Why this fragment 走 Vault；导入失败保留原件。
+- **漂移检测负例:** 只读假装 ingest；file-as-authority；secret ingestion；捆绑 Obsidian。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T08 — Settings connections + don't-ask-again + CloseBackground
+
+- **2.0.0 表面:** 连接表 + 「本周不再问」可收回 + CloseBackgroundDialog。
+  T12 list-only；T02 close-background 权威已存在。
+- **依赖:** P12-T01；P11-T02/T12/T13。
+- **垂直切片:** 诚实连接表 → 本周不再问可收回（非永久）→ CloseBackground 走 T02。
+- **acceptance:** unknown≠0；native E2E 可 `not-run`。
+- **不可做:** 假连接表；永久 Don't ask；unknown=0；raw secret 进 DOM/env。
+- **validation environment:** Dual Track TS + required CI。native close/host
+  E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。
+- **关闭门:** 连接表诚实；本周不再问可收回；CloseBackground 走 T02 权威。
+- **漂移检测负例:** 假连接表；永久 Don't ask；unknown=0；把 native not-run 写成 pass。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
+
+### P12-T09 — Right-rail edit → confirm → write canvas (no Approve)
+
+- **2.0.0 表面:** 右栏「编辑 → 确认 → 写画布」无 Approve。empty-home 可藏聊天。
+- **依赖:** P12-T01；P11-T05/T06。
+- **垂直切片:** candidate 编辑 → 确认 → 写画布；无 authority/Secret 写。
+- **acceptance:** candidate-only；Pi Linux 资格不转移 Windows。
+- **不可做:** 聊天 Approve；助手直写权威/Secret/archive；empty-home 仍画假聊天。
+- **validation environment:** 同 T02 Dual Track + required CI。
+- **关闭门:** 编辑→确认→写画布且无 Approve；empty-home 可藏聊天。
+- **漂移检测负例:** 聊天 Approve；助手直写权威；empty-home 假聊天；preview bypass。
+- **硬门:** 适用 Phase 12 四条 + Dual Track。
 
 ---
 
@@ -1741,6 +1870,10 @@ phases:
     implementation_requires: [P11-T01]
     acceptance_requires: [P11-T15]
     claim_boundary: WINDOWS_OPC_NON_CLAIM_UNTIL_SEPARATE_RELEASE
+  P12:
+    implementation_requires: [P12-T01]
+    acceptance_requires: [P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
+    claim_boundary: HYPOTHESIS_NOT_T15_NOT_GATE_NOT_PIXEL_REPLICA
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -1754,6 +1887,7 @@ post_1_0:
   MULTI_AGENT: [P6-T01, P6-T02, P6-T03, P6-T04, B11]
   WEB_UI_WINDOWS: [P7-T05, P7-T07, B01-W]
   WINDOWS_OPC_2_0: [P11-T01, P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13, P11-T14, P11-T15]
+  FROZEN_PROTOTYPE_UI_COMPLETENESS: [P12-T01, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -1943,10 +2077,40 @@ tasks:
     acceptance_requires: [X_CONNECTOR_WALKING_SKELETON_HITL_UNKNOWN_READBACK]
   notes: NOT_P0_HERO_LIVE_X_API_NOT_RUN_DONE_PR_293
   P11-T15:
-    implementation_requires: []
-    acceptance_requires: []
-    disposition: PARKED
+    implementation_requires: [P11-T01]
+    acceptance_requires: [FIXED_N15_WINDOWS_OPC]
+    notes: UNPARKED_NOT_P12_MUTEX_REQUIRES_QUALIFIED_WINDOWS
     promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
+  P12-T01:
+    implementation_requires: [OWNER_2026_08_31_PHASE_12_AUTHORIZATION, P11-T01, P11-T13, P11-T14]
+    acceptance_requires: [PHASE_12_CARDS_TRACE_PROGRESS_HANDBOOK_CONSISTENCY]
+    notes: DOCUMENTATION_ONLY
+  P12-T02:
+    implementation_requires: [P12-T01, P11-T03, P11-T04, P11-T12, P11-T13]
+    acceptance_requires: [EMPTY_HOME_ONLY_CREATE_FIVE_STEP_WIZARD]
+  P12-T03:
+    implementation_requires: [P12-T01, P11-T03, P11-T04, P11-T08, P11-T13]
+    acceptance_requires: [PROJECT_FOUR_SUBMENUS]
+    notes: NO_T02_MUTEX
+  P12-T04:
+    implementation_requires: [P12-T03, P11-T04]
+    acceptance_requires: [SELECT_THEN_CONFIGURE_EIGHT_TABS_ADD_MEMBER]
+  P12-T05:
+    implementation_requires: [P12-T01, P11-T03, P11-T09, P11-T13]
+    acceptance_requires: [TODAY_DECISION_PACKETS]
+  P12-T06:
+    implementation_requires: [P12-T03, P11-T09]
+    acceptance_requires: [HITL_CANVAS_CONFIRM_NO_CHAT_APPROVE]
+    notes: NO_T08_MUTEX
+  P12-T07:
+    implementation_requires: [P12-T01, P11-T10, P11-T13]
+    acceptance_requires: [KNOWLEDGE_INGEST_WHY_THIS_FRAGMENT]
+  P12-T08:
+    implementation_requires: [P12-T01, P11-T02, P11-T12, P11-T13]
+    acceptance_requires: [SETTINGS_CONNECTIONS_DONT_ASK_CLOSE_BACKGROUND]
+  P12-T09:
+    implementation_requires: [P12-T01, P11-T05, P11-T06]
+    acceptance_requires: [RAIL_EDIT_CONFIRM_WRITE_NO_APPROVE]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。

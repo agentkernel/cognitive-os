@@ -33,8 +33,9 @@ Personal 2.0 Phase 11 (Personal 2.0.0 chrome) routes daily Project/Employee
 authority tests to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (plus exact-revision
 `DEV-LINUX-NATIVE-01` when a native daemon/store is required). Host/DSH native
 E2E stays future qualified `DEV-WINDOWS-NATIVE-OPC-01` (`Requires-environment` /
-`not-run` until provisioned). Parked T15 would still need a preregistered N=15
-acceptance at one qualified Windows revision. The native environment and B01-W
+`not-run` until provisioned). Unparked T15 still needs a preregistered N=15
+acceptance at one qualified Windows revision and is not the Phase 12 mutex.
+Phase 12 Dual Track UI uses `DEV-WIN-GNU-01` TS plus required CI. The native environment and B01-W
 are not provisioned; `B01-DESKTOP-002` is not the 2.0 daily default. Local
 Windows GNU, WSL, ordinary CI and Canvas cannot substitute Gate/release;
 record native cells `not-run` until available. `not-run` is never pass.

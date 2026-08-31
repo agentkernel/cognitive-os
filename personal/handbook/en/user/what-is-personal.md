@@ -103,7 +103,10 @@ Keep these two baselines separate:
   do not treat that catalog as shipped UI. Owner prototype approval is not
   usability, Gate, or release evidence.
 
-No OPC backend or Windows/DSH qualification is claimed. Phase 11's future fixed
-denominator is 15 scenarios; Canvas and ordinary CI do not execute or promote
-it. There is no human desirability, usability, adoption, willingness-to-pay,
+No OPC backend or Windows/DSH qualification is claimed. Dual Track L1 empty
+chrome is on daemon `/ui/`; frozen-prototype default scenes (wizard, packets,
+HITL Confirm, ingest, connections, rail write) are Phase 12 cards in the
+formal plan, not canvas pixel-replica and not 2.1. Phase 11's future fixed
+denominator is 15 scenarios and is not the prototype-completeness mutex;
+Canvas and ordinary CI do not execute or promote it. There is no human desirability, usability, adoption, willingness-to-pay,
 support, release, Gate, Profile or Agent-benefit evidence.

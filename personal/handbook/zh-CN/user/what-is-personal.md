@@ -86,7 +86,10 @@ Digital Employee。
   [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)，
   不是已交付 UI。Owner 原型批准不是可用性、Gate 或 release 证据。
 
-本文不声称 OPC backend 或 Windows/DSH qualification。Phase 11 的 future fixed
-denominator 是 15 个场景；Canvas 与 ordinary CI 不执行也不提升它。没有 human
+本文不声称 OPC backend 或 Windows/DSH qualification。Dual Track L1 空 chrome 已在
+daemon `/ui/`；冻结 prototype 默认可走场景（向导、决策包、HITL Confirm、ingest、
+连接表、右栏写画布）是正式计划 Phase 12 卡，不是 canvas 像素复制，也不是 2.1。
+Phase 11 的 future fixed denominator 是 15 个场景，**不是** prototype completeness
+mutex；Canvas 与 ordinary CI 不执行也不提升它。没有 human
 desirability、usability、adoption、WTP、support、release、Gate、Profile 或
 Agent-benefit evidence。

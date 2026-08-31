@@ -57,9 +57,12 @@ non_claims:
 - **Installed Agent target 很窄**：DSH 是唯一 2.0 runtime qualification target。
   Existing dsh Path B 不证明 Windows managed artifact；Pi 是 hidden Assistant target；
   Hermes/Codex/Cursor 是 future candidates。产品不做 native DSH UI/conversation sync。
-- **固定验收不是用户或 release evidence**：future Phase 11 使用 N=15 Windows OPC
-  scenarios，目前一个也未执行。Canvas/ordinary CI 不证明 human desirability、
+- **固定验收不是用户或 release evidence**：unparked 的 Phase 11 T15 使用 N=15 Windows OPC
+  scenarios，**不是** prototype completeness mutex，目前一个也未执行。Canvas/ordinary CI 不证明 human desirability、
   usability、adoption、WTP、support、release/Gate readiness 或 Agent benefit。
+- **冻结 prototype `/ui/` 完备是单独计划阶段**：daemon `/ui/` 上默认可走场景是 Phase 12 卡。
+  不是 canvas 像素复制，不是 2.1，不是 T15。Dual Track：无权威则 empty / Requires-backend；
+  0 假 Create/Activate/Approve。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
   query` 与 `cognitive audit query` 无过滤器；用量 JSON 含带标签事件（`cost` /

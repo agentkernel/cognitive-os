@@ -38,8 +38,11 @@ Phase 11 Personal 2.0.0 routing: T03/T04 daily authority tests use
 when a native daemon/store is required). T02/T07 native host/DSH E2E stay
 `DEV-WINDOWS-NATIVE-OPC-01` = `Requires-environment` / `not-run` until
 qualified. T09 is HITL on canvas, not a first-level Inbox. `B01-DESKTOP-002`
-is campaign-only, not the 2.0 daily default. The parked T15 N=15 acceptance
-would still need one preregistered qualified Windows revision. Local GNU, WSL,
+is campaign-only, not the 2.0 daily default. Unparked T15 N=15 acceptance
+still needs one preregistered qualified Windows revision and is **not** the
+Phase 12 prototype-completeness mutex. Phase 12 Dual Track UI work uses
+`DEV-WIN-GNU-01` TS plus required CI; native UI E2E stays `not-run` until
+`DEV-WINDOWS-NATIVE-OPC-01`. Local GNU, WSL,
 Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
 `not-run` remains `not-run`.
 
