@@ -1796,7 +1796,7 @@ formal acceptance.
 
 ### P12-T08 — Settings connections + don't-ask-again + CloseBackground
 
-- **status:** `in-progress` (`lease/personal/P12-T08/settings-connections`, branch `personal/P12-T08-settings`). Unique next = Dual Track then Draft PR + required CI.
+- **status:** `in-progress` (`lease/personal/P12-T08/settings-connections`, branch `personal/P12-T08-settings`, Draft PR [#301](https://github.com/agentkernel/cognitive-os/pull/301)). Dual Track TS web **405/405**. Unique next = required CI then merge and claim `P12-T09`.
 
 - **2.0.0 表面:** 连接表 + 「本周不再问」可收回 + CloseBackgroundDialog。
   T12 list-only；T02 close-background 权威已存在。

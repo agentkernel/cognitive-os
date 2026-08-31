@@ -1396,7 +1396,7 @@ flowchart TD
 | P12-T05 | Today 决策包 | P12-T01；P11-T03/T09/T13 | 见下表三栏；`today-incomplete`、`today`；T13 明确未做 packet | done | merged PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) at `main@bfc9aad6`；Dual Track TS **373/373** + required CI；NVDA/200%/host-theme hung |
 | P12-T06 | HITL 画布 Confirm | P12-T03；P11-T09；**不依赖 T08** | 见下表三栏；批准/改窄/拒绝/停；聊天无 Approve | done | merged PR [#299](https://github.com/agentkernel/cognitive-os/pull/299) at `main@a5265b22`；required CI [33396112669](https://github.com/agentkernel/cognitive-os/actions/runs/33396112669) **SUCCESS** at `89f85f16`；Dual Track TS **381/381**；NVDA/200%/host-theme hung |
 | P12-T07 | Knowledge ingest UI | P12-T01；P11-T10/T13 | 见下表三栏；ingest / Why this fragment；T13 现为只读 | done | merged PR [#300](https://github.com/agentkernel/cognitive-os/pull/300) at `main@081c40d0`；required CI [33401268090](https://github.com/agentkernel/cognitive-os/actions/runs/33401268090) **SUCCESS** at `fefd6872`；Dual Track TS **391/391**；owner-paste `vault.import`；files ≠ authority |
-| P12-T08 | Settings 连接表 + 本周不再问 + CloseBackground | P12-T01；P11-T02/T12/T13 | 见下表三栏；T12 list-only；native E2E 可 not-run | in-progress | `lease/personal/P12-T08/settings-connections`；branch `personal/P12-T08-settings`；unknown≠0；revoke 非永久；native E2E `not-run` |
+| P12-T08 | Settings 连接表 + 本周不再问 + CloseBackground | P12-T01；P11-T02/T12/T13 | 见下表三栏；T12 list-only；native E2E 可 not-run | in-progress | Draft PR [#301](https://github.com/agentkernel/cognitive-os/pull/301)；Dual Track TS **405/405**；unknown≠0；revoke 非永久；native E2E `not-run` |
 | P12-T09 | 右栏编辑→确认→写画布 | P12-T01；P11-T05/T06 | 见下表三栏；无 Approve；empty-home 可藏聊天 | not-started | unclaimed |
 
 | ID | validation environment | 关闭门 | 漂移检测负例 |
