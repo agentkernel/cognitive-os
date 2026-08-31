@@ -1782,7 +1782,7 @@ formal acceptance.
 
 ### P12-T07 — Knowledge ingest UI
 
-- **status:** `in-progress` on `personal/P12-T07-knowledge-ingest`; Dual Track TS **391/391**. Owner-paste `vault.import` + Why this fragment from `vault.index`. Files ≠ Project authority. Import failure keeps original. Claim ceiling `hypothesis`. Unique next = Draft PR + required CI.
+- **status:** `in-progress` Draft PR [#300](https://github.com/agentkernel/cognitive-os/pull/300) at `736fcbcb`; Dual Track TS **391/391**. Owner-paste `vault.import` + Why this fragment from `vault.index`. Files ≠ Project authority. Import failure keeps original. Claim ceiling `hypothesis`. Unique next = required CI.
 - **2.0.0 表面:** ingest / Why this fragment。T13 现为只读 Knowledge。
 - **依赖:** P12-T01；P11-T10 Vault 权威；P11-T13。
 - **垂直切片:** ingest UI → Why this fragment 走 Vault 权威 → 导入失败保留原件。

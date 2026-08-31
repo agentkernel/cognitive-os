@@ -1395,7 +1395,7 @@ flowchart TD
 | P12-T04 | 先选后配 + 八标签 + 加成员 | P12-T03；P11-T04 | 见下表三栏；`add-member`、`member-config` | done | merged PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) at `main@8c413648`；Dual Track TS **367/367** + required CI；NVDA/200%/host-theme hung |
 | P12-T05 | Today 决策包 | P12-T01；P11-T03/T09/T13 | 见下表三栏；`today-incomplete`、`today`；T13 明确未做 packet | done | merged PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) at `main@bfc9aad6`；Dual Track TS **373/373** + required CI；NVDA/200%/host-theme hung |
 | P12-T06 | HITL 画布 Confirm | P12-T03；P11-T09；**不依赖 T08** | 见下表三栏；批准/改窄/拒绝/停；聊天无 Approve | done | merged PR [#299](https://github.com/agentkernel/cognitive-os/pull/299) at `main@a5265b22`；required CI [33396112669](https://github.com/agentkernel/cognitive-os/actions/runs/33396112669) **SUCCESS** at `89f85f16`；Dual Track TS **381/381**；NVDA/200%/host-theme hung |
-| P12-T07 | Knowledge ingest UI | P12-T01；P11-T10/T13 | 见下表三栏；ingest / Why this fragment；T13 现为只读 | in-progress | Dual Track TS **391/391**；owner-paste `vault.import`；files ≠ authority |
+| P12-T07 | Knowledge ingest UI | P12-T01；P11-T10/T13 | 见下表三栏；ingest / Why this fragment；T13 现为只读 | in-progress | Draft PR [#300](https://github.com/agentkernel/cognitive-os/pull/300)；Dual Track TS **391/391**；owner-paste `vault.import`；files ≠ authority |
 | P12-T08 | Settings 连接表 + 本周不再问 + CloseBackground | P12-T01；P11-T02/T12/T13 | 见下表三栏；T12 list-only；native E2E 可 not-run | not-started | unclaimed |
 | P12-T09 | 右栏编辑→确认→写画布 | P12-T01；P11-T05/T06 | 见下表三栏；无 Approve；empty-home 可藏聊天 | not-started | unclaimed |
 
