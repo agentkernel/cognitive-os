@@ -1768,7 +1768,7 @@ formal acceptance.
 
 ### P12-T06 — HITL canvas Confirm
 
-- **status:** `in-progress` `lease/personal/P12-T06/hitl-confirm` on `personal/P12-T06-hitl-confirm`. Worktree `D:/agent-kernel-wt-P12-T06` stacked on `origin/main@bfc9aad6`.
+- **status:** `in-progress` Draft PR [#299](https://github.com/agentkernel/cognitive-os/pull/299). `lease/personal/P12-T06/hitl-confirm` on `personal/P12-T06-hitl-confirm`. Worktree `D:/agent-kernel-wt-P12-T06` stacked on `origin/main@bfc9aad6`. Unique next = required CI.
 - **2.0.0 表面:** 画布批准 / 改窄 / 拒绝 / 停。聊天无 Approve。
 - **依赖:** P12-T03；P11-T09 preview 权威。**不依赖 T08。**
 - **垂直切片:** 画布 Confirm → persist-before-dispatch → stale/unknown 不能批。
