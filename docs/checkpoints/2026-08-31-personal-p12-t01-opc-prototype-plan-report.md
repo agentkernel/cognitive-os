@@ -22,7 +22,7 @@ This report is documentation evidence only. It cannot establish product implemen
 | `pnpm run check:consistency` | **pass** | `DEV-WIN-GNU-01` | worktree | 275 requirements; leases verified; Layer 1 153/122/1/1/13 Remaining 31 |
 | `check:handbook` / generator `--check` / fingerprints | **pass** | `DEV-WIN-GNU-01` | worktree | 58×2 handbook OK; generate-handbook `--check` 18 pages; fingerprints refreshed for architecture-overview (prep-index source) |
 | docs-sync-gate `--staged` | **pass** | `DEV-WIN-GNU-01` | worktree | mapped personal-2-opc-rebaseline + prep-index; handbook suite green |
-| required Ubuntu/Windows CI | pending | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | — | after push |
+| Draft PR [#294](https://github.com/agentkernel/cognitive-os/pull/294) opened | **pass** | GitHub | `86a9cadd` | Draft; documentation-only |
 | product code / contracts / tests | **not-run** | documentation-only | — | allowed; T02 is the first implementation card |
 | NVDA / 200% / host-theme | **not-run** | Requires-environment | — | hung; not a P12 close gate |
 | `DEV-WIN-GNU-01` cargo test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | — | not a product fail |
