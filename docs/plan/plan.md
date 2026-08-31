@@ -1649,6 +1649,7 @@ formal acceptance.
 
 ### P11-T14 — X/Twitter connector walking skeleton
 
+- **status:** `done` (merged PR [#293](https://github.com/agentkernel/cognitive-os/pull/293) at `main@bc274bfd`; required CI [33364486699](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699) **SUCCESS** at `53a35adf`; live X API **not-run**).
 - **2.0.0 表面:** 隐藏能力，不是 chrome，**不是** P0 hero / default demo Project。
 - **依赖:** P11-T03 Project、P11-T09 HITL confirm、P11-T12 honest unknown≠0。
 - **垂直切片:** SecretStore-only bind → rights-safe original → digest preview →
@@ -1940,7 +1941,7 @@ tasks:
   P11-T14:
     implementation_requires: [P11-T03, P11-T09, P11-T12]
     acceptance_requires: [X_CONNECTOR_WALKING_SKELETON_HITL_UNKNOWN_READBACK]
-    notes: NOT_P0_HERO_LIVE_X_API_NOT_RUN
+  notes: NOT_P0_HERO_LIVE_X_API_NOT_RUN_DONE_PR_293
   P11-T15:
     implementation_requires: []
     acceptance_requires: []

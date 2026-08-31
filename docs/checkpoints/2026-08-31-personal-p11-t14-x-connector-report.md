@@ -7,7 +7,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Lease: `lease/personal/P11-T14/x-connector`
 - Change class: `implementation-only`
 - Implementation commit: `cf94a8d99344490fdf561fe1ad8b500d1cb184c4` (Draft PR [#293](https://github.com/agentkernel/cognitive-os/pull/293)).
-- Unique next: wait `required-ci` on this docs-head, then ready/merge. Do not claim T15.
+- Unique next: PR [#293](https://github.com/agentkernel/cognitive-os/pull/293) merged as `main@bc274bfd`. Claim `P11-T15` next. Live X E2E stays `not-run`.
 
 | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|
@@ -34,8 +34,11 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | independent reconfirm kernel-server `-- p11_t14_connector_negatives` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` same worktree | `cf94a8d99344490fdf561fe1ad8b500d1cb184c4` | HTTP_EXIT=0; 0.18s |
 | `resolve validation route` | **SUCCESS** | GitHub Actions [99400606906](https://github.com/agentkernel/cognitive-os/actions/runs/33363933263/job/99400606906) | `cf94a8d9` | ~4s; run [33363933263](https://github.com/agentkernel/cognitive-os/actions/runs/33363933263) |
 | `verify (ubuntu-latest)` | **SUCCESS** | `CI-UBUNTU-01` [99400626715](https://github.com/agentkernel/cognitive-os/actions/runs/33363933263/job/99400626715) | `cf94a8d9` | ~3m35s |
-| `verify (windows-latest)` | **pending** | `CI-WINDOWS-MSVC-01` [99400626731](https://github.com/agentkernel/cognitive-os/actions/runs/33363933263/job/99400626731) | `cf94a8d9` | this docs-head push may cancel/re-run |
+| `verify (ubuntu-latest)` on docs-head | **SUCCESS** | `CI-UBUNTU-01` [99402292175](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699/job/99402292175) | `53a35adf` | ~4m47s; run [33364486699](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699) |
+| `verify (windows-latest)` on docs-head | **SUCCESS** | `CI-WINDOWS-MSVC-01` [99402292377](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699/job/99402292377) | `53a35adf` | ~13m25s |
+| workspace `required-ci` | **SUCCESS** | GitHub Actions [99404936641](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699/job/99404936641) | `53a35adf` | run [33364486699](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699). Live X E2E remains `not-run`. A7: CI ≠ Gate. |
+| PR [#293](https://github.com/agentkernel/cognitive-os/pull/293) merge | **merged** | GitHub | `bc274bfd2204694ea44fc2c7da3e0152631f00e5` | merge commit of `53a35adf`; not Gate |
 
 ## Non-claims
 
-Not Gate, release, Profile, B01, platform qualification, business result, chrome, or a second credential plane. Fingerprint/CAPTCHA/anti-abuse evasion is forbidden. Live X API remains `not-run`. T15 stays unparked until T14 closes.
+Not Gate, release, Profile, B01, platform qualification, business result, chrome, or a second credential plane. Fingerprint/CAPTCHA/anti-abuse evasion is forbidden. Live X API remains `not-run`. T14 is closed; unique next is claim `P11-T15`.

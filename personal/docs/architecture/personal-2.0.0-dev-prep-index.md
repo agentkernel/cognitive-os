@@ -16,6 +16,7 @@
 | Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 table + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15` cards |
 | First implementation knife | **`P11-T03` Project aggregate walking skeleton** — not a full `/ui/` page, not `P11-T02` |
 | T02 host walking skeleton | **`P11-T02` done** (merged PR [#292](https://github.com/agentkernel/cognitive-os/pull/292)); native install/tray/sleep/SecretStore E2E remains `not-run` |
+| T14 X connector walking skeleton | **`P11-T14` done** (merged PR [#293](https://github.com/agentkernel/cognitive-os/pull/293)); live X API E2E remains `not-run`; not P0 hero |
 | Environment names | only [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md); do not invent environments |
 | Authority order | [AXIOMS.md](../../../docs/governance/AXIOMS.md) A1–A8 → frozen product facts → core 1.0.0 contracts (this window does not change specs) → mapping → this index |
 
@@ -92,6 +93,7 @@ Stage defaults (do not invent environments):
   (`not-run`); full `/ui/` is not pre-accepted.
 - **T02 / T07**: `Requires-environment`; unqualified native host ⇒ `not-run`.
   T02 walking skeleton (v34 + `host.*`) is on `main`; native E2E is still `not-run`.
+- **T14**: walking skeleton (v35 + `connector/x.*`) is on `main`; live X API E2E is still `not-run`; not P0 hero.
 - Gate / release / B01: independent campaign; not slice green.
 
 ### Owner local viewing (later implementation windows with guest `/ui/`)
