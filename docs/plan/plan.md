@@ -1704,6 +1704,8 @@ formal acceptance.
 
 ### P12-T02 — Five-step create wizard + empty home only-create
 
+- **status:** `done` pending merge PR [#295](https://github.com/agentkernel/cognitive-os/pull/295); required CI [33373453242](https://github.com/agentkernel/cognitive-os/actions/runs/33373453242) **SUCCESS** at `69f5edb0`; Dual Track TS web **344/344**. Claim ceiling `hypothesis`. Unique next = merge #295 then claim `P12-T03`.
+
 - **2.0.0 表面:** Scenes `empty-home`、`create-init`…`create-joint`。空 Home
   只创建、藏右栏。
 - **依赖:** P12-T01；P11-T03/T04/T12 权威；P11-T13 Dual Track L1。

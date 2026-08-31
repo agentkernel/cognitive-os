@@ -6,7 +6,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Branch: `personal/P12-T02-wizard`
 - Lease: `lease/personal/P12-T02/create-wizard`
 - Change class: `implementation-only` (Control Plane `/ui/` wizard + empty-home; thin management `draft.create` wrapping existing store)
-- Unique next: wait required CI on Draft PR [#295](https://github.com/agentkernel/cognitive-os/pull/295) at `65729499`
+- Unique next: merge PR [#295](https://github.com/agentkernel/cognitive-os/pull/295) then claim `P12-T03`
 
 Product origin is daemon-served `/ui/`. Vite/canvas is not the product. NVDA/200%/host-theme remain hung. Native UI E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`. `DEV-WIN-GNU-01` cargo is `not-run` (`RUST-LINK-DEV-WIN-GNU-01`).
 
@@ -21,7 +21,7 @@ Product origin is daemon-served `/ui/`. Vite/canvas is not the product. NVDA/200
 | `check:consistency` | **pass** | `DEV-WIN-GNU-01` | worktree | 275 requirements; Layer 1 153/123/1/1/12 Remaining 30 |
 | `check:handbook` / generate-handbook / fingerprints | **pass** | `DEV-WIN-GNU-01` | worktree | 58×2; `draft.create` on http-api; daemon-and-http fingerprints |
 | Draft PR [#295](https://github.com/agentkernel/cognitive-os/pull/295) opened | **pass** | GitHub | `65729499` | Draft; Dual Track TS green locally |
-| required CI | pending | GitHub | `65729499` | unique next |
+| required CI [33373453242](https://github.com/agentkernel/cognitive-os/actions/runs/33373453242) | **pass** | GitHub | `69f5edb0` | ubuntu 4m46s, windows 12m54s, required-ci 3s |
 | NVDA / 200% / host-theme | **not-run** | Requires-environment | — | hung; not a P12 close gate |
 | Native UI E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` unqualified | — | not a product fail |
 | `DEV-WIN-GNU-01` cargo test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | — | route to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` |
