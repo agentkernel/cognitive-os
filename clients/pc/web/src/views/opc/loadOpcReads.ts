@@ -2,7 +2,11 @@ import { fetchProjection } from "../../data/fetchProjection";
 import {
   HITL_KEY,
   pendingPreviewsPath,
+  previewDetailKey,
+  previewDetailPath,
   projectPendingPreviews,
+  projectPreviewDetail,
+  type PreviewDetailRow,
 } from "../../data/projections/hitl";
 import {
   firstLiveProjectId,
@@ -152,5 +156,18 @@ export async function loadPendingPreviewsForProject(projectId: string): Promise<
     pendingPreviewsPath(projectId),
     "management",
     projectPendingPreviews,
+  );
+}
+
+/** Digest lives on preview-detail, never on the pending list. */
+export async function loadPreviewDetail(
+  previewId: string,
+): Promise<Projection<PreviewDetailRow[]>> {
+  return fetchProjection(
+    appProjections,
+    previewDetailKey(previewId),
+    previewDetailPath(previewId),
+    "management",
+    projectPreviewDetail,
   );
 }

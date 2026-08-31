@@ -14,7 +14,8 @@ import { ProjectAuthorityPanel } from "./ProjectAuthorityPanel";
  * Projects — L1 inventory of daemon Project rows plus the HITL canvas.
  * Populated only from GET /management/project/v1/list. Open is hash
  * navigation to `#/projects/:id` four submenus. No create/activate/Confirm
- * on this list. Today deep-links here via ?preview=; not Inbox L1.
+ * on this list. Today deep-links here via ?preview=; T06 Confirm is on this
+ * canvas via preview-detail digest. Not Inbox L1.
  */
 export function ProjectsPage() {
   const [params] = useSearchParams();
@@ -71,7 +72,7 @@ export function ProjectsPage() {
             projection={hitl}
             surface="Projects HITL canvas"
             emptyTitle="Projects: no pending ApprovalPreview"
-            emptyBody="No pending ApprovalPreview. Chat cannot Approve. This canvas does not mint Confirm."
+            emptyBody="No pending ApprovalPreview. Chat cannot Approve. Confirm stays on this canvas when preview-detail supplies a digest."
             region="opc-hitl"
           >
             <HitlCanvasTable
@@ -79,6 +80,9 @@ export function ProjectsPage() {
               rows={hitl.data ?? []}
               focusPreviewId={focusPreviewId}
               deepLink={false}
+              onWritten={() => {
+                void refresh();
+              }}
             />
           </DaemonReadPanel>
         ) : null}

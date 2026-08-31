@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { hitlCanvasPath, pendingPreviewsPath, projectPendingPreviews } from "./hitl";
+import {
+  hitlCanvasPath,
+  pendingPreviewsPath,
+  previewDetailPath,
+  previewIsConfirmable,
+  projectPendingPreviews,
+  projectPreviewDetail,
+} from "./hitl";
 
 describe("pending-previews projection (P11-T13)", () => {
   it("maps announcement rows and never copies preview_digest", () => {
@@ -44,5 +51,69 @@ describe("pending-previews projection (P11-T13)", () => {
     expect(hitlCanvasPath("prev-1")).toBe("/projects?preview=prev-1");
     expect(hitlCanvasPath("prev-1", "proj-1")).toBe("/projects/proj-1?preview=prev-1");
     expect(hitlCanvasPath("prev-1", "proj-1")).not.toMatch(/hitl|inbox|team/i);
+  });
+});
+
+describe("preview-detail projection (P12-T06)", () => {
+  it("maps digest from preview-detail and never invents one", () => {
+    expect(
+      projectPreviewDetail({
+        preview_id: "prev-1",
+        subject_kind: "activation",
+        preview_digest: "digest-1",
+        status: "pending",
+      }),
+    ).toEqual([
+      {
+        previewId: "prev-1",
+        subjectKind: "activation",
+        previewDigest: "digest-1",
+        status: "pending",
+        receiptRef: "",
+        supersededBy: "",
+        baseStateDigest: "",
+      },
+    ]);
+    expect(projectPreviewDetail({ status: "ok" })).toEqual([]);
+    expect(previewDetailPath("prev-1")).toBe(
+      "/management/project/v1/preview-detail?preview_id=prev-1",
+    );
+  });
+
+  it("treats missing digest or non-pending as not confirmable", () => {
+    expect(
+      previewIsConfirmable({
+        previewId: "prev-1",
+        subjectKind: "activation",
+        previewDigest: "",
+        status: "pending",
+        receiptRef: "",
+        supersededBy: "",
+        baseStateDigest: "",
+      }),
+    ).toBe(false);
+    expect(
+      previewIsConfirmable({
+        previewId: "prev-1",
+        subjectKind: "activation",
+        previewDigest: "digest-1",
+        status: "stale",
+        receiptRef: "",
+        supersededBy: "",
+        baseStateDigest: "",
+      }),
+    ).toBe(false);
+    expect(
+      previewIsConfirmable({
+        previewId: "prev-1",
+        subjectKind: "activation",
+        previewDigest: "digest-1",
+        status: "pending",
+        receiptRef: "",
+        supersededBy: "",
+        baseStateDigest: "",
+      }),
+    ).toBe(true);
+    expect(previewIsConfirmable(undefined)).toBe(false);
   });
 });

@@ -26,7 +26,7 @@ import { ProjectWorkNav } from "./ProjectWorkNav";
 
 /**
  * Project detail — daemon GET detail + read-only PlanRevision axis.
- * L2 goes to members/runs/outputs. HITL here is announce-only (T06 Confirm).
+ * L2 goes to members/runs/outputs. HITL Confirm is digest-bound on this canvas.
  */
 export function ProjectDetailPage() {
   const { projectId = "" } = useParams();
@@ -154,7 +154,7 @@ export function ProjectDetailPage() {
           projection={hitl}
           surface="Project HITL canvas"
           emptyTitle="Project: no pending ApprovalPreview"
-          emptyBody="No pending ApprovalPreview. Chat cannot Approve. This canvas does not mint Confirm."
+          emptyBody="No pending ApprovalPreview. Chat cannot Approve. Confirm stays on this canvas when preview-detail supplies a digest."
           region="opc-hitl"
         >
           <HitlCanvasTable
@@ -162,6 +162,9 @@ export function ProjectDetailPage() {
             rows={hitl.data ?? []}
             focusPreviewId={focusPreviewId}
             deepLink={false}
+            onWritten={() => {
+              void refresh();
+            }}
           />
         </DaemonReadPanel>
       ) : null}
