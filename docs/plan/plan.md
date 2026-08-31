@@ -1740,7 +1740,7 @@ formal acceptance.
 
 ### P12-T04 — Select-then-configure + eight tabs + add member
 
-- **status:** `in-progress` on `personal/P12-T04-member-config`; lease `lease/personal/P12-T04/member-config`. Claim ceiling `hypothesis`. Unique next = Dual Track TS + required CI.
+- **status:** `in-progress` Draft PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) on `personal/P12-T04-member-config` @ `ac93ac23`; lease `lease/personal/P12-T04/member-config`. Dual Track TS **367/367**. Claim ceiling `hypothesis`. Unique next = required CI.
 
 - **2.0.0 表面:** `add-member`、`member-config`（八标签：duty/input/output/
   skills/tools/prompt/loop/perms）。
