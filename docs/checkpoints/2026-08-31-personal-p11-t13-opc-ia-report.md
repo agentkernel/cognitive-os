@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Continue `P11-T13/D01` on Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) (`personal/P11-T13-opc-ia`). Empty L1 plus fail-closed Project/HITL/Vault/Memory management reads are in this commit. Remaining: rest of T13 `/ui/` acceptance (no full fake OPC chrome; NVDA/200%/host-theme hung `not-run`; host UI E2E vs **this** revision's daemon `/ui/` `not-run` — linux-002 `:48681` is listening but this branch is not deployed). Do not auto-claim T02. Do not unpark T14/T15.
+Keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) until required-ci is green on this head. L1 honesty now includes Settings Advanced collapsed, Today → Projects HITL canvas deep-link (`?preview=`), and assistant-rail announce-only. Remaining: required-ci on this head; host UI E2E vs a **T13-revision** daemon `/ui/` on `DEV-LINUX-NATIVE-01` (not B01 guest); NVDA/200%/host-theme hung `not-run`. Do not auto-claim T02. Do not unpark T14/T15. Do not flip ready/merge yet.
 
 ## Closed predecessor
 
@@ -43,6 +43,10 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | N11 | Settings StandingApprovalPolicy list-only; no Team/Inbox/member budget control | `opcIa.test.tsx` + `standingPolicies.test.ts` | **pass** |
 | N12 | L1/Settings copy does not claim Vite as product origin | `opcIa.test.tsx` | **pass** |
 | N13 | POST confirm / vault.apply-authority stay off the client whitelist | `normalize.test.ts` | **pass** |
+| N14 | Settings Advanced (Linux 1.0) is collapsed by default | `opcIa.test.tsx` | **pass** (Vitest, `DEV-WIN-GNU-01`) |
+| N15 | Today deep-links into `#/projects?preview=`; never `#/hitl` / Inbox L1 | `opcIa.test.tsx` + `hitl.test.ts` | **pass** |
+| N16 | empty Project list ignores `?preview=` (no invented rows / HITL GET) | `opcIa.test.tsx` | **pass** |
+| N17 | `#/hitl`, `#/inbox`, `#/team` are missing routes, not L1 | `opcIa.test.tsx` | **pass** |
 
 ## Validation log (`TEST-REPORT-INCREMENTAL-01`)
 
@@ -61,6 +65,15 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | Host UI E2E vs **this** T13 `/ui/` | linux-002 `:48681` LISTEN on loopback; this branch not deployed | **not-run** |
 | NVDA / 200% layout / host-theme contrast | hung | **not-run** |
 | required-ci | pending push of this head | **not-run** |
+| `pnpm test` in `clients/pc/web` (Settings Advanced + HITL canvas deep-link) | `DEV-WIN-GNU-01` | **pass** 43 files / 340 tests |
+| `pnpm run build` (`tsc --noEmit` + Vite) | `DEV-WIN-GNU-01` | **pass** (CSS 23.25 kB, JS 452.22 kB) |
+| `resolve validation route` on `865339f2` | GitHub Actions run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **pass** job [99346265478](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346265478) |
+| `verify (ubuntu-latest)` on `865339f2` | `CI-UBUNTU-01` run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **pass** job [99346278145](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346278145) (3m50s) |
+| `verify (windows-latest)` on `865339f2` | `CI-WINDOWS-MSVC-01` run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **pending** job [99346278170](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346278170) (superseded if this head is pushed) |
+| `required-ci` on `865339f2` | GitHub Actions | **not-run** (windows still pending; do not invent green) |
+| Host UI E2E vs **this** T13 `/ui/` | `DEV-LINUX-NATIVE-01` (not B01 guest) | **not-run** until this head is pushed and a disposable daemon `/ui/` listens |
+| NVDA / 200% layout / host-theme contrast | hung | **not-run** |
+| Rust cargo | `DEV-WIN-GNU-01` | **not-run** (`RUST-LINK-DEV-WIN-GNU-01`) |
 
 ## Non-claims
 
@@ -78,6 +91,10 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 - Today/Projects: HITL announce-only for the first daemon Project id; no Confirm/Approve.
 - Knowledge: Vault index + Memory envelope after a real Project id; no ingest.
 - Settings: StandingApprovalPolicy list-only; member budget remains 2.1 / Deferred.
+- Settings Advanced (Linux 1.0 Home/Work/Agents/…) hidden by default (`<details>` closed).
+- Today deep-links pending ApprovalPreview into `#/projects?preview=` (project-center canvas). Not `#/hitl`. Not Inbox L1. Canvas does not mint Confirm.
+- Assistant rail announces pending HITL already loaded in this tab; no Approve control.
+- Projects populated only from GET list; `?preview=` cannot invent a Project.
 - Keyboard: `g` then t/p/n/s; keep w/a/h/v/r/c.
 - Palette destinations include L1 + Linux 1.0 + Settings.
 - Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291).

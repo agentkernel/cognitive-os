@@ -14,6 +14,14 @@ export function pendingPreviewsPath(subjectRef: string): string {
   return `${PENDING_PREVIEWS_PATH}?subject_ref=${encodeURIComponent(subjectRef)}`;
 }
 
+/**
+ * Project-center HITL canvas (T09). Today deep-links here. Not Inbox L1
+ * and not an independent `#/hitl/:id` space.
+ */
+export function hitlCanvasPath(previewId: string): string {
+  return `/projects?preview=${encodeURIComponent(previewId)}`;
+}
+
 export interface PendingPreviewRow {
   previewId: string;
   subjectKind: string;

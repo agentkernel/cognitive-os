@@ -25,8 +25,9 @@ import { SystemPage } from "./views/system/SystemPage";
  * Route map — Personal 2.0 L1 is Today / Projects / Knowledge; Settings is
  * chrome. Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
  * Activity/System stay as real secondary routes. Bindings folded into
- * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox are not
- * routes.
+ * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox/#/hitl
+ * are not routes. HITL is the Projects canvas (`?preview=`), reached from
+ * Today by deep link.
  */
 export function AppRoutes() {
   return (

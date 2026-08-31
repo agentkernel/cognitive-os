@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pendingPreviewsPath, projectPendingPreviews } from "./hitl";
+import { hitlCanvasPath, pendingPreviewsPath, projectPendingPreviews } from "./hitl";
 
 describe("pending-previews projection (P11-T13)", () => {
   it("maps announcement rows and never copies preview_digest", () => {
@@ -38,5 +38,10 @@ describe("pending-previews projection (P11-T13)", () => {
     expect(pendingPreviewsPath("proj-1")).toBe(
       "/management/project/v1/pending-previews?subject_ref=proj-1",
     );
+  });
+
+  it("deep-links Today into the Projects canvas, never an Inbox or #/hitl space", () => {
+    expect(hitlCanvasPath("prev-1")).toBe("/projects?preview=prev-1");
+    expect(hitlCanvasPath("prev-1")).not.toMatch(/hitl|inbox|team/i);
   });
 });

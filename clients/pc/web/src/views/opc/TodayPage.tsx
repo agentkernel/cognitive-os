@@ -1,18 +1,17 @@
 import { useCallback, useEffect } from "react";
 import { PageHeader } from "../../components/PageHeader";
-import { fetchProjection } from "../../data/fetchProjection";
-import { HITL_KEY, pendingPreviewsPath, projectPendingPreviews, type PendingPreviewRow } from "../../data/projections/hitl";
+import { HITL_KEY, type PendingPreviewRow } from "../../data/projections/hitl";
 import { PROJECTS_KEY, PROJECT_LIST_PATH, type ProjectListRow } from "../../data/projections/projects";
-import { appProjections } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
 import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
-import { loadProjectList, readyProjectId } from "./loadOpcReads";
+import { HitlCanvasTable } from "./HitlCanvasTable";
+import { loadPendingPreviewsForReadyProject, loadProjectList, readyProjectId } from "./loadOpcReads";
 import { ProjectAuthorityPanel } from "./ProjectAuthorityPanel";
 
 /**
- * Today — Personal 2.0 L1. Project list plus HITL announce-only for the
- * first daemon Project. No Confirm/Approve. No fake next-action chrome.
+ * Today — Personal 2.0 L1. Project list plus HITL announce-only with a
+ * deep link into the Projects canvas. No Confirm/Approve. No Inbox L1.
  */
 export function TodayPage() {
   const projects = useProjection<ProjectListRow[]>(PROJECTS_KEY);
@@ -20,17 +19,7 @@ export function TodayPage() {
   const projectId = readyProjectId(projects);
   const refresh = useCallback(async () => {
     const list = await loadProjectList();
-    const id = readyProjectId(list);
-    if (!id) {
-      return;
-    }
-    await fetchProjection(
-      appProjections,
-      HITL_KEY,
-      pendingPreviewsPath(id),
-      "management",
-      projectPendingPreviews,
-    );
+    await loadPendingPreviewsForReadyProject(list);
   }, []);
   useEffect(() => {
     void refresh();
@@ -61,29 +50,11 @@ export function TodayPage() {
             emptyBody="No pending ApprovalPreview for this Project. Chat cannot Approve. Confirm stays on management HTTP."
             region="opc-hitl"
           >
-            <table className="cp-table">
-              <caption className="cp-quiet">
-                GET {pendingPreviewsPath(projectId)} — announce only; no Confirm
-              </caption>
-              <thead>
-                <tr>
-                  <th>Preview</th>
-                  <th>Kind</th>
-                  <th>Status</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(hitl.data ?? []).map((row) => (
-                  <tr key={row.previewId} data-row-key={row.previewId}>
-                    <td>
-                      <code className="cp-mono">{row.previewId}</code>
-                    </td>
-                    <td>{row.subjectKind}</td>
-                    <td>{row.status}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+            <HitlCanvasTable
+              projectId={projectId}
+              rows={hitl.data ?? []}
+              deepLink
+            />
           </DaemonReadPanel>
         ) : null}
       </ProjectAuthorityPanel>

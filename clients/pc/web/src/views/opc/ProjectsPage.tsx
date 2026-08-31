@@ -1,36 +1,29 @@
 import { useCallback, useEffect } from "react";
+import { useSearchParams } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
-import { fetchProjection } from "../../data/fetchProjection";
-import { HITL_KEY, pendingPreviewsPath, projectPendingPreviews, type PendingPreviewRow } from "../../data/projections/hitl";
+import { HITL_KEY, type PendingPreviewRow } from "../../data/projections/hitl";
 import { PROJECTS_KEY, PROJECT_LIST_PATH, type ProjectListRow } from "../../data/projections/projects";
-import { appProjections } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
 import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
-import { loadProjectList, readyProjectId } from "./loadOpcReads";
+import { HitlCanvasTable } from "./HitlCanvasTable";
+import { loadPendingPreviewsForReadyProject, loadProjectList, readyProjectId } from "./loadOpcReads";
 import { ProjectAuthorityPanel } from "./ProjectAuthorityPanel";
 
 /**
- * Projects — L1 inventory of daemon Project rows plus HITL announce-only.
- * No create/activate/Confirm control in this slice.
+ * Projects — L1 inventory of daemon Project rows plus the HITL canvas.
+ * Populated only from GET /management/project/v1/list. No create/activate/
+ * Confirm. Today deep-links here via ?preview=; not Inbox L1.
  */
 export function ProjectsPage() {
+  const [params] = useSearchParams();
+  const focusPreviewId = params.get("preview");
   const projects = useProjection<ProjectListRow[]>(PROJECTS_KEY);
   const hitl = useProjection<PendingPreviewRow[]>(HITL_KEY);
   const projectId = readyProjectId(projects);
   const refresh = useCallback(async () => {
     const list = await loadProjectList();
-    const id = readyProjectId(list);
-    if (!id) {
-      return;
-    }
-    await fetchProjection(
-      appProjections,
-      HITL_KEY,
-      pendingPreviewsPath(id),
-      "management",
-      projectPendingPreviews,
-    );
+    await loadPendingPreviewsForReadyProject(list);
   }, []);
   useEffect(() => {
     void refresh();
@@ -45,6 +38,7 @@ export function ProjectsPage() {
       <HonestyNote>
         Product origin is daemon-served hash /ui/. Vite is not the product origin.
         Rows are the daemon list. Confirm-before-activate stays on management HTTP.
+        HITL on this page is the project-center canvas, not an Inbox.
       </HonestyNote>
       <ProjectAuthorityPanel projection={projects} surface="Projects">
         <table className="cp-table">
@@ -73,17 +67,17 @@ export function ProjectsPage() {
         {projectId ? (
           <DaemonReadPanel
             projection={hitl}
-            surface="Projects HITL announcements"
+            surface="Projects HITL canvas"
             emptyTitle="Projects: no pending ApprovalPreview"
-            emptyBody="No pending ApprovalPreview. Chat cannot Approve."
+            emptyBody="No pending ApprovalPreview. Chat cannot Approve. This canvas does not mint Confirm."
             region="opc-hitl"
           >
-            <p className="cp-quiet">
-              {(hitl.data?.length ?? 0)} pending ApprovalPreview
-              {(hitl.data?.length ?? 0) === 1 ? "" : "s"} on{" "}
-              <code className="cp-mono">{pendingPreviewsPath(projectId)}</code>.
-              Announce only.
-            </p>
+            <HitlCanvasTable
+              projectId={projectId}
+              rows={hitl.data ?? []}
+              focusPreviewId={focusPreviewId}
+              deepLink={false}
+            />
           </DaemonReadPanel>
         ) : null}
       </ProjectAuthorityPanel>

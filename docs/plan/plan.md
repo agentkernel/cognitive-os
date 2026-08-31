@@ -1626,7 +1626,7 @@ formal acceptance.
 
 ### P11-T13 — OPC Control Plane IA closure
 
-- **status:** in-progress (`P11-T13/D01` Dual Track fail-closed L1 reads on `clients/pc/web`; not complete `/ui/` acceptance). Claim ceiling `hypothesis`. Unique next = continue D01 on Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291).
+- **status:** in-progress (`P11-T13/D01` Dual Track L1 honesty on `clients/pc/web`; Settings Advanced collapsed; Today → Projects HITL canvas; not complete `/ui/` acceptance). Claim ceiling `hypothesis`. Unique next = keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) until required-ci is green.
 - **2.0.0 表面:** Today / Projects / Knowledge + 底栏 Settings + 右栏助手。
   Team/Inbox **不是一级**。
 - **依赖:** P11-T03 + Visual UI 规格。Dual Track `clients/pc/web` **仅**在 T03

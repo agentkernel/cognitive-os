@@ -11,23 +11,20 @@ import {
 import { appProjections } from "../../data/store";
 import { useProjection } from "../../data/useProjection";
 import { HonestyNote } from "../../state/HonestyNote";
+import { LINUX_1_0_NAV } from "../../shell/PrimaryNav";
 import { DaemonReadPanel } from "./DaemonReadPanel";
 
-const LINUX_1_0 = [
-  ["/", "Today"],
-  ["/home", "Linux 1.0 Home"],
-  ["/work", "Work"],
-  ["/agents", "Agents"],
-  ["/providers", "Providers"],
-  ["/resources", "Resources"],
-  ["/activity", "Activity"],
-  ["/system", "System"],
+const ADVANCED_ROUTES = [
+  ...LINUX_1_0_NAV.map(([to, label]) =>
+    to === "/home" ? (["/home", "Linux 1.0 Home"] as const) : ([to, label] as const),
+  ),
   ["/session", "Session"],
 ] as const;
 
 /**
  * Settings — bottom chrome, not L1. StandingApprovalPolicy list is
- * announce-only. Member-level budget is 2.1 / Deferred.
+ * announce-only. Linux 1.0 six-family surfaces stay in Advanced, hidden
+ * by default (state-lab). Member-level budget is 2.1 / Deferred.
  */
 export function SettingsPage() {
   const policies = useProjection<StandingPolicyRow[]>(STANDING_POLICIES_KEY);
@@ -54,7 +51,8 @@ export function SettingsPage() {
         Product origin is daemon-served hash /ui/. Vite is not the product origin.
         Member-level budget hard-stop is 2.1 / Deferred. These links are existing
         daemon-served hash routes, not a new authority plane. StandingApprovalPolicy
-        create/revoke stay on management HTTP.
+        create/revoke stay on management HTTP. Advanced Linux 1.0 surfaces are
+        hidden by default.
       </HonestyNote>
       <DaemonReadPanel
         projection={policies}
@@ -87,13 +85,20 @@ export function SettingsPage() {
           </tbody>
         </table>
       </DaemonReadPanel>
-      <ul className="cp-nav">
-        {LINUX_1_0.map(([to, label]) => (
-          <li key={to}>
-            <Link to={to}>{label}</Link>
-          </li>
-        ))}
-      </ul>
+      <details className="cp-details" data-region="opc-settings-advanced">
+        <summary>Advanced — Linux 1.0 surfaces (hidden by default)</summary>
+        <p className="cp-quiet">
+          These are real daemon-served hash routes from Linux 1.0. They are not
+          Personal 2.0 L1. Not Team. Not Inbox.
+        </p>
+        <ul className="cp-nav">
+          {ADVANCED_ROUTES.map(([to, label]) => (
+            <li key={to}>
+              <Link to={to}>{label}</Link>
+            </li>
+          ))}
+        </ul>
+      </details>
     </section>
   );
 }

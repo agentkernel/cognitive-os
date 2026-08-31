@@ -332,6 +332,16 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
     expect(host.textContent).toContain("activation");
     expect(host.textContent).not.toContain("must-not-render");
     expect(host.textContent).toMatch(/announce only/i);
+    expect(host.querySelector("a[href='#/projects?preview=prev-1']")?.textContent).toMatch(
+      /Projects canvas/i,
+    );
+    expect(host.querySelector("a[href*='#/hitl']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-rail-hitl']")?.textContent).toMatch(
+      /pending ApprovalPreview/i,
+    );
+    expect(
+      host.querySelector("[data-rail='assistant'] a[href='#/projects?preview=prev-1']"),
+    ).not.toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     expect(
       calls.some(
@@ -446,5 +456,71 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
     ).toBe(true);
     expect(calls.some((call) => call.method === "POST")).toBe(false);
     unmount(host, root);
+  });
+
+  it("keeps Settings Advanced collapsed so Linux 1.0 is not default chrome", async () => {
+    const { host, root } = await renderOpc("#/settings", EMPTY_LIST);
+    const advanced = host.querySelector(
+      "[data-region='opc-settings-advanced']",
+    ) as HTMLDetailsElement | null;
+    expect(advanced).not.toBeNull();
+    expect(advanced?.open).toBe(false);
+    expect(advanced?.querySelector("a[href='#/home']")?.textContent).toBe("Linux 1.0 Home");
+    expect(advanced?.querySelector("a[href='#/work']")?.textContent).toBe("Work");
+    expect(host.querySelector("nav[aria-label='Primary'] a[href='#/work']")).toBeNull();
+    expect(host.querySelector("nav[aria-label='Primary']")?.textContent).not.toMatch(/Team|Inbox/);
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("lands Today deep-links on the Projects canvas without making Inbox or #/hitl L1", async () => {
+    const { host, root } = await renderOpc("#/projects?preview=prev-1", READY_LIST, {
+      "GET /management/project/v1/pending-previews": {
+        status: 200,
+        body: {
+          status: "ok",
+          previews: [
+            {
+              preview_id: "prev-1",
+              subject_kind: "activation",
+              subject_ref: "proj-1",
+              status: "pending",
+            },
+          ],
+        },
+      },
+    });
+    expect(host.querySelector("[data-page='opc-projects']")).not.toBeNull();
+    expect(host.querySelector("[data-row-key='proj-1']")).not.toBeNull();
+    expect(host.querySelector("[data-row-key='prev-1']")?.getAttribute("data-canvas-focus")).toBe(
+      "true",
+    );
+    expect(host.querySelector("nav[aria-label='Primary']")?.textContent).not.toMatch(/Team|Inbox/);
+    expect(host.querySelector("a[href*='#/hitl']")).toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("does not populate Projects from a preview query when the daemon list is empty", async () => {
+    const { host, root, calls } = await renderOpc("#/projects?preview=prev-1", EMPTY_LIST);
+    expect(host.textContent).toContain(NO_PROJECT_EMPTY);
+    expect(host.querySelector("[data-row-key='proj-1']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-hitl']")).toBeNull();
+    expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
+      false,
+    );
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("treats #/hitl, #/inbox, and #/team as missing routes, not L1", () => {
+    for (const hash of ["#/hitl/prev-1", "#/inbox", "#/team"]) {
+      const { host, root } = renderAppAt(hash);
+      expect(host.textContent).toContain("No such route");
+      expect(host.querySelector("nav[aria-label='Primary'] a[aria-current='page']")).toBeNull();
+      expect(host.querySelector("nav[aria-label='Primary']")?.textContent).not.toMatch(/Team|Inbox/);
+      expect(fakeActionLabels(host)).toEqual([]);
+      unmount(host, root);
+    }
   });
 });
