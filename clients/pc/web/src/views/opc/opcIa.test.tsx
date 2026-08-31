@@ -7,7 +7,7 @@ import { appProjections } from "../../data/store";
 import { clearSession, rememberBearer } from "../../session";
 import { SPACE_CHORDS } from "../../shell/keyboard";
 import { PRIMARY_NAV } from "../../shell/PrimaryNav";
-import { NO_PROJECT_EMPTY } from "./ProjectAuthorityPanel";
+import { NO_PROJECT_EMPTY, TODAY_EMPTY_ONLY_CREATE } from "./ProjectAuthorityPanel";
 
 type RouteResponse = { status: number; body: unknown };
 type FetchCall = { method: string; path: string; pathname: string };
@@ -180,7 +180,9 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(isKnownRoute("GET", "/management/project/v1/pending-previews")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/vault.index")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
-    expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/draft.create")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/preview.request")).toBe(true);
   });
 });
 
@@ -189,9 +191,11 @@ describe("P11-T13 Dual Track honesty (zero fake buttons)", () => {
     const { host, root, calls } = await renderOpc("#/", EMPTY_LIST);
     expect(host.querySelector("[data-page='opc-today']")).not.toBeNull();
     expect(host.querySelector("main h2")?.textContent).toBe("Today");
-    expect(host.textContent).toContain(NO_PROJECT_EMPTY);
+    expect(host.textContent).toContain(TODAY_EMPTY_ONLY_CREATE);
     expect(host.querySelector("[data-page='opc-today'] .cp-region")).toBeNull();
     expect(host.querySelector("[data-region='opc-hitl']")).toBeNull();
+    expect(host.querySelector("[data-rail='assistant']")).toBeNull();
+    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/Start create/);
     expect(fakeActionLabels(host)).toEqual([]);
     expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
       false,

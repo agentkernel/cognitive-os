@@ -94,7 +94,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Windows OPC fixed-denominator acceptance | Requires-environment / not-run | unparked N=15、同一 qualified Windows revision；不是 Phase 12 prototype completeness mutex；required CI/Canvas 不执行；signing/B01-W/release 分离 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
 | 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
-| 当前 Web UI / Console | partial | daemon 同源 `/ui/` Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）位于 `clients/pc/web/`；无权威诚实空态；向导/决策包/HITL Confirm/ingest/连接表/右栏写画布是 Phase 12 卡，不是完整 IA；Linux 1.0 六族仍在高级/二级；不是 Windows OPC |
+| 当前 Web UI / Console | partial | daemon 同源 `/ui/` Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）位于 `clients/pc/web/`；空 Home 只创建（`#/projects/new` 五段向导）正在推进（`P12-T02`）；决策包/HITL Confirm/ingest/连接表/右栏写画布仍是后续 Phase 12 卡，不是完整 IA；Linux 1.0 六族仍在高级/二级；不是 Windows OPC |
 | 当前 Windows 产品 | unavailable | installer/credential fragment 与 ordinary CI 不是 Windows OPC host/DSH/UI support；qualified native environment 与 B01-W 均不存在 |
 | Personal 2.1 native mobile/E2E relay remote | deferred | 仅 host-online；device-bound key/revocation/short session/preview/audit/no secret downlink 为 future controls |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |

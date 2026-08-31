@@ -26,6 +26,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/pending-previews",
     "GET /management/project/v1/preview-detail",
     "POST /management/project/v1/draft.apply",
+    "POST /management/project/v1/draft.create",
     "POST /management/project/v1/preview.request",
     "POST /management/project/v1/preview.reject",
     "POST /management/project/v1/preview.narrow",
@@ -57,6 +58,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "POST /management/project/v1/routine.resume",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
+    "POST /task/project/v1/draft.create",
     "POST /task/project/v1/preview.request",
     "POST /task/project/v1/preview.reject",
     "POST /task/project/v1/preview.narrow",
@@ -139,6 +141,7 @@ pub(crate) fn handle(
         "GET /management/project/v1/pending-previews" => pending_previews(method_path, &plane),
         "GET /management/project/v1/preview-detail" => preview_detail(method_path, &plane),
         "POST /management/project/v1/draft.apply" => draft_apply(body, &plane),
+        "POST /management/project/v1/draft.create" => draft_create(body, &plane),
         "POST /management/project/v1/preview.request" => preview_request(body, &plane),
         "POST /management/project/v1/preview.reject" => preview_reject(body, &plane),
         "POST /management/project/v1/preview.narrow" => preview_narrow(body, &plane),
@@ -1351,6 +1354,34 @@ fn preview_detail(method_path: &str, plane: &ProjectAggregateStore) -> ResourceA
     }
 }
 
+fn draft_create(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(charter) = document.get("charter").and_then(Value::as_str) else {
+        return error(400, "CHARTER_REQUIRED", "charter required");
+    };
+    let payload = document
+        .get("payload")
+        .and_then(Value::as_str)
+        .unwrap_or("project-create");
+    match plane.create_draft(payload.as_bytes(), now_ms()) {
+        Ok((draft_id, payload_digest)) => {
+            match plane.put_draft_charter(&draft_id, charter.as_bytes(), now_ms()) {
+                Ok((charter_revision_id, charter_digest)) => ok(json!({
+                    "status": "ok",
+                    "draft_id": draft_id,
+                    "payload_digest": payload_digest,
+                    "charter_revision_id": charter_revision_id,
+                    "charter_digest": charter_digest,
+                })),
+                Err(error) => store_error(error),
+            }
+        }
+        Err(error) => store_error(error),
+    }
+}
+
 fn draft_apply(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
     let Some(document) = parse_json(body) else {
         return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
@@ -1632,6 +1663,7 @@ mod tests {
             "POST /task/project/v1/standing-policy.create",
             "POST /task/project/v1/standing-policy.revoke",
             "GET /task/project/v1/standing-policies",
+            "POST /task/project/v1/draft.create",
         ] {
             let response = handle(
                 path,
@@ -1646,6 +1678,77 @@ mod tests {
             );
             assert!(!response.body.contains("Approve"));
         }
+    }
+
+    #[test]
+    fn draft_create_http_then_preview_confirm_mints_project_and_rejects_secret() {
+        let (_tmp, store) = authority();
+        let created = handle(
+            "POST /management/project/v1/draft.create",
+            json!({
+                "payload": "Q3 charter title",
+                "charter": "owner charter body"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(created.status, 200, "{}", created.body);
+        let created_json = serde_json::from_str::<Value>(&created.body).unwrap();
+        let draft_id = created_json
+            .get("draft_id")
+            .and_then(Value::as_str)
+            .expect("draft_id");
+        let previewed = handle(
+            "POST /management/project/v1/preview.request",
+            json!({
+                "subject_kind": "activation",
+                "subject_ref": draft_id
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(previewed.status, 200, "{}", previewed.body);
+        let preview_json = serde_json::from_str::<Value>(&previewed.body).unwrap();
+        let preview_id = preview_json
+            .get("preview_id")
+            .and_then(Value::as_str)
+            .expect("preview_id");
+        let preview_digest = preview_json
+            .get("preview_digest")
+            .and_then(Value::as_str)
+            .expect("preview_digest");
+        let confirmed = handle(
+            "POST /management/project/v1/confirm",
+            json!({
+                "preview_id": preview_id,
+                "preview_digest": preview_digest
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        assert!(confirmed.body.contains("new_ref"), "{}", confirmed.body);
+        let secret = handle(
+            "POST /management/project/v1/draft.create",
+            json!({
+                "payload": "sk-live-secret-material",
+                "charter": "should not land"
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(secret.status, 422, "{}", secret.body);
+        assert!(secret.body.contains("PROJECT_INVALID"), "{}", secret.body);
+        let missing = handle(
+            "POST /management/project/v1/draft.create",
+            json!({ "payload": "no charter" }).to_string().as_bytes(),
+            &store,
+        );
+        assert_eq!(missing.status, 400, "{}", missing.body);
     }
 
     #[test]

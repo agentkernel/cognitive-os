@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { NotFound } from "./shell/NotFound";
 import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
+import { CreateWizardPage } from "./views/opc/CreateWizardPage";
 import { KnowledgePage } from "./views/opc/KnowledgePage";
 import { ProjectsPage } from "./views/opc/ProjectsPage";
 import { SettingsPage } from "./views/opc/SettingsPage";
@@ -23,7 +24,8 @@ import { SystemPage } from "./views/system/SystemPage";
 
 /**
  * Route map — Personal 2.0 L1 is Today / Projects / Knowledge; Settings is
- * chrome. Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
+ * chrome. `/projects/new` is the five-step create wizard (P12-T02), not L1.
+ * Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
  * Activity/System stay as real secondary routes. Bindings folded into
  * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox/#/hitl
  * are not routes. HITL is the Projects canvas (`?preview=`), reached from
@@ -38,6 +40,14 @@ export function AppRoutes() {
         element={
           <SessionGate channel="management" title="Today">
             <TodayPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/new"
+        element={
+          <SessionGate channel="management" title="Create Project">
+            <CreateWizardPage />
           </SessionGate>
         }
       />
