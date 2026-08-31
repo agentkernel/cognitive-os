@@ -6,7 +6,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Branch: `personal/P12-T05-today-packets`
 - Lease: `lease/personal/P12-T05/today-packets`
 - Change class: `implementation-only` (daemon-served `/ui/` Today packets; no new authority writer; no `core/specs`)
-- Unique next: required CI on Draft PR [#298](https://github.com/agentkernel/cognitive-os/pull/298)
+- Unique next: merge PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) then claim `P12-T06`
 
 Product origin is daemon-served `/ui/`. Vite/canvas is not the product. NVDA/200%/host-theme remain hung. Native UI E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`. `DEV-WIN-GNU-01` cargo is `not-run` (`RUST-LINK-DEV-WIN-GNU-01`). Creating-only = continue-create (`today-incomplete`). Live = pending-previews packets deep-linked to `/projects/:id?preview=`. No KPI wall. Chat has no Approve. Not T06 Confirm. Not T15.
 
@@ -17,6 +17,7 @@ Product origin is daemon-served `/ui/`. Vite/canvas is not the product. NVDA/200
 | Claim `lease/personal/P12-T05/today-packets` | **pass** | `DEV-WIN-GNU-01` | worktree `D:/agent-kernel-wt-P12-T05` stacked on `origin/main@8c413648` | T04 PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) **merged** at `main@8c413648`. DOC-REFRAME retained. Evaluation routing OFF. |
 | Dual Track TS Today packets (`todayPackets` + `opcIa` + projections) | **pass** | `DEV-WIN-GNU-01` | `83febfb` | personal-web-ui **373/373**. Creating-only does not GET pending-previews. Live packets deep-link `/projects/:id?preview=`. Empty home remains only-create. Native UI E2E **not-run**. NVDA/200%/host-theme **not-run**. GNU cargo **not-run**. |
 | Draft PR [#298](https://github.com/agentkernel/cognitive-os/pull/298) | **pass** | GitHub | `83febfb` | Unique next = required CI. |
+| required CI [33389046120](https://github.com/agentkernel/cognitive-os/actions/runs/33389046120) | **pass** | GitHub | `e4176c35` | ubuntu 3m59s, windows 15m32s, required-ci 3s |
 | NVDA / 200% / host-theme | **not-run** | Requires-environment | — | hung; not a P12 close gate |
 | Native UI E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` unqualified | — | not a product fail |
 | `DEV-WIN-GNU-01` cargo test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | — | route to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` |
