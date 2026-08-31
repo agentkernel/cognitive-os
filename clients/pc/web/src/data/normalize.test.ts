@@ -115,6 +115,9 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/project/v1/vault.import")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/vault.index.rebuild")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/standing-policy.revoke")).toBe(true);
+    expect(isKnownRoute("GET", "/management/host/v1/status?home_id=home-1")).toBe(true);
+    expect(isKnownRoute("POST", "/management/host/v1/close.request")).toBe(true);
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
     expect(isKnownRoute("POST", "/management/agent-bindings/remove")).toBe(true);
   });
@@ -135,6 +138,9 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/project/v1/employee.seat.request")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/employee.seat.confirm")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/vault.apply-authority")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/standing-policy.create")).toBe(false);
+    expect(isKnownRoute("POST", "/task/project/v1/standing-policy.revoke")).toBe(false);
+    expect(isKnownRoute("POST", "/task/host/v1/close.request")).toBe(false);
     expect(isKnownRoute("POST", "/management/agent/transition")).toBe(false);
     expect(isKnownRoute("GET", "/management/providers/accounts/../../etc")).toBe(false);
     expect(isKnownRoute("DELETE", "/management/providers/accounts")).toBe(false);

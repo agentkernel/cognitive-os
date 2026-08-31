@@ -1782,7 +1782,7 @@ formal acceptance.
 
 ### P12-T07 — Knowledge ingest UI
 
-- **status:** `done` pending merge PR [#300](https://github.com/agentkernel/cognitive-os/pull/300). Required CI [33401268090](https://github.com/agentkernel/cognitive-os/actions/runs/33401268090) **SUCCESS** at `fefd6872`. Dual Track TS **391/391**. Owner-paste `vault.import` + Why this fragment from `vault.index`. Files ≠ Project authority. Import failure keeps original. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T08`.
+- **status:** `done` (merged PR [#300](https://github.com/agentkernel/cognitive-os/pull/300) at `main@081c40d0`). Required CI [33401268090](https://github.com/agentkernel/cognitive-os/actions/runs/33401268090) **SUCCESS** at `fefd6872`. Dual Track TS **391/391**. Owner-paste `vault.import` + Why this fragment from `vault.index`. Files ≠ Project authority. Import failure keeps original. Claim ceiling `hypothesis`.
 - **2.0.0 表面:** ingest / Why this fragment。T13 现为只读 Knowledge。
 - **依赖:** P12-T01；P11-T10 Vault 权威；P11-T13。
 - **垂直切片:** ingest UI → Why this fragment 走 Vault 权威 → 导入失败保留原件。
@@ -1795,6 +1795,8 @@ formal acceptance.
 - **硬门:** 适用 Phase 12 四条 + Dual Track。
 
 ### P12-T08 — Settings connections + don't-ask-again + CloseBackground
+
+- **status:** `in-progress` (`lease/personal/P12-T08/settings-connections`, branch `personal/P12-T08-settings`). Unique next = Dual Track then Draft PR + required CI.
 
 - **2.0.0 表面:** 连接表 + 「本周不再问」可收回 + CloseBackgroundDialog。
   T12 list-only；T02 close-background 权威已存在。

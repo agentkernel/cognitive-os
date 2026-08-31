@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { projectStandingPolicies } from "./standingPolicies";
+import { projectStandingPolicies, STANDING_POLICY_REVOKE_PATH } from "./standingPolicies";
 
 describe("standing-policies projection (P11-T13)", () => {
   it("maps daemon rows and does not invent active or expiry", () => {
@@ -40,5 +40,9 @@ describe("standing-policies projection (P11-T13)", () => {
         active: "unknown",
       },
     ]);
+  });
+
+  it("revokes on management HTTP and does not mint from Settings", () => {
+    expect(STANDING_POLICY_REVOKE_PATH).toBe("/management/project/v1/standing-policy.revoke");
   });
 });
