@@ -11,6 +11,9 @@ export const NO_PROJECT_EMPTY =
 export const TODAY_EMPTY_ONLY_CREATE =
   "This daemon reports no Project. That is not an empty Task list, not a decision packet, and not an accepted OPC chrome. Start create opens the five-step wizard. The wizard does not mint a Project until owner-management preview and write.";
 
+export const TODAY_INCOMPLETE_ONLY_CREATE =
+  "Create is not finished. Daily packets wait for activation. Today keeps only continue-create. This is not a decision packet, not a KPI wall, and not T13 empty chrome pretending packets are accepted.";
+
 export const NO_FAKE_CHROME =
   "This slice does not paint Today packets, Team, Inbox, or Requires-backend controls.";
 

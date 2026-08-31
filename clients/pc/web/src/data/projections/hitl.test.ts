@@ -42,6 +42,7 @@ describe("pending-previews projection (P11-T13)", () => {
 
   it("deep-links Today into the Projects canvas, never an Inbox or #/hitl space", () => {
     expect(hitlCanvasPath("prev-1")).toBe("/projects?preview=prev-1");
-    expect(hitlCanvasPath("prev-1")).not.toMatch(/hitl|inbox|team/i);
+    expect(hitlCanvasPath("prev-1", "proj-1")).toBe("/projects/proj-1?preview=prev-1");
+    expect(hitlCanvasPath("prev-1", "proj-1")).not.toMatch(/hitl|inbox|team/i);
   });
 });

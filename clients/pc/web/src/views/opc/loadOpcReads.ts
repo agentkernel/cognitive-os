@@ -5,6 +5,7 @@ import {
   projectPendingPreviews,
 } from "../../data/projections/hitl";
 import {
+  firstLiveProjectId,
   firstReadyProjectId,
   PROJECTS_KEY,
   PROJECT_LIST_PATH,
@@ -49,11 +50,36 @@ export function readyProjectId(list: Projection<ProjectListRow[]>): string | und
   return firstReadyProjectId(list.data);
 }
 
+/** Live (accepted) Project only. Creating drafts are not daily-packet subjects. */
+export function liveProjectId(list: Projection<ProjectListRow[]>): string | undefined {
+  if (list.status !== "ready") {
+    return undefined;
+  }
+  return firstLiveProjectId(list.data);
+}
+
 /** N8: no Project id ⇒ no pending-previews call. */
 export async function loadPendingPreviewsForReadyProject(
   list: Projection<ProjectListRow[]>,
 ): Promise<void> {
   const id = readyProjectId(list);
+  if (!id) {
+    return;
+  }
+  await fetchProjection(
+    appProjections,
+    HITL_KEY,
+    pendingPreviewsPath(id),
+    "management",
+    projectPendingPreviews,
+  );
+}
+
+/** N8 + P12-T05: creating-only lists must not fetch daily packets. */
+export async function loadPendingPreviewsForLiveProject(
+  list: Projection<ProjectListRow[]>,
+): Promise<void> {
+  const id = liveProjectId(list);
   if (!id) {
     return;
   }

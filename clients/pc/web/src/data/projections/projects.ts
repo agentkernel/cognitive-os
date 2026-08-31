@@ -19,6 +19,25 @@ export function firstReadyProjectId(rows: ProjectListRow[] | undefined): string 
   return typeof id === "string" && id.length > 0 ? id : undefined;
 }
 
+/** Accepted / live Project states. `creating` is not live (P12-T05). */
+export const LIVE_PROJECT_STATES = new Set(["active", "attention", "paused"]);
+
+export function isLiveProjectState(state: string): boolean {
+  return LIVE_PROJECT_STATES.has(state);
+}
+
+export function liveProjectRows(rows: ProjectListRow[] | undefined): ProjectListRow[] {
+  return (rows ?? []).filter((row) => row.projectId.length > 0 && isLiveProjectState(row.state));
+}
+
+export function creatingProjectRows(rows: ProjectListRow[] | undefined): ProjectListRow[] {
+  return (rows ?? []).filter((row) => row.projectId.length > 0 && row.state === "creating");
+}
+
+export function firstLiveProjectId(rows: ProjectListRow[] | undefined): string | undefined {
+  return liveProjectRows(rows)[0]?.projectId;
+}
+
 export function projectProjectList(body: unknown): ProjectListRow[] {
   if (!body || typeof body !== "object") {
     return [];

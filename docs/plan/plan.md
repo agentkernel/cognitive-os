@@ -1740,7 +1740,7 @@ formal acceptance.
 
 ### P12-T04 — Select-then-configure + eight tabs + add member
 
-- **status:** `done` pending merge PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) at `49ad8812`; required CI [33383681338](https://github.com/agentkernel/cognitive-os/actions/runs/33383681338) **SUCCESS**. Dual Track TS **367/367**. Not T05 packets. Not T06 Confirm. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T05`.
+- **status:** `done` merged PR [#297](https://github.com/agentkernel/cognitive-os/pull/297) at `main@8c413648`; required CI [33383681338](https://github.com/agentkernel/cognitive-os/actions/runs/33383681338) **SUCCESS**. Dual Track TS **367/367**. Not T05 packets. Not T06 Confirm. Claim ceiling `hypothesis`.
 
 - **2.0.0 表面:** `add-member`、`member-config`（八标签：duty/input/output/
   skills/tools/prompt/loop/perms）。
@@ -1755,6 +1755,7 @@ formal acceptance.
 
 ### P12-T05 — Today decision packets
 
+- **status:** `in-progress` on `lease/personal/P12-T05/today-packets` / `personal/P12-T05-today-packets`. Creating-only = continue-create; live = pending-previews packets deep-linked to `/projects/:id?preview=`. No KPI wall. Chat has no Approve. Not T06 Confirm. Claim ceiling `hypothesis`.
 - **2.0.0 表面:** `today-incomplete`、`today`。T13 明确未验收 packet canvas。
 - **依赖:** P12-T01；P11-T03/T09/T13。
 - **垂直切片:** 未验收只「继续创建」→ 已上线才日常决策包 → 拍板深链 HITL 画布。
