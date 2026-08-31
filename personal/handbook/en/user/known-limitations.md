@@ -68,10 +68,14 @@ current fact of the code.
   qualification target. Existing dsh Path B does not prove the Windows managed
   artifact; Pi remains a hidden Assistant target, and Hermes/Codex/Cursor are
   future candidates. No native DSH UI/conversation synchronization is planned.
-- **Fixed acceptance is not user or release evidence**: future Phase 11 uses
-  N=15 Windows OPC scenarios. None has run. Canvas/ordinary CI cannot prove
+- **Fixed acceptance is not user or release evidence**: unparked Phase 11 T15 uses
+  N=15 Windows OPC scenarios and is not the prototype-completeness mutex. None has run. Canvas/ordinary CI cannot prove
   human desirability, usability, adoption, willingness to pay, support,
   release/Gate readiness, or Agent benefit.
+- **Frozen-prototype `/ui/` completeness is a separate plan phase**: default
+  walkable scenes on daemon `/ui/` are Phase 12 cards. They are not a canvas
+  pixel replica, not 2.1, and not T15. Dual Track: no authority yields empty or
+  Requires-backend; zero fake Create/Activate/Approve.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no

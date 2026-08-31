@@ -58,9 +58,11 @@ silently:
   design and Agent Shell/adapter/multi-Agent/recovery/learning architecture;
 - `personal-2-mcp-family` routes ADR-0037/0057 plus the bilingual MCP-family,
   cognitive-resource, and Resource Manager sources.
-- `personal-2-opc-rebaseline` routes ADR-0059, the Phase 11 formal/support/
+- `personal-2-opc-rebaseline` routes ADR-0059, the Phase 11 and Phase 12 formal/support/
   environment sources, focused Project/Conversation/Windows/Routine product
   and architecture chapters, and the current client OPC design corpus.
+  Phase 12 registers frozen-prototype functional completeness on daemon `/ui/`
+  (not pixel-replica, not 2.1, not T15).
 - `personal-2-opc-v9-implementation-mapping` routes the design-frozen
   Personal 2.0.0 Scene → daemon mapping
   (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`;
@@ -68,8 +70,9 @@ silently:
   to `dev.architecture-overview` and this page. Informative only; not
   implementation, support, Gate, or a P11 claim.
 - `personal-2-0-0-dev-prep` routes the Personal 2.0.0 development-prep index
-  (`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`) to
+  `personal/docs/architecture/personal-2.0.0-dev-prep-index.md`) to
   `dev.architecture-overview` and this page. Plan cards aligned 2026-08-30;
+  Phase 12 registered 2026-08-31 inside the existing formal plan;
   documentation only; not implementation, thaw, Gate, or a P11 claim.
   The OPC design corpus (`clients/docs/design/opc-2.0/`, including the
   maintenance index) catalogues a 2026-08-30 informative Design-Agent /

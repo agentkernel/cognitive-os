@@ -77,7 +77,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | 当前六族资源投影/watch | implemented | 仅 management+task 通道；不是已采纳的 MCP 第七族 |
 | Agent 生命周期（Pi 获取→sidecar） | implemented | — |
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
-| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）、Project 工作闭环与 native Windows host 均为 target；当前交互规格是 `personal-20-opc-e2e-optimized-v9`（不是 `/ui/`）；单模块目录 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)；Linux/WSL/CI/Canvas evidence 不转移 |
+| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）；Dual Track L1 空 chrome 已在 daemon `/ui/`；冻结 prototype 默认可走场景是正式计划 Phase 12 卡（非 canvas 像素复制、非 2.1）；当前交互规格仍是 `personal-20-opc-e2e-optimized-v9`；单模块目录 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)；Linux/WSL/CI/Canvas evidence 不转移 |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority 可复用，但 Project activation、manager envelope、Routine/missed ledger 与完整 hierarchy 不存在 |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | 没有完整 authority/projection；employee identity 必须与 runtime/process 分离 |
 | Pi-backed Personal Assistant | Requires-backend | Pi 是 hidden、candidate-only target engine；current Pi Shell/Linux qualification 不构成 OPC Assistant |
@@ -91,10 +91,10 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | X/Twitter connector（隐藏） | partial（walking skeleton）+ Requires-environment | v35 + management `connector/x.*` 已证明 SecretStore-only bind、原创 digest 绑定 preview、HITL confirm、persist-before-dispatch 与诚实 unknown readback。不是 P0 hero。不是业务结果。禁止 evasion。live X API / CAPTCHA / platform qualification 为 `not-run`。 |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |
 | Personal MCP 第七族 | deferred / Requires-backend | ADR-0057/0058 retained advanced private target；不是 OPC P0，无 current family API，DSH native MCP/base tools 继续禁用 |
-| Windows OPC fixed-denominator acceptance | Requires-environment / not-run | future N=15、同一 qualified Windows revision；required CI/Canvas 不执行；signing/B01-W/release 分离 |
+| Windows OPC fixed-denominator acceptance | Requires-environment / not-run | unparked N=15、同一 qualified Windows revision；不是 Phase 12 prototype completeness mutex；required CI/Canvas 不执行；signing/B01-W/release 分离 |
 | 管理回退动词 | implemented | R0/R2/R3 审批流 partial |
 | 备份/恢复命令 | partial | 排除 secret/bearer/provider-config/authority SQLite；Memory/Skill 为 digest 绑定 sidecar；公开 `admin-cli` 覆盖 Pi install→recover |
-| 当前 Web UI / Console | partial | daemon 同源 `/ui/` Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）位于 `clients/pc/web/`；无权威诚实空态；不是完整 IA；Linux 1.0 六族仍在高级/二级；不是 Windows OPC |
+| 当前 Web UI / Console | partial | daemon 同源 `/ui/` Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）位于 `clients/pc/web/`；无权威诚实空态；向导/决策包/HITL Confirm/ingest/连接表/右栏写画布是 Phase 12 卡，不是完整 IA；Linux 1.0 六族仍在高级/二级；不是 Windows OPC |
 | 当前 Windows 产品 | unavailable | installer/credential fragment 与 ordinary CI 不是 Windows OPC host/DSH/UI support；qualified native environment 与 B01-W 均不存在 |
 | Personal 2.1 native mobile/E2E relay remote | deferred | 仅 host-online；device-bound key/revocation/short session/preview/audit/no secret downlink 为 future controls |
 | 性能 campaign 工具 | implemented | 结果是计划中的 non-claim 记录 |

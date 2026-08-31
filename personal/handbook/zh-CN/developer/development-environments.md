@@ -38,8 +38,10 @@ Phase 11 Personal 2.0.0 路由：T03/T04 日常权威测试用 `CI-UBUNTU-01` /
 `DEV-LINUX-NATIVE-01`）。T02/T07 原生 host/DSH E2E 仍是
 `DEV-WINDOWS-NATIVE-OPC-01` = `Requires-environment` / `not-run`（未资格化）。
 T09 是画布 HITL，不是一级 Inbox。`B01-DESKTOP-002` 仅 campaign，不是 2.0 日常
-默认机。parked 的 T15 N=15 acceptance 若解冻仍需同一 preregistered qualified
-Windows revision。本地 GNU、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
+默认机。unparked 的 T15 N=15 acceptance 仍需同一 preregistered qualified
+Windows revision，**不是** Phase 12 prototype completeness mutex。Phase 12 Dual Track
+UI 用 `DEV-WIN-GNU-01` TS 加 required CI；原生 UI E2E 在
+`DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。本地 GNU、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
 Gate/release；`not-run` 保持 `not-run`。
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22

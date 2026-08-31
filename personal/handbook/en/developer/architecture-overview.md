@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:d08507651d814ac1b11931e754299bda4090a0481a098cb3e3f1a97a9cd05ea7"
+fingerprint: "sha256:9331ae27cd3b7df8973acb2cdcfa52dcff93816f2a3f9d11b44e9b84488a447b"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -111,7 +111,7 @@ authority.
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero)). Development-prep index
+  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). Phase 12 is registered in the formal plan for frozen-prototype functional completeness on daemon `/ui/` (not pixel-replica, not 2.1, not T15)). Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
@@ -135,7 +135,7 @@ authority.
   Routine/Trigger walking skeleton (`P11-T08`) is on `main`;
   Dual Track `/ui/` IA (`P11-T13`) is on `main`;
   Windows host walking skeleton (`P11-T02`) is on `main` (native E2E `not-run`);
-  X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X `not-run`; not P0 hero). Prep index:
+  X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X `not-run`; not P0 hero). Phase 12 is registered in the formal plan (frozen-prototype `/ui/` completeness; not T15). Prep index:
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its
@@ -145,7 +145,7 @@ is not reinterpreted. MCP is advanced/deferred from OPC P0.
 All missing capabilities remain `Requires-backend`; Windows host/DSH/connector
 validation also `Requires-environment`. Native mobile/E2E relay remote is 2.1.
 The future fixed denominator is N=15 and proves nothing until run on a
-qualified Windows revision.
+qualified Windows revision. That card is not the prototype-completeness mutex.
 
 ## Design decisions that explain surprises
 

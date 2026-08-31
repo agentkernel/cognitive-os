@@ -51,9 +51,10 @@ source map 有意让已采纳目标无法静默变化：
   多 Agent/recovery/learning 架构；
 - `personal-2-mcp-family` 路由 ADR-0037/0057 以及双语 MCP 资源族、认知资源与 Resource
   Manager 来源。
-- `personal-2-opc-rebaseline` 路由 ADR-0059、Phase 11 formal/support/environment、
+- `personal-2-opc-rebaseline` 路由 ADR-0059、Phase 11 与 Phase 12 formal/support/environment、
   focused Project/Conversation/Windows/Routine 产品与架构章，以及 current client OPC
-  design corpus。
+  design corpus。Phase 12 在既有正式计划内登记冻结 prototype 接到 daemon `/ui/`
+  的功能完备（非像素复制、非 2.1、非 T15）。
 - `personal-2-opc-v9-implementation-mapping` 路由已定档 Personal 2.0.0 Scene →
   daemon 映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`；
   历史文件名与规则 id 含 v9，不是产品版本）
@@ -61,7 +62,8 @@ source map 有意让已采纳目标无法静默变化：
   或 P11 领取。
 - `personal-2-0-0-dev-prep` 路由 Personal 2.0.0 开发前期索引
   （`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`）到
-  `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；仅文档；
+  `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；Phase 12 于
+  2026-08-31 登记进既有正式计划；仅文档；
   不是实现、解冻、Gate 或 P11 领取。OPC 设计语料（`clients/docs/design/opc-2.0/`，
   含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；

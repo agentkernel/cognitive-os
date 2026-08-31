@@ -1,10 +1,11 @@
 # CognitiveOS Personal 2.0.0 development-prep index
 
-> Documentation-only. Not implementation, not thaw, not Gate, not a P11 claim.
+> Documentation-only index. Not implementation, not thaw, not Gate, not a P11 claim.
 > Product name: **CognitiveOS Personal 2.0.0** (os-personal 2.0.0). **v9 is a
 > historical canvas filename**, not a product version.
 > HEAD at writing: see `PROGRESS.md` Current snapshot. Evaluation routing **OFF**.
-> Lease: `lease/personal/DOC-PERSONAL-2.0.0/dev-prep`.
+> The overlapping `DOC-PERSONAL-2.0.0/dev-prep` lease is **closed** (2026-08-31).
+> Phase 12 registration is `lease/personal/P12-T01/opc-prototype-plan`.
 
 ## Identity and sources
 
@@ -13,8 +14,9 @@
 | Chrome source | `clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx` |
 | Scene → daemon map | [personal-2.0-opc-v9-implementation-mapping.md](personal-2.0-opc-v9-implementation-mapping.md) (historical path name contains v9) |
 | Design-Agent / journey assessment | [13-personal-20-agent-design-difficulty-and-journey-assessment.md](../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md) (2026-08-30; hypothesis; not a P11 claim) |
-| Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 table + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15` cards |
-| First implementation knife | **`P11-T03` Project aggregate walking skeleton** — not a full `/ui/` page, not `P11-T02` |
+| Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 + **Phase 12** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15` and `P12-T01`…`T09` cards |
+| First implementation knife (Phase 11) | **`P11-T03` Project aggregate walking skeleton** — done; not a full `/ui/` page |
+| First implementation knife (Phase 12) | **`P12-T02` five-step wizard + empty-home only-create** after `P12-T01` docs-only merge — not T15, not pixel-replica |
 | T02 host walking skeleton | **`P11-T02` done** (merged PR [#292](https://github.com/agentkernel/cognitive-os/pull/292)); native install/tray/sleep/SecretStore E2E remains `not-run` |
 | T14 X connector walking skeleton | **`P11-T14` done** (merged PR [#293](https://github.com/agentkernel/cognitive-os/pull/293)); live X API E2E remains `not-run`; not P0 hero |
 | Environment names | only [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md); do not invent environments |
@@ -25,7 +27,9 @@ five-step create wizard; members selected then configured; project four
 sub-menus; HITL only on the center canvas + Today deep link; chat has no
 Approve; `state-lab` = Settings → Advanced, hidden by default. Live `/ui/` L1
 is Dual Track OPC chrome (`P11-T13` **done**); Linux 1.0 six-family pages
-remain Advanced/secondary. Do not claim complete `/ui/` acceptance.
+remain Advanced/secondary. Do not claim complete `/ui/` acceptance. Phase 12
+registers frozen-prototype **functional completeness** on daemon `/ui/`
+(default walkable scenes; not canvas pixel-replica; not 2.1; not T15).
 
 Authority object English id = **Employee**. Product chrome may still say
 **Member Runtime** until post-completion reconciliation.
