@@ -1,13 +1,15 @@
 /**
- * StandingApprovalPolicy list (P11-T13 Settings). Source is
- * GET /management/project/v1/standing-policies. List-only: this file never
- * mints or revokes a policy. Chat cannot mint (T09). Not Inbox L1.
+ * StandingApprovalPolicy list (P11-T13) plus Settings revoke (P12-T08).
+ * Source is GET /management/project/v1/standing-policies. Revoke is POST
+ * standing-policy.revoke. Chat cannot mint. Time-box is not permanent.
+ * Not Inbox L1.
  */
 
 import { asList, asRecord } from "../projections";
 
 export const STANDING_POLICIES_KEY = "opc:standing-policies";
 export const STANDING_POLICIES_PATH = "/management/project/v1/standing-policies";
+export const STANDING_POLICY_REVOKE_PATH = "/management/project/v1/standing-policy.revoke";
 
 export interface StandingPolicyRow {
   policyId: string;

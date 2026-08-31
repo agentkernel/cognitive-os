@@ -74,7 +74,9 @@ function fakeActionLabels(host: HTMLElement): string[] {
     for (const node of scope.querySelectorAll("button, a.cp-button")) {
       if (
         node.closest("[data-region='opc-hitl-actions']") ||
-        node.closest("[data-region='opc-vault-ingest']")
+        node.closest("[data-region='opc-vault-ingest']") ||
+        node.closest("[data-region='opc-standing-policies']") ||
+        node.closest("[data-region='opc-close-background']")
       ) {
         continue;
       }
@@ -112,6 +114,11 @@ function opcRoutes(
       status: 200,
       body: { status: "ok", policies: [] },
     },
+    "GET /management/providers/accounts": {
+      status: 200,
+      body: { status: "ok", accounts: [] },
+    },
+    "GET /management/usage": { status: 200, body: { status: "ok", events: [] } },
     "GET /management/resource/v1/list": {
       status: 200,
       body: { status: "ok", family: "memory", resources: [] },
@@ -197,6 +204,10 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(isKnownRoute("POST", "/management/project/v1/vault.index.rebuild")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/vault.apply-authority")).toBe(false);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/standing-policy.revoke")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/standing-policy.create")).toBe(false);
+    expect(isKnownRoute("GET", "/management/host/v1/status")).toBe(true);
+    expect(isKnownRoute("POST", "/management/host/v1/close.request")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/preview-detail")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/preview.reject")).toBe(true);
