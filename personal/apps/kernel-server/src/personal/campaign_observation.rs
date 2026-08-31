@@ -41,7 +41,7 @@ use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, OpenOptions},
     io::{Read, Write},
-    net::{Shutdown, TcpListener, TcpStream},
+    net::{TcpListener, TcpStream},
     path::{Path, PathBuf},
     sync::{
         Arc, Mutex, OnceLock,
@@ -58,6 +58,8 @@ const RUN_STATE_SCHEMA: &str = "cognitiveos.personal.a7-observation/0.1";
 const MUTATION_DIGEST_DOMAIN: &str = "personal-a7-external-mutation/0.1";
 const POST_STATE_DIGEST_DOMAIN: &str = "personal-a7-external-post-state/0.1";
 const MAXIMUM_HTTP_BYTES: usize = 16 * 1024;
+const FIXTURE_HTTP_IO_TIMEOUT: Duration = Duration::from_millis(2_000);
+const FIXTURE_HTTP_CONNECT_ATTEMPTS: u32 = 8;
 const ARTIFACT_MAXIMUM_BYTES: usize = 8 * 1024 * 1024;
 const FIXED_EFFECT_VERIFIER_REF: &str = "verifier://personal/fixed-effect";
 static TEMPORARY_SEQUENCE: AtomicU64 = AtomicU64::new(0);
@@ -559,9 +561,18 @@ fn handle_fixture_connection(
     mut stream: TcpStream,
     runtime: &Arc<FixtureRuntime>,
 ) -> Result<(), CampaignObservationError> {
+    // Windows inherits non-blocking from the listener; timeouts only apply to
+    // blocking sockets. If an accepted stream stays WouldBlock, the client sees
+    // Unknown/Indeterminate instead of the injected MutationAfterReceiptBefore crash.
     stream
-        .set_read_timeout(Some(Duration::from_millis(500)))
+        .set_nonblocking(false)
+        .map_err(|error| infrastructure("configure fixture blocking socket", error))?;
+    stream
+        .set_read_timeout(Some(FIXTURE_HTTP_IO_TIMEOUT))
         .map_err(|error| infrastructure("configure fixture read timeout", error))?;
+    stream
+        .set_write_timeout(Some(FIXTURE_HTTP_IO_TIMEOUT))
+        .map_err(|error| infrastructure("configure fixture write timeout", error))?;
     let request = read_http_message(&mut stream)?;
     let (request_line, headers, body) = split_http_request(&request)?;
     if request_line == "POST /v1/mutations HTTP/1.1" {
@@ -1807,13 +1818,26 @@ fn send_fixture_http(
     body: &[u8],
 ) -> Result<HttpResponse, String> {
     let address = endpoint_address(endpoint).map_err(|error| error.to_string())?;
-    let mut stream = TcpStream::connect_timeout(&address, Duration::from_millis(300))
-        .map_err(|error| format!("connect fixture: {error}"))?;
+    let mut last_connect_error = String::from("connect fixture: exhausted retries");
+    let mut stream = None;
+    for _ in 0..FIXTURE_HTTP_CONNECT_ATTEMPTS {
+        match TcpStream::connect_timeout(&address, Duration::from_millis(250)) {
+            Ok(connected) => {
+                stream = Some(connected);
+                break;
+            }
+            Err(error) => {
+                last_connect_error = format!("connect fixture: {error}");
+                std::thread::sleep(Duration::from_millis(5));
+            }
+        }
+    }
+    let mut stream = stream.ok_or(last_connect_error)?;
     stream
-        .set_read_timeout(Some(Duration::from_millis(300)))
+        .set_read_timeout(Some(FIXTURE_HTTP_IO_TIMEOUT))
         .map_err(|error| format!("configure fixture read timeout: {error}"))?;
     stream
-        .set_write_timeout(Some(Duration::from_millis(300)))
+        .set_write_timeout(Some(FIXTURE_HTTP_IO_TIMEOUT))
         .map_err(|error| format!("configure fixture write timeout: {error}"))?;
     let mut request = format!(
         "{method} {path} HTTP/1.1\r\nHost: {}\r\nConnection: close\r\nContent-Length: {}\r\n",
@@ -1831,7 +1855,6 @@ fn send_fixture_http(
         .write_all(request.as_bytes())
         .and_then(|_| stream.write_all(body))
         .map_err(|error| format!("write fixture request: {error}"))?;
-    let _ = stream.shutdown(Shutdown::Write);
     let mut response = Vec::new();
     stream
         .take(MAXIMUM_HTTP_BYTES as u64)
