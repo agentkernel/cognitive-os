@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) until required-ci is green on this head. L1 honesty now includes Settings Advanced collapsed, Today → Projects HITL canvas deep-link (`?preview=`), and assistant-rail announce-only. Remaining: required-ci on this head; host UI E2E vs a **T13-revision** daemon `/ui/` on `DEV-LINUX-NATIVE-01` (not B01 guest); NVDA/200%/host-theme hung `not-run`. Do not auto-claim T02. Do not unpark T14/T15. Do not flip ready/merge yet.
+Keep Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) until this docs-head also has required-ci green, then ready/merge. L1 Dual Track close-gate evidence is on `e86ddd7b` (Settings Advanced collapsed; Today → Projects HITL canvas; rail announce-only; Vitest **340/340**; required-ci **SUCCESS** run [33345249452](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452)). Remaining on the product claim: host UI E2E **not-run**; NVDA/200%/host-theme hung **not-run**. Do not auto-claim T02. Do not unpark T14/T15.
 
 ## Closed predecessor
 
@@ -69,9 +69,14 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | `pnpm run build` (`tsc --noEmit` + Vite) | `DEV-WIN-GNU-01` | **pass** (CSS 23.25 kB, JS 452.22 kB) |
 | `resolve validation route` on `865339f2` | GitHub Actions run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **pass** job [99346265478](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346265478) |
 | `verify (ubuntu-latest)` on `865339f2` | `CI-UBUNTU-01` run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **pass** job [99346278145](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346278145) (3m50s) |
-| `verify (windows-latest)` on `865339f2` | `CI-WINDOWS-MSVC-01` run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **pending** job [99346278170](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346278170) (superseded if this head is pushed) |
-| `required-ci` on `865339f2` | GitHub Actions | **not-run** (windows still pending; do not invent green) |
-| Host UI E2E vs **this** T13 `/ui/` | `DEV-LINUX-NATIVE-01` (not B01 guest) | **not-run** until this head is pushed and a disposable daemon `/ui/` listens |
+| `verify (windows-latest)` on `865339f2` | `CI-WINDOWS-MSVC-01` run [33344595222](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222) | **superseded** job [99346278170](https://github.com/agentkernel/cognitive-os/actions/runs/33344595222/job/99346278170) (head moved to `e86ddd7b`; do not invent pass/fail) |
+| `required-ci` on `865339f2` | GitHub Actions | **not-run** (superseded by `e86ddd7b`) |
+| HTTPS `git push` `e86ddd7b` | `DEV-WIN-GNU-01` | **pass** `865339f2` → `origin/personal/P11-T13-opc-ia` |
+| `resolve validation route` on `e86ddd7b` | GitHub Actions run [33345249452](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452) | **pass** job [99348054118](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452/job/99348054118) |
+| `verify (ubuntu-latest)` on `e86ddd7b` | `CI-UBUNTU-01` run [33345249452](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452) | **pass** job [99348063616](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452/job/99348063616) |
+| `verify (windows-latest)` on `e86ddd7b` | `CI-WINDOWS-MSVC-01` run [33345249452](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452) | **pass** job [99348063688](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452/job/99348063688) (~14m44s) |
+| `required-ci` on `e86ddd7b` | GitHub Actions run [33345249452](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452) | **pass** job [99350091100](https://github.com/agentkernel/cognitive-os/actions/runs/33345249452/job/99350091100) |
+| Host UI E2E vs daemon `/ui/` at `e86ddd7b` | `DEV-LINUX-NATIVE-01` `wuz@192.168.1.2` | **not-run** (`git fetch` GitHub `:443` timeout; no copied uncommitted tree; B01 guest `hal9001@192.168.123.160` unused) |
 | NVDA / 200% layout / host-theme contrast | hung | **not-run** |
 | Rust cargo | `DEV-WIN-GNU-01` | **not-run** (`RUST-LINK-DEV-WIN-GNU-01`) |
 
@@ -81,7 +86,8 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 - Empty honesty is not a Today packet canvas and not a fake Requires-backend control.
 - Linux 1.0 six-family pages remain real secondary routes (`#/home`, Work, …), not L1.
 - Vite is not the product origin.
-- linux-002 `:48681` LISTEN is not this T13 `/ui/` bundle (no guest deploy this turn).
+- linux-002 `:48681` LISTEN is not this T13 `/ui/` bundle (B01 guest unused this turn).
+- `DEV-LINUX-NATIVE-01` GitHub fetch timeout is not a product defect.
 - CI ≠ Gate (A7).
 
 ## Implemented in this slice
