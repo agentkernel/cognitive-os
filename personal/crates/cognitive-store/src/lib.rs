@@ -40,6 +40,7 @@ pub mod scheduler;
 pub mod skill_store;
 pub mod sqlite;
 pub mod vault;
+pub mod windows_host;
 pub mod worker_authorization;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
@@ -128,6 +129,11 @@ pub use vault::{
     CONTEXT_INJECT_ORDER, ContextInjectPlan, VAULT_BODY_LIMIT, VAULT_CONTEXT_BUDGET_BYTES,
     VAULT_PROJECTION_ID, VAULT_SCHEMA_V32, VaultConflict, VaultDocument, VaultImportSpec,
     VaultIndexEntry, VaultReadSpec, VaultStore, vault_migration_entry,
+};
+pub use windows_host::{
+    CloseRequestSpec, DaemonBindSpec, HomeAdmitSpec, WAKE_RECOVERY_STEPS,
+    WINDOWS_HOST_PROJECTION_ID, WINDOWS_HOST_SCHEMA_V34, WindowsHostDaemon, WindowsHostHome,
+    WindowsHostRecovery, WindowsHostStatus, WindowsHostStore, windows_host_migration_entry,
 };
 
 /// Authority store backend implemented by this crate (ADR-0002).

@@ -28,7 +28,7 @@ non_claims:
 
 `partial`：下述完整路线已实现并在干净 Linux 机器上端到端演练过，但**尚无公开的生产
 发布产物**——迄今的 bundle 来自实验 campaign 构建器与非生产签名密钥。平台：Linux
-x86_64 + user systemd；桌面需要 Secret Service 密钥环（GNOME Keyring）。
+x86_64 + user systemd；桌面需要 Secret Service 密钥环（GNOME Keyring）。Windows host 布局策略（Personal Home `app/`/`data/`）由 authority v34 daemon 拥有；本页仍是 Linux 首次对话路径。原生 Windows install/tray E2E 为 `not-run`。
 
 ## 1. 运行可检查的引导安装脚本
 

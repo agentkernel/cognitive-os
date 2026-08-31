@@ -116,6 +116,41 @@ fn task_template_is_least_privilege_interactive_and_unrendered() {
 }
 
 #[test]
+fn p11_t02_host_layout_policy_is_declared_on_install_surface() {
+    let bootstrap = bootstrap_template();
+    for required_fragment in [
+        "Personal Home/app/",
+        "Personal Home/data/",
+        "not a second credential plane",
+        "DSH web is not",
+        "tray icon is not proof of work",
+        "background-or-pause",
+        "local restore points, not disaster backups",
+        "GNU/WSL/Linux",
+    ] {
+        assert!(
+            bootstrap.contains(required_fragment),
+            "windows bootstrap template is missing {required_fragment:?}"
+        );
+    }
+    let task = task_template();
+    for required_fragment in [
+        "IgnoreNew refuses a duplicate daemon",
+        "not a DSH web host shell",
+        "not a second credential plane",
+        "not proof of work",
+        "local restore points, not disaster backups",
+    ] {
+        assert!(
+            task.contains(required_fragment),
+            "windows task template is missing {required_fragment:?}"
+        );
+    }
+    assert!(!bootstrap.contains("cognitive dsh web"));
+    assert!(!task.contains("cognitive dsh web"));
+}
+
+#[test]
 fn task_template_reuses_the_linux_service_placeholder_contract() {
     let linux_unit = std::fs::read_to_string(
         repository_root().join("personal/deploy/linux/cognitiveos-personal.service"),

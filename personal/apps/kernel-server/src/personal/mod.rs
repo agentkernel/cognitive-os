@@ -37,6 +37,7 @@ mod tool_executor;
 mod tool_lifecycle;
 mod user_backup;
 mod verification_executor;
+mod windows_host;
 
 pub use bounds::PersonalResourceBounds;
 pub(crate) use registered_check::run_registered_check_worker;

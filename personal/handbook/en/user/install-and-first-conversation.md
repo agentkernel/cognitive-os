@@ -30,7 +30,9 @@ non_claims:
 Linux machines, but there is **no public production release artifact yet** — bundles
 so far come from the experimental campaign builder with a non-production signing
 key. Platform: Linux x86_64 with user systemd; desktop needs a Secret Service
-keyring (GNOME Keyring).
+keyring (GNOME Keyring). Windows host layout policy (Personal Home `app/`/`data/`)
+is daemon-owned under authority v34; this page remains the Linux first-conversation
+path. Native Windows install/tray E2E is `not-run`.
 
 ## 1. Run the inspected bootstrap installer
 

@@ -16,9 +16,10 @@ sources:
   - path: personal/apps/kernel-server/src/personal/server.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/apps/kernel-server/src/personal/windows_host.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:dc3cb3c0e203d7dc8cced94b0ae1d2f6932f2797ca14350e61cd27494328bc05"
+fingerprint: "sha256:0c2f2ebbf29f12ef64d3888dc782f049ec8c7fdb3d3bfabc4823b6f6bbabadf3"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -191,6 +192,15 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/routine.ledger` | management | List active / queued / missed / coalesced occurrences for one Routine. Not Inbox L1. Requires project_id and routine_id. |
 | `POST` | `/management/project/v1/routine.checkpoint` | management | Persist recovery checkpoint bytes. Completing from a checkpoint is rejected (`checkpoint is not completion`). |
 | `POST` | `/management/project/v1/routine.resume` | management | Resume a missed internal occurrence onto the daemon scheduler. Consequential auto-resume fail-closes. |
+| `POST` | `/management/host/v1/home.admit` | management | Admit Personal Home `app/`+`data/` (P11-T02). Install root must end with `Personal Home`; GNU/WSL/Linux roots, ACL escape, and secret env/argv fail closed. Upgrade replaces app and preserves data. Native ACL E2E is `not-run`. |
+| `POST` | `/management/host/v1/daemon.bind` | management | Bind the single daemon to one admitted Home. Duplicate bind while bound/recovering/resumed fails closed. Tray role is observe-and-request only. |
+| `POST` | `/management/host/v1/close.request` | management | Typed close: background-or-pause is honored only when the daemon can honor background; otherwise the request is rejected (fake background forbidden). |
+| `POST` | `/management/host/v1/offline.record` | management | Record an explicit offline/missed segment (sleep/shutdown/daemon-stop/network-loss/locked SecretStore/Provider outage). Silent drop is forbidden. |
+| `POST` | `/management/host/v1/dsh.bind` | management | Bind a hosted DSH child to the admitted Home. Orphan DSH (no matching daemon bind) fails closed. |
+| `POST` | `/management/host/v1/recovery.run` | management | Start ordered seven-step wake/restart recovery. Skipping a step is rejected. Resume is only eligible work. No execution while the host is off. |
+| `POST` | `/management/host/v1/recovery.advance` | management | Advance the current recovery by one ordered step. Out-of-order advance fails closed. |
+| `POST` | `/management/host/v1/restore-point.record` | management | Record a same-disk local restore point. Claiming it as a disaster backup fails closed. |
+| `GET` | `/management/host/v1/status` | management | Observe Home/daemon/offline/recovery status. Secrets are omitted. Tray icon is not proof of work. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
@@ -224,4 +234,13 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/routine.ledger` | task | Forbidden: Routine ledger is management-channel only. |
 | `POST` | `/task/project/v1/routine.checkpoint` | task | Forbidden: Routine checkpoint is management-channel only. |
 | `POST` | `/task/project/v1/routine.resume` | task | Forbidden: Routine resume is management-channel only. |
+| `POST` | `/task/host/v1/home.admit` | task | Forbidden: Windows host admit is management-channel only. |
+| `POST` | `/task/host/v1/daemon.bind` | task | Forbidden: Windows host daemon bind is management-channel only. |
+| `POST` | `/task/host/v1/close.request` | task | Forbidden: Windows host close is management-channel only. |
+| `POST` | `/task/host/v1/offline.record` | task | Forbidden: Windows host offline record is management-channel only. |
+| `POST` | `/task/host/v1/dsh.bind` | task | Forbidden: Windows host DSH bind is management-channel only. |
+| `POST` | `/task/host/v1/recovery.run` | task | Forbidden: Windows host recovery is management-channel only. |
+| `POST` | `/task/host/v1/recovery.advance` | task | Forbidden: Windows host recovery advance is management-channel only. |
+| `POST` | `/task/host/v1/restore-point.record` | task | Forbidden: Windows host restore-point is management-channel only. |
+| `GET` | `/task/host/v1/status` | task | Forbidden: Windows host status is management-channel only. |
 | `POST` | `/chat/completions` | private-socket | One-shot private Unix-socket completion used by the daemon-launched Pi candidate process; Authorization headers are forbidden. |

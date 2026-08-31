@@ -26,6 +26,8 @@ sources:
     symbols: ["write_personal_backup_archive", "restore_personal_backup_archive", "plan_personal_lifecycle"]
   - path: personal/crates/cognitive-store/src/personal_db.rs
     symbols: ["prepare_personal_databases"]
+  - path: personal/crates/cognitive-store/src/windows_host.rs
+    symbols: ["WindowsHostStore", "WAKE_RECOVERY_STEPS"]
   - path: personal/crates/cognitive-store/src/sqlite/intent_chain.rs
     symbols: ["insert_task_contract_with_execution_bootstrap"]
 tests:
@@ -34,14 +36,15 @@ tests:
   - personal/apps/admin-cli/tests/p2_t27_backup_restore.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
-fingerprint: "sha256:5e01fe19574ab23a92e831ee9196296645621ff048a470b7d5e4bddccdf14256"
+  - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
+fingerprint: "sha256:c83ad5a7e777f182823aaf44972eb257d13d2b7ee5721d04aeee89a8201c4dba"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
 
 # 运维与恢复
 
-missed Routine occurrence 是可见 ledger 行（`GET /management/project/v1/routine.ledger`），不是静默丢弃。clock/sleep/restart 宿主 E2E 仍为 `not-run`。
+missed Routine occurrence 是可见 ledger 行（`GET /management/project/v1/routine.ledger`），不是静默丢弃。sleep/shutdown/daemon-stop/network-loss/锁定 SecretStore/Provider 中断也会成为显式 Windows host offline/missed 事实（`POST /management/host/v1/offline.record`）。clock/sleep/restart 宿主 E2E 仍为 `not-run`。
 
 ## 日常检查 —— `implemented`
 

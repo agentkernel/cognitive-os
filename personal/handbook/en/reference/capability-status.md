@@ -27,7 +27,9 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:c10f965a0b986a4cfae23f1a49019eded5e2365218ba211f12da7cccbc1d8bef"
+  - path: personal/crates/cognitive-store/src/windows_host.rs
+    symbols: ["WINDOWS_HOST_SCHEMA_V34", "WindowsHostStore", "WAKE_RECOVERY_STEPS"]
+fingerprint: "sha256:a2ef88691e02688d6f7a6af71edd28f06475a252e646680a905ea0b10c2485cc"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -84,6 +86,7 @@ and Agent requires independent qualification.
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | no OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion product path |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget exists, but Conversation/Vault extraction/retrieval integration and privacy matrix do not |
 | Routine/Trigger/Inbox/offline-missed recovery | partial (walking skeleton) + Requires-backend | v33 + management `routine.*` prove no-overlap/queue-latest and a visible missed ledger; daemon `scheduler_entries` is the only schedule authority. Dual Track L1 chrome is on `main` (`P11-T13`); clock/sleep/restart host E2E and Inbox L1 remain absent (HITL is T09 canvas). |
+| Windows host/tray/background (hidden) | partial (walking skeleton) + Requires-environment | v34 + management `host.*` prove Personal Home `app/`/`data/`, close honesty, missed segments, and ordered seven-step recovery. Not chrome. Not a second credential plane. Native install/tray/ACL/sleep/SecretStore E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`. |
 | Provider global→Project→employee→Task binding and hard budgets | Requires-backend | current fixed Agent binding and advisory budgets remain partial; DSH/Pi raw-secret-free daemon proxy is required |
 | X/Twitter qualified connector scenario | Requires-backend + Requires-environment | no connector/platform qualification or business outcome is claimed; evasion is forbidden |
 | Existing MCP Tool transport + bounded dynamic-Tool MVP | implemented for its accepted P5-T03/P5-T04 scope | interop produces Tool candidates; it has no Personal 2.0 server/package/connection/binding/health/quarantine family lifecycle |

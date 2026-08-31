@@ -27,7 +27,9 @@ sources:
   - path: docs/adr/0057-personal-2-0-mcp-resource-family.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: personal/docs/architecture/windows-host-background.md
-fingerprint: "sha256:c10f965a0b986a4cfae23f1a49019eded5e2365218ba211f12da7cccbc1d8bef"
+  - path: personal/crates/cognitive-store/src/windows_host.rs
+    symbols: ["WINDOWS_HOST_SCHEMA_V34", "WindowsHostStore", "WAKE_RECOVERY_STEPS"]
+fingerprint: "sha256:a2ef88691e02688d6f7a6af71edd28f06475a252e646680a905ea0b10c2485cc"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -81,6 +83,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget 已有，但 Conversation/Vault extraction/retrieval 与 privacy matrix 不存在 |
 | Routine/Trigger/Inbox/offline-missed recovery | partial（walking skeleton）+ Requires-backend | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；daemon `scheduler_entries` 是唯一调度权威。Dual Track L1 chrome 已在 `main`（`P11-T13`）；clock/sleep/restart 宿主 E2E 与 Inbox 一级仍缺（HITL 是 T09 画布）。 |
+| Windows host/tray/background（隐藏） | partial（walking skeleton）+ Requires-environment | v34 + management `host.*` 已证明 Personal Home `app/`/`data/`、close 诚实性、missed 时段与七步有序恢复。不是 chrome。不是第二套凭据平面。原生 install/tray/ACL/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。 |
 | Provider global→Project→employee→Task binding 与 hard budget | Requires-backend | current fixed Agent binding 与 advisory budget 保持 partial；DSH/Pi 必须经 no-raw-secret daemon proxy |
 | X/Twitter qualified connector scenario | Requires-backend + Requires-environment | 不声明 connector/platform qualification 或业务结果；禁止 evasion |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |

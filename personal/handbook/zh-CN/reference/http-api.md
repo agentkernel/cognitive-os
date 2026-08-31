@@ -16,9 +16,10 @@ sources:
   - path: personal/apps/kernel-server/src/personal/server.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
+  - path: personal/apps/kernel-server/src/personal/windows_host.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:dc3cb3c0e203d7dc8cced94b0ae1d2f6932f2797ca14350e61cd27494328bc05"
+fingerprint: "sha256:0c2f2ebbf29f12ef64d3888dc782f049ec8c7fdb3d3bfabc4823b6f6bbabadf3"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -191,6 +192,15 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/routine.ledger` | management | 列出一条 Routine 的 active / queued / missed / coalesced occurrence。不是 Inbox 一级。需要 project_id 与 routine_id。 |
 | `POST` | `/management/project/v1/routine.checkpoint` | management | 持久化恢复 checkpoint。用 checkpoint 当完成一律拒绝（`checkpoint is not completion`）。 |
 | `POST` | `/management/project/v1/routine.resume` | management | 把 missed 的 internal occurrence 恢复到 daemon scheduler。consequential 自动恢复失败闭合。 |
+| `POST` | `/management/host/v1/home.admit` | management | 受理 Personal Home `app/`+`data/`（P11-T02）。安装根必须以 `Personal Home` 结尾；GNU/WSL/Linux 根、ACL 逃逸、secret env/argv 失败闭合。升级替换 app、保留 data。原生 ACL E2E 为 `not-run`。 |
+| `POST` | `/management/host/v1/daemon.bind` | management | 把唯一 daemon 绑到已受理的 Home。已 bound/recovering/resumed 时重复绑定失败闭合。托盘角色仅 observe-and-request。 |
+| `POST` | `/management/host/v1/close.request` | management | 类型化关闭：仅当 daemon 能兑现 background 时才接受 background-or-pause；否则拒绝（禁止假 background）。 |
+| `POST` | `/management/host/v1/offline.record` | management | 记录显式 offline/missed 时段（sleep/shutdown/daemon-stop/network-loss/锁定 SecretStore/Provider 中断）。禁止静默丢弃。 |
+| `POST` | `/management/host/v1/dsh.bind` | management | 把托管 DSH 子进程绑到已受理 Home。无匹配 daemon bind 的孤儿 DSH 失败闭合。 |
+| `POST` | `/management/host/v1/recovery.run` | management | 启动七步有序 wake/restart 恢复。跳步被拒绝。只恢复合格工作。宿主关闭期间不执行。 |
+| `POST` | `/management/host/v1/recovery.advance` | management | 按序推进当前恢复一步。乱序推进失败闭合。 |
+| `POST` | `/management/host/v1/restore-point.record` | management | 记录同盘本地 restore point。把它声明为灾难备份失败闭合。 |
+| `GET` | `/management/host/v1/status` | management | 观察 Home/daemon/offline/recovery 状态。不返回 secret。托盘图标不是工作证明。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
@@ -224,4 +234,13 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/routine.ledger` | task | 禁止：Routine ledger 仅限 management 通道。 |
 | `POST` | `/task/project/v1/routine.checkpoint` | task | 禁止：Routine checkpoint 仅限 management 通道。 |
 | `POST` | `/task/project/v1/routine.resume` | task | 禁止：Routine resume 仅限 management 通道。 |
+| `POST` | `/task/host/v1/home.admit` | task | 禁止：Windows host admit 仅限 management 通道。 |
+| `POST` | `/task/host/v1/daemon.bind` | task | 禁止：Windows host daemon bind 仅限 management 通道。 |
+| `POST` | `/task/host/v1/close.request` | task | 禁止：Windows host close 仅限 management 通道。 |
+| `POST` | `/task/host/v1/offline.record` | task | 禁止：Windows host offline 记录仅限 management 通道。 |
+| `POST` | `/task/host/v1/dsh.bind` | task | 禁止：Windows host DSH bind 仅限 management 通道。 |
+| `POST` | `/task/host/v1/recovery.run` | task | 禁止：Windows host recovery 仅限 management 通道。 |
+| `POST` | `/task/host/v1/recovery.advance` | task | 禁止：Windows host recovery 推进一步仅限 management 通道。 |
+| `POST` | `/task/host/v1/restore-point.record` | task | 禁止：Windows host restore-point 仅限 management 通道。 |
+| `GET` | `/task/host/v1/status` | task | 禁止：Windows host status 仅限 management 通道。 |
 | `POST` | `/chat/completions` | private-socket | daemon 启动的 Pi candidate 进程使用的一次性私有 Unix socket completion；禁止 Authorization 头。 |

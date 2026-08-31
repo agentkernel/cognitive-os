@@ -39,6 +39,7 @@ use crate::skill_store::{
 };
 use crate::sqlite::AUTHORITY_SCHEMA_V1;
 use crate::vault::vault_migration_entry;
+use crate::windows_host::windows_host_migration_entry;
 use crate::worker_authorization::{
     continuation_authority_consumption_migration_entry, continuation_authority_migration_entry,
     daemon_authorization_snapshot_migration_entry, daemon_operation_descriptor_migration_entry,
@@ -106,7 +107,9 @@ impl PersonalDatabasePrepareReport {
 /// v31 = hidden hosted DSH managed child (`p11_hosted_dsh_child`; P11-T07), and
 /// v32 = Markdown Vault documents / rebuildable index / conflicts (P11-T10),
 /// and v33 = Routine revision / Trigger occurrence ledger (P11-T08; reuses
-/// `scheduler_entries`, no second scheduler).
+/// `scheduler_entries`, no second scheduler), and
+/// v34 = Windows host Personal Home / lifecycle / missed / ordered recovery
+/// (P11-T02; not a second credential plane; native E2E remains not-run).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -145,6 +148,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         hosted_dsh_migration_entry(),
         vault_migration_entry(),
         routine_migration_entry(),
+        windows_host_migration_entry(),
     ]
 }
 
