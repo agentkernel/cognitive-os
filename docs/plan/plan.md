@@ -1768,7 +1768,7 @@ formal acceptance.
 
 ### P12-T06 — HITL canvas Confirm
 
-- **status:** `done` pending merge PR [#299](https://github.com/agentkernel/cognitive-os/pull/299) at `00349b4c`; required CI [33394249597](https://github.com/agentkernel/cognitive-os/actions/runs/33394249597) **SUCCESS**. Dual Track TS **381/381**. Digest-bound Confirm/Narrow/Reject; Stop honest; chat has no Approve. Not T07 ingest. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T07`.
+- **status:** `done` merged PR [#299](https://github.com/agentkernel/cognitive-os/pull/299) at `main@a5265b22`; required CI [33396112669](https://github.com/agentkernel/cognitive-os/actions/runs/33396112669) **SUCCESS** at `89f85f16`. Dual Track TS **381/381**. Digest-bound Confirm/Narrow/Reject; Stop honest; chat has no Approve. Not T07 ingest. Claim ceiling `hypothesis`.
 - **2.0.0 表面:** 画布批准 / 改窄 / 拒绝 / 停。聊天无 Approve。
 - **依赖:** P12-T03；P11-T09 preview 权威。**不依赖 T08。**
 - **垂直切片:** 画布 Confirm → persist-before-dispatch → stale/unknown 不能批。
@@ -1782,6 +1782,7 @@ formal acceptance.
 
 ### P12-T07 — Knowledge ingest UI
 
+- **status:** `in-progress` on `personal/P12-T07-knowledge-ingest`; Dual Track TS **391/391**. Owner-paste `vault.import` + Why this fragment from `vault.index`. Files ≠ Project authority. Import failure keeps original. Claim ceiling `hypothesis`. Unique next = Draft PR + required CI.
 - **2.0.0 表面:** ingest / Why this fragment。T13 现为只读 Knowledge。
 - **依赖:** P12-T01；P11-T10 Vault 权威；P11-T13。
 - **垂直切片:** ingest UI → Why this fragment 走 Vault 权威 → 导入失败保留原件。

@@ -72,7 +72,10 @@ function fakeActionLabels(host: HTMLElement): string[] {
   const labels: string[] = [];
   for (const scope of scopes) {
     for (const node of scope.querySelectorAll("button, a.cp-button")) {
-      if (node.closest("[data-region='opc-hitl-actions']")) {
+      if (
+        node.closest("[data-region='opc-hitl-actions']") ||
+        node.closest("[data-region='opc-vault-ingest']")
+      ) {
         continue;
       }
       const label = (node.textContent ?? "").trim();
@@ -100,6 +103,10 @@ function opcRoutes(
     "GET /management/project/v1/vault.index": {
       status: 200,
       body: { status: "ok", is_authority: false, entries: [] },
+    },
+    "GET /management/project/v1/vault.conflicts": {
+      status: 200,
+      body: { status: "ok", conflicts: [] },
     },
     "GET /management/project/v1/standing-policies": {
       status: 200,
@@ -185,6 +192,10 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(isKnownRoute("GET", "/management/project/v1/roster")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/pending-previews")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/vault.index")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/vault.conflicts")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/vault.import")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/vault.index.rebuild")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/vault.apply-authority")).toBe(false);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/preview-detail")).toBe(true);
@@ -399,7 +410,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
     unmount(host, root);
   });
 
-  it("reads Vault index and Memory envelope without ingest when a Project exists", async () => {
+  it("reads Vault index and Memory envelope without posting ingest on load when a Project exists", async () => {
     const { host, root, calls } = await renderOpc("#/knowledge", READY_LIST, {
       "GET /management/project/v1/vault.index": {
         status: 200,

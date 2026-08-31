@@ -1,5 +1,14 @@
 import { describe, expect, it } from "vitest";
-import { projectVaultIndex, vaultIndexPath } from "./vault";
+import {
+  projectVaultConflicts,
+  projectVaultIndex,
+  projectVaultInjectOrder,
+  vaultConflictsPath,
+  vaultImportIsAuthority,
+  vaultIndexPath,
+  VAULT_IMPORT_PATH,
+  VAULT_REBUILD_PATH,
+} from "./vault";
 
 describe("vault index projection (P11-T13)", () => {
   it("maps daemon entries and ignores is_authority", () => {
@@ -37,5 +46,54 @@ describe("vault index projection (P11-T13)", () => {
     expect(vaultIndexPath("proj-1")).toBe(
       "/management/project/v1/vault.index?project_id=proj-1&caller_project_id=proj-1",
     );
+    expect(vaultConflictsPath("proj-1")).toBe(
+      "/management/project/v1/vault.conflicts?project_id=proj-1&caller_project_id=proj-1",
+    );
+  });
+});
+
+describe("vault Why this fragment + conflicts (P12-T07)", () => {
+  it("projects inject_order from vault.index and does not invent layers", () => {
+    expect(
+      projectVaultInjectOrder({
+        inject_order: ["task-contract", "fixed-decision", "sourced-excerpt", "summary", "older-narrative"],
+      }),
+    ).toEqual(["task-contract", "fixed-decision", "sourced-excerpt", "summary", "older-narrative"]);
+    expect(projectVaultInjectOrder({ status: "ok", entries: [] })).toEqual([]);
+    expect(projectVaultInjectOrder(null)).toEqual([]);
+  });
+
+  it("maps conflict rows without treating them as Project authority", () => {
+    expect(
+      projectVaultConflicts({
+        conflicts: [
+          {
+            conflict_id: "c-1",
+            relative_path: "notes/a.md",
+            incumbent_document_id: "doc-old",
+            incoming_document_id: "doc-new",
+            resolution: "unresolved",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        conflictId: "c-1",
+        relativePath: "notes/a.md",
+        incumbentDocumentId: "doc-old",
+        incomingDocumentId: "doc-new",
+        resolution: "unresolved",
+      },
+    ]);
+    expect(projectVaultConflicts({ status: "ok", conflicts: [] })).toEqual([]);
+  });
+
+  it("treats import is_authority true as a lie the UI must not promote", () => {
+    expect(vaultImportIsAuthority({ status: "ok", is_authority: false, document_id: "doc-1" })).toBe(
+      false,
+    );
+    expect(vaultImportIsAuthority({ status: "ok", is_authority: true })).toBe(true);
+    expect(VAULT_IMPORT_PATH).toBe("/management/project/v1/vault.import");
+    expect(VAULT_REBUILD_PATH).toBe("/management/project/v1/vault.index.rebuild");
   });
 });

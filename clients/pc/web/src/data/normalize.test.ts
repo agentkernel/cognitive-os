@@ -111,6 +111,9 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("GET", "/management/project/v1/roster?project_id=proj-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/pending-previews?subject_ref=proj-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/vault.index?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/vault.conflicts?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/vault.import")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/vault.index.rebuild")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
     expect(isKnownRoute("POST", "/management/agent-bindings/remove")).toBe(true);
