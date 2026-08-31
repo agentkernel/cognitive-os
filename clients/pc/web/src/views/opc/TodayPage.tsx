@@ -1,4 +1,5 @@
 import { useCallback, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
 import { HITL_KEY, type PendingPreviewRow } from "../../data/projections/hitl";
 import { PROJECTS_KEY, PROJECT_LIST_PATH, type ProjectListRow } from "../../data/projections/projects";
@@ -7,11 +8,12 @@ import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
 import { HitlCanvasTable } from "./HitlCanvasTable";
 import { loadPendingPreviewsForReadyProject, loadProjectList, readyProjectId } from "./loadOpcReads";
-import { ProjectAuthorityPanel } from "./ProjectAuthorityPanel";
+import { ProjectAuthorityPanel, TODAY_EMPTY_ONLY_CREATE } from "./ProjectAuthorityPanel";
 
 /**
- * Today — Personal 2.0 L1. Project list plus HITL announce-only with a
- * deep link into the Projects canvas. No Confirm/Approve. No Inbox L1.
+ * Today — Personal 2.0 L1. Empty home is only-create (P12-T02). Packed
+ * Today is a later card. HITL remains announce-only with a deep link.
+ * No Confirm/Approve. No Inbox L1.
  */
 export function TodayPage() {
   const projects = useProjection<ProjectListRow[]>(PROJECTS_KEY);
@@ -33,9 +35,19 @@ export function TodayPage() {
       />
       <HonestyNote>
         Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        This page is empty until Project authority exists.
+        This page is empty until Project authority exists. Empty home is
+        only-create: Start create opens the wizard; it does not mint a Project.
       </HonestyNote>
-      <ProjectAuthorityPanel projection={projects} surface="Today">
+      <ProjectAuthorityPanel
+        projection={projects}
+        surface="Today"
+        emptyBody={TODAY_EMPTY_ONLY_CREATE}
+        emptyAction={
+          <Link className="cp-button cp-button--primary" to="/projects/new">
+            Start create
+          </Link>
+        }
+      >
         <p className="cp-quiet">
           {projects.data?.length ?? 0} Project
           {(projects.data?.length ?? 0) === 1 ? "" : "s"} on{" "}

@@ -20,7 +20,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:5791bebb6d5d20b8e87111f0e8086b29cebc20c925b549499af1c6340c0ffac7"
+fingerprint: "sha256:c8188ec289a2f67e16077122e4baaf567782ba736eca2136d94fbee0672f5678"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -164,6 +164,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/pending-previews` | management | Pending ApprovalPreview announcement list. Omits `preview_digest` (conversation/canvas announcement seam). |
 | `GET` | `/management/project/v1/preview-detail` | management | Canvas preview-detail: includes `preview_digest`, `receipt_ref`, and `superseded_by` for management confirm/reject/narrow. Not a chat Approve control. |
 | `POST` | `/management/project/v1/draft.apply` | management | Apply a candidate onto an open draft at exact `base_seq`. Wrong seq is conflict (N13). |
+| `POST` | `/management/project/v1/draft.create` | management | Open a Project-create draft and put its charter. Does not mint a Project. Activation still requires preview.request then confirm. |
 | `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance / grant-expansion). Response includes `preview_digest` for canvas confirm. Secret-shaped bytes are rejected at registration. |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner-management reject of a pending ApprovalPreview. Leaves a receipt. The rejected digest is never confirmable. Not a chat Approve control. |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner-management narrow: mint a new pending preview and freeze the old row as superseded (`superseded_by`). Old digest is never confirmable. Stale is mechanical `base_state_digest` mismatch only. |
@@ -209,6 +210,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/connector/x/v1/status` | management | Redacted connector status. `secret_ref` is omitted. `is_p0_hero` and `platform_qualified` are false. Impressions stay `unknown`. |
 | `GET` | `/task/project/v1/list` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/draft.apply` | task | Forbidden: Project aggregate is management-channel only. |
+| `POST` | `/task/project/v1/draft.create` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.request` | task | Forbidden: Project aggregate is management-channel only. |
 | `POST` | `/task/project/v1/preview.reject` | task | Forbidden: HITL reject is management-channel only. Chat cannot complete approval. |
 | `POST` | `/task/project/v1/preview.narrow` | task | Forbidden: HITL narrow is management-channel only. Chat cannot complete approval. |

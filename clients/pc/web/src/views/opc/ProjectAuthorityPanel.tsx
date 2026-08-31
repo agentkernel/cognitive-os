@@ -8,22 +8,29 @@ import { HonestyNote } from "../../state/HonestyNote";
 export const NO_PROJECT_EMPTY =
   "This daemon reports no Project. That is not an empty Task list and not an accepted OPC chrome. No action is available until a Project exists as daemon authority.";
 
+export const TODAY_EMPTY_ONLY_CREATE =
+  "This daemon reports no Project. That is not an empty Task list, not a decision packet, and not an accepted OPC chrome. Start create opens the five-step wizard. The wizard does not mint a Project until owner-management preview and write.";
+
 export const NO_FAKE_CHROME =
   "This slice does not paint Today packets, Team, Inbox, or Requires-backend controls.";
 
 /**
  * Shared honesty for Today / Projects / Knowledge when Project authority is
  * missing. Empty, denied, disconnected, stub, and unexpected are distinct.
- * No action slot — EmptyState.action stays unset so this cannot grow a fake
- * button.
+ * Today may pass emptyAction (Start create → wizard). Knowledge/Projects leave
+ * EmptyState.action unset so they cannot grow a fake Activate control.
  */
 export function ProjectAuthorityPanel({
   projection,
   surface,
+  emptyBody,
+  emptyAction,
   children,
 }: {
   projection: Projection<ProjectListRow[]>;
   surface: string;
+  emptyBody?: string;
+  emptyAction?: ReactNode;
   children?: ReactNode;
 }) {
   if (projection.status === "loading") {
@@ -78,8 +85,8 @@ export function ProjectAuthorityPanel({
   }
   if (projection.status === "empty" || (projection.status === "ready" && (projection.data?.length ?? 0) === 0)) {
     return (
-      <EmptyState title={`${surface}: no Project`}>
-        {NO_PROJECT_EMPTY} {NO_FAKE_CHROME}
+      <EmptyState title={`${surface}: no Project`} action={emptyAction}>
+        {emptyBody ?? `${NO_PROJECT_EMPTY} ${NO_FAKE_CHROME}`}
       </EmptyState>
     );
   }

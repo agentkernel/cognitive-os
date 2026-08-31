@@ -20,7 +20,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:5791bebb6d5d20b8e87111f0e8086b29cebc20c925b549499af1c6340c0ffac7"
+fingerprint: "sha256:c8188ec289a2f67e16077122e4baaf567782ba736eca2136d94fbee0672f5678"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -164,6 +164,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/pending-previews` | management | 待批 ApprovalPreview 宣布列表。省略 `preview_digest`（对话/画布宣布接缝）。 |
 | `GET` | `/management/project/v1/preview-detail` | management | 画布 preview-detail：含供 management 确认/拒绝/改窄的 `preview_digest`、`receipt_ref`、`superseded_by`。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/draft.apply` | management | 按精确 `base_seq` 把候选应用到未关闭草稿。错误 seq 为冲突（N13）。 |
+| `POST` | `/management/project/v1/draft.create` | management | 打开 Project-create 草稿并写入 charter。不铸造 Project。激活仍须 preview.request 再 confirm。 |
 | `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance / grant-expansion）。响应含供画布确认的 `preview_digest`。secret 形态字节在登记时拒绝。 |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner management 拒绝待批 ApprovalPreview。留下 receipt。被拒 digest 永不可确认。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner management 改窄：签发新的 pending preview，旧行 `superseded`（`superseded_by`）。旧 digest 永不可确认。stale 只按机械 `base_state_digest` 不等判定。 |
@@ -209,6 +210,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/connector/x/v1/status` | management | 脱敏 connector 状态。不返回 `secret_ref`。`is_p0_hero` 与 `platform_qualified` 为 false。impressions 保持 `unknown`。 |
 | `GET` | `/task/project/v1/list` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/draft.apply` | task | 禁止：Project 聚合仅限 management 通道。 |
+| `POST` | `/task/project/v1/draft.create` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.request` | task | 禁止：Project 聚合仅限 management 通道。 |
 | `POST` | `/task/project/v1/preview.reject` | task | 禁止：HITL reject 仅限 management 通道。聊天不能完成批准。 |
 | `POST` | `/task/project/v1/preview.narrow` | task | 禁止：HITL 改窄仅限 management 通道。聊天不能完成批准。 |
