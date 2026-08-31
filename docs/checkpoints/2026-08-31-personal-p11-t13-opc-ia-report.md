@@ -11,7 +11,7 @@
 
 ## Unique next action
 
-Continue `P11-T13/D01` on `personal/P11-T13-opc-ia`: Dual Track empty/unavailable L1 is in this commit. Remaining is the rest of T13 acceptance (no full fake OPC chrome; NVDA/200%/host-theme stay hung `not-run`; host UI E2E vs daemon `/ui/` `not-run` until a guest is up). Do not auto-claim T02. Do not unpark T14/T15.
+Continue `P11-T13/D01` on Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) (`personal/P11-T13-opc-ia`). Empty L1 plus fail-closed Project/HITL/Vault/Memory management reads are in this commit. Remaining: rest of T13 `/ui/` acceptance (no full fake OPC chrome; NVDA/200%/host-theme hung `not-run`; host UI E2E vs **this** revision's daemon `/ui/` `not-run` — linux-002 `:48681` is listening but this branch is not deployed). Do not auto-claim T02. Do not unpark T14/T15.
 
 ## Closed predecessor
 
@@ -23,7 +23,7 @@ Acceptance: `TODAY_PROJECTS_KNOWLEDGE_SETTINGS_UI`.
 
 Product origin is daemon-served hash `/ui/`. Linux 1.0 Home stays at `#/home`. Team/Inbox are not L1. Chat Approve is not a Control Plane control.
 
-Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠ disconnected ≠ stub), `GET /management/project/v1/list`. No kernel-server path claimed; `/ui/` static mount and project list already exist on `main`.
+Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠ disconnected ≠ stub), `GET /management/project/v1/list`, `GET /management/project/v1/pending-previews`, `GET /management/project/v1/vault.index`, `GET /management/project/v1/standing-policies`, `GET /management/resource/v1/list?family=memory`. No kernel-server path claimed; those GETs already exist on `main`.
 
 ## Failure-first (this slice)
 
@@ -37,6 +37,12 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | N6 | L1 is Today/Projects/Knowledge; Settings in side-foot; no Team/Inbox | PrimaryNav + App.test + opcIa | **pass** |
 | N7 | Assistant rail has no Approve control | `AssistantRail` | **pass** |
 | projector | malformed list does not invent a Project | `projects.test.ts` | **pass** |
+| N8 | no Project id ⇒ no pending-previews / vault.index / memory list call | `opcIa.test.tsx` | **pass** |
+| N9 | HITL announce-only; 403 does not invent preview rows; no Confirm | `opcIa.test.tsx` + `hitl.test.ts` | **pass** |
+| N10 | Vault/Memory 403 does not invent files; no ingest | `opcIa.test.tsx` + `vault.test.ts` | **pass** |
+| N11 | Settings StandingApprovalPolicy list-only; no Team/Inbox/member budget control | `opcIa.test.tsx` + `standingPolicies.test.ts` | **pass** |
+| N12 | L1/Settings copy does not claim Vite as product origin | `opcIa.test.tsx` | **pass** |
+| N13 | POST confirm / vault.apply-authority stay off the client whitelist | `normalize.test.ts` | **pass** |
 
 ## Validation log (`TEST-REPORT-INCREMENTAL-01`)
 
@@ -48,6 +54,13 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 | Host UI E2E vs daemon `/ui/` | guest not used this session | **not-run** |
 | NVDA / 200% layout / host-theme contrast | hung | **not-run** |
 | required-ci | not yet on this head | **not-run** |
+| HTTPS `git push -u origin HEAD` | `DEV-WIN-GNU-01` | **pass** `b5b604c0` → `origin/personal/P11-T13-opc-ia` (SSH host-key failed first; HTTPS retry 1 succeeded) |
+| Draft PR | GitHub | **pass** [#291](https://github.com/agentkernel/cognitive-os/pull/291) stays Draft |
+| `pnpm test` in `clients/pc/web` (fail-closed reads) | `DEV-WIN-GNU-01` | **pass** 43 files / 335 tests |
+| `pnpm run build` (`tsc --noEmit` + Vite) | `DEV-WIN-GNU-01` | **pass** (CSS 23.25 kB, JS 450.94 kB) |
+| Host UI E2E vs **this** T13 `/ui/` | linux-002 `:48681` LISTEN on loopback; this branch not deployed | **not-run** |
+| NVDA / 200% layout / host-theme contrast | hung | **not-run** |
+| required-ci | pending push of this head | **not-run** |
 
 ## Non-claims
 
@@ -55,11 +68,16 @@ Reused: SessionGate, hash `/ui/`, P7-T05 inventory honesty (empty ≠ denied ≠
 - Empty honesty is not a Today packet canvas and not a fake Requires-backend control.
 - Linux 1.0 six-family pages remain real secondary routes (`#/home`, Work, …), not L1.
 - Vite is not the product origin.
+- linux-002 `:48681` LISTEN is not this T13 `/ui/` bundle (no guest deploy this turn).
 - CI ≠ Gate (A7).
 
 ## Implemented in this slice
 
 - L1: Today / Projects / Knowledge; Settings in side-foot; assistant rail (candidate-only).
-- Dual Track: `fetchProjection` + whitelist `GET /management/project/v1/list`.
+- Dual Track: `fetchProjection` + whitelist `GET /management/project/v1/list`, `pending-previews`, `vault.index`, `standing-policies` (Memory list already whitelisted).
+- Today/Projects: HITL announce-only for the first daemon Project id; no Confirm/Approve.
+- Knowledge: Vault index + Memory envelope after a real Project id; no ingest.
+- Settings: StandingApprovalPolicy list-only; member budget remains 2.1 / Deferred.
 - Keyboard: `g` then t/p/n/s; keep w/a/h/v/r/c.
 - Palette destinations include L1 + Linux 1.0 + Settings.
+- Draft PR [#291](https://github.com/agentkernel/cognitive-os/pull/291).

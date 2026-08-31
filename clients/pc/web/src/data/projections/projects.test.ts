@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { projectProjectList } from "./projects";
+import { firstReadyProjectId, projectProjectList } from "./projects";
 
 describe("project list projection (P11-T13)", () => {
   it("maps daemon rows and keeps title/cost as stated", () => {
@@ -29,5 +29,14 @@ describe("project list projection (P11-T13)", () => {
     expect(projectProjectList({ status: "ok" })).toEqual([]);
     expect(projectProjectList(null)).toEqual([]);
     expect(projectProjectList({ projects: [{ state: "active" }] })).toEqual([]);
+  });
+
+  it("does not invent a first Project id", () => {
+    expect(firstReadyProjectId(undefined)).toBeUndefined();
+    expect(firstReadyProjectId([])).toBeUndefined();
+    expect(firstReadyProjectId([{ projectId: "", state: "active", titleSummary: "unknown", cost: "unknown" }])).toBeUndefined();
+    expect(
+      firstReadyProjectId([{ projectId: "proj-1", state: "active", titleSummary: "unknown", cost: "unknown" }]),
+    ).toBe("proj-1");
   });
 });

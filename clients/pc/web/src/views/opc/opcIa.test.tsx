@@ -10,13 +10,16 @@ import { PRIMARY_NAV } from "../../shell/PrimaryNav";
 import { NO_PROJECT_EMPTY } from "./ProjectAuthorityPanel";
 
 type RouteResponse = { status: number; body: unknown };
+type FetchCall = { method: string; path: string; pathname: string };
 
-function installFetch(routes: Record<string, RouteResponse>): void {
+function installFetch(routes: Record<string, RouteResponse>): FetchCall[] {
+  const calls: FetchCall[] = [];
   vi.stubGlobal(
     "fetch",
     vi.fn(async (input: unknown, init?: RequestInit) => {
       const url = new URL(String(input), "http://localhost");
       const method = (init?.method ?? "GET").toUpperCase();
+      calls.push({ method, path: `${url.pathname}${url.search}`, pathname: url.pathname });
       const handler = routes[`${method} ${url.pathname}`];
       const resolved =
         handler ??
@@ -29,6 +32,7 @@ function installFetch(routes: Record<string, RouteResponse>): void {
       });
     }),
   );
+  return calls;
 }
 
 function renderAppAt(hash: string) {
@@ -42,7 +46,7 @@ function renderAppAt(hash: string) {
   return { host, root };
 }
 
-async function flush(ticks = 12) {
+async function flush(ticks = 20) {
   for (let i = 0; i < ticks; i += 1) {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
@@ -57,7 +61,7 @@ function unmount(host: HTMLDivElement, root: ReturnType<typeof createRoot>) {
   host.remove();
 }
 
-const FAKE_ACTION = /approve|create project|activate|new project|team|inbox/i;
+const FAKE_ACTION = /approve|create project|activate|new project|team|inbox|confirm|ingest|apply authority/i;
 
 function fakeActionLabels(host: HTMLElement): string[] {
   const scopes = [
@@ -77,21 +81,45 @@ function fakeActionLabels(host: HTMLElement): string[] {
   return labels;
 }
 
-function opcRoutes(list: RouteResponse): Record<string, RouteResponse> {
+function opcRoutes(
+  list: RouteResponse,
+  extras: Record<string, RouteResponse> = {},
+): Record<string, RouteResponse> {
   return {
     "GET /personal/health": { status: 200, body: { status: "ok" } },
     "GET /personal/status": { status: 200, body: { status: "ok", overall: "ready", alerts: [] } },
     "GET /management/alerts": { status: 200, body: { status: "ok", alerts: [] } },
     "GET /management/project/v1/list": list,
+    "GET /management/project/v1/pending-previews": {
+      status: 200,
+      body: { status: "ok", previews: [] },
+    },
+    "GET /management/project/v1/vault.index": {
+      status: 200,
+      body: { status: "ok", is_authority: false, entries: [] },
+    },
+    "GET /management/project/v1/standing-policies": {
+      status: 200,
+      body: { status: "ok", policies: [] },
+    },
+    "GET /management/resource/v1/list": {
+      status: 200,
+      body: { status: "ok", family: "memory", resources: [] },
+    },
+    ...extras,
   };
 }
 
-async function renderOpc(hash: string, list: RouteResponse) {
+async function renderOpc(
+  hash: string,
+  list: RouteResponse,
+  extras: Record<string, RouteResponse> = {},
+) {
   rememberBearer("management", "test-management-bearer");
-  installFetch(opcRoutes(list));
+  const calls = installFetch(opcRoutes(list, extras));
   const view = renderAppAt(hash);
   await flush();
-  return view;
+  return { ...view, calls };
 }
 
 const EMPTY_LIST: RouteResponse = { status: 200, body: { status: "ok", projects: [] } };
@@ -149,17 +177,27 @@ describe("P11-T13 OPC IA chrome", () => {
   it("whitelists the Project list route used by Dual Track", () => {
     expect(isKnownRoute("GET", "/management/project/v1/list")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/list")).toBe(false);
+    expect(isKnownRoute("GET", "/management/project/v1/pending-previews")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/vault.index")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(false);
   });
 });
 
 describe("P11-T13 Dual Track honesty (zero fake buttons)", () => {
   it("renders Today as empty, not a fake OPC chrome, when the daemon has no Project", async () => {
-    const { host, root } = await renderOpc("#/", EMPTY_LIST);
+    const { host, root, calls } = await renderOpc("#/", EMPTY_LIST);
     expect(host.querySelector("[data-page='opc-today']")).not.toBeNull();
     expect(host.querySelector("main h2")?.textContent).toBe("Today");
     expect(host.textContent).toContain(NO_PROJECT_EMPTY);
     expect(host.querySelector("[data-page='opc-today'] .cp-region")).toBeNull();
+    expect(host.querySelector("[data-region='opc-hitl']")).toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
+    expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
+      false,
+    );
+    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index")).toBe(false);
+    expect(calls.some((call) => call.method === "POST")).toBe(false);
     unmount(host, root);
   });
 
@@ -257,6 +295,156 @@ describe("P11-T13 disconnected is not empty", () => {
     expect(host.textContent).toMatch(/unreachable|Failed to fetch/i);
     expect(host.textContent).not.toContain(NO_PROJECT_EMPTY);
     expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+});
+
+describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
+  it("does not claim Vite as the product origin on L1 or Settings", async () => {
+    for (const hash of ["#/", "#/projects", "#/knowledge", "#/settings"]) {
+      const { host, root } = await renderOpc(hash, EMPTY_LIST);
+      expect(host.textContent).toMatch(/daemon-served hash \/ui\//);
+      expect(host.textContent).not.toMatch(/vite preview|vite dev server|localhost:5173/i);
+      expect(fakeActionLabels(host)).toEqual([]);
+      unmount(host, root);
+    }
+  });
+
+  it("announces pending HITL without Confirm when a Project exists", async () => {
+    const { host, root, calls } = await renderOpc("#/", READY_LIST, {
+      "GET /management/project/v1/pending-previews": {
+        status: 200,
+        body: {
+          status: "ok",
+          previews: [
+            {
+              preview_id: "prev-1",
+              subject_kind: "activation",
+              subject_ref: "proj-1",
+              status: "pending",
+              preview_digest: "must-not-render",
+            },
+          ],
+        },
+      },
+    });
+    expect(host.querySelector("[data-row-key='prev-1']")).not.toBeNull();
+    expect(host.textContent).toContain("activation");
+    expect(host.textContent).not.toContain("must-not-render");
+    expect(host.textContent).toMatch(/announce only/i);
+    expect(fakeActionLabels(host)).toEqual([]);
+    expect(
+      calls.some(
+        (call) => call.path === "/management/project/v1/pending-previews?subject_ref=proj-1",
+      ),
+    ).toBe(true);
+    expect(calls.some((call) => call.method === "POST")).toBe(false);
+    unmount(host, root);
+  });
+
+  it("does not invent HITL rows when pending-previews is 403", async () => {
+    const { host, root } = await renderOpc("#/", READY_LIST, {
+      "GET /management/project/v1/pending-previews": {
+        status: 403,
+        body: { status: "error", error: { code: "LOCAL_ORIGIN_HEADER_REJECTED", message: "denied" } },
+      },
+    });
+    expect(host.querySelector("[data-region='opc-hitl']")?.textContent).toMatch(/session denied/i);
+    expect(host.querySelector("[data-row-key='prev-1']")).toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("does not open Vault or Memory without a Project id", async () => {
+    const { host, root, calls } = await renderOpc("#/knowledge", EMPTY_LIST);
+    expect(host.textContent).toContain(NO_PROJECT_EMPTY);
+    expect(host.querySelector("[data-region='opc-vault']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-memory']")).toBeNull();
+    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index")).toBe(false);
+    expect(
+      calls.some(
+        (call) =>
+          call.pathname === "/management/resource/v1/list" && call.path.includes("family=memory"),
+      ),
+    ).toBe(false);
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("reads Vault index and Memory envelope without ingest when a Project exists", async () => {
+    const { host, root, calls } = await renderOpc("#/knowledge", READY_LIST, {
+      "GET /management/project/v1/vault.index": {
+        status: 200,
+        body: {
+          status: "ok",
+          is_authority: false,
+          entries: [{ entry_id: "ent-1", document_id: "doc-1", layer: "summaries", excerpt: "note" }],
+        },
+      },
+      "GET /management/resource/v1/list": {
+        status: 200,
+        body: { status: "ok", family: "memory", resources: [{ id: "mem-1", family: "memory" }] },
+      },
+    });
+    expect(host.querySelector("[data-row-key='ent-1']")).not.toBeNull();
+    expect(host.querySelector("[data-row-key='mem-1']")).not.toBeNull();
+    expect(host.textContent).toContain("mem-1");
+    expect(fakeActionLabels(host)).toEqual([]);
+    expect(
+      calls.some(
+        (call) =>
+          call.path ===
+          "/management/project/v1/vault.index?project_id=proj-1&caller_project_id=proj-1",
+      ),
+    ).toBe(true);
+    expect(calls.some((call) => call.method === "POST")).toBe(false);
+    unmount(host, root);
+  });
+
+  it("does not invent Vault rows when vault.index is 403", async () => {
+    const { host, root } = await renderOpc("#/knowledge", READY_LIST, {
+      "GET /management/project/v1/vault.index": {
+        status: 403,
+        body: { status: "error", error: { code: "LOCAL_ORIGIN_HEADER_REJECTED", message: "denied" } },
+      },
+    });
+    expect(host.querySelector("[data-region='opc-vault']")?.textContent).toMatch(/session denied/i);
+    expect(host.querySelector("[data-row-key='ent-1']")).toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("lists StandingApprovalPolicy on Settings without mint, Team, Inbox, or member budget", async () => {
+    const { host, root, calls } = await renderOpc("#/settings", EMPTY_LIST, {
+      "GET /management/project/v1/standing-policies": {
+        status: 200,
+        body: {
+          status: "ok",
+          policies: [
+            {
+              policy_id: "pol-1",
+              subject_class: "grant-expansion",
+              subject_ref: "proj-1",
+              expires_at: 1,
+              active: true,
+            },
+          ],
+        },
+      },
+    });
+    expect(host.querySelector("[data-row-key='pol-1']")).not.toBeNull();
+    expect(host.querySelector("input")).toBeNull();
+    expect(host.textContent).toMatch(/2\.1 \/ Deferred/);
+    const settingsLinks = [...host.querySelectorAll("[data-page='opc-settings'] a")].map(
+      (node) => (node.textContent ?? "").trim(),
+    );
+    expect(settingsLinks).not.toContain("Team");
+    expect(settingsLinks).not.toContain("Inbox");
+    expect(fakeActionLabels(host)).toEqual([]);
+    expect(
+      calls.some((call) => call.pathname === "/management/project/v1/standing-policies"),
+    ).toBe(true);
+    expect(calls.some((call) => call.method === "POST")).toBe(false);
     unmount(host, root);
   });
 });

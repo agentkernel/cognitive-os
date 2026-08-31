@@ -14,6 +14,11 @@ export interface ProjectListRow {
   cost: string;
 }
 
+export function firstReadyProjectId(rows: ProjectListRow[] | undefined): string | undefined {
+  const id = rows?.[0]?.projectId;
+  return typeof id === "string" && id.length > 0 ? id : undefined;
+}
+
 export function projectProjectList(body: unknown): ProjectListRow[] {
   if (!body || typeof body !== "object") {
     return [];
