@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { firstReadyProjectId, projectProjectList } from "./projects";
+import {
+  creatingProjectRows,
+  firstLiveProjectId,
+  firstReadyProjectId,
+  isLiveProjectState,
+  liveProjectRows,
+  projectProjectList,
+} from "./projects";
 
 describe("project list projection (P11-T13)", () => {
   it("maps daemon rows and keeps title/cost as stated", () => {
@@ -38,5 +45,34 @@ describe("project list projection (P11-T13)", () => {
     expect(
       firstReadyProjectId([{ projectId: "proj-1", state: "active", titleSummary: "unknown", cost: "unknown" }]),
     ).toBe("proj-1");
+  });
+
+  it("treats creating as unaccepted and only active/attention/paused as live (P12-T05)", () => {
+    const creating = {
+      projectId: "proj-draft",
+      state: "creating",
+      titleSummary: "unknown",
+      cost: "unknown",
+    };
+    const live = {
+      projectId: "proj-1",
+      state: "active",
+      titleSummary: "unknown",
+      cost: "unknown",
+    };
+    const paused = {
+      projectId: "proj-2",
+      state: "paused",
+      titleSummary: "unknown",
+      cost: "unknown",
+    };
+    expect(isLiveProjectState("creating")).toBe(false);
+    expect(isLiveProjectState("archived")).toBe(false);
+    expect(isLiveProjectState("active")).toBe(true);
+    expect(creatingProjectRows([creating, live])).toEqual([creating]);
+    expect(liveProjectRows([creating, live, paused])).toEqual([live, paused]);
+    expect(firstLiveProjectId([creating, live])).toBe("proj-1");
+    expect(firstLiveProjectId([creating])).toBeUndefined();
+    expect(firstReadyProjectId([creating, live])).toBe("proj-draft");
   });
 });

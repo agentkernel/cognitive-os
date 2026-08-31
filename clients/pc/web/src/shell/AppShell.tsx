@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { CommandPalette } from "../components/CommandPalette";
-import { PROJECTS_KEY, type ProjectListRow } from "../data/projections/projects";
+import { liveProjectRows, PROJECTS_KEY, type ProjectListRow } from "../data/projections/projects";
 import { useProjection } from "../data/useProjection";
 import type { Projection } from "../data/store";
 import { AssistantRail } from "./AssistantRail";
@@ -23,6 +23,9 @@ function hideAssistantRail(pathname: string, projects: Projection<ProjectListRow
   if (projects.status === "ready" && (projects.data?.length ?? 0) === 0) {
     return true;
   }
+  if (projects.status === "ready" && liveProjectRows(projects.data).length === 0) {
+    return true;
+  }
   if (projects.status === "loading") {
     return true;
   }
@@ -32,7 +35,8 @@ function hideAssistantRail(pathname: string, projects: Projection<ProjectListRow
 /**
  * App shell — Personal 2.0: strip + L1 + main + assistant rail.
  * ⌘K is chrome, not a space. The rail never Approves. Empty home and the
- * create wizard hide the rail (P12-T02).
+ * create wizard hide the rail (P12-T02). Creating-only Today also hides it
+ * (P12-T05 today-incomplete).
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const location = useLocation();

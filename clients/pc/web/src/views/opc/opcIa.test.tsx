@@ -339,12 +339,13 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
         },
       },
     });
+    expect(host.querySelector("[data-packet='prev-1']")).not.toBeNull();
     expect(host.querySelector("[data-row-key='prev-1']")).not.toBeNull();
     expect(host.textContent).toContain("activation");
     expect(host.textContent).not.toContain("must-not-render");
     expect(host.textContent).toMatch(/announce only/i);
-    expect(host.querySelector("a[href='#/projects?preview=prev-1']")?.textContent).toMatch(
-      /Projects canvas/i,
+    expect(host.querySelector("a[href='#/projects/proj-1?preview=prev-1']")?.textContent).toMatch(
+      /Open this decision on the canvas/i,
     );
     expect(host.querySelector("a[href*='#/hitl']")).toBeNull();
     expect(host.querySelector("[data-region='opc-rail-hitl']")?.textContent).toMatch(
