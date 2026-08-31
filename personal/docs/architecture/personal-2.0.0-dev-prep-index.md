@@ -15,6 +15,7 @@
 | Design-Agent / journey assessment | [13-personal-20-agent-design-difficulty-and-journey-assessment.md](../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md) (2026-08-30; hypothesis; not a P11 claim) |
 | Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 table + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15` cards |
 | First implementation knife | **`P11-T03` Project aggregate walking skeleton** — not a full `/ui/` page, not `P11-T02` |
+| T02 host walking skeleton | **`P11-T02` done** (merged PR [#292](https://github.com/agentkernel/cognitive-os/pull/292)); native install/tray/sleep/SecretStore E2E remains `not-run` |
 | Environment names | only [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md); do not invent environments |
 | Authority order | [AXIOMS.md](../../../docs/governance/AXIOMS.md) A1–A8 → frozen product facts → core 1.0.0 contracts (this window does not change specs) → mapping → this index |
 
@@ -90,6 +91,7 @@ Stage defaults (do not invent environments):
 - **T13**: IA replacement; NVDA / 200% layout / host-theme contrast **hung**
   (`not-run`); full `/ui/` is not pre-accepted.
 - **T02 / T07**: `Requires-environment`; unqualified native host ⇒ `not-run`.
+  T02 walking skeleton (v34 + `host.*`) is on `main`; native E2E is still `not-run`.
 - Gate / release / B01: independent campaign; not slice green.
 
 ### Owner local viewing (later implementation windows with guest `/ui/`)

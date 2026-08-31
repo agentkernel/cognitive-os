@@ -1427,6 +1427,7 @@ formal acceptance.
 
 ### P11-T02 — Windows host, tray, and background (hidden)
 
+- **status:** `done` (merged PR [#292](https://github.com/agentkernel/cognitive-os/pull/292) at `main@cb66c7fb`; required CI [33358661063](https://github.com/agentkernel/cognitive-os/actions/runs/33358661063) **SUCCESS** at `19300b92`; Linux store 9/9 + HTTP 1/1 at `71c4824a`; native E2E **not-run**). Claim ceiling `hypothesis`.
 - **2.0.0 表面:** 非一级 chrome；隐藏 Windows host 能力。不挡 T03。
 - **依赖:** P11-T01；ADR-0052/P7-T07 fragments。**不**作为 T03 mutex。
 - **垂直切片:** inspectable install → Personal Home `app/`/`data/` → daemon/tray

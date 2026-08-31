@@ -8,7 +8,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Change class: `implementation-only`
 - Claim commit: `d3229009` (lease/plan only).
 - Implementation commit: `71c4824a` (Draft PR [#292](https://github.com/agentkernel/cognitive-os/pull/292)).
-- Unique next: wait for `CI-WINDOWS-MSVC-01` + `required-ci` on run [33358224579](https://github.com/agentkernel/cognitive-os/actions/runs/33358224579). Native Windows tray/ACL/sleep/SecretStore E2E stays `not-run`.
+- Unique next: PR [#292](https://github.com/agentkernel/cognitive-os/pull/292) merged as `main@cb66c7fb`. Claim `P11-T14` next. Native Windows tray/ACL/sleep/SecretStore E2E stays `not-run`.
 
 | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|
@@ -34,8 +34,10 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | independent reconfirm store `p11_t02_windows_host` | **pass** 9/9 | `DEV-LINUX-NATIVE-01` `/home/wuz/cognitiveos-personal-worktrees/p11-t02-71c4824a` | `71c4824afd2c465864443eddc2e1b71c6b2fcf59` | STORE_EXIT=0; 0.97s; exact pushed SHA |
 | independent reconfirm kernel-server `-- p11_t02` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` same worktree | `71c4824afd2c465864443eddc2e1b71c6b2fcf59` | HTTP_EXIT=0; 0.20s; 385 filtered; `p11_t02_host_negatives_and_task_channel_is_forbidden` |
 | `resolve validation route` | **SUCCESS** | GitHub Actions [99384354560](https://github.com/agentkernel/cognitive-os/actions/runs/33358224579/job/99384354560) | `71c4824a` | ~2s; run [33358224579](https://github.com/agentkernel/cognitive-os/actions/runs/33358224579) |
-| `verify (ubuntu-latest)` | **SUCCESS** | `CI-UBUNTU-01` [99384365895](https://github.com/agentkernel/cognitive-os/actions/runs/33358224579/job/99384365895) | `71c4824a` | ~3m48s |
-| `verify (windows-latest)` | in-progress | `CI-WINDOWS-MSVC-01` [99384365882](https://github.com/agentkernel/cognitive-os/actions/runs/33358224579/job/99384365882) | `71c4824a` | started 2026-08-31T04:46:04Z |
+| `verify (ubuntu-latest)` | **SUCCESS** | `CI-UBUNTU-01` [99385666462](https://github.com/agentkernel/cognitive-os/actions/runs/33358661063/job/99385666462) | `19300b92` | ~3m45s; docs-head after `71c4824a` (run [33358224579](https://github.com/agentkernel/cognitive-os/actions/runs/33358224579) cancelled by this push) |
+| `verify (windows-latest)` | **SUCCESS** | `CI-WINDOWS-MSVC-01` [99385666475](https://github.com/agentkernel/cognitive-os/actions/runs/33358661063/job/99385666475) | `19300b92` | ~15m23s |
+| workspace `required-ci` | **SUCCESS** | GitHub Actions [99388098195](https://github.com/agentkernel/cognitive-os/actions/runs/33358661063/job/99388098195) | `19300b92` | run [33358661063](https://github.com/agentkernel/cognitive-os/actions/runs/33358661063). Native Windows E2E remains `not-run`. A7: CI ≠ Gate. |
+| PR [#292](https://github.com/agentkernel/cognitive-os/pull/292) merge | **merged** | GitHub | `cb66c7fb5d2fa8f2821f373bdb2c9ae91b40a438` | merge commit of `19300b92`; not Gate |
 
 ## Non-claims
 
