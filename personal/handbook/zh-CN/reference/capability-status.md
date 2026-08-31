@@ -29,7 +29,10 @@ sources:
   - path: personal/docs/architecture/windows-host-background.md
   - path: personal/crates/cognitive-store/src/windows_host.rs
     symbols: ["WINDOWS_HOST_SCHEMA_V34", "WindowsHostStore", "WAKE_RECOVERY_STEPS"]
-fingerprint: "sha256:a2ef88691e02688d6f7a6af71edd28f06475a252e646680a905ea0b10c2485cc"
+  - path: personal/docs/architecture/x-twitter-connector.md
+  - path: personal/crates/cognitive-store/src/x_connector.rs
+    symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
+fingerprint: "sha256:45992e27d8b59d1a5b22645ea71b794c90898fc036e638011314d04086122fac"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -85,7 +88,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Routine/Trigger/Inbox/offline-missed recovery | partial（walking skeleton）+ Requires-backend | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；daemon `scheduler_entries` 是唯一调度权威。Dual Track L1 chrome 已在 `main`（`P11-T13`）；clock/sleep/restart 宿主 E2E 与 Inbox 一级仍缺（HITL 是 T09 画布）。 |
 | Windows host/tray/background（隐藏） | partial（walking skeleton）+ Requires-environment | v34 + management `host.*` 已证明 Personal Home `app/`/`data/`、close 诚实性、missed 时段与七步有序恢复。不是 chrome。不是第二套凭据平面。原生 install/tray/ACL/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。 |
 | Provider global→Project→employee→Task binding 与 hard budget | Requires-backend | current fixed Agent binding 与 advisory budget 保持 partial；DSH/Pi 必须经 no-raw-secret daemon proxy |
-| X/Twitter qualified connector scenario | Requires-backend + Requires-environment | 不声明 connector/platform qualification 或业务结果；禁止 evasion |
+| X/Twitter connector（隐藏） | partial（walking skeleton）+ Requires-environment | v35 + management `connector/x.*` 已证明 SecretStore-only bind、原创 digest 绑定 preview、HITL confirm、persist-before-dispatch 与诚实 unknown readback。不是 P0 hero。不是业务结果。禁止 evasion。live X API / CAPTCHA / platform qualification 为 `not-run`。 |
 | 既有 MCP Tool transport + 有界 dynamic-Tool MVP | 在其已接受 P5-T03/P5-T04 范围内 implemented | interop 产出 Tool candidate；没有 Personal 2.0 server/package/connection/binding/health/quarantine 资源族生命周期 |
 | Personal MCP 第七族 | deferred / Requires-backend | ADR-0057/0058 retained advanced private target；不是 OPC P0，无 current family API，DSH native MCP/base tools 继续禁用 |
 | Windows OPC fixed-denominator acceptance | Requires-environment / not-run | future N=15、同一 qualified Windows revision；required CI/Canvas 不执行；signing/B01-W/release 分离 |

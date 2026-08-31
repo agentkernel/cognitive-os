@@ -34,6 +34,8 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/windows_host.rs
     symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/x_connector.rs
+    symbols: ["handle", "matches"]
   - path: personal/crates/cognitive-store/src/hosted_dsh.rs
     symbols: ["HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/apps/kernel-server/src/personal/task_api.rs
@@ -54,7 +56,8 @@ tests:
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
-fingerprint: "sha256:82c87a5e514b92e0a6b9906d0c2f43100b1d7281d451723e195caf4292c0c7ab"
+  - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
+fingerprint: "sha256:0e9993862521d3c64b8ead2cb8f47f7a115663015e0de589a994addc730281eb"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -143,6 +146,8 @@ binding 说明（缺失的 Project/employee/Task 层为 `unbound`），以及省
 Personal-private Project 聚合路由（`/management/project/v1/{list,detail,axis,roster,employee.catalog,pending-previews,preview-detail,draft.apply,preview.request,preview.reject,preview.narrow,confirm,standing-policies,standing-policy.create,standing-policy.revoke,roster.register,employee.seat.request,employee.seat.confirm,employee.runtime.bind,speech.candidate,conversation.append,conversation.archive,conversation.record,handoff.record,assistant.turn,dsh.hosted.start,dsh.hosted.observe-exit,vault.import,vault.index.rebuild,vault.index,vault.conflicts,vault.apply-authority,routine.revision,routine.trigger,routine.ledger,routine.checkpoint,routine.resume}`）需要 management bearer。它们投影 v26 `p11_*` Project 表、v27 Employee/Blueprint/Assignment/Grant 表、v28 `p11_conversation_archive`（标识 `cognitiveos.personal.conversation-archive/0.1`，不重解释 ADR-0058 `conversation-projection/0.1`）、v29 ApprovalPreview `superseded_by`（HITL reject/narrow）、v30 `grant-expansion` 与 StandingApprovalPolicy 时间盒（`expires_at` 必填、≤7 天；Settings 列表/撤销），v31 隐藏托管 DSH 子进程身份（`p11_hosted_dsh_child`；`dsh.hosted.start` 把 `runtime_binding_ref` 绑到 `hosted-dsh:<digest>:<child_id>`；Windows GNU isolated spawn 失败闭合；Windows OPC E2E 为 `not-run`；不是 Installed Agent chrome；Pi 不是 Member 执行引擎），v32 Markdown Vault（`p11_vault_document` / 可重建 `p11_vault_index_entry` / `p11_vault_conflict`，标识 `cognitiveos.personal.markdown-vault/0.1`；文件不是 Project 权威；Memory FTS 不是 Vault 索引；无冲突记录的 last-write-wins 被拒绝；宿主文件系统 E2E 为 `not-run`），以及 v33 Routine/Trigger（`p11_routine` / `p11_routine_revision` / `p11_routine_occurrence`，标识 `cognitiveos.personal.routine/0.1`；no-overlap-queue-latest；missed/coalesced 可见；复用 `scheduler_entries`；checkpoint 不是完成；无 Temporal；clock/sleep/restart E2E 为 `not-run`），不是 Task 行冒充，也不动 P7-T05 冻结 inventory。空列表无假按钮；未知费用字面量是 `unknown`，序列化里不出现 `0`。空花名册使用 `authority_note: empty-roster`；已就位成员按 `employee_id` 列出。Blueprint 行无 Provider binding。白名单投递发言落档案行；owner `conversation.append` 写入 `note` 等档案 kind；chatter 仅审计。档案索引用 `limit` 1..=32 且只返回引用；`include_bodies` 与缺省 limit 失败闭合。单条正文走 `conversation.record`。档案行只是观察，不是完成。HITL confirm/reject/narrow 与 standing-policy 签发/撤销仅限 management；聊天/task 别名失败闭合（`PROJECT_AGGREGATE_CHANNEL_FORBIDDEN`），不能完成批准。stale 只按机械 `base_state_digest` 不等判定，不是墙钟新鲜度。`preview.request` 返回供画布使用的 `preview_digest`。这不是 Today 页，不是 Inbox 一级，也不是完整 `/ui/` IA。
 
 Windows host 隐藏能力路由（`/management/host/v1/{home.admit,daemon.bind,close.request,offline.record,dsh.bind,recovery.run,recovery.advance,restore-point.record}` 与 `GET /management/host/v1/status`）需要 management bearer。它们持久化 v34 Personal Home `app/`+`data/`、daemon bind、孤儿 DSH 拒绝、close background-or-pause 诚实性、可见 offline/missed 时段、七步有序 wake/restart，以及不是备份的 restore point。task 通道别名失败闭合（`WINDOWS_HOST_CHANNEL_FORBIDDEN`）。托盘只观察与请求，不写权威。原生 tray/ACL/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。
+
+X/Twitter connector walking skeleton 路由（`/management/connector/x/v1/{account.bind,preview.request,preview.confirm,publish.dispatch}` 与 `GET /management/connector/x/v1/status`）需要 management bearer。它们持久化 v35 SecretStore-only bind、digest 绑定的原创 preview、HITL confirm、persist-before-dispatch 发布与诚实 `unknown` readback。task 通道别名失败闭合（`X_CONNECTOR_CHANNEL_FORBIDDEN`）。status 不返回 `secret_ref`。不是 P0 hero chrome。不是业务结果。live X API E2E 为 `not-run`。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

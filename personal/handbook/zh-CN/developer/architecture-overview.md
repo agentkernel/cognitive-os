@@ -24,6 +24,7 @@ sources:
   - path: personal/docs/architecture/project-role-employee.md
   - path: personal/docs/architecture/conversation-memory-vault.md
   - path: personal/docs/architecture/windows-host-background.md
+  - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/docs/architecture/routine-trigger-missed-run.md
   - path: personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md
   - path: personal/docs/architecture/personal-2.0.0-dev-prep-index.md
@@ -31,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:9b54616f113ed2e6fb9caacba58586bd6a1ebf3d545327c2932ba16f3ddba822"
+fingerprint: "sha256:a65cbf8da7ce14298012e89b861ab554f95ade6e181af8d854218d0d45bbb4b7"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -99,7 +100,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   hypothesis；不是 Gate、不是 P11 领取）。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`））。
+  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`）；X/Twitter connector walking skeleton（`P11-T14`）已实现（live X API E2E `not-run`；不是 P0 hero））。
   开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
@@ -117,7 +118,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   scoped Memory admission D01 已在 `main`；
   Routine/Trigger walking skeleton（`P11-T08`）已在 `main`；
   Dual Track `/ui/` IA（`P11-T13`）已在 `main`；
-  Windows host walking skeleton（`P11-T02`）已在 `main`（原生 E2E `not-run`）。前期索引：
+  Windows host walking skeleton（`P11-T02`）已在 `main`（原生 E2E `not-run`）；
+  X/Twitter connector walking skeleton（`P11-T14`）已实现（live X `not-run`；不是 P0 hero）。前期索引：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh

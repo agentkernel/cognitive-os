@@ -184,6 +184,7 @@
         "personal/docs/architecture/project-role-employee.md",
         "personal/docs/architecture/conversation-memory-vault.md",
         "personal/docs/architecture/windows-host-background.md",
+        "personal/docs/architecture/x-twitter-connector.md",
         "personal/docs/architecture/routine-trigger-missed-run.md",
         "clients/docs/design/opc-2.0/**"
       ],
