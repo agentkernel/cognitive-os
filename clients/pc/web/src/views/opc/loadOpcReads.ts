@@ -11,6 +11,20 @@ import {
   projectProjectList,
   type ProjectListRow,
 } from "../../data/projections/projects";
+import {
+  projectAxisKey,
+  projectAxisPath,
+  projectDetailKey,
+  projectDetailPath,
+  projectProjectAxis,
+  projectProjectDetail,
+  projectProjectRoster,
+  projectRosterKey,
+  projectRosterPath,
+  type ProjectAxisStageRow,
+  type ProjectDetailRow,
+  type ProjectRosterRow,
+} from "../../data/projections/projectWork";
 import { appProjections } from "../../data/store";
 import type { Projection } from "../../data/store";
 
@@ -43,6 +57,56 @@ export async function loadPendingPreviewsForReadyProject(
     appProjections,
     HITL_KEY,
     pendingPreviewsPath(id),
+    "management",
+    projectPendingPreviews,
+  );
+}
+
+export async function loadProjectDetail(
+  projectId: string,
+): Promise<Projection<ProjectDetailRow[]>> {
+  return fetchProjection(
+    appProjections,
+    projectDetailKey(projectId),
+    projectDetailPath(projectId),
+    "management",
+    projectProjectDetail,
+  );
+}
+
+export async function loadProjectAxis(
+  projectId: string,
+): Promise<Projection<ProjectAxisStageRow[]>> {
+  return fetchProjection(
+    appProjections,
+    projectAxisKey(projectId),
+    projectAxisPath(projectId),
+    "management",
+    projectProjectAxis,
+  );
+}
+
+export async function loadProjectRoster(
+  projectId: string,
+): Promise<Projection<ProjectRosterRow[]>> {
+  return fetchProjection(
+    appProjections,
+    projectRosterKey(projectId),
+    projectRosterPath(projectId),
+    "management",
+    projectProjectRoster,
+  );
+}
+
+/** N8: missing Project id ⇒ no pending-previews call. */
+export async function loadPendingPreviewsForProject(projectId: string): Promise<void> {
+  if (projectId.length === 0) {
+    return;
+  }
+  await fetchProjection(
+    appProjections,
+    `${HITL_KEY}:${projectId}`,
+    pendingPreviewsPath(projectId),
     "management",
     projectPendingPreviews,
   );

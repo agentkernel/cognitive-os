@@ -106,6 +106,9 @@ describe("route whitelist (R-1)", () => {
   it("accepts known routes with query strings", () => {
     expect(isKnownRoute("GET", "/management/providers/accounts")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/list")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/detail?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/axis?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/roster?project_id=proj-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/pending-previews?subject_ref=proj-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/vault.index?project_id=proj-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);

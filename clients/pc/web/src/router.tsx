@@ -4,6 +4,10 @@ import { SessionGate } from "./shell/SessionGate";
 import { SessionPage } from "./views/SessionPage";
 import { CreateWizardPage } from "./views/opc/CreateWizardPage";
 import { KnowledgePage } from "./views/opc/KnowledgePage";
+import { ProjectDetailPage } from "./views/opc/ProjectDetailPage";
+import { ProjectMembersPage } from "./views/opc/ProjectMembersPage";
+import { ProjectOutputsPage } from "./views/opc/ProjectOutputsPage";
+import { ProjectRunsPage } from "./views/opc/ProjectRunsPage";
 import { ProjectsPage } from "./views/opc/ProjectsPage";
 import { SettingsPage } from "./views/opc/SettingsPage";
 import { TodayPage } from "./views/opc/TodayPage";
@@ -25,6 +29,7 @@ import { SystemPage } from "./views/system/SystemPage";
 /**
  * Route map — Personal 2.0 L1 is Today / Projects / Knowledge; Settings is
  * chrome. `/projects/new` is the five-step create wizard (P12-T02), not L1.
+ * `/projects/:id` plus members/runs/outputs are P12-T03 four submenus.
  * Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
  * Activity/System stay as real secondary routes. Bindings folded into
  * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox/#/hitl
@@ -48,6 +53,38 @@ export function AppRoutes() {
         element={
           <SessionGate channel="management" title="Create Project">
             <CreateWizardPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/:projectId/members"
+        element={
+          <SessionGate channel="management" title="Project members">
+            <ProjectMembersPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/:projectId/runs"
+        element={
+          <SessionGate channel="management" title="Project runs">
+            <ProjectRunsPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/:projectId/outputs"
+        element={
+          <SessionGate channel="management" title="Project outputs">
+            <ProjectOutputsPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/:projectId"
+        element={
+          <SessionGate channel="management" title="Project detail">
+            <ProjectDetailPage />
           </SessionGate>
         }
       />

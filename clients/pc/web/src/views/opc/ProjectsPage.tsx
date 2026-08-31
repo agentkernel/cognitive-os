@@ -1,5 +1,5 @@
 import { useCallback, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
 import { HITL_KEY, type PendingPreviewRow } from "../../data/projections/hitl";
 import { PROJECTS_KEY, PROJECT_LIST_PATH, type ProjectListRow } from "../../data/projections/projects";
@@ -12,8 +12,9 @@ import { ProjectAuthorityPanel } from "./ProjectAuthorityPanel";
 
 /**
  * Projects — L1 inventory of daemon Project rows plus the HITL canvas.
- * Populated only from GET /management/project/v1/list. No create/activate/
- * Confirm. Today deep-links here via ?preview=; not Inbox L1.
+ * Populated only from GET /management/project/v1/list. Open is hash
+ * navigation to `#/projects/:id` four submenus. No create/activate/Confirm
+ * on this list. Today deep-links here via ?preview=; not Inbox L1.
  */
 export function ProjectsPage() {
   const [params] = useSearchParams();
@@ -55,7 +56,8 @@ export function ProjectsPage() {
             {(projects.data ?? []).map((row) => (
               <tr key={row.projectId} data-row-key={row.projectId}>
                 <td>
-                  <code className="cp-mono">{row.projectId}</code>
+                  <code className="cp-mono">{row.projectId}</code>{" "}
+                  <Link to={`/projects/${encodeURIComponent(row.projectId)}`}>Open</Link>
                 </td>
                 <td>{row.state}</td>
                 <td>{row.titleSummary}</td>
