@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 import {
+  projectEmployeeCatalog,
   projectProjectAxis,
   projectProjectDetail,
   projectProjectRoster,
+  uniqueResponsibleSlots,
 } from "./projectWork";
 
 describe("project work projections (P12-T03)", () => {
@@ -73,6 +75,7 @@ describe("project work projections (P12-T03)", () => {
       seated: "true",
       deliverableType: "unknown",
       gapCount: "1",
+      responsibleSlot: "unknown",
     });
   });
 
@@ -110,7 +113,56 @@ describe("project work projections (P12-T03)", () => {
         isCurrentManager: "true",
         runtimeBindingRef: "run-1",
         authorityNote: "employee",
+        responsibleStageIds: "unknown",
       },
     ]);
+  });
+
+  it("maps grant catalog without treating recipe mentions as grants", () => {
+    expect(projectEmployeeCatalog({ status: "ok", catalog: [] })).toEqual([]);
+    expect(
+      projectEmployeeCatalog({ status: "ok", catalog: ["tool.read", "skill.pack"] }),
+    ).toEqual([
+      { capabilityRef: "tool.read", authorityNote: "grant" },
+      { capabilityRef: "skill.pack", authorityNote: "grant" },
+    ]);
+  });
+
+  it("dedupes responsible slots without inventing missing ones", () => {
+    expect(
+      uniqueResponsibleSlots([
+        {
+          stageId: "a",
+          position: "0",
+          title: "A",
+          objective: "unknown",
+          confirmStatus: "unknown",
+          ready: "false",
+          seated: "false",
+          outputDigest: "unknown",
+          deliverableType: "unknown",
+          saveFormat: "unknown",
+          openWith: "unknown",
+          gapCount: "0",
+          responsibleSlot: "manager",
+        },
+        {
+          stageId: "b",
+          position: "1",
+          title: "B",
+          objective: "unknown",
+          confirmStatus: "unknown",
+          ready: "false",
+          seated: "false",
+          outputDigest: "unknown",
+          deliverableType: "unknown",
+          saveFormat: "unknown",
+          openWith: "unknown",
+          gapCount: "0",
+          responsibleSlot: "manager",
+        },
+      ]),
+    ).toEqual(["manager"]);
+    expect(uniqueResponsibleSlots([])).toEqual([]);
   });
 });

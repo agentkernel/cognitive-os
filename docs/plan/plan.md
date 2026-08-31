@@ -1725,7 +1725,7 @@ formal acceptance.
 
 ### P12-T03 — Project four submenus
 
-- **status:** `done` pending merge PR [#296](https://github.com/agentkernel/cognitive-os/pull/296) @ `43b3f092`; required CI [33378377579](https://github.com/agentkernel/cognitive-os/actions/runs/33378377579) **SUCCESS**. Dual Track TS **358/358**. Not T04 eight-tabs. Not T06 Confirm. Claim ceiling `hypothesis`. Unique next = merge then claim `P12-T04`.
+- **status:** `done` merged PR [#296](https://github.com/agentkernel/cognitive-os/pull/296) at `main@1e736aae`; required CI [33378377579](https://github.com/agentkernel/cognitive-os/actions/runs/33378377579) **SUCCESS** at `43b3f092`. Dual Track TS **358/358**. Not T04 eight-tabs. Not T06 Confirm. Claim ceiling `hypothesis`.
 
 - **2.0.0 表面:** `projects` / `project-detail` / `members` / `runs` / `outputs`。
 - **依赖:** P12-T01；P11-T03/T04/T08 权威；P11-T13 L1。**不依赖 T02 mutex。**
@@ -1739,6 +1739,8 @@ formal acceptance.
 - **硬门:** 适用 Phase 12 四条 + Dual Track。
 
 ### P12-T04 — Select-then-configure + eight tabs + add member
+
+- **status:** `in-progress` on `personal/P12-T04-member-config`; lease `lease/personal/P12-T04/member-config`. Claim ceiling `hypothesis`. Unique next = Dual Track TS + required CI.
 
 - **2.0.0 表面:** `add-member`、`member-config`（八标签：duty/input/output/
   skills/tools/prompt/loop/perms）。

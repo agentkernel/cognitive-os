@@ -14,14 +14,18 @@ import {
 import {
   projectAxisKey,
   projectAxisPath,
+  projectCatalogKey,
+  projectCatalogPath,
   projectDetailKey,
   projectDetailPath,
+  projectEmployeeCatalog,
   projectProjectAxis,
   projectProjectDetail,
   projectProjectRoster,
   projectRosterKey,
   projectRosterPath,
   type ProjectAxisStageRow,
+  type ProjectCatalogRow,
   type ProjectDetailRow,
   type ProjectRosterRow,
 } from "../../data/projections/projectWork";
@@ -95,6 +99,19 @@ export async function loadProjectRoster(
     projectRosterPath(projectId),
     "management",
     projectProjectRoster,
+  );
+}
+
+export async function loadEmployeeCatalog(
+  projectId: string,
+  employeeId: string,
+): Promise<Projection<ProjectCatalogRow[]>> {
+  return fetchProjection(
+    appProjections,
+    projectCatalogKey(projectId, employeeId),
+    projectCatalogPath(projectId, employeeId),
+    "management",
+    projectEmployeeCatalog,
   );
 }
 

@@ -186,6 +186,10 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/draft.create")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/preview.request")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/employee.catalog")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/roster.register")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/employee.seat.request")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/employee.seat.confirm")).toBe(true);
   });
 });
 

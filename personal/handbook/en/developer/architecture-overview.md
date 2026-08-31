@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:e619ce0160f622829a229ab8b8e6ab4d9922219e40e09bd3fbd8d17527ebb850"
+fingerprint: "sha256:cf12a9681ae7757a9be10815aef1f7a3db830b5d8fc26657aedc90b326b43f99"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -111,7 +111,7 @@ authority.
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). Phase 12 is registered; `P12-T01` documentation-only is on `main`; `P12-T02` five-step create wizard + empty-home only-create is on `main`; `P12-T03` Project four submenus are done pending merge (not pixel-replica, not 2.1, not T15)). Development-prep index
+  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). Phase 12 is registered; `P12-T01` documentation-only is on `main`; `P12-T02` five-step create wizard + empty-home only-create is on `main`; `P12-T03` Project four submenus are on `main`; `P12-T04` select-then-configure + add member is in progress (not pixel-replica, not 2.1, not T15)). Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
@@ -135,7 +135,7 @@ authority.
   Routine/Trigger walking skeleton (`P11-T08`) is on `main`;
   Dual Track `/ui/` IA (`P11-T13`) is on `main`;
   Windows host walking skeleton (`P11-T02`) is on `main` (native E2E `not-run`);
-  X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X `not-run`; not P0 hero). Phase 12 is registered (`P12-T01` done; `P12-T02` wizard on `main`; `P12-T03` four submenus done pending merge; not T15). Prep index:
+  X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X `not-run`; not P0 hero). Phase 12 is registered (`P12-T01` done; `P12-T02` wizard on `main`; `P12-T03` four submenus on `main`; `P12-T04` member-config in progress; not T15). Prep index:
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its

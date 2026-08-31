@@ -1,8 +1,9 @@
 /**
- * Personal-private Project work projections (P12-T03 Dual Track).
- * Sources are GET /management/project/v1/{detail,axis,roster}.
+ * Personal-private Project work projections (P12-T03/T04 Dual Track).
+ * Sources are GET /management/project/v1/{detail,axis,roster,employee.catalog}.
+ * Writes are POST roster.register / employee.seat.request / employee.seat.confirm.
  * These files never invent a Project, Employee, or completion.
- * Eight-tab member config / add-member is P12-T04. HITL Confirm is P12-T06.
+ * HITL Confirm is P12-T06.
  */
 
 import { asList, asRecord } from "../projections";
@@ -10,6 +11,10 @@ import { asList, asRecord } from "../projections";
 export const PROJECT_DETAIL_PATH = "/management/project/v1/detail";
 export const PROJECT_AXIS_PATH = "/management/project/v1/axis";
 export const PROJECT_ROSTER_PATH = "/management/project/v1/roster";
+export const PROJECT_CATALOG_PATH = "/management/project/v1/employee.catalog";
+export const ROSTER_REGISTER_PATH = "/management/project/v1/roster.register";
+export const SEAT_REQUEST_PATH = "/management/project/v1/employee.seat.request";
+export const SEAT_CONFIRM_PATH = "/management/project/v1/employee.seat.confirm";
 
 export function projectDetailPath(projectId: string): string {
   return `${PROJECT_DETAIL_PATH}?project_id=${encodeURIComponent(projectId)}`;
@@ -23,6 +28,10 @@ export function projectRosterPath(projectId: string): string {
   return `${PROJECT_ROSTER_PATH}?project_id=${encodeURIComponent(projectId)}`;
 }
 
+export function projectCatalogPath(projectId: string, employeeId: string): string {
+  return `${PROJECT_CATALOG_PATH}?project_id=${encodeURIComponent(projectId)}&employee_id=${encodeURIComponent(employeeId)}`;
+}
+
 export function projectDetailKey(projectId: string): string {
   return `opc:project-detail:${projectId}`;
 }
@@ -33,6 +42,10 @@ export function projectAxisKey(projectId: string): string {
 
 export function projectRosterKey(projectId: string): string {
   return `opc:project-roster:${projectId}`;
+}
+
+export function projectCatalogKey(projectId: string, employeeId: string): string {
+  return `opc:project-catalog:${projectId}:${employeeId}`;
 }
 
 export interface ProjectDetailRow {
@@ -61,6 +74,7 @@ export interface ProjectAxisStageRow {
   saveFormat: string;
   openWith: string;
   gapCount: string;
+  responsibleSlot: string;
 }
 
 export interface ProjectRosterRow {
@@ -69,6 +83,12 @@ export interface ProjectRosterRow {
   modelBound: string;
   isCurrentManager: string;
   runtimeBindingRef: string;
+  authorityNote: string;
+  responsibleStageIds: string;
+}
+
+export interface ProjectCatalogRow {
+  capabilityRef: string;
   authorityNote: string;
 }
 
@@ -126,6 +146,7 @@ export function projectProjectAxis(body: unknown): ProjectAxisStageRow[] {
       saveFormat: stated(output.save_format),
       openWith: stated(output.open_with),
       gapCount: String(gaps.length),
+      responsibleSlot: stated(record.responsible_slot),
     });
   }
   return rows;
@@ -150,7 +171,39 @@ export function projectProjectRoster(body: unknown): ProjectRosterRow[] {
           : stated(row.is_current_manager),
       runtimeBindingRef: stated(row.runtime_binding_ref),
       authorityNote,
+      responsibleStageIds: Array.isArray(row.responsible_stage_ids)
+        ? row.responsible_stage_ids.filter((id): id is string => typeof id === "string").join(", ")
+        : stated(row.responsible_stage_ids),
     });
   }
   return rows;
+}
+
+export function projectEmployeeCatalog(body: unknown): ProjectCatalogRow[] {
+  const record = asRecord(body);
+  const authorityNote = stated(record.authority_note, "grant");
+  const rows: ProjectCatalogRow[] = [];
+  const catalog = Array.isArray(record.catalog) ? record.catalog : [];
+  for (const item of catalog) {
+    if (typeof item !== "string" || item.length === 0) {
+      continue;
+    }
+    rows.push({ capabilityRef: item, authorityNote });
+  }
+  return rows;
+}
+
+export function uniqueResponsibleSlots(stages: ProjectAxisStageRow[]): string[] {
+  const seen = new Set<string>();
+  const slots: string[] = [];
+  for (const stage of stages) {
+    if (stage.responsibleSlot.length === 0 || stage.responsibleSlot === "unknown") {
+      continue;
+    }
+    if (!seen.has(stage.responsibleSlot)) {
+      seen.add(stage.responsibleSlot);
+      slots.push(stage.responsibleSlot);
+    }
+  }
+  return slots;
 }

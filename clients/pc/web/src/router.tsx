@@ -5,6 +5,8 @@ import { SessionPage } from "./views/SessionPage";
 import { CreateWizardPage } from "./views/opc/CreateWizardPage";
 import { KnowledgePage } from "./views/opc/KnowledgePage";
 import { ProjectDetailPage } from "./views/opc/ProjectDetailPage";
+import { AddMemberPage } from "./views/opc/AddMemberPage";
+import { MemberConfigPage } from "./views/opc/MemberConfigPage";
 import { ProjectMembersPage } from "./views/opc/ProjectMembersPage";
 import { ProjectOutputsPage } from "./views/opc/ProjectOutputsPage";
 import { ProjectRunsPage } from "./views/opc/ProjectRunsPage";
@@ -30,6 +32,7 @@ import { SystemPage } from "./views/system/SystemPage";
  * Route map — Personal 2.0 L1 is Today / Projects / Knowledge; Settings is
  * chrome. `/projects/new` is the five-step create wizard (P12-T02), not L1.
  * `/projects/:id` plus members/runs/outputs are P12-T03 four submenus.
+ * `/projects/:id/members/new` and `/members/:memberId` are P12-T04.
  * Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
  * Activity/System stay as real secondary routes. Bindings folded into
  * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox/#/hitl
@@ -53,6 +56,22 @@ export function AppRoutes() {
         element={
           <SessionGate channel="management" title="Create Project">
             <CreateWizardPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/:projectId/members/new"
+        element={
+          <SessionGate channel="management" title="Add member">
+            <AddMemberPage />
+          </SessionGate>
+        }
+      />
+      <Route
+        path="/projects/:projectId/members/:memberId"
+        element={
+          <SessionGate channel="management" title="Member configuration">
+            <MemberConfigPage />
           </SessionGate>
         }
       />

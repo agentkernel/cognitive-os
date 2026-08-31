@@ -1,7 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { Link, useParams } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
-import { EmptyState } from "../../components/states";
 import {
   PROJECT_ROSTER_PATH,
   projectRosterKey,
@@ -14,13 +13,12 @@ import { loadProjectRoster } from "./loadOpcReads";
 import { ProjectWorkNav } from "./ProjectWorkNav";
 
 /**
- * Members — daemon GET roster. Select-then-view only.
- * Eight tabs and add-member are P12-T04. No Install store.
+ * Members — daemon GET roster. Select-then-configure via member-config.
+ * Add member is Intent. No Install store. No member budget.
  */
 export function ProjectMembersPage() {
   const { projectId = "" } = useParams();
   const roster = useProjection<ProjectRosterRow[]>(projectRosterKey(projectId));
-  const [selectedId, setSelectedId] = useState<string | undefined>();
   const refresh = useCallback(async () => {
     if (projectId.length === 0) {
       return;
@@ -29,21 +27,20 @@ export function ProjectMembersPage() {
   }, [projectId]);
   useEffect(() => {
     void refresh();
-    setSelectedId(undefined);
   }, [refresh]);
-  const selected = (roster.data ?? []).find((row) => row.employeeId === selectedId);
+  const addHref = projectId ? `/projects/${encodeURIComponent(projectId)}/members/new` : "/projects";
 
   return (
     <section data-page="opc-project-members">
       <PageHeader
         title="Project members"
-        lede="Employee roster for this Project. Not Installed Agents."
+        lede="Employee roster for this Project. Select a row to configure. Not Installed Agents."
       />
       <HonestyNote>
         Product origin is daemon-served hash /ui/. GET {PROJECT_ROSTER_PATH} is
-        the list. Click a row to view identity. Eight-tab configuration and add
-        member are a later card. This page does not Install and does not mint
-        a seat. Role is not merged into Agent.
+        the list. Add member writes join as management Intent. This page does
+        not Install and does not mint a seat locally. Role is not merged into
+        Agent. Member-level budget is not chrome.
       </HonestyNote>
       <p className="cp-quiet">
         <Link to="/projects">Projects list</Link>
@@ -53,13 +50,17 @@ export function ProjectMembersPage() {
             · <code className="cp-mono">{projectId}</code>
           </>
         ) : null}
+        {" · "}
+        <Link to={addHref} className="cp-button">
+          Add member
+        </Link>
       </p>
       {projectId ? <ProjectWorkNav projectId={projectId} /> : null}
       <DaemonReadPanel
         projection={roster}
         surface="Project members"
         emptyTitle="Project members: empty roster"
-        emptyBody="authority_note empty-roster. That is not a missing Team space. No member is seated. This page does not offer Install or a fake Add control."
+        emptyBody="authority_note empty-roster. That is not a missing Team space. No member is seated. Add member still requires PlanRevision slots. This page does not offer Install."
         region="opc-project-roster"
       >
         <table className="cp-table">
@@ -75,14 +76,12 @@ export function ProjectMembersPage() {
             {(roster.data ?? []).map((row) => (
               <tr key={row.employeeId} data-row-key={row.employeeId}>
                 <td>
-                  <button
-                    type="button"
+                  <Link
                     className="cp-button"
-                    aria-pressed={selectedId === row.employeeId}
-                    onClick={() => setSelectedId(row.employeeId)}
+                    to={`/projects/${encodeURIComponent(projectId)}/members/${encodeURIComponent(row.employeeId)}`}
                   >
                     {row.employeeId}
-                  </button>
+                  </Link>
                 </td>
                 <td>{row.state}</td>
                 <td>{row.isCurrentManager}</td>
@@ -90,38 +89,6 @@ export function ProjectMembersPage() {
             ))}
           </tbody>
         </table>
-        {selected ? (
-          <table className="cp-table" data-region="opc-member-selected">
-            <caption className="cp-quiet">Selected Employee — identity only</caption>
-            <tbody>
-              <tr>
-                <td>Employee</td>
-                <td>
-                  <code className="cp-mono">{selected.employeeId}</code>
-                </td>
-              </tr>
-              <tr>
-                <td>State</td>
-                <td>{selected.state}</td>
-              </tr>
-              <tr>
-                <td>Model bound</td>
-                <td>{selected.modelBound}</td>
-              </tr>
-              <tr>
-                <td>Runtime binding</td>
-                <td>
-                  <code className="cp-mono">{selected.runtimeBindingRef}</code>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        ) : (
-          <EmptyState title="Project members: no member selected">
-            Pick a row. This page does not default the first Employee. Eight-tab
-            configuration is not this card.
-          </EmptyState>
-        )}
       </DaemonReadPanel>
     </section>
   );

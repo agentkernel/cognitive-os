@@ -122,6 +122,12 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/project/v1/confirm")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/draft.create")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/preview.request")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/employee.catalog?project_id=proj-1&employee_id=emp-1")).toBe(
+      true,
+    );
+    expect(isKnownRoute("POST", "/management/project/v1/roster.register")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/employee.seat.request")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/employee.seat.confirm")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/vault.apply-authority")).toBe(false);
     expect(isKnownRoute("POST", "/management/agent/transition")).toBe(false);
     expect(isKnownRoute("GET", "/management/providers/accounts/../../etc")).toBe(false);
