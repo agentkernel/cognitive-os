@@ -60,7 +60,7 @@ The daemon records missed causes and requested times. Resume:
 4. coalesce according to queue-latest;
 5. classify low-risk internal versus consequential work;
 6. admit automatic catch-up only inside current policy;
-7. send publishing/communication/spend/delete/expansion to Inbox.
+7. send publishing/communication/spend/delete/expansion to the Project HITL canvas (not a first-level Inbox).
 
 An occurrence is not silently dropped or marked complete because its trigger
 time passed.

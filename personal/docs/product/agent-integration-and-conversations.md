@@ -12,7 +12,7 @@
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
 - Prototype identity: owner-approved 2026-08-30 current chrome is
   personal-20-opc-e2e-optimized-v9. v8 is the prior approved baseline (not overwritten). Archived V2 is not current chrome. Canvas-only HITL and daemon authority path remain.
-- Existing architecture inputs (pending reconciliation):
+- Existing architecture inputs:
   [Agent lifecycle](../architecture/agent-shell-and-agent-lifecycle.md) and
   [Project, Role, and Employee](../architecture/project-role-employee.md)
 - Chinese mirror:

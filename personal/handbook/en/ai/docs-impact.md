@@ -70,7 +70,8 @@ silently:
   to `dev.architecture-overview` and this page. Informative only; canvas v9
   is the frozen design prototype, not the product. Dual Track hashes on
   daemon `/ui/` are Now / hypothesis chrome after `P12-T01`–`T09` closed.
-  Authority remains the P11 walking skeleton. Not Gate, release, or a T15
+  Architecture chapter bodies no longer present Team/Inbox as 2.0.0 L1
+  (`DOC-P12-DEBT`). Authority remains the P11 walking skeleton. Not Gate, release, or a T15
   claim.
 - `personal-2-0-0-dev-prep` routes the Personal 2.0.0 development-prep index
   `personal/docs/architecture/personal-2.0.0-dev-prep-index.md`) to

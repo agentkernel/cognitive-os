@@ -67,7 +67,7 @@ evidence.
 
 Project, employee, and Task budgets attenuate. Enforcement evaluates current
 envelopes before dispatch, stops new work at the boundary, retains unknown
-Effects, and creates an Inbox adjustment request. It cannot mint budget or
+Effects, and creates a HITL canvas adjustment request (not Inbox L1). It cannot mint budget or
 silently reroute.
 
 Quota, usage, and cost retain Provider/source/period/model/pricing/metering

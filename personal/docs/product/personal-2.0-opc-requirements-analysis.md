@@ -69,10 +69,10 @@ Source ownership remains separated:
 | Current implementation and evidence facts | `docs/plan/PROGRESS.md` |
 
 Architecture, ADR, formal-plan, and handbook material still carrying the
-2026-08-27 OPC vocabulary is **pending architecture/plan/handbook
-reconciliation**. It remains valid as dated decision or implementation fact,
-but it does not override the product semantics in this baseline. This delivery
-does not modify those surfaces.
+2026-08-27 OPC vocabulary remains **historical dated fact**. Dual Track L1,
+P12 `/ui/` chrome, and the implementation mapping are reconciled (P12 Remaining
+= 0; PR [#303](https://github.com/agentkernel/cognitive-os/pull/303)). Dated
+copies do not override the product semantics in this baseline.
 
 All absent product behavior is labelled **Requires-backend**; behavior that
 also needs a qualified native or external environment is labelled
@@ -819,6 +819,12 @@ plans define them.
 The owner decisions themselves are closed for this baseline; these gaps are
 validation and downstream-reconciliation work, not questions to re-ask in this
 document.
+
+Later closure (2026-09-01): Dual Track L1, P12 Remaining = 0 `/ui/` chrome, and
+the implementation mapping are reconciled (PR
+[#303](https://github.com/agentkernel/cognitive-os/pull/303) and this leftover
+docs pass). Team/Inbox are not 2.0.0 L1. Dated 2026-08-27 ADR/legacy copies
+remain historical. Handbook follows mapped sources.
 
 ## L. Explicit supersession map from the 2026-08-27 OPC baseline
 

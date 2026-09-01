@@ -285,11 +285,12 @@ outside 2.0; the product has no user-facing adapter marketplace or switching
 promise. GitHub OpenAI Codex is in 2.0 scope as the assistant **memory
 architecture**, not as a selectable Member execution engine.
 
-The 2026-08-27 architecture, ADR, formal-plan, and handbook descriptions that
+The 2026-08-27 architecture, ADR, formal-plan, and handbook copies that
 still expose Installed Agents, top-level Team/Inbox, the prior Role/Employee
-chain, or a different MCP/budget policy are **pending architecture/plan/
-handbook reconciliation**. They remain dated facts and are not rewritten by
-this product-only scope update.
+chain, or a different MCP/budget policy remain **historical dated facts**.
+Dual Track L1 and P12 `/ui/` chrome do not expose Team/Inbox as first-level;
+the implementation mapping is rewritten. Those dated copies are not current
+chrome.
 
 ## 6. Local data and recovery
 

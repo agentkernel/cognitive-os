@@ -54,9 +54,9 @@ Full Grep of `.cursor/rules/*.mdc` and `AGENTS.md` for current-chrome six-family
 IA, Team/Inbox as first-level destinations, or “v9” as the product name:
 **no hits**. Adapter rules already route to Operating Model / axioms / handbook
 sync. **No adapter rewrite.** Architecture README mermaid first-level nav is
-Today / Projects / Knowledge (Team/Inbox removed in `DOC-P12-ALIGN`). Other
-architecture-chapter bodies may still say Team/Inbox until a later wording
-pass; this index does not batch-replace those chapters.
+Today / Projects / Knowledge (Team/Inbox removed in `DOC-P12-ALIGN`). Chapter
+bodies that still presented Team/Inbox as 2.0.0 L1 were aligned in
+`DOC-P12-DEBT`; Dual Track L1 is Today / Projects / Knowledge + Settings.
 
 ## Testing and environment (hard gates)
 

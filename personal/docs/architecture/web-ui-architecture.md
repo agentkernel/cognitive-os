@@ -27,7 +27,7 @@ OpcAppShell
   -> channel/session boundary
   -> route + Project/employee scope
   -> independent projection caches
-  -> Today/Projects/Team/Knowledge/Inbox/Settings
+  -> Today/Projects/Knowledge/Settings
   -> one Conversation rail/composer
   -> structured preview + receipt surface
   -> state/freshness/capability boundary
@@ -38,7 +38,7 @@ The client consumes separate daemon projections rather than one universal DTO:
 - Project/Goal/Plan/Routine/Task/Attempt;
 - Role/Assignment/Employee/runtime;
 - Conversation/archive/retrieval/Memory;
-- Inbox/approval/Effect/recovery;
+- HITL canvas / approval / Effect / recovery (not Inbox L1);
 - Provider/binding/budget/usage;
 - Installed Agent/supply-chain/health;
 - Windows host/background/missed state.
@@ -49,8 +49,9 @@ authority, total order, completion, policy, or conflict resolution.
 
 ## 3. Route and state boundary
 
-The target routes are design paths under Today, Projects, Team, Knowledge,
-Inbox, and Settings. Current route inventory remains a frozen P7 input and is
+The target routes are design paths under Today, Projects, Knowledge, and
+Settings. Team and Inbox are not first-level destinations; HITL opens on the
+Project canvas. Current route inventory remains a frozen P7 input and is
 not silently rewritten as backend support.
 
 Every route defines loading, empty, partial, stale, permission, error, unknown,
@@ -108,12 +109,13 @@ Daemon redaction is authoritative; client redaction is defense in depth.
 | Capability | Status |
 |---|---|
 | daemon-served same-origin client and current P7 surfaces | **Now** |
-| OPC IA/app shell | **Requires-backend** |
+| Dual Track L1 (Today / Projects / Knowledge + Settings + rail) | **Now / hypothesis chrome** |
+| remaining OPC completeness beyond Dual Track L1 | **Requires-backend** |
 | Project/Role/Employee and Routine/Attempt projections | **Requires-backend** |
 | Personal Conversation archive/index/retrieval | **Requires-backend** |
 | Personal Assistant/Pi integration and single-composer persistence | **Requires-backend** |
 | managed DSH Installed Agent dossier/runtime actions | **Requires-backend + Requires-environment** |
-| Inbox approval/recovery/missed-run composition | **Requires-backend** |
+| HITL canvas approval/recovery/missed-run (not Inbox L1) | **Now / hypothesis chrome** |
 | Windows tray/background/close choice | **Requires-backend + Requires-environment** |
 | X connector actions | **Requires-backend + Requires-environment** |
 

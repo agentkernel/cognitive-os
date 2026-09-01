@@ -25,7 +25,7 @@ scope. They do not implement Windows OPC.
 ```mermaid
 flowchart TB
   owner["Owner"]
-  client["Windows OPC client\nToday · Projects · Team · Knowledge · Inbox"]
+  client["Windows OPC client\nToday · Projects · Knowledge + Settings"]
   assistant["Personal Assistant\nPi hidden candidate engine"]
   daemon["Personal daemon\napplication + sole authority"]
   project["Project domain\nCharter · Goal · Plan · Role · Employee"]
@@ -53,7 +53,9 @@ flowchart TB
   external -->|"observation/receipt"| truth
 ```
 
-Dependency direction is toward daemon-owned domain ports. Windows, DSH, Pi,
+Dependency direction is toward daemon-owned domain ports. Dual Track L1 on
+the client is Today / Projects / Knowledge + Settings; Team and Inbox are
+not first-level destinations. Windows, DSH, Pi,
 Provider, Vault, and connector adapters implement those ports; they never
 become authority owners.
 
