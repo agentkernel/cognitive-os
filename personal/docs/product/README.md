@@ -164,11 +164,11 @@ object hierarchy, or everyday experience.
   original index. It is not current semantics.
 - Accepted ADR-0056/0058/0059 remain dated decisions. Current product semantics
   is amended by the 2026-08-28 owner requirements and the 2026-08-28/29
-  workshop scheme. Architecture, ADR, formal plan, and handbook text that still
-  reflects the 2026-08-27 object model or IA, or the V2 CEO-rail chrome, is
-  **pending architecture/plan/handbook reconciliation**; accepted history is
-  not rewritten here. Handbook generated pages were not regenerated in the
-  workshop delivery.
+  workshop scheme. Dual Track L1, P12 `/ui/` chrome, and the implementation
+  mapping are reconciled (`P12-T01`–`T09` Remaining = 0; PR
+  [#303](https://github.com/agentkernel/cognitive-os/pull/303)). Dated
+  2026-08-27 ADR/legacy corpus and V2 CEO-rail remain historical and are not
+  current chrome. Handbook follows the mapped sources.
 
 ## Fixed safety and claim boundaries
 

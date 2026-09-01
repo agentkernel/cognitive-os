@@ -11,7 +11,7 @@
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
 - Prototype identity: owner-approved 2026-08-30 current chrome is
   personal-20-opc-e2e-optimized-v9. v8 is the prior approved baseline (not overwritten). Archived V2 is not current chrome. Canvas-only HITL and daemon authority path remain.
-- Existing architecture input (pending reconciliation):
+- Existing architecture input:
   [Routine, Trigger, and missed-run](../architecture/routine-trigger-missed-run.md)
 - UX surface:
   [Contextual attention and recovery journey](user-journeys.md#6-resolve-contextual-attention-approval-and-recovery)

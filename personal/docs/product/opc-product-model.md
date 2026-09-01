@@ -15,7 +15,7 @@
 - Prototype identity: owner-approved 2026-08-30 current chrome is
   personal-20-opc-e2e-optimized-v9. v8 is the prior approved baseline.
   Archived V2 is not current chrome. Canvas-only HITL and daemon authority path remain.
-- Existing architecture input (pending reconciliation):
+- Existing architecture input:
   [Project, Role, and Employee](../architecture/project-role-employee.md)
 
 ## 1. Product object chain

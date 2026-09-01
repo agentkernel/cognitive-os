@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:3a46b6641e8cf51832242f4d2c2fc72c96f73e91a1b66efdf4ddbc29e5aae178"
+fingerprint: "sha256:74ca32cac52e2f9e9052546bafc471cdb4a1b9f8b29e4717c245b05c86ab00c9"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -95,6 +95,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   `personal-20-opc-e2e-optimized-v9`），不是产品。产品源是 daemon `/ui/`。
   Dual Track L1 在 `P12-T01`–`T09` 收口后是 **Now / hypothesis chrome**
   （merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）。
+  架构章节正文不再把 Team/Inbox 写成 2.0.0 一级（`DOC-P12-DEBT`）。
   权威仍是 P11 walking skeleton。NVDA/200%/host-theme 仍 `not-run`。
   `P11-T15` 独立 / not-started。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。

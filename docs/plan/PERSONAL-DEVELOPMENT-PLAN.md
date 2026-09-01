@@ -291,7 +291,7 @@
 | P7 | Linux 1.0 Product Operability 与后续 RC | 对应 P1/P2/P3/P4/P5/P7 implementation requirements | `GMVP-LINUX` 后按声明范围汇合 RC | 用未执行能力扩大 1.0/RC |
 | P10 | superseded desktop/MCP 计划 | P10-T01/T02 已完成历史事实 | P10-T03..T18 已明确 disposition/cancelled | 静默改旧验收或把 cancelled 写成完成 |
 | P11 | Windows-first OPC 2.0（chrome = Personal 2.0.0） | P11-T01 docs closure；T01–T14 `done`；T15 unparked | T13 Dual Track L1 不等于完整 `/ui/` 验收；T15 ≠ prototype done；release/signing/B01-W 仍独立 | 用 docs/Canvas/ordinary CI/Linux/Win-GNU 证据宣称 Windows、DSH、connector 或 release；把六族 `/ui/` 写成已是 OPC IA；把 T15 塞进 P12 |
-| P12 | Frozen-prototype functional completeness on daemon `/ui/` | P12-T01/T02/T03 **done**；按 typed dependency 领取 T04 | 默认可走场景接到 `/ui/`（非像素复制）；Dual Track 诚实空态；NVDA/200%/host-theme 挂单；T15 仍独立 | 新开平行计划/PRD；把 T13 L1 或 hidden T02/T07/T14 写成完整 Today/Projects；Vite/canvas 当产品源；假 Create/Activate/Approve；把缺口推到 2.1 |
+| P12 | Frozen-prototype functional completeness on daemon `/ui/` | P12-T01–T09 **done**；P12 Remaining = 0；do not auto-claim T15 | 默认可走场景接到 `/ui/`（非像素复制）；Dual Track 诚实空态；NVDA/200%/host-theme 挂单；T15 仍独立 | 新开平行计划/PRD；把 T13 L1 或 hidden T02/T07/T14 写成完整 Today/Projects；Vite/canvas 当产品源；假 Create/Activate/Approve；把缺口推到 2.1 |
 
 ### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
@@ -313,7 +313,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Personal 2.0 MCP seventh family | ADR-0057/0058 retained；future advanced successor | 不阻塞 OPC P0；不自动启用 DSH native MCP/base tools 或 advertised tools |
 | Multi-Agent | P6-T01..T04、B11 | 默认关闭；NO-GO 是合法结果 |
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
-| Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01/T02/T03 done；T04..T09 把冻结 prototype 默认可走场景接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
+| Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01–T09 done；冻结 prototype 默认可走场景已接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies

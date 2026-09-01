@@ -60,7 +60,8 @@ source map 有意让已采纳目标无法静默变化：
   历史文件名与规则 id 含 v9，不是产品版本）
   到 `dev.architecture-overview` 与本页。仅 informative；canvas v9 是冻结设计原型，
   不是产品。daemon `/ui/` Dual Track hash 在 `P12-T01`–`T09` 收口后是 Now /
-  hypothesis chrome。权威仍是 P11 walking skeleton。不是 Gate、release 或 T15 领取。
+  hypothesis chrome。架构章节正文不再把 Team/Inbox 写成 2.0.0 一级（`DOC-P12-DEBT`）。
+  权威仍是 P11 walking skeleton。不是 Gate、release 或 T15 领取。
 - `personal-2-0-0-dev-prep` 路由 Personal 2.0.0 开发前期索引
   （`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`）到
   `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；Phase 12

@@ -10,8 +10,11 @@
   sequential member init), then owner-approved v8 2026-08-29 (member
   select-then-configure; Project four work scenes), then owner-approved v9
   2026-08-30 (current chrome). This document owns the
-  amended product intent; architecture and implementation-plan reconciliation
-  remain deferred.
+  amended product intent. Architecture Dual Track L1, P12 `/ui/`
+  completeness, and the implementation mapping are reconciled
+  (`P12-T01`–`T09` Remaining = 0; mapping rewritten in
+  [DOC-P12-ALIGN](https://github.com/agentkernel/cognitive-os/pull/303)).
+  Canvas v9 is the frozen design prototype; product origin is daemon `/ui/`.
 - Requirements baseline:
   [Personal 2.0 OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Exact scope: [Personal 2.0 scope](personal-2.0-scope.md)
@@ -135,8 +138,8 @@ available until all five complete and ⑤ 验收 succeeds:
 
 Owner-confirmed prototype amendment (2026-08-29): **process before members**.
 The 2026-08-28/29 journey-subtraction workshop recorded members then process;
-that Q&A remains historical record and is not rewritten. Architecture and
-formal-plan reconciliation remain deferred.
+that Q&A remains historical record and is not rewritten. Architecture Dual
+Track L1 and formal-plan P12 cards are reconciled; they are not deferred.
 
 Create / members / test / joint right chat defaults to Personal Assistant.
 Canvas edit → Enter → confirm dialog → Owner message in chat; assistant
@@ -382,8 +385,9 @@ still require separate research before numerical claims.
 
 ## 8. Non-claims
 
-This document changes product semantics only. Architecture, ADR, formal-plan,
-and handbook reconciliation remain pending by scope. It does not implement
+This document changes product semantics only. Dual Track L1, P12 `/ui/` chrome,
+and the OPC implementation mapping are reconciled as of P12 Remaining = 0 and
+PR [#303](https://github.com/agentkernel/cognitive-os/pull/303). It does not implement
 or qualify Windows, DSH, Pi, Project, Conversation, Vault, Trigger, UI,
 Provider routing, capability acquisition, or parked X/Twitter connectivity.
 It creates no Gate, release, Profile, market, usability, performance,

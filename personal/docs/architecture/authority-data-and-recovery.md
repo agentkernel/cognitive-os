@@ -109,7 +109,7 @@ confirmation.
 
 Current Task/Effect/fencing/verification authority remains **Now**. OPC Project/
 Role/Employee, Conversation archive, Routine/missed, Windows/DSH recovery,
-binding hierarchy, and Inbox composition are **Requires-backend**; Windows
+binding hierarchy, and HITL canvas composition (not Inbox L1) are **Requires-backend**; Windows
 validation **Requires-environment**.
 
 This architecture does not implement or qualify those targets and creates no
