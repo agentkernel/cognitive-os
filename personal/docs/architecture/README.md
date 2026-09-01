@@ -30,14 +30,18 @@ transition, current status, support statement, or Gate result.
 Linux Personal 1.0 remains six-family and Pi-qualified. The Rust daemon is the
 sole authority writer. Current Resource Manager, Provider Control Plane,
 Task/Effect/verification, learning admission, adapter registration, dsh Path B,
-and daemon-served `/ui/` retain their implemented boundaries. Native dsh web is
-a separate current surface. None establishes Windows OPC support.
+and daemon-served `/ui/` retain their implemented boundaries. Dual Track L1
+(Today / Projects / Knowledge + Settings + rail) is **Now / hypothesis
+chrome** on `/ui/` after `P11-T13` and `P12-T01`–`T09`. Team and Inbox are
+not first-level. Authority remains the P11 walking skeleton. Native dsh web
+is a separate current surface. None establishes Windows OPC support. Canvas
+v9 is the frozen design prototype, not the product.
 
 ### Personal 2.0 target
 
 ```mermaid
 flowchart TB
-  ui["Today · Projects · Team · Knowledge · Inbox\nSettings + right Personal Assistant"]
+  ui["Today · Projects · Knowledge\nSettings + right Personal Assistant"]
   daemon["Personal Rust daemon\nsole authority writer"]
   project["Project authority\nCharter · Goal · Plan · Role · Employee"]
   work["Work authority\nRoutine · Trigger · Task · Attempt · Effect · Evidence"]

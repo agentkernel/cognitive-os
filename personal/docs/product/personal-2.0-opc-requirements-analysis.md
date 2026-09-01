@@ -322,7 +322,9 @@ the current 2.0 object model. See section L for migration.
   or skip ④⑤ after 总预览; it does not restart at ①.
   Owner-confirmed prototype amendment (2026-08-29): **process before members**.
   The workshop snapshot recorded members then process; that Q&A is unchanged.
-  Architecture and formal-plan reconciliation remain deferred.
+  After P12 Remaining=0, Dual Track L1 on daemon `/ui/` is **Now /
+  hypothesis chrome** (not Gate). Canvas v9 remains the frozen design
+  prototype; product origin is daemon `/ui/`.
 - **PRJ-01a:** Empty Home (no Project): center is only Create Project; right
   chat is hidden. Create Project jumps to the Projects create page. With a
   model, right chat opens as the normal assistant; without a model, chat only
@@ -850,7 +852,7 @@ the following replacements:
 | ordinary chat is not Memory (2026-08-28 KNOW-04) | chat auto-admits to inspectable/forgettable Memory; Obsidian as knowledge 底座; Codex as assistant memory architecture | Codex is not a user-facing execution-engine store; Obsidian app install is not required |
 | one-shot create then daily Today | five-stage create wizard; daily Today only after ⑤ 验收 | empty Home = Create Project only; chat hidden until create page |
 | superseded post-subtraction `personal-20-opc-e2e` plus optimized v1–v8 as current chrome | owner-approved current chrome is [`personal-20-opc-e2e-optimized-v9`](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx); v8 is the prior approved baseline (not overwritten); v5–v7 remain in the live folder and are not current; source and v1–v4 are in [pre-v5-approval history](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md); V2 remains in [pre-subtraction history](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md) | Canvas runtime/render, NVDA, host-theme contrast, and 200% real layout remain `not-run`; Owner prototype approval is not usability, accessibility, backend, Gate, release, qualification, or acceptance |
-| workshop members-then-process as current create order | ① project → ② process → ③ members → ④ per-stage test → ⑤ joint; sequential member init; ④ seated-member gate | workshop Q&A is historical; architecture/formal-plan reconciliation remains deferred |
+| workshop members-then-process as current create order | ① project → ② process → ③ members → ④ per-stage test → ⑤ joint; sequential member init; ④ seated-member gate | workshop Q&A is historical; Dual Track L1 on `/ui/` is Now / hypothesis chrome after P12 Remaining=0 |
 
 Accepted 2026-08-27 ADRs and formal-plan records are not rewritten by this map.
 They are dated inputs awaiting the explicit downstream reconciliation named in

@@ -17,8 +17,9 @@ Windows-first OPC target，包含 Project/Role/Employee/Routine/Attempt authorit
 Personal-owned Conversation/Vault/Memory、hidden Pi Assistant engine、preinstalled
 managed DSH child、Provider/budget hierarchy 与 OPC UI。每个缺失项都是
 `Requires-backend`/`Requires-environment`，不是实现事实。MCP advanced/deferred；
-native mobile/E2E relay remote 属于 2.1。owner 批准的当前交互原型是
-`personal-20-opc-e2e-optimized-v9`（Canvas 规格，不是 `/ui/`）。单模块维护入口：
+native mobile/E2E relay remote 属于 2.1。Canvas v9 是冻结设计原型，不是产品。
+产品源是 daemon `/ui/`。Dual Track L1 是 **Now / hypothesis chrome**。权威仍是
+P11 walking skeleton。`P11-T15` 独立 / not-started。单模块维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 
 导引：

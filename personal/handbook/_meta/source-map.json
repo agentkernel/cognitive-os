@@ -197,7 +197,7 @@
         "personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md"
       ],
       "docs": ["dev.architecture-overview", "ai.docs-impact"],
-      "note": "CognitiveOS Personal 2.0.0 (os-personal 2.0.0) design-frozen Scene → daemon mapping; historical source filename and rule id contain v9 — not a product version. Informative; not implementation, support, Gate, or a P11 claim. Authority object id = Employee; product chrome Member Runtime until post-completion reconciliation. P11-T02–T15 plan cards aligned 2026-08-30; implementation remains unclaimed."
+      "note": "CognitiveOS Personal 2.0.0 (os-personal 2.0.0) design-frozen Scene → daemon mapping; historical source filename and rule id contain v9 — not a product version. Canvas v9 is the frozen design prototype, not the product. Dual Track hashes on daemon `/ui/` are Now / hypothesis chrome after `P12-T01`–`T09` closed. Authority remains the P11 walking skeleton. Informative; not Gate, release, or a T15 claim."
     },
     {
       "id": "personal-2-0-0-dev-prep",
@@ -205,7 +205,7 @@
         "personal/docs/architecture/personal-2.0.0-dev-prep-index.md"
       ],
       "docs": ["dev.architecture-overview", "ai.docs-impact"],
-      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only; not implementation, thaw, Gate, or a P11 claim."
+      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only. P12-T01–T09 done; T15 independent / not-started. Not implementation, Gate, or a T15 claim."
     },
     {
       "id": "dsh-recovery-docs",

@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:add78b1853e41200db854d78d6aa190bbea8d69d9bd0da61d9b7efafdeaa7562"
+fingerprint: "sha256:367fb6a68961ddfbcf7161ad4532f701922bd58e8c9c5caf71e5deda64bd59bb"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -84,8 +84,9 @@ Owner
 ```
 
 UI 是 Today / Projects / Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
-不是一级导航。2026-08-30 已定档 chrome 是 **CognitiveOS Personal 2.0.0**；canvas
-文件名可保留 `personal-20-opc-e2e-optimized-v9`，不是 daemon `/ui/`。创建顺序为项目 → 流程 →
+不是一级导航。Canvas v9 是冻结设计原型；文件名可保留
+`personal-20-opc-e2e-optimized-v9`。产品源是 daemon `/ui/`。Dual Track L1 是
+**Now / hypothesis chrome**。权威仍是 P11 walking skeleton。创建顺序为项目 → 流程 →
 成员 → 分环测试 → 联调。单模块 PM/UI 维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是隐藏托管 Member 执行引擎
@@ -98,9 +99,12 @@ Routine 支持 manual/schedule/qualified-event Trigger、no-overlap、queue-late
 missed work。HITL 只在画布。Provider binding 按 global→Project→employee→Task 解析；
 actual usage 与 Provider quota 分离；未知费用不得显示为 0；成员级预算属 2.1 / Deferred。
 
-上述仍只是 target。`Requires-backend`/`Requires-environment` 表示不能展示为可用。
+Dual Track L1 chrome 在 daemon `/ui/` 上是 **Now / hypothesis chrome**。权威仍是
+P11 walking skeleton：无权威则诚实 empty / Requires-backend；零假 Create /
+Activate / Approve。Windows host/DSH qualification 仍是 `Requires-environment`。
 MCP 保留为 advanced deferred seventh family；native mobile/E2EE relay remote 属于 2.1；
-future Agent 需要独立 qualification。
+future Agent 需要独立 qualification。NVDA/200%/host-theme 仍 `not-run`。`P11-T15`
+独立 / not-started。
 
 ## 一次交互如何流动
 

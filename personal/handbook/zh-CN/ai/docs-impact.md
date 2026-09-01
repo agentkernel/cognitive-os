@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:c2c8acf0f3d4150ac7676d7c1fc6be7ed07111a3e96935c27164720220fd9b62"
+fingerprint: "sha256:840ad92cf83ca04b31e1be4a2d6a4e3cf7426b40a53f3e972ad226defe029f64"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -58,13 +58,14 @@ source map 有意让已采纳目标无法静默变化：
 - `personal-2-opc-v9-implementation-mapping` 路由已定档 Personal 2.0.0 Scene →
   daemon 映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`；
   历史文件名与规则 id 含 v9，不是产品版本）
-  到 `dev.architecture-overview` 与本页。仅 informative；不是实现、support、Gate
-  或 P11 领取。
+  到 `dev.architecture-overview` 与本页。仅 informative；canvas v9 是冻结设计原型，
+  不是产品。daemon `/ui/` Dual Track hash 在 `P12-T01`–`T09` 收口后是 Now /
+  hypothesis chrome。权威仍是 P11 walking skeleton。不是 Gate、release 或 T15 领取。
 - `personal-2-0-0-dev-prep` 路由 Personal 2.0.0 开发前期索引
   （`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`）到
-  `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；Phase 12 于
-  2026-08-31 登记进既有正式计划；仅文档；
-  不是实现、解冻、Gate 或 P11 领取。OPC 设计语料（`clients/docs/design/opc-2.0/`，
+  `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；Phase 12
+  `P12-T01`–`T09` 于 2026-09-01 done（merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）；
+  仅文档；不是实现、Gate 或 T15 领取。OPC 设计语料（`clients/docs/design/opc-2.0/`，
   含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；
   hypothesis；不是 Gate）。

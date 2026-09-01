@@ -21,9 +21,13 @@ Project/Role/Employee/Routine/Attempt authority, Personal-owned Conversations/
 Vault/Memory, Pi-backed Personal Assistant, preinstalled managed DSH,
 global→Project→employee→Task Provider/budgets, and a fixed Windows acceptance
 path. MCP is advanced/deferred; native mobile/E2E relay remote is 2.1. None is
-current implementation or Windows/DSH support. Owner-approved current
-interaction prototype is `personal-20-opc-e2e-optimized-v9` (Canvas spec, not
-`/ui/`). One-module OPC maintenance:
+current implementation or Windows/DSH support. Canvas v9
+(`personal-20-opc-e2e-optimized-v9`) is the **frozen design prototype**, not
+the product. Product origin is daemon `/ui/`. Dual Track L1
+(Today/Projects/Knowledge + Settings + rail) is **Now / hypothesis chrome**
+after `P12-T01`–`T09` closed. Authority remains the P11 walking skeleton.
+NVDA/200%/host-theme remain `not-run`. `P11-T15` is independent / not-started.
+One-module OPC maintenance:
 [`00-maintenance-index.md`](../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 
 - **[User guide](user/README.md)** — install, first conversation, CLI, secrets,

@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:dc90e764dc1f2620613c35c207b7d478469fb7de21def910ac3559f865093b69"
+fingerprint: "sha256:3a46b6641e8cf51832242f4d2c2fc72c96f73e91a1b66efdf4ddbc29e5aae178"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -91,16 +91,19 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   billing/quota、budget 与 actual usage 分离。
 - UI 是 Today/Projects/Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
   不是一级导航。2026-08-30 设计定档的当前 chrome 是 **CognitiveOS Personal
-  2.0.0**（os-personal 2.0.0）。canvas 文件名可保留
-  `personal-20-opc-e2e-optimized-v9` 作为历史文件名；勿再称 v9 为产品版本。
-  architecture/formal-plan 用词对账推迟到 **完成后**。单模块维护入口：
+  2.0.0**（os-personal 2.0.0）。Canvas v9 是冻结设计原型（历史文件名
+  `personal-20-opc-e2e-optimized-v9`），不是产品。产品源是 daemon `/ui/`。
+  Dual Track L1 在 `P12-T01`–`T09` 收口后是 **Now / hypothesis chrome**
+  （merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）。
+  权威仍是 P11 walking skeleton。NVDA/200%/host-theme 仍 `not-run`。
+  `P11-T15` 独立 / not-started。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
   该索引同时收录设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；
   hypothesis；不是 Gate、不是 P11 领取）。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
-  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；  Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`）；X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X API E2E `not-run`；不是 P0 hero）。Phase 12 已登记；`P12-T01` documentation-only 已在 `main`；`P12-T02` 五段创建向导 + 空 Home 只创建已在 `main`；`P12-T03` Project 四子菜单已在 `main`；`P12-T04` 先选后配 + 加成员已在 `main`（非像素复制、非 2.1、非 T15）；`P12-T05` Today 决策包已在 `main`；`P12-T06` HITL 画布 Confirm 已在 `main`；`P12-T07` Knowledge ingest 已在 `main`；`P12-T08` Settings 连接表待合并。开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
+  （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；  Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`）；X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X API E2E `not-run`；不是 P0 hero）。`P12-T01`–`T09` 已在 `main`（merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)；Dual Track **Now / hypothesis chrome**；非像素复制、非 2.1、非 T15）。开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
@@ -118,7 +121,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   Routine/Trigger walking skeleton（`P11-T08`）已在 `main`；
   Dual Track `/ui/` IA（`P11-T13`）已在 `main`；
   Windows host walking skeleton（`P11-T02`）已在 `main`（原生 E2E `not-run`）；
-  X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X `not-run`；不是 P0 hero）。Phase 12 已登记（`P12-T01` done；`P12-T02` 向导已在 `main`；`P12-T03` 四子菜单已在 `main`；`P12-T04` member-config 已在 `main`；`P12-T05` Today 决策包已在 `main`；`P12-T06` HITL Confirm 已在 `main`；`P12-T07` Knowledge ingest 已在 `main`；`P12-T08` Settings 连接表待合并；不是 T15）。前期索引：
+  X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X `not-run`；不是 P0 hero）。`P12-T01`–`T09` 已收口（`P12-T01`–`T09` done，merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)；Dual Track Now / hypothesis chrome；不是 T15）。前期索引：
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
 
 ADR-0058 的 MCP/private/fail-closed/P5-no-migration 边界保留；只 supersede dsh

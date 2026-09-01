@@ -16,9 +16,10 @@ CognitiveOS Personal 是本地、单一 Owner 的受治理 Agent 工作系统。
 Personal 2.0 target 包含 Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）；Project、Role、
 Digital Employee、Routine 与 preserved Attempt；Personal-owned Conversation/Vault/
 Memory；Pi-backed Personal Assistant；preinstalled managed DSH；Provider/budget
-hierarchy 与固定 Windows acceptance path。当前同源 `/ui/` 真实存在，但这些 OPC
-增量尚未实现。owner 批准的交互原型是 `personal-20-opc-e2e-optimized-v9`
-（Canvas 规格，不是 `/ui/`）。单模块维护入口：
+hierarchy 与固定 Windows acceptance path。当前同源 `/ui/` Dual Track L1 是
+**Now / hypothesis chrome**。Canvas v9 是冻结设计原型，不是产品。产品源是
+daemon `/ui/`。权威仍是 P11 walking skeleton（无假 Create / Activate /
+Approve）。NVDA/200%/host-theme 仍 `not-run`。单模块维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 
 从这里开始：

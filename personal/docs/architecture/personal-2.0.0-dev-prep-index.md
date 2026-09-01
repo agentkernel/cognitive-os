@@ -2,21 +2,24 @@
 
 > Documentation-only index. Not implementation, not thaw, not Gate, not a P11 claim.
 > Product name: **CognitiveOS Personal 2.0.0** (os-personal 2.0.0). **v9 is a
-> historical canvas filename**, not a product version.
+> historical canvas filename**, not a product version. Canvas v9 is the
+> **frozen design prototype**, not the product. Product origin is daemon `/ui/`.
 > HEAD at writing: see `PROGRESS.md` Current snapshot. Evaluation routing **OFF**.
 > The overlapping `DOC-PERSONAL-2.0.0/dev-prep` lease is **closed** (2026-08-31).
-> Phase 12 registration is `lease/personal/P12-T01/opc-prototype-plan`.
+> Phase 12 `P12-T01`–`T09` are **done** (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`). P12 Remaining = 0.
+> `P11-T15` remains independent / not-started. Do not auto-claim T15.
 
 ## Identity and sources
 
 | Fact | Pointer |
 |---|---|
-| Chrome source | `clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx` |
-| Scene → daemon map | [personal-2.0-opc-v9-implementation-mapping.md](personal-2.0-opc-v9-implementation-mapping.md) (historical path name contains v9) |
+| Chrome source | Frozen design prototype: `clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx` (not the product) |
+| Product origin | daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite is not the product origin |
+| Scene → daemon map | [personal-2.0-opc-v9-implementation-mapping.md](personal-2.0-opc-v9-implementation-mapping.md) (historical path name contains v9; rewritten to post-P12 facts) |
 | Design-Agent / journey assessment | [13-personal-20-agent-design-difficulty-and-journey-assessment.md](../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md) (2026-08-30; hypothesis; not a P11 claim) |
 | Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 + **Phase 12** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15` and `P12-T01`…`T09` cards |
 | First implementation knife (Phase 11) | **`P11-T03` Project aggregate walking skeleton** — done; not a full `/ui/` page |
-| First implementation knife (Phase 12) | **`P12-T04` select-then-configure + add member** done pending merge #297; unique next is `P12-T05`; not T15; not pixel-replica |
+| First implementation knife (Phase 12) | **`P12-T01`–`T09` done**; merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`. Dual Track **Now / hypothesis chrome** on `/ui/`. Not T15; not pixel-replica; NVDA/200%/host-theme **not-run** |
 | T02 host walking skeleton | **`P11-T02` done** (merged PR [#292](https://github.com/agentkernel/cognitive-os/pull/292)); native install/tray/sleep/SecretStore E2E remains `not-run` |
 | T14 X connector walking skeleton | **`P11-T14` done** (merged PR [#293](https://github.com/agentkernel/cognitive-os/pull/293)); live X API E2E remains `not-run`; not P0 hero |
 | Environment names | only [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md); do not invent environments |
@@ -28,8 +31,11 @@ sub-menus; HITL only on the center canvas + Today deep link; chat has no
 Approve; `state-lab` = Settings → Advanced, hidden by default. Live `/ui/` L1
 is Dual Track OPC chrome (`P11-T13` **done**); Linux 1.0 six-family pages
 remain Advanced/secondary. Do not claim complete `/ui/` acceptance. Phase 12
-registers frozen-prototype **functional completeness** on daemon `/ui/`
-(default walkable scenes; not canvas pixel-replica; not 2.1; not T15).
+**Remaining = 0**: frozen-prototype default walkable scenes are Dual Track
+**Now / hypothesis chrome** on daemon `/ui/` (`P12-T01`–`T09` done). Not
+canvas pixel-replica; not 2.1; not T15. Authority remains the P11 walking
+skeleton: no authority → honest empty / Requires-backend; zero fake Create /
+Activate / Approve.
 
 Authority object English id = **Employee**. Product chrome may still say
 **Member Runtime** until post-completion reconciliation.
@@ -47,9 +53,10 @@ window. Clones stay in ignored `/artifacts/`; never `git add` them.
 Full Grep of `.cursor/rules/*.mdc` and `AGENTS.md` for current-chrome six-family
 IA, Team/Inbox as first-level destinations, or “v9” as the product name:
 **no hits**. Adapter rules already route to Operating Model / axioms / handbook
-sync. **No adapter rewrite.** Architecture-chapter mermaid that still says
-Team/Inbox stays **post-completion reconciliation** (mapping decision); this
-window only adds the Chapters pointer row on [README.md](README.md).
+sync. **No adapter rewrite.** Architecture README mermaid first-level nav is
+Today / Projects / Knowledge (Team/Inbox removed in `DOC-P12-ALIGN`). Other
+architecture-chapter bodies may still say Team/Inbox until a later wording
+pass; this index does not batch-replace those chapters.
 
 ## Testing and environment (hard gates)
 
@@ -161,8 +168,8 @@ flowchart TD
   T07[T07_hosted_DSH_hidden]
   T02[T02_Windows_host]
   T13[T13_ui_IA_closure]
-  T14[T14_X_parked]
-  T15[T15_acceptance_parked]
+  T14[T14_X_done_not_P0]
+  T15[T15_independent_not_started]
   vis -.-> T03
   T03 --> T04
   T04 --> T05
@@ -176,8 +183,8 @@ flowchart TD
   T03 -.-> T02
   T03 --> T13
   vis --> T13
-  T14 -.-> parked1[parked]
-  T15 -.-> parked2[parked]
+  T14 -.-> done14[T14_done_not_P0]
+  T15 -.-> parked2[T15_independent_not_started]
 ```
 
 - T03 does **not** wait on T02.
@@ -195,7 +202,8 @@ flowchart TD
   **must** produce visual spec before T13 coding; do not change IA; do not run
   `personal-20-prototype-review` phase 4 canvas regen.
 - T06 stays after T05 (hidden Pi is a decided capability).
-- T14 / T15 remain **parked**.
+- T14 walking skeleton is **done** (not P0 hero). T15 remains
+  **independent / not-started** and is not the P12 mutex.
 
 ## Parallel window path rule
 

@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:c2c8acf0f3d4150ac7676d7c1fc6be7ed07111a3e96935c27164720220fd9b62"
+fingerprint: "sha256:840ad92cf83ca04b31e1be4a2d6a4e3cf7426b40a53f3e972ad226defe029f64"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -67,13 +67,16 @@ silently:
   Personal 2.0.0 Scene → daemon mapping
   (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`;
   historical filename and rule id contain v9 — not a product version)
-  to `dev.architecture-overview` and this page. Informative only; not
-  implementation, support, Gate, or a P11 claim.
+  to `dev.architecture-overview` and this page. Informative only; canvas v9
+  is the frozen design prototype, not the product. Dual Track hashes on
+  daemon `/ui/` are Now / hypothesis chrome after `P12-T01`–`T09` closed.
+  Authority remains the P11 walking skeleton. Not Gate, release, or a T15
+  claim.
 - `personal-2-0-0-dev-prep` routes the Personal 2.0.0 development-prep index
   `personal/docs/architecture/personal-2.0.0-dev-prep-index.md`) to
   `dev.architecture-overview` and this page. Plan cards aligned 2026-08-30;
-  Phase 12 registered 2026-08-31 inside the existing formal plan;
-  documentation only; not implementation, thaw, Gate, or a P11 claim.
+  Phase 12 `P12-T01`–`T09` done 2026-09-01 (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302));
+  documentation only; not implementation, Gate, or a T15 claim.
   The OPC design corpus (`clients/docs/design/opc-2.0/`, including the
   maintenance index) catalogues a 2026-08-30 informative Design-Agent /
   Owner-journey hardness assessment

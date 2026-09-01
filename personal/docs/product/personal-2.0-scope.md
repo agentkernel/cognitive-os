@@ -10,15 +10,19 @@
   2026-08-28/29, then owner-approved v5 prototype 2026-08-29 (process before
   members; sequential member init), then owner-approved v8 2026-08-29 (member
   select-then-configure; Project four work scenes), then owner-approved v9
-  2026-08-30 (current chrome). Architecture and
-  formal-plan reconciliation remain deferred.
+  2026-08-30 (frozen design prototype). Canvas v9 is not the product.
+  Product origin is daemon `/ui/`. Dual Track **Now / hypothesis chrome**
+  and P11 walking-skeleton authority are recorded after Phase 12
+  Remaining = 0 (`P12-T01`–`T09` done, merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)).
 - Product intent: [Product design](product-design.md)
 - **PM/UI maintenance entry (do not duplicate the table here):**
   [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
-- Current interaction prototype:
+- Frozen design prototype (not the product):
   [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Product origin: daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite
+  is not the product origin.
 - Prior approved baseline (not current chrome; **not overwritten**):
   [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
@@ -26,12 +30,13 @@
   (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-30 current chrome is
-  `personal-20-opc-e2e-optimized-v9` (`opc-e2e-optimized-vN` naming, not
-  `ai-ceo`). Pre-optimization `personal-20-opc-e2e` and optimized v1–v4 are
-  archived iteration. v8 is the prior approved baseline. Same-day v5 and
-  unapproved v6/v7 are not current.
-  Canvas-only HITL and daemon authority path remain.
+- Prototype identity: canvas v9 (`opc-e2e-optimized-vN` naming, not
+  `ai-ceo`) is the frozen design prototype, not daemon `/ui/` and not a
+  product version. Dual Track hashes that shipped on `/ui/` are hypothesis
+  chrome. Authority remains the P11 walking skeleton. Pre-optimization
+  `personal-20-opc-e2e` and optimized v1–v4 are archived iteration. v8 is
+  the prior approved baseline. Same-day v5 and unapproved v6/v7 are not
+  current. Canvas-only HITL and daemon authority path remain.
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
   200% real layout
 - Evidence boundary: Owner approval is not usability, accessibility, backend,

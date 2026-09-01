@@ -3,26 +3,26 @@
 # 个人 2.0 OPC v9 到 daemon 实现映射
 
 - Status: **informative** / 非实现 / 非 support / 非 Gate
-- Change class: owner-directed architecture mapping; no formal `P*-T*` claim
-- Mapped chrome: owner-approved v9
+- Change class: owner-directed post-P12 documentation alignment; no formal
+  `P*-T*` claim; no `P11-T15` claim
+- Frozen design prototype (not the product): owner-approved canvas v9
   (`clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx`)
-- Frozen current `/ui/`: `clients/pc/web/` served same-origin by the Personal
-  daemon; Vite is not the product origin
-- HEAD at writing (mapping first draft): `ed82bd1744e2ca71b71c63bfdcfeadaaa5c21311`
-- 决议修订 HEAD: `ed82bd1744e2ca71b71c63bfdcfeadaaa5c21311`
-  （2026-08-30 Owner 决议落盘；相对本映射初稿；本轮无新 Git commit）
-- Lease: `lease/personal/DOC-PERSONAL-2.0-ARCH/v9-implementation-mapping`
-- Writable this window:
-  this file; `personal/docs/architecture/README.md` (Chapters pointer row
-  only); `personal/handbook/_meta/source-map.json`; mapped bilingual
-  handbook pages + fingerprints; `docs/plan/PARALLEL-LANES.md` (this
-  lease row only, coordination)
+- Product origin: daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite
+  is not the product origin
+- Dual Track hashes on `/ui/`: **Now / hypothesis chrome** after
+  `P11-T13` + `P12-T01`–`T09` (merged PR
+  [#302](https://github.com/agentkernel/cognitive-os/pull/302) at
+  `main@3a563e7c`). Authority remains the P11 walking skeleton.
+  No authority → honest empty / Requires-backend. Zero fake Create /
+  Activate / Approve.
+- NVDA / 200% layout / host-theme: still **not-run** (hung)
+- `P11-T15`: independent / **not-started**; not this campaign's mutex
+- HEAD at this rewrite: `origin/main` `bf5965f0614e2a3b05835f7bd3afefecf05dec6a`
+- Lease: `lease/personal/DOC-P12-ALIGN/docs-reconcile`
 - Evaluation routing: **OFF**. `PERSONAL-PERF-EVAL-015` closed.
-  P11 implementation paused. `P11-T01` done; `P11-T02..T15` not-started /
-  unclaimed. **本窗口不领取任何 P11-T***。
-- Claim ceiling: `hypothesis`. Owner 批准本文 ≠ 后端已存在。Owner 批准 v9 ≠
-  usability / a11y / backend / Gate / release / qualification / acceptance.
-  Owner 批准映射 ≠ 已领取实现、≠ 已改 `router.tsx`、≠ 已改正式计划正文。
+- Claim ceiling: `hypothesis`. Canvas v9 ≠ product. Dual Track chrome ≠
+  Gate / release / Profile / Windows qualification / Agent-benefit.
+  Walking-skeleton authority ≠ complete OPC acceptance.
 
 `personal/docs/architecture/README.md` 已在 source-map 规则
 `personal-2-baseline`。**本映射文件** 在规则
@@ -31,23 +31,24 @@
 同步 handbook（双语手写页 + 指纹；`generated: true` 页只经
 `node tools/src/generate-handbook.mjs`，禁止手改正文）。
 
-现网 architecture 章（`system-architecture.md`、`web-ui-architecture.md`、
-`project-role-employee.md` 等）仍可能写 Team / Inbox 一级、Installed Agent、
-Employee。产品旅程正文 **本窗口不改**。architecture / handbook 用词对账
-按 Owner 决议 **完成后**（实现/任务收口后）再做，不在本窗口批量替换。
+2.0.0 do-nots 不变：无 Team / Inbox 一级；聊天无 Approve；无 DSH store /
+Installed Agent 商店 / 原生 DSH UI 进默认 chrome；无假 Create / Activate /
+Approve；`state-lab` 仍不是一级。Employee 权威 id 与 Member Runtime 表面
+用语的完成后对账仍可保留在各 architecture 章正文，不在本窗口批量改旅程。
 
 ---
 
 ## Owner 决议（2026-08-30）
 
-Owner 已确认下列七条。本窗口原样落盘。**已决议。** 未决 = 0（handbook
-生成细节不再提问）。本窗口不领取 P11、不改正式计划正文、不改产品旅程、
-不改 `clients/pc/web`、不改 core 合同、不 commit。
+Owner 已确认下列七条（2026-08-30）。**已决议。** 未决 = 0。
+2026-09-01 本文件只把事后事实对齐到 P12 Remaining = 0：Dual Track
+hash 已在 `/ui/`；P11-T01–T14 已 done；T15 仍独立未开始。不新开
+Phase 13 / PRD；不领取 T15；不实现新 chrome。
 
 | # | 原问题 | Owner 答复（可执行） |
 |---|---|---|
 | 1 | 权威对象英文 id：Employee 还是 Member Runtime？架构/handbook 何时对账？ | **Employee**。**完成后对账**（实现/任务收口后再做 architecture / handbook 用词对账）。本窗口不改产品旅程。v9 chrome 仍可能写 Member Runtime：权威对象 id = Employee；产品表面 Member Runtime 用语保留到完成后对账。 |
-| 2 与 3 | P11-T13 Team/Inbox 一级 vs v9；P11-T12 成员/Task budget stop vs 2.1 | **先冻结当前所有未开发开发，以 v9 为准，重新开发。** 不领取、不开始任何 P11 实现。正式计划卡（`PERSONAL-DEVELOPMENT-PLAN.md` 的 P11-T02–T15 正文）**本窗口不改写**；本文将其标为 **frozen / 与 v9 冲突时以 v9 chrome 为准**。「重新开发」= 将来 owner 解冻 P11 实现时，按已批准 v9 chrome 重新切分/实现，而不是按任务卡里的 Team/Inbox 一级或成员级 budget stop 当前 chrome 去实现。**不要**把「重新开发」理解成现在去改 `router.tsx` 或开 frontend。v9 为准的当前 chrome：Today / Projects / Knowledge + 底栏 Settings；Team、Inbox 不是一级；成员级预算不在当前 chrome（2.1 / Deferred）；HITL 见第 4 条；state-lab 见第 5 条。 |
+| 2 与 3 | P11-T13 Team/Inbox 一级 vs v9；P11-T12 成员/Task budget stop vs 2.1 | 已按 v9 实现 Dual Track L1：**Today / Projects / Knowledge + 底栏 Settings**。Team、Inbox **不是一级**。成员级预算 **2.1 / Deferred**。`P11-T13` 与 `P12-T01`–`T09` 已 done。不要把 Dual Track chrome 写成完整 `/ui/` 验收或 Gate。 |
 | 4 | HITL：独立 `#/hitl/:approvalId`，还是仅项目中心画布 + Today 深链？ | **后者**。HITL **只**在项目中心画布；Today 用深链进入该画布。建议 hash **不要**把独立 `#/hitl/:approvalId` 写成产品一级或默认路由。若内部深链需要稳定 id，记为项目内画布锚点（例如 `#/projects/:id` 上的 HITL 表面），不是独立 Inbox/HITL 一级页。 |
 | 5 | state-lab：仅开发构建，还是 Settings 高级且默认隐藏？ | **后者**。放在 **Settings 高级**，**默认隐藏**。不是纯开发构建开关；也不是一级导航。 |
 | 6 | Conversation 新 private version：T05 内做，还是先独立 Lane-CTR？ | Owner 交本文件判断。见下方 **§ Owner 决议第 6 条判断**。 |
@@ -86,24 +87,27 @@ Owner 已确认下列七条。本窗口原样落盘。**已决议。** 未决 = 
 
 ### 1.1 本文做什么
 
-把 owner-approved **v9 Scene** 映射到：
+把 **frozen design prototype**（canvas v9 Scene）映射到 **post-P12** 事实：
 
-- 现网 daemon-served `/ui/`（hash 路由、七空间 + session）；
-- 现网 HTTP / 投影（management vs task、session gate、P7-T05 冻结 inventory）；
+- 产品源 daemon-served `/ui/` 上已落地的 Dual Track hash（**Now /
+  hypothesis chrome**）；
+- P11 walking-skeleton 权威（Project / Employee / archive / Vault /
+  Routine / HITL / host / connector）；无权威则诚实 empty /
+  Requires-backend；
+- 现网 HTTP / 投影（management vs task、session gate）；
 - core 1.0.0 合同约束与公理；
-- Personal 2.0 scope §4 能力缺口；
-- 正式计划 `P11-T02..T15` 的建议切分（**不领取**）。
+- Personal 2.0 scope §4 能力缺口（Windows 资格、完整 OPC 验收仍缺）；
+- `P11-T15` 仍独立 / not-started。
 
 ### 1.2 本文不做什么
 
-- 不领取、不启动、不实现任何 `P*-T*`（含 `P11-T02`）。
-- 不改 `PROGRESS.md` 任务 / Remaining / campaign。
-- 不 commit / push / PR。
-- 不改 `clients/pc/web/`、core 合同、v8/v9 canvas、产品旅程正文、
-  handbook 生成页、`00-maintenance-index.md`。
-- 不把 v9 写成已交付 `/ui/`，不把 Linux 1.0 六族写成 OPC IA。
-- 不把本地 / 文档 / ordinary CI 升为 Gate、release、Profile、support、
-  B01、Agent-benefit。
+- 不领取、不启动 `P11-T15`，不新开 Phase 13 / PRD，不实现新 chrome。
+- 不把 Dual Track chrome 升为 Gate、release、Profile、Windows
+  qualification、Agent-benefit。
+- 不把 canvas v9 写成已交付产品。
+- 不把 Linux 1.0 六族写成 OPC IA。
+- 不把 NVDA / 200% / host-theme 的 `not-run` 写成 pass。
+- 不把本地 / 文档 / ordinary CI 升为 Gate。
 
 ### 1.3 权威顺序
 
@@ -114,21 +118,24 @@ Owner 已确认下列七条。本窗口原样落盘。**已决议。** 未决 = 
 4. [ADR-0058](../../../docs/adr/0058-personal-2-0-mcp-conversation-private-projection.md)
    `conversation-projection/0.1` **禁止重解释**
 5. [personal-2.0-scope.md](../product/personal-2.0-scope.md) §3.1 / §4 / §5 / §7 / §8
-6. v9 canvas + [00-maintenance-index.md](../../../clients/docs/design/opc-2.0/00-maintenance-index.md) 表 A
+6. Frozen canvas v9 + [00-maintenance-index.md](../../../clients/docs/design/opc-2.0/00-maintenance-index.md) 表 A
 7. [11-design-to-code-and-backend-matrix.md](../../../clients/docs/design/opc-2.0/11-design-to-code-and-backend-matrix.md)
    （引用，不复制成第三张总表）
-8. 现网 `clients/pc/web/src/router.tsx` +
+8. 现网 `clients/pc/web/src/router.tsx`（Dual Track L1 已落地；Linux 1.0
+   六族页仍为 Advanced/secondary）。
    [web-ui-route-inventory.json](web-ui-route-inventory.json)
-   （P7-T05 冻结，**不是 OPC 合同**）
+   维持 P7-T05 冻结输入，**不是 OPC 合同**。
 
-### 1.4 产品 chrome 事实（v9，不改旅程）
+### 1.4 产品 chrome 事实（v9 冻结原型 + Dual Track `/ui/`）
 
 - 一级：**Today / Projects / Knowledge** + 底栏 **Settings**。
 - **Team、Inbox 不是一级。**
 - 聊天无 Approve；HITL 在中心画布；无假按钮。
+- `state-lab` 仍不是一级（Settings 高级 / 默认隐藏）。
+- Dual Track hash **已在** daemon `/ui/`（hypothesis chrome）。
 - 对象名 chrome：**Member Runtime**（v9 产品表面用语）。权威对象英文
   id = **Employee**。产品表面 Member Runtime 用语保留到 **完成后对账**。
-  本窗口不改产品旅程。实现期不得另发明第三套权威对象 id。
+  实现期不得另发明第三套权威对象 id。
 
 ---
 
@@ -250,8 +257,8 @@ core 1.0.0 已定稿。权威在 **personal daemon**，合同在 `core/`。
 | 项 | 处置 |
 |---|---|
 | 2.1 native mobile / 配对 / E2E relay / 云端 24/7 | **Deferred** |
-| `M-X` / `P11-T14` X connector | **Deferred** / parked；无当前 v9 场景 |
-| 成员级预算作为当前 chrome | **Deferred**（2.1）。`P11-T12` 任务卡 **frozen**；与 v9 冲突时以 v9 为准，解冻后重新开发，见 §9 |
+| `M-X` / `P11-T14` X connector | walking skeleton **done**；live X **not-run**；不是 P0 hero；无当前 P0 场景 |
+| 成员级预算作为当前 chrome | **Deferred**（2.1）。`P11-T12` 诚实 usage **done**；成员级预算硬停仍不在当前 chrome |
 | engine store / Installed Agent 商店 / Harness 切换 / 原生 DSH UI 进默认 chrome | **Forbidden** |
 | 消费订阅管理 | **Deferred** / out of scope（scope §8） |
 | Codex / Claude / Hermes 作为可选 Member 执行引擎 | **Forbidden**（Codex 仅 Memory 参考） |
@@ -269,22 +276,29 @@ core 1.0.0 已定稿。权威在 **personal daemon**，合同在 `core/`。
 
 ## 6. v9 Scene 主映射表 / Scene → daemon map
 
-建议 hash 标明 **建议、尚未实现**。现网 hash 仍是 Home / Work / Agents / …
-不要假装已经是 Today / Projects / Knowledge。
+Canvas v9 仍是 **frozen design prototype**。daemon `/ui/` 上的 Dual Track
+hash 已是 **Now / hypothesis chrome**（`P11-T13` + `P12-T01`–`T09`）。
+权威仍是 P11 walking skeleton：无权威 → 诚实 empty / Requires-backend；
+**零**假 Create / Activate / Approve。Linux 1.0 Home / Work / Agents /
+Resources / Activity / System 仍是 Advanced/secondary，不是 OPC L1。
 
-### 6.0 建议产品 hash（未实现；与 Owner 决议第 4、5 条一致）
+### 6.0 Dual Track hash（Now / hypothesis chrome；与 Owner 决议第 4、5 条一致）
 
-| 表面 | 建议 hash | 不是 |
+| 表面 | `/ui/` hash（Now chrome） | 不是 |
 |---|---|---|
-| Today（含 empty / incomplete） | `#/` 或 `#/today` | 不是现网 Home 改名即完成 |
+| Today（含 empty / incomplete） | `#/` | 不是 canvas 像素复制；不是完整 Windows OPC 验收 |
+| 五段创建向导 | `#/projects/new` | 不是 `#/work/new` 单 Task 链冒充 Project |
 | Projects 列表 | `#/projects` | 不是 `#/work` 改名 |
-| 项目中心（含 HITL 画布） | `#/projects/:id`（HITL 为画布锚点/表面） | **不是**独立 `#/hitl/:approvalId` 一级或默认路由；**不是** Inbox 一级 |
+| 项目中心（含 HITL 画布） | `#/projects/:id`（HITL 为 `?preview=` 画布表面） | **不是**独立 `#/hitl/:approvalId`；**不是** Inbox 一级 |
+| members / runs / outputs | `#/projects/:id/{members,runs,outputs}` | 不是 Task 行冒充 Project 聚合 |
+| add-member / member-config | `#/projects/:id/members/new`、`…/members/:mid` | 无 Install 商店 |
 | Knowledge | `#/knowledge` | 不是 `#/resources` 改名 |
 | Settings | `#/settings` | 不是一级 Providers / System |
-| state-lab | Settings 高级质检；默认隐藏 | **不是**一级导航；不是纯开发构建开关 |
-| Team / Inbox | 无一级 hash | 解冻后也不得按任务卡恢复为一级 |
+| 右栏写画布 | 上述表面的右栏 | 聊天无 Approve；candidate-only |
+| state-lab | Settings 高级质检；默认隐藏 | **不是**一级导航 |
+| Team / Inbox | 无一级 hash | 不得恢复为一级 |
 
-横切 HTTP（P7-T05 inventory，**不是 OPC 合同**）：
+横切 HTTP（P7-T05 inventory + P11/P12 management 面，**不是 OPC 合同**）：
 
 - Session：`POST /local/session`（bootstrap）；`SessionGate` 分
   `management` / `task`。
@@ -292,37 +306,38 @@ core 1.0.0 已定稿。权威在 **personal daemon**，合同在 `core/`。
   `GET /personal/dsh/runtime`、`/management/providers/*`、
   `/management/agent-bindings`、`/management/usage`、
   `/management/budgets`、`/management/alerts`、`/management/audit`、
-  `/management/resource/v1/{list,inspect}`。
+  `/management/resource/v1/{list,inspect}`，以及 P11/P12 Project /
+  Employee / Vault / Routine / host / connector 管理面（各任务边界内）。
 - 任务：`POST /task/intent.record` → `intent.interpret` → `preview` →
   `admit`；`GET /task/{watch,evidence,effects,observation}`。
-- 现网数据层：`clients/pc/web/src/data/`（`fetchProjection` /
-  `useProjection` / `projections/{home,work,workDetail,agents,providers,resources,memory,skills,tools,activity,system}`）。
+- Dual Track 数据层：`clients/pc/web/src/views/opc/`。Linux 1.0 投影
+  仍在 `projections/{home,work,…}`，只作 Advanced/secondary。
 - envelope 列表：`GET /management/resource/v1/list?family=task`。
-  现网 Work **不**发明 lifecycle；无 evidence 则 `state not exposed`。
+  无 evidence 则 `state not exposed`。
 
 ### 6.1 每 Scene 一行
 
-| Scene | 建议 hash（未实现） | 维护 ID | 现网近似 | 权威缺口 | 判定 | Intent / HITL |
+| Scene | Dual Track hash | 维护 ID | Chrome | 权威 | 判定 | Intent / HITL |
 |---|---|---|---|---|---|---|
-| `empty-home` | `#/` 或 `#/today` | `M-EMPTY` | `#/` Home 注意力面（四区，非空 Home） | 无 Project 权威；空 Home = 只创建、藏右栏 | **2.0 target** + **Requires-backend** | 创建 CTA 只进向导，不写权威 |
-| `create-init` | `#/projects/new` 或 wizard ① | `M-CREATE-1` | 无；`#/work/new` 是单 Task admit 链 | Project/Charter 草稿 + 总预览 | **Requires-backend** | 总预览前项目未上线。确认项走 preview，激活须 Owner confirm + Intent |
-| `create-process` | wizard ② | `M-CREATE-2` | 无 | Plan / 流程轴修订 | **Requires-backend** | 「确认这一环」= 当前 preview digest，不是改名 Work |
-| `create-members` | wizard ③ | `M-CREATE-3` | 无；`#/agents` 是安装 Agent 名册 | Role/Member Runtime 就位；模型必选 | **Requires-backend** | 就位确认走画布/预览。聊天不能批。无模型 = pending，不静默绑 |
-| `create-test` | wizard ④ | `M-CREATE-4` | 无；`#/work/:ref` 是单 Task 时间线 | 每环可打开结果 + 就位门 + 独立 verify | **Requires-backend** | 未知/离线不能过。通过 ≠ 模型文本 |
-| `create-joint` | wizard ⑤ | `M-CREATE-5` | 无 | 全流程联调；「验收，进入 Today」第一次成功 | **Requires-backend** | 验收 = 独立 verification + daemon acceptance。无假发布 |
-| `today-incomplete` | `#/` / `#/today` | `M-TODAY-INCOMPLETE` | 无（Home 已当日常注意力墙） | 未验收不得进日常决策包 | **2.0 target** + **Requires-backend** | 只「继续创建」 |
-| `today` | `#/` / `#/today` | `M-TODAY` | `#/` Home：**替换**，不是改名 | 决策包 + 已上线项目运行概览 + 助手 | **Requires-backend** | 拍板链接到 HITL 画布。无 KPI 墙 |
-| `projects` | `#/projects` | `M-PROJECTS` | `#/work` **不是** Projects。改名而不做聚合 = **Forbidden** as Current | Project 列表 / 复制（副本无密钥、在途、跳过） | **Requires-backend** | 复制后编辑 + 总预览 |
-| `project-detail` | `#/projects/:id` | `M-LIVE-PROJECT` | `#/work/:taskRef` 是 Task 详情，不是 Project | 只读流程轴 + 去成员/运行/产出 | **Requires-backend** | 点轴换环只在运行。详情不验收 |
-| `project-members` | `#/projects/:id/members` | `M-MEMBER-CONFIG` | `#/agents` **替换**（可见 Installed Agents **Forbidden** as chrome） | 先选后看；未选空态 | **Requires-backend** | 配置写入走 preview；无 Install |
-| `project-runs` | `#/projects/:id/runs` | `M-LIVE-PROJECT` | Work 时间线可作 **Reusable foundation**，不是运行子菜单 | Routine / Attempt / 末环验收 | **Requires-backend** | 「验收回今日」只在末环；须 A3+A4 |
-| `project-outputs` | `#/projects/:id/outputs` | `M-LIVE-PROJECT` | 无 | 先选后看；源链接产出 | **Requires-backend** | 发布预览在画布，聊天无 Confirm |
-| `add-member` | `#/projects/:id/members/new` | `M-ADD-MEMBER` | 无 | 当前项目真实名单；先职责后执行方式 | **Requires-backend** | 确认加入 = Intent。拒绝 = 未加入 |
-| `member-config` | `#/projects/:id/members/:mid` | `M-MEMBER-CONFIG` | 无；Agent dossier **不是**八标签 | 见 §6.2 | **Requires-backend** | 输入只读流程合同；输出可编「交出什么」 |
-| `hitl` | 项目中心画布（`#/projects/:id` HITL 表面）+ Today 深链。**不要**把独立 `#/hitl/:approvalId` 写成产品一级或默认路由 | `M-HITL` | alerts / Work preview **Reusable foundation**；不是一级 Inbox | 序列化当前 preview；过期不能批 | **Requires-backend** | **点名 persist-before-dispatch**。聊天只宣布 |
-| `knowledge` | `#/knowledge` | `M-KNOWLEDGE` | `#/resources` + Memory/Skills/Tools **部分 foundation**；不是 Knowledge | Vault / 导入 / Why this fragment / 可检查 Memory | **Requires-backend** | 导入失败保留原件。无 Project 锁定 |
-| `settings` | `#/settings` | `M-SETTINGS` | `#/providers` + `#/system` **拆入 Settings**（一级 Providers/System **替换**） | 连接 / 本周不再问收回 / 通知恢复 | **Requires-backend**（连接层级）+ 现网 CP **Reusable foundation** | 密钥走 SecretStore。未知费用 ≠ 0 |
-| `state-lab` | `#/settings` 高级质检表面；**默认隐藏**；**非一级** | `M-STATE` | 无 | 九态真版式质检 | Settings 高级 / 默认隐藏 / 非一级。不是纯开发构建开关 | 不是验收、不是 Gate |
+| `empty-home` | `#/` | `M-EMPTY` | **Now**（P12-T02：只创建、藏右栏） | P11-T03 walking skeleton；无权威诚实 empty | **Now chrome** + 权威 **Requires-backend** 边界 | 创建 CTA 只进向导，不写权威 |
+| `create-init` | `#/projects/new` ① | `M-CREATE-1` | **Now**（P12-T02 五段向导） | Project/Charter 草稿仍须 confirm-before-activate | **Now chrome** + 权威 walking skeleton | 总预览前项目未上线。无假 Activate |
+| `create-process` | wizard ② | `M-CREATE-2` | **Now** | Plan / 流程轴仍须 preview digest | 同上 | 「确认这一环」= 当前 preview digest |
+| `create-members` | wizard ③ | `M-CREATE-3` | **Now** | Employee walking skeleton（P11-T04） | 同上 | 聊天不能批。无模型 = pending |
+| `create-test` | wizard ④ | `M-CREATE-4` | **Now** | 独立 verify 仍是 A4 | 同上 | 通过 ≠ 模型文本 |
+| `create-joint` | wizard ⑤ | `M-CREATE-5` | **Now** | 验收 = 独立 verification + daemon acceptance | 同上 | 无假发布 |
+| `today-incomplete` | `#/` | `M-TODAY-INCOMPLETE` | **Now**（P12-T05：只「继续创建」） | 未验收不得进日常决策包 | **Now chrome** | 只「继续创建」 |
+| `today` | `#/` | `M-TODAY` | **Now**（P12-T05 决策包） | pending-previews 来自 HITL 权威 | **Now chrome** | 拍板深链 HITL 画布。无 KPI 墙 |
+| `projects` | `#/projects` | `M-PROJECTS` | **Now**（P12-T03） | P11-T03 Project 聚合；禁止 `#/work` 改名冒充 | **Now chrome** | 无权威诚实 empty |
+| `project-detail` | `#/projects/:id` | `M-LIVE-PROJECT` | **Now** | 只读流程轴 + HITL 画布（P12-T06） | **Now chrome** | 详情不验收 |
+| `project-members` | `#/projects/:id/members` | `M-MEMBER-CONFIG` | **Now** | 先选后看；P11-T04 | **Now chrome** | 无 Install |
+| `project-runs` | `#/projects/:id/runs` | `M-LIVE-PROJECT` | **Now** | Routine/Attempt walking skeleton（P11-T08） | **Now chrome** | 「验收回今日」须 A3+A4 |
+| `project-outputs` | `#/projects/:id/outputs` | `M-LIVE-PROJECT` | **Now** | 先选后看 | **Now chrome** | 聊天无 Confirm |
+| `add-member` | `#/projects/:id/members/new` | `M-ADD-MEMBER` | **Now**（P12-T04） | 确认加入 = Intent | **Now chrome** | 拒绝 = 未加入 |
+| `member-config` | `#/projects/:id/members/:mid` | `M-MEMBER-CONFIG` | **Now**（P12-T04 八标签） | 见 §6.2 | **Now chrome** | 无成员级预算 chrome |
+| `hitl` | `#/projects/:id?preview=` + Today 深链 | `M-HITL` | **Now**（P12-T06） | persist-before-dispatch（P11-T09） | **Now chrome** | 聊天无 Approve。stale/unknown 不能批 |
+| `knowledge` | `#/knowledge` | `M-KNOWLEDGE` | **Now**（P12-T07 ingest） | Vault walking skeleton（P11-T10）；files ≠ Project 权威 | **Now chrome** | 导入失败保留原件 |
+| `settings` | `#/settings` | `M-SETTINGS` | **Now**（P12-T08） | 连接表诚实；unknown≠0；本周不再问可收回 | **Now chrome** | 密钥走 SecretStore |
+| `state-lab` | Settings 高级；默认隐藏 | `M-STATE` | **not first-class** | 九态质检 | Settings 高级 / 非一级 | 不是验收、不是 Gate |
 
 ### 6.2 member-config 八标签
 
@@ -330,14 +345,14 @@ v9 `MemberConfigTab`（canvas 行 59–67、276–285）：
 
 | Tab id | 中文 | 权威含义 | 判定 |
 |---|---|---|---|
-| `duty` | 职责 | 岗位职责；身份（模型、就位、负责环节）留在详情头 | **Requires-backend** |
-| `input` | 输入 | **只读**流程合同（上一环交出物），不是成员私有输入字段 | **Requires-backend** |
-| `output` | 输出 | 可编「交出什么」 | **Requires-backend** |
-| `skills` | 技能 | 能力包；安装 ≠ 授权 | **Requires-backend** |
-| `tools` | 工具 | 无假 Install | **Requires-backend** |
-| `prompt` | 工作说明 | 业务标签；底层可称提示词，默认 chrome 不暴露引擎名 | **Requires-backend** |
-| `loop` | 周期与触发 | 能力说法一层后才出现 loop；对应 Routine/Trigger | **Requires-backend** |
-| `perms` | 连接与权限 | 精确版本与权限另批；底层有时称 MCP；无市场安装 | **Requires-backend** |
+| `duty` | 职责 | 岗位职责；身份（模型、就位、负责环节）留在详情头 | **Now chrome**（P12-T04）+ Employee walking skeleton |
+| `input` | 输入 | **只读**流程合同（上一环交出物），不是成员私有输入字段 | **Now chrome** |
+| `output` | 输出 | 可编「交出什么」 | **Now chrome** |
+| `skills` | 技能 | 能力包；安装 ≠ 授权 | **Now chrome**；无假 Install |
+| `tools` | 工具 | 无假 Install | **Now chrome** |
+| `prompt` | 工作说明 | 业务标签；底层可称提示词，默认 chrome 不暴露引擎名 | **Now chrome** |
+| `loop` | 周期与触发 | 能力说法一层后才出现 loop；对应 Routine/Trigger | **Now chrome** + P11-T08 walking skeleton |
+| `perms` | 连接与权限 | 精确版本与权限另批；底层有时称 MCP；无市场安装 | **Now chrome** |
 
 ### 6.3 HITL 画布
 
@@ -355,11 +370,9 @@ v9 `HitlScene`：`HitlFate = idle | approved | narrowed | rejected | stopped`；
 | 离线 | 不能批准对外 |
 | 实现 | 必须 persist-before-dispatch Intent/Effect + fencing（A3）；回执钉在环节，unknown 先 reconcile |
 
-建议 hash：**不要**把独立 `#/hitl/:approvalId` 写成产品一级或默认路由。
-HITL **只**在项目中心画布；Today 决策包用深链进入该画布。内部深链若需
-稳定 id，用项目内画布锚点（例如 `#/projects/:id` 上的 HITL 表面），不是
-独立 Inbox/HITL 一级页。`P11-T09` 任务卡 **frozen**（仍可能写 Inbox
-queue）；解冻后以 v9 重新开发，见 §9。
+Dual Track hash：**不要**把独立 `#/hitl/:approvalId` 写成产品一级或默认路由。
+HITL **只**在项目中心画布（`#/projects/:id?preview=`）；Today 决策包用深链
+进入该画布。`P11-T09` 与 `P12-T06` **done**。聊天无 Approve。
 
 ### 6.4 State Lab 九态
 
@@ -380,23 +393,30 @@ queue）；解冻后以 v9 重新开发，见 §9。
 
 ## 7. 现网 `/ui/` 复用与替换 / Reuse vs replace
 
-现网：`HashRouter`（`App.tsx`）；daemon 同源静态 `/ui/`；
-`SessionGate` 分通道。空间名仍是 **Home / Work / Agents / Resources /
-Activity / System / Providers / session**。
+现网：`HashRouter`（`App.tsx`）；daemon 同源静态 `/ui/`；`SessionGate`
+分通道。**L1 已是 Dual Track**：Today / Projects / Knowledge + Settings +
+rail。Linux 1.0 Home / Work / Agents / Resources / Activity / System /
+Providers 仍作为 **Advanced/secondary** 真路由存在。Team / Inbox /
+`#/hitl` **不是**路由。
 
 | 现网 | 通道 | 2.0 | 处置 |
 |---|---|---|---|
-| SessionGate、CSP、hash 路由、同源 `/ui/`、管理/任务分离、memory-only bearer | bootstrap / 双通道 | 保留 | **Current** / **Reusable foundation** |
-| `#/` Home（readiness / attention / current work / evidence） | management | Today | **替换 chrome**。投影纪律（不发明总数、unknown ≠ 0）可复用 |
-| `#/work`、`#/work/new`、`#/work/:taskRef` | task | Projects / runs | **Reusable foundation**（intent.record 链、envelope、evidence）。**禁止**改名冒充 Project 聚合 |
-| `#/agents`、`#/agents/:id` | management | 无一级 | **Forbidden** as 2.0 chrome（可见 Installed Agents）。诊断进 Settings 高级 |
-| `#/resources` + Memory / Skills / Tools | management | Knowledge | 六族操作 **Reusable foundation**；IA **替换**为 Knowledge |
-| `#/activity` | management | 非一级 | 并入 Today / 项目运行概览，不保留一级 |
-| `#/system` | management | Settings 一段 | **替换**一级；stewardship / doctor 可复用 |
-| `#/providers`、`#/providers/:id` | management | Settings 连接 | CP **Reusable foundation**；一级 Providers **替换** |
-| `#/session` | bootstrap | 保留 | **Current** |
-| `#/bindings` → providers、`#/tasks` → work | — | 历史重定向 | 实现 OPC 后不得把 `/tasks` 当产品入口 |
-| 原生 `cognitive dsh web` `:3080` | 独立 | 非默认 chrome | **Current** 诊断面。**Forbidden** 嵌进 OPC 默认 IA |
+| SessionGate、CSP、hash 路由、同源 `/ui/`、管理/任务分离、memory-only bearer | bootstrap / 双通道 | 保留 | **Now** / **Reusable foundation** |
+| `#/` Today（P11-T13 + P12-T02/T05） | management | Today | **Now / hypothesis chrome**。无权威诚实 empty。投影纪律（unknown ≠ 0）保留 |
+| `#/projects`、`#/projects/new`、`#/projects/:id` + members/runs/outputs | management | Projects / wizard / 四子菜单 | **Now chrome**（P12-T02–T04）。权威 = P11 walking skeleton |
+| `#/knowledge` | management | Knowledge | **Now chrome**（P12-T07 ingest）。files ≠ Project 权威 |
+| `#/settings` | management | Settings | **Now chrome**（P12-T08）。unknown≠0 |
+| 右栏 rail write | management | 助手写画布 | **Now chrome**（P12-T09）。candidate-only；无 Approve |
+| `#/home` Home | management | Linux 1.0 二级 | **Advanced/secondary**。不是 OPC L1 |
+| `#/work`、`#/work/new`、`#/work/:taskRef` | task | 非 L1 | **Reusable foundation**（intent.record 链）。**禁止**改名冒充 Project |
+| `#/agents`、`#/agents/:id` | management | 无一级 | **Forbidden** as 2.0 L1（可见 Installed Agents）。诊断进 Settings 高级 |
+| `#/resources` + Memory / Skills / Tools | management | Knowledge 二级 | 六族操作 **Reusable foundation** |
+| `#/activity` | management | 非一级 | 并入 Today / 项目运行概览 |
+| `#/system` | management | Settings 一段 | **Advanced/secondary** |
+| `#/providers`、`#/providers/:id` | management | Settings 连接二级 | CP **Reusable foundation** |
+| `#/session` | bootstrap | 保留 | **Now** |
+| `#/bindings` → providers、`#/tasks` → work | — | 历史重定向 | 不得把 `/tasks` 当产品入口 |
+| 原生 `cognitive dsh web` `:3080` | 独立 | 非默认 chrome | **Now** 诊断面。**Forbidden** 嵌进 OPC 默认 IA |
 | Pi client / dsh Path B / Provider CP / Task-Intent-Effect-verification | daemon | 引擎 / 权威 | **Reusable foundation**；不构成 OPC IA |
 
 组件对照见
@@ -409,25 +429,26 @@ Activity / System / Providers / session**。
 
 ## 8. 对照 scope §4 缺口 / Gaps vs scope §4
 
-[personal-2.0-scope.md](../product/personal-2.0-scope.md) §4 全表。组合现网原语
-**不会**把目标行变成 Current support。
+[personal-2.0-scope.md](../product/personal-2.0-scope.md) §4 全表。Walking
+skeleton + Dual Track chrome **不会**把目标行变成 Windows OPC support。
 
 | Capability | Current 真相 | 2.0 处置 | 映射备注 |
 |---|---|---|---|
-| Windows host/install/background | 既有 Windows 碎片 + ordinary MSVC CI ≠ 合格宿主产品 | **Requires-backend + Requires-environment** | `P11-T02` |
-| Project/Charter/Goal/Plan/Attempt | Task 权威可复用；完整 Project 聚合与 UI 投影缺失 | **Requires-backend** | 禁止改装既有 Task 行当 Project |
-| Role/Member Runtime | 无完整当前权威/投影 | **Requires-backend** | 权威对象 id = **Employee**；chrome 表面 = Member Runtime（完成后对账） |
-| Personal-owned Conversation archive | ADR-0058 信封是决策；无 OPC archive/index/retrieval 产品 | **Requires-backend**；禁止重解释 `0.1`；**T05 内**新 private version，不先开 Lane-CTR | `P11-T05` |
-| Personal Assistant | Pi Shell 原语可复用；无全局 OPC 助手 | **Requires-backend**；Pi 保持隐藏 / candidate-only | `P11-T06` |
-| Hidden managed DSH | Path B 存在但非 Windows 打包/隔离/供给链合格产品 | **Requires-backend + Requires-environment** | `P11-T07`。禁止原生 DSH UI 进默认 chrome |
-| Routine/Trigger/missed-run | scheduler 原语 ≠ 完整产品生命周期 | **Requires-backend** | `P11-T08` |
-| Contextual approval/recovery | preview / Effect / alert / recovery 是部分输入 | **Requires-backend** | 产品 = 项目中心画布 HITL + Today 深链，不是一级 Inbox |
-| Knowledge/Vault ingestion | Memory/Skill/Context ≠ OPC Vault/导入/索引 | **Requires-backend** | `P11-T10` |
-| Memory privacy/forget | 已承认 Memory/forget 可复用；缺会话抽取/检索策略 | **Requires-backend** | `P11-T11` |
-| Provider 绑定与诚实费用 | 固定 Agent 绑定、usage、咨询预算存在 | 成员绑定层级、自定义兼容、诚实归因 **Requires-backend** | 成员级预算当前 chrome **Deferred** |
-| OPC UI | `/ui/` 是已交付 Linux 期非阻塞面 | 目标 IA + Windows 宿主 **Requires-backend** | `P11-T13` |
-| X connector | 无合格 X/Twitter connector | **Requires-backend + Requires-environment** | `P11-T14` parked |
-| Skill/MCP 获取与授权 | 现有 Skill/Tool/MCP 传输不足；无评审过的发现/授权流 | 安全评审获取 + 精确 per-scope grant **Requires-backend** | 广谱市场 / family console out of scope |
+| Windows host/install/background | P11-T02 walking skeleton **done**；native E2E **not-run** | **Requires-environment** | `P11-T02` |
+| Project/Charter/Goal/Plan/Attempt | P11-T03 walking skeleton **done**；Dual Track 列表/向导 **Now chrome** | 权威仍是 walking skeleton；禁止 Task 行冒充 | `P11-T03` + `P12-T02/T03` |
+| Role/Member Runtime | P11-T04 walking skeleton **done**；八标签 chrome **Now** | 权威 id = **Employee**；chrome = Member Runtime | `P11-T04` + `P12-T04` |
+| Personal-owned Conversation archive | P11-T05 walking skeleton **done**；禁止重解释 `0.1` | host archive E2E **not-run** | `P11-T05` |
+| Personal Assistant | P11-T06 hidden Pi **done**；rail write **Now**（P12-T09） | candidate-only；Pi Linux 不转移 Windows | `P11-T06` + `P12-T09` |
+| Hidden managed DSH | P11-T07 walking skeleton **done** | **Requires-environment**；禁止原生 DSH UI 进默认 chrome | `P11-T07` |
+| Routine/Trigger/missed-run | P11-T08 walking skeleton **done** | clock/sleep/restart E2E **not-run** | `P11-T08` |
+| Contextual approval/recovery | P11-T09 + P12-T06 HITL canvas **Now chrome** | 不是一级 Inbox | `P11-T09` + `P12-T06` |
+| Knowledge/Vault ingestion | P11-T10 + P12-T07 **done** | files ≠ Project 权威；host FS E2E **not-run** | `P11-T10` + `P12-T07` |
+| Memory privacy/forget | P11-T11 walking skeleton **done** | privacy/rebuild E2E **not-run** | `P11-T11` |
+| Provider 绑定与诚实费用 | P11-T12 + P12-T08 **done** | 成员级预算 **Deferred**；unknown≠0 | `P11-T12` + `P12-T08` |
+| OPC UI | Dual Track L1 **Now / hypothesis chrome** | NVDA/200%/host-theme **not-run**；不是完整 `/ui/` 验收 | `P11-T13` + `P12-T01`–`T09` |
+| X connector | P11-T14 walking skeleton **done** | live X **not-run**；不是 P0 hero | `P11-T14` |
+| Skill/MCP 获取与授权 | 现有 Skill/Tool/MCP 传输不足 | 广谱市场 / family console out of scope | 仍 **Requires-backend** |
+| 固定 15 场景验收 | `P11-T15` **not-started** / independent | 不是 Phase 12 mutex | 不自动领取 |
 
 scope §5：DSH / Pi 日常隐藏。无 Installed Agents 产品面。
 scope §7：2.1 = native mobile / 配对 / E2E relay。
@@ -435,56 +456,52 @@ scope §8：不承诺离线宿主 24/7、业务结果、消费订阅、可选 Ha
 
 ---
 
-## 9. P11-T02–T13 切分建议 / Suggested slices（不领取；任务卡 frozen）
+## 9. P11 / P12 事后状态（Remaining = 0；不领取 T15）
 
-**本窗口不可开始任何实现。** Owner 已暂停 P11 实现，并决议：**先冻结
-当前所有未开发开发，以 v9 为准，重新开发。** 正式计划
-`PERSONAL-DEVELOPMENT-PLAN.md` 的 P11-T02–T15 正文 **本窗口不改写**。
-下列任务卡在本文标为 **frozen / 与 v9 冲突时以 v9 chrome 为准**。
-「重新开发」只在将来 owner 解冻 P11 实现时发生：按已批准 v9 chrome
-重新切分/实现，而不是按任务卡里的 Team/Inbox 一级或成员级 budget stop
-当前 chrome 去实现。**不要**现在改 `router.tsx` 或开 frontend。
-`P11-T14` / `P11-T15` 点名停放。
+`P11-T01`–`T14` **done**。`P12-T01`–`T09` **done**（#302 merged）。
+`P11-T15` **unparked / not-started**，不是 prototype completeness mutex。
+本窗口是文档对齐，不实现新 chrome，不新开 Phase 13。
 
-v9 为准的当前 chrome：Today / Projects / Knowledge + 底栏 Settings；
+Dual Track 当前 chrome：Today / Projects / Knowledge + 底栏 Settings；
 Team、Inbox 不是一级；成员级预算不在当前 chrome（2.1 / Deferred）；
 HITL 只在项目中心画布 + Today 深链；state-lab 在 Settings 高级、默认隐藏、
-非一级。
+非一级。无权威 → 诚实 empty；零假 Create / Activate / Approve。
 
-### 张力（写入本文，不改正式计划）
+### 张力（事后）
 
-| 张力 | 正式计划 / 架构仍可能写 | v9 / 本决议 | 处置 |
+| 张力 | 事后事实 | 处置 |
+|---|---|---|
+| `P11-T13` IA | Dual Track L1 **done**；Team/Inbox **不是一级** | architecture README mermaid 本窗口去掉 Team/Inbox 一级 |
+| `P11-T12` 预算 | 诚实 usage **done**；成员级硬停仍 2.1 | 当前 chrome 不做成员级预算 |
+| 对象名 | 权威 id = **Employee**；chrome = **Member Runtime** | 完成后对账仍可保留在各章正文 |
+| `P11-T09` | HITL 画布 **done**；不是 Inbox L1 | 保持 |
+| `P11-T15` | independent / not-started | 不自动领取 |
+
+### 任务卡状态
+
+| Task | 状态 | Dual Track / 权威 | 非声明 |
 |---|---|---|---|
-| `P11-T13` IA | Today / Projects / **Team** / Knowledge / **Inbox** + Settings | Team、Inbox **不是一级** | **frozen**；解冻后按 v9 重新开发 |
-| `P11-T12` 预算 | Project / **member** / Task budget stop | 成员级预算 **2.1 / 非当前 chrome** | **frozen**；解冻后按 v9 重新开发 |
-| 对象名 | Employee / Digital Employee / Installed Agent | 权威 id = **Employee**；chrome = **Member Runtime** | 完成后对账；本窗口不改旅程 |
-| `P11-T09` | Inbox queue 一级组合 | 上下文 HITL 只在项目中心画布 + Today 深链 | **frozen**；解冻后按 v9 重新开发 |
-| architecture README mermaid | Today · Projects · Team · Knowledge · Inbox | 与 v9 未对账 | **完成后对账**；本窗口不改 README 正文 |
-
-### 任务卡（各一条：依赖 / 垂直切片 / Scene / 为何本窗口不开始）
-
-| Task | 依赖 | 建议垂直切片 | 对应 v9 Scene | 本窗口不开始 |
-|---|---|---|---|---|
-| **T02** | T01 done；ADR-0052 / P7-T07 碎片 | install → Home app/data → daemon/tray/background close → sleep/offline/missed → recover | Settings 恢复；无独立 Scene | 暂停；任务卡 **frozen**；**Requires-environment** |
-| **T03** | T01；现有 Task/Intent/Effect/verifier | 草稿 → Charter/Goal/Plan preview → confirm → active Project → Task/Attempt → Effect/evidence | `create-*`、`projects`、`project-detail`、`project-runs` | 暂停；任务卡 **frozen**；无 Project 聚合则 UI 只能撒谎 |
-| **T04** | T03；adapter identity | Blueprint → Assignment → Member Runtime；一当前 manager。权威对象 id = **Employee** | `create-members`、`project-members`、`add-member`、`member-config` | 暂停；任务卡 **frozen**；表面用语完成后对账 |
-| **T05** | T03、T04；ADR-0058 | Personal Conversation archive/index/retrieval；**T05 内**新 private version；禁止重解释 `0.1`；不先开 Lane-CTR | 右栏助手 / 项目群（横切 `M-CHAT-CANVAS`） | 暂停；任务卡 **frozen**；core 公共 schema 变更才 Lane-CTR |
-| **T06** | T03、T05；exact Pi | 隐藏 Pi 助手：解释/导航/研究/提案 → daemon preview | 右栏 Assistant；`empty-home` 藏聊天 | 暂停；任务卡 **frozen**；Pi Linux 证据不转移 Windows |
-| **T07** | T02、T03、T04；dsh Path B | 托管 DSH 精确制品、隔离 child、stdio broker、Provider proxy、update/rollback | 无默认 Scene；失败诊断进 Settings 高级 | 暂停；任务卡 **frozen**；**Forbidden** 原生 DSH UI / 商店 |
-| **T08** | T03；scheduler | Routine + Trigger；no-overlap；queue-latest；missed ledger | `member-config` `loop`；`project-runs`；Today 概览 | 暂停；任务卡 **frozen** |
-| **T09** | T03、T08；preview/alert | 上下文审批 / 恢复；**不要**做一级 Inbox；HITL 只在项目中心画布 + Today 深链 | `hitl`、`today` 决策包 | 暂停；任务卡 **frozen**（Inbox 措辞与 v9 冲突）；解冻后按 v9 重新开发 |
-| **T10** | T03、T05；Memory/Skill/Context | Home 目录 + Knowledge/Vault 导入/索引 | `knowledge` | 暂停；任务卡 **frozen** |
-| **T11** | T05、T10 | 有界检索 + Memory 承认/改正/忘记 | `knowledge` Memory 标签 | 暂停；任务卡 **frozen** |
-| **T12** | T03、T04、T06、T07；Provider CP | 账户/订阅/配额分离；global→Project→(**2.1** member)→Task 绑定；诚实 usage | `settings`；创建模型必选 | 暂停。**当前 chrome 不做成员级预算硬停**。任务卡 **frozen**；解冻后按 v9 重新开发 |
-| **T13** | T02..T12 | daemon-served OPC IA：Today / Projects / Knowledge + Settings + 右栏助手。`state-lab` 只在 Settings 高级、默认隐藏 | 全部产品 Scene（`state-lab` 非一级） | 暂停。任务卡 **frozen**（仍写 Team/Inbox）；解冻后按 v9 重新开发。本窗口不对账计划正文 |
-| **T14** | T03、T07..T13 | X/Twitter 场景 | **无** v9 Scene（`M-X`） | **Parked** |
-| **T15** | T02..T14 + 合格 Windows | 固定 15 场景验收 campaign | 全部 + X | **Parked**；不是本窗口、不自动 release |
+| **T02** | **done** #292 | host walking skeleton | native E2E **not-run** |
+| **T03** | **done** #281 | Project 聚合 walking skeleton | 不是完整 `/ui/` 页 |
+| **T04** | **done** #282 | Employee walking skeleton | 表面用语完成后对账 |
+| **T05** | **done** #283 | Conversation archive walking skeleton | 禁止重解释 `0.1`；host E2E **not-run** |
+| **T06** | **done** #284 | hidden Pi Assistant | draft-apply ≠ authority-approve |
+| **T07** | **done** #287 | hidden hosted DSH | **Forbidden** 原生 DSH UI / 商店 |
+| **T08** | **done** #290 | Routine/Trigger walking skeleton | 无第二 scheduler / Inbox L1 |
+| **T09** | **done** #285 + P12-T06 #299 | HITL canvas | 聊天无 Approve |
+| **T10** | **done** #288 + P12-T07 #300 | Vault + ingest chrome | files ≠ authority |
+| **T11** | **done** #289 | Memory admission/privacy/forget | 无 Letta/Mem0 写路径 |
+| **T12** | **done** #286 + P12-T08 #301 | 诚实 usage + Settings 连接 | 成员级预算 2.1 |
+| **T13** | **done** #291 | Dual Track L1 chrome | 不是完整 `/ui/` 验收 |
+| **T14** | **done** #293 | X connector walking skeleton | live X **not-run**；不是 P0 hero |
+| **T15** | **not-started** / independent | 固定 15 场景验收 | 不是 P12 mutex；不自动领取 |
+| **P12-T01**–**T09** | **done** #294–#302 | hypothesis chrome on `/ui/` | NVDA/200%/host-theme **not-run** |
 
 ---
 
-## 10. 实现期 UI 挂单 / UI punch list
+## 10. 仍挂单 / hung punch list
 
-实现开始后（须 owner 重新授权 P11）必须挂起，**本窗口不开新 canvas**：
+不新开 canvas。下列仍 **not-run**：
 
 | 项 | 状态 | 要求 |
 |---|---|---|
@@ -493,50 +510,58 @@ HITL 只在项目中心画布 + Today 深链；state-lab 在 Settings 高级、�
 | host-theme contrast | **not-run** | 含系统深浅色 |
 | 200% 真布局 | **not-run** | 三栏不叠成抽屉；窄画布横滑 |
 | hash + 三栏键盘 / 焦点 | 现网 W12 是 Linux IA 证据，**不转移** OPC | 路由变化焦点到主标题；无陷阱 |
-| unknown 费用 | 现网 Providers 有诚实 unknown | **永不显示为 0** |
-| 假按钮 | — | 无 Connect / Install / Confirm / 聊天 Approve |
+| unknown 费用 | Dual Track Settings 有诚实 unknown | **永不显示为 0** |
+| 假按钮 | Dual Track 负例覆盖 | 无 Connect / Install / Confirm / 聊天 Approve |
 | Vite | — | 不得当产品源；只允许 daemon `/ui/` |
 
 ---
 
 ## 11. 已决议 / Resolved（原待确认）
 
-2026-08-30 Owner 已确认原 7 问。全文见文首 **Owner 决议（2026-08-30）**。
+2026-08-30 Owner 已确认原 7 问。2026-09-01 对齐 P12 Remaining = 0。
 未决 = 0。
 
-| # | 原待确认 | 决议 |
+| # | 原待确认 | 决议 + 事后 |
 |---|---|---|
-| 1 | Employee vs Member Runtime id / 何时对账 | 权威 id = **Employee**。**完成后对账**。表面 Member Runtime 保留到那时。本窗口不改旅程 |
-| 2 | `P11-T13` Team/Inbox 一级 vs v9 | 与第 3 条合并：**冻结未开发**；解冻后以 v9 重新开发。本窗口不改正式计划正文 |
-| 3 | `P11-T12` 成员/Task budget stop | 同上。成员级预算 **2.1 / 非当前 chrome** |
-| 4 | HITL 独立 `#/hitl/:approvalId` vs 画布 + Today 深链 | **只**在项目中心画布；Today 深链。独立 `#/hitl/:approvalId` 不是产品一级或默认路由 |
+| 1 | Employee vs Member Runtime id / 何时对账 | 权威 id = **Employee**。完成后对账仍可保留。 |
+| 2 | `P11-T13` Team/Inbox 一级 vs v9 | Dual Track L1 **done**。Team/Inbox **不是一级**。 |
+| 3 | `P11-T12` 成员/Task budget stop | 成员级预算 **2.1 / 非当前 chrome**。诚实 usage **done**。 |
+| 4 | HITL 独立 `#/hitl/:approvalId` vs 画布 + Today 深链 | **只**在项目中心画布；Today 深链。P12-T06 **done**。 |
 | 5 | `state-lab` 仅开发构建 vs Settings 高级 | **Settings 高级 / 默认隐藏 / 非一级** |
-| 6 | Conversation 新 private version：T05 vs 先 Lane-CTR | **T05 内**新 private version；禁止重解释 0.1；不先开 Lane-CTR。core 公共变更才 Lane-CTR |
+| 6 | Conversation 新 private version：T05 vs 先 Lane-CTR | T05 **done**（新 private version）；禁止重解释 0.1 |
 | 7 | 本文件是否纳入 handbook source-map | **纳入**（规则 `personal-2-opc-v9-implementation-mapping`） |
 
-无需再确认即可成立的事实：evaluation OFF；P11 实现暂停且 **未领取**；
-v9 不是 `/ui/`；DSH 不是 authority writer；仿冒仓 `getpaperclipai/paperclip`
-禁止；Owner 批准映射 ≠ 后端已存在。
+无需再确认即可成立的事实：evaluation OFF；P11-T01–T14 **done**；
+T15 independent / not-started；canvas v9 **不是**产品；产品源 = daemon
+`/ui/`；DSH 不是 authority writer；仿冒仓 `getpaperclipai/paperclip`
+禁止；Dual Track chrome ≠ Gate / release。
 
 ---
 
-## 附录 A — 现网 hash 对照（冻结，非 OPC）
+## 附录 A — Dual Track vs Linux 1.0 hash
 
-| 现网 hash | 页面 | 2.0 |
+| hash | 角色 | 事实 |
 |---|---|---|
-| `#/` | Home | 替换为 Today（含 empty / incomplete） |
-| `#/work` | Work 清单 | 不改名冒充 Projects |
-| `#/work/new` | 单 Task 创建链 | 可复用链，不是五段向导 |
+| `#/` | Today（empty / incomplete / packets） | **Now / hypothesis chrome**（P11-T13 + P12-T02/T05） |
+| `#/projects/new` | 五段向导 | **Now**（P12-T02） |
+| `#/projects` | Projects 列表 | **Now**（P12-T03） |
+| `#/projects/:id` + members/runs/outputs | 项目中心 / 四子菜单 / HITL | **Now**（P12-T03/T06） |
+| `#/projects/:id/members/new`、`…/:mid` | 加成员 / 八标签 | **Now**（P12-T04） |
+| `#/knowledge` | Knowledge ingest | **Now**（P12-T07） |
+| `#/settings` | Settings 连接 | **Now**（P12-T08） |
+| `#/home` | Linux 1.0 Home | Advanced/secondary |
+| `#/work` | Linux 1.0 Work | 不改名冒充 Projects |
+| `#/work/new` | 单 Task 创建链 | 可复用链，不是 OPC 向导 |
 | `#/work/:taskRef` | Task 详情 | 可复用时间线，不是 Project 四子菜单 |
-| `#/agents` | Agents | 删除一级 |
-| `#/providers` | Providers | 移入 Settings |
-| `#/resources`… | 六族 | 重组为 Knowledge |
-| `#/activity` | Activity | 取消一级 |
-| `#/system` | System | 移入 Settings |
+| `#/agents` | Agents | 不是 OPC L1 |
+| `#/providers` | Providers | Settings 二级 |
+| `#/resources`… | 六族 | Knowledge 二级 |
+| `#/activity` | Activity | 非一级 |
+| `#/system` | System | Settings 二级 |
 | `#/session` | Session | 保留 |
 
 独立 `#/hitl/:approvalId` **不是** 2.0 产品一级或默认路由（Owner 决议第 4 条）。
-`state-lab` **不是** 现网或建议一级 hash（Owner 决议第 5 条）。
+`state-lab` **不是**一级 hash（Owner 决议第 5 条）。
 
 [web-ui-route-inventory.json](web-ui-route-inventory.json) 维持 P7-T05 冻结输入。
 
@@ -557,4 +582,5 @@ v9 不是 `/ui/`；DSH 不是 authority writer；仿冒仓 `getpaperclipai/paper
 
 ---
 
-End of mapping. Informative only. Owner 批准本文 ≠ 后端已存在。
+End of mapping. Informative only. Canvas v9 ≠ product. Dual Track chrome ≠
+Gate / release. Authority remains the P11 walking skeleton.
