@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:8e9adca952669badfc66e8d4aa96ce3eb4bb60668b95a8612cdaf211bef32a82"
+fingerprint: "sha256:3548caed4b27fa18ed8eeee3ac8aada8eda346a9d77b5d58948752fada1dc761"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -94,19 +94,18 @@ Keep these two baselines separate:
 - **Deferred:** MCP remains an advanced seventh-family target but is not an OPC
   P0 dependency. Native mobile, device pairing and E2E relay remote begin in
   Personal 2.1.
-- **Current interaction prototype (not shipped):** owner-approved 2026-08-30
-  chrome is `personal-20-opc-e2e-optimized-v9` under
-  `clients/docs/design/opc-2.0/`. It is a Canvas specification, not daemon
-  `/ui/`. Create order is ① project → ② process → ③ members → ④ test → ⑤ joint.
-  Maintain one module or flow from
+- **Frozen design prototype (not the product):** canvas
+  `personal-20-opc-e2e-optimized-v9` under `clients/docs/design/opc-2.0/`.
+  Product origin is daemon `/ui/`. Dual Track L1 is **Now / hypothesis
+  chrome** after `P12-T01`–`T09` closed. Authority remains the P11 walking
+  skeleton. Create order is ① project → ② process → ③ members → ④ test → ⑤
+  joint. Maintain one module or flow from
   [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md);
-  do not treat that catalog as shipped UI. Owner prototype approval is not
-  usability, Gate, or release evidence.
+  do not treat that catalog as complete `/ui/` acceptance. Owner prototype
+  approval is not usability, Gate, or release evidence.
 
-No OPC backend or Windows/DSH qualification is claimed. Dual Track L1 empty
-chrome is on daemon `/ui/`; frozen-prototype default scenes (wizard, packets,
-HITL Confirm, ingest, connections, rail write) are Phase 12 cards in the
-formal plan, not canvas pixel-replica and not 2.1. Phase 11's future fixed
-denominator is 15 scenarios and is not the prototype-completeness mutex;
-Canvas and ordinary CI do not execute or promote it. There is no human desirability, usability, adoption, willingness-to-pay,
+No OPC Windows/DSH qualification is claimed. Dual Track L1 chrome is on daemon
+`/ui/`; NVDA/200%/host-theme remain `not-run`. `P11-T15` is independent /
+not-started and is not the prototype-completeness mutex. Canvas and ordinary
+CI do not execute or promote it. There is no human desirability, usability, adoption, willingness-to-pay,
 support, release, Gate, Profile or Agent-benefit evidence.

@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:dc90e764dc1f2620613c35c207b7d478469fb7de21def910ac3559f865093b69"
+fingerprint: "sha256:3a46b6641e8cf51832242f4d2c2fc72c96f73e91a1b66efdf4ddbc29e5aae178"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -99,10 +99,13 @@ authority.
 - UI is Today/Projects/Knowledge with bottom Settings and one persistent
   right conversation. Team and Inbox are not first-level destinations.
   Design-frozen current chrome (2026-08-30) is **CognitiveOS Personal
-  2.0.0** (os-personal 2.0.0). The canvas file may keep
-  `personal-20-opc-e2e-optimized-v9` as a historical filename; do not call
-  v9 the product version. Architecture/formal-plan reconciliation remains
-  deferred until after implementation close. One-module PM/UI work starts at
+  2.0.0** (os-personal 2.0.0). Canvas v9 is the frozen design prototype
+  (historical filename `personal-20-opc-e2e-optimized-v9`), not the
+  product. Product origin is daemon `/ui/`. Dual Track L1 is **Now /
+  hypothesis chrome** after `P12-T01`–`T09` closed (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)).
+  Authority remains the P11 walking skeleton. NVDA/200%/host-theme remain
+  `not-run`. `P11-T15` is independent / not-started. One-module PM/UI work
+  starts at
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
   That index also catalogues an informative Design-Agent / Owner-journey
   hardness assessment
@@ -111,7 +114,7 @@ authority.
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). Phase 12 is registered; `P12-T01` documentation-only is on `main`; `P12-T02` five-step create wizard + empty-home only-create is on `main`; `P12-T03` Project four submenus are on `main`; `P12-T04` select-then-configure + add member is on `main` (not pixel-replica, not 2.1, not T15); `P12-T05` Today decision packets are on `main`; `P12-T06` HITL canvas Confirm is on `main`; `P12-T07` Knowledge ingest is on `main`; `P12-T08` Settings connections is pending merge). Development-prep index
+  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). `P12-T01`–`T09` are on `main` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302); Dual Track **Now / hypothesis chrome**; not pixel-replica, not 2.1, not T15). Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 - Authority object English id is **Employee**. Product chrome may still say
@@ -135,7 +138,7 @@ authority.
   Routine/Trigger walking skeleton (`P11-T08`) is on `main`;
   Dual Track `/ui/` IA (`P11-T13`) is on `main`;
   Windows host walking skeleton (`P11-T02`) is on `main` (native E2E `not-run`);
-  X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X `not-run`; not P0 hero). Phase 12 is registered (`P12-T01` done; `P12-T02` wizard on `main`; `P12-T03` four submenus on `main`; `P12-T04` member-config on `main`; `P12-T05` Today packets on `main`; `P12-T06` HITL Confirm on `main`; `P12-T07` Knowledge ingest on `main`; `P12-T08` Settings connections pending merge; not T15). Prep index:
+  X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X `not-run`; not P0 hero). `P12-T01`–`T09` closed (`P12-T01`–`T09` done, merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302); Dual Track Now / hypothesis chrome; not T15). Prep index:
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
 
 ADR-0058's MCP/private/fail-closed/P5-no-migration boundary remains. Only its

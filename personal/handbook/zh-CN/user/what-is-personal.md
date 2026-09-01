@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:8e9adca952669badfc66e8d4aa96ce3eb4bb60668b95a8612cdaf211bef32a82"
+fingerprint: "sha256:3548caed4b27fa18ed8eeee3ac8aada8eda346a9d77b5d58948752fada1dc761"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -79,17 +79,16 @@ Digital Employee。
   candidates。
 - **Deferred：** MCP 保留为 advanced seventh-family target，但不是 OPC P0。native
   mobile、device pairing 与 E2E relay remote 从 Personal 2.1 开始。
-- **当前交互原型（未交付）：** 2026-08-30 owner 批准的 chrome 是
-  `clients/docs/design/opc-2.0/` 下的 `personal-20-opc-e2e-optimized-v9`。这是
-  Canvas 规格，不是 daemon `/ui/`。创建顺序为 ① 项目 → ② 流程 → ③ 成员 → ④ 测试 →
-  ⑤ 联调。单模块维护入口是
+- **冻结设计原型（不是产品）：** canvas
+  `clients/docs/design/opc-2.0/` 下的 `personal-20-opc-e2e-optimized-v9`。
+  产品源是 daemon `/ui/`。Dual Track L1 在 `P12-T01`–`T09` 收口后是
+  **Now / hypothesis chrome**。权威仍是 P11 walking skeleton。创建顺序为
+  ① 项目 → ② 流程 → ③ 成员 → ④ 测试 → ⑤ 联调。单模块维护入口是
   [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)，
-  不是已交付 UI。Owner 原型批准不是可用性、Gate 或 release 证据。
+  不是完整 `/ui/` 验收。Owner 原型批准不是可用性、Gate 或 release 证据。
 
-本文不声称 OPC backend 或 Windows/DSH qualification。Dual Track L1 空 chrome 已在
-daemon `/ui/`；冻结 prototype 默认可走场景（向导、决策包、HITL Confirm、ingest、
-连接表、右栏写画布）是正式计划 Phase 12 卡，不是 canvas 像素复制，也不是 2.1。
-Phase 11 的 future fixed denominator 是 15 个场景，**不是** prototype completeness
-mutex；Canvas 与 ordinary CI 不执行也不提升它。没有 human
+本文不声称 OPC Windows/DSH qualification。Dual Track L1 chrome 已在 daemon
+`/ui/`；NVDA/200%/host-theme 仍 `not-run`。`P11-T15` 独立 / not-started，
+**不是** prototype completeness mutex；Canvas 与 ordinary CI 不执行也不提升它。没有 human
 desirability、usability、adoption、WTP、support、release、Gate、Profile 或
 Agent-benefit evidence。

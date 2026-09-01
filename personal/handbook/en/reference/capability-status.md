@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:45992e27d8b59d1a5b22645ea71b794c90898fc036e638011314d04086122fac"
+fingerprint: "sha256:2062963056440b68aee735fd2b7b3a7b32b14ac38c8c3dc7e94ec90d0cf3728a"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -80,7 +80,7 @@ and Agent requires independent qualification.
 | Current six-family resource projection/watch | implemented | management+task channels only; this is not the adopted MCP seventh family |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |
 | Non-Pi agents | designed | Codex fixture qualification only |
-| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level); Dual Track L1 empty chrome is on daemon `/ui/`; frozen-prototype default scenes are Phase 12 formal-plan cards (not canvas pixel-replica, not 2.1); current interaction spec remains `personal-20-opc-e2e-optimized-v9`; one-module catalog [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md); Linux/WSL/CI/Canvas evidence does not transfer |
+| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level); Dual Track L1 is **Now / hypothesis chrome** on daemon `/ui/` after `P12-T01`–`T09` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)); canvas v9 is the frozen design prototype, not the product; NVDA/200%/host-theme `not-run`; `P11-T15` independent / not-started; one-module catalog [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md); Linux/WSL/CI/Canvas evidence does not transfer |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority is reusable, but Project activation, manager envelope, Routine/missed ledger and complete hierarchy do not exist |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | no complete authority/projection; employee identity must remain separate from runtime/process |
 | Pi-backed Personal Assistant | Requires-backend | Pi is the hidden candidate-only target engine; current Pi Shell/Linux qualification does not establish the OPC Assistant |
@@ -97,7 +97,7 @@ and Agent requires independent qualification.
 | Windows OPC fixed-denominator acceptance | Requires-environment / not-run | unparked N=15 at one qualified Windows revision; not the Phase 12 prototype-completeness mutex; required CI/Canvas does not execute it; signing/B01-W/release remain separate |
 | Management fallback verbs | implemented | R0/R2/R3 approval flows partial |
 | Backup/restore command | partial | secrets/bearer/provider-config/authority SQLite excluded; Memory/Skill as digest-bound sidecar; public `admin-cli` covers Pi install→recover |
-| Current Web UI / Console | partial | same-origin daemon-served `/ui/` Dual Track L1 (Today/Projects/Knowledge + Settings + rail) exists at `clients/pc/web/`; empty home is only-create (`#/projects/new` five-step wizard) on `main` (`P12-T02`); Project four submenus (`#/projects/:id` plus members/runs/outputs) are on `main` (`P12-T03`); select-then-configure + add member is on `main` (`P12-T04`); Today decision packets (`today-incomplete` continue-create vs live pending-previews) are on `main` (`P12-T05`); HITL canvas Confirm (`P12-T06`) is on `main`; Knowledge ingest (`P12-T07`) is on `main`; Settings connections (`P12-T08`) pending merge on daemon `/ui/`; rail-write remains a later Phase 12 card, not complete IA; Linux 1.0 six-family remains Advanced/secondary; not Windows OPC |
+| Current Web UI / Console | partial | same-origin daemon-served `/ui/` Dual Track L1 (Today/Projects/Knowledge + Settings + rail) exists at `clients/pc/web/`; empty home is only-create (`#/projects/new` five-step wizard) on `main` (`P12-T02`); Project four submenus (`#/projects/:id` plus members/runs/outputs) are on `main` (`P12-T03`); select-then-configure + add member is on `main` (`P12-T04`); Today decision packets (`today-incomplete` continue-create vs live pending-previews) are on `main` (`P12-T05`); HITL canvas Confirm (`P12-T06`) is on `main`; Knowledge ingest (`P12-T07`) is on `main`; Settings connections (`P12-T08`) is on `main`; right-rail write (`P12-T09`) is on `main` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)); Dual Track **Now / hypothesis chrome**; Linux 1.0 six-family remains Advanced/secondary; NVDA/200%/host-theme `not-run`; not Windows OPC |
 | Current Windows product | unavailable | installer/credential fragments and ordinary CI are not Windows OPC host/DSH/UI support; qualified native environment and B01-W do not exist |
 | Personal 2.1 native mobile/E2E relay remote | deferred | host-online only; device-bound keys/revocation/short sessions/preview/audit/no secret downlink remain future controls |
 | Performance campaign tooling | implemented | results are non-claim records in the plan |

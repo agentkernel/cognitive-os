@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:add78b1853e41200db854d78d6aa190bbea8d69d9bd0da61d9b7efafdeaa7562"
+fingerprint: "sha256:367fb6a68961ddfbcf7161ad4532f701922bd58e8c9c5caf71e5deda64bd59bb"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -86,10 +86,11 @@ Owner
 ```
 
 The UI is Today / Projects / Knowledge, bottom Settings, and a persistent
-right conversation. Team and Inbox are not first-level destinations. The
-owner-approved current chrome is **CognitiveOS Personal 2.0.0**; the canvas
-file may keep `personal-20-opc-e2e-optimized-v9` as a historical filename.
-It is not daemon `/ui/`. Create order is
+right conversation. Team and Inbox are not first-level destinations. Canvas
+v9 is the frozen design prototype; the file may keep
+`personal-20-opc-e2e-optimized-v9` as a historical filename. Product origin
+is daemon `/ui/`. Dual Track L1 is **Now / hypothesis chrome**. Authority
+remains the P11 walking skeleton. Create order is
 project → process → members → per-stage test → joint. One-module PM/UI
 maintenance starts at
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
@@ -106,10 +107,13 @@ binding resolves global to Project to employee to Task; actual usage stays
 distinct from Provider quota; unknown cost is never shown as 0; member-level
 budget is 2.1 / Deferred.
 
-All of this remains target-only. `Requires-backend`/`Requires-environment`
-means it must not be shown as working. MCP stays an advanced deferred seventh
-family; native mobile/E2E relay remote is 2.1; future Agents need independent
-qualification.
+Dual Track L1 chrome on daemon `/ui/` is **Now / hypothesis chrome**. Authority
+remains the P11 walking skeleton: no authority → honest empty /
+Requires-backend; zero fake Create / Activate / Approve. Windows host/DSH
+qualification remains `Requires-environment`. MCP stays an advanced deferred
+seventh family; native mobile/E2E relay remote is 2.1; future Agents need
+independent qualification. NVDA/200%/host-theme remain `not-run`. `P11-T15`
+is independent / not-started.
 
 ## How a normal interaction flows
 

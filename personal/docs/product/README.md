@@ -11,8 +11,10 @@
   2026-08-28/29
 - **PM/UI maintenance (one module or flow, not the whole corpus):**
   [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
-- Current interaction prototype:
+- Frozen design prototype (not the product):
   [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+- Product origin: daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite
+  is not the product origin.
 - Prior approved baseline (not current chrome; **not overwritten**):
   [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
@@ -20,12 +22,14 @@
   (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: owner-approved 2026-08-30 current chrome is
-  `personal-20-opc-e2e-optimized-v9`. Pre-optimization `personal-20-opc-e2e`
-  and optimized v1–v4 are archived iteration. v8 is the prior approved
-  baseline. Same-day v5 and unapproved
-  v6/v7 are not current. Archived V2 is historical.
-  Canvas-only HITL and daemon authority path remain.
+- Prototype identity: canvas v9 is the **frozen design prototype** (owner-
+  approved 2026-08-30 chrome spec). It is not daemon `/ui/` and not a
+  product version. Dual Track **Now / hypothesis chrome** on `/ui/` is the
+  shipped hash surface (`P11-T13` + `P12-T01`–`T09`). Authority remains
+  the P11 walking skeleton. Pre-optimization `personal-20-opc-e2e` and
+  optimized v1–v4 are archived iteration. v8 is the prior approved
+  baseline. Same-day v5 and unapproved v6/v7 are not current. Archived V2
+  is historical. Canvas-only HITL and daemon authority path remain.
 - Cursor-openable copy (IDE detection path; not a second product baseline):
   [personal-20-opc-e2e-optimized-v9](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Not-run validation: Canvas runtime/render, NVDA, host-theme contrast, and
@@ -79,9 +83,9 @@ Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
 Receipt** as backend discipline. Knowledge Context shows why each fragment
 was selected; chat auto-admits to inspectable Memory. Secrets use SecretStore
-takeover and never appear in chat. The prototype is an interactive spec, not
-daemon `/ui/`. P0 is complete capabilities only: no demo Project, no X as
-P0 hero.
+takeover and never appear in chat. Canvas v9 is the frozen design prototype,
+not the product. Product origin is daemon `/ui/`. P0 is complete capabilities
+only: no demo Project, no X as P0 hero.
 
 A reusable **Role Runtime Template** becomes a Project-specific, long-lived
 **Project Member Runtime definition**. Members are not shared across Projects;
@@ -89,12 +93,16 @@ only Templates may be reused. Each Task execution starts a disposable
 **Agent process/Attempt**. “Digital staff / 数字员工” remains positioning
 language, not an additional product object.
 
-The direction is approved product semantics, not shipped capability. Most OPC
-surfaces are **Requires-backend** and Windows remains unqualified. The delivered
-Linux 1.0 product, current daemon-served `/ui/`, Provider Control Plane,
-Resource Manager, Pi qualification, and dsh Path B are preserved factual
-foundations only within their recorded boundaries. They are not the 2.0
-product organization.
+Dual Track L1 hashes (Today / Projects / Knowledge + Settings + rail) are
+**Now / hypothesis chrome** on daemon `/ui/` after Phase 12 Remaining = 0.
+Authority remains the P11 walking skeleton: no authority → honest empty /
+Requires-backend; zero fake Create / Activate / Approve. Chat has no Approve.
+Team and Inbox are not first-level. `state-lab` is not first-class. NVDA /
+200% layout / host-theme remain **not-run**. Windows host/DSH qualification
+remains **Requires-environment**. The delivered Linux 1.0 product, Provider
+Control Plane, Resource Manager, Pi qualification, and dsh Path B are
+preserved factual foundations only within their recorded boundaries. They
+are not Windows OPC support. `P11-T15` stays independent and not-started.
 
 ## Status vocabulary
 
