@@ -649,6 +649,13 @@ Pi 不可以：
 - **回滚：** 保持 loopback disabled-by-default。
 - **解锁：** P1-T04。
 
+#### DOC-P13-DRIFT-FIX — 文档漂移对齐（owner-directed，非正式任务；P0-T09 前置）
+
+- **状态：** 以正式台账为准（PERSONAL-DEVELOPMENT-PLAN Phase 13「配套维护交付」行；2026-09-03 领取，lease `lease/personal/DOC-P13-DRIFT-FIX/build-order-and-pi-package`）。
+- **内容：** (a) dev-prep index「Phase 13 build order」边集合逐条对齐正式计划 mermaid（补 `T05→T12b`、`T07→T12b`、`T05→T13`、`T09→T15`、`T10→T15`、`T11→T15`；27 边全等）；(b) Pi 包名权威 = 代码 `OFFICIAL_PI_PACKAGE = "@earendil-works/pi-coding-agent"`（与环境登记 §1、本表 PI-02 一致），handbook `reference/compatibility` + `developer/agent-and-pi-lifecycle` 双语四页统一到该常量；(c) `developer/development-environments` 双语补 autocrlf/`.gitattributes` 说明。
+- **不包含：** 不改正式计划建造顺序；不改代码常量；不实现机械校验（归 `P0-T09`）。
+- **证据：** [running report](../checkpoints/2026-09-03-personal-doc-p13-drift-fix-report.md)。
+
 ### P0-T09 — 计划/规则漂移的机械校验（2026-09-02 登记）
 
 - **状态：** 以正式台账为准（`not-started`）。来源：`DOC-AGENT-RULES`（PR #306）复审「发现但未修改」第 1/4/6 项；`DOC-P13-DRIFT-FIX` 是其前置（先对齐再上校验）。

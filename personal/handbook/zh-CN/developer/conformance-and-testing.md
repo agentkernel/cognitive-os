@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:5a0151410bb94c704dc374579d339b7bac857e868eeccdd1f487dfbdfeca971e"
+fingerprint: "sha256:346c4a993e6b2ac50c610e4d5d4aaa0b730f48ddba2feaf3b2f2480e96f30474"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -72,7 +72,11 @@ Gate 记账形状（含 `lease/personal/EVAL-<id>/…` owner-directed 评测 cam
 描述必须命名与 lease id 相同且已在 Current snapshot 登记的 `GOV-<id>`，且只能拥有
 `docs/governance/`、`docs/adr/`、`docs/plan/PROGRESS.md`、lease 语法检查器面
 （`tools/src/check-consistency.mjs`、`tools/test/check.test.mjs`）与
-`personal/handbook/` 下被映射的手册页面）、命令/环境路由
+`personal/handbook/` 下被映射的手册页面；以及 `lease/personal/DOC-<id>/…`
+owner-directed 文档对齐 lease 类别：描述必须命名与 lease id 相同且已在 Current
+snapshot 登记的 `DOC-<id>`，且只能拥有精确的 plan/product/architecture/handbook/design
+文档、`AGENTS.md`、`.cursor/rules/`、本交付自己的带日期 `docs/checkpoints/`
+report/closure 文件——不得整目录——以及同一 lease 语法检查器面）、命令/环境路由
 文本、checkpoint-delivery 与 task-atomic 措辞等。
 `tools/src/gen-matrix.mjs --check` 保持 `docs/traceability/matrix.yaml` 新鲜。两者
 在 CI 与本地（`pnpm run check:consistency`）都运行。手册新增自己的检查器

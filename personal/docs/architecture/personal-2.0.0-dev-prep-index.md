@@ -255,13 +255,26 @@ flowchart TD
   P13T02 -.-> P13T08
   P13T05 -.-> P13T09
   P13T04 --> P13T12b
+  P13T05 --> P13T12b
+  P13T07 --> P13T12b
   P13T08 --> P13T12b
   P13T12a --> P13T12b
   P13T02 --> P13T13
+  P13T05 --> P13T13
   P13T08 --> P13T13
   P13T12b --> P11T15
   P13T13 --> P11T15
+  P13T09 --> P11T15
+  P13T10 --> P11T15
+  P13T11 --> P11T15
 ```
+
+The edge set above is the formal plan's Phase 13 mermaid
+([PERSONAL-DEVELOPMENT-PLAN.md](../../../docs/plan/PERSONAL-DEVELOPMENT-PLAN.md)
+"Phase 13 - Personal 2.0.0 completion" → 建造顺序) with node ids prefixed
+`P13`/`P11`; the formal plan is authoritative and this copy must match it
+edge-for-edge (27 edges, 3 dashed). `P0-T09` turns that equality into a
+machine check.
 
 - `P13-T02` and `P13-T03` do **not** wait on each other; claim them in
   separate leases / worktrees with non-overlapping paths.
