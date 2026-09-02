@@ -176,6 +176,7 @@ export const KNOWN_ROUTES: readonly KnownRoute[] = [
   { method: "POST", path: "/management/project/v1/draft.create", channel: "management" },
   { method: "POST", path: "/management/project/v1/draft.apply", channel: "management" },
   { method: "POST", path: "/management/project/v1/assistant.turn", channel: "management" },
+  { method: "GET", path: "/management/project/v1/assistant.status", channel: "management" },
   { method: "POST", path: "/management/project/v1/preview.request", channel: "management" },
   { method: "GET", path: "/management/project/v1/preview-detail", channel: "management" },
   { method: "POST", path: "/management/project/v1/preview.reject", channel: "management" },

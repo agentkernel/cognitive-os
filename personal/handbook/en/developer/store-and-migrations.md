@@ -54,7 +54,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:7605e61b1427f9af331b0220795744da7fefa1222f8a356bd933d1a9d36a3eda"
+fingerprint: "sha256:de8ee6640f2d245b0f35129e37776d32067c6344f1949f7f0917d15c55b2b87b"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -93,6 +93,8 @@ orders authority first and names the backup path on a second-phase failure.
 | v35 | X/Twitter connector account / preview / publish ledger (`p11_x_connector_account`, `p11_x_connector_preview`, `p11_x_connector_publish`) under `cognitiveos.personal.x-connector/0.1`. SecretStore `secret_ref` only. `is_p0_hero` and `platform_qualified` CHECK=0. Impressions stay the literal `unknown`. Receipt is not completion. Live X API E2E is `not-run`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
+
+P13-T03 real inference also adds **no new migration**. `AssistantPlane::run_turn` now requires a daemon-observed `AssistantInferenceRecord` (protocol `cognitiveos.personal.assistant-inference/0.1`, bound `model_id`, `provider_round_trips ≥ 1`, bounded reply, the inferred object chain, and the daemon-derived citable URIs); the registered v26 candidate ops carry the inferred chain, the owner payload labelled as owner input, the reply digest, and the inject-order reference — never the echoed payload as the candidate. `validate_inferred_object_chain` is the single object-chain validator (closed kinds in chain order, one object per kind, every field `{value, provenance}` with typed provenance, `sources[]` uris only from fetched or owner-supplied URIs, closed schema); runtime parsing and HTTP call into it. `admit_turn_request` refuses ambient tools before any Pi process spawns. `provider_unbound_guidance()` is the fixed Settings pointer (`chat_input: false`, `silent_bind: false`, `candidate_registered: false`). `candidate_count` is a read-only accounting helper.
 
 P11-T09 HITL canvas reuses v26 `request_preview` / `confirm_preview` / `p11_approval_preview` plus v29 `superseded_by` and v30 grant-expansion / StandingApprovalPolicy. Management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*` are the durable caller; T05 announce+deep-link only; T06 `draft.apply` is not authority-approve. Host UI E2E is `not-run`. Settings chrome is T13. No second scheduler, no chat Approve, no Inbox L1.
 

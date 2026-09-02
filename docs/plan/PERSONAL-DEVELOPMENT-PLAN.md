@@ -248,8 +248,8 @@
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化 Windows |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
-| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 1 | 0 | 11 | P13-T01 docs-only done；P13-T12 in-progress（D01 视觉规格 docs-only）；T02–T11、T13 not-started；P11-T15 是其验收出口，不自动 release |
-| **合计** | **167** | **132** | **1** | **1** | **17** | 另有 16 cancelled；无新 Gate pass |
+| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 2 | 0 | 10 | P13-T01 docs-only done；P13-T03 in-progress（claimed 2026-09-03，隐藏 Pi 真实推理）；P13-T12 in-progress（D01 视觉规格 docs-only）；T02/T04–T11、T13 not-started；P11-T15 是其验收出口，不自动 release |
+| **合计** | **167** | **132** | **2** | **1** | **16** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -1614,7 +1614,7 @@ flowchart TD
 |---|---|---|---|---|---|
 | P13-T01 | Phase 13 docs/plan 登记 + T15 N=15 预注册草案 | owner 2026-09-02 指令；P11-T01..T14 与 P12-T01..T09 done；2026-09-02 差距核对 | 本文件 Phase 13 + typed deps + 三栏 + Slices + plan.md 卡 + T15 卡细化 + trace/environments/PROGRESS/dev-prep index/handbook；static/docs-sync/required CI；documentation-only | done | merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) at `main@aac6804f`；required CI [33620332959](https://github.com/agentkernel/cognitive-os/actions/runs/33620332959) **SUCCESS** at `9724f67f`；[report](../checkpoints/2026-09-02-personal-p13-t01-completion-plan-report.md)；[closure](../checkpoints/2026-09-02-personal-p13-t01-completion-plan-closure.md)；无 implementation/support/Gate/release claim |
 | P13-T02 | 托管 DSH 真实 Attempt 循环（完整 stdio broker + health/update/rollback） | P11-T07 骨架；P11-T03/T04/T12；P2 Effect/WIA/verification；**不依赖 T03** | 见下表三栏；实现第一刀之一 | not-started | unclaimed |
-| P13-T03 | 隐藏 Pi 助手真实推理（explain/navigate/research/propose 真调 exact Pi） | P11-T06/T05/T10/T12；P12-T09；**不依赖 T02** | 见下表三栏；实现第一刀之一 | not-started | unclaimed |
+| P13-T03 | 隐藏 Pi 助手真实推理（explain/navigate/research/propose 真调 exact Pi） | P11-T06/T05/T10/T12；P12-T09；**不依赖 T02** | 见下表三栏；实现第一刀之一 | in-progress | claimed 2026-09-03 on `lease/personal/P13-T03/pi-inference` / `personal/P13-T03-pi-inference`; running report [P13-T03 report](../checkpoints/2026-09-03-personal-p13-t03-pi-inference-report.md) |
 | P13-T04 | 独立验证 + 产出可打开 + 发布包预览 | P13-T02；P11-T03/T09；P3-T03；P2-T07；P12-T03 | 见下表三栏；末环验收；planned ≠ published | not-started | unclaimed |
 | P13-T05 | 运行/例程闭环 + Today 运行概览 | P11-T08；P13-T02；P11-T02；P12-T03/T05 | 见下表三栏；daemon scheduler 唯一权威 | not-started | unclaimed |
 | P13-T06 | 项目群聊与 manager 协调（`@manager` / `@member`） | P11-T05/T04；P13-T02/T03；P12-T09 | 见下表三栏；聊天无 Approve | not-started | unclaimed |

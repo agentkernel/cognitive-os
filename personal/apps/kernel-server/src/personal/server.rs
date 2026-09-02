@@ -27,6 +27,7 @@ use cognitive_store::{
 };
 use serde_json::json;
 
+use super::assistant_inference;
 use super::auth::{ChannelClass, LocalAuthError, LocalSessionAuthority, SessionIssueRequest};
 use super::bounds::{
     PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
@@ -719,6 +720,7 @@ fn dispatch_http_route(
             &method_path,
             headers,
             body,
+            layout,
             authority,
             authority_store,
         );
@@ -1733,6 +1735,7 @@ fn handle_project_aggregate_route(
     method_path: &str,
     headers: &str,
     body: &[u8],
+    layout: &PersonalDataLayout,
     authority: &Arc<Mutex<LocalSessionAuthority>>,
     authority_store: &Arc<SqliteAuthorityStore>,
 ) -> Result<(), String> {
@@ -1768,7 +1771,19 @@ fn handle_project_aggregate_route(
     if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
-    let response = project_aggregate::handle(method_path, body, authority_store.as_ref());
+    // P13-T03: the hidden assistant infers through the exact-Pi runtime of
+    // this daemon; the Provider is reached only via the private proxy.
+    let assistant = assistant_inference::DaemonAssistantRuntime::new(
+        layout.config_dir(),
+        layout.data_dir(),
+        authority_store.as_ref().clone(),
+    );
+    let response = project_aggregate::handle_with_assistant(
+        method_path,
+        body,
+        authority_store.as_ref(),
+        &assistant,
+    );
     write_response(
         stream,
         response.status,

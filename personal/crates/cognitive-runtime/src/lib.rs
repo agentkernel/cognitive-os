@@ -36,6 +36,7 @@ pub mod non_pi_agent;
 pub mod oob;
 pub mod perf;
 pub mod performance_campaign;
+pub mod pi_inference;
 pub mod pi_launcher;
 pub mod provider_route_policy;
 pub mod readiness;
@@ -184,6 +185,16 @@ pub use perf::{
 pub use performance_campaign::{
     CampaignCorrelationId, CampaignMeasurementEnvelope, CampaignStage, CampaignStageTiming,
     PerformanceCampaignError, ProviderUsage,
+};
+pub use pi_inference::{
+    ASSISTANT_CONTEXT_BUDGET_BYTES, ASSISTANT_INFERENCE_FRAME_LIMIT, ASSISTANT_INFERENCE_PROTOCOL,
+    ASSISTANT_RESEARCH_EXCERPT_BYTES, ASSISTANT_RESEARCH_MAX_TARGETS,
+    ASSISTANT_RESEARCH_RESPONSE_LIMIT, ASSISTANT_RESEARCH_TASK_REF, ASSISTANT_RESEARCH_TIMEOUT_MS,
+    AssistantContextLayer, AssistantInferenceRequest, AssistantInferenceResponse,
+    AssistantObjectChain, BoundedAssistantContext, ProviderBindingState, assemble_bounded_context,
+    parse_assistant_inference_request, parse_assistant_inference_response,
+    parse_assistant_object_chain, render_assistant_prompt, validate_assistant_inference_request,
+    validate_research_target,
 };
 pub use pi_launcher::{
     PiLaunchFailure, PiLaunchPermit, PiLaunchRequest, PiPlatformClass, PiSandboxAdapterState,

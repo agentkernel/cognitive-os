@@ -33,7 +33,7 @@ core (`cognitive-kernel`) has no HTTP, SQLite, or model SDK dependency by design
 | `crates/cognitive-conformance` | conformance runner: 89 vectors, five-state report, 41-flip self-check | `src/main.rs`, `src/exec/` |
 | `apps/kernel-server` | the Personal daemon (`--personal`): loopback HTTP, auth channels, readiness/doctor, Provider proxy, scheduler authority, tool executor, verification executor | `src/personal/server.rs` (`serve_personal_loopback`), `scheduler_authority/`, `task_api.rs` |
 | `apps/admin-cli` | two binaries: `cognitive` (product CLI) and `admin-cli` (management fallback) | `src/cognitive_main.rs`, `src/main.rs`, `src/personal_cli/` |
-| `apps/pi-agent-adapter` | pinned Pi child-process adapter; only `daemon-candidate` is operational | `src/main.rs`, `src/lib.rs` |
+| `apps/pi-agent-adapter` | pinned Pi child-process adapter; only `daemon-candidate` and `assistant-turn` (P13-T03 hidden assistant) are operational | `src/main.rs`, `src/lib.rs` |
 | `packages/pi-cognitiveos` | Pi extension: daemon discovery/client, provider bridge, default-deny tools | `src/extension.ts` (`registerCognitiveOsExtension`), `src/daemon-client.ts` |
 | `packages/sdk-ts` | channel-isolated AKP client SDK: envelopes, transports, watch consumer | `src/client.ts`, `src/channel.ts`, `src/watch.ts` |
 | `packages/contracts-ts` | canonical JSON/digest twin + 55 generated TS modules + golden emitters | `src/canonical.ts`, `src/generated/` |

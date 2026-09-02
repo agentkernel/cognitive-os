@@ -307,6 +307,66 @@ describe("P12-T09 right-rail canvas write", () => {
     unmount(host, root);
   });
 
+  it("points at Settings and applies nothing when the daemon reports no bound Provider (P13-T03)", async () => {
+    const { host, root, calls } = await renderRail("#/projects", {
+      "POST /management/project/v1/assistant.turn": {
+        status: 409,
+        body: {
+          status: "provider_unbound",
+          code: "ASSISTANT_PROVIDER_UNBOUND",
+          message: "no Provider is bound to the assistant; open Settings to connect one",
+          chat_input: false,
+          silent_bind: false,
+          candidate_registered: false,
+          settings_route: "#/settings",
+        },
+      },
+    });
+    fillWrite(host);
+    clickButton(host, "Review write");
+    clickButton(host, "Write to canvas");
+    await flush();
+    expect(calls.filter((call) => call.method === "POST").map((call) => call.pathname)).toEqual([
+      "/management/project/v1/assistant.turn",
+    ]);
+    expect(host.querySelector("[data-region='opc-rail-written']")).toBeNull();
+    const pointer = host.querySelector("[data-region='opc-rail-provider-unbound'] a");
+    expect(pointer?.getAttribute("href")).toBe("#/settings");
+    expect(pointer?.textContent).toMatch(/Open Settings to connect a Provider/);
+    expect(railButtons(host)).not.toContain("Approve");
+    expect(host.textContent).not.toMatch(/api[_ ]key/i);
+    unmount(host, root);
+  });
+
+  it("renders the inferred reply and chain kinds after a real turn (P13-T03)", async () => {
+    const { host, root } = await renderRail("#/projects", {
+      "POST /management/project/v1/assistant.turn": {
+        status: 200,
+        body: {
+          ...(TURN_OK.body as Record<string, unknown>),
+          reply: "Candidate charter proposed; nothing is written until you confirm.",
+          model_id: "deepseek-chat",
+          provider_round_trips: 1,
+          chain: [
+            { object_kind: "business-brief", fields: { goal: { value: "x", provenance: { kind: "owner-stated" } } } },
+            { object_kind: "charter", fields: { title: { value: "y", provenance: { kind: "owner-stated" } } } },
+          ],
+        },
+      },
+    });
+    fillWrite(host);
+    clickButton(host, "Review write");
+    clickButton(host, "Write to canvas");
+    await flush();
+    const reply = host.querySelector("[data-region='opc-rail-assistant-reply']")?.textContent ?? "";
+    expect(reply).toMatch(/Candidate charter proposed/);
+    expect(reply).toMatch(/deepseek-chat/);
+    expect(reply).toMatch(/1 Provider round trip/);
+    expect(reply).toMatch(/business-brief → charter/);
+    expect(host.querySelector("[data-region='opc-rail-written']")).not.toBeNull();
+    unmount(host, root);
+  });
+
   it("does not claim success when draft.apply is refused", async () => {
     const { host, root, calls } = await renderRail("#/projects", {
       "POST /management/project/v1/draft.apply": {
