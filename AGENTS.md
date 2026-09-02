@@ -181,8 +181,9 @@ Ready/merge 前额外：`node tools/src/check-handbook.mjs`、`node tools/src/ge
   时记 `blocked`/`not-run`。
 - 本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`；这只恢复
   钉住工具的发现（版本以 `rust-toolchain.toml` 为准），不授权在本机 GNU 运行 Rust linking。
-- `pnpm run verify:local`（V01 编排器）钉住过期计数且需要 pwsh 7 与 Rust 构建，在本机不是
-  可用门；用 §5 的单项命令。
+- `pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）在本机不是可用门：它钉住过期的
+  符合性计数（85/60/25，CI 已钉 89/62/27）且会在 GNU host 上执行被禁止的 `cargo build`；
+  本机已有 pwsh 7，这不是阻碍。重钉或废弃由 `P0-T01/D02` 子决策处理；用 §5 的单项命令。
 
 | 目的 | Windows PowerShell（本地） | CI / Linux（bash） |
 |---|---|---|

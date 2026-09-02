@@ -564,6 +564,17 @@ Pi 不可以：
 - **安全/观测/回滚：** 不读取 secret；只生成 ignored artifacts；失败即恢复环境，不改源码。
 - **解锁/风险/不确定：** 解锁全部任务；Windows GNU 是否继续支持需在此关闭。
 
+#### P0-T01/D02 — 本机 Rust 工具链修复 Slice（2026-09-02 owner 指令登记；未执行）
+
+- **目标：** 让 `DEV-WIN-GNU-01` 具备 workspace Rust 本地迭代能力：`cargo build --workspace --locked`、`cargo test --workspace --locked -- --test-threads=1`、`cargo clippy --workspace --all-targets --locked -- -D warnings` 在本机通过。
+- **事实基线（2026-09-02 探测，未跑 cargo）：** 默认 host `x86_64-pc-windows-gnu`；rustup 已装 `1.97.1-x86_64-pc-windows-msvc` 与 `gnullvm`；`D:\VSBuildTools` 存在且 vswhere 报告 `VC.Tools.x86.x64`，但 `link.exe` 不在 Cursor Shell PATH；pwsh 7.6.5 已装；`core.autocrlf=true`（被 `.gitattributes eol=lf` 覆盖）。这些事实尚未写入环境登记，由本 Slice 写回。
+- **Owner 决策点（执行前必须确认）：** (a) 本机 override——`rustup override set 1.97.1-x86_64-pc-windows-msvc`（目录级）或本机 `.cargo/config.toml`（不提交），不改 tracked 文件，CI/其他机器不受影响；**推荐默认**。(b) 改 tracked `rust-toolchain.toml`——影响所有 clone 与 CI，corrective 决策，需 owner 明示。子决策：`pnpm run verify:local` + `scripts/v01-auto-run.*` 重钉到 CI 计数（89/62/27）还是废弃并从 `package.json` 移除。未确认前可做：事实探测、环境登记草稿、running report 骨架、connected-docs 改写草稿。
+- **步骤：** 领取 lease（Lane-DOC + 工具面路径：`docs/plan/PERSONAL-TEST-ENVIRONMENTS.md`、`AGENTS.md`、`.cursor/rules/10-*.mdc`、`docs/governance/DEVELOPMENT-OPERATING-MODEL.md` §3.0、`personal/tests/baseline/README.md`、`tools/src/check-consistency.mjs` 6c 守卫片段、handbook 三页双语、`package.json`/`scripts/` 视子决策）→ P0-T01 改 `in-progress` 并同步进度汇总 → 决策点确认 → 执行切换 → 在本机跑三条 cargo 命令并记 running report（`rustc -vV`、`link.exe` 路径/版本、exact revision）→ 写回环境登记 §3（allowlist 扩展；**能力上限不变**）→ 改写 `RUST-LINK-DEV-WIN-GNU-01` 相关禁令为"历史 GNU 结论 + 当前 MSVC 允许面"（6c 守卫片段同步）→ handbook 双语 + 指纹 → required CI 仍绿 → 收口。
+- **validation environment：** `DEV-WIN-GNU-01`（执行对象）+ `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`。
+- **关闭门：** 三条 cargo 命令在本机 exact revision 上通过且记账；环境登记与全部引用文件同步；`check:consistency`（含 6c）、`check:handbook`、generator `--check`、`check:rules`、docs-sync 绿；required CI 绿。
+- **漂移检测负例：** 本机 Rust 证据被写成 Gate/Profile/Windows 产品支持或 `DEV-WINDOWS-NATIVE-OPC-01`；在 feature Slice 内顺手改工具链；只改 PATH/override 不写回登记；未确认决策点即改 `rust-toolchain.toml`；把过期 `verify:local` 当本地门。
+- **不阻塞：** 任何 P13 卡（旁支加速项）。
+
 ### P0-T02 — 冻结 Personal 需求、追踪与架构边界
 
 - **目标：** 将 PERS-PR、现有 REQ、任务、测试、Benchmark 建立双向映射。
@@ -637,6 +648,19 @@ Pi 不可以：
 - **验收：** ADR-0019 冻结 UDS 默认 + loopback TCP 可选、channel-scoped bearer bootstrap、资源上限；threat model 覆盖 CSRF、DNS rebinding、token theft、channel confusion、replay；不实现业务路由、不声明 G0/B01-B12/Profile。
 - **回滚：** 保持 loopback disabled-by-default。
 - **解锁：** P1-T04。
+
+### P0-T09 — 计划/规则漂移的机械校验（2026-09-02 登记）
+
+- **状态：** 以正式台账为准（`not-started`）。来源：`DOC-AGENT-RULES`（PR #306）复审「发现但未修改」第 1/4/6 项；`DOC-P13-DRIFT-FIX` 是其前置（先对齐再上校验）。
+- **目标：** 把三类已发生的漂移变成机械红灯：(1) 已提交文档链接到本机未跟踪文件（`clients/docs/design/opc-2.0/` 14–18、21–26、`window-c-*.md`、`docs/plan/p11-plan-review-and-optimization.md`）——`tools/src/check-consistency.mjs` 与 `tools/src/check-agent-rules.mjs` 的相对链接/路径存在性检查改为基于 `git ls-files`（tracked-only），本机与 CI 结论一致；(2) 正式计划 Phase 13 mermaid 建造顺序边集合 == `personal/docs/architecture/personal-2.0.0-dev-prep-index.md`「Phase 13 build order」边集合；(3) `personal/handbook/_meta/source-map.json` 新增 `personal/crates/cognitive-runtime/src/installer.rs`（`OFFICIAL_PI_PACKAGE`）→ `ref.compatibility`、`dev.agent-pi-lifecycle` 路由，两页 `sources` 加 `symbols` 钉住包名。
+- **依赖 / 不包含：** P0-T01、P8-T08；`DOC-P13-DRIFT-FIX` 完成。不改正式计划的建造顺序本身；不改产品代码。
+- **文件：** `tools/src/check-consistency.mjs`、`tools/src/check-agent-rules.mjs`、`tools/test/check.test.mjs`、`tools/test/check-agent-rules.test.mjs`、`tools/test/handbook-check.test.mjs`、`personal/handbook/_meta/source-map.json`、受影响 handbook 页指纹。
+- **Lane / lease：** Lane-CFR 主责（工具面）+ handbook `_meta`；正式 `P0-T09` task lease（DOC/GOV 类不能拥有 `tools/**`）。
+- **验收：** 三项校验各有 focused negative fixture 且在当前树绿；按 docs-sync-contract §5 重跑注入演练并把输出贴入 PR；required CI 绿。
+- **validation environment：** `DEV-WIN-GNU-01`（Node 工具面）+ `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`。
+- **关闭门：** 本机对未跟踪文件的链接即红；两处建造顺序边集合不等即红；`installer.rs` 变动触发 docs-sync 路由；负例 fixture 全绿。
+- **漂移检测负例：** 校验只在 CI 生效而本机放行；用文件系统存在性冒充 tracked；边集合写死在文档而非解析 mermaid；为让校验通过反向改正式计划。
+- **不阻塞：** 任何 P13 卡。
 
 ---
 
