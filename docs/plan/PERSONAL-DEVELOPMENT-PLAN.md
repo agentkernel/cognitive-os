@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T12` `in-progress`（`P13-T12/D01` 视觉规格 + v9 对照清单 documentation-only `done`，PR #308；D02 `ready`）；`P13-T02..T11`、`P13-T13` `not-started`；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice（owner 决策点待确认）、`P0-T09` 漂移机械校验 `not-started`、`DOC-P13-DRIFT-FIX` 文档对齐；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T02` `in-progress`（2026-09-03 托管 DSH 真实 Attempt 循环 acceptance 全部满足于 PR #310，`done` 随 lease closure 落 `main`；Windows sandbox/ACL/supply-chain 格仍 `not-run` 至 P13-T13）；`P13-T12` `in-progress`（`P13-T12/D01` 视觉规格 + v9 对照清单 documentation-only `done`，PR #308；D02 `ready`）；`P13-T03..T11`、`P13-T13` `not-started`；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice（owner 决策点待确认）、`P0-T09` 漂移机械校验 `not-started`、`DOC-P13-DRIFT-FIX` 文档对齐；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-09-02**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -164,7 +164,15 @@
 > at `main@3680b742`；required CI [33669225379](https://github.com/agentkernel/cognitive-os/actions/runs/33669225379)
 > **SUCCESS** at `bd87b8ee`）；`P13-T12/D02` `ready`；规格 §13 记录但不裁决的漂移：
 > 现网 `app.css` ≤ 1279 px 叠栏 vs 产品「窄窗横滚不叠栏」，目前无 P13 卡拥有该 CSS
-> 修正；其余 `P13-T02..T11`、`P13-T13` `not-started`/unclaimed。
+> 修正；`P13-T02`（托管 DSH 真实 Attempt 循环：v36 Attempt / frame / artifact-fact
+> ledger、daemon-owned stdio broker + 真实 child spawn、`dsh.hosted.attempt.*` /
+> `dsh.hosted.artifact.*` management 路由）acceptance 全部满足，`done` 随 lease closure 落
+> `main`（PR [#310](https://github.com/agentkernel/cognitive-os/pull/310)；
+> required CI [33676373077](https://github.com/agentkernel/cognitive-os/actions/runs/33676373077)
+> **SUCCESS** at `f82bd437`；`DEV-LINUX-NATIVE-01` 真实 spawn：store 9/9、runtime 7/7、
+> kernel-server 2/2、live daemon E2E 含 product child → pinned dsh → daemon proxy 与
+> daemon crash → `unknown-outcome`；Windows sandbox/ACL/supply-chain 格 `not-run` 至
+> `P13-T13`）；其余 `P13-T03..T11`、`P13-T13` `not-started`/unclaimed。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -248,8 +256,8 @@
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化 Windows |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
-| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 2 | 0 | 10 | P13-T01 docs-only done；P13-T03 in-progress（claimed 2026-09-03，隐藏 Pi 真实推理）；P13-T12 in-progress（D01 视觉规格 docs-only）；T02/T04–T11、T13 not-started；P11-T15 是其验收出口，不自动 release |
-| **合计** | **167** | **132** | **2** | **1** | **16** | 另有 16 cancelled；无新 Gate pass |
+| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 3 | 0 | 9 | P13-T01 docs-only done；P13-T02 in-progress → closing（hosted DSH real Attempt loop acceptance 全部满足，PR #310，`done` 随 lease closure）；P13-T03 in-progress（claimed 2026-09-03，隐藏 Pi 真实推理）；P13-T12 in-progress（D01 视觉规格 docs-only done）；T04–T11、T13 not-started；P11-T15 是其验收出口，不自动 release |
+| **合计** | **167** | **132** | **3** | **1** | **15** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -325,7 +333,7 @@
 | P10 | superseded desktop/MCP 计划 | P10-T01/T02 已完成历史事实 | P10-T03..T18 已明确 disposition/cancelled | 静默改旧验收或把 cancelled 写成完成 |
 | P11 | Windows-first OPC 2.0（chrome = Personal 2.0.0） | P11-T01 docs closure；T01–T14 `done`；T15 unparked | T13 Dual Track L1 不等于完整 `/ui/` 验收；T15 ≠ prototype done；release/signing/B01-W 仍独立 | 用 docs/Canvas/ordinary CI/Linux/Win-GNU 证据宣称 Windows、DSH、connector 或 release；把六族 `/ui/` 写成已是 OPC IA；把 T15 塞进 P12 |
 | P12 | Frozen-prototype functional completeness on daemon `/ui/` | P12-T01–T09 **done**；P12 Remaining = 0；do not auto-claim T15 | 默认可走场景接到 `/ui/`（非像素复制）；Dual Track 诚实空态；NVDA/200%/host-theme 挂单；T15 仍独立 | 新开平行计划/PRD；把 T13 L1 或 hidden T02/T07/T14 写成完整 Today/Projects；Vite/canvas 当产品源；假 Create/Activate/Approve；把缺口推到 2.1 |
-| P13 | Personal 2.0.0 completion：walking skeleton → 原型程度 + 设计目标 | P13-T01 docs closure **done**（PR #305）；实现第一刀 **`P13-T02`**（托管 DSH 真实 Attempt 循环）与 **`P13-T03`**（隐藏 Pi 真实推理）可并行；其余按 typed dependency 领取 | 主链（成员真实执行 → 产物 → 独立验证 → 产出/发布 → 运行/例程 → 群聊协调）在 Linux native + CI 关闭；表面完备（Knowledge/Memory/Settings/生命周期/Skill-MCP/反思）；视觉与 a11y 资格化；Windows 原生环境资格化并回填挂单 E2E；最后 `P11-T15` N=15 | 用 Linux/CI 证据宣称 Windows 支持；把 P13 done 写成 release/signing/B01-W；用 canvas 截图当 a11y/视觉验收；把 walking skeleton 改名当产品级；把缺口推到 2.1；新开平行计划/PRD |
+| P13 | Personal 2.0.0 completion：walking skeleton → 原型程度 + 设计目标 | P13-T01 docs closure **done**（PR #305）；实现第一刀 **`P13-T02`**（托管 DSH 真实 Attempt 循环）acceptance 全部满足（PR #310，closing）；**`P13-T03`**（隐藏 Pi 真实推理）可并行；`P13-T04/T05`（与 T03 后的 T06）在 P13-T02 合并后可领取；其余按 typed dependency 领取 | 主链（成员真实执行 → 产物 → 独立验证 → 产出/发布 → 运行/例程 → 群聊协调）在 Linux native + CI 关闭；表面完备（Knowledge/Memory/Settings/生命周期/Skill-MCP/反思）；视觉与 a11y 资格化；Windows 原生环境资格化并回填挂单 E2E；最后 `P11-T15` N=15 | 用 Linux/CI 证据宣称 Windows 支持；把 P13 done 写成 release/signing/B01-W；用 canvas 截图当 a11y/视觉验收；把 walking skeleton 改名当产品级；把缺口推到 2.1；新开平行计划/PRD |
 
 ### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
@@ -348,7 +356,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Multi-Agent | P6-T01..T04、B11 | 默认关闭；NO-GO 是合法结果 |
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
 | Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01–T09 done；冻结 prototype 默认可走场景已接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
-| Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T12 in-progress（D01 视觉规格 + v9 对照清单 docs-only）；P13-T02..T11、T13 not-started；出口 = P11-T15 N=15 | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
+| Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T02 closing（托管 DSH 真实 Attempt 循环 acceptance 全部满足，PR #310）；P13-T12 in-progress（D01 视觉规格 + v9 对照清单 docs-only）；P13-T03..T11、T13 not-started；出口 = P11-T15 N=15 | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -1583,7 +1591,7 @@ flowchart TD
 | ID | 类型 / Lane | 内容 | 依赖 | 验证环境 | 关闭门 | 漂移检测负例 | 状态 |
 |---|---|---|---|---|---|---|---|
 | `P0-T01/D02` | 正式任务 P0-T01 的 Delivery Slice / Lane-DOC + Lane-CFR（`rust-toolchain.toml` 或本机 override、环境登记、AGENTS/规则、handbook、`verify:local`） | 让 `DEV-WIN-GNU-01` 用本机已装 `1.97.1-x86_64-pc-windows-msvc` + `D:\VSBuildTools` 跑通 `cargo build/test/clippy`；重写环境登记 §3（含 MSVC/pwsh 7.6.5/autocrlf 事实），能力上限不变 | **owner 决策点**：本机 override（推荐）vs 改 tracked `rust-toolchain.toml`；子决策 `verify:local` 重钉或废弃 | `DEV-WIN-GNU-01` + required CI 仍绿 | 见 Delivery Slice register 该行 | 本机 Rust 证据升 Gate/Profile/Windows 支持；feature Slice 内改工具链；只改 PATH 不登记 | `ready`（决策点未确认前先做不需决策的部分：事实探测、登记草稿、running report 骨架） |
-| `DOC-P13-DRIFT-FIX` | owner-directed 文档交付（`DOC-<id>` lease，Lane-DOC） | (a) **优先**：`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`「Phase 13 build order」补齐缺边 `T05→T12b`、`T07→T12b`、`T05→T13`、`T09→T15`、`T10→T15`、`T11→T15`，以本节 mermaid 为准（正式计划优先）；(b) Pi 包名统一：先确认权威——代码 `personal/crates/cognitive-runtime/src/installer.rs` `OFFICIAL_PI_PACKAGE = "@earendil-works/pi-coding-agent"` 与 `PERSONAL-TEST-ENVIRONMENTS.md` §1 / `plan.md` PI-02 一致，handbook `reference/compatibility.md`、`developer/agent-and-pi-lifecycle.md`（双语 4 页）写 `@mariozechner/pi`——统一到代码事实并刷新指纹；(c) handbook `developer/development-environments.md` 双语明示"本机 `core.autocrlf=true` 被 `.gitattributes` `* text=auto eol=lf` 覆盖，无需改本机配置" | 无（可立即领取）；(b) 若确认权威为 handbook 而非代码则升级为产品语义决策并停下问 owner | `DEV-WIN-GNU-01`：`check:consistency`、`check:handbook`、generator `--check`、`fill-handbook-fingerprints`、docs-sync；required CI | 两处建造顺序边集合逐条相等；四页 handbook 包名 == 代码常量；autocrlf 说明双语存在；全部门禁绿 | 只改一处图不改另一处；用 handbook 反向改代码常量；在 handbook 复制 PROGRESS 动态状态 | `ready`（无依赖，可立即领取；是 `P0-T09` 的前置） |
+| `DOC-P13-DRIFT-FIX` | owner-directed 文档交付（`DOC-<id>` lease，Lane-DOC） | (a) **优先**：`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`「Phase 13 build order」补齐缺边 `T05→T12b`、`T07→T12b`、`T05→T13`、`T09→T15`、`T10→T15`、`T11→T15`，以本节 mermaid 为准（正式计划优先）；(b) Pi 包名统一：先确认权威——代码 `personal/crates/cognitive-runtime/src/installer.rs` `OFFICIAL_PI_PACKAGE = "@earendil-works/pi-coding-agent"` 与 `PERSONAL-TEST-ENVIRONMENTS.md` §1 / `plan.md` PI-02 一致，handbook `reference/compatibility.md`、`developer/agent-and-pi-lifecycle.md`（双语 4 页）写 `@mariozechner/pi`——统一到代码事实并刷新指纹；(c) handbook `developer/development-environments.md` 双语明示"本机 `core.autocrlf=true` 被 `.gitattributes` `* text=auto eol=lf` 覆盖，无需改本机配置" | 无（可立即领取）；(b) 若确认权威为 handbook 而非代码则升级为产品语义决策并停下问 owner | `DEV-WIN-GNU-01`：`check:consistency`、`check:handbook`、generator `--check`、`fill-handbook-fingerprints`、docs-sync；required CI | 两处建造顺序边集合逐条相等；四页 handbook 包名 == 代码常量；autocrlf 说明双语存在；全部门禁绿 | 只改一处图不改另一处；用 handbook 反向改代码常量；在 handbook 复制 PROGRESS 动态状态 | `done`（2026-09-03；PR [#309](https://github.com/agentkernel/cognitive-os/pull/309)，required CI [33670770754](https://github.com/agentkernel/cognitive-os/actions/runs/33670770754) SUCCESS at `12e84b7c`；权威确认为代码常量，无需 owner 决策；两图 27/27 边相等；`P0-T09` 前置已满足） |
 | `P0-T09` | 正式任务 / Lane-CFR（`tools/**`、`personal/handbook/_meta/source-map.json`） | tracked-only 链接检查（`check-consistency` + `check-agent-rules`）、Phase 13 建造顺序边集合机械比对、`installer.rs` → handbook source-map 路由 + symbols | `DOC-P13-DRIFT-FIX` 完成（否则新校验一上线即红）；P8-T08 | `DEV-WIN-GNU-01`（Node）+ required CI；注入演练 | 见 Phase 0 表 P0-T09 行与 `P0-T09/D01` | 校验只在 CI 生效；文件系统存在性冒充 tracked；为通过校验反向改正式计划 | `not-started` |
 
 已在 `DOC-AGENT-RULES` 复审中**直接修正**（无需卡）：`AGENTS.md` §6 对 `pnpm run verify:local`
@@ -1613,7 +1621,7 @@ flowchart TD
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P13-T01 | Phase 13 docs/plan 登记 + T15 N=15 预注册草案 | owner 2026-09-02 指令；P11-T01..T14 与 P12-T01..T09 done；2026-09-02 差距核对 | 本文件 Phase 13 + typed deps + 三栏 + Slices + plan.md 卡 + T15 卡细化 + trace/environments/PROGRESS/dev-prep index/handbook；static/docs-sync/required CI；documentation-only | done | merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) at `main@aac6804f`；required CI [33620332959](https://github.com/agentkernel/cognitive-os/actions/runs/33620332959) **SUCCESS** at `9724f67f`；[report](../checkpoints/2026-09-02-personal-p13-t01-completion-plan-report.md)；[closure](../checkpoints/2026-09-02-personal-p13-t01-completion-plan-closure.md)；无 implementation/support/Gate/release claim |
-| P13-T02 | 托管 DSH 真实 Attempt 循环（完整 stdio broker + health/update/rollback） | P11-T07 骨架；P11-T03/T04/T12；P2 Effect/WIA/verification；**不依赖 T03** | 见下表三栏；实现第一刀之一 | not-started | unclaimed |
+| P13-T02 | 托管 DSH 真实 Attempt 循环（完整 stdio broker + health/update/rollback） | P11-T07 骨架；P11-T03/T04/T12；P2 Effect/WIA/verification；**不依赖 T03** | 见下表三栏；实现第一刀之一 | in-progress | **acceptance 全部满足，closing**（`done` 随 lease closure 落 `main`）：PR [#310](https://github.com/agentkernel/cognitive-os/pull/310)；required CI [33676373077](https://github.com/agentkernel/cognitive-os/actions/runs/33676373077) **SUCCESS** at `f82bd437`；`DEV-LINUX-NATIVE-01` at `f82bd437`：store 9/9 + migrations 8/8、runtime broker 7/7（真实 `node` child）、kernel-server 2/2、live daemon E2E（product child → pinned dsh `528c682e` compiled-lib → daemon proxy → `failed/dsh-exit-1` 诚实终态；daemon SIGKILL → 重启 → `unknown-outcome`；0 secret leaks）；[report](../checkpoints/2026-09-03-personal-p13-t02-hosted-dsh-attempt-report.md)；[closure](../checkpoints/2026-09-03-personal-p13-t02-hosted-dsh-attempt-closure.md)；Windows sandbox/ACL/supply-chain 格 `not-run` 至 P13-T13；Linux Path B ≠ Windows 资格；无 Gate/release |
 | P13-T03 | 隐藏 Pi 助手真实推理（explain/navigate/research/propose 真调 exact Pi） | P11-T06/T05/T10/T12；P12-T09；**不依赖 T02** | 见下表三栏；实现第一刀之一 | in-progress | claimed 2026-09-03 on `lease/personal/P13-T03/pi-inference` / `personal/P13-T03-pi-inference`; running report [P13-T03 report](../checkpoints/2026-09-03-personal-p13-t03-pi-inference-report.md) |
 | P13-T04 | 独立验证 + 产出可打开 + 发布包预览 | P13-T02；P11-T03/T09；P3-T03；P2-T07；P12-T03 | 见下表三栏；末环验收；planned ≠ published | not-started | unclaimed |
 | P13-T05 | 运行/例程闭环 + Today 运行概览 | P11-T08；P13-T02；P11-T02；P12-T03/T05 | 见下表三栏；daemon scheduler 唯一权威 | not-started | unclaimed |

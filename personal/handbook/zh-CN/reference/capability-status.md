@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:5414240d5d4be38aa13f46ed6dff5b7d24307e4bbd996c50678f9c7c2f6671c2"
+fingerprint: "sha256:9cd25c49e74840a547f7881eb0483b92b3969509d9316bc2bedb97585bf13f6b"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -81,6 +81,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority 可复用，但 Project activation、manager envelope、Routine/missed ledger 与完整 hierarchy 不存在 |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | 没有完整 authority/projection；employee identity 必须与 runtime/process 分离 |
 | Pi-backed Personal Assistant | Requires-backend | Pi 是 hidden、candidate-only target engine；current Pi Shell/Linux qualification 不构成 OPC Assistant |
+| 隐藏托管 DSH 真实 Attempt 循环 | partial（实现已存在）+ Requires-environment | v36 + management `dsh.hosted.attempt.run` / `attempt.list` / `attempt.detail` / `artifact.check` / `artifact.facts` 已证明 persist-before-dispatch Intent、经 daemon stdio broker 真实 spawn exact-artifact 子进程（stdin 递交有界 Context、白名单 env、仅 Path B）、candidates/observations 只追加台账、daemon 写入且永不为 `success` 的终态、`completion_claimed=false`、崩溃 → `unknown-outcome`，以及 artifact health/update/rollback 事实。不是 Installed Agent chrome，不是原生 DSH UI，不是 Pi 当 Member 引擎。Linux 真实 spawn 只是实现证据；Windows sandbox / ACL / supply-chain E2E 在 `P13-T13` 前为 `not-run`。所产文本的独立验证属于 `P13-T04`。 |
 | Preinstalled managed DSH Installed Agent | Requires-backend + Requires-environment | existing dsh Path B 不是 exact Windows artifact/isolated child/sandbox/update/rollback qualification；没有 native DSH UI/conversation target |
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive 与 single composer 不存在；不得重解释 ADR-0058 `conversation-projection/0.1` |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |

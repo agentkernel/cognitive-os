@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:1423217c348a2e9a2328ac65a6ea874f01ad7a6a54d29ef162781bf01683e6dc"
+fingerprint: "sha256:6a529502ccb3585066247e0238da59dbf192f07daf89c7d7b785e7bd5d2ae013"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---

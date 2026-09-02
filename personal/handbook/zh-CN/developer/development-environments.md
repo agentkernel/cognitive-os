@@ -53,7 +53,9 @@ Gate/release；`not-run` 保持 `not-run`。
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22
 （`package.json`）、workspace 级 `unsafe_code = "forbid"` 与 pedantic clippy
 （`Cargo.toml`）。文本强制 LF 行尾（`.gitattributes`）——这也是手册指纹跨平台稳定的
-原因。
+原因。本机 Windows 主机 `git config core.autocrlf` 为 `true`；该设置被 tracked 的
+`.gitattributes` 规则 `* text=auto eol=lf` 覆盖，checkout 与 commit 均保持 LF，
+无需改任何本机 Git 配置。
 
 本 Windows 主机的 shell 纪律：PowerShell 5.1——无 `&&`/`||`；用分开的调用或
 `if ($LASTEXITCODE -eq 0) { … }` 串接。该规则与 GNU linker 上限都不适用于

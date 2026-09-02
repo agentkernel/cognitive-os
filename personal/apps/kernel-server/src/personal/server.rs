@@ -22,7 +22,7 @@ use cognitive_secret::{
     select_production_secret_store,
 };
 use cognitive_store::{
-    PersonalDataLayout, ProviderControlPlaneStore, SqliteAuthorityStore,
+    HostedDshAttemptStore, PersonalDataLayout, ProviderControlPlaneStore, SqliteAuthorityStore,
     prepare_personal_databases, scheduler::SchedulerRepository,
 };
 use serde_json::json;
@@ -33,6 +33,7 @@ use super::bounds::{
     PersonalResourceBounds, RequestBoundError, validate_body_length, validate_header_block,
 };
 use super::fault_profile;
+use super::hosted_dsh_attempt;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::pinned_https;
 use super::project_aggregate;
@@ -262,6 +263,19 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             detail: format!("publish immutable native Tool descriptors: {error}"),
         }
     })?;
+    // Hosted DSH Attempts left `persisted`/`dispatched` by a previous daemon
+    // process reconcile to `unknown-outcome` (A3); they never become success.
+    let reconciled_attempts = HostedDshAttemptStore::from_authority_store(authority_store.as_ref())
+        .reconcile_unknown_outcomes(cognitive_store::now_ms())
+        .map_err(|error| PersonalDaemonError::Io {
+            detail: format!("reconcile hosted DSH attempts before startup: {error}"),
+        })?;
+    if !reconciled_attempts.is_empty() {
+        eprintln!(
+            "kernel-server personal: {} hosted DSH attempt(s) reconciled to unknown-outcome",
+            reconciled_attempts.len()
+        );
+    }
     let artifact_store = Arc::new(open_daemon_artifact_store(&config.layout).map_err(|error| {
         PersonalDaemonError::Io {
             detail: format!("assemble daemon ArtifactStore: {error}"),
@@ -705,6 +719,17 @@ fn dispatch_http_route(
     }
     if provider_control_plane::matches(&method_path) {
         return handle_provider_control_plane_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            layout,
+            authority,
+            authority_store,
+        );
+    }
+    if hosted_dsh_attempt::matches(&method_path) {
+        return handle_hosted_dsh_attempt_route(
             stream,
             &method_path,
             headers,
@@ -1833,6 +1858,57 @@ fn handle_windows_host_route(
         return write_error_response(stream, status, error.code(), &error.to_string());
     }
     let response = windows_host::handle(method_path, body, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+fn handle_hosted_dsh_attempt_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    layout: &PersonalDataLayout,
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if hosted_dsh_attempt::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = hosted_dsh_attempt::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let host = hosted_dsh_attempt::HostedAttemptHost::from_layout(layout);
+    let response = hosted_dsh_attempt::handle(method_path, body, authority_store.as_ref(), &host);
     write_response(
         stream,
         response.status,

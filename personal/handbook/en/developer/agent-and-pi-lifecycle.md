@@ -34,6 +34,9 @@ sources:
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.mjs
+  - path: personal/crates/cognitive-runtime/src/hosted_dsh_broker.rs
+    symbols: ["run_hosted_child", "HostedDshArtifact", "HOSTED_FRAME_PROTOCOL"]
   - path: personal/docs/product/agent-integration-and-conversations.md
   - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
   - path: personal/docs/architecture/agent-shell-and-agent-lifecycle.md
@@ -54,7 +57,9 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:770463872da22062c5711d3455592ced38931df761f41884f21e8ce287616397"
+  - personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.test.mjs
+  - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
+fingerprint: "sha256:1fca04be0fad51387cc7a4199f0d05bfb2a56d731c2c8526f36e4802cb5975a1"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -66,7 +71,8 @@ daemon-side authority record, all epoch-fenced.
 
 ## Acquisition and installation
 
-`acquire_official_pi_durable` pins `@mariozechner/pi@0.81.1` by exact
+`acquire_official_pi_durable` pins `@earendil-works/pi-coding-agent@0.81.1`
+(`OFFICIAL_PI_PACKAGE` / `OFFICIAL_PI_VERSION` in `installer.rs`) by exact
 `sha512-…` integrity: normalizes/validates the npm metadata URL against an
 allowlist, verifies the tarball hash, repackages deterministically, and emits an
 acquisition report whose failure classes are typed. `install_package` verifies
@@ -250,6 +256,31 @@ Direct Flash
 (`--path a`) is measurement-only via `scripts/paired-path.mjs`. Adapter
 registration digest in `dsh.json` is not SQLite-durable daemon adapter state.
 Both remain implementation evidence only.
+
+**Hidden hosted DSH real Attempt loop (P13-T02).** The same pinned checkout is
+also the hidden Member execution engine, but it is never launched by a CLI or
+a user: the daemon's `cognitive-runtime` stdio broker
+(`hosted_dsh_broker::run_hosted_child`) spawns
+`node <adapter_root>/scripts/hosted-attempt-child.mjs --dsh-root … --adapter-root
+… --revision <pin> --provider-path b` from `dsh.json` with `env_clear` plus an
+allowlisted environment, writes one bounded `request` frame (Context ≤64 KiB,
+its SHA-256, the loopback daemon origin, the bootstrap-file *path*, the
+timeout) to stdin, and reads newline-JSON `observation` / `candidate` /
+`heartbeat` / `response` frames under a wall-clock timeout and byte/frame caps.
+The child mints its own management session from the bootstrap file, keeps the
+bearer only in a 0600 `.credentials.yaml` under a disposable `DSH_HOME`, points
+`llm-deepseek` at `/provider/v1/dsh` on the daemon (never a Provider host),
+runs `dsh --profile headless --patch … <context>`, streams redacted dsh output
+as observations, and ends with one `DeliverableDraft` candidate and a
+`response` whose `status: done` is **not** completion. Path A, `--api-key-file`,
+native MCP flags, non-loopback origins, and pin drift refuse before dsh exists
+(exit classes 2–5); a dsh that outlives the budget is killed and reported
+`failed / timed-out`. `cognitive dsh web` / `launch` are unaffected. The daemon
+records every frame as an observation and writes the terminal itself; see
+[Daemon and HTTP](daemon-and-http.md) and
+[Store and migrations](store-and-migrations.md) (v36). Linux real spawn is
+implementation evidence; Windows sandbox / ACL / supply-chain qualification is
+`P13-T13` and stays `not-run`.
 
 After a daemon restart, the current dsh Path B web process can retain a stale
 management session and surface the resulting 401 as "API key invalid." The

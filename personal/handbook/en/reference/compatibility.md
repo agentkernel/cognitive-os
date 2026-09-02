@@ -43,7 +43,7 @@ Personal 2.1.
 | Rust toolchain | 1.97.1 | `rust-toolchain.toml` |
 | pnpm | 10.33.2 | root `package.json` `packageManager` |
 | Node | ≥ 22 | root `package.json` engines; Node 22 in CI |
-| Pi agent | exactly `0.81.1` (`@mariozechner/pi`, pinned sha512 integrity) | acquisition + launch admission |
+| Pi agent | exactly `0.81.1` (`@earendil-works/pi-coding-agent`, pinned sha512 integrity) | acquisition + launch admission (`OFFICIAL_PI_PACKAGE` in `personal/crates/cognitive-runtime/src/installer.rs`) |
 | SQLite mode | WAL, `synchronous=FULL`, foreign keys on | store open assertions |
 | HTTP surface | local loopback only, port 48181 by convention | daemon config |
 

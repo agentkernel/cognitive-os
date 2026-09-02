@@ -41,7 +41,7 @@ relay remote 属于 Personal 2.1。
 | Rust 工具链 | 1.97.1 | `rust-toolchain.toml` |
 | pnpm | 10.33.2 | 根 `package.json` `packageManager` |
 | Node | ≥ 22 | 根 `package.json` engines；CI 用 Node 22 |
-| Pi agent | 精确 `0.81.1`（`@mariozechner/pi`，钉住 sha512 integrity） | 获取 + 启动准入 |
+| Pi agent | 精确 `0.81.1`（`@earendil-works/pi-coding-agent`，钉住 sha512 integrity） | 获取 + 启动准入（`personal/crates/cognitive-runtime/src/installer.rs` 的 `OFFICIAL_PI_PACKAGE`） |
 | SQLite 模式 | WAL、`synchronous=FULL`、外键开启 | store 打开断言 |
 | HTTP 面 | 仅本地 loopback，约定端口 48181 | daemon 配置 |
 
