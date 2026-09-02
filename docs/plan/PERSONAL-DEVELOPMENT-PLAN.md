@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T02..T13` `not-started`；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice（owner 决策点待确认）、`P0-T09` 漂移机械校验 `not-started`、`DOC-P13-DRIFT-FIX` 文档对齐；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T12` `in-progress`（D01 视觉规格 + v9 对照清单，documentation-only）；`P13-T02..T11`、`P13-T13` `not-started`；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice（owner 决策点待确认）、`P0-T09` 漂移机械校验 `not-started`、`DOC-P13-DRIFT-FIX` 文档对齐；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-09-02**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -156,7 +156,11 @@
 > 本批不改任何既有任务状态、attempt、evidence、Gate 结论或 claim scope；`P13-T01`
 > documentation-only **done**（merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305)
 > at `main@aac6804f`；required CI [33620332959](https://github.com/agentkernel/cognitive-os/actions/runs/33620332959)
-> **SUCCESS** at `9724f67f`），`P13-T02..T13` `not-started`/unclaimed。
+> **SUCCESS** at `9724f67f`）。2026-09-03：`P13-T12` 转 `in-progress`——`P13-T12/D01`
+> documentation-only（Apple-led Visual UI 规格 + 冻结 v9 逐模块 `/ui/` 对照清单，
+> 落在 `personal/docs/architecture/`，不改 IA、不重生 canvas、不建第二套设计系统、
+> 不改 CSS；对照清单全部判定 `not-run`，由 `P13-T12/D02` 在 exact-revision daemon
+> `/ui/` 上逐格填写）；其余 `P13-T02..T11`、`P13-T13` `not-started`/unclaimed。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
@@ -240,8 +244,8 @@
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化 Windows |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
-| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 0 | 0 | 12 | P13-T01 docs-only done；T02–T13 not-started；P11-T15 是其验收出口，不自动 release |
-| **合计** | **167** | **132** | **0** | **1** | **18** | 另有 16 cancelled；无新 Gate pass |
+| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 1 | 0 | 11 | P13-T01 docs-only done；P13-T12 in-progress（D01 视觉规格 docs-only）；T02–T11、T13 not-started；P11-T15 是其验收出口，不自动 release |
+| **合计** | **167** | **132** | **1** | **1** | **17** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -340,7 +344,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Multi-Agent | P6-T01..T04、B11 | 默认关闭；NO-GO 是合法结果 |
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
 | Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01–T09 done；冻结 prototype 默认可走场景已接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
-| Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T02..T13 not-started；出口 = P11-T15 N=15 | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
+| Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T12 in-progress（D01 视觉规格 + v9 对照清单 docs-only）；P13-T02..T11、T13 not-started；出口 = P11-T15 N=15 | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -1615,7 +1619,7 @@ flowchart TD
 | P13-T09 | 项目生命周期与本地恢复（副本 / 归档 / 删除 / 还原点 / 导出） | P11-T03/T08/T02；P7-T02 边界 | 见下表三栏；restore point ≠ backup | not-started | unclaimed |
 | P13-T10 | Skill/MCP 安全评审获取与按范围授权 | P11-T04/T09；P13-T03；P12-T04；P4；P5-T03/T04 | 见下表三栏；安装 ≠ 授权 | not-started | unclaimed |
 | P13-T11 | 反思与 Member Runtime 版本化改进 | P13-T02/T04/T05；P11-T04 | 见下表三栏；模型自报 ≠ 改进 | not-started | unclaimed |
-| P13-T12 | 视觉规格 + a11y / 视觉资格化（State Lab / 键盘 / NVDA / 200% / host-theme） | D01：P11-T01 + 冻结 v9；D02：P12 + P13-T04..T09 表面 | 见下表三栏；D01 documentation-only；D02 逐格记账 | not-started | unclaimed |
+| P13-T12 | 视觉规格 + a11y / 视觉资格化（State Lab / 键盘 / NVDA / 200% / host-theme） | D01：P11-T01 + 冻结 v9；D02：P12 + P13-T04..T09 表面 | 见下表三栏；D01 documentation-only；D02 逐格记账 | in-progress | `P13-T12/D01` 领取 2026-09-03（`lease/personal/P13-T12/visual-spec`，`personal/P13-T12-D01-visual-spec`）：视觉规格 [personal-2.0-opc-visual-ui-spec.md](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md) + 对照清单 [personal-2.0-opc-v9-ui-comparison-checklist.md](../../personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)（19/19 表 A 模块，判定全 `not-run`）；[report](../checkpoints/2026-09-03-personal-p13-t12-d01-visual-spec-report.md)。D02 未领取 |
 | P13-T13 | Windows 原生宿主资格化 + 挂单原生 E2E 回填 | owner 宿主；P11-T02；P13-T02/T05/T08；P10-T18 历史 | 见下表三栏；宿主未到位则 `blocked`，不挡其他卡 | not-started | unclaimed；`DEV-WINDOWS-NATIVE-OPC-01` 目前 not provisioned |
 
 | ID | validation environment | 关闭门 | 漂移检测负例 |
