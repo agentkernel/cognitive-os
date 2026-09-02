@@ -211,11 +211,16 @@ fn p13_t02_child_direct_provider_is_refused_and_recorded() {
     if isolated_spawn_is_fenced() {
         return;
     }
+    // The launch-plan validator refuses Provider hosts and bearer shapes in
+    // argv itself (proven below), so the child assembles them at runtime.
     let script = r#"
-process.stdout.write(JSON.stringify({frame:"provider_request",url:"https://api.deepseek.com/v1/chat/completions"})+"\n");
-process.stdout.write(JSON.stringify({frame:"candidate",operation:"HttpFetch",payload:{url:"https://api.openai.com/v1/chat"}})+"\n");
+const deepseek = "https://api." + "deepseek.com/v1/chat/completions";
+const openai = "https://api." + "openai.com/v1/chat";
+const header = "Authorization: Bea" + "rer abc.def";
+process.stdout.write(JSON.stringify({frame:"provider_request",url:deepseek})+"\n");
+process.stdout.write(JSON.stringify({frame:"candidate",operation:"HttpFetch",payload:{url:openai}})+"\n");
 process.stdout.write(JSON.stringify({frame:"observation",provider_direct:true,text:"tried"})+"\n");
-process.stdout.write(JSON.stringify({frame:"observation",text:"Authorization: Bearer abc.def"})+"\n");
+process.stdout.write(JSON.stringify({frame:"observation",text:header})+"\n");
 process.exit(0);
 "#;
     let run = run(&node_plan(script), "do the task");
