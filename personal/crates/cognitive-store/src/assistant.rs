@@ -514,13 +514,24 @@ impl AssistantPlane {
         )?;
         let preview_id = if matches!(spec.kind, "research" | "propose") {
             let preview_bytes = format!("assistant-preview:{candidate_digest}").into_bytes();
-            let (preview_id, _) = self.projects.request_preview(
+            match self.projects.request_preview(
                 "activation",
                 spec.draft_id,
                 &preview_bytes,
                 spec.now_ms,
-            )?;
-            Some(preview_id)
+            ) {
+                Ok((preview_id, _)) => Some(preview_id),
+                // A second research/propose turn on the same draft re-announces
+                // the pending preview instead of failing after the candidate
+                // was registered; the announcement is still not an Approve.
+                Err(ProjectAggregateError::Conflict { .. }) => self
+                    .projects
+                    .list_pending_previews(spec.draft_id)?
+                    .into_iter()
+                    .find(|row| row.subject_kind == "activation")
+                    .map(|row| row.preview_id),
+                Err(error) => return Err(error),
+            }
         } else {
             None
         };

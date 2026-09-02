@@ -54,7 +54,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:a47fc753652ee3b9d12f77280529abda6e0d82bd0fe249dbc0e48ec07d780eba"
+fingerprint: "sha256:49b41273894770c75422d2eade688260137c1da76973349fb030592f65457dd9"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---

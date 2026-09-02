@@ -454,6 +454,54 @@ fn inferred_turn_registers_the_chain_not_the_echo() {
 }
 
 #[test]
+fn second_propose_on_the_same_draft_reannounces_the_pending_preview() {
+    let (_tmp, projects, _, assistant) = stores();
+    let (draft_id, _) = projects.create_draft(b"payload", 10).expect("draft");
+    let payload = json!({"text": "weekly report"});
+    let provenance = owner_stated();
+    let charter = chain("charter");
+    let record = inference(&charter, &[], 1);
+    let first = assistant
+        .run_turn(&spec(
+            "propose",
+            &draft_id,
+            "charter",
+            &payload,
+            &provenance,
+            &[],
+            &record,
+        ))
+        .expect("first propose");
+    let research = chain("research-run");
+    let research_record = inference(&research, &[], 1);
+    let second = assistant
+        .run_turn(&spec(
+            "research",
+            &draft_id,
+            "research-run",
+            &payload,
+            &provenance,
+            &[ASSISTANT_RESEARCH_FETCH_FAMILY],
+            &research_record,
+        ))
+        .expect("second turn on the same draft is not a conflict");
+    assert!(first.preview_id.is_some());
+    assert_eq!(
+        second.preview_id, first.preview_id,
+        "the pending activation preview is re-announced, not duplicated"
+    );
+    assert_ne!(first.candidate_digest, second.candidate_digest);
+    assert_eq!(assistant.candidate_count(&draft_id).expect("count"), 2);
+    assert_eq!(
+        projects
+            .list_pending_previews(&draft_id)
+            .expect("previews")
+            .len(),
+        1
+    );
+}
+
+#[test]
 fn hyphenated_prose_registers_while_key_prefixed_tokens_stay_refused() {
     let (_tmp, projects, _, assistant) = stores();
     let (draft_id, _) = projects.create_draft(b"payload", 10).expect("draft");
