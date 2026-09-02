@@ -38,7 +38,9 @@ This report is documentation evidence only. It cannot establish product implemen
 | `check:handbook` / generator `--check` | **pass** | `DEV-WIN-GNU-01` | worktree | 58×2 documents OK; 18 generated pages byte-identical. |
 | docs-sync-gate `--staged` | **pass** | `DEV-WIN-GNU-01` | worktree | routes personal-2-opc-rebaseline / personal-2-0-0-dev-prep / dsh-recovery-docs / handbook-itself; handbook check set green. |
 | `git diff --cached --check`; repo-tools test suite | **pass** | `DEV-WIN-GNU-01` | worktree | 109/109 tools tests. |
-| Draft PR / required CI / merge | pending | GitHub | — | owner decides when to commit and open the Draft PR from `personal/P13-T01-completion-plan`. |
+| Commit `f7430d75` (pre-commit docs-sync hook green) + push | **pass** | `DEV-WIN-GNU-01` | `f7430d75` | `docs(P13-T01): register Phase 13 Personal 2.0.0 completion cards` |
+| Draft PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) opened | **pass** | GitHub | `f7430d75` | Draft; documentation-only |
+| required CI on PR head | pending | GitHub | — | Ubuntu / Windows / required-ci; ready/merge only after SUCCESS |
 | product code / contracts / tests | **not-run** | documentation-only | — | allowed; T02/T03 are the first implementation cards |
 | NVDA / 200% / host-theme | **not-run** | Requires-environment | — | hung; owned by `P13-T12/D02` |
 | `DEV-WINDOWS-NATIVE-OPC-01` native E2E | **not-run** | not provisioned | — | owned by `P13-T13` |
