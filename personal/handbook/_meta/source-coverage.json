@@ -59,7 +59,10 @@
     { "glob": "scripts/**", "category": "first-party-source", "docs": ["dev.dev-environments"] },
     { "glob": ".github/**", "category": "first-party-source", "docs": ["dev.contributing-workflow", "dev.dev-environments"] },
     { "glob": ".cursor/rules/**", "category": "legacy-docs", "reason": "editor adapter rules owned by repository governance; the handbook sync rule is registered separately" },
+    { "glob": ".cursor/commands/**", "category": "legacy-docs", "reason": "editor slash-command adapters for imported PM/design skills; not product source" },
+    { "glob": ".cursor/mcp.json", "category": "legacy-docs", "reason": "editor MCP server registration; gitignored per-machine file (must hold no secret material), kept here so an accidental force-add is still classified" },
     { "glob": ".cursor/environment.json", "category": "first-party-source", "docs": ["dev.dev-environments"] },
+    { "glob": ".vscode/**", "category": "legacy-docs", "reason": "editor workspace settings; not product source" },
 
     { "glob": "docs/governance/**", "category": "legacy-docs", "reason": "canonical governance sources; handbook links, never duplicates" },
     { "glob": "docs/plan/**", "category": "legacy-docs", "reason": "formal plan, current snapshot, lease ledger, environments; dynamic status is never copied into the handbook" },

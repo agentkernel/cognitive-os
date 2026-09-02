@@ -10,6 +10,7 @@
     "test": "pnpm -r test",
     "check:consistency": "pnpm --filter @cognitiveos/repo-tools run check",
     "check:handbook": "pnpm --filter @cognitiveos/repo-tools run check-handbook",
+    "check:rules": "node tools/src/check-agent-rules.mjs",
     "check:docs-sync": "node tools/src/docs-sync-gate.mjs --range",
     "hooks:install": "git config core.hooksPath .githooks",
     "verify:local": "node scripts/v01-auto-run-entry.mjs"

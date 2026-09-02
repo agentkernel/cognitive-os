@@ -16,6 +16,10 @@ dist/
 Thumbs.db
 *.log
 
+# Editor-local MCP server registration (per-machine; may carry local endpoints
+# or credentials — never commit it)
+.cursor/mcp.json
+
 # Local personal notes (not Cos deliverables)
 docs/_local/
 

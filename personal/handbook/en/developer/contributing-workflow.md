@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:f992fef9331b446c5c1ae1cbd594184008248c78b427782efea1670e30638523"
+fingerprint: "sha256:40093bb2ac40a3edd6150d390fe4bb08bc2d696661bebd31da38cff5508e6001"
 non_claims:
   - The Operating Model owns the binding workflow; this page is an oriented summary for contributors.
 ---
@@ -51,6 +51,13 @@ the practical shape:
    negatives + executed evidence; run required CI at the exact merge-candidate
    head; flip the PR from Draft only then; merge; close the lease; delete the
    task branch; fast-forward local `main`; leave `git status` clean.
+
+The PR description follows `.github/PULL_REQUEST_TEMPLATE.md` (task/lease ids,
+the five-way change class, validation route with explicit `not-run` reasons,
+handbook sync or the `DOCS_IMPACT_NONE` reason). `AGENTS.md` §5 is the compact
+"what changed → what to run → what to sync" table; `pnpm run check:rules`
+(`tools/src/check-agent-rules.mjs`) verifies that `AGENTS.md`, `.cursor/rules/`
+and `.cursor/commands/` reference only real paths, skills and commands.
 
 Never: merge with failing/pending checks, force-push shared history, use
 `git add -A`, mix unknown worktree changes, or record unexecuted validation as

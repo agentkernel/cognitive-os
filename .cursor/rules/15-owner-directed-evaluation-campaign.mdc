@@ -1,6 +1,6 @@
 ---
-description: Route continuation to the active owner-directed evaluation campaign instead of development
-alwaysApply: true
+description: Owner-directed evaluation campaign adapter. Apply only while the PROGRESS.md Current snapshot registers an active `Owner-directed campaign` row; routes continuation to that measurement-only campaign instead of P*-T* development.
+alwaysApply: false
 ---
 
 # Owner-directed evaluation campaign adapter
@@ -15,20 +15,20 @@ claim ceilings.
 # Activation check (first action in every new window)
 
 1. Read the `Owner-directed campaign` row in `docs/plan/PROGRESS.md` Current
-   snapshot.
+   snapshot. That row is the only activation switch; this rule never records
+   whether a campaign is currently open or closed.
 2. If it names an **active** campaign, this adapter applies:
- development-backlog continuation is suspended and the session's objective is
- the campaign itself. (As of 2026-08-25 all campaigns through
- `PERSONAL-PERF-EVAL-015` are **closed** and evaluation routing is OFF; this
- adapter is dormant until the owner registers a new active campaign row.)
-3. If no such row is active, this adapter is dormant. Do not invent an
-   evaluation mode from chat history.
+   development-backlog continuation is suspended and the session's objective is
+   the campaign itself.
+3. If no such row is active (or it reads closed / routing OFF), this adapter is
+   dormant. Do not invent an evaluation mode from chat history, and do not
+   reopen a closed campaign.
 
 # Recovery order while active
 
 1. the `Owner-directed campaign` row (current facts and unique next step);
-2. the campaign execution plan under `docs/evaluation/` (for
-   `PERSONAL-PERF-EVAL-002`:
+2. the campaign execution plan under `docs/evaluation/` named by that row (for
+   the Personal performance benchmark family this is
    `docs/evaluation/personal-performance-benchmark-execution-plan.md`);
 3. the latest matching evaluation preregistration/checkpoint under
    `docs/checkpoints/`;
@@ -60,9 +60,9 @@ claim ceilings.
   preregistered procedure; exact pushed revisions for any remote build or
   staging; evidence redaction; claim ceilings (`hypothesis`/non-claim — no
   Gate, release, Profile, or Agent-benefit promotion).
-- `COMMAND-SHELL-PS51` and `RUST-LINK-DEV-WIN-GNU-01` still apply: local shell
-  is Windows PowerShell 5.1 (no `&&`/`||`), and Rust build/test runs only on
-  supported CI or exact-revision native Linux.
+- `COMMAND-SHELL-PS51` and `RUST-LINK-DEV-WIN-GNU-01` still apply (`AGENTS.md`
+  §6): local shell is Windows PowerShell 5.1 (no `&&`/`||`), and Rust
+  build/test runs only on supported CI or exact-revision native Linux.
 
 # Stop conditions
 

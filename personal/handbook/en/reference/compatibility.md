@@ -13,7 +13,7 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:12b0883f3868482103e5b1f348e3d308f55c7099e7203dfa0ab39cd0c5322c75"
+fingerprint: "sha256:e134eb589f7e2ff6c5b9cf1b689a0aea44542317fc9fe7167afa605d0769398f"
 non_claims:
   - Compilation on a platform is not product support; only the listed product target carries installation and service paths.
 ---

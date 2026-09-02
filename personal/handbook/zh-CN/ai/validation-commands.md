@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:9b895c19dc80a595506a85d083f85974119c40107a2fb16542d59808f0b278b4"
+fingerprint: "sha256:fc351a47a88393c306d6b9b052b533203e90d48567f9874dae4a6716ea91971b"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -53,6 +53,7 @@ node tools/src/gen-matrix.mjs --check
 node tools/src/check-handbook.mjs   # 手册防漂移门
 node tools/src/generate-handbook.mjs --check
 node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--push / --range）
+pnpm run check:rules                # tools/src/check-agent-rules.mjs：AGENTS.md / .cursor/rules / .cursor/commands 引用与 frontmatter
 pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
 # bash 主机（Cloud Agent / Linux）可一次性引导：
 #   bash scripts/setup-dev-env.sh   # 依赖 + 钉住的工具链 + docs-sync hooks
@@ -143,7 +144,8 @@ SPA 单元测试在外部 clients checkout `pc/web`（`vitest run`）；它们�
 
 [`ci.yml`](../../../../.github/workflows/ci.yml) 的 `verify` 矩阵（Ubuntu + Windows
 MSVC）：TypeScript 构建/测试、Rust 构建/测试/clippy/fmt、codegen 漂移 diff、
-consistency 检查、traceability 新鲜度、带固定五态计数与证据诚实断言的符合性 runner、
+consistency 检查、traceability 新鲜度、agent 规则引用检查（`check-agent-rules`）、
+handbook 检查与生成页字节比对、带固定五态计数与证据诚实断言的符合性 runner、
 错误实现自检、跨语言 golden digest 字节一致。
 
 ## 已知过期入口

@@ -124,7 +124,10 @@ does not set Gate or Profile state. Focused tests:
 
 `.github/workflows/ci.yml` `verify` runs on Ubuntu and Windows MSVC: pnpm
 build/test, cargo build/test (`--test-threads=1`)/clippy(-D warnings)/fmt,
-codegen regeneration diff, consistency, traceability, conformance with pinned
-counts, wrong-implementation self-check, and golden digest byte-parity. Rust
+codegen regeneration diff, consistency, traceability, the agent-rule reference
+check (`tools/src/check-agent-rules.mjs`: frontmatter and path/skill/command
+references of `AGENTS.md`, `.cursor/rules`, `.cursor/commands`), handbook checks,
+conformance with pinned counts, wrong-implementation self-check, and golden digest
+byte-parity. Rust
 validation never runs on the registered-unsupported local Windows GNU host;
 native Linux evidence consumes pushed exact revisions only.

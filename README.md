@@ -98,6 +98,12 @@ pnpm run check:handbook
 
 # 符合性 runner（输出五态报告、证据与样例 manifest）
 cargo run -p cognitive-conformance --bin conformance-runner
+
+# 代理入口 / 编辑器规则引用检查（AGENTS.md、.cursor/rules、.cursor/commands）
+pnpm run check:rules
 ```
+
+已登记的本地 Windows GNU 开发机不能链接 Rust；Rust 构建/测试/Clippy 的环境路由见
+[AGENTS.md](AGENTS.md) §6 与 [PERSONAL-TEST-ENVIRONMENTS.md](docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)。
 
 `History/` 为冻结归档，不参与构建、schema bundle 与符合性声明，任何工具与文档不得引用。

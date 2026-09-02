@@ -107,6 +107,11 @@ jobs:
       - name: Traceability matrix freshness
         run: node tools/src/gen-matrix.mjs --check
 
+      # Agent entry / editor rules must reference only real paths, skills and
+      # commands, and every .mdc rule needs a valid frontmatter -------------
+      - name: Agent rule reference check (AGENTS.md, .cursor/rules, .cursor/commands)
+        run: node tools/src/check-agent-rules.mjs
+
       # Handbook drift gate (manifest, locale pairing, links, fingerprints,
       # coverage, generated-page byte equality; see personal/handbook/_meta) ----------
       - name: Handbook consistency and generated-page drift
