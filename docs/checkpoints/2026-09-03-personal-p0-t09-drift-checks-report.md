@@ -57,11 +57,14 @@ No stash is used anywhere else in this delivery; failing-first runs use `git che
 | U5 | `node tools/src/gen-matrix.mjs --check`; `git diff --check` | matrix freshness; whitespace | `DEV-WIN-GNU-01` | worktree (pre-commit) | **pass** | `matrix is up to date`; clean |
 | U6 | repo-tools build + full test suite | `pnpm --filter @cognitiveos/repo-tools run build`; `node --test test/*.test.mjs` | `DEV-WIN-GNU-01` | worktree (pre-commit) | **pass** | build OK; **124/124** (115 existing + 9 new) |
 | U7 | docs-sync-contract §5 injection drill | read-only override fixture (`COGNITIVEOS_CONSISTENCY_OVERRIDE_DIR`) + one temporary untracked file, removed afterwards; working tree untouched | `DEV-WIN-GNU-01` | worktree (pre-commit) | **pass (checker fails as intended)** | output in §4 |
+| U8 | rebase onto `origin/main@21f34434` (after `DOC-P13-DRIFT-FIX` merged) + ledger edits, full static gate rerun | `git rebase origin/main`; `check-consistency`; `check-handbook`; `generate-handbook --check`; `check-agent-rules`; `gen-matrix --check`; `git diff --check` | `DEV-WIN-GNU-01` | `64732c61` + working tree | **fail → fixed** | rebase clean (1 commit replayed). `check-consistency` first flagged this very report: the pasted drill output contained a numeric drill requirement id, which the living-doc orphan-REQ check (§5a) correctly reported; digits redacted (`REQ-DRILL-NNN`). All other gates green: handbook OK (58×2), generator OK (18), agent-rules OK (`path existence = git-tracked`), matrix fresh, diff clean |
 
 ## 4. Injection drill output (docs-sync-contract §5)
 
-Injected: orphan `REQ-DRILL-999` + broken link + link to an untracked-but-present file into `docs/plan/plan.md`
-(override); removed `P13T05 --> P13T13` and added `P13T03 --> P13T13` in the dev-prep index graph (override).
+Injected: orphan `REQ-DRILL-NNN` (a numeric drill id; digits redacted here so this report itself is not parsed as an
+orphan requirement reference — the live checker did flag the report until redacted, U8) + broken link + link to an
+untracked-but-present file into `docs/plan/plan.md` (override); removed `P13T05 --> P13T13` and added
+`P13T03 --> P13T13` in the dev-prep index graph (override).
 
 ```text
 exit code: 1
@@ -73,7 +76,7 @@ check-consistency: 5 violation(s)
   docs/plan/plan.md
     broken relative link: ../checkpoints/.p0-t09-drill-untracked-15324.md (exists locally but is not tracked by Git)
   docs/plan/plan.md
-    orphan requirement reference: REQ-DRILL-999
+    orphan requirement reference: REQ-DRILL-NNN
   personal/docs/architecture/personal-2.0.0-dev-prep-index.md
     BUILD_ORDER_EDGE_MISSING: formal plan edge absent from the dev-prep index graph: T05 --> T13
   personal/docs/architecture/personal-2.0.0-dev-prep-index.md
