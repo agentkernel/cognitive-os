@@ -2240,6 +2240,15 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
   State Lab 静态图；把 rendered review 写成 Windows native 资格。
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`（D01 documentation-only
   出口写明）。
+- **D01 done（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；lease `lease/personal/P13-T12/visual-spec` 已关闭；D02 `ready`）:** 视觉规格
+  [`personal-2.0-opc-visual-ui-spec.md`](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md)
+  与对照清单
+  [`personal-2.0-opc-v9-ui-comparison-checklist.md`](../../personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
+  已成文（表 A 19/19 模块；九态 × 九表面 81 格、键盘/焦点 57 格、200%/窄窗 36 格、
+  主题 40 格、NVDA 10 条路径；全部判定 `not-run`）。规格全部以现有 `tokens.css`
+  token 名与七类 `StateCategory` 表达；新增 token 只列为「proposed」，不改 CSS。
+  观察到但未裁决的漂移记在规格 §13（含：现网 `app.css` ≤ 1279 px 叠栏 vs 产品
+  「窄窗横滚不叠栏」——目前无 P13 卡拥有该 CSS 修正）。状态源见 PROGRESS。
 
 ### P13-T13 — Windows native host qualification + hung native E2E backfill
 

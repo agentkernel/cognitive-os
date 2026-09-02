@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:b0cda98bec45c9050152cf6d995cd67e8ff4a0c07fb8e4a798659eee9ed8fb21"
+fingerprint: "sha256:668a7fc2e06d13a163f4f9833b41f58bc9e37ffcd9435515cbd12e9f2d00f497"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。

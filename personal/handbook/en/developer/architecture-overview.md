@@ -28,11 +28,13 @@ sources:
   - path: personal/docs/architecture/routine-trigger-missed-run.md
   - path: personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md
   - path: personal/docs/architecture/personal-2.0.0-dev-prep-index.md
+  - path: personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md
+  - path: personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md
   - path: personal/apps/kernel-server/src/personal/mod.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:e45784f4aa9e097841fea47f6fc525e868269e2922b8f5d6be74a945af13ab2b"
+fingerprint: "sha256:d4ae526460a5d34f220e2754ab33194c216e0bfb1e70fbfa29c98fbdad7817da"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -125,11 +127,21 @@ authority.
   The Scene → daemon map is
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   (historical path name contains v9; informative; Owner approval ≠ backend
-  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). `P12-T01`–`T09` are on `main` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302); Dual Track **Now / hypothesis chrome**; not pixel-replica, not 2.1, not T15). Development-prep index
+  exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). `P12-T01`–`T09` are on `main` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302); Dual Track **Now / hypothesis chrome**; not pixel-replica, not 2.1, not T15).   Development-prep index
   (plan cards, test/env hard gates, window prompts):
   [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md);
   its "Phase 13 build order" graph mirrors the formal plan's Phase 13 mermaid
   edge-for-edge (the formal plan is authoritative).
+  The `P13-T12/D01` documentation-only visual layer is the
+  [Visual UI specification](../../../docs/architecture/personal-2.0-opc-visual-ui-spec.md)
+  (Apple-led rules for daemon `/ui/` expressed against the existing
+  `clients/pc/web/src/tokens.css` names and the seven-category state system;
+  IA unchanged; not a second design system; no CSS edit) and the
+  [frozen v9 ↔ `/ui/` comparison checklist](../../../docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
+  (19/19 maintenance-index modules plus the nine × nine, keyboard/focus,
+  200%/narrow, host-theme and NVDA cell grids). Every checklist judgement is
+  `not-run` until `P13-T12/D02` records it on an exact `/ui/` revision;
+  neither document is Gate, release, or T15 evidence.
 - Authority object English id is **Employee**. Product chrome may still say
   **Member Runtime** until post-completion architecture/handbook wording
   reconciliation. This handbook page does not rewrite product journeys.
