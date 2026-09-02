@@ -23,6 +23,7 @@ pub mod conversation;
 pub mod employee;
 pub mod faults;
 pub mod hosted_dsh;
+pub mod hosted_dsh_attempt;
 pub mod ids;
 pub mod installation;
 pub mod layout;
@@ -67,6 +68,13 @@ pub use hosted_dsh::{
     HOSTED_DSH_ARTIFACT_DIGEST, HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PATH_B_AGENT, HOSTED_DSH_PROTOCOL,
     HOSTED_DSH_PROVIDER_PROXY, HOSTED_DSH_SCHEMA_V31, HOSTED_DSH_WIN_GNU_FENCE,
     HostedDshObservation, HostedDshPlane, HostedDshStartSpec, hosted_dsh_migration_entry,
+};
+pub use hosted_dsh_attempt::{
+    HOSTED_ATTEMPT_CONTEXT_MAX_BYTES, HOSTED_ATTEMPT_FRAME_TEXT_MAX_CHARS,
+    HOSTED_ATTEMPT_MAX_FRAMES, HOSTED_ATTEMPT_PROJECTION_ID, HOSTED_DSH_ATTEMPT_SCHEMA_V36,
+    HostedArtifactFact, HostedArtifactObservation, HostedAttemptFrameRow, HostedAttemptFrameSpec,
+    HostedAttemptIntentSpec, HostedAttemptRow, HostedAttemptTerminalSpec, HostedDshAttemptStore,
+    hosted_dsh_attempt_migration_entry, redact_bounded,
 };
 pub use ids::UuidV7Generator;
 pub use installation::{

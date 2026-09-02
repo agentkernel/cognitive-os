@@ -34,6 +34,9 @@ sources:
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-real-process.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/dsh-web-preflight.mjs
   - path: personal/packages/dsh-akp-adapter/scripts/paired-path.mjs
+  - path: personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.mjs
+  - path: personal/crates/cognitive-runtime/src/hosted_dsh_broker.rs
+    symbols: ["run_hosted_child", "HostedDshArtifact", "HOSTED_FRAME_PROTOCOL"]
   - path: personal/docs/product/agent-integration-and-conversations.md
   - path: personal/docs/product/agent-integration-and-conversations.zh-CN.md
   - path: personal/docs/architecture/agent-shell-and-agent-lifecycle.md
@@ -54,7 +57,9 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
   - personal/packages/dsh-akp-adapter/src/index.test.ts
-fingerprint: "sha256:233c7596c3476901f1b304caf26c88fa564256ffbad7987421032361fd32b7fa"
+  - personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.test.mjs
+  - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
+fingerprint: "sha256:61c6eebccf888acae6f923434f1cc162bd7919eb96898fbfe860477549c4dab3"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -192,6 +197,24 @@ overlay 同步。它不是 daemon 重启后的 session 刷新路径：新 daemon
 直接 Flash（`--path a`）只经 `scripts/paired-path.mjs` 做测量。
 `dsh.json` 里的 adapter registration digest 不是 SQLite 持久的 daemon adapter 状态。
 两者都只是 implementation evidence。
+
+**隐藏托管 DSH 真实 Attempt 循环（P13-T02）。** 同一个钉住的检出也是隐藏的成员执行
+引擎，但从不由 CLI 或用户启动：daemon 的 `cognitive-runtime` stdio broker
+（`hosted_dsh_broker::run_hosted_child`）按 `dsh.json` 以 `env_clear` + 白名单环境
+spawn `node <adapter_root>/scripts/hosted-attempt-child.mjs --dsh-root … --adapter-root
+… --revision <pin> --provider-path b`，向 stdin 写入一条有界 `request` 帧（Context
+≤64 KiB、其 SHA-256、loopback daemon origin、bootstrap 文件*路径*、超时），并在墙钟
+超时与字节/帧上限下读回逐行 JSON 的 `observation` / `candidate` / `heartbeat` /
+`response` 帧。子进程用 bootstrap 文件自行铸造 management session，bearer 只存在于
+一次性 `DSH_HOME` 下的 0600 `.credentials.yaml`，把 `llm-deepseek` 指向 daemon 的
+`/provider/v1/dsh`（绝不指向 Provider 主机），运行 `dsh --profile headless --patch …
+<context>`，把脱敏的 dsh 输出作为观察流回，最后给出一条 `DeliverableDraft` candidate
+与一条 `response`——其 `status: done` **不是**完成。Path A、`--api-key-file`、native MCP
+标志、非 loopback origin 与 pin 漂移在 dsh 存在之前就被拒（退出类 2–5）；超出预算的
+dsh 会被杀掉并报 `failed / timed-out`。`cognitive dsh web` / `launch` 不受影响。
+daemon 把每一帧记为观察并自己写终态；见 [Daemon 与 HTTP](daemon-and-http.md) 与
+[存储与迁移](store-and-migrations.md)（v36）。Linux 真实 spawn 只是实现证据；Windows
+sandbox / ACL / supply-chain 资格化属于 `P13-T13`，保持 `not-run`。
 
 daemon 重启后，当前 dsh Path B web 进程可能继续持有 stale management session，并把
 401 显示成 “API key invalid”。必须重启 `cognitive dsh web`，再检查
