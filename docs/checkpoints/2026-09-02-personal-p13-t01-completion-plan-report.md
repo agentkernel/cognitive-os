@@ -7,7 +7,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Lease: `lease/personal/P13-T01/completion-plan`
 - Change class: `product-semantic` (plan registration inside the existing formal plan; no product code)
 - Owner instruction (2026-09-02): "完善当前计划，确保后续开发窗口能够持续推进任务，完成所有 2.0.0 的开发，使得产品达到原型图的程度和设计目标" — supersedes the 2026-09-01 "do not open Phase 13" wait.
-- Unique next: `check:consistency` / handbook / docs-sync → commit → Draft PR → required CI → ready/merge, then claim `P13-T02` and/or `P13-T03` (independent first knives) and `P13-T12/D01` (documentation-only visual spec, parallel).
+- Unique next: **closed** — merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) at `main@aac6804f`; see [closure](2026-09-02-personal-p13-t01-completion-plan-closure.md). Next claim: `P13-T02` and/or `P13-T03` (independent first knives) and `P13-T12/D01` (documentation-only visual spec, parallel).
 
 This report is documentation evidence only. It cannot establish product implementation, Windows support, Gate, release, Profile, T15 N=15 acceptance, or Agent-benefit. Phase 13 done is not release, signing, B01-W, or 2.1.
 
@@ -40,7 +40,8 @@ This report is documentation evidence only. It cannot establish product implemen
 | `git diff --cached --check`; repo-tools test suite | **pass** | `DEV-WIN-GNU-01` | worktree | 109/109 tools tests. |
 | Commit `f7430d75` (pre-commit docs-sync hook green) + push | **pass** | `DEV-WIN-GNU-01` | `f7430d75` | `docs(P13-T01): register Phase 13 Personal 2.0.0 completion cards` |
 | Draft PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) opened | **pass** | GitHub | `f7430d75` | Draft; documentation-only |
-| required CI on PR head | pending | GitHub | — | Ubuntu / Windows / required-ci; ready/merge only after SUCCESS |
+| Required CI [33620332959](https://github.com/agentkernel/cognitive-os/actions/runs/33620332959) | **pass** | GitHub | `9724f67f` | resolve 4s, ubuntu 3m56s, windows 14m03s, required-ci 3s |
+| Merge PR #305 | **pass** | GitHub | `main@aac6804f` | Documentation-only close. Lease closed → §3.1. Immediately claimable: `P13-T02` / `P13-T03` / `P13-T12/D01`. |
 | product code / contracts / tests | **not-run** | documentation-only | — | allowed; T02/T03 are the first implementation cards |
 | NVDA / 200% / host-theme | **not-run** | Requires-environment | — | hung; owned by `P13-T12/D02` |
 | `DEV-WINDOWS-NATIVE-OPC-01` native E2E | **not-run** | not provisioned | — | owned by `P13-T13` |

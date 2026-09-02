@@ -1871,6 +1871,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T01 — Phase 13 docs/plan registration + T15 N=15 预注册草案 (documentation-only)
 
+- **status:** `done`. Merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) at `main@aac6804f`. Required CI [33620332959](https://github.com/agentkernel/cognitive-os/actions/runs/33620332959) **SUCCESS** at `9724f67f`. Unique next = claim `P13-T02` and/or `P13-T03`; `P13-T12/D01` may run in parallel; do not claim `P11-T15`.
 - **Outcome:** Phase 13 + `P13-T02..T13` registered inside the existing
   `PERSONAL-DEVELOPMENT-PLAN.md`（三栏、负例、Slices、`implementation_requires`）；
   `P11-T15` card elaborated with the N=15 preregistration draft and its

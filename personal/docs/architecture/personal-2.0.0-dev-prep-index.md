@@ -9,9 +9,9 @@
 > Phase 12 `P12-T01`–`T09` are **done** (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`). P12 Remaining = 0.
 > **Phase 13** (`P13-T01..T13`, owner instruction 2026-09-02) is registered in the
 > formal plan: walking skeleton → prototype-grade product + design goals.
-> `P13-T01` docs-only in-progress on `lease/personal/P13-T01/completion-plan`.
-> `P11-T15` acceptance now requires Phase 13 done + qualified Windows. Do not
-> auto-claim T15.
+> `P13-T01` docs-only **done** (merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) at `main@aac6804f`);
+> `P13-T02..T13` not-started. `P11-T15` acceptance now requires Phase 13 done +
+> qualified Windows. Do not auto-claim T15.
 
 ## Identity and sources
 
