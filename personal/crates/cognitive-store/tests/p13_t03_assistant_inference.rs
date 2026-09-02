@@ -3,11 +3,11 @@
 //! P13-T03 Hidden Pi Assistant real inference — store-side negatives.
 //!
 //! `run_turn` may register a candidate only from a daemon-observed inference:
-//! exact Pi reached the Provider through the daemon proxy (`provider_round_trips
-//! >= 1`) and returned a closed object chain where every field carries typed
-//! provenance and every cited `sources[]` uri was fetched or owner-supplied.
-//! Echo, fabricated sources, unprovenanced fields, ambient tools, and assistant
-//! writes to authority/Secret/archive/Memory are refused.
+//! exact Pi reached the Provider through the daemon proxy (at least one
+//! `provider_round_trips`) and returned a closed object chain where every field
+//! carries typed provenance and every cited `sources[]` uri was fetched or
+//! owner-supplied. Echo, fabricated sources, unprovenanced fields, ambient
+//! tools, and assistant writes to authority/Secret/archive/Memory are refused.
 
 use cognitive_store::{
     ASSISTANT_INFERENCE_PROTOCOL, ASSISTANT_RESEARCH_FETCH_FAMILY, ASSISTANT_SETTINGS_ROUTE,

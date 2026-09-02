@@ -14,7 +14,9 @@ use cognitive_store::{
 };
 use serde_json::{Value, json};
 
-use super::assistant_inference::{AssistantRuntime, UnconfiguredAssistantRuntime};
+use super::assistant_inference::AssistantRuntime;
+#[cfg(test)]
+use super::assistant_inference::UnconfiguredAssistantRuntime;
 use super::resource_api::ResourceApiResponse;
 
 const ROUTE_LITERALS: &[&str] = &[
@@ -116,8 +118,10 @@ pub(crate) fn channel_forbidden() -> ResourceApiResponse {
     )
 }
 
-/// Store-only entry: the assistant routes see no configured runtime, so
-/// `assistant.turn` answers with the Settings pointer and registers nothing.
+/// Store-only entry (unit tests): the assistant routes see no configured
+/// runtime, so `assistant.turn` answers with the Settings pointer and registers
+/// nothing.
+#[cfg(test)]
 pub(crate) fn handle(
     method_path: &str,
     body: &[u8],

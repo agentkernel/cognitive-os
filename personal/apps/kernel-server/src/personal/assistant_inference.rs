@@ -61,7 +61,9 @@ pub(crate) struct ObservedInference {
 pub(crate) enum InferenceFailure {
     /// Pi runtime is not configured or unusable on this daemon host.
     PiUnavailable(String),
-    /// The invocation ran and failed (adapter, Pi, or Provider proxy).
+    /// The invocation ran and failed (adapter, Pi, or Provider proxy). Only the
+    /// Unix production path can reach this; Windows stays `PiUnavailable`.
+    #[cfg_attr(not(unix), allow(dead_code))]
     Failed(String),
 }
 
@@ -377,8 +379,10 @@ impl AssistantRuntime for DaemonAssistantRuntime {
 /// Runtime used when the HTTP plane is exercised without a configured daemon
 /// (store-only unit tests). Unbound, no Pi: the route answers with the Settings
 /// pointer and registers nothing.
+#[cfg(test)]
 pub(crate) struct UnconfiguredAssistantRuntime;
 
+#[cfg(test)]
 impl AssistantRuntime for UnconfiguredAssistantRuntime {
     fn binding_state(&self) -> ProviderBindingState {
         ProviderBindingState::Unbound
@@ -410,7 +414,7 @@ impl AssistantRuntime for UnconfiguredAssistantRuntime {
 /// means bound Provider + configured exact Pi; anything else disables the chat
 /// input and points at Settings (or states the Pi gap honestly).
 pub(crate) fn handle_status(runtime: &dyn AssistantRuntime) -> ResourceApiResponse {
-    let base = json!({
+    let mut body = json!({
         "engine": ASSISTANT_ENGINE_ID,
         "pi_pin": ASSISTANT_PI_PIN,
         "protocol": ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
@@ -421,7 +425,6 @@ pub(crate) fn handle_status(runtime: &dyn AssistantRuntime) -> ResourceApiRespon
         "research_origins_pinned": runtime.pinned_research_origins().len(),
         "observation_only": true,
     });
-    let mut body = base;
     match runtime.binding_state() {
         ProviderBindingState::Unbound => {
             merge(&mut body, provider_unbound_guidance());
