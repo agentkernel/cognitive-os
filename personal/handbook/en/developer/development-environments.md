@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:75f81edaeae31a1997fba92f475510b22e0bb57209d4a7e3faebfd506fa7f654"
+fingerprint: "sha256:d0a89c6e8266f516581ddb211610a1b91f941dd94960c7946a0579c9142fd609"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -42,7 +42,14 @@ is campaign-only, not the 2.0 daily default. Unparked T15 N=15 acceptance
 still needs one preregistered qualified Windows revision and is **not** the
 Phase 12 prototype-completeness mutex. Phase 12 Dual Track UI work uses
 `DEV-WIN-GNU-01` TS plus required CI; native UI E2E stays `not-run` until
-`DEV-WINDOWS-NATIVE-OPC-01`. Local GNU, WSL,
+`DEV-WINDOWS-NATIVE-OPC-01`. Phase 13 routing
+(`PERSONAL-TEST-ENVIRONMENTS.md` §5.2): P13-T02/T03 real child/Pi paths and
+the other authority cards use `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` plus pushed
+exact-revision `DEV-LINUX-NATIVE-01`; `/ui/` surfaces use Dual Track TS; the
+P13-T12/D02 rendered / NVDA / 200% / host-theme review against exact-revision
+guest daemon `/ui/` (SSH tunnel) is implementation evidence only; only P13-T13
+may register `DEV-WINDOWS-NATIVE-OPC-01` as qualified and backfill the hung
+native cells, and T15 runs only after that. Local GNU, WSL,
 Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
 `not-run` remains `not-run`.
 

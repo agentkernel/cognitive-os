@@ -88,7 +88,11 @@ Digital Employee。
   不是完整 `/ui/` 验收。Owner 原型批准不是可用性、Gate 或 release 证据。
 
 本文不声称 OPC Windows/DSH qualification。Dual Track L1 chrome 已在 daemon
-`/ui/`；NVDA/200%/host-theme 仍 `not-run`。`P11-T15` 独立 / not-started，
-**不是** prototype completeness mutex；Canvas 与 ordinary CI 不执行也不提升它。没有 human
+`/ui/`；NVDA/200%/host-theme 仍 `not-run`。正式计划 **Phase 13**（`P13-T01`–`T13`，
+2026-09-02 登记）负责把 walking skeleton 补到原型程度与设计目标：托管 DSH 真实
+Attempt 循环、隐藏 Pi 真实推理、可打开产出与发布预览、运行/例程闭环、群聊路由、
+Knowledge/Memory/Settings 表面、生命周期与还原点、Skill/MCP 评审授权、反思改进、
+视觉与 a11y 资格化、Windows 原生宿主资格化。`P11-T15` 是其验收出口，
+**不是** prototype completeness mutex，也不是 release；Canvas 与 ordinary CI 不执行也不提升它。没有 human
 desirability、usability、adoption、WTP、support、release、Gate、Profile 或
 Agent-benefit evidence。

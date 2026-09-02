@@ -7,7 +7,11 @@
 > HEAD at writing: see `PROGRESS.md` Current snapshot. Evaluation routing **OFF**.
 > The overlapping `DOC-PERSONAL-2.0.0/dev-prep` lease is **closed** (2026-08-31).
 > Phase 12 `P12-T01`–`T09` are **done** (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`). P12 Remaining = 0.
-> `P11-T15` remains independent / not-started. Do not auto-claim T15.
+> **Phase 13** (`P13-T01..T13`, owner instruction 2026-09-02) is registered in the
+> formal plan: walking skeleton → prototype-grade product + design goals.
+> `P13-T01` docs-only in-progress on `lease/personal/P13-T01/completion-plan`.
+> `P11-T15` acceptance now requires Phase 13 done + qualified Windows. Do not
+> auto-claim T15.
 
 ## Identity and sources
 
@@ -17,9 +21,11 @@
 | Product origin | daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite is not the product origin |
 | Scene → daemon map | [personal-2.0-opc-v9-implementation-mapping.md](personal-2.0-opc-v9-implementation-mapping.md) (historical path name contains v9; rewritten to post-P12 facts) |
 | Design-Agent / journey assessment | [13-personal-20-agent-design-difficulty-and-journey-assessment.md](../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md) (2026-08-30; hypothesis; not a P11 claim) |
-| Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 + **Phase 12** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15` and `P12-T01`…`T09` cards |
+| Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 + **Phase 12** + **Phase 13** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15`, `P12-T01`…`T09` and `P13-T01`…`T13` cards |
 | First implementation knife (Phase 11) | **`P11-T03` Project aggregate walking skeleton** — done; not a full `/ui/` page |
 | First implementation knife (Phase 12) | **`P12-T01`–`T09` done**; merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`. Dual Track **Now / hypothesis chrome** on `/ui/`. Not T15; not pixel-replica; NVDA/200%/host-theme **not-run** |
+| First implementation knives (Phase 13) | **`P13-T02` hosted DSH real Attempt loop** and **`P13-T03` hidden Pi real inference** — independent, may run in parallel leases after `P13-T01` docs-only merge; **`P13-T12/D01` visual spec** is documentation-only and parallel. Exit of Phase 13 = `P11-T15` N=15 on a qualified Windows host (`P13-T13`). Not release / signing / B01-W / 2.1 |
+| Phase 13 gap check (2026-09-02, `main@67ad05c0`) | hosted DSH = `dsh.hosted.start` skeleton, no stdio broker / Attempt loop; `assistant.turn` never calls Pi; `runs` / `outputs` render PlanRevision axis only; Settings defers connections to `/providers`; Memory correct/forget has no OPC surface; no Visual UI spec document; `DEV-WINDOWS-NATIVE-OPC-01` not provisioned. Details: [P13-T01 report](../../../docs/checkpoints/2026-09-02-personal-p13-t01-completion-plan-report.md) |
 | T02 host walking skeleton | **`P11-T02` done** (merged PR [#292](https://github.com/agentkernel/cognitive-os/pull/292)); native install/tray/sleep/SecretStore E2E remains `not-run` |
 | T14 X connector walking skeleton | **`P11-T14` done** (merged PR [#293](https://github.com/agentkernel/cognitive-os/pull/293)); live X API E2E remains `not-run`; not P0 hero |
 | Environment names | only [PERSONAL-TEST-ENVIRONMENTS.md](../../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md); do not invent environments |
@@ -105,6 +111,16 @@ Stage defaults (do not invent environments):
 - **T02 / T07**: `Requires-environment`; unqualified native host ⇒ `not-run`.
   T02 walking skeleton (v34 + `host.*`) is on `main`; native E2E is still `not-run`.
 - **T14**: walking skeleton (v35 + `connector/x.*`) is on `main`; live X API E2E is still `not-run`; not P0 hero.
+- **P13-T02 / T03 / T04 / T05 / T06 / T09 / T10 / T11**: authority + real
+  child/Pi paths → `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + pushed exact-revision
+  `DEV-LINUX-NATIVE-01`; `/ui/` surfaces → Dual Track TS. Linux native closes
+  "implementation exists" only; the matching Windows cell stays `not-run`
+  until `P13-T13` backfills it.
+- **P13-T12**: D01 documentation-only; D02 rendered / NVDA / 200% / host-theme
+  review against exact-revision guest daemon `/ui/` via the documented SSH
+  tunnel = implementation evidence, never Windows native chrome qualification.
+- **P13-T13**: the only card that may change the `DEV-WINDOWS-NATIVE-OPC-01`
+  registry row, and only by recording a real provisioned + qualified host.
 - Gate / release / B01: independent campaign; not slice green.
 
 ### Owner local viewing (later implementation windows with guest `/ui/`)
@@ -204,6 +220,59 @@ flowchart TD
 - T06 stays after T05 (hidden Pi is a decided capability).
 - T14 walking skeleton is **done** (not P0 hero). T15 remains
   **independent / not-started** and is not the P12 mutex.
+
+### Phase 13 build order (implementation windows after `P13-T01` merge)
+
+```mermaid
+flowchart TD
+  P13T01[P13_T01_docs_only]
+  P13T02[P13_T02_hosted_DSH_real_attempt]
+  P13T03[P13_T03_hidden_Pi_real_inference]
+  P13T04[P13_T04_verify_outputs_publish]
+  P13T05[P13_T05_runs_routine_today]
+  P13T06[P13_T06_group_chat_routing]
+  P13T07[P13_T07_knowledge_memory_surfaces]
+  P13T08[P13_T08_settings_completeness]
+  P13T09[P13_T09_lifecycle_restore]
+  P13T10[P13_T10_skill_mcp_grant]
+  P13T11[P13_T11_reflection_improve]
+  P13T12a[P13_T12_D01_visual_spec]
+  P13T12b[P13_T12_D02_a11y_visual]
+  P13T13[P13_T13_windows_native]
+  P11T15[P11_T15_N15_exit]
+  P13T01 --> P13T02
+  P13T01 --> P13T03
+  P13T01 --> P13T12a
+  P13T02 --> P13T04
+  P13T02 --> P13T05
+  P13T02 --> P13T06
+  P13T03 --> P13T06
+  P13T03 --> P13T10
+  P13T04 --> P13T10
+  P13T04 --> P13T11
+  P13T05 --> P13T11
+  P13T06 -.-> P13T07
+  P13T02 -.-> P13T08
+  P13T05 -.-> P13T09
+  P13T04 --> P13T12b
+  P13T08 --> P13T12b
+  P13T12a --> P13T12b
+  P13T02 --> P13T13
+  P13T08 --> P13T13
+  P13T12b --> P11T15
+  P13T13 --> P11T15
+```
+
+- `P13-T02` and `P13-T03` do **not** wait on each other; claim them in
+  separate leases / worktrees with non-overlapping paths.
+- `P13-T07` / `P13-T08` / `P13-T09` may start on P11 authority before the
+  main chain closes (dashed edges are sources, not mutexes); they must not
+  fake data the daemon does not have.
+- `P13-T13` is `blocked` until the owner provides a Windows 11 x86_64 host;
+  it never blocks another card — their Windows cells simply stay `not-run`.
+- `P11-T15` claims only after `P13-T02..T13` are done and the host is
+  qualified; freeze the 15-scenario preregistration on the plan.md T15 card
+  first. T15 done ≠ release.
 
 ## Parallel window path rule
 

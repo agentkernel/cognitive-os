@@ -445,9 +445,9 @@ personal_requirements:
 
   - id: PERS-PR-047
     classification: product-only
-    statement: Windows OPC acceptance uses a fixed N=15 preregistered denominator at one exact supported revision with every result retained, zero critical A1-A8 failures, independent review and non-claim reporting; signing, B01-W, release, Profile, and 2.1 remote remain separate. Unparked T15 is not the Phase 12 prototype-completeness mutex.
+    statement: Windows OPC acceptance uses a fixed N=15 preregistered denominator at one exact supported revision with every result retained, zero critical A1-A8 failures, independent review and non-claim reporting; signing, B01-W, release, Profile, and 2.1 remote remain separate. Unparked T15 is not the Phase 12 prototype-completeness mutex; since 2026-09-02 its acceptance requires Phase 13 P13-T02..T13 done plus a qualified DEV-WINDOWS-NATIVE-OPC-01, and its 15 scenarios are drafted in the plan.md T15 card by P13-T01.
     direct_registry_requirements: []
-    tasks: [P11-T15]
+    tasks: [P11-T15, P13-T01]
     gates: []
     evidence_status: not-run
 
@@ -456,6 +456,38 @@ personal_requirements:
     statement: Frozen-prototype functional completeness on daemon-served /ui/ walks default v9 scenes without pixel-replica of canvas and without 2.1; Dual Track honesty (no authority yields empty or Requires-backend; zero fake Create/Activate/Approve); product origin is always daemon /ui/; NVDA/200%/host-theme remain hung not-run; T15 N=15 Windows acceptance stays a separate card.
     direct_registry_requirements: []
     tasks: [P12-T01, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-049
+    classification: product-only
+    statement: A seated Member really executes a Task Attempt through the hidden hosted DSH engine (exact artifact, isolated child, complete stdio broker, bounded Context, daemon Provider proxy, health/update/rollback) with candidates and observations flowing through Intent/Effect persist-before-dispatch; artifacts land in CAS, independent verification produces evidence, run acceptance happens only on the last ring, outputs are openable, publication packages are canvas previews where planned is never published; Routine/Trigger arm from the confirmed stage declarations after G2 with a visible occurrence ledger, safe-point continue/pause/restart, and a Today live-project overview; the Project group conversation routes @manager/@member to daemon candidates and previews with member speech rules; reflection candidates come from daemon facts and Member Runtime improvement is a versioned, Owner-confirmed, reversible revision. Process death, model text, HTTP 200, agent_end, checkpoints, and receipts are never completion.
+    direct_registry_requirements: []
+    tasks: [P13-T02, P13-T04, P13-T05, P13-T06, P13-T11]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-050
+    classification: product-only
+    statement: The hidden Pi Personal Assistant really infers through exact Pi via the daemon Provider proxy for explain/navigate/research/propose, producing a closed candidate object chain with typed provenance (sources / owner-stated / assistant-assumption) and honest guidance to Settings when no Provider is bound; Skill/MCP capabilities are acquired only through assistant-led discovery, structured security review, exact Owner canvas preview before first install or permission expansion, version-pinned artifacts, separate Project/Member grants, update review, compatibility test, and rollback. The assistant remains candidate-only with no authority, secret, archive, or Memory write; recipe is never grant; no marketplace, MCP family console, or engine store.
+    direct_registry_requirements: []
+    tasks: [P13-T03, P13-T10]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-051
+    classification: product-only
+    statement: Frozen-prototype surfaces reach design-goal completeness on daemon /ui/ - Knowledge fragments carry provenance, rights, freshness, exclusion, and untrusted labels with visible reindex and failed-import handling; Memory is inspectable, correctable, promotable (Owner-confirmed across Projects), and forgettable without resurrection; Settings Model Connections complete a real Provider connection inside OPC through SecretStore takeover with source-labelled usage, notification/recovery groups, collapsed advanced diagnostics, and a hidden nine-state state-lab; Projects copy as inactive duplicates, archive before deletion with impact preview and second confirmation, keep local restore points that are explicitly not backups, and export without secrets. Files are never Project authority; raw secrets never reach the UI; unknown cost is never zero; member-level budget stays 2.1.
+    direct_registry_requirements: []
+    tasks: [P13-T07, P13-T08, P13-T09]
+    gates: []
+    evidence_status: not-run
+
+  - id: PERS-PR-052
+    classification: product-only
+    statement: Personal 2.0.0 completion is qualified rather than asserted - a written visual specification plus a per-module comparison against the frozen v9 prototype; nine states by nine surfaces, keyboard reachability and focus restoration, 200% zoom and narrow three-column horizontal scroll, light/dark/high-contrast host themes, and NVDA key paths are each recorded pass/fail/not-run on exact-revision daemon /ui/; DEV-WINDOWS-NATIVE-OPC-01 is provisioned and qualified and every hung native E2E cell is backfilled there; only then does P11-T15 execute its fixed N=15 denominator. Phase 13 done is not release, signing, B01-W, Gate, Profile, or 2.1.
+    direct_registry_requirements: []
+    tasks: [P13-T01, P13-T12, P13-T13, P11-T15]
     gates: []
     evidence_status: not-run
 

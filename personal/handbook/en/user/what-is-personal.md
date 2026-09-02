@@ -105,7 +105,13 @@ Keep these two baselines separate:
   approval is not usability, Gate, or release evidence.
 
 No OPC Windows/DSH qualification is claimed. Dual Track L1 chrome is on daemon
-`/ui/`; NVDA/200%/host-theme remain `not-run`. `P11-T15` is independent /
-not-started and is not the prototype-completeness mutex. Canvas and ordinary
+`/ui/`; NVDA/200%/host-theme remain `not-run`. Formal-plan **Phase 13**
+(`P13-T01`–`T13`, registered 2026-09-02) carries the walking skeletons to
+prototype-grade product and design goals: a real hosted-DSH Attempt loop, real
+hidden-Pi inference, openable outputs and publication preview, runs/routine
+loop, group-chat routing, Knowledge/Memory/Settings surfaces, lifecycle and
+restore points, reviewed Skill/MCP grants, reflection, visual/a11y
+qualification, and Windows native host qualification. `P11-T15` is its exit;
+it is not the prototype-completeness mutex and not release. Canvas and ordinary
 CI do not execute or promote it. There is no human desirability, usability, adoption, willingness-to-pay,
 support, release, Gate, Profile or Agent-benefit evidence.

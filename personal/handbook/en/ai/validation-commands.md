@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:1c56a73d5211a5462526d2e86a2b0361cc72f0940e8cc2e5a58e56be2e4e15e4"
+fingerprint: "sha256:9b895c19dc80a595506a85d083f85974119c40107a2fb16542d59808f0b278b4"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -34,8 +34,12 @@ authority tests to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (plus exact-revision
 `DEV-LINUX-NATIVE-01` when a native daemon/store is required). Host/DSH native
 E2E stays future qualified `DEV-WINDOWS-NATIVE-OPC-01` (`Requires-environment` /
 `not-run` until provisioned). Unparked T15 still needs a preregistered N=15
-acceptance at one qualified Windows revision and is not the Phase 12 mutex.
-Phase 12 Dual Track UI uses `DEV-WIN-GNU-01` TS plus required CI. The native environment and B01-W
+acceptance at one qualified Windows revision and is not the Phase 12 mutex;
+since 2026-09-02 its acceptance requires Phase 13 `P13-T02`–`T13` done plus
+`P13-T13` qualifying the Windows host. Phase 12 Dual Track UI uses
+`DEV-WIN-GNU-01` TS plus required CI. Phase 13 card routing is in
+`PERSONAL-TEST-ENVIRONMENTS.md` §5.2 (Linux native closes "implementation
+exists" only; Windows native cells are backfilled by P13-T13). The native environment and B01-W
 are not provisioned; `B01-DESKTOP-002` is not the 2.0 daily default. Local
 Windows GNU, WSL, ordinary CI and Canvas cannot substitute Gate/release;
 record native cells `not-run` until available. `not-run` is never pass.
