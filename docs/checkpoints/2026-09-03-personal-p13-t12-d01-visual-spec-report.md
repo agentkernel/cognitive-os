@@ -7,7 +7,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Lease: `lease/personal/P13-T12/visual-spec`
 - Change class: `implementation-only` documentation (a visual specification and a comparison checklist for an unchanged product/IA contract; no product code, contract, test, CSS, or canvas change)
 - Deliverables: [`personal-2.0-opc-visual-ui-spec.md`](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md), [`personal-2.0-opc-v9-ui-comparison-checklist.md`](../../personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
-- Unique next: **in-progress** — see the last unit row.
+- Unique next: **closed** — merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`; see [closure](2026-09-03-personal-p13-t12-d01-visual-spec-closure.md). `P13-T12` stays `in-progress` for `P13-T12/D02`. Main line: claim `P13-T02` and/or `P13-T03`.
 
 This report is documentation evidence only. It cannot establish rendered accessibility, host-theme contrast, 200% layout, NVDA behaviour, Windows support, Gate, release, Profile, T15 N=15 acceptance, or Agent-benefit. Every checklist judgement stays `not-run` until `P13-T12/D02` records it on an exact daemon `/ui/` revision.
 
@@ -45,6 +45,10 @@ This report is documentation evidence only. It cannot establish rendered accessi
 | `pnpm --filter @cognitiveos/repo-tools test` | **pass** | `DEV-WIN-GNU-01` | worktree | 115/115. |
 | Commit `3aeb378b` (pre-commit docs-sync hook green) + push `personal/P13-T12-D01-visual-spec` (pre-push hook green) | **pass** | `DEV-WIN-GNU-01` | `3aeb378b` | `docs(P13-T12/D01): add Apple-led Visual UI spec and frozen-v9 /ui/ comparison checklist`; `origin/main` still `a0465653`. |
 | Draft PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) opened | **pass** | GitHub | `3aeb378b` | Draft; documentation-only; required CI run [33668931545](https://github.com/agentkernel/cognitive-os/actions/runs/33668931545) started (resolve route pass; ubuntu/windows pending). |
+| Commit `bd87b8ee` (record Draft PR) + push | **pass** | `DEV-WIN-GNU-01` | `bd87b8ee` | docs-sync gate: no documentation-relevant changes. Run [33668931545](https://github.com/agentkernel/cognitive-os/actions/runs/33668931545) at `3aeb378b` was superseded (cancelled) by the new head. |
+| Required CI [33669225379](https://github.com/agentkernel/cognitive-os/actions/runs/33669225379) at `bd87b8ee` | **pass** | GitHub | `bd87b8ee` | resolve 2s, ubuntu 3m35s, windows 17m9s, required-ci 3s |
+| `origin/main` still `a0465653` at ready time; `gh pr ready 308`; `gh pr merge 308 --merge` | **pass** | GitHub | `main@3680b742` | Merged. `--delete-branch` local switch failed (`main` is checked out in `D:/agent-kernel`); remote branch deleted explicitly with `git push origin --delete`. |
+| Closure on `main` (lease → §3.1; `P13-T12/D01` → done; `P13-T12` stays in-progress; PROGRESS heading / intro / Active task lease / rows / Layer 2; plan status line + revision note + 三栏 row; plan.md card; closure checkpoint) | **pass** | `DEV-WIN-GNU-01` | `main` (see closure commit) | Layer 1 unchanged at 167/132/1/1/17/35 because the task remains in-progress for D02. |
 | product code / contracts / tests / CSS / canvas | **not-run** | documentation-only | — | allowed by the D01 exit; nothing edited under `clients/pc/web/src` or `clients/docs/design/opc-2.0/` |
 | NVDA / 200% / host-theme / nine × nine rendered cells | **not-run** | Requires-environment | — | owned by `P13-T12/D02`; every checklist judgement is `not-run` |
 | `DEV-WIN-GNU-01` cargo build / test / Clippy / link | **not-run** | `RUST-LINK-DEV-WIN-GNU-01` | — | not a product fail; no Rust surface changed |
