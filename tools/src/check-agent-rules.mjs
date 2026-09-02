@@ -14,16 +14,24 @@
  *  - `/pm-*` command references in commands point at existing command files;
  *  - skill names in markdown tables whose header contains "Skill" (rules 30/40)
  *    exist under `.cursor/skills/`;
- *  - relative markdown links resolve;
- *  - repo-relative paths quoted in backticks exist (globs, placeholders, URLs,
- *    lease ids, ignored roots such as `artifacts/` are skipped).
+ *  - relative markdown links resolve to Git-tracked paths;
+ *  - repo-relative paths quoted in backticks are Git-tracked (globs,
+ *    placeholders, URLs, lease ids, ignored roots such as `artifacts/` are
+ *    skipped).
+ *
+ * Path existence is decided by `git ls-files` (P0-T09), so a rule that points
+ * at a file which exists only in the author's working tree fails locally just
+ * as it fails on a clean CI checkout. When `root` is not a Git checkout (the
+ * focused fixtures in tools/test) the checker falls back to the filesystem and
+ * labels that mode in its result (`checked.pathExistence`) and CLI output.
  *
  * Local-only editor assets (`LOCAL_ONLY_PREFIXES`: imported skills, slash
  * commands and the skill-routing rules 30/40 stay untracked; `.cursor/mcp.json`
- * is gitignored) are kept out of Git by owner decision. When such a path is present it is checked as
- * strictly as anything else; when it is absent (a clean CI checkout) the
- * reference is reported as a warning, never as a failure. Every other missing
- * path remains a failure.
+ * is gitignored) are kept out of Git by owner decision. They are untracked by
+ * definition, so they are always checked against the filesystem: when such a
+ * path is present it is checked as strictly as anything else; when it is
+ * absent (a clean CI checkout) the reference is reported as a warning, never
+ * as a failure. Every other missing or untracked path remains a failure.
  *
  * It creates no task, Gate, contract, or release semantics. It only prevents the
  * rules from drifting away from the tree they describe.
@@ -35,8 +43,12 @@ import { existsSync, readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import YAML from "yaml";
+import { isTrackedPath, loadTrackedPaths } from "./lib.mjs";
 
 const DEFAULT_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+export const PATH_EXISTENCE_TRACKED = "git-tracked";
+export const PATH_EXISTENCE_FILESYSTEM_FALLBACK = "filesystem (not a Git checkout; untracked files cannot be detected)";
 
 const RULES_DIR = ".cursor/rules";
 const COMMANDS_DIR = ".cursor/commands";
@@ -218,7 +230,22 @@ export function checkAgentRules(root = DEFAULT_ROOT) {
   const warnings = [];
   const fail = (file, message) => failures.push({ file, message });
   const warn = (file, message) => warnings.push({ file, message });
-  const exists = (rel) => existsSync(path.join(root, ...rel.split("/")));
+  const existsOnDisk = (rel) => existsSync(path.join(root, ...rel.split("/")));
+  const tracked = loadTrackedPaths(root);
+  const pathExistence = tracked ? PATH_EXISTENCE_TRACKED : PATH_EXISTENCE_FILESYSTEM_FALLBACK;
+  /**
+   * Tracked-only existence for ordinary paths; filesystem existence for the
+   * local-only editor assets, which are untracked by owner decision.
+   */
+  const exists = (rel) => {
+    if (!tracked || isLocalOnlyPath(rel)) {
+      return existsOnDisk(rel);
+    }
+    return isTrackedPath(tracked, rel);
+  };
+  /** Explains why a path counted as missing under tracked-only checking. */
+  const untrackedSuffix = (rel) =>
+    tracked && !isLocalOnlyPath(rel) && existsOnDisk(rel) ? " (exists locally but is not tracked by Git)" : "";
   /** A local-only asset whose root is absent from this checkout (clean CI). */
   const localOnlyAbsent = (rel) => {
     const assetRoot = localOnlyRootFor(rel);
@@ -262,9 +289,9 @@ export function checkAgentRules(root = DEFAULT_ROOT) {
       const withoutAnchor = target.split("#")[0];
       if (!withoutAnchor) continue;
       const resolved = path.resolve(root, path.dirname(rel), withoutAnchor);
-      if (!existsSync(resolved)) {
-        const relTarget = toPosix(path.relative(root, resolved));
-        missing(rel, relTarget, `broken relative link: ${target}`);
+      const relTarget = toPosix(path.relative(root, resolved));
+      if (!exists(relTarget)) {
+        missing(rel, relTarget, `broken relative link: ${target}${untrackedSuffix(relTarget)}`);
       }
     }
   };
@@ -274,7 +301,7 @@ export function checkAgentRules(root = DEFAULT_ROOT) {
     for (const ref of pathReferences(body, topLevelEntries)) {
       count += 1;
       if (!exists(ref)) {
-        missing(rel, ref, `referenced path does not exist: ${ref}`);
+        missing(rel, ref, `referenced path does not exist: ${ref}${untrackedSuffix(ref)}`);
       }
     }
     return count;
@@ -377,6 +404,7 @@ export function checkAgentRules(root = DEFAULT_ROOT) {
       rules: ruleFiles.length,
       commands: commandFiles.length,
       pathReferences: pathRefCount,
+      pathExistence,
     },
   };
 }
@@ -386,6 +414,9 @@ function main() {
   const rootIndex = argv.indexOf("--root");
   const root = rootIndex !== -1 && argv[rootIndex + 1] ? path.resolve(argv[rootIndex + 1]) : DEFAULT_ROOT;
   const { failures, warnings, checked } = checkAgentRules(root);
+  if (checked.pathExistence !== PATH_EXISTENCE_TRACKED) {
+    console.error(`warning: path existence mode = ${checked.pathExistence}`);
+  }
   for (const { file, message } of warnings) {
     console.error(`warning: ${toPosix(file)}: ${message}`);
   }
@@ -397,7 +428,7 @@ function main() {
     process.exit(1);
   }
   console.log(
-    `check-agent-rules: OK (${checked.rules} rules, ${checked.commands} commands, ${checked.pathReferences} path references, ${warnings.length} local-only warning(s))`,
+    `check-agent-rules: OK (${checked.rules} rules, ${checked.commands} commands, ${checked.pathReferences} path references, ${warnings.length} local-only warning(s), path existence = ${checked.pathExistence})`,
   );
 }
 
