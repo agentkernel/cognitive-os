@@ -678,7 +678,23 @@ pub(crate) fn handle_turn(
     };
     let chain = match parse_assistant_object_chain(&observed.assistant_text, &allowed_source_uris) {
         Ok(chain) => chain,
-        Err(detail) => return error(422, "ASSISTANT_CANDIDATE_REFUSED", &detail),
+        Err(detail) => {
+            // Refused text is observation-only: a bounded, secret-scrubbed
+            // excerpt lets the owner see why nothing was registered.
+            return ResourceApiResponse {
+                status: 422,
+                body: json!({
+                    "status": "error",
+                    "code": "ASSISTANT_CANDIDATE_REFUSED",
+                    "message": detail,
+                    "candidate_registered": false,
+                    "provider_round_trips": observed.provider_round_trips,
+                    "assistant_text_excerpt": refused_text_excerpt(&observed.assistant_text),
+                })
+                .to_string(),
+                content_type: "application/json",
+            };
+        }
     };
     let record = AssistantInferenceRecord {
         protocol: ASSISTANT_INFERENCE_PROTOCOL,
@@ -785,6 +801,32 @@ fn owner_supplied_source_uris(provenance: &Value) -> Vec<String> {
         .filter(|uri| !uri.is_empty())
         .map(ToOwned::to_owned)
         .collect()
+}
+
+/// Bounded excerpt of a refused assistant text. Key-shaped tokens are
+/// scrubbed even though the child never receives Provider material.
+fn refused_text_excerpt(text: &str) -> String {
+    const EXCERPT_CHARS: usize = 400;
+    let scrubbed = text
+        .split_whitespace()
+        .map(|token| {
+            let lowered = token.to_ascii_lowercase();
+            if lowered.starts_with("sk-")
+                || lowered.contains("api_key")
+                || lowered.contains("bearer")
+            {
+                "<redacted>".to_owned()
+            } else {
+                token.to_owned()
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ");
+    let mut excerpt: String = scrubbed.chars().take(EXCERPT_CHARS).collect();
+    if scrubbed.chars().count() > EXCERPT_CHARS {
+        excerpt.push('…');
+    }
+    excerpt
 }
 
 /// Bounded, control-character-free excerpt of a fetched research body.
@@ -1018,10 +1060,23 @@ pub(crate) mod tests {
     #[test]
     fn prose_echo_fabricated_source_and_zero_round_trip_register_nothing() {
         let (_tmp, store, draft_id) = authority();
-        let prose = ScriptedAssistantRuntime::bound("I would suggest a weekly report.", 1);
+        let prose = ScriptedAssistantRuntime::bound(
+            "I would suggest a weekly report. Use sk-abcdefghijklmnopqrstuvwxyz if needed.",
+            1,
+        );
         let response = post(&turn_body("propose", &draft_id, "charter"), &store, &prose);
         assert_eq!(response.status, 422, "{}", response.body);
-        assert!(response.body.contains("ASSISTANT_CANDIDATE_REFUSED"));
+        let refused: Value = serde_json::from_str(&response.body).unwrap();
+        assert_eq!(refused["code"], "ASSISTANT_CANDIDATE_REFUSED");
+        assert_eq!(refused["candidate_registered"], false);
+        assert_eq!(refused["provider_round_trips"], 1);
+        let excerpt = refused["assistant_text_excerpt"].as_str().unwrap();
+        assert!(excerpt.starts_with("I would suggest a weekly report."));
+        assert!(
+            !excerpt.contains("sk-abc"),
+            "key-shaped token is scrubbed: {excerpt}"
+        );
+        assert!(excerpt.contains("<redacted>"));
         assert_eq!(candidate_count(&store, &draft_id), 0);
 
         let fabricated = ScriptedAssistantRuntime::bound(

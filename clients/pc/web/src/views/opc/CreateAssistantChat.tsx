@@ -172,7 +172,12 @@ export function CreateAssistantChat({ step, title }: CreateAssistantChatProps) {
         return;
       }
       if (!response.ok) {
-        setError(`${httpErrorMessage(response.status, response.body)} No candidate was registered. Chat cannot Approve.`);
+        const excerpt = field(response.body, "assistant_text_excerpt");
+        setError(
+          `${httpErrorMessage(response.status, response.body)} No candidate was registered. Chat cannot Approve.${
+            excerpt ? ` Unregistered assistant text: ${excerpt}` : ""
+          }`,
+        );
         return;
       }
       const turn = projectAssistantTurn(response.body);

@@ -409,6 +409,8 @@ describe("P13-T03 create-page assistant chat", () => {
           status: "error",
           code: "ASSISTANT_CANDIDATE_REFUSED",
           message: "assistant chain field without provenance is refused",
+          candidate_registered: false,
+          assistant_text_excerpt: "Sure! A charter should have a title and cadence.",
         },
       },
     });
@@ -424,6 +426,9 @@ describe("P13-T03 create-page assistant chat", () => {
     );
     expect(host.querySelector("[data-region='opc-create-assistant-error']")?.textContent).toMatch(
       /No candidate was registered/,
+    );
+    expect(host.querySelector("[data-region='opc-create-assistant-error']")?.textContent).toMatch(
+      /Unregistered assistant text: Sure! A charter/,
     );
     unmount(host, root);
   });

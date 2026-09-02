@@ -454,6 +454,52 @@ fn inferred_turn_registers_the_chain_not_the_echo() {
 }
 
 #[test]
+fn hyphenated_prose_registers_while_key_prefixed_tokens_stay_refused() {
+    let (_tmp, projects, _, assistant) = stores();
+    let (draft_id, _) = projects.create_draft(b"payload", 10).expect("draft");
+    let payload = json!({"text": "summarise progress, risks and next steps"});
+    let provenance = owner_stated();
+    let prose_chain = json!([
+        {"object_kind": "charter", "fields": {
+            "risk_review": {"value": "risk-based weekly review at the desk-side stand-up; task-contract stays owner-confirmed", "provenance": {"kind": "assistant-assumption"}}
+        }}
+    ]);
+    let record = inference(&prose_chain, &[], 1);
+    assistant
+        .run_turn(&spec(
+            "propose",
+            &draft_id,
+            "charter",
+            &payload,
+            &provenance,
+            &[],
+            &record,
+        ))
+        .expect("hyphenated words such as risk-/desk-/task- are prose, not Provider material");
+    assert_eq!(assistant.candidate_count(&draft_id).expect("count"), 1);
+
+    let key_chain = json!([
+        {"object_kind": "charter", "fields": {
+            "note": {"value": "use sk-abcdefghijklmnopqrstuvwxyz for access", "provenance": {"kind": "assistant-assumption"}}
+        }}
+    ]);
+    let key_record = inference(&key_chain, &[], 1);
+    let error = assistant
+        .run_turn(&spec(
+            "propose",
+            &draft_id,
+            "charter",
+            &payload,
+            &provenance,
+            &[],
+            &key_record,
+        ))
+        .expect_err("a key-shaped token is still refused at registration");
+    assert!(invalid_detail(error).contains("secret-shaped"));
+    assert_eq!(assistant.candidate_count(&draft_id).expect("count"), 1);
+}
+
+#[test]
 fn provider_unbound_guidance_is_a_settings_pointer_not_a_chat_box() {
     let guidance = provider_unbound_guidance();
     assert_eq!(guidance["status"], "provider_unbound");

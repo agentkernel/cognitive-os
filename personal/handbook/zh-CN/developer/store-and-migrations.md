@@ -54,7 +54,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:de8ee6640f2d245b0f35129e37776d32067c6344f1949f7f0917d15c55b2b87b"
+fingerprint: "sha256:a47fc753652ee3b9d12f77280529abda6e0d82bd0fe249dbc0e48ec07d780eba"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -95,7 +95,7 @@ P11-T07 隐藏托管 DSH 新增 v31 `p11_hosted_dsh_child`。Attempt-runner `sta
 
 P11-T06 隐藏 Pi Assistant **不新增迁移**。它复用 v26 `p11_candidate` / `p11_approval_preview` 与 T05 只读档案上下文。助手登记必须带 typed 出处（`sources[]` | `owner-stated` | `assistant-assumption`）；非空 blob 不够。封闭候选 JSON 禁止 `grant` / `secret` / `trigger-arm`。`draft.apply` 指向 Project/Employee/Grant/已确认 charter 会被拒。助手平面不能写 archive、SecretStore、Memory，也不能 confirm/apply 权威。工具 default-deny；research 只能点名既有 `HttpFetchReadOnly`。exact Pi `0.81.1` 与 `cognitiveos.private-candidate/1` 是身份钉，不是第二套调度器或 Installed Agent。
 
-P13-T03 真实推理同样**不新增迁移**。`AssistantPlane::run_turn` 现在必须带 daemon 观测到的 `AssistantInferenceRecord`（协议 `cognitiveos.personal.assistant-inference/0.1`、已绑 `model_id`、`provider_round_trips ≥ 1`、有界 reply、推理出的对象链、daemon 推导的可引用 URI）；登记进 v26 的候选 ops 携带推理链、标记为 owner 输入的 owner payload、reply digest 与注入顺序引用——绝不把回显 payload 当候选。`validate_inferred_object_chain` 是唯一的对象链校验器（封闭 kind 按链序、每 kind 一个对象、每个字段 `{value, provenance}` 带 typed 出处、`sources[]` uri 只能来自已抓取或 owner 提供的 URI、封闭 schema）；runtime 解析与 HTTP 都调用它。`admit_turn_request` 在任何 Pi 进程启动前拒绝 ambient tool。`provider_unbound_guidance()` 是固定的 Settings 指路（`chat_input: false`、`silent_bind: false`、`candidate_registered: false`）。`candidate_count` 是只读计数辅助。
+P13-T03 真实推理同样**不新增迁移**。`AssistantPlane::run_turn` 现在必须带 daemon 观测到的 `AssistantInferenceRecord`（协议 `cognitiveos.personal.assistant-inference/0.1`、已绑 `model_id`、`provider_round_trips ≥ 1`、有界 reply、推理出的对象链、daemon 推导的可引用 URI）；登记进 v26 的候选 ops 携带推理链、标记为 owner 输入的 owner payload、reply digest 与注入顺序引用——绝不把回显 payload 当候选。`validate_inferred_object_chain` 是唯一的对象链校验器（封闭 kind 按链序、每 kind 一个对象、每个字段 `{value, provenance}` 带 typed 出处、`sources[]` uri 只能来自已抓取或 owner 提供的 URI、封闭 schema）；runtime 解析与 HTTP 都调用它。`admit_turn_request` 在任何 Pi 进程启动前拒绝 ambient tool。`provider_unbound_guidance()` 是固定的 Settings 指路（`chat_input: false`、`silent_bind: false`、`candidate_registered: false`）。`candidate_count` 是只读计数辅助。登记时的 secret-shape 守卫只在 token 起始处把 `sk-` 当作 key 前缀（`risk-based`、`task-contract`、`desk-side` 是普通文本）；`bearer `、`api_key`、`x-api-key`、`ssv1:` 与 token 起始的 `sk-…` 仍被拒绝。
 
 P11-T09 HITL 画布复用 v26 `request_preview` / `confirm_preview` / `p11_approval_preview` 与 v29 `superseded_by`、v30 grant-expansion / StandingApprovalPolicy。真实调用者是 management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*`；T05 只宣布+深链；T06 `draft.apply` 不是 authority-approve。宿主 UI E2E 为 `not-run`。Settings chrome 是 T13。无第二套调度器、无聊天 Approve、无 Inbox 一级。
 

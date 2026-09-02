@@ -239,7 +239,7 @@ pub fn render_assistant_prompt(request: &AssistantInferenceRequest) -> String {
     } else {
         prompt.push_str(&request.allowed_source_uris.join(", "));
     }
-    prompt.push_str(". Never emit grant, secret, api_key, trigger-arm, or tool fields. ");
+    prompt.push_str(". Never emit grant, secret, api_key, trigger-arm, or tool fields. Keep it compact: `reply` under 300 characters, at most 6 fields per object, each value under 200 characters, and include only the requested object kind plus objects that are strictly necessary. ");
     prompt.push_str(&format!(
         "Turn kind: {}. The chain must include an object of kind {}. Owner payload (provenance {}):\n{}\n",
         request.turn,
@@ -265,18 +265,25 @@ pub fn render_assistant_prompt(request: &AssistantInferenceRequest) -> String {
             ));
         }
     }
+    prompt.push_str(
+        "End of context. Respond now with ONLY the single JSON object described above: no Markdown, no code fence, no explanation before or after it.\n",
+    );
     prompt
 }
 
-/// Turn Pi's final text into a validated candidate object chain. Accepts an
-/// optional Markdown code fence around the JSON. Any other shape fails closed.
+/// Turn Pi's final text into a validated candidate object chain. The text may
+/// wrap the JSON object in a Markdown code fence or surround it with prose;
+/// the first balanced top-level JSON object is the candidate. Any other shape
+/// fails closed.
 pub fn parse_assistant_object_chain(
     assistant_text: &str,
     allowed_source_uris: &[String],
 ) -> Result<AssistantObjectChain, String> {
     let body = strip_code_fence(assistant_text.trim());
     let value: Value = serde_json::from_str(body)
-        .map_err(|_| "assistant final message is not a JSON candidate object".to_owned())?;
+        .ok()
+        .or_else(|| first_json_object(body).and_then(|slice| serde_json::from_str(slice).ok()))
+        .ok_or_else(|| "assistant final message is not a JSON candidate object".to_owned())?;
     let Some(object) = value.as_object() else {
         return Err("assistant final message must be a JSON object".to_owned());
     };
@@ -316,6 +323,39 @@ fn describe_store_error(error: ProjectAggregateError) -> String {
         | ProjectAggregateError::Rejected { detail } => detail.to_owned(),
         ProjectAggregateError::Unavailable { detail } => detail,
     }
+}
+
+/// First balanced `{ … }` slice in `text`, string- and escape-aware. Prose
+/// before or after it is ignored here; the schema validator still decides.
+fn first_json_object(text: &str) -> Option<&str> {
+    let start = text.find('{')?;
+    let mut depth = 0usize;
+    let mut in_string = false;
+    let mut escaped = false;
+    for (offset, ch) in text[start..].char_indices() {
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == '"' {
+                in_string = false;
+            }
+            continue;
+        }
+        match ch {
+            '"' => in_string = true,
+            '{' => depth += 1,
+            '}' => {
+                depth = depth.saturating_sub(1);
+                if depth == 0 {
+                    return Some(&text[start..start + offset + ch.len_utf8()]);
+                }
+            }
+            _ => {}
+        }
+    }
+    None
 }
 
 fn strip_code_fence(text: &str) -> &str {
@@ -548,6 +588,43 @@ mod tests {
         );
         assert!(parse_assistant_object_chain("{\"objects\":[]}", &allowed).is_err());
         assert!(parse_assistant_object_chain("[1,2,3]", &allowed).is_err());
+    }
+
+    #[test]
+    fn object_chain_parser_tolerates_prose_around_one_json_object_only() {
+        let wrapped = "Here is the candidate you asked for:\n\n{\"reply\":\"A charter with a {brace} in text.\",\"objects\":[{\"object_kind\":\"charter\",\"fields\":{\"title\":{\"value\":\"Weekly \\\"client\\\" report\",\"provenance\":{\"kind\":\"owner-stated\"}}}}]}\n\nLet me know if you want changes.";
+        let chain = parse_assistant_object_chain(wrapped, &[]).expect("prose around one object");
+        assert_eq!(chain.object_kinds, ["charter"]);
+        assert_eq!(chain.reply, "A charter with a {brace} in text.");
+        assert_eq!(
+            chain.objects[0]["fields"]["title"]["value"],
+            "Weekly \"client\" report"
+        );
+
+        let fenced_with_prose = "Sure.\n```json\n{\"reply\":\"ok\",\"objects\":[{\"object_kind\":\"axis\",\"fields\":{\"steps\":{\"value\":\"draft, review, send\",\"provenance\":{\"kind\":\"assistant-assumption\"}}}}]}\n```";
+        assert_eq!(
+            parse_assistant_object_chain(fenced_with_prose, &[])
+                .expect("fenced after prose")
+                .object_kinds,
+            ["axis"]
+        );
+
+        assert!(
+            parse_assistant_object_chain("I would { suggest a weekly report.", &[]).is_err(),
+            "unbalanced brace is not a candidate"
+        );
+        assert!(
+            parse_assistant_object_chain("prose {\"tool_call\":\"bash\"} prose", &[]).is_err(),
+            "the extracted object still has to match {reply, objects}"
+        );
+        assert!(
+            parse_assistant_object_chain(
+                "{\"reply\":\"x\",\"objects\":[]} {\"reply\":\"y\",\"objects\":[]}",
+                &[]
+            )
+            .is_err(),
+            "first object is taken and its empty chain is refused"
+        );
     }
 
     #[test]
