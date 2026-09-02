@@ -283,10 +283,19 @@ pub fn parse_assistant_object_chain(
     let value: Value = serde_json::from_str(body)
         .ok()
         .or_else(|| {
-            let slice = first_json_object(body)?;
+            // Models slip on structure, never on the schema we validate next:
+            // prose around the object, raw newlines inside strings, a closer
+            // dropped before `]`/`}`. Each attempt is structural only; field
+            // values are never invented or altered.
+            let slice = first_json_object(body).unwrap_or(body);
+            let escaped = escape_raw_controls_in_strings(slice);
             serde_json::from_str(slice)
                 .ok()
-                .or_else(|| serde_json::from_str(&escape_raw_controls_in_strings(slice)).ok())
+                .or_else(|| serde_json::from_str(&escaped).ok())
+                .or_else(|| {
+                    let repaired = close_unbalanced_json(&escaped)?;
+                    serde_json::from_str(&repaired).ok()
+                })
         })
         .ok_or_else(|| "assistant final message is not a JSON candidate object".to_owned())?;
     let Some(object) = value.as_object() else {
@@ -361,6 +370,64 @@ fn first_json_object(text: &str) -> Option<&str> {
         }
     }
     None
+}
+
+/// Insert the closers a model dropped: a `]` or `}` that does not match the
+/// innermost open bracket first closes the open ones, and open brackets left at
+/// the end of the text (outside any string) are closed. Text that ends inside a
+/// string literal is truncated output and is refused (`None`), as is a closer
+/// with nothing open. Only closers are inserted; no value is changed.
+fn close_unbalanced_json(text: &str) -> Option<String> {
+    let mut out = String::with_capacity(text.len() + 8);
+    let mut stack: Vec<char> = Vec::new();
+    let mut in_string = false;
+    let mut escaped = false;
+    let mut changed = false;
+    for ch in text.chars() {
+        if in_string {
+            if escaped {
+                escaped = false;
+            } else if ch == '\\' {
+                escaped = true;
+            } else if ch == '"' {
+                in_string = false;
+            }
+            out.push(ch);
+            continue;
+        }
+        match ch {
+            '"' => {
+                in_string = true;
+                out.push(ch);
+            }
+            '{' | '[' => {
+                stack.push(if ch == '{' { '}' } else { ']' });
+                out.push(ch);
+            }
+            '}' | ']' => {
+                if !stack.contains(&ch) {
+                    return None;
+                }
+                while let Some(expected) = stack.pop() {
+                    if expected == ch {
+                        break;
+                    }
+                    out.push(expected);
+                    changed = true;
+                }
+                out.push(ch);
+            }
+            other => out.push(other),
+        }
+    }
+    if in_string {
+        return None;
+    }
+    while let Some(expected) = stack.pop() {
+        out.push(expected);
+        changed = true;
+    }
+    changed.then_some(out)
 }
 
 /// Models sometimes emit literal newlines or tabs inside JSON string values,
@@ -672,8 +739,37 @@ mod tests {
                 &[]
             )
             .is_err(),
-            "a truncated object is not a candidate"
+            "output cut inside a string is not a candidate"
         );
+        assert!(
+            parse_assistant_object_chain(
+                "{\"reply\":\"truncated\",\"objects\":[{\"object_kind\":\"charter\",\"fields\":{\"title\":{\"value\":\"Weekly\"",
+                &[]
+            )
+            .is_err(),
+            "output cut before the provenance leaves an unprovenanced field, refused by the schema"
+        );
+
+        // Live deepseek-v4-flash output (2026-09-03): the object's own `}` was
+        // dropped before `]`. Structure is repaired; values are untouched.
+        let dropped_brace = "{\"reply\":\"Axis: weekly report process.\",\"objects\":[{\"object_kind\":\"axis\",\"summary\":\"Process steps\",\"fields\":{\"cadence\":{\"value\":\"Weekly\",\"provenance\":{\"kind\":\"assistant-assumption\"}},\"review\":{\"value\":\"Owner reviews draft on canvas before approval\",\"provenance\":{\"kind\":\"assistant-assumption\"}}}]}";
+        let repaired =
+            parse_assistant_object_chain(dropped_brace, &[]).expect("dropped closer repaired");
+        assert_eq!(repaired.object_kinds, ["axis"]);
+        assert_eq!(
+            repaired.objects[0]["fields"]["review"]["value"],
+            "Owner reviews draft on canvas before approval"
+        );
+        assert_eq!(
+            close_unbalanced_json("{\"a\":1}"),
+            None,
+            "balanced input is left alone"
+        );
+        assert_eq!(
+            close_unbalanced_json("{\"a\":[1}"),
+            Some("{\"a\":[1]}".to_owned())
+        );
+        assert_eq!(close_unbalanced_json("}"), None, "closer with nothing open");
         assert!(
             parse_assistant_object_chain("prose {\"tool_call\":\"bash\"} prose", &[]).is_err(),
             "the extracted object still has to match {{reply, objects}}"
