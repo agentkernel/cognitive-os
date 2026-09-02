@@ -223,8 +223,9 @@ Ready/merge 前额外：`node tools/src/check-handbook.mjs`、`node tools/src/ge
 
 1. Rust daemon 是唯一 authority writer（A1）；概率组件与第三方 agent 只产 candidate（A2）。
 2. 外部 mutation 必须 persist-before-dispatch Intent/Effect（A3）；独立 verification 才可完成 Task（A4）。
-3. Secret 只进 approved Secret Store（A5）；`.cursor/mcp.json`、`.cursor/environment.json`、
-   CI 配置、测试 fixture 与 evidence 中不得出现 token/key 明文，只允许环境变量引用。
+3. Secret 只进 approved Secret Store（A5）；`.cursor/mcp.json`（已 gitignore 的本机文件，
+   不得 force-add）、`.cursor/environment.json`、CI 配置、测试 fixture 与 evidence 中不得出现
+   token/key 明文，只允许环境变量引用。
 4. 合同与负例不得为实现而削弱（A6）；本地/fixture/WSL/ordinary CI 证据不得提升为
    Gate/release/Profile（A7）；未知工作树改动受保护（A8）。
 5. Git：禁止 force push、amend 已推送历史、`--no-verify` 跳过 hooks、`git add -A`、直接在

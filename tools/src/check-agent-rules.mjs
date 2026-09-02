@@ -19,8 +19,8 @@
  *    lease ids, ignored roots such as `artifacts/` are skipped).
  *
  * Local-only editor assets (`LOCAL_ONLY_PREFIXES`: imported skills, slash
- * commands, the skill-routing rules 30/40 and `.cursor/mcp.json`) are kept out
- * of Git by owner decision. When such a path is present it is checked as
+ * commands and the skill-routing rules 30/40 stay untracked; `.cursor/mcp.json`
+ * is gitignored) are kept out of Git by owner decision. When such a path is present it is checked as
  * strictly as anything else; when it is absent (a clean CI checkout) the
  * reference is reported as a warning, never as a failure. Every other missing
  * path remains a failure.

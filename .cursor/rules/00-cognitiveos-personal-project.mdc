@@ -46,9 +46,10 @@ alwaysApply: true
 | `30-product-manager-skills.mdc` — **local rule, not tracked in Git** | on demand (description) | PRD / discovery / roadmap / prioritization requests (needs the local `.cursor/skills/` pack) |
 | `40-personal-20-design-review-skills.mdc` — **local rule, not tracked in Git** | auto-attached by globs | Personal 2.0 canvas / Control Plane prototype review (needs the local `.cursor/skills/` pack) |
 
-Local-only editor assets by owner decision: `.cursor/skills/` (imported skills),
-`.cursor/commands/` (slash commands), rules 30/40 above and `.cursor/mcp.json`.
-They stay untracked; a clean checkout does not have them. `pnpm run check:rules`
+Local-only editor assets by owner decision: `.cursor/skills/` (imported skills,
+partly tracked), `.cursor/commands/` (slash commands) and rules 30/40 above stay
+untracked; `.cursor/mcp.json` is gitignored. A clean checkout does not have
+them. `pnpm run check:rules`
 verifies them strictly when present and only warns when they are absent
 (`LOCAL_ONLY_PREFIXES` in `tools/src/check-agent-rules.mjs`).
 
