@@ -54,7 +54,7 @@ generated: false
 |---|---|
 | Canonical obligation | [`docs/standards/docs-sync-contract.md`](../../../docs/standards/docs-sync-contract.md) §2 handbook block (all change classes) + §5 items 16–17 |
 | Pre-commit / pre-push gate | `tools/src/docs-sync-gate.mjs` (`--staged` / `--push`): source-map routing, conditional handbook check set, fail-closed on unsynced mapped changes; wired through repo `.githooks/` — enable once per clone with `pnpm run hooks:install` |
-| Editor/AI guidance | always-applied rules `.cursor/rules/10-…` (checkpoint/closure obligations) and `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` (adapters only; this file + the contract own the policy) |
+| Editor/AI guidance | `AGENTS.md` §5 quick table, the always-applied rule `.cursor/rules/10-…` (checkpoint/closure obligations) and the glob-attached rule `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` (attached whenever `core/`, `personal/`, `tools/`, `.github/`, `.githooks/` or root manifests are edited; adapters only — this file + the contract own the policy) |
 | Non-Cursor AI tools | root `llms.txt` + [`personal/handbook/en/ai/README.md`](../en/ai/README.md) |
 | Machine gate (CI, unconditional) | `check-handbook.mjs` rules HB001–HB015 (manifest, pairing, links, sources, symbols, fingerprints, coverage, generated equality, forbidden content, source-set reproducibility) + generator `--check` byte equality |
 | Task-closure gate | `check-handbook.mjs --diff-base <rev>` proves legacy docs changed only on the allowlist ([`legacy-change-allowlist.json`](legacy-change-allowlist.json)) |

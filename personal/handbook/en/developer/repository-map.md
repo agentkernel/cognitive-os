@@ -9,7 +9,7 @@ sources:
   - path: Cargo.toml
   - path: pnpm-workspace.yaml
   - path: package.json
-fingerprint: "sha256:745730153e54e17f02e18938e78f29945b36c6921afd82b9af1e134616949346"
+fingerprint: "sha256:950e3cf911737be09016291674c41670603f88b24c0cd78fcffd84b313922c8f"
 non_claims:
   - Directory presence is not implementation or Gate evidence; wiring status lives in execution-chain-status.
 ---
@@ -24,7 +24,7 @@ non_claims:
 | `core/specs/` | requirement/error/state-domain registries, 74 JSON schemas, 5 transition tables, narrative companions | architecture contracts — Lane-CTR only; never bent to fit code |
 | `core/conformance/` | 89 vectors + README | contract assets — same protection |
 | `tests/` | baseline/e2e/faults/security indexes + `core/tests/golden/` cross-language fixtures | golden JSONs are generated |
-| `tools/` | Node checkers/generators (consistency, traceability, gate evaluators, handbook, docs-sync gate) | syntax-checked and tested by `@cognitiveos/repo-tools` |
+| `tools/` | Node checkers/generators (consistency, traceability, gate evaluators, handbook, docs-sync gate, agent-rule reference check) | syntax-checked and tested by `@cognitiveos/repo-tools` |
 | `.githooks/` | repo-tracked pre-commit/pre-push docs-sync hooks (opt-in: `pnpm run hooks:install`) | thin `sh` wrappers over `tools/src/docs-sync-gate.mjs` |
 | `docs/` | governance, formal plan + current snapshot + lease ledger, product/architecture design, ADRs, standards, checkpoints, prompts | canonical documentation system; the handbook links to it and never edits it |
 | `personal/handbook/` | this bilingual derived documentation system | validated by `tools/src/check-handbook.mjs` |

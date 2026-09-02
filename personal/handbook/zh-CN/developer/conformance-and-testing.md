@@ -112,6 +112,8 @@ Gate 或 Profile 状态。聚焦测试：`tools/test/personal-rc-gate.test.mjs`�
 
 `.github/workflows/ci.yml` 的 `verify` 在 Ubuntu 与 Windows MSVC 上运行：pnpm 构建/
 测试、cargo build/test（`--test-threads=1`）/clippy（-D warnings）/fmt、codegen 重
-生成 diff、consistency、traceability、钉住计数的符合性、错误实现自检、golden
-digest 字节奇偶。Rust 验证绝不在已登记不支持的本地 Windows GNU 主机运行；native
+生成 diff、consistency、traceability、agent 规则引用检查
+（`tools/src/check-agent-rules.mjs`：`AGENTS.md`、`.cursor/rules`、`.cursor/commands`
+的 frontmatter 与路径/skill/命令引用）、handbook 检查、钉住计数的符合性、错误实现
+自检、golden digest 字节奇偶。Rust 验证绝不在已登记不支持的本地 Windows GNU 主机运行；native
 Linux 证据只消费已推送的精确 revision。

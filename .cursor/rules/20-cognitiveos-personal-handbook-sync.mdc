@@ -1,40 +1,60 @@
+---
+description: Keep the bilingual derived handbook (personal/handbook/) synchronized with code, contracts, tooling and CI changes in the same change set; docs-sync gate obligations before commit/push/merge.
+globs:
+  - "core/**"
+  - "personal/**"
+  - "tools/**"
+  - ".github/**"
+  - ".githooks/**"
+  - "package.json"
+  - "pnpm-workspace.yaml"
+  - "Cargo.toml"
+  - "rust-toolchain.toml"
+  - "llms.txt"
+alwaysApply: false
+---
+
 # Handbook sync adapter
 
 This adapter keeps `personal/handbook/` (the bilingual derived documentation system)
 consistent with the tree. It adds no workflow, axiom, or status semantics; the
-policy is owned by `personal/handbook/_meta/sync-policy.md` and canonical governance
-sources always win over handbook content.
+policy is owned by `personal/handbook/_meta/sync-policy.md` and
+`docs/standards/docs-sync-contract.md` §2/§5, and canonical governance sources
+always win over handbook content.
 
-1. Before finishing any change under `core/crates/`, `core/packages/`, `core/specs/`,
-   `core/conformance/`, `core/tests/`, `personal/crates/`, `personal/apps/`,
-   `personal/packages/`, `personal/tests/`, `tools/`, `personal/deploy/`, `.github/`,
-   or root manifests, match the changed paths against
-   `personal/handbook/_meta/source-map.json` and update the mapped handbook
-   documents in the same formal task and PR.
-2. User-visible behavior changes (CLI verbs/flags, configuration files, errors,
-   security boundaries, installation, recovery) must update both locales of the
-   affected `personal/handbook/*/user/**` and `personal/handbook/*/reference/**` pages.
-3. Architecture, data, protocol, authority, or test-environment changes must
-   update the affected `personal/handbook/*/developer/**` and `personal/handbook/*/ai/**` pages.
-4. Pages with `generated: true` are refreshed only by running
-   `node tools/src/generate-handbook.mjs`; never hand-edit them. After editing a
-   hand-written page or its mapped sources, run
-   `node tools/src/fill-handbook-fingerprints.mjs`.
-5. A new tracked file must be classified in
-   `personal/handbook/_meta/source-coverage.json` (owning docs, or an excluded category
-   with a reason).
-6. If a change truly affects no documentation, acknowledge it explicitly:
-   pass `DOCS_IMPACT_NONE="<concrete reason>"` to the docs-sync gate and record
-   the same reason in the commit/PR description. Blank or trivial reasons do
-   not pass.
-7. Timing is mandatory, not advisory: the docs-sync gate
+1. **Route first.** Before finishing any change under `core/crates/`, `core/packages/`,
+   `core/specs/`, `core/conformance/`, `core/tests/`, `personal/crates/`,
+   `personal/apps/`, `personal/packages/`, `personal/tests/`, `personal/deploy/`,
+   `tools/`, `.github/`, `.githooks/`, or the root manifests, match the changed paths
+   against `personal/handbook/_meta/source-map.json` and update the mapped
+   `doc_ids` in the same formal task and PR (both `en` and `zh-CN`).
+2. **User-visible behavior** (CLI verbs/flags, configuration files, errors,
+   security boundaries, installation, recovery) → update the affected
+   `personal/handbook/*/user/**` and `personal/handbook/*/reference/**` pages.
+3. **Architecture, data, protocol, authority, or test-environment changes** →
+   update the affected `personal/handbook/*/developer/**` and
+   `personal/handbook/*/ai/**` pages.
+4. **Generated vs hand-written.** Pages with `generated: true` are refreshed only
+   by `node tools/src/generate-handbook.mjs`; never hand-edit them. After editing
+   a hand-written page or any file listed in its `sources:`, run
+   `node tools/src/fill-handbook-fingerprints.mjs` (fingerprint drift is a CI
+   red light, HB008).
+5. **New tracked files** must match a rule in
+   `personal/handbook/_meta/source-coverage.json` (owning docs, or an excluded
+   category with a reason), otherwise `check-handbook` fails (HB009). New
+   source-map globs must match at least one tracked file (HB015).
+6. **No documentation impact** must be stated explicitly: pass
+   `DOCS_IMPACT_NONE="<concrete reason>"` to the docs-sync gate and record the
+   same reason in the commit/PR description. Blank or trivial reasons do not pass.
+7. **Timing is mandatory.** The docs-sync gate
    (`node tools/src/docs-sync-gate.mjs --staged|--push`) runs before **every
    commit and push** — enable the repo hooks once per clone with
-   `pnpm run hooks:install`. Before flipping a task PR to ready, additionally
-   run `node tools/src/check-handbook.mjs`,
+   `pnpm run hooks:install`; never skip it with `--no-verify`. Before flipping a
+   task PR to ready, additionally run `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
    `pnpm run check:consistency`; CI enforces the same set on every PR.
-8. When a canonical source (governance, formal plan, `core/specs/`, `core/conformance/`,
-   standards) conflicts with a handbook page, the canonical source wins; correct
-   the handbook page in the same delivery. Never copy dynamic
-   `PROGRESS.md`/Gate status into the handbook — link it.
+8. **Canonical wins.** When a canonical source (governance, formal plan,
+   `core/specs/`, `core/conformance/`, standards) conflicts with a handbook page,
+   correct the handbook page in the same delivery — never "fix" the canonical
+   source to match documentation. Never copy dynamic `PROGRESS.md`/Gate status
+   into the handbook — link it (HB012).

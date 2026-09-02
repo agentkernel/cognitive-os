@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:9b895c19dc80a595506a85d083f85974119c40107a2fb16542d59808f0b278b4"
+fingerprint: "sha256:fc351a47a88393c306d6b9b052b533203e90d48567f9874dae4a6716ea91971b"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -55,6 +55,7 @@ node tools/src/gen-matrix.mjs --check
 node tools/src/check-handbook.mjs   # handbook drift gate
 node tools/src/generate-handbook.mjs --check
 node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push / --range)
+pnpm run check:rules                # tools/src/check-agent-rules.mjs: AGENTS.md / .cursor/rules / .cursor/commands references and frontmatter
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 # bash hosts (Cloud Agent / Linux) bootstrap everything at once:
 #   bash scripts/setup-dev-env.sh   # deps + pinned toolchain + docs-sync hooks
@@ -152,8 +153,10 @@ they are not kernel CI and not live SecretStore proof.
 The `verify` matrix (Ubuntu + Windows MSVC) in
 [`ci.yml`](../../../../.github/workflows/ci.yml): TypeScript build/test, Rust
 build/test/clippy/fmt, codegen drift diff, consistency check, traceability freshness,
-conformance runner with pinned five-state counts and evidence-honesty assertions,
-wrong-implementation self-check, cross-language golden digest byte equality.
+agent-rule reference check (`check-agent-rules`), handbook check and generated-page
+byte equality, conformance runner with pinned five-state counts and
+evidence-honesty assertions, wrong-implementation self-check, cross-language golden
+digest byte equality.
 
 ## Known stale entry
 

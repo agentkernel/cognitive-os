@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:f992fef9331b446c5c1ae1cbd594184008248c78b427782efea1670e30638523"
+fingerprint: "sha256:40093bb2ac40a3edd6150d390fe4bb08bc2d696661bebd31da38cff5508e6001"
 non_claims:
   - 具约束力的工作流由 Operating Model 拥有；本页是面向贡献者的导向性摘要。
 ---
@@ -45,6 +45,12 @@ non_claims:
 6. **确定性收口**：把每条 acceptance 映射到实现 + 负例 + 已执行证据；在精确 merge
    候选 head 上跑 required CI；仅此后才把 PR 从 Draft 转 ready；合并；关闭 lease；
    删除任务分支；本地 `main` fast-forward；`git status` 干净。
+
+PR 描述按 `.github/PULL_REQUEST_TEMPLATE.md` 填写（任务/lease id、五分类变更类别、
+带明确 `not-run` 原因的验证路由、handbook 联动或 `DOCS_IMPACT_NONE` 理由）。
+`AGENTS.md` §5 是"改了什么 → 跑什么 → 联动什么"的速查表；`pnpm run check:rules`
+（`tools/src/check-agent-rules.mjs`）校验 `AGENTS.md`、`.cursor/rules/`、
+`.cursor/commands/` 只引用真实存在的路径、skill 与命令。
 
 绝不：带失败/未完成检查合并、force-push 共享历史、使用 `git add -A`、混入未知工作树
 改动、把未执行验证记成 `not-run` 以外的任何东西。

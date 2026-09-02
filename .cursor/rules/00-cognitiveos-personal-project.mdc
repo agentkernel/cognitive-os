@@ -1,5 +1,5 @@
 ---
-description: Distinguish CognitiveOS architecture from the sole active Personal project
+description: Distinguish CognitiveOS architecture from the sole active Personal project; index of the other repository rules
 alwaysApply: true
 ---
 
@@ -7,8 +7,11 @@ alwaysApply: true
 
 - `cognitiveos-personal` is the repository's only active implementation project.
 - CognitiveOS whitepapers, specifications, conformance assets, and reusable kernel
-  code form the architecture/contract layer; they are not a second product backlog.
+  code (`core/`) form the architecture/contract layer; they are not a second
+  product backlog. `enterprise/` is design-only; `clients/` is a folded-in
+  subproject consuming the Personal API.
 - Read `AGENTS.md` and `docs/governance/PROJECT-IDENTITY.md` before selecting work.
+  `AGENTS.md` §5 is the "what changed → what to run → what to sync" quick table.
 - Immutable axioms live only in `docs/governance/AXIOMS.md`; do not invent a
   parallel invariant list in rules or chat.
 - Select tasks from `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` only — unless the
@@ -25,6 +28,29 @@ alwaysApply: true
 - `docs/plan/PARALLEL-LANES.md` owns active writable leases.
 - Handoffs and `docs/plan/plan.md` are historical/detail sources and cannot override current facts.
 - Claim a non-overlapping, exact-path `lease/personal/...` before writing;
-  broad protected-tree globs are invalid.
+  broad protected-tree globs are invalid. Standalone edits to `AGENTS.md`,
+  `.cursor/rules/`, governance or plan documents (outside a task's own lease)
+  need an owner-directed `DOC-<id>` / `GOV-<id>` lease, not an ad hoc write.
 - Deliver a smallest vertical slice; do not replace known implementation work with repeated audits.
-- Never read or cite `History/`; never mix `personal-blog/` into this repository.
+- Never read or cite `History/`; never mix `personal-blog/` into this repository;
+  never edit third-party copies under `artifacts/` or `.cursor/skills/`.
+
+# Rule index (which rule applies when)
+
+| Rule | Loaded | Applies to |
+|---|---|---|
+| `00-cognitiveos-personal-project.mdc` (this file) | always | identity, sources of truth, rule index |
+| `10-autonomous-personal-development.mdc` | always | continuation events, stop conditions, checkpoint/Draft PR behavior for `P*-T*` work |
+| `15-owner-directed-evaluation-campaign.mdc` | on demand (description) | only while `PROGRESS.md` registers an active `Owner-directed campaign` row |
+| `20-cognitiveos-personal-handbook-sync.mdc` | auto-attached by globs | edits under `core/`, `personal/`, `tools/`, `.github/`, root manifests, or `personal/handbook/` |
+| `30-product-manager-skills.mdc` — **local rule, not tracked in Git** | on demand (description) | PRD / discovery / roadmap / prioritization requests (needs the local `.cursor/skills/` pack) |
+| `40-personal-20-design-review-skills.mdc` — **local rule, not tracked in Git** | auto-attached by globs | Personal 2.0 canvas / Control Plane prototype review (needs the local `.cursor/skills/` pack) |
+
+Local-only editor assets by owner decision: `.cursor/skills/` (imported skills),
+`.cursor/commands/` (slash commands), rules 30/40 above and `.cursor/mcp.json`.
+They stay untracked; a clean checkout does not have them. `pnpm run check:rules`
+verifies them strictly when present and only warns when they are absent
+(`LOCAL_ONLY_PREFIXES` in `tools/src/check-agent-rules.mjs`).
+
+Canonical workflow semantics stay in `docs/governance/DEVELOPMENT-OPERATING-MODEL.md`;
+these rules are Cursor adapters and may summarize but never redefine them.

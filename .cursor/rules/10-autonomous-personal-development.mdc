@@ -1,5 +1,5 @@
 ---
-description: Cursor adapter for continuous CognitiveOS Personal delivery
+description: Cursor adapter for continuous CognitiveOS Personal delivery (continuation, stop conditions, checkpoint and Draft PR behavior)
 alwaysApply: true
 ---
 
@@ -8,19 +8,13 @@ alwaysApply: true
 This file adapts Cursor behavior to the repository workflow. It does not own or
 redefine task, evidence, Git, blocker, confirmation, performance, or closure
 semantics. The canonical workflow is
-[`DEVELOPMENT-OPERATING-MODEL.md`](../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md),
-including:
-
-- `TASK-ATOMIC-DELIVERY-01`;
-- `TEST-REPORT-INCREMENTAL-01` (append every finished test/validation unit to
- its single running report document immediately, before starting the next);
-- `CHECKPOINT-DELIVERY-01`;
-- `CONTINUOUS-AUTONOMOUS-DELIVERY-01`;
-- `CAMPAIGN-BACKLOG-CONTINUATION-01`;
-- `RESOLVE-BEFORE-BLOCKED-PROGRESS-01`;
-- required interactive confirmation boundaries;
-- the performance validation ladder; and
-- deterministic task closure.
+[`DEVELOPMENT-OPERATING-MODEL.md`](../../docs/governance/DEVELOPMENT-OPERATING-MODEL.md)
+(`TASK-ATOMIC-DELIVERY-01`, `TEST-REPORT-INCREMENTAL-01`,
+`CHECKPOINT-DELIVERY-01`, `CONTINUOUS-AUTONOMOUS-DELIVERY-01`,
+`CAMPAIGN-BACKLOG-CONTINUATION-01`, `RESOLVE-BEFORE-BLOCKED-PROGRESS-01`,
+required interactive confirmation boundaries, the performance validation
+ladder, and deterministic task closure). `AGENTS.md` §3 carries the
+Chinese summary of the same IDs; do not restate them here.
 
 If this adapter conflicts with a canonical repository source, follow the
 canonical source and correct this adapter in the same scoped delivery.
@@ -36,7 +30,7 @@ Slice close, one PR, or one Gate ask as the end of the campaign.
 **Owner-directed evaluation campaign takes precedence.** While the
 `PROGRESS.md` Current snapshot registers an active `Owner-directed campaign`
 row (Operating Model §2.5), continuation events execute that evaluation
-campaign instead — follow
+campaign instead — read and follow
 `15-owner-directed-evaluation-campaign.mdc`. Do not claim, continue, or
 register any implementation task, and do not resume the development backlog
 after campaign closure without a fresh owner delivery instruction.
@@ -52,7 +46,9 @@ instead of asking the user to restate history:
 3. read only `PROGRESS.md` Current snapshot for current facts;
 4. read the active lease table before selecting writable paths;
 5. read only the latest matching handoff and relevant task card;
-6. verify branch, worktree, HEAD/upstream, Draft PR, and required checks.
+6. verify branch, worktree, HEAD/upstream, Draft PR, and required checks
+   (Operating Model "Fast resume protocol": when that tuple is consistent, do
+   not repeat a broad repository Git audit).
 
 Never read or use `History/` as an operational source. Chat, branch names, old
 prompts, and historical handoffs cannot override canonical repository facts.
@@ -61,8 +57,7 @@ prompts, and historical handoffs cannot override canonical repository facts.
 
 - If the Current snapshot registers an active owner-directed evaluation
   campaign, skip implementation-task selection entirely and execute the
-  campaign per its execution plan and
-  `15-owner-directed-evaluation-campaign.mdc`.
+  campaign per its execution plan and `15-owner-directed-evaluation-campaign.mdc`.
 - Otherwise continue the active formal task and its unique `in-progress`
   Slice. If no task is active, select one implementation-ready Personal task
   and claim one narrow task lease before editing.
@@ -74,89 +69,46 @@ prompts, and historical handoffs cannot override canonical repository facts.
   or separate acceptance-assessment work.
 - Prefer a real caller, durable authority outcome, or end-to-end correctness
   property over consecutive helper-only changes.
-- Use focused failure-first or negative tests when they materially reduce
-  regression risk. Do not add tests that merely restate implementation.
+- Write the focused failure-first or negative test before the behavior change
+  and observe it fail; do not add tests that merely restate implementation.
 - For Gate/campaign slices, prefer an ADR-0040-class fixed authority-path
   denominator and non-claim report over live Provider/Pi statistical campaigns
   unless the formal acceptance explicitly forbids the MVP path.
-- Protect unknown or user-owned changes. Stop for user direction when their
+- Protect unknown or user-owned changes (A8). Stop for user direction when their
   ownership cannot be resolved; never overwrite, revert, stage, or mix them.
 - Respect daemon-only authority, persist-before-dispatch Intent/Effect,
   fencing, budget, independent verification, secret isolation, and all
   registered safety boundaries.
 - Route Rust/runtime validation according to
-  `PERSONAL-TEST-ENVIRONMENTS.md`. Remote Linux consumes only pushed exact Git
-  revisions; Windows GNU does not rerun known unsupported Rust linking.
-- Keep campaign guests isolated from ordinary development.
+  [`PERSONAL-TEST-ENVIRONMENTS.md`](../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)
+  §1.1 before writing the test: remote Linux consumes only pushed exact Git
+  revisions; the local Windows GNU host runs only `cargo fmt`, Node/TypeScript
+  and static checks (`AGENTS.md` §6). Local shell is Windows PowerShell 5.1 —
+  no `&&`/`||`.
+- Keep campaign guests isolated from ordinary development; after any deploy,
+  debug, or daemon replace on `B01-Desktop-Linux-002`, end the turn with the
+  owner SSH-forward command and local browser URLs exactly as
+  `PERSONAL-TEST-ENVIRONMENTS.md` §7 "Owner viewing" and `AGENTS.md` §7
+  specify (do not assume the owner remembers them or uses the guest desktop).
 - Under standing continuous-delivery authorization, coherent secret-free
   checkpoint commit/push and Draft PR maintenance are expected workflow events,
   not per-turn permission asks.
 - After every development step and **before every commit, push, and
   ready/merge flip**, satisfy the docs-sync obligations of
   `docs/standards/docs-sync-contract.md` §2: route changed paths through
-  `personal/handbook/_meta/source-map.json`; update or regenerate the mapped handbook
-  documents (both locales, fingerprints refreshed) in the same change set, or
-  acknowledge a genuinely documentation-neutral change with
+  `personal/handbook/_meta/source-map.json`; update or regenerate the mapped
+  handbook documents (both locales, fingerprints refreshed) in the same change
+  set, or acknowledge a genuinely documentation-neutral change with
   `DOCS_IMPACT_NONE="<concrete reason>"` recorded in the commit/PR
   description. Run `node tools/src/docs-sync-gate.mjs --staged` (the
   `.githooks` hooks run it automatically once `pnpm run hooks:install` has
-  been executed for the clone); never hand-edit generated handbook pages.
+  been executed for the clone); never hand-edit generated handbook pages; never
+  bypass a hook with `--no-verify`. Details: `20-cognitiveos-personal-handbook-sync.mdc`.
 - Follow Operating Model §2.3 for ADR-0040/0046/0047-class fixed-denominator
   Gate MVP self-disposition and for importing owner-designated local test
   Provider keys into an approved Secret Store. Do not re-ask for those
   authorized cases; never place secret material in Git, chat, logs, or
   evidence.
-
-# Owner local viewing on `DEV-WIN-GNU-01` (linux-002)
-
-When development or validation deploys to **`B01-Desktop-Linux-002`**
-(`hal9001@192.168.123.160` via ProxyJump `wuz@192.168.1.2`), **default to
-letting the owner review UI results on the local Windows machine** after
-supported checks pass — not only on the guest desktop or in chat summaries.
-
-Canonical routing and port facts live in
-[`PERSONAL-TEST-ENVIRONMENTS.md`](../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)
-§7 (`DEV-LINUX-NATIVE-01` owner viewing). Typical owner-ops runtime ports on
-the guest (loopback only):
-
-| Surface | Guest URL | Local URL after forward |
-|---|---|---|
-| Control Plane (`/ui/`) | `http://127.0.0.1:48681/ui/` | `http://127.0.0.1:48681/ui/` |
-| Native dsh panel | `http://127.0.0.1:3080/` | `http://127.0.0.1:3080/` |
-
-If the active runtime uses a different daemon bind, forward that port instead
-(record the exact port from `cognitive daemon status` or `ss` on the guest).
-
-**Default end-of-slice handoff to the owner (PowerShell on `DEV-WIN-GNU-01`):**
-
-```powershell
-ssh -J wuz@192.168.1.2 -L 48681:127.0.0.1:48681 -L 3080:127.0.0.1:3080 hal9001@192.168.123.160
-```
-
-Keep that session open; then open in the **local** browser:
-
-- Control Plane: `http://127.0.0.1:48681/ui/`
-- dsh harness panel: `http://127.0.0.1:3080/`
-
-**Agent obligations after guest deploy, debug, or daemon replace:**
-
-1. Confirm guest services listen on the forwarded ports before telling the
-   owner to connect.
-2. **After every guest debug or validation session that touches UI/runtime,**
-   end the turn with the SSH forward command and **local** browser URLs above;
-   do not assume VM console, guest Firefox, or prior chat history.
-3. Control Plane first entry needs the runtime **management bootstrap secret**
-   (from the guest `local-bootstrap.secret` file — paste in the UI gate, never
-   a Provider API key, never in chat/logs).
-4. After `cognitive daemon stop/start` or kernel-server replace on the guest,
-   restart `cognitive dsh web` on that runtime before expecting dsh chat to
-   work. The new daemon reports dsh `INACTIVE`, so `cognitive dsh apply` cannot
-   recover that stale session; use `apply` only for supported overlay sync on
-   an already-`ACTIVE` runtime (see
-   [`docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md`](../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)).
-
-Do not substitute Vite preview or a separate clients dev server as the product
-origin; daemon-served `/ui/` on loopback is the Control Plane product surface.
 
 # Forbidden stop conditions
 
@@ -174,9 +126,10 @@ following:
 - local Windows GNU cannot run Rust (route to CI/Linux and continue eligible
   work).
 
-Valid stop conditions are only: owner pause/scope change; required interactive
-confirmation boundary with alternatives exhausted; unknown concurrent changes;
-or no remaining ready tasks (Remaining = 0, or only blocked items awaiting
+Valid stop conditions are only: owner pause/scope change; a required
+interactive confirmation boundary (Operating Model §2.4; summarized in
+`AGENTS.md` §3.1) with alternatives exhausted; unknown concurrent changes; or no
+remaining ready tasks (Remaining = 0, or only blocked items awaiting
 owner/external recovery).
 
 # Persistence, blockers, and reporting
