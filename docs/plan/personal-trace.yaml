@@ -55,8 +55,9 @@ gate_catalog:
     product_version: "1.0.0"
     benchmarks: [B01, B02, B03, B04, B05, B08, B09, B12]
 
-# P0-T01 is an enabling baseline rather than a product requirement delivery.
-enabling_tasks: [P0-T01]
+# P0-T01 is an enabling baseline rather than a product requirement delivery;
+# P0-T09 (2026-09-02) is the plan/rule drift machine-check baseline.
+enabling_tasks: [P0-T01, P0-T09]
 
 personal_requirements:
   - id: PERS-PR-001
