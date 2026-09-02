@@ -76,6 +76,13 @@ current fact of the code.
   walkable scenes on daemon `/ui/` are Phase 12 cards. They are not a canvas
   pixel replica, not 2.1, and not T15. Dual Track: no authority yields empty or
   Requires-backend; zero fake Create/Activate/Approve.
+- **Phase 12 closing does not mean a Member really works**: as of 2026-09-02
+  hosted DSH is a start skeleton, the hidden Pi assistant never calls Pi,
+  `runs`/`outputs` show only the process axis, Settings still defers connections
+  to the legacy `/providers` page, Memory correct/forget has no OPC surface, no
+  visual specification exists, and the Windows native environment is not
+  provisioned. Formal-plan **Phase 13** (`P13-T01`–`T13`) owns these gaps card
+  by card; Phase 13 done is still not release / signing / B01-W.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no

@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:74ca32cac52e2f9e9052546bafc471cdb4a1b9f8b29e4717c245b05c86ab00c9"
+fingerprint: "sha256:e7fab054b4a96a08997f2db7b790d4b247fcf2603ab9ef39d99f289a481142b0"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -105,8 +105,18 @@ authority.
   hypothesis chrome** after `P12-T01`–`T09` closed (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)).
   Architecture chapter bodies no longer present Team/Inbox as 2.0.0 L1
   (`DOC-P12-DEBT`). Authority remains the P11 walking skeleton. NVDA/200%/host-theme remain
-  `not-run`. `P11-T15` is independent / not-started. One-module PM/UI work
-  starts at
+  `not-run`. **Phase 13** (`P13-T01`–`T13`, registered in the formal plan on
+  2026-09-02) carries the walking skeletons to prototype-grade product and
+  design goals: P13-T02 real hosted-DSH Attempt loop (complete stdio broker),
+  P13-T03 real hidden-Pi inference, P13-T04 independent verification /
+  openable outputs / publication package, P13-T05 runs/routine loop + Today
+  overview, P13-T06 group-chat `@manager`/`@member` routing, P13-T07
+  Knowledge/Memory surfaces, P13-T08 Settings Model Connections / diagnostics /
+  state-lab, P13-T09 lifecycle + restore points, P13-T10 reviewed Skill/MCP
+  grants, P13-T11 reflection, P13-T12 visual spec + a11y qualification,
+  P13-T13 Windows native host qualification; `P11-T15` N=15 is the exit (not
+  release) and its acceptance now requires Phase 13 done + a qualified
+  Windows host. One-module PM/UI work starts at
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
   That index also catalogues an informative Design-Agent / Owner-journey
   hardness assessment

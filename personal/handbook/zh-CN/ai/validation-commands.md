@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:1c56a73d5211a5462526d2e86a2b0361cc72f0940e8cc2e5a58e56be2e4e15e4"
+fingerprint: "sha256:9b895c19dc80a595506a85d083f85974119c40107a2fb16542d59808f0b278b4"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -34,8 +34,11 @@ Personal 2.0 Phase 11（Personal 2.0.0 chrome）把 T03/T04 日常权威测试�
 `DEV-LINUX-NATIVE-01`）。host/DSH 原生 E2E 仍是 future qualified
 `DEV-WINDOWS-NATIVE-OPC-01`（未 provision 则为 `Requires-environment` / `not-run`）。
 unparked 的 T15 仍需同一 qualified Windows revision 上的 preregistered N=15
-acceptance，不是 Phase 12 mutex。Phase 12 Dual Track UI 用 `DEV-WIN-GNU-01` TS 加
-required CI。native environment 与 B01-W 尚未 provision；`B01-DESKTOP-002` 不是
+acceptance，不是 Phase 12 mutex；自 2026-09-02 起其验收前置 = Phase 13
+`P13-T02`–`T13` done + `P13-T13` 资格化 Windows。Phase 12 Dual Track UI 用
+`DEV-WIN-GNU-01` TS 加 required CI。Phase 13 卡的验证路由见
+`PERSONAL-TEST-ENVIRONMENTS.md` §5.2（Linux native 只关闭"实现已存在"，Windows
+原生格由 P13-T13 回填）。native environment 与 B01-W 尚未 provision；`B01-DESKTOP-002` 不是
 2.0 日常默认机。本地 Windows GNU、WSL、ordinary CI 与 Canvas 都不能替代
 Gate/release；可用前 native cell 记 `not-run`。`not-run` 永远不是 pass。
 

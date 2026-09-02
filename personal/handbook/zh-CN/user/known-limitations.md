@@ -63,6 +63,11 @@ non_claims:
 - **冻结 prototype `/ui/` 完备是单独计划阶段**：daemon `/ui/` 上默认可走场景是 Phase 12 卡。
   不是 canvas 像素复制，不是 2.1，不是 T15。Dual Track：无权威则 empty / Requires-backend；
   0 假 Create/Activate/Approve。
+- **Phase 12 收口不等于成员真的会干活**：截至 2026-09-02，托管 DSH 只有 start 骨架、
+  隐藏 Pi 助手不调用 Pi、`runs`/`outputs` 只显示流程轴、Settings 连接仍指路旧
+  `/providers`、Memory 纠正/遗忘无 OPC 表面、没有视觉规格、Windows 原生环境未
+  provisioned。这些缺口由正式计划 **Phase 13**（`P13-T01`–`T13`）逐卡承接；Phase 13
+  done 也不是 release / signing / B01-W。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
   query` 与 `cognitive audit query` 无过滤器；用量 JSON 含带标签事件（`cost` /

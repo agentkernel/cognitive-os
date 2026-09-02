@@ -137,11 +137,29 @@ default. This subsection aligns names only; it does not provision hosts.
 | P11-T12 Provider/honest usage | required CI plus qualified Windows SecretStore/daemon-proxy/usage route; unknown cost ≠ 0; member budget not current chrome | raw env/plaintext credential; member-level budget stop as 2.0.0 chrome |
 | P11-T13 OPC UI | client tests/contract mock/empty states plus daemon-served `/ui/`; NVDA/200%/host-theme contrast hung `not-run`; Dual Track after T03 HTTP stable | Vite preview as product origin; claiming full IA before Project authority |
 | P11-T14 X connector | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` plus exact-revision `DEV-LINUX-NATIVE-01` store/HTTP. Live X/Twitter API/account/CAPTCHA/platform qualification = `Requires-environment` / `not-run` | CAPTCHA/fingerprint/anti-abuse evasion; Linux CI as platform qualification |
-| P11-T15 fixed acceptance | **parked**; if later unparked, preregistered `N=15` on one exact qualified Windows revision | ordinary CI, local GNU, Linux, WSL, Canvas |
+| P11-T15 fixed acceptance | **unparked**; 15-scenario denominator drafted on the plan.md T15 card by `P13-T01` (frozen at claim); executes only on the qualified `DEV-WINDOWS-NATIVE-OPC-01` after `P13-T02..T13` are done | ordinary CI, local GNU, Linux, WSL, Canvas; Linux cells standing in for Windows scenarios |
+
+### 5.2 Phase 13 completion validation route
+
+Phase 13 closes the gap between the P11 walking skeletons / P12 walkable
+scenes and the frozen prototype + design goals. Linux native evidence closes
+"the implementation exists"; every Windows-native cell stays `not-run` until
+`P13-T13` qualifies the host and backfills it. Do not invent environment IDs.
+
+| Phase 13 work | Required development evidence | Explicit non-substitute |
+|---|---|---|
+| P13-T02 hosted DSH real Attempt loop | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` plus pushed exact-revision `DEV-LINUX-NATIVE-01` real child spawn, stdio broker, terminal observation; `DEV-WIN-GNU-01` fmt/docs/TS only (`HOSTED_DSH_WIN_GNU_FENCE`) | Linux Path B or GNU fence as Windows sandbox/ACL/supply-chain qualification (that is `P13-T13`) |
+| P13-T03 hidden Pi real inference | required CI plus pushed exact-revision `DEV-LINUX-NATIVE-01` with the pinned Pi and daemon Provider proxy | Linux Pi qualification as a Windows Pi route; echoing client payload as "inference" |
+| P13-T04 / T05 / T06 / T09 / T10 / T11 authority + `/ui/` | required CI plus `DEV-LINUX-NATIVE-01` for authority/store/HTTP; Dual Track TS on the `DEV-WIN-GNU-01` allowed surface for `/ui/`; product origin daemon `/ui/` | file open / clock-sleep-restart / FS / supply-chain host cells before `P13-T13` |
+| P13-T07 / T08 surfaces | Dual Track TS + required CI; `DEV-LINUX-NATIVE-01` for SecretStore route | Windows SecretStore / privacy host cells before `P13-T13`; Vite as product origin |
+| P13-T12 visual spec + a11y qualification | D01 documentation-only; D02 rendered browser / NVDA / 200% / host-theme review from a registered host's local browser against pushed exact-revision guest daemon `/ui/` (`DEV-LINUX-NATIVE-01` over the documented SSH tunnel) = implementation evidence | canvas screenshots; skipping a cell as pass; rendered review as Windows native chrome qualification |
+| P13-T13 Windows native qualification | owner-provisioned Windows 11 x86_64 host registered here as `DEV-WINDOWS-NATIVE-OPC-01` (image / tools / pins recorded) before any cell counts; then the hung native E2E cells run there | CI / GNU / WSL / Linux / `B01-DESKTOP-002`; B01-W VM as a daily development host; unsigned dev path as release |
 
 `DEV-WINDOWS-NATIVE-OPC-01` is a reserved capability requirement, not an
 existing machine or qualification claim. Until provisioned and qualified,
-native checks are `not-run`/`Requires-environment`.
+native checks are `not-run`/`Requires-environment`. `P13-T13/D01` is the only
+card allowed to change that row, and only by recording an actually provisioned
+and qualified host.
 
 `CI-WINDOWS-MSVC-01` may prove compile/test behavior only. It cannot prove
 Windows install, tray/background, SecretStore, process/ACL containment, sleep/

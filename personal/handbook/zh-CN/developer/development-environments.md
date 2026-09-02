@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:75f81edaeae31a1997fba92f475510b22e0bb57209d4a7e3faebfd506fa7f654"
+fingerprint: "sha256:d0a89c6e8266f516581ddb211610a1b91f941dd94960c7946a0579c9142fd609"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -41,7 +41,13 @@ T09 是画布 HITL，不是一级 Inbox。`B01-DESKTOP-002` 仅 campaign，不�
 默认机。unparked 的 T15 N=15 acceptance 仍需同一 preregistered qualified
 Windows revision，**不是** Phase 12 prototype completeness mutex。Phase 12 Dual Track
 UI 用 `DEV-WIN-GNU-01` TS 加 required CI；原生 UI E2E 在
-`DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。本地 GNU、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
+`DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。Phase 13 路由
+（`PERSONAL-TEST-ENVIRONMENTS.md` §5.2）：P13-T02/T03 真实 child/Pi 路径与其余权威卡用
+`CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + 已 push exact-revision `DEV-LINUX-NATIVE-01`；
+`/ui/` 表面用 Dual Track TS；P13-T12/D02 的 rendered / NVDA / 200% / host-theme 复审对
+exact-revision guest daemon `/ui/`（SSH 隧道）只是 implementation evidence；只有
+P13-T13 可以把 `DEV-WINDOWS-NATIVE-OPC-01` 登记为 qualified，并回填所有挂单原生格；
+T15 只在那之后执行。本地 GNU、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
 Gate/release；`not-run` 保持 `not-run`。
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22

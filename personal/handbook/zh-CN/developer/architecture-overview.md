@@ -32,7 +32,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:74ca32cac52e2f9e9052546bafc471cdb4a1b9f8b29e4717c245b05c86ab00c9"
+fingerprint: "sha256:e7fab054b4a96a08997f2db7b790d4b247fcf2603ab9ef39d99f289a481142b0"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -97,7 +97,14 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   （merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）。
   架构章节正文不再把 Team/Inbox 写成 2.0.0 一级（`DOC-P12-DEBT`）。
   权威仍是 P11 walking skeleton。NVDA/200%/host-theme 仍 `not-run`。
-  `P11-T15` 独立 / not-started。单模块维护入口：
+  **Phase 13**（`P13-T01`–`T13`，2026-09-02 登记于正式计划）把 walking skeleton
+  补到原型程度与设计目标：P13-T02 托管 DSH 真实 Attempt 循环（完整 stdio broker）、
+  P13-T03 隐藏 Pi 真实推理、P13-T04 独立验证/可打开产出/发布包、P13-T05 运行/例程
+  闭环 + Today 概览、P13-T06 群聊 `@manager`/`@member` 路由、P13-T07 Knowledge/Memory
+  表面、P13-T08 Settings Model Connections/诊断/state-lab、P13-T09 生命周期与还原点、
+  P13-T10 Skill/MCP 评审授权、P13-T11 反思改进、P13-T12 视觉规格 + a11y 资格化、
+  P13-T13 Windows 原生宿主资格化；`P11-T15` N=15 是验收出口（不是 release）。
+  `P11-T15` 验收前置 = Phase 13 done + 资格化 Windows。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
   该索引同时收录设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；

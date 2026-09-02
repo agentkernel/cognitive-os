@@ -1667,21 +1667,47 @@ formal acceptance.
   unknown metrics=0、scraped、P0 hero、secret 进日志/DOM。
 - **硬门:** 适用 Phase 11 四条。
 
-### P11-T15 — Fixed-denominator Windows OPC acceptance (unparked; not P12 mutex)
+### P11-T15 — Fixed-denominator Windows OPC acceptance (unparked; Phase 13 验收出口)
 
-- **2.0.0 表面:** unparked；领取时细化 N=15 固定分母。**不是** Phase 12
-  prototype completeness mutex。不自动 release。
-- **依赖:** 领取时细化。可与 P12 非重叠 lease 并行。
-- **垂直切片:** N=15、一 exact qualified Windows revision、retain every started cell。
-- **Scene:** 固定分母场景；环境未资格化则诚实 `not-run`。
-- **acceptance:** signing/B01-W/2.1 仍独立。T15 done ≠ prototype done。
-- **不可做:** 用 ordinary CI/Linux/WSL/GNU promotion；把本卡当 P12 mutex。
-- **本仓 foundation:** Operating Model 固定分母实践。
-- **禁止再造:** 把本卡当当前实现 mutex；把 `not-run` 写成 pass。
-- **validation environment:** 仅资格化 Windows。`DEV-WINDOWS-NATIVE-OPC-01`
-  未资格化 = `Requires-environment` / `not-run`。
-- **关闭门:** 领取时细化；环境缺失不得编造 pass。
-- **漂移检测负例:** 把 `not-run` 写成 pass；A7 提升；把 T15 写成 prototype done。
+- **2.0.0 表面:** unparked；N=15 固定分母预注册草案见下（`P13-T01` 登记，领取时
+  冻结为 preregistration）。**不是** Phase 12 prototype completeness mutex。不自动
+  release。
+- **依赖:** `acceptance_requires` = **`P13-T02..T13` done** + `P13-T13` 已把
+  `DEV-WINDOWS-NATIVE-OPC-01` 资格化。可与 P13 非重叠 lease 并行准备 preregistration
+  文档，但任何 cell 执行前必须满足上述前置。
+- **垂直切片:** 冻结 15 个场景 → 一 exact qualified Windows revision → 全部执行并
+  retain every started cell → independent review → non-claim report。
+- **Scene（N=15 预注册草案；领取时逐条冻结 oracle / 记录格式；分母不可替换）:**
+  1. 干净 Windows 宿主 inspectable install → Personal Home `app/`/`data/` → daemon/tray 就位（P11-T02 / P13-T13）。
+  2. 首次打开 `/ui/`：空 Home 只创建、右栏隐藏、无假按钮（P12-T02）。
+  3. Settings Model Connections 完成一个真实 Provider 连接，raw secret 只经 SecretStore（P13-T08）。
+  4. 五段创建向导 ①→⑤：助手真实研究/提案（P13-T03）、confirm-before-activate、G1/G2、成员顺序就位、④ 逐环测试、⑤ 联合验收进入 Today（P12-T02 / P11-T03 / P11-T04）。
+  5. Project 四子菜单：详情只读流程轴；成员先选后配八标签；确认加入 = Intent（P12-T03 / P12-T04）。
+  6. 一个 Member 经隐藏托管 DSH 真实执行一个 Task Attempt 并产出产物（P13-T02）。
+  7. 独立验证 → `outputs` 可打开产物 → 末环验收（P13-T04）。
+  8. Routine 按 ③ 声明武装，手动触发经 Intent，`runs` 显示 occurrence + Attempt 历史（P13-T05）。
+  9. 关窗选择 background-or-pause → 睡眠/离线 → 唤醒后 missed/resume 事实可见且不重叠（P11-T02 / P13-T05 / P13-T13）。
+  10. HITL：聊天只宣布，Today 深链进中心画布，批准 / 改窄 / 拒绝 / 停；stale 与 unknown 不能批（P12-T05 / P12-T06 / P11-T09）。
+  11. external-send 发布包：画布 AUTONOMY packet 预览 → 确认 → receipt；planned ≠ published（P13-T04）。
+  12. 项目群聊 `@manager` / `@member` 路由；成员发言规则；`@` 只进草稿；无 Approve（P13-T06）。
+  13. Knowledge ingest → Why this fragment → 冲突/来源/权利可见；Memory inspect / correct / forget 后不复活（P12-T07 / P13-T07）。
+  14. Skill/MCP 获取：评审 → exact Owner 画布 preview → 版本锁定 → 按范围 grant → 回滚（P13-T10）。
+  15. 复制为 inactive 副本 → 归档停触发 → 删除影响预览 + 二次确认 → local restore point / 导出排除 secret（P13-T09）。
+  以上每格记 `pass` / `fail` / `partial` / `not-run`（环境缺失时全部 `not-run`，不是
+  产品失败）；zero critical A1–A8；a11y / 视觉资格化由 `P13-T12` 单独记账，不占本分母。
+- **acceptance:** 15 格全部执行且保留、zero critical、independent review、non-claim
+  report；signing / B01-W / 2.1 仍独立。T15 done ≠ release，≠ Gate，≠ Profile。
+- **不可做:** 用 ordinary CI / Linux / WSL / GNU promotion；把本卡当 P12 mutex；替换
+  或缩小分母；用 Linux 单元顶替 Windows 场景。
+- **本仓 foundation:** Operating Model 固定分母实践；B01 successor `002` 的
+  preregistration / evidence collector / independent verifier 模式。
+- **禁止再造:** 把本卡当当前实现 mutex；把 `not-run` 写成 pass；第二套验收分母。
+- **validation environment:** 仅已资格化 `DEV-WINDOWS-NATIVE-OPC-01`（P13-T13）。
+  未资格化 = 整卡 `blocked` / `not-run`。`CI-WINDOWS-MSVC-01` 只证明编译。
+- **关闭门:** 15 格在同一 exact qualified Windows revision 上全部执行并记账；
+  environment 缺失不得编造 pass。
+- **漂移检测负例:** 把 `not-run` 写成 pass；A7 提升；把 T15 写成 prototype done；
+  替换分母；用 B01-DESKTOP-002 / Linux 冒充 Windows。
 - **硬门:** 适用 Phase 11 四条 + `TEST-REPORT-INCREMENTAL-01`。
 
 ### P12-T01 — Phase 12 docs/plan registration (documentation-only)
@@ -1823,6 +1849,392 @@ formal acceptance.
 - **漂移检测负例:** 聊天 Approve；助手直写权威；empty-home 假聊天；preview bypass。
 - **硬门:** 适用 Phase 12 四条 + Dual Track。
 
+## Phase 13 — Personal 2.0.0 completion task cards（walking skeleton → 原型程度 + 设计目标）
+
+These cards elaborate the formal Phase 13 rows. They do not authorize
+implementation by themselves. Each implementation task uses one task branch,
+lease, Draft PR, focused negatives, supported CI, and the environment named by
+its formal acceptance. Phase 13 is **not** release, **not** 2.1, **not** canvas
+pixel-replica. Dual Track honesty continues: no authority → empty /
+`Requires-backend`; zero fake Create / Activate / Approve / Connect / Install /
+Publish. Product origin is daemon `/ui/`. Claim ceiling `hypothesis`.
+
+差距来源（2026-09-02 对 `main@67ad05c0` 核对；写在卡上以便后续窗口不重审）：
+`dsh.hosted.start` 只是 start 骨架、无完整 stdio broker
+（[T07 closure](../checkpoints/2026-08-30-personal-p11-t07-dsh-closure.md)）；
+`assistant.rs` `run_turn` 不调用 Pi，只把客户端 payload 注册为候选；
+`ProjectRunsPage` / `ProjectOutputsPage` 只读 PlanRevision axis /
+`output_contract`；`SettingsPage` 连接空态指路 `/providers`；`KnowledgePage`
+Memory 列表只读（"Forget/remember stay on management HTTP"）；
+`clients/docs/design/opc-2.0/` 无 Visual UI 规格文档；
+`DEV-WINDOWS-NATIVE-OPC-01` not provisioned。
+
+### P13-T01 — Phase 13 docs/plan registration + T15 N=15 预注册草案 (documentation-only)
+
+- **Outcome:** Phase 13 + `P13-T02..T13` registered inside the existing
+  `PERSONAL-DEVELOPMENT-PLAN.md`（三栏、负例、Slices、`implementation_requires`）；
+  `P11-T15` card elaborated with the N=15 preregistration draft and its
+  `acceptance_requires` pointed at Phase 13；plan.md / trace / environments /
+  PROGRESS / dev-prep index / handbook synced。
+- **Boundaries:** documentation/plan only; no product code, contracts,
+  negatives, tests, support, Gate, or qualification. Visual spec gap is
+  registered as `P13-T12/D01`, not produced here.
+- **Acceptance:** Phase 13 cards complete; T15 draft present; `check:consistency`
+  / handbook / docs-sync / required CI; documentation-only.
+- **Validation:** local Markdown/link/anchor/fence/terminology,
+  `check:consistency`, `check:handbook`, generator `--check`, fingerprint,
+  docs-sync, diff/lint; required Ubuntu/Windows CI.
+- **不可做:** 新开平行计划/PRD；把 P13 写成 release；把 walking skeleton 写成
+  产品级；把 T15 分母留空；canvas/Vite 当产品源。
+- **硬门:** documentation-only 出口写明；不触碰 code/contracts/tests。
+
+### P13-T02 — Hosted DSH real Attempt loop（完整 stdio broker + health/update/rollback）
+
+- **2.0.0 表面:** 无新一级 chrome；成员"运行"真实发生。引擎身份只在高级诊断
+  （P13-T08）。不是 Installed Agent、不是原生 DSH UI、不是 engine store。
+- **依赖:** P11-T07 骨架（v31 `p11_hosted_dsh_child`、`runtime_binding_ref`、
+  `dsh.hosted.start` / `observe-exit`）；P11-T03/T04/T12；P2-T03/T06/T07
+  Effect/WIA/verification。**不依赖 P13-T03。**
+- **垂直切片:** D01：有界 Context payload → exact artifact child 真实 spawn
+  （isolated；完整 stdio broker：request/response/observation 帧、超时、bounded
+  redacted output）→ candidates/observations 流 → 终态观察写 Attempt；
+  failure-first：process death ≠ completion、unknown ≠ success、secret 不进
+  env/argv、child 直连 Provider 被拒、native MCP/base tool/HMR/home patch 被拒。
+  D02：artifact health/update/rollback 事实 + 一个已就位 Member 对一个 Task 的
+  完整 Attempt 经 Intent/Effect persist-before-dispatch 落 durable 终态；Attempt
+  历史可被 `runs`（P13-T05）读取。
+- **Scene:** `project-runs` 的数据源；`hitl` 的 external-send 由 T09 preview 承接。
+- **acceptance:** 引擎无权威、无 secret、无完成权（14 §7.3 契约）；Personal 拥有
+  Conversation/Memory/Task/completion；Attempt 终态只由 daemon 观察写入。
+- **不可做:** heartbeat 写权威；in-process loop 当权威；把 Linux Path B 写成
+  Windows 资格；Pi 当 Member 引擎；搬 harness `apps/web`。
+- **本仓 foundation:** P11-T07 child identity + Provider proxy；P2-T06 process
+  supervisor seam（PID ownership / timeout / orphan containment）；P2-T03 WIA。
+  可借形状（不搬权威）：harness `packages/sandbox/*`、`packages/subprocess/*`、
+  `session-persistence-jsonl`。
+- **禁止再造:** 第二套 supervisor；第二套 Provider 凭据平面。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + 已 push
+  exact-revision `DEV-LINUX-NATIVE-01`（真实 child spawn）。`DEV-WIN-GNU-01` 仅
+  fmt/docs/TS（`HOSTED_DSH_WIN_GNU_FENCE`）。Windows sandbox/ACL/supply-chain E2E =
+  `DEV-WINDOWS-NATIVE-OPC-01` / `not-run` 直到 P13-T13。
+- **关闭门:** 一个已就位 Member 对一个 Task 的 Attempt 经隐藏托管 DSH 真实 spawn、
+  有界 Context、完整 stdio broker、candidates/observations 流、persist-before-dispatch、
+  终态观察写 Attempt；health/update/rollback 事实可查。
+- **漂移检测负例:** heartbeat 写权威；child 直连 Provider；orphan；process exit =
+  complete；unknown output = success；secret 进 env/argv；Linux Path B 当 Windows
+  资格；Pi 当 Member 引擎；把 start 骨架改名当完整循环。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T03 — Hidden Pi Assistant real inference（explain / navigate / research / propose 真调 exact Pi）
+
+- **2.0.0 表面:** 右栏助手真的会想：创建向导 ①/② 的研究与提案、`propose` 候选
+  带 typed 出处；Provider 未绑时渲染「去 Settings 连接」指路文案。Pi 仍不进
+  Installed Agents chrome。
+- **依赖:** P11-T06 candidate path（`run_turn`、`validate_assistant_provenance`、
+  `reject_closed_candidate_schema`、`admit_tool`）；P11-T05 archive；P11-T10
+  `inject_order`；P11-T12 Provider binding；P12-T09 右栏；exact Pi pin。
+  **不依赖 P13-T02。**
+- **垂直切片:** D01：`assistant.turn` 四类 turn 在 daemon 侧真实调用 exact Pi
+  （Provider 经 daemon proxy；有界 Context 按 T10 inject_order 组装）→ Pi 输出解析为
+  候选对象链（BusinessBrief → ResearchRun → Charter/Axis/Roster/Recipe）→ 每字段
+  typed 出处（`sources[]` / owner-stated / assistant-assumption；无出处被拒）→
+  注册候选 + research/propose 可选 preview；research fetch 只走
+  `HttpFetchReadOnly` 只读族；Provider 未绑 → 指路 Settings（非假聊天框、非静默
+  绑模型）。
+- **Scene:** `create-init`…`create-joint` 右栏、`today` / `project-*` 右栏助手会话。
+- **acceptance:** 仍 candidate-only；无 authority/Secret/archive/Memory 写；
+  draft-apply 与 authority-approve 两层永不混用（14 §2.4）。
+- **不可做:** 助手直写权威；伪造 sources；ambient shell；把 Pi Linux 资格写成
+  Windows；聊天 Approve。
+- **本仓 foundation:** exact Pi client/Shell、P2-T04 private candidate worker
+  composition、P3-T02 Context builder、P11-T06 closed candidate schema。
+- **禁止再造:** 第二套候选 schema；Pi 当 Member 执行引擎。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + 已 push
+  exact-revision `DEV-LINUX-NATIVE-01`（pinned Pi）。`DEV-WIN-GNU-01` 仅
+  fmt/docs/TS。Windows Pi 路由 `not-run` 直到 P13-T13；Linux Pi qualification 不转移
+  Windows。
+- **关闭门:** 四类 turn 真实经 daemon 调用 exact Pi 并产出带 typed 出处的候选对象
+  链；Provider 未绑时指路 Settings；`run_turn` 不再只回显客户端 payload。
+- **漂移检测负例:** 直连 SecretStore/DB/Provider；伪造 `sources[]`；无出处候选注册；
+  ambient tool；preview bypass；未绑 Provider 仍假装回答；完成自报。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T04 — Independent verification + openable outputs + publication package
+
+- **2.0.0 表面:** `project-outputs` select-then-view 显示真实产物并可打开；run 验收
+  **只在末环**；发布包 = 完整 AUTONOMY packet 画布预览；planned ≠ published；
+  聊天无 Confirm。
+- **依赖:** P13-T02；P11-T03 StageAcceptanceSpec / StageTestPassed /
+  `acceptance_decision`；P11-T09 ApprovalPreview（external-send）；P3-T03 CAS；
+  P2-T07 independent verifier；P12-T03 outputs 页。
+- **垂直切片:** D01：Attempt 产物入 CAS（digest / format / 来源 / 新鲜度）→ 独立
+  verifier 对业务产物出 evidence → 末环验收需 StageTestPassed；failure-first：模型
+  文本 / HTTP 200 / `agent_end` 当完成被拒、中间环验收被拒、file-as-authority 被拒。
+  D02：`outputs` 页 select-then-view + 打开/下载（Personal Home `data/`）；
+  publication package 画布预览 → 确认 → external-send 走 T09 preview → receipt；
+  planned ≠ published。
+- **Scene:** `project-outputs`、`hitl`（external-send）、`project-runs`（验收环）。
+- **acceptance:** 完成 = 独立 verifier + daemon acceptance；产物 = CAS 引用；
+  publish 前必有 preview。
+- **不可做:** file 当权威；receipt 当完成；假 Publish 按钮；聊天 Confirm。
+- **本仓 foundation:** P2-T07 verifier seam、P3-T03 CAS、P11-T03 acceptance、
+  P11-T09 ApprovalPreview、P11-T14 connector preview 形状。
+- **禁止再造:** 第二套 artifact store；第二套 verifier。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` +
+  `DEV-LINUX-NATIVE-01`；Dual Track TS（`DEV-WIN-GNU-01` 允许面）。宿主打开文件
+  E2E = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。
+- **关闭门:** 真实 Attempt 产物入 CAS 且 `outputs` 可选看/打开；独立 verifier 出
+  evidence；末环验收需 StageTestPassed；发布包画布预览且 planned ≠ published。
+- **漂移检测负例:** 模型文本 / HTTP 200 / `agent_end` 当完成；file-as-authority；
+  中间环验收；无验证即 published；聊天 Confirm；receipt-as-completion。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T05 — Runs / Routine loop + Today run overview
+
+- **2.0.0 表面:** `project-runs` 显示真实 occurrence ledger + Attempt 历史；
+  Routine/Trigger 按 ③「周期与触发」在 G2 后武装；`today` 每 live Project 一行
+  （状态 / 今日完成次数 / 当前环节 / 时长）+ created/live/blocked 计数 + 周期切换；
+  无待批时折叠决策包保留概览；无 KPI 墙。
+- **依赖:** P11-T08 Routine/Trigger 骨架；P13-T02；P11-T02 close-background；
+  P12-T03 runs 页；P12-T05 Today。
+- **垂直切片:** D01：G2 后按声明武装 Routine/Trigger；手动触发经 Intent；
+  occurrence ledger（no-overlap / queue-latest / missed / coalesced）真实产生；安全点
+  continue / pause / restart 不静默注入 prompt；close-window background-or-pause 与
+  offline/missed/resume 事实相连；failure-first：第二 scheduler、overlap、静默丢
+  occurrence、checkpoint 当完成被拒。D02：`runs` UI + Today 概览行/计数/周期切换。
+- **Scene:** `project-runs`、`today`。
+- **acceptance:** daemon scheduler 唯一调度权威；checkpoint 非权威；Working ≠
+  completion。
+- **不可做:** Inbox 一级；第二套 Temporal；假 Start 按钮；KPI 墙。
+- **本仓 foundation:** P11-T08 `scheduler_entries` 复用、P2-T03 scheduler/fencing、
+  P11-T02 host status。
+- **禁止再造:** 第二 scheduler。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` +
+  `DEV-LINUX-NATIVE-01`；Dual Track TS。clock/sleep/restart 宿主 E2E =
+  `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。
+- **关闭门:** `runs` 显示真实 occurrence ledger + Attempt 历史；Routine 按 ③ 声明在
+  G2 后武装；手动触发经 Intent；安全点 continue/pause/restart；Today 概览行 + 计数
+  + 周期切换。
+- **漂移检测负例:** 第二 scheduler；overlap；静默丢 occurrence；checkpoint 当完成；
+  运行中静默 prompt 注入；进程退出 = cancel/complete；KPI 墙；假 Start。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T06 — Project group conversation + manager routing（`@manager` / `@member`）
+
+- **2.0.0 表面:** 右栏在 Project 内是群聊（Owner / manager / Members），在 Project 外
+  是 Personal Assistant；`@manager` / `@member` 路由；manager-default speech；成员
+  proactive speech 仅 mentioned / delivering / handoff / blocked / decision-request；
+  `@` 只插入未发送草稿；聊天无 Approve。
+- **依赖:** P11-T05 记录类型词汇（`owner-message | assistant-proposal | announce |
+  receipt | member-deliverable | handoff | blocked | decision-request`）；P11-T04；
+  P13-T02（成员真的会 deliver）；P13-T03（助手真的会答）；P12-T09。
+- **垂直切片:** 群聊与助手会话分层可切换 → `@manager` → daemon Task/PlanRevision
+  候选 → preview（非直写）→ `@member` 只路由该成员 Task → 成员发言规则由 daemon
+  记录类型强制 → `@` 只进草稿；failure-first：聊天 Approve、成员间转移权威、跨项目
+  读、secret 进聊天被拒。
+- **Scene:** 全部 `project-*` 右栏、`today` 右栏。
+- **acceptance:** Conversation 只宣布不批准；无完成语义；SecretStore takeover。
+- **不可做:** 聊天 Approve；成员自发 handoff 转移权威；Conversation 当 Task 完成。
+- **本仓 foundation:** P11-T05 archive/index、P11-T09 announce + 深链、P12-T09
+  `assistant.turn` → `draft.apply`。
+- **禁止再造:** 第二套会话投影；重解释 `conversation-projection/0.1`。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` +
+  `DEV-LINUX-NATIVE-01`；Dual Track TS。
+- **关闭门:** 群聊与助手会话分层；`@manager` → 候选 → preview；`@member` 只路由该
+  成员 Task；成员发言规则；`@` 只进草稿；聊天无 Approve。
+- **漂移检测负例:** 聊天 Approve；成员间直接转移权威；成员随意发言；`@` 直写权威；
+  Conversation 当完成；跨项目读；secret 进聊天。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T07 — Knowledge & Memory surface completeness
+
+- **2.0.0 表面:** Knowledge 每条 fragment 显示 provenance / rights / freshness /
+  exclusion / untrusted-observation；reindex 与导入失败保留原件可见；Memory
+  inspect / correct / promote / forget 表面；聊天自动准入进可检查 Memory；跨 Project
+  promote 需 Owner 确认。
+- **依赖:** P11-T10/T11 权威；P12-T07；P13-T06（自动准入来源；**非 mutex**）。
+  **不依赖 P13-T02。**
+- **垂直切片:** Knowledge 标签/状态 → reindex/失败态 → Memory 四动作走 management
+  HTTP（tombstone 不复活）→ 聊天自动准入 → 跨 Project promote preview。
+- **Scene:** `knowledge`。
+- **acceptance:** files ≠ Project 权威；Memory 须 admission；forget 后 index/cache
+  不复活。
+- **不可做:** file-as-authority；越权检索当功能；Agent 自 admission；捆绑 Obsidian。
+- **本仓 foundation:** P11-T10 Vault import/index/conflict、P11-T11 admission/
+  privacy/forget、P4-T03 tombstone/non-resurrection。
+- **禁止再造:** 文件当 CAS 权威；第二套 Memory 写路径。
+- **validation environment:** Dual Track TS + `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`。
+  宿主 FS/privacy E2E `not-run` 直到 P13-T13。
+- **关闭门:** 标签可见；reindex/失败态可见；Memory 四动作走 management HTTP 且
+  tombstone 不复活；跨 Project promote 需 Owner preview。
+- **漂移检测负例:** file-as-authority；越权检索；tombstone 复活；Agent 自
+  admission；secret/PII 进 Memory；last-write-wins 无冲突记录；捆绑 Obsidian。
+- **硬门:** 适用 Phase 13 六条 + Dual Track。
+
+### P13-T08 — Settings completeness（Model Connections / 通知恢复 / 高级诊断 / state-lab）
+
+- **2.0.0 表面:** Settings **Model Connections**：主流 Provider 模板下拉 + 自定义
+  URL / 兼容模式 / key / model；connected / failed 不露 raw secret；不再指路
+  Linux-era `/providers`；usage source-labelled actual / estimated / unknown≠0；
+  通知 / 恢复分组；高级诊断默认折叠（DSH / Pi exact version / health / update /
+  rollback）；state-lab 九态 × 九表面用真实组件渲染，Settings 高级默认隐藏。
+- **依赖:** P11-T12；P8-T13 Provider CP；P12-T08；P11-T02 host status；P13-T02
+  engine health facts（**非 mutex**：缺则诚实 empty）。
+- **垂直切片:** D01：Model Connections 写路径（SecretStore takeover；`/providers`
+  能力迁入 OPC Settings）+ usage 标签。D02：通知/恢复分组 + 高级诊断 + state-lab。
+- **Scene:** `settings`、`state-lab`。
+- **acceptance:** raw secret 永不进 UI/DSH/Pi；unknown≠0；成员级预算硬停不是
+  chrome；订阅/发票管理不做。
+- **不可做:** 假 Connect 按钮；Installed Agents 商店；state-lab 一级。
+- **本仓 foundation:** P8-T13 Provider Control Plane（account/secret/binding/usage）、
+  P11-T12 labelled usage、P12-T08 连接表/时间盒撤销/CloseBackground、P11-T07
+  hosted DSH identity。
+- **禁止再造:** 第二套凭据平面；engine store。
+- **validation environment:** Dual Track TS + `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`
+  + `DEV-LINUX-NATIVE-01`（SecretStore route）。Windows SecretStore 宿主 =
+  `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`。
+- **关闭门:** OPC Settings 内完成一个真实 Provider 连接且不露 secret；不再指路
+  `/providers`；usage 标签；通知/恢复分组；高级诊断默认折叠；state-lab 九态 × 九表面
+  真实组件、默认隐藏。
+- **漂移检测负例:** raw secret 进 DOM/log/env；unknown=0；成员级预算 chrome；
+  Installed Agents 商店；state-lab 一级；假 Connect；订阅/发票产品。
+- **硬门:** 适用 Phase 13 六条 + Dual Track。
+
+### P13-T09 — Project lifecycle + local recovery（副本 / 归档 / 删除 / 还原点 / 导出）
+
+- **2.0.0 表面:** copy-project 生成 inactive 副本；归档先停 Routine/Trigger；删除
+  需影响预览 + 二次确认；同盘自动版本 = local restore points（明示非灾备）；手动导出
+  默认排除 secret；每 Project 自动 `data/` 目录。
+- **依赖:** P11-T03；P11-T08；P11-T02（Personal Home `app/`/`data/`、restore-point-
+  not-backup）；P7-T02 backup/restore 边界。
+- **垂直切片:** copy → archive（停触发）→ delete（影响预览 + 二次确认）→ restore
+  point → export（排除 secret）；failure-first：副本继承 grant/就位、删除不停触发、
+  导出含 secret 被拒。
+- **Scene:** `projects`、`project-detail`、`settings`（还原点/导出入口）。
+- **acceptance:** 副本不复制运行/grant/Member 就位；archive-first；secret 默认排除。
+- **不可做:** restore-as-backup 声称；跨项目共享 Member；删除即物理删。
+- **本仓 foundation:** P11-T03 Project aggregate、P11-T08 Trigger、P11-T02
+  restore-point 事实、P7-T02 export 排除规则。
+- **禁止再造:** 第二套备份平面。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` +
+  `DEV-LINUX-NATIVE-01`；Dual Track TS。Windows FS E2E `not-run` 直到 P13-T13。
+- **关闭门:** copy = inactive 副本；归档先停触发；删除影响预览 + 二次确认；restore
+  points 明示非灾备；导出排除 secret；每 Project 自动 `data/`。
+- **漂移检测负例:** 副本自动激活/继承 grant/就位；删除不停触发；restore-as-backup；
+  导出含 secret；跨项目共享 Member。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T10 — Skill/MCP security-reviewed acquisition + scoped grant
+
+- **2.0.0 表面:** 成员 skills / tools / perms 标签可发起获取；助手主导发现 → 结构化
+  安全评审展示 → 首次安装或扩权前 exact Owner 画布 preview → 版本锁定 capability
+  artifact → 独立 Project/Member grant → 更新评审 / 兼容测试 / 回滚。广泛
+  marketplace / MCP family console / engine store **不做**。
+- **依赖:** P11-T04 InstallFact/Grant 拆分；P11-T09 grant-expansion preview +
+  时间盒；P13-T03 助手研究；P12-T04 标签；P4 Skill package/revision/binding；
+  P5-T03/T04 MCP transport facts（不等于 MCP 第七族）。
+- **垂直切片:** 发现候选（带 sources）→ 评审（来源 / 许可 / 隐藏指令 /
+  prompt-injection / 文件·网络·命令意图；MCP 加依赖 / 可执行代码 / 网络 / Secret /
+  工具权限 / 供应链）→ preview → InstallFact → Grant（Project/Member 范围、时间盒可选）
+  → 更新评审 / 兼容测试 / 回滚；failure-first：安装即授权、未评审安装、聊天 Approve、
+  ambient grant 被拒。
+- **Scene:** `member-config`（skills / tools / perms）、`hitl`（grant-expansion）。
+- **acceptance:** 配方 ≠ 授权；grant 有范围；exact Owner 确认在画布。
+- **不可做:** generic Resource schema；DSH native MCP/base tool 自动启用；engine
+  store。
+- **本仓 foundation:** P11-T04 InstallFact/Grant、P11-T09 subject_kind
+  grant-expansion、P4 Skill、P5 MCP transport、P11-T06 research 只读边界。
+- **禁止再造:** MCP family console；第二套 grant 表。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` +
+  `DEV-LINUX-NATIVE-01`；Dual Track TS。supply-chain 宿主 E2E `not-run` 直到 P13-T13。
+- **关闭门:** 发现 → 评审 → exact Owner 画布 preview → 版本锁定 → 按范围 grant →
+  更新评审/兼容测试/回滚 全链可走且负例绿。
+- **漂移检测负例:** 安装即授权；未评审自动安装；聊天 Approve；ambient grant；
+  generic Resource schema；engine store / marketplace；grant 无过期无范围。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T11 — Reflection + versioned Member Runtime improvement
+
+- **2.0.0 表面:** 关键结果 / 日 / 周期 / 事件反思候选；Member Runtime 改进 = 新
+  revision + Owner preview + 可回滚；跨 Project Role Template 提案需 Owner 确认。
+  设计目标层（2.0 scope §3.3），不是原型 Scene 新增。
+- **依赖:** P13-T02；P13-T04；P13-T05；P11-T04 versioned Employee/Blueprint、
+  per-Project opt-in 升级。
+- **垂直切片:** daemon 从 Attempt / verification / evidence 事实生成反思候选（非模型
+  自报）→ 改进提案 = 新 revision preview → Owner 确认 → 生效 / 回滚；跨 Project
+  提案需 Owner 确认；failure-first：模型自报即改进、隐式 Blueprint 升级、运行中
+  prompt 注入被拒。
+- **Scene:** `project-members`（revision 历史）、`hitl`（改进 preview）。
+- **acceptance:** 反馈先是 Project evidence，再是 versioned 提案；不静默注入。
+- **不可做:** 自动升级 Blueprint；跨 Project 静默复用 Member。
+- **本仓 foundation:** P11-T04 versioned Employee/Blueprint、P11-T09 preview、
+  P3-T04 loop-control observation（repeat/no-progress 事实）。
+- **禁止再造:** 第二套 evaluation 平面（evaluation routing 仍 OFF）。
+- **validation environment:** `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` +
+  `DEV-LINUX-NATIVE-01`。
+- **关闭门:** 反思候选由 daemon 从事实生成；改进 = 新 revision + Owner preview +
+  可回滚；跨 Project 提案需 Owner 确认。
+- **漂移检测负例:** 模型自报即改进；隐式 Blueprint 升级；运行中 prompt 注入；反思
+  当完成；跨 Project 静默复用 Member。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
+### P13-T12 — Visual spec + accessibility / visual qualification
+
+- **2.0.0 表面:** D01 补 Phase 11 未产出的 **Visual UI 规格**（Apple-led；不改 IA；
+  不重生 canvas）+ 冻结 v9 逐模块 `/ui/` 对照清单。D02 在真实 `/ui/` 上执行：State
+  Lab 九态 × 九表面真布局、键盘可达与焦点恢复、200% 与窄窗三栏横滚不堆叠、
+  light / dark / high-contrast host-theme 对比、NVDA 关键路径朗读。
+- **依赖:** D01：P11-T01 设计文档（`09-state-accessibility-and-visual-system.md`、
+  `10-component-map-and-prototype-flows.md`）+ 冻结 canvas v9。D02：P12-T02..T09 +
+  P13-T04..T09 表面存在。D01 可与任何实现并行。
+- **垂直切片:** D01 documentation-only：视觉规格 + 对照清单。D02：逐格执行并记账
+  pass / fail / not-run。
+- **Scene:** 全部 19 Scene + `state-lab`。
+- **acceptance:** 对照清单每模块有判定；a11y 每格有环境 ID + exact revision。
+- **不可做:** canvas 截图当验收；改 IA；Vite 当产品源；跑 `personal-20-prototype-review`
+  phase 4 重生 canvas。
+- **本仓 foundation:** P7-T05 rendered browser review 方法（exclusive Chrome、
+  cells/assertions、overflow/clipped/contrast 计数）、`clients/pc/web/src/tokens.css`、
+  P11-T13 host dump-dom / CDP 检查。
+- **禁止再造:** 第二套设计系统；平行 canvas。
+- **validation environment:** D01：local Markdown/link、`check:consistency`、
+  handbook/docs-sync。D02：rendered browser / NVDA / 200% / theme review 从登记宿主
+  本机浏览器对已 push exact-revision guest daemon `/ui/`（`DEV-LINUX-NATIVE-01`
+  SSH 隧道）= implementation evidence；Windows native chrome 证据 =
+  `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`；缺环境诚实 `not-run`；不发明环境 ID。
+- **关闭门:** D01 视觉规格 + 对照清单成文；D02 九态 × 九表面、键盘/焦点、200%/窄窗、
+  host-theme、NVDA 每格记账。
+- **漂移检测负例:** canvas 截图当验收；跳过格写 pass；改 IA；Vite 当产品源；假
+  State Lab 静态图；把 rendered review 写成 Windows native 资格。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`（D01 documentation-only
+  出口写明）。
+
+### P13-T13 — Windows native host qualification + hung native E2E backfill
+
+- **2.0.0 表面:** 无新 chrome；把所有 `Requires-environment` / `not-run` 变成真实
+  pass / fail。
+- **依赖:** owner 提供 Windows 11 x86_64 宿主；`PERSONAL-TEST-ENVIRONMENTS.md`
+  登记修订；P11-T02；P13-T02；P13-T05；P13-T08；P10-T18 历史 unsigned dev path。
+  **宿主未到位时本卡 `blocked`，不挡任何其他卡。**
+- **垂直切片:** D01：provision + qualify `DEV-WINDOWS-NATIVE-OPC-01`（image / tools /
+  pins 写回登记）；unsigned 开发安装路径可在该宿主运行。D02：挂单原生 E2E 回填并
+  逐格记 pass / fail：T02 install / tray / sleep / SecretStore；P13-T02 sandbox / ACL /
+  supply chain；P13-T05 clock / sleep / restart；P13-T08 SecretStore / proxy；P13-T04
+  文件打开；UI 原生 E2E；live X（T14）可继续 `not-run`。
+- **Scene:** 无；环境与证据。
+- **acceptance:** 环境登记状态改变；每个挂单格有实际执行记录。
+- **不可做:** CI / GNU / WSL / Linux 当原生资格；B01-W 当日常机；签名/release 声称。
+- **本仓 foundation:** P11-T02 host walking skeleton（v34 + `host.*`）、P7-T07 D02
+  inspectable bootstrap installer + Credential Manager 后端、P10-T18 免签名路径文档。
+- **禁止再造:** 第二套安装器；用 B01-DESKTOP-002 冒充 Windows。
+- **validation environment:** `DEV-WINDOWS-NATIVE-OPC-01`（本卡负责资格化并写回
+  登记）；`CI-WINDOWS-MSVC-01` compile。
+- **关闭门:** 环境登记从 not provisioned/qualified 变为 qualified；挂单原生 E2E 在该
+  环境实际跑过并逐格记账；unsigned 开发安装路径可运行。
+- **漂移检测负例:** CI/GNU/WSL/Linux 当原生资格；`not-run` 写 pass；B01-W 当日常机；
+  签名/release 声称；用 B01-DESKTOP-002 冒充 Windows。
+- **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+
 ---
 
 # 12. 机器可读 typed dependency 图
@@ -1886,6 +2298,11 @@ phases:
     implementation_requires: [P12-T01]
     acceptance_requires: [P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
     claim_boundary: HYPOTHESIS_NOT_T15_NOT_GATE_NOT_PIXEL_REPLICA
+  P13:
+    implementation_requires: [P13-T01]
+    acceptance_requires: [P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13]
+    exit: P11-T15
+    claim_boundary: HYPOTHESIS_NOT_RELEASE_NOT_SIGNING_NOT_B01W_NOT_2_1
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -1900,6 +2317,7 @@ post_1_0:
   WEB_UI_WINDOWS: [P7-T05, P7-T07, B01-W]
   WINDOWS_OPC_2_0: [P11-T01, P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13, P11-T14, P11-T15]
   FROZEN_PROTOTYPE_UI_COMPLETENESS: [P12-T01, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
+  PERSONAL_2_0_0_COMPLETION: [P13-T01, P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13, P11-T15]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -2089,9 +2507,9 @@ tasks:
     acceptance_requires: [X_CONNECTOR_WALKING_SKELETON_HITL_UNKNOWN_READBACK]
   notes: NOT_P0_HERO_LIVE_X_API_NOT_RUN_DONE_PR_293
   P11-T15:
-    implementation_requires: [P11-T01]
-    acceptance_requires: [FIXED_N15_WINDOWS_OPC]
-    notes: UNPARKED_NOT_P12_MUTEX_REQUIRES_QUALIFIED_WINDOWS
+    implementation_requires: [P11-T01, P13-T01]
+    acceptance_requires: [P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13, FIXED_N15_WINDOWS_OPC]
+    notes: UNPARKED_NOT_P12_MUTEX_PHASE_13_EXIT_REQUIRES_QUALIFIED_WINDOWS
     promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
   P12-T01:
     implementation_requires: [OWNER_2026_08_31_PHASE_12_AUTHORIZATION, P11-T01, P11-T13, P11-T14]
@@ -2123,6 +2541,53 @@ tasks:
   P12-T09:
     implementation_requires: [P12-T01, P11-T05, P11-T06]
     acceptance_requires: [RAIL_EDIT_CONFIRM_WRITE_NO_APPROVE]
+  P13-T01:
+    implementation_requires: [OWNER_2026_09_02_COMPLETION_INSTRUCTION, P11-T01, P12-T01, P12-T09, DOC_P12_ALIGN_DEBT_DONE]
+    acceptance_requires: [PHASE_13_CARDS_T15_PREREGISTRATION_DRAFT_TRACE_PROGRESS_HANDBOOK_CONSISTENCY]
+    notes: DOCUMENTATION_ONLY
+  P13-T02:
+    implementation_requires: [P13-T01, P11-T07, P11-T03, P11-T04, P11-T12, P2-T03, P2-T06, P2-T07]
+    acceptance_requires: [HOSTED_DSH_REAL_ATTEMPT_LOOP_STDIO_BROKER_HEALTH_UPDATE_ROLLBACK]
+    notes: FIRST_KNIFE_NO_T03_MUTEX_WINDOWS_SANDBOX_E2E_VIA_P13_T13
+  P13-T03:
+    implementation_requires: [P13-T01, P11-T06, P11-T05, P11-T10, P11-T12, P12-T09, EXACT_PI_FOUNDATION]
+    acceptance_requires: [ASSISTANT_TURN_REAL_PI_INFERENCE_TYPED_PROVENANCE_CANDIDATES]
+    notes: FIRST_KNIFE_NO_T02_MUTEX_PI_LINUX_NOT_WINDOWS
+  P13-T04:
+    implementation_requires: [P13-T02, P11-T03, P11-T09, P3-T03, P2-T07, P12-T03]
+    acceptance_requires: [INDEPENDENT_VERIFY_CAS_OUTPUTS_OPENABLE_LAST_RING_ACCEPTANCE_PUBLICATION_PREVIEW]
+  P13-T05:
+    implementation_requires: [P11-T08, P13-T02, P11-T02, P12-T03, P12-T05]
+    acceptance_requires: [RUNS_OCCURRENCE_LEDGER_ROUTINE_ARMING_SAFE_POINT_TODAY_OVERVIEW]
+  P13-T06:
+    implementation_requires: [P11-T05, P11-T04, P13-T02, P13-T03, P12-T09]
+    acceptance_requires: [PROJECT_GROUP_CHAT_MANAGER_MEMBER_ROUTING_NO_APPROVE]
+  P13-T07:
+    implementation_requires: [P11-T10, P11-T11, P12-T07]
+    acceptance_requires: [KNOWLEDGE_PROVENANCE_RIGHTS_MEMORY_INSPECT_CORRECT_PROMOTE_FORGET_UI]
+    notes: P13_T06_AUTO_ADMISSION_SOURCE_NOT_MUTEX_NO_T02_MUTEX
+  P13-T08:
+    implementation_requires: [P11-T12, P8-T13, P12-T08, P11-T02]
+    acceptance_requires: [SETTINGS_MODEL_CONNECTIONS_NOTIFICATIONS_DIAGNOSTICS_STATE_LAB]
+    notes: P13_T02_ENGINE_HEALTH_NOT_MUTEX
+  P13-T09:
+    implementation_requires: [P11-T03, P11-T08, P11-T02, P7-T02]
+    acceptance_requires: [PROJECT_COPY_ARCHIVE_DELETE_RESTORE_POINT_EXPORT]
+  P13-T10:
+    implementation_requires: [P11-T04, P11-T09, P13-T03, P12-T04, P4-T04, P5-T03, P5-T04]
+    acceptance_requires: [SKILL_MCP_REVIEWED_ACQUISITION_SCOPED_GRANT_ROLLBACK]
+  P13-T11:
+    implementation_requires: [P13-T02, P13-T04, P13-T05, P11-T04]
+    acceptance_requires: [REFLECTION_CANDIDATES_VERSIONED_MEMBER_RUNTIME_IMPROVEMENT]
+  P13-T12:
+    implementation_requires: [P11-T01, FROZEN_CANVAS_V9, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
+    acceptance_requires: [VISUAL_SPEC_D01, STATE_LAB_KEYBOARD_NVDA_200_HOST_THEME_D02]
+    notes: D01_DOCUMENTATION_ONLY_PARALLEL_D02_AFTER_P13_T04_T05_T07_T08
+  P13-T13:
+    implementation_requires: [OWNER_PROVISIONED_WINDOWS_11_HOST, P11-T02, P13-T02, P13-T05, P13-T08]
+    acceptance_requires: [DEV_WINDOWS_NATIVE_OPC_01_QUALIFIED, HUNG_NATIVE_E2E_BACKFILLED]
+    notes: BLOCKED_UNTIL_HOST_DOES_NOT_BLOCK_OTHER_CARDS
+    promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。
