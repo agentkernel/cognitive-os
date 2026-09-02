@@ -806,7 +806,7 @@ fn owner_supplied_source_uris(provenance: &Value) -> Vec<String> {
 /// Bounded excerpt of a refused assistant text. Key-shaped tokens are
 /// scrubbed even though the child never receives Provider material.
 fn refused_text_excerpt(text: &str) -> String {
-    const EXCERPT_CHARS: usize = 400;
+    const EXCERPT_CHARS: usize = 1000;
     let scrubbed = text
         .split_whitespace()
         .map(|token| {

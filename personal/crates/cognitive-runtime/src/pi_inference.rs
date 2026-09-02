@@ -282,7 +282,12 @@ pub fn parse_assistant_object_chain(
     let body = strip_code_fence(assistant_text.trim());
     let value: Value = serde_json::from_str(body)
         .ok()
-        .or_else(|| first_json_object(body).and_then(|slice| serde_json::from_str(slice).ok()))
+        .or_else(|| {
+            let slice = first_json_object(body)?;
+            serde_json::from_str(slice)
+                .ok()
+                .or_else(|| serde_json::from_str(&escape_raw_controls_in_strings(slice)).ok())
+        })
         .ok_or_else(|| "assistant final message is not a JSON candidate object".to_owned())?;
     let Some(object) = value.as_object() else {
         return Err("assistant final message must be a JSON object".to_owned());
@@ -356,6 +361,45 @@ fn first_json_object(text: &str) -> Option<&str> {
         }
     }
     None
+}
+
+/// Models sometimes emit literal newlines or tabs inside JSON string values,
+/// which strict JSON rejects. Escape them (and drop other control characters)
+/// inside string literals only; structure outside strings is left untouched.
+fn escape_raw_controls_in_strings(text: &str) -> String {
+    let mut out = String::with_capacity(text.len() + 16);
+    let mut in_string = false;
+    let mut escaped = false;
+    for ch in text.chars() {
+        if in_string {
+            if escaped {
+                escaped = false;
+                out.push(ch);
+                continue;
+            }
+            match ch {
+                '\\' => {
+                    escaped = true;
+                    out.push(ch);
+                }
+                '"' => {
+                    in_string = false;
+                    out.push(ch);
+                }
+                '\n' => out.push_str("\\n"),
+                '\r' => out.push_str("\\r"),
+                '\t' => out.push_str("\\t"),
+                control if control.is_control() => {}
+                other => out.push(other),
+            }
+        } else {
+            if ch == '"' {
+                in_string = true;
+            }
+            out.push(ch);
+        }
+    }
+    out
 }
 
 fn strip_code_fence(text: &str) -> &str {
@@ -609,13 +653,30 @@ mod tests {
             ["axis"]
         );
 
+        let raw_newlines = "{\"reply\":\"Two lines:\nsecond line\",\"objects\":[{\"object_kind\":\"research-run\",\"fields\":{\"outline\":{\"value\":\"1) summary\n2) risks\n3) next steps\",\"provenance\":{\"kind\":\"assistant-assumption\"}}}}]}";
+        let chain =
+            parse_assistant_object_chain(raw_newlines, &[]).expect("raw newlines inside strings");
+        assert_eq!(chain.reply, "Two lines:\nsecond line");
+        assert_eq!(
+            chain.objects[0]["fields"]["outline"]["value"],
+            "1) summary\n2) risks\n3) next steps"
+        );
+
         assert!(
             parse_assistant_object_chain("I would { suggest a weekly report.", &[]).is_err(),
             "unbalanced brace is not a candidate"
         );
         assert!(
+            parse_assistant_object_chain(
+                "{\"reply\":\"truncated\",\"objects\":[{\"object_kind\":\"charter\",\"fields\":{\"title\":{\"value\":\"Weekly",
+                &[]
+            )
+            .is_err(),
+            "a truncated object is not a candidate"
+        );
+        assert!(
             parse_assistant_object_chain("prose {\"tool_call\":\"bash\"} prose", &[]).is_err(),
-            "the extracted object still has to match {reply, objects}"
+            "the extracted object still has to match {{reply, objects}}"
         );
         assert!(
             parse_assistant_object_chain(
