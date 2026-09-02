@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:11e301a16b11769f903579adc5f39857f8e3862624a8c76d11852a7fc4dbaec0"
+fingerprint: "sha256:8b3c6a0934e135a8c12ae932d99c6a2fddbd54ede3bbf4f135f90581f2f8d4dc"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -78,7 +78,12 @@ lease class, which must name a snapshot-registered campaign and may own only
 `GOV-<id>` and which may own only `docs/governance/`, `docs/adr/`,
 `docs/plan/PROGRESS.md`, the lease-grammar checker surface
 (`tools/src/check-consistency.mjs`, `tools/test/check.test.mjs`), and mapped
-handbook pages under `personal/handbook/`),
+handbook pages under `personal/handbook/`; and the `lease/personal/DOC-<id>/…`
+owner-directed documentation-alignment lease class, whose description must name
+the same snapshot-registered `DOC-<id>` and which may own only exact
+plan/product/architecture/handbook/design documents, `AGENTS.md`,
+`.cursor/rules/`, its own dated `docs/checkpoints/` report/closure files — never
+the directory — and the same lease-grammar checker surface),
 command/environment routing text, checkpoint-delivery and task-atomic wording,
 and more. `tools/src/gen-matrix.mjs --check` keeps
 `docs/traceability/matrix.yaml` fresh. Both run in CI and locally

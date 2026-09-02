@@ -71,7 +71,8 @@ daemon-side authority record, all epoch-fenced.
 
 ## Acquisition and installation
 
-`acquire_official_pi_durable` pins `@mariozechner/pi@0.81.1` by exact
+`acquire_official_pi_durable` pins `@earendil-works/pi-coding-agent@0.81.1`
+(`OFFICIAL_PI_PACKAGE` / `OFFICIAL_PI_VERSION` in `installer.rs`) by exact
 `sha512-…` integrity: normalizes/validates the npm metadata URL against an
 allowlist, verifies the tarball hash, repackages deterministically, and emits an
 acquisition report whose failure classes are typed. `install_package` verifies

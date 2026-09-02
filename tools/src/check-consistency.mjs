@@ -1427,11 +1427,14 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
             normalizedDocumentationPath === "clients/docs/design" ||
             normalizedDocumentationPath.startsWith("clients/docs/design/") ||
             normalizedDocumentationPath === ".cursor/rules" ||
-            normalizedDocumentationPath.startsWith(".cursor/rules/");
+            normalizedDocumentationPath.startsWith(".cursor/rules/") ||
+            // The delivery's own dated running report / closure files
+            // (TEST-REPORT-INCREMENTAL-01) live under docs/checkpoints/.
+            normalizedDocumentationPath.startsWith("docs/checkpoints/");
           if (!documentationPathAllowed) {
             fail(
               "docs/plan/PARALLEL-LANES.md",
-              `DOC_LEASE_PATH_FORBIDDEN: documentation lease ${leaseId} may own only plan/product/architecture/handbook/design docs, AGENTS.md, .cursor/rules/, and the lease-grammar checker surface, not ${normalizedDocumentationPath}`,
+              `DOC_LEASE_PATH_FORBIDDEN: documentation lease ${leaseId} may own only plan/product/architecture/handbook/design docs, AGENTS.md, .cursor/rules/, its own docs/checkpoints/ report and closure files, and the lease-grammar checker surface, not ${normalizedDocumentationPath}`,
             );
           }
         }

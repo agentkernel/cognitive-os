@@ -361,7 +361,7 @@ function injectDocumentationLease(leaseRow, { registerDelivery = true } = {}) {
 test("owner-directed documentation lease is accepted without a formal task slice", () => {
   const result = runConsistencyFailureInjection(
     injectDocumentationLease(
-      "| `lease/personal/DOC-FIXTURE01/dev-prep` | `DOC-FIXTURE01` owner-directed documentation delivery fixture; no formal task/slice | Lane-DOC | `main` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `tools/src/check-consistency.mjs`; `tools/test/check.test.mjs`; `personal/handbook/en/ai/docs-impact.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
+      "| `lease/personal/DOC-FIXTURE01/dev-prep` | `DOC-FIXTURE01` owner-directed documentation delivery fixture; no formal task/slice | Lane-DOC | `main` | `docs/plan/PROGRESS.md`; `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`; `tools/src/check-consistency.mjs`; `tools/test/check.test.mjs`; `personal/handbook/en/ai/docs-impact.md`; `docs/checkpoints/2026-08-30-personal-doc-fixture01-report.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
     ),
   );
 
@@ -372,7 +372,7 @@ test("owner-directed documentation lease is accepted without a formal task slice
 test("documentation lease rejects unregistered deliveries and product paths", () => {
   const result = runConsistencyFailureInjection(
     injectDocumentationLease(
-      "| `lease/personal/DOC-ZZZ9/rogue` | `DOC-ZZZ9` unregistered documentation fixture | Lane-DOC | `main` | `personal/crates/cognitive-runtime/src/lib.rs`; `docs/plan/PROGRESS.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
+      "| `lease/personal/DOC-ZZZ9/rogue` | `DOC-ZZZ9` unregistered documentation fixture | Lane-DOC | `main` | `personal/crates/cognitive-runtime/src/lib.rs`; `docs/checkpoints/`; `docs/plan/PROGRESS.md` | documentation session fixture | 2026-08-30 / 2026-08-30 | active |",
       { registerDelivery: false },
     ),
   );
@@ -382,6 +382,11 @@ test("documentation lease rejects unregistered deliveries and product paths", ()
   assert.match(
     result.stderr,
     /DOC_LEASE_PATH_FORBIDDEN: documentation lease lease\/personal\/DOC-ZZZ9\/rogue .* not personal\/crates\/cognitive-runtime\/src\/lib\.rs/,
+  );
+  // Only exact report/closure files under docs/checkpoints/ are allowed, never the directory.
+  assert.match(
+    result.stderr,
+    /DOC_LEASE_PATH_FORBIDDEN: documentation lease lease\/personal\/DOC-ZZZ9\/rogue .* not docs\/checkpoints$/m,
   );
 });
 

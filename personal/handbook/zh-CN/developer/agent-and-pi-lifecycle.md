@@ -72,7 +72,8 @@ non_claims:
 ## 获取与安装
 
 `acquire_official_pi_durable` 以精确 `sha512-…` integrity 钉住
-`@mariozechner/pi@0.81.1`：对 npm 元数据 URL 做白名单规范化/校验、验证 tarball 哈
+`@earendil-works/pi-coding-agent@0.81.1`（`installer.rs` 的 `OFFICIAL_PI_PACKAGE` /
+`OFFICIAL_PI_VERSION`）：对 npm 元数据 URL 做白名单规范化/校验、验证 tarball 哈
 希、确定性重打包，并产出失败类别类型化的获取报告。`install_package` 校验 digest +
 签名端口并提交**零能力授予**的不可变安装证据。另有 custom-project 校验器路径服务本
 地操作者包（路径安全 + digest + 本地策略 id）。
