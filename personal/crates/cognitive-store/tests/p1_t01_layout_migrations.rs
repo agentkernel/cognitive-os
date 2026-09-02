@@ -61,7 +61,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
         report.authority().applied_versions(),
         &[
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
         ]
     );
     assert_eq!(report.installation().applied_versions(), &[1, 2, 3, 4]);
@@ -84,7 +84,7 @@ fn empty_layout_migrates_both_databases_to_latest() {
         recorded_migration_versions(&layout.authority_database_path()),
         vec![
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
         ]
     );
     assert_eq!(
@@ -232,6 +232,18 @@ fn empty_layout_migrates_both_databases_to_latest() {
         "p11_x_connector_publish"
     ));
     assert!(table_exists(
+        &layout.authority_database_path(),
+        "p13_hosted_dsh_artifact_fact"
+    ));
+    assert!(table_exists(
+        &layout.authority_database_path(),
+        "p13_hosted_dsh_attempt"
+    ));
+    assert!(table_exists(
+        &layout.authority_database_path(),
+        "p13_hosted_dsh_attempt_frame"
+    ));
+    assert!(table_exists(
         &layout.installation_database_path(),
         "installations"
     ));
@@ -284,7 +296,7 @@ fn reapply_prepare_is_replay_safe() {
         first.authority().applied_versions(),
         &[
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
         ]
     );
     assert_eq!(first.installation().applied_versions(), &[1, 2, 3, 4]);
@@ -296,7 +308,7 @@ fn reapply_prepare_is_replay_safe() {
         recorded_migration_versions(&layout.authority_database_path()),
         vec![
             1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24,
-            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35,
+            25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
         ]
     );
 }
@@ -340,7 +352,7 @@ fn scheduler_v2_work_migrates_to_epoch_one_without_losing_its_fence() {
         report.applied_versions(),
         &[
             3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25,
-            26, 27, 28, 29, 30, 31, 32, 33, 34, 35
+            26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36
         ]
     );
     let connection = Connection::open(&database_path).expect("open v3 scheduler database");

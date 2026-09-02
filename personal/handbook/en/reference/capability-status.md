@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:9fb7383bda19dec593167a28a06c6e5911f172ff200117077d6267211e38df03"
+fingerprint: "sha256:545c2974e512cc3b7d7bd42b2b46a9ef1c0f30cb141edd289424e80cf41c06e0"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -84,6 +84,7 @@ and Agent requires independent qualification.
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority is reusable, but Project activation, manager envelope, Routine/missed ledger and complete hierarchy do not exist |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | no complete authority/projection; employee identity must remain separate from runtime/process |
 | Pi-backed Personal Assistant | Requires-backend | Pi is the hidden candidate-only target engine; current Pi Shell/Linux qualification does not establish the OPC Assistant |
+| Hidden hosted DSH real Attempt loop | partial (implementation exists) + Requires-environment | v36 + management `dsh.hosted.attempt.run` / `attempt.list` / `attempt.detail` / `artifact.check` / `artifact.facts` prove persist-before-dispatch Intent, real exact-artifact child spawn through the daemon stdio broker (bounded Context on stdin, allowlisted env, Path B only), candidates/observations as an append-only ledger, a daemon-written terminal that is never `success`, `completion_claimed=false`, crash → `unknown-outcome`, and artifact health/update/rollback facts. Not Installed Agent chrome, not native DSH UI, not Pi as Member engine. Linux real spawn is implementation evidence only; Windows sandbox / ACL / supply-chain E2E is `not-run` until `P13-T13`. Independent verification of the produced text is `P13-T04`. |
 | Preinstalled managed DSH Installed Agent | Requires-backend + Requires-environment | existing dsh Path B is not the exact Windows artifact/isolated child/sandbox/update/rollback qualification; no native DSH UI/conversation target |
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive and single composer are absent; ADR-0058 `conversation-projection/0.1` must not be reinterpreted |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | no OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion product path |

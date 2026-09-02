@@ -23,6 +23,7 @@ pub mod event_envelope;
 pub mod graded_load;
 pub mod harness_hooks;
 pub mod harness_loop;
+pub mod hosted_dsh_broker;
 pub mod installer;
 pub mod intent_flow;
 pub mod learning_loop;
@@ -118,6 +119,15 @@ pub use harness_hooks::{
     RegisteredHarnessHook, invoke_registered_harness_hook, register_harness_hook,
 };
 pub use harness_loop::{BoundedHarness, HarnessDecision, StagnationPolicy, decide_stagnation};
+pub use hosted_dsh_broker::{
+    HOSTED_ATTEMPT_CHILD_SCRIPT, HOSTED_CONTEXT_MAX_BYTES, HOSTED_DEFAULT_TIMEOUT,
+    HOSTED_DIRECT_PROVIDER_MARKERS, HOSTED_DSH_CONFIG_FILE_NAME, HOSTED_DSH_REVISION_FILE_NAME,
+    HOSTED_FRAME_PROTOCOL, HOSTED_MAX_FRAMES, HOSTED_MAX_TIMEOUT, HOSTED_STDERR_TAIL_BYTES,
+    HOSTED_STDOUT_MAX_BYTES, HostedBrokerError, HostedChildLaunchPlan, HostedChildRun,
+    HostedContextPayload, HostedDshArtifact, HostedFrame, HostedFrameKind, HostedRejectedFrame,
+    HostedTerminalKind, inherited_child_environment, isolated_spawn_is_fenced, run_hosted_child,
+    validate_launch_plan,
+};
 pub use installer::{
     AcceptingOfficialPiAcquisitionLockVerifier, AcceptingSignaturePort,
     CUSTOM_USER_PROVIDED_RISK_NOTICE, CustomInstallationAcknowledgement,

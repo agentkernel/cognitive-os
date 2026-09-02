@@ -36,8 +36,14 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
     symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
+    symbols: ["handle", "matches", "HostedAttemptHost"]
   - path: personal/crates/cognitive-store/src/hosted_dsh.rs
     symbols: ["HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
+  - path: personal/crates/cognitive-store/src/hosted_dsh_attempt.rs
+    symbols: ["HostedDshAttemptStore", "HostedAttemptIntentSpec", "HostedAttemptTerminalSpec"]
+  - path: personal/crates/cognitive-runtime/src/hosted_dsh_broker.rs
+    symbols: ["run_hosted_child", "validate_launch_plan", "HostedDshArtifact", "HostedContextPayload"]
   - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -55,9 +61,11 @@ tests:
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
+  - personal/crates/cognitive-store/tests/p13_t02_hosted_dsh_attempt.rs
+  - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
   - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
-fingerprint: "sha256:a8b08a3fb79651640e43d7ce45a4f97eb421c2db05110c4e52deadab5a458be8"
+fingerprint: "sha256:7a293332ba147e328d9995caa0d6ca45d859722b76ef419f464a4f02ca77e97d"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---
@@ -164,6 +172,8 @@ Personal-private Project aggregate routes (`/management/project/v1/{list,detail,
 Windows host hidden-capability routes (`/management/host/v1/{home.admit,daemon.bind,close.request,offline.record,dsh.bind,recovery.run,recovery.advance,restore-point.record}` and `GET /management/host/v1/status`) require a management bearer. They persist v34 Personal Home `app/`+`data/`, daemon bind, orphan-DSH rejection, close background-or-pause honesty, visible offline/missed segments, ordered seven-step wake/restart, and restore points that are not backups. Task-channel aliases fail closed (`WINDOWS_HOST_CHANNEL_FORBIDDEN`). Tray observes and requests; it does not write authority. Native tray/ACL/sleep/SecretStore E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`.
 
 X/Twitter connector walking-skeleton routes (`/management/connector/x/v1/{account.bind,preview.request,preview.confirm,publish.dispatch}` and `GET /management/connector/x/v1/status`) require a management bearer. They persist v35 SecretStore-only bind, digest-bound original preview, HITL confirm, persist-before-dispatch publish, and honest `unknown` readback. Task-channel aliases fail closed (`X_CONNECTOR_CHANNEL_FORBIDDEN`). Status omits `secret_ref`. Not P0 hero chrome. Not a business result. Live X API E2E is `not-run`.
+
+Hosted DSH real Attempt routes (`POST /management/project/v1/dsh.hosted.attempt.run`, `GET …/dsh.hosted.attempt.list`, `GET …/dsh.hosted.attempt.detail`, `POST …/dsh.hosted.artifact.check`, `GET …/dsh.hosted.artifact.facts`; P13-T02) require a management bearer and are dispatched before the Project aggregate matcher. `attempt.run` records a v36 artifact fact from `dsh.json` + pin file + child-script digest (anything but `pinned` is `HOSTED_ARTIFACT_UNHEALTHY` 422 with no spawn), persists the Attempt Intent, binds the v31 child identity, and then a daemon thread runs the `cognitive-runtime` stdio broker: `env_clear` + allowlisted environment, argv of paths and the pin only, the bounded Context (≤64 KiB, secret shapes refused) written to the child's stdin as one `request` frame with the loopback daemon origin and the bootstrap-file *path*, newline-JSON frames read back under a wall-clock timeout and byte/frame caps, own process group on Unix so a timeout kills the dsh grandchild too. Every frame is an observation; `provider_request`, non-loopback URLs, `task_complete` / `effect` / `authority` frames and candidates without an operation are refused and recorded; free text and `{"status":"success"}` are unknown lines. The daemon writes the terminal row (`exited` / `signaled` / `timed-out` / `spawn-failed`, never `success`; `completion_claimed=false`; `verification_status=not-run`) and clears the child pid; a pre-spawn refusal becomes a durable `spawn-failed` terminal (`HOSTED_ATTEMPT_SPAWN_REFUSED` 422). Startup reconciles crash-shaped rows to `unknown-outcome`. Task-channel aliases fail closed (`HOSTED_ATTEMPT_CHANNEL_FORBIDDEN`). Responses that still carry a session/bootstrap/`sk-` shape fail closed (`HOSTED_ATTEMPT_REDACTION`). Linux real spawn is implementation evidence; Windows sandbox / ACL / supply-chain E2E is `not-run` until P13-T13.
 
 Management `POST/GET /management/resource/v1/fault-profile` persists a
 default-off, campaign-authorized fixed fault profile for one `task_ref`.

@@ -50,6 +50,19 @@ The Provider key stays in SecretStore. Timing fields are measurement hooks, not 
 Live linux-002 and jump-host samples are implementation evidence, not a Gate,
 release, Profile, B01, or Agent-benefit claim.
 
+`scripts/hosted-attempt-child.mjs` is the hidden hosted DSH Attempt child
+(P13-T02). Only the Personal daemon's stdio broker spawns it: one `request`
+frame (bounded Context, its digest, loopback daemon origin, bootstrap-file path,
+timeout) arrives on stdin; the child mints a management session itself, keeps
+the bearer in a 0600 `.credentials.yaml` under a disposable `DSH_HOME`, points
+`llm-deepseek` at the daemon `/provider/v1/dsh` proxy, runs pinned headless dsh
+with the Context as its task, and streams newline-JSON `observation` /
+`heartbeat` / `candidate` (`DeliverableDraft`) / `response` frames to stdout. A
+`response` is never Task completion; Path A, `--api-key-file`, native MCP
+flags, non-loopback origins, and pin drift refuse before dsh exists.
+`scripts/hosted-attempt-child.test.mjs` runs it against a fake pinned CLI and a
+fake loopback daemon.
+
 Product install is `cognitive dsh configure` then `cognitive dsh launch`
 (Path B). Configure writes `{dsh_root}/.cognitiveos-dsh-revision` and
 `config/cognitiveos/dsh.json` (pin, adapter root, candidate-only digest). The

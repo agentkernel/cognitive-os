@@ -36,8 +36,14 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
     symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
+    symbols: ["handle", "matches", "HostedAttemptHost"]
   - path: personal/crates/cognitive-store/src/hosted_dsh.rs
     symbols: ["HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
+  - path: personal/crates/cognitive-store/src/hosted_dsh_attempt.rs
+    symbols: ["HostedDshAttemptStore", "HostedAttemptIntentSpec", "HostedAttemptTerminalSpec"]
+  - path: personal/crates/cognitive-runtime/src/hosted_dsh_broker.rs
+    symbols: ["run_hosted_child", "validate_launch_plan", "HostedDshArtifact", "HostedContextPayload"]
   - path: personal/apps/kernel-server/src/personal/task_api.rs
     symbols: ["TaskApi"]
 tests:
@@ -55,9 +61,11 @@ tests:
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/apps/kernel-server/tests/p8_t13_provider_control_plane.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
+  - personal/crates/cognitive-store/tests/p13_t02_hosted_dsh_attempt.rs
+  - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
   - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
-fingerprint: "sha256:a8b08a3fb79651640e43d7ce45a4f97eb421c2db05110c4e52deadab5a458be8"
+fingerprint: "sha256:7a293332ba147e328d9995caa0d6ca45d859722b76ef419f464a4f02ca77e97d"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -148,6 +156,8 @@ Personal-private Project 聚合路由（`/management/project/v1/{list,detail,axi
 Windows host 隐藏能力路由（`/management/host/v1/{home.admit,daemon.bind,close.request,offline.record,dsh.bind,recovery.run,recovery.advance,restore-point.record}` 与 `GET /management/host/v1/status`）需要 management bearer。它们持久化 v34 Personal Home `app/`+`data/`、daemon bind、孤儿 DSH 拒绝、close background-or-pause 诚实性、可见 offline/missed 时段、七步有序 wake/restart，以及不是备份的 restore point。task 通道别名失败闭合（`WINDOWS_HOST_CHANNEL_FORBIDDEN`）。托盘只观察与请求，不写权威。原生 tray/ACL/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。
 
 X/Twitter connector walking skeleton 路由（`/management/connector/x/v1/{account.bind,preview.request,preview.confirm,publish.dispatch}` 与 `GET /management/connector/x/v1/status`）需要 management bearer。它们持久化 v35 SecretStore-only bind、digest 绑定的原创 preview、HITL confirm、persist-before-dispatch 发布与诚实 `unknown` readback。task 通道别名失败闭合（`X_CONNECTOR_CHANNEL_FORBIDDEN`）。status 不返回 `secret_ref`。不是 P0 hero chrome。不是业务结果。live X API E2E 为 `not-run`。
+
+托管 DSH 真实 Attempt 路由（`POST /management/project/v1/dsh.hosted.attempt.run`、`GET …/dsh.hosted.attempt.list`、`GET …/dsh.hosted.attempt.detail`、`POST …/dsh.hosted.artifact.check`、`GET …/dsh.hosted.artifact.facts`；P13-T02）需要 management bearer，并在 Project 聚合匹配器之前分派。`attempt.run` 先从 `dsh.json` + 钉住文件 + 子脚本 digest 记一条 v36 artifact 事实（非 `pinned` 即 `HOSTED_ARTIFACT_UNHEALTHY` 422，不 spawn），再持久化 Attempt Intent、绑定 v31 子进程身份，然后由 daemon 线程运行 `cognitive-runtime` stdio broker：`env_clear` + 白名单环境、argv 只含路径与 pin、有界 Context（≤64 KiB，secret 形状被拒）作为一条 `request` 帧写入子进程 stdin（带 loopback daemon origin 与 bootstrap 文件*路径*），在墙钟超时与字节/帧上限下读回逐行 JSON 帧，Unix 上独立进程组使超时能连带杀掉 dsh 孙进程。每一帧都是观察；`provider_request`、非 loopback URL、`task_complete` / `effect` / `authority` 帧与无 operation 的 candidate 被拒并记录；自由文本与 `{"status":"success"}` 计为未知行。终态行由 daemon 写入（`exited` / `signaled` / `timed-out` / `spawn-failed`，永无 `success`；`completion_claimed=false`；`verification_status=not-run`）并清除子进程 pid；spawn 前的拒绝落为 durable `spawn-failed` 终态（`HOSTED_ATTEMPT_SPAWN_REFUSED` 422）。启动时把崩溃形状的行 reconcile 为 `unknown-outcome`。task 通道别名失败闭合（`HOSTED_ATTEMPT_CHANNEL_FORBIDDEN`）。仍带 session/bootstrap/`sk-` 形状的响应失败闭合（`HOSTED_ATTEMPT_REDACTION`）。Linux 真实 spawn 只是实现证据；Windows sandbox / ACL / supply-chain E2E 在 P13-T13 前为 `not-run`。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

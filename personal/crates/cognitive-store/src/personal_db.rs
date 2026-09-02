@@ -12,6 +12,7 @@ use crate::context_store::{
 use crate::conversation::conversation_migration_entry;
 use crate::employee::employee_migration_entry;
 use crate::hosted_dsh::hosted_dsh_migration_entry;
+use crate::hosted_dsh_attempt::hosted_dsh_attempt_migration_entry;
 use crate::installation::{
     INSTALLATION_SCHEMA_V1, INSTALLATION_SCHEMA_V2, INSTALLATION_SCHEMA_V3, INSTALLATION_SCHEMA_V4,
 };
@@ -112,7 +113,10 @@ impl PersonalDatabasePrepareReport {
 /// v34 = Windows host Personal Home / lifecycle / missed / ordered recovery
 /// (P11-T02; not a second credential plane; native E2E remains not-run), and
 /// v35 = X/Twitter connector account / preview / publish ledger (P11-T14;
-/// live X API remains not-run; not a P0 hero path).
+/// live X API remains not-run; not a P0 hero path), and
+/// v36 = hosted DSH artifact health/update/rollback facts plus the
+/// persist-before-dispatch Attempt / frame ledger (P13-T02; `completion_claimed`
+/// CHECK=0, `verification_status` CHECK='not-run'; no `success` terminal).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -153,6 +157,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         routine_migration_entry(),
         windows_host_migration_entry(),
         x_connector_migration_entry(),
+        hosted_dsh_attempt_migration_entry(),
     ]
 }
 

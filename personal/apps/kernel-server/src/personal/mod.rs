@@ -12,6 +12,7 @@ mod campaign_observation;
 mod capability_truth;
 mod fault_profile;
 mod headless_vault_doctor;
+mod hosted_dsh_attempt;
 mod lifecycle;
 mod memory_skill_consumer;
 mod observation;

@@ -466,6 +466,13 @@ personal_requirements:
     direct_registry_requirements: []
     tasks: [P13-T02, P13-T04, P13-T05, P13-T06, P13-T11]
     gates: []
+    # 2026-09-03: the P13-T02 clause (hidden hosted DSH real Attempt loop:
+    # exact artifact, isolated child, complete stdio broker, bounded Context,
+    # daemon Provider proxy, health/update/rollback, persist-before-dispatch,
+    # process death never completion) is implemented and exercised on
+    # DEV-LINUX-NATIVE-01 + required CI (PR #310); evidence_status stays
+    # not-run until P13-T04/T05/T06/T11 close the remaining clauses and the
+    # Windows-native cells are backfilled by P13-T13.
     evidence_status: not-run
 
   - id: PERS-PR-050
