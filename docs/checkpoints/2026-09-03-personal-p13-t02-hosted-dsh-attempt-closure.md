@@ -1,10 +1,10 @@
 # P13-T02 Hosted DSH real Attempt loop — closure
 
-- Task: `P13-T02` **done** / slices `P13-T02/D01` **done**, `P13-T02/D02` **done** (on the PR head the formal plan / PROGRESS still read `in-progress → closing` because the active lease binds `P13-T02/D02`; the lease-closure commit on `main` records `done`, following the P13-T01 closure precedent)
+- Task: `P13-T02` **done** / slices `P13-T02/D01` **done**, `P13-T02/D02` **done** (on the PR head the formal plan / PROGRESS read `in-progress → closing` because the active lease bound `P13-T02/D02`; this lease-closure commit on `main` records `done`, following the P13-T01 closure precedent)
 - Branch: `personal/P13-T02-hosted-dsh-attempt` (remote deleted after merge; worktree `D:\agent-kernel-wt-p13-t02` removed)
-- Lease: `lease/personal/P13-T02/hosted-dsh-attempt` → PARALLEL-LANES §3.1 (closed in the same closure delivery on `main`)
-- PR: [#310](https://github.com/agentkernel/cognitive-os/pull/310) (merge revision recorded in the lease-closure commit on `main`)
-- Required CI: [33676373077](https://github.com/agentkernel/cognitive-os/actions/runs/33676373077) **SUCCESS** at `f82bd437` (resolve 3s, ubuntu 3m53s, windows 12m48s, required-ci 3s); the closure-head run is recorded in the lease-closure commit
+- Lease: `lease/personal/P13-T02/hosted-dsh-attempt` → PARALLEL-LANES §3.1 (closed 2026-09-03 in this closure delivery on `main`)
+- PR: [#310](https://github.com/agentkernel/cognitive-os/pull/310) merged at `main@d8a002ea`
+- Required CI: [33676373077](https://github.com/agentkernel/cognitive-os/actions/runs/33676373077) **SUCCESS** at `f82bd437` (resolve 3s, ubuntu 3m53s, windows 12m48s, required-ci 3s); closure head [33680357538](https://github.com/agentkernel/cognitive-os/actions/runs/33680357538) **SUCCESS** at `4c62bf9a` (resolve 3s, ubuntu 3m54s, windows 11m26s, required-ci 3s)
 - Validated implementation revision: `f82bd4373657983b0744f4fd38e43bac0c9098c8` (`DEV-LINUX-NATIVE-01` + required CI); closure commits after it are documentation-only
 - Change class: `implementation-only` (no `core/specs`, no Lane-CTR, no new first-level chrome, no Pi Member engine; additive v36 migration)
 - Claim ceiling: `hypothesis`
