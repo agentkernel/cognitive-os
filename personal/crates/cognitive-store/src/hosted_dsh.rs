@@ -257,6 +257,31 @@ impl HostedDshPlane {
         })
     }
 
+    /// Spawn observer (P13-T02): the broker reports the OS pid of an
+    /// identity-bound child after the process exists. Only a `bound` child
+    /// without a pid may take one; nothing else about the row changes.
+    pub fn observe_spawn(
+        &self,
+        child_id: &str,
+        pid: u32,
+        now_ms: i64,
+    ) -> Result<(), ProjectAggregateError> {
+        let conn = self.lock()?;
+        let updated = conn
+            .execute(
+                "UPDATE p11_hosted_dsh_child SET pid = ?1, updated_at = ?2
+                  WHERE child_id = ?3 AND state = 'bound' AND pid IS NULL",
+                params![i64::from(pid), now_ms, child_id],
+            )
+            .map_err(unavailable("observe hosted dsh spawn"))?;
+        if updated == 0 {
+            return Err(ProjectAggregateError::Conflict {
+                detail: "hosted DSH child is not a bound, pid-less identity",
+            });
+        }
+        Ok(())
+    }
+
     /// Process-death observer: record child exit without deleting authority rows.
     pub fn observe_exit(
         &self,
@@ -393,7 +418,7 @@ fn reject_unknown_child_output_as_success(
     })
 }
 
-fn secret_shaped_key(value: &str) -> bool {
+pub(crate) fn secret_shaped_key(value: &str) -> bool {
     let lowered = value.to_ascii_lowercase();
     lowered.contains("secret")
         || lowered.contains("token")
@@ -404,7 +429,7 @@ fn secret_shaped_key(value: &str) -> bool {
         || lowered.contains("api-key")
 }
 
-fn secret_shaped_value(value: &str) -> bool {
+pub(crate) fn secret_shaped_value(value: &str) -> bool {
     let lowered = value.to_ascii_lowercase();
     lowered.contains("sk-")
         || lowered.contains("bearer ")

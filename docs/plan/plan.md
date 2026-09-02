@@ -1915,6 +1915,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T02 — Hosted DSH real Attempt loop（完整 stdio broker + health/update/rollback）
 
+- **status:** in-progress (claimed 2026-09-03 on `lease/personal/P13-T02/hosted-dsh-attempt`, branch `personal/P13-T02-hosted-dsh-attempt`; `P13-T02/D01` in-progress; running report [2026-09-03 P13-T02 report](../checkpoints/2026-09-03-personal-p13-t02-hosted-dsh-attempt-report.md)). Claim ceiling `hypothesis`.
 - **2.0.0 表面:** 无新一级 chrome；成员"运行"真实发生。引擎身份只在高级诊断
   （P13-T08）。不是 Installed Agent、不是原生 DSH UI、不是 engine store。
 - **依赖:** P11-T07 骨架（v31 `p11_hosted_dsh_child`、`runtime_binding_ref`、

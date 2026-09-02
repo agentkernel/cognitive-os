@@ -3,7 +3,7 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T02..T13` `not-started`；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice（owner 决策点待确认）、`P0-T09` 漂移机械校验 `not-started`、`DOC-P13-DRIFT-FIX` 文档对齐；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T02` `in-progress`（2026-09-03 claimed）；`P13-T03..T13` `not-started`；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice（owner 决策点待确认）、`P0-T09` 漂移机械校验 `not-started`、`DOC-P13-DRIFT-FIX` 文档对齐；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
 > **最后更新：2026-09-02**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
@@ -240,8 +240,8 @@
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化 Windows |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
-| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 0 | 0 | 12 | P13-T01 docs-only done；T02–T13 not-started；P11-T15 是其验收出口，不自动 release |
-| **合计** | **167** | **132** | **0** | **1** | **18** | 另有 16 cancelled；无新 Gate pass |
+| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 1 | 1 | 0 | 11 | P13-T01 docs-only done；P13-T02 in-progress（hosted DSH real Attempt loop）；T03–T13 not-started；P11-T15 是其验收出口，不自动 release |
+| **合计** | **167** | **132** | **1** | **1** | **17** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -1605,7 +1605,7 @@ flowchart TD
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P13-T01 | Phase 13 docs/plan 登记 + T15 N=15 预注册草案 | owner 2026-09-02 指令；P11-T01..T14 与 P12-T01..T09 done；2026-09-02 差距核对 | 本文件 Phase 13 + typed deps + 三栏 + Slices + plan.md 卡 + T15 卡细化 + trace/environments/PROGRESS/dev-prep index/handbook；static/docs-sync/required CI；documentation-only | done | merged PR [#305](https://github.com/agentkernel/cognitive-os/pull/305) at `main@aac6804f`；required CI [33620332959](https://github.com/agentkernel/cognitive-os/actions/runs/33620332959) **SUCCESS** at `9724f67f`；[report](../checkpoints/2026-09-02-personal-p13-t01-completion-plan-report.md)；[closure](../checkpoints/2026-09-02-personal-p13-t01-completion-plan-closure.md)；无 implementation/support/Gate/release claim |
-| P13-T02 | 托管 DSH 真实 Attempt 循环（完整 stdio broker + health/update/rollback） | P11-T07 骨架；P11-T03/T04/T12；P2 Effect/WIA/verification；**不依赖 T03** | 见下表三栏；实现第一刀之一 | not-started | unclaimed |
+| P13-T02 | 托管 DSH 真实 Attempt 循环（完整 stdio broker + health/update/rollback） | P11-T07 骨架；P11-T03/T04/T12；P2 Effect/WIA/verification；**不依赖 T03** | 见下表三栏；实现第一刀之一 | in-progress | claimed 2026-09-03 on `lease/personal/P13-T02/hosted-dsh-attempt`（branch `personal/P13-T02-hosted-dsh-attempt`；D01 in-progress）；[running report](../checkpoints/2026-09-03-personal-p13-t02-hosted-dsh-attempt-report.md) |
 | P13-T03 | 隐藏 Pi 助手真实推理（explain/navigate/research/propose 真调 exact Pi） | P11-T06/T05/T10/T12；P12-T09；**不依赖 T02** | 见下表三栏；实现第一刀之一 | not-started | unclaimed |
 | P13-T04 | 独立验证 + 产出可打开 + 发布包预览 | P13-T02；P11-T03/T09；P3-T03；P2-T07；P12-T03 | 见下表三栏；末环验收；planned ≠ published | not-started | unclaimed |
 | P13-T05 | 运行/例程闭环 + Today 运行概览 | P11-T08；P13-T02；P11-T02；P12-T03/T05 | 见下表三栏；daemon scheduler 唯一权威 | not-started | unclaimed |

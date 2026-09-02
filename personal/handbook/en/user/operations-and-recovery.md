@@ -37,7 +37,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
-fingerprint: "sha256:ab49b62ad6f616049e315cd1bca96f0f2f087551d3d157a9e7984f8e45bb499e"
+fingerprint: "sha256:7f358448713a93499e817143a8b133d856d27cd96ac913e0e4257b386a3f826b"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---

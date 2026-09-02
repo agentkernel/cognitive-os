@@ -6,6 +6,7 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
+  - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
   - path: personal/apps/kernel-server/src/personal/observation.rs
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
@@ -20,7 +21,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:c8188ec289a2f67e16077122e4baaf567782ba736eca2136d94fbee0672f5678"
+fingerprint: "sha256:aea4867e5d90c9f2fa8537c95cf0785cdea9ab694bfc7a6ff1310fac6c6b0cf7"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -184,6 +185,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/assistant.turn` | management | Hidden Pi Personal Assistant (exact Pi 0.81.1 / `cognitiveos.private-candidate/1`): explain/navigate/research/propose registers a digest-bound draft candidate with typed provenance (`sources` | `owner-stated` | `assistant-assumption`) and, for research/propose, a daemon preview announcement. Candidate-only: no Approve, no archive/SecretStore/Memory/authority write, default-deny tools except research `HttpFetchReadOnly`. Pi is not an Installed Agent. Closed schema rejects grant/secret/trigger-arm fields. |
 | `POST` | `/management/project/v1/dsh.hosted.start` | management | Hidden hosted DSH Attempt-runner start: persist a managed child identity (artifact digest / protocol / optional observed pid) onto Employee `runtime_binding_ref`. Reuses Path B `POST /provider/v1/dsh/chat/completions` as the only secret-bearing path. Isolated spawn fail-closes on Windows GNU. Not Installed Agent chrome. Windows OPC E2E is `not-run`. |
 | `POST` | `/management/project/v1/dsh.hosted.observe-exit` | management | Observe hosted DSH child exit. Clears pid observation. Does not delete Employee, conversation archive, or Memory. |
+| `POST` | `/management/project/v1/dsh.hosted.attempt.run` | management | Hidden hosted DSH real Attempt loop (P13-T02): records an artifact health fact (unpinned → 422, no spawn), persists the Attempt Intent, binds the v31 child identity, then the daemon broker spawns the exact-artifact child with the bounded Context (≤64 KiB, secret-shape refused) on stdin and brokers `observation` / `candidate` / `heartbeat` / `response` frames back as observations. The daemon writes the terminal observation (`exited` / `signaled` / `timed-out` / `spawn-failed`; never `success`); `completion_claimed` is always `false` and verification stays `not-run`. Direct Provider frames are refused and recorded; Path A / API-key / native MCP flags never spawn. `wait` (default true) blocks up to `timeout_ms` (≤30 min). Windows sandbox / ACL / supply-chain E2E is `not-run` until P13-T13. |
+| `GET` | `/management/project/v1/dsh.hosted.attempt.list` | management | Newest-first hosted Attempt history for one `project_id` (the `runs` data source, P13-T05 renders it). Every row carries `completion_claimed=false`, `verification_status=not-run`, and a terminal kind that is never `success`. `limit` 1..=64. |
+| `GET` | `/management/project/v1/dsh.hosted.attempt.detail` | management | One hosted Attempt plus its redacted frame ledger (`observation` / `candidate` / `heartbeat` / `response` / `rejected`, each `authority_written=false`). Secret shapes are redacted before persistence; a surviving shape fails the response closed. |
+| `POST` | `/management/project/v1/dsh.hosted.artifact.check` | management | Observe the configured hosted DSH artifact (`dsh.json` revision, `.cognitiveos-dsh-revision` pin file, hosted child script digest) and append a durable fact. Kind is derived: `health-check`, `update` (configured revision changed), or `rollback` (returned to the previous revision). Health `pinned` | `absent` | `corrupt` | `mismatch` | `script-missing`; only `pinned` admits a spawn. Never spawns. |
+| `GET` | `/management/project/v1/dsh.hosted.artifact.facts` | management | Latest hosted DSH artifact fact plus newest-first history (`limit` 1..=64) and `admits_spawn`. Facts are append-only. |
 | `POST` | `/management/project/v1/vault.import` | management | Import one Markdown Vault file with rights and provenance. Secret-shape, path traversal, conversation-archive-as-Vault, CAS-only blobs, and last-write-wins without a conflict record fail closed. Files are not Project authority. Host filesystem E2E is `not-run`. |
 | `POST` | `/management/project/v1/vault.index.rebuild` | management | Rebuild the derived Vault index from stored documents. Does not write Memory FTS. Index is not Project authority. |
 | `GET` | `/management/project/v1/vault.index` | management | Query the rebuildable Vault index for one Project. Cross-project `caller_project_id` is retrieval overreach. Returns documented Context inject order (task contract → fixed decisions → sourced excerpts → summaries → older narrative). |
@@ -232,6 +238,11 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/project/v1/assistant.turn` | task | Forbidden: hidden assistant is management-channel only. |
 | `POST` | `/task/project/v1/dsh.hosted.start` | task | Forbidden: hosted DSH process bind is management-channel only. |
 | `POST` | `/task/project/v1/dsh.hosted.observe-exit` | task | Forbidden: hosted DSH exit observation is management-channel only. |
+| `POST` | `/task/project/v1/dsh.hosted.attempt.run` | task | Forbidden: hosted DSH Attempt run is management-channel only. |
+| `GET` | `/task/project/v1/dsh.hosted.attempt.list` | task | Forbidden: hosted DSH Attempt history is management-channel only. |
+| `GET` | `/task/project/v1/dsh.hosted.attempt.detail` | task | Forbidden: hosted DSH Attempt detail is management-channel only. |
+| `POST` | `/task/project/v1/dsh.hosted.artifact.check` | task | Forbidden: hosted DSH artifact check is management-channel only. |
+| `GET` | `/task/project/v1/dsh.hosted.artifact.facts` | task | Forbidden: hosted DSH artifact facts are management-channel only. |
 | `POST` | `/task/project/v1/vault.import` | task | Forbidden: Vault import is management-channel only. |
 | `POST` | `/task/project/v1/vault.index.rebuild` | task | Forbidden: Vault index rebuild is management-channel only. |
 | `GET` | `/task/project/v1/vault.index` | task | Forbidden: Vault index query is management-channel only. |

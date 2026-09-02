@@ -6,6 +6,7 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
+  - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
   - path: personal/apps/kernel-server/src/personal/observation.rs
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
@@ -20,7 +21,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:c8188ec289a2f67e16077122e4baaf567782ba736eca2136d94fbee0672f5678"
+fingerprint: "sha256:aea4867e5d90c9f2fa8537c95cf0785cdea9ab694bfc7a6ff1310fac6c6b0cf7"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -184,6 +185,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/project/v1/assistant.turn` | management | 隐藏 Pi Personal Assistant（exact Pi 0.81.1 / `cognitiveos.private-candidate/1`）：explain/navigate/research/propose 把带 digest 的草稿候选登记进 daemon，并强制 typed 出处（`sources` | `owner-stated` | `assistant-assumption`）；research/propose 另发 daemon preview 宣布。只产 candidate：无 Approve、无 archive/SecretStore/Memory/权威写；除 research 的 `HttpFetchReadOnly` 外 default-deny。Pi 不是 Installed Agent。封闭 schema 拒绝 grant/secret/trigger-arm 字段。 |
 | `POST` | `/management/project/v1/dsh.hosted.start` | management | 隐藏托管 DSH Attempt-runner start：把托管子进程身份（artifact digest / protocol / 可选观测 pid）持久绑定到 Employee `runtime_binding_ref`。复用 Path B `POST /provider/v1/dsh/chat/completions` 作为唯一持 secret 路径。Windows GNU 上 isolated spawn 失败闭合。不是 Installed Agent chrome。Windows OPC E2E 为 `not-run`。 |
 | `POST` | `/management/project/v1/dsh.hosted.observe-exit` | management | 观察托管 DSH 子进程退出。清除 pid 观测。不删除 Employee、对话档案或 Memory。 |
+| `POST` | `/management/project/v1/dsh.hosted.attempt.run` | management | 隐藏托管 DSH 真实 Attempt 循环（P13-T02）：先记 artifact 健康事实（未钉住 → 422，不 spawn），再持久化 Attempt Intent 并绑定 v31 子进程身份，然后 daemon broker 以 stdin 递交有界 Context（≤64 KiB，secret-shape 被拒）真实 spawn exact-artifact 子进程，并把 `observation` / `candidate` / `heartbeat` / `response` 帧作为观察回收。终态观察由 daemon 写入（`exited` / `signaled` / `timed-out` / `spawn-failed`；永无 `success`）；`completion_claimed` 恒为 `false`，verification 保持 `not-run`。直连 Provider 帧被拒并记录；Path A / API key / native MCP 标志不会 spawn。`wait`（默认 true）最多阻塞 `timeout_ms`（≤30 分钟）。Windows sandbox / ACL / supply-chain E2E 在 P13-T13 前为 `not-run`。 |
+| `GET` | `/management/project/v1/dsh.hosted.attempt.list` | management | 一个 `project_id` 的托管 Attempt 历史（最新在前；`runs` 数据源，P13-T05 渲染）。每行 `completion_claimed=false`、`verification_status=not-run`，终态类别永无 `success`。`limit` 1..=64。 |
+| `GET` | `/management/project/v1/dsh.hosted.attempt.detail` | management | 一个托管 Attempt 及其脱敏帧台账（`observation` / `candidate` / `heartbeat` / `response` / `rejected`，每条 `authority_written=false`）。secret 形状在持久化前脱敏；残留形状使响应失败闭合。 |
+| `POST` | `/management/project/v1/dsh.hosted.artifact.check` | management | 观察已配置的托管 DSH artifact（`dsh.json` revision、`.cognitiveos-dsh-revision` 钉住文件、托管子脚本 digest）并追加一条 durable 事实。kind 由 daemon 推导：`health-check`、`update`（配置 revision 变化）或 `rollback`（回到上一个 revision）。health 为 `pinned` | `absent` | `corrupt` | `mismatch` | `script-missing`；只有 `pinned` 允许 spawn。绝不 spawn。 |
+| `GET` | `/management/project/v1/dsh.hosted.artifact.facts` | management | 最新托管 DSH artifact 事实与最新在前的历史（`limit` 1..=64）及 `admits_spawn`。事实仅追加。 |
 | `POST` | `/management/project/v1/vault.import` | management | 导入一份带 rights/provenance 的 Markdown Vault 文件。secret-shape、路径遍历、把对话档案当 Vault、仅 CAS blob、以及无冲突记录的 last-write-wins 失败闭合。文件不是 Project 权威。宿主文件系统 E2E 为 `not-run`。 |
 | `POST` | `/management/project/v1/vault.index.rebuild` | management | 从已存文档重建派生 Vault 索引。不写入 Memory FTS。索引不是 Project 权威。 |
 | `GET` | `/management/project/v1/vault.index` | management | 查询一个 Project 的可重建 Vault 索引。跨项目 `caller_project_id` 视为检索越权。返回已文档化的 Context 注入顺序（当前 Task 合同 → 已固定决定 → 带出处摘录 → 摘要 → 旧叙述）。 |
@@ -232,6 +238,11 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/project/v1/assistant.turn` | task | 禁止：隐藏助手仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.start` | task | 禁止：托管 DSH 进程绑定仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.observe-exit` | task | 禁止：托管 DSH 退出观察仅限 management 通道。 |
+| `POST` | `/task/project/v1/dsh.hosted.attempt.run` | task | 禁止：托管 DSH Attempt 运行仅限 management 通道。 |
+| `GET` | `/task/project/v1/dsh.hosted.attempt.list` | task | 禁止：托管 DSH Attempt 历史仅限 management 通道。 |
+| `GET` | `/task/project/v1/dsh.hosted.attempt.detail` | task | 禁止：托管 DSH Attempt 详情仅限 management 通道。 |
+| `POST` | `/task/project/v1/dsh.hosted.artifact.check` | task | 禁止：托管 DSH artifact 检查仅限 management 通道。 |
+| `GET` | `/task/project/v1/dsh.hosted.artifact.facts` | task | 禁止：托管 DSH artifact 事实仅限 management 通道。 |
 | `POST` | `/task/project/v1/vault.import` | task | 禁止：Vault 导入仅限 management 通道。 |
 | `POST` | `/task/project/v1/vault.index.rebuild` | task | 禁止：Vault 索引重建仅限 management 通道。 |
 | `GET` | `/task/project/v1/vault.index` | task | 禁止：Vault 索引查询仅限 management 通道。 |
