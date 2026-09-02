@@ -211,12 +211,13 @@ fn p13_t02_child_direct_provider_is_refused_and_recorded() {
     if isolated_spawn_is_fenced() {
         return;
     }
-    // The launch-plan validator refuses Provider hosts and bearer shapes in
-    // argv itself (proven below), so the child assembles them at runtime.
+    // The launch-plan validator refuses Provider hosts, `Authorization` and
+    // bearer shapes in argv itself (proven below), so the child assembles
+    // them at runtime.
     let script = r#"
 const deepseek = "https://api." + "deepseek.com/v1/chat/completions";
 const openai = "https://api." + "openai.com/v1/chat";
-const header = "Authorization: Bea" + "rer abc.def";
+const header = "Author" + "ization: Bea" + "rer abc.def";
 process.stdout.write(JSON.stringify({frame:"provider_request",url:deepseek})+"\n");
 process.stdout.write(JSON.stringify({frame:"candidate",operation:"HttpFetch",payload:{url:openai}})+"\n");
 process.stdout.write(JSON.stringify({frame:"observation",provider_direct:true,text:"tried"})+"\n");
