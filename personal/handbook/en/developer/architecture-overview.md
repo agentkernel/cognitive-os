@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:3e518dae38b5a91abb9d83729602857645fc8be4ad0b8610402a60bfd267e0fa"
+fingerprint: "sha256:d4ae526460a5d34f220e2754ab33194c216e0bfb1e70fbfa29c98fbdad7817da"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -129,7 +129,9 @@ authority.
   (historical path name contains v9; informative; Owner approval ≠ backend
   exists; Project aggregate walking skeleton is Personal-private; Markdown Vault import/index/conflict (`P11-T10`) is on `main` (files are not Project authority); scoped Memory admission/privacy/forget (`P11-T11`) is on `main`; Routine/Trigger walking skeleton (`P11-T08`) is on `main` (reuses daemon `scheduler_entries`; not Inbox L1); Dual Track `/ui/` IA (`P11-T13`) is on `main` (empty/unavailable honesty; not complete IA acceptance); Windows host/tray/background walking skeleton (`P11-T02`) is on `main` (native install/tray/sleep/SecretStore E2E `not-run`); X/Twitter connector walking skeleton (`P11-T14`) is on `main` (live X API E2E `not-run`; not P0 hero). `P12-T01`–`T09` are on `main` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302); Dual Track **Now / hypothesis chrome**; not pixel-replica, not 2.1, not T15).   Development-prep index
   (plan cards, test/env hard gates, window prompts):
-  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md).
+  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md);
+  its "Phase 13 build order" graph mirrors the formal plan's Phase 13 mermaid
+  edge-for-edge (the formal plan is authoritative).
   The `P13-T12/D01` documentation-only visual layer is the
   [Visual UI specification](../../../docs/architecture/personal-2.0-opc-visual-ui-spec.md)
   (Apple-led rules for daemon `/ui/` expressed against the existing

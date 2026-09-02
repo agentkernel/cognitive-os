@@ -56,7 +56,10 @@ Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
 Toolchain pins: Rust 1.97.1 (`rust-toolchain.toml`), pnpm 10.33.2 + Node ≥22
 (`package.json`), workspace-wide `unsafe_code = "forbid"` and pedantic clippy
 (`Cargo.toml`). Line endings are forced LF for text (`.gitattributes`), which is
-also what keeps handbook fingerprints platform-stable.
+also what keeps handbook fingerprints platform-stable. On the local Windows
+host `git config core.autocrlf` reports `true`; that setting is overridden by
+the tracked `.gitattributes` rule `* text=auto eol=lf`, so checkouts and
+commits stay LF without any local Git configuration change.
 
 Shell discipline on this Windows host: PowerShell 5.1 — no `&&`/`||`; sequence
 with separate invocations or `if ($LASTEXITCODE -eq 0) { … }`. Neither that

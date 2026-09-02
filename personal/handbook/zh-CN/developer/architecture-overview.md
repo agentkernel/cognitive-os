@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:3e518dae38b5a91abb9d83729602857645fc8be4ad0b8610402a60bfd267e0fa"
+fingerprint: "sha256:d4ae526460a5d34f220e2754ab33194c216e0bfb1e70fbfa29c98fbdad7817da"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -114,7 +114,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   Scene → daemon 映射见
   [`personal-2.0-opc-v9-implementation-mapping.md`](../../../docs/architecture/personal-2.0-opc-v9-implementation-mapping.md)
   （历史路径名含 v9；informative；Owner 批准 ≠ 后端已存在；Project 聚合 walking skeleton 为 Personal-private；Markdown Vault import/index/conflict（`P11-T10`）已在 `main`（文件不是 Project 权威）；scoped Memory admission/privacy/forget（`P11-T11`）已在 `main`；Routine/Trigger walking skeleton（`P11-T08`）已在 `main`（复用 daemon `scheduler_entries`；不是 Inbox 一级）；  Dual Track `/ui/` IA（`P11-T13`）已在 `main`（无权威诚实空态；不是完整 IA 验收）；Windows host/tray/background walking skeleton（`P11-T02`）已在 `main`（原生 install/tray/sleep/SecretStore E2E `not-run`）；X/Twitter connector walking skeleton（`P11-T14`）已在 `main`（live X API E2E `not-run`；不是 P0 hero）。`P12-T01`–`T09` 已在 `main`（merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)；Dual Track **Now / hypothesis chrome**；非像素复制、非 2.1、非 T15）。开发前期索引（计划卡、测试/环境硬门、窗口提示词）：
-  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)。
+  [`personal-2.0.0-dev-prep-index.md`](../../../docs/architecture/personal-2.0.0-dev-prep-index.md)；
+  其「Phase 13 build order」图与正式计划 Phase 13 mermaid 逐边相等（正式计划为权威）。
   `P13-T12/D01` 的 documentation-only 视觉层是
   [视觉 UI 规格](../../../docs/architecture/personal-2.0-opc-visual-ui-spec.md)
   （面向 daemon `/ui/` 的 Apple-led 规则，全部以现有
