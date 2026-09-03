@@ -12,7 +12,7 @@
 
 ## Unique next action
 
-Fold `main@ef9baab2` into Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319), wait for required CI green on the merge HEAD, then complete `P13-T07/D01` formal acceptance and ready/merge. Slice status is `in-progress` (never `in-progress (owner-paused)`). Keep 0 fake Admit buttons.
+Push clippy `AdmissionDraft` fix; wait for required CI green on the new HEAD of Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319); then complete `P13-T07/D01` formal acceptance and ready/merge. Slice status is `in-progress`. Auto-admit UI stays honest empty / Requires-backend (0 fake Admit buttons) even though T06 group-chat is now on `main`.
 
 ## Failure-first (D01)
 
@@ -25,7 +25,7 @@ Fold `main@ef9baab2` into Draft PR [#319](https://github.com/agentkernel/cogniti
 | N5 | Tombstoned Memory cannot be promoted or resurrected | store |
 | N6 | Unconfirmed promote does not copy Memory; confirm is digest-bound | store + HTTP |
 | N7 | Last-write-wins without a conflict record is rejected; import failure keeps original fields | existing Vault + Knowledge ingest |
-| N8 | No fake Admit button; auto-admit UI stays honest empty / Requires-backend while T06 archive is absent | Dual Track UI |
+| N8 | No fake Admit button; auto-admit UI stays honest empty / Requires-backend (T06 group-chat is on `main`; this surface still does not list turns as admit candidates) | Dual Track UI |
 
 ## Incremental validation log (TEST-REPORT-INCREMENTAL-01)
 
@@ -38,4 +38,6 @@ Fold `main@ef9baab2` into Draft PR [#319](https://github.com/agentkernel/cogniti
 | 2026-09-03 | required CI run [33746065086](https://github.com/agentkernel/cognitive-os/actions/runs/33746065086) at `e1e276df` | **fail** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) | `check-consistency`: Phase 13 counts 13/5/1/0/7 vs task rows 13/5/2/0/6; lease owned `PARALLEL-LANES.md` |
 | 2026-09-03 | governance fix (lease ledger + plan/PROGRESS counts) | **pending** | worktree | after push | unique next: required CI green |
 | 2026-09-03 | required CI run [33748054839](https://github.com/agentkernel/cognitive-os/actions/runs/33748054839) at `5e2c5efc` | **fail** | `CI-UBUNTU-01` | PR #319 | `check-consistency`: `P13-T07/D01` status `in-progress (owner-paused)` is invalid; lease/slice mismatch |
-| 2026-09-03 | fold `origin/main@ef9baab2` (T06 done) | **in-progress** | worktree | merge in flight | restore T07 `in-progress`; regenerate handbook; 0 fake Admit |
+| 2026-09-03 | fold `origin/main@ef9baab2` (T06 done) | **pass** (local gates) | worktree | `ad633b64` | `check:consistency` OK; handbook OK; generate-handbook --check OK; 0 fake Admit |
+| 2026-09-03 | required CI run [33751771572](https://github.com/agentkernel/cognitive-os/actions/runs/33751771572) at `ad633b64` | **fail** | `CI-UBUNTU-01` | PR #319 | clippy `-D warnings`: `too_many_arguments` on `admit_text` / `prepare_admission` |
+| 2026-09-03 | clippy argument grouping (`AdmissionDraft`) | **pass** | local MSVC override | worktree | `cargo clippy -p cognitive-store --all-targets --locked -- -D warnings`; focused store 8/8 |

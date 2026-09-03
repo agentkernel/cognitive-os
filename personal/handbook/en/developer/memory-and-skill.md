@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/crates/cognitive-store/tests/p13_t07_knowledge_memory.rs
-fingerprint: "sha256:458c4ba73fe3f63f706bc89ff5dc9e2891b7ab7900f35fb88b05cab0d9dd70ba"
+fingerprint: "sha256:819182730280e81fcbe3a669eb1e30a5969d43624dae763bd2f8084e78771333"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -82,8 +82,10 @@ and `memory/auto-admit.chat` / `memory/promote.request` /
 `memory/promote.confirm` / `GET memory/promotes` on the existing Memory
 tables. Owner only; task aliases 403; Assistant self-admission and
 tombstone promote fail closed; an unconfirmed promote does not copy. Chat
-auto-admission stays honest-empty until the conversation archive source
-exists. Host filesystem E2E is `not-run`.
+auto-admission stays honest-empty / Requires-backend on the Knowledge
+surface (P13-T06 group-chat exists; this surface does not list those turns
+as admit candidates and has no Admit button). Host filesystem E2E is
+`not-run`.
 Task-channel Memory mutation aliases (`/task/resource/v1/memory/*`) return
 `403 RESOURCE_MEMORY_CHANNEL_FORBIDDEN`. The common Resource Manager (`GET
 /management/resource/v1/list|inspect`) projects non-tombstoned Memory objects

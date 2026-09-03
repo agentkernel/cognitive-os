@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
   - personal/crates/cognitive-store/tests/p13_t07_knowledge_memory.rs
-fingerprint: "sha256:458c4ba73fe3f63f706bc89ff5dc9e2891b7ab7900f35fb88b05cab0d9dd70ba"
+fingerprint: "sha256:819182730280e81fcbe3a669eb1e30a5969d43624dae763bd2f8084e78771333"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -74,8 +74,9 @@ P13-T07 在既有 Memory 表上增加 management `vault.labeled` / `vault.docume
 `memory/auto-admit.chat` / `memory/promote.request` /
 `memory/promote.confirm` / `GET memory/promotes`。仅 Owner；task 别名 403；
 助手自 admission 与 tombstone promote 失败闭合；未确认 promote 不复制。
-聊天自动准入在会话归档来源未到前保持诚实空列表。宿主文件系统 E2E 为
-`not-run`。task 通道 Memory 变更别名
+聊天自动准入在 Knowledge 表面保持诚实空列表 / Requires-backend（P13-T06
+群聊已存在；本表面不把那些 turn 列为 admit 候选，也没有 Admit 按钮）。
+宿主文件系统 E2E 为 `not-run`。task 通道 Memory 变更别名
 （`/task/resource/v1/memory/*`）返回 `403 RESOURCE_MEMORY_CHANNEL_FORBIDDEN`。
 通用 Resource Manager（`GET /management/resource/v1/list|inspect`）从同一权威行投影
 未墓碑 Memory 对象与 Skill binding；它不是通用 Resource 表，Memory forget 仍是族

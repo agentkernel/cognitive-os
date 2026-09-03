@@ -50,6 +50,16 @@ pub struct MemoryPromoteRow {
     pub promoted_memory_id: Option<String>,
 }
 
+/// Bundled admission fields so helpers stay under clippy's argument cap.
+struct AdmissionDraft<'a> {
+    project_id: &'a str,
+    employee_id: &'a str,
+    text: &'a str,
+    purpose: &'a str,
+    extra: Value,
+    now_ms: i64,
+}
+
 /// Knowledge/Memory authority writer (P13-T07). Shares the daemon SQLite.
 #[derive(Clone)]
 pub struct KnowledgeMemoryStore {
@@ -90,17 +100,19 @@ impl KnowledgeMemoryStore {
             &record.employee_id,
         )?;
         let memory_id = self.admit_text(
-            project_id,
-            &record.employee_id,
-            &record.body_redacted,
-            AUTO_ADMIT_PURPOSE,
+            AdmissionDraft {
+                project_id,
+                employee_id: &record.employee_id,
+                text: &record.body_redacted,
+                purpose: AUTO_ADMIT_PURPOSE,
+                extra: json!({
+                    "kind": AUTO_ADMIT_PURPOSE,
+                    "archive_record_id": record.record_id,
+                    "project_id": project_id,
+                }),
+                now_ms,
+            },
             AUTO_ADMIT_PROVENANCE,
-            json!({
-                "kind": AUTO_ADMIT_PURPOSE,
-                "archive_record_id": record.record_id,
-                "project_id": project_id,
-            }),
-            now_ms,
         )?;
         Ok(ChatAdmission { memory_id })
     }
@@ -195,21 +207,23 @@ impl KnowledgeMemoryStore {
         let source = self.load_memory_text(&pending.memory_id)?;
         screen_memory_admission(&source, "{}")?;
         let promoted_memory_id = self.admit_text(
-            &pending.to_project_id,
-            &to_employee_id,
-            &source,
-            PROMOTE_PURPOSE_COPY,
+            AdmissionDraft {
+                project_id: &pending.to_project_id,
+                employee_id: &to_employee_id,
+                text: &source,
+                purpose: PROMOTE_PURPOSE_COPY,
+                extra: json!({
+                    "kind": PROMOTE_PURPOSE_COPY,
+                    "parent_promote_id": promote_id,
+                    "memory_id": pending.memory_id,
+                    "from_project_id": pending.from_project_id,
+                    "to_project_id": pending.to_project_id,
+                    "preview_digest": preview_digest,
+                    "status": "confirmed",
+                }),
+                now_ms,
+            },
             PROMOTE_PROVENANCE,
-            json!({
-                "kind": PROMOTE_PURPOSE_COPY,
-                "parent_promote_id": promote_id,
-                "memory_id": pending.memory_id,
-                "from_project_id": pending.from_project_id,
-                "to_project_id": pending.to_project_id,
-                "preview_digest": preview_digest,
-                "status": "confirmed",
-            }),
-            now_ms,
         )?;
         Ok(MemoryPromoteRow {
             promote_id: pending.promote_id,
@@ -386,8 +400,17 @@ impl KnowledgeMemoryStore {
         extra: Value,
         now_ms: i64,
     ) -> Result<String, ProjectAggregateError> {
-        let (candidate, decision, _) =
-            self.prepare_admission(project_id, employee_id, "", purpose, extra, now_ms, false)?;
+        let (candidate, decision, _) = self.prepare_admission(
+            AdmissionDraft {
+                project_id,
+                employee_id,
+                text: "",
+                purpose,
+                extra,
+                now_ms,
+            },
+            false,
+        )?;
         self.authority
             .append_memory_admission(&candidate, &decision, None)
             .map_err(store_err)?;
@@ -396,21 +419,14 @@ impl KnowledgeMemoryStore {
 
     fn admit_text(
         &self,
-        project_id: &str,
-        employee_id: &str,
-        text: &str,
-        purpose: &str,
+        mut draft: AdmissionDraft<'_>,
         provenance: &str,
-        extra: Value,
-        now_ms: i64,
     ) -> Result<String, ProjectAggregateError> {
-        let mut extra = extra;
-        if let Some(object) = extra.as_object_mut() {
-            object.insert("text".to_owned(), json!(text));
+        if let Some(object) = draft.extra.as_object_mut() {
+            object.insert("text".to_owned(), json!(draft.text));
             object.insert("provenance_ref".to_owned(), json!(provenance));
         }
-        let (candidate, decision, object) =
-            self.prepare_admission(project_id, employee_id, text, purpose, extra, now_ms, true)?;
+        let (candidate, decision, object) = self.prepare_admission(draft, true)?;
         self.authority
             .append_memory_admission(&candidate, &decision, Some(&object))
             .map_err(store_err)?;
@@ -419,12 +435,7 @@ impl KnowledgeMemoryStore {
 
     fn prepare_admission(
         &self,
-        project_id: &str,
-        employee_id: &str,
-        text: &str,
-        purpose: &str,
-        extra: Value,
-        now_ms: i64,
+        draft: AdmissionDraft<'_>,
         with_object: bool,
     ) -> Result<
         (
@@ -434,6 +445,14 @@ impl KnowledgeMemoryStore {
         ),
         ProjectAggregateError,
     > {
+        let AdmissionDraft {
+            project_id,
+            employee_id,
+            text,
+            purpose,
+            extra,
+            now_ms,
+        } = draft;
         let scope = crate::memory_privacy::canonical_episodic_scope(project_id, employee_id);
         let source_id = next_object_id()?;
         let candidate_id = next_object_id()?;

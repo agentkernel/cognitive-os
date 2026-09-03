@@ -1,7 +1,8 @@
 /**
  * P13-T07 Knowledge/Memory projections. New GETs use readJson, not
  * fetchProjection (T06 owns KNOWN_ROUTES). Chat auto-admission stays
- * honest-empty / Requires-backend while the T06 archive source is absent.
+ * honest-empty / Requires-backend: T06 group-chat exists, but this surface
+ * does not list those turns as admit candidates.
  */
 
 import { asList, asRecord } from "../projections";
@@ -15,7 +16,7 @@ export const MEMORY_FORGET_PATH = "/management/resource/v1/memory/forget";
 export const MEMORY_REMEMBER_PATH = "/management/resource/v1/memory/remember";
 
 export const CHAT_AUTO_ADMIT_REQUIRES_BACKEND =
-  "Chat auto-admission Requires-backend until the conversation archive (P13-T06) is present. This list stays empty. No admission control.";
+  "Chat auto-admission Requires-backend: T06 group-chat turns are not listed as admit candidates on this surface. This list stays empty. No admission control.";
 
 export function memoryPromotesPath(projectId: string): string {
   return `${MEMORY_PROMOTES_PATH}?project_id=${encodeURIComponent(projectId)}`;
