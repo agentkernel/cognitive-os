@@ -564,16 +564,15 @@ Pi 不可以：
 - **安全/观测/回滚：** 不读取 secret；只生成 ignored artifacts；失败即恢复环境，不改源码。
 - **解锁/风险/不确定：** 解锁全部任务；Windows GNU 是否继续支持需在此关闭。
 
-#### P0-T01/D02 — 本机 Rust 工具链修复 Slice（2026-09-02 owner 指令登记；2026-09-03 领取，`in-progress`）
+#### P0-T01/D02 — 本机 Rust 工具链修复 Slice（2026-09-02 owner 指令登记；2026-09-03 领取并收口，`done`）
 
-- **状态：** 以正式台账为准（`in-progress`；lease `lease/personal/P0-T01/toolchain-repair`，分支
-  `personal/P0-T01-D02-toolchain`；[running report](../checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-report.md)）。
+- **状态：** 以正式台账为准（`done`；merged PR [#314](https://github.com/agentkernel/cognitive-os/pull/314) at `main@e9826f70`；lease `lease/personal/P0-T01/toolchain-repair` closed；[running report](../checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-report.md)；[closure](../checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-closure.md)）。
   owner 已选决策点 **(a) 本机 override** 并已应用：`rustup override set 1.97.1-x86_64-pc-windows-msvc`
   于 `D:\agent-kernel` 与任务 worktree（override 存于 rustup settings；`.cargo/config.toml` 未被
   gitignore 故不用；tracked `rust-toolchain.toml` 未改，CI 不受影响）；MSVC 工具链补装 `rustfmt`/`clippy`；
   `rustc -vV` → `host: x86_64-pc-windows-msvc`；linker `D:\VSBuildTools` VS Build Tools 17.14.37、
   `link.exe` 14.44.35228.0（rustc 自行定位，无 PATH/vcvars 改动）。本机 cargo 结果与磁盘约束
-  （`CARGO_PROFILE_DEV_DEBUG=0` 会话变量）见 running report §3。剩余唯一项：`verify:local` Option A 重钉落地（89/62/27）；完成后 P0-T01 回到 `done`。
+  （`CARGO_PROFILE_DEV_DEBUG=0` 会话变量）见 running report §3。Option A 已落地（89/62/27）；required CI [33733732726](https://github.com/agentkernel/cognitive-os/actions/runs/33733732726) **SUCCESS** at `2cbc0975`；P0-T01 保持 `done`。
 - **目标：** 让 `DEV-WIN-GNU-01` 具备 workspace Rust 本地迭代能力：`cargo build --workspace --locked`、`cargo test --workspace --locked -- --test-threads=1`、`cargo clippy --workspace --all-targets --locked -- -D warnings` 在本机通过。
 - **事实基线（2026-09-02 探测，未跑 cargo）：** 默认 host `x86_64-pc-windows-gnu`；rustup 已装 `1.97.1-x86_64-pc-windows-msvc` 与 `gnullvm`；`D:\VSBuildTools` 存在且 vswhere 报告 `VC.Tools.x86.x64`，但 `link.exe` 不在 Cursor Shell PATH；pwsh 7.6.5 已装；`core.autocrlf=true`（被 `.gitattributes eol=lf` 覆盖）。这些事实尚未写入环境登记，由本 Slice 写回。
 - **Owner 决策点（已确认 2026-09-03）：** (a) 本机 override 已应用。子决策 Option A：`pnpm run verify:local` + `scripts/v01-auto-run.*` 重钉到 CI 计数 89/62/27。

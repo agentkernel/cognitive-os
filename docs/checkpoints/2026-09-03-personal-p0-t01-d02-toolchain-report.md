@@ -170,3 +170,12 @@ Capability ceiling unchanged: this is not `DEV-WINDOWS-NATIVE-OPC-01` and does n
 | # | Unit | Instrument | Result | Notes |
 |---|---|---|---|---|
 | M1 | Sibling ledger | `git merge origin/main` (`327478d4` / T05 close `main@90437cb4`) | **applied** (this merge commit) | Remaining conflicts were `PROGRESS.md`, `PERSONAL-DEVELOPMENT-PLAN.md`, and bilingual `ai/validation-commands.md` fingerprints. Canonical resolution: Layer 1 **167 / 137 / 1 / 1 / 12 / 30** (T05 close; `P0-T01` stays `done` at task level; `P0-T01/D02` remains the open slice); Phase 13 **13 / 5 / 1 / 0 / 7**; keep Option A evidence 89/62/27; unique next = continue T06 PR #316 at `6ed02688` + P0 Option A PR #314, then claim T07/T08/T09/T10. Tracked `rust-toolchain.toml` untouched. This slice does not claim P13-T06 product work. **Required CI must re-run on this new merge HEAD** before Draft→ready→merge #314. |
+
+## 9. Fold `7fe3b839`, required CI, PR #314 merge, lease close
+
+| # | Unit | Instrument | Result | Notes |
+|---|---|---|---|---|
+| M2 | Sibling ledger | `git merge origin/main` (`7fe3b839`) | **applied** and **pushed** as `2cbc0975` | No `MERGE_HEAD` left. Parents `dfa7e7ce` + `7fe3b839`. Worktree `D:\agent-kernel-wt-p0-t01` was clean and matched `origin/personal/P0-T01-D02-toolchain`. |
+| C5 | Required CI on merge HEAD `2cbc0975` | run [33733732726](https://github.com/agentkernel/cognitive-os/actions/runs/33733732726) | **SUCCESS** | resolve 5s; ubuntu 4m24s; windows 13m41s; required-ci 2s. Tracked `rust-toolchain.toml` still identical to `origin/main`. Pins 89/62/27. |
+| C6 | Draft → ready → merge | GitHub merge of PR [#314](https://github.com/agentkernel/cognitive-os/pull/314) | **merged** 2026-09-03T08:45:35Z | merge commit `main@e9826f70` (of `2cbc0975`). T05 close at `7fe3b839` is an ancestor. |
+| C7 | Lease close on `main` | PARALLEL-LANES §3 → §3.1; PROGRESS / formal plan / plan.md / this report + [closure](2026-09-03-personal-p0-t01-d02-toolchain-closure.md) | **this commit** | Unique next: continue `P13-T06` Draft PR #316. This close does not claim `P13-T06` product work or `P13-T07`. |
