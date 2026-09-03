@@ -162,7 +162,7 @@ fn p13_t09_copy_refuses_inherit_flags_but_copies_seated_source_as_inactive() {
 
     let view = lifecycle.lifecycle_view(&copy_id).expect("view");
     assert!(!view.tombstoned);
-    assert_eq!(view.is_backup, false);
+    assert!(!view.is_backup);
     assert!(view.data_dir.is_some(), "every Project gets data/");
 }
 
@@ -204,7 +204,7 @@ fn p13_t09_archive_delete_export_restore_negatives_and_round_trip() {
         })
         .expect("archive");
     assert_eq!(archived.state, "archived");
-    assert_eq!(archived.is_backup, false);
+    assert!(!archived.is_backup);
 
     let preview = lifecycle
         .preview_delete(LifecycleDeletePreviewSpec {
