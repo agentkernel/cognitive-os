@@ -5,9 +5,9 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Task: `P13-T08` / slices `P13-T08/D01` then `P13-T08/D02`
 - Branch: `personal/P13-T08-settings`
 - Worktree: `D:\agent-kernel-wt-P13-T08`
-- Lease: `lease/personal/P13-T08/settings-connections`
+- Lease: `lease/personal/P13-T08/settings-connections` (closed this delivery → PARALLEL-LANES §3.1)
 - Change class: `implementation-only` (Settings/provider write path + Dual Track UI; no contract/axiom change)
-- Unique next: required CI on the folded HEAD of Draft PR [#317](https://github.com/agentkernel/cognitive-os/pull/317). Live SecretStore `connection.connect` **pass** at pushed `8b71fb8d` (`settings_connections.rs` unchanged by the fold). Windows SecretStore host E2E stays `not-run` until `P13-T13`. Keep Draft; do not claim T09 / T11 / T12 / T13 / T15; do not merge beside T07 #319 / T09 #321 / T11 #320.
+- Unique next: required CI on this closure HEAD, then `gh pr ready 317` and merge. Folded implementation `b6bc5ea8` required CI [33756778043](https://github.com/agentkernel/cognitive-os/actions/runs/33756778043) **SUCCESS**. Live SecretStore **pass 12/12** at `8b71fb8d`; Linux cargo 8/8 at `b6bc5ea8` (`settings_connections.rs` unchanged). Windows SecretStore host E2E stays `not-run` until `P13-T13`. Do not claim T09 / T11 / T12 / T13 / T15.
 
 Product origin is daemon-served `/ui/`. Vite/canvas is not the product. Model Connections POSTs `/management/settings/v1/connection.connect` (key required; SecretStore takeover; connected/failed; secret presence only). Settings does not open `#/providers`. Usage cells are `actual` / `estimated` / `unknown` (unknown never 0). Diagnostics and state-lab stay collapsed. Windows SecretStore host E2E is `not-run` until `P13-T13`. P13-T02 engine health is 非 mutex (honest empty OK). Occupied T06 / T07 / T10 paths were not written.
 
@@ -42,3 +42,6 @@ Product origin is daemon-served `/ui/`. Vite/canvas is not the product. Model Co
 | Handbook regen + fingerprints + consistency after fold | **pass** | `DEV-WIN-GNU-01` Node | fold commit (this change set) | `generate-handbook --check` OK (18); `check-handbook` OK (58×2); `check:consistency` OK. |
 | Dual Track TS after fold | **pass** | `clients/pc/web` vitest | fold commit (this change set) | 3 files / **16/16** (`settingsModelConnections` + `settingsConnections` + `connectionUsage`). Pre-fold Dual Track 28/28 at first implementation still stands. |
 | Focused cargo `settings_connections` after fold | **pass** | worktree MSVC override + `CARGO_PROFILE_DEV_DEBUG=0` | fold commit (this change set) | `cargo test -p kernel-server --bin kernel-server --locked -- personal::settings_connections` **8/8**. `host: x86_64-pc-windows-msvc`. Development evidence only. |
+| Required CI run [33756778043](https://github.com/agentkernel/cognitive-os/actions/runs/33756778043) | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `b6bc5ea8` | resolve SUCCESS; ubuntu 4m18s SUCCESS; windows 14m50s SUCCESS; `required-ci` SUCCESS. Folded HEAD of Draft PR #317. |
+| `DEV-LINUX-NATIVE-01` focused cargo on folded HEAD | **pass** | worktree `~/cognitiveos-personal-worktrees/p13-t08-b6bc5ea8` (`HEAD=b6bc5ea8`, dirty=0); rustc 1.97.1 `x86_64-unknown-linux-gnu`; shared `CARGO_TARGET_DIR` from T05 | `b6bc5ea8` | `cargo test -p kernel-server --bin kernel-server --locked -- personal::settings_connections` **8/8**. `settings_connections.rs` unchanged vs live-validated `8b71fb8d`; full live SecretStore re-run not repeated. |
+| Windows SecretStore host E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` unqualified | — | waits `P13-T13`; not a product fail |
