@@ -228,7 +228,9 @@ pub struct AttemptArtifactRow {
     pub context_digest: String,
     pub produced_at: i64,
     pub created_at: i64,
-    /// `current` (newest artifact for this Project + task) or `superseded`.
+    /// `current` (newest artifact this Member produced for this Project +
+    /// task) or `superseded`. Another Member's deliverable on the same task
+    /// ref never supersedes this one.
     pub freshness: String,
     /// `not-run` | latest evidence disposition.
     pub verification_status: String,
@@ -1594,6 +1596,7 @@ SELECT a.artifact_id, a.attempt_id, a.project_id, a.task_ref, a.employee_id, a.c
          ORDER BY e.verified_at DESC, e.rowid DESC LIMIT 1) AS latest_disposition,
        (SELECT COUNT(*) FROM p13_attempt_artifact n
          WHERE n.project_id = a.project_id AND n.task_ref = a.task_ref
+           AND n.employee_id = a.employee_id
            AND (n.created_at > a.created_at
                 OR (n.created_at = a.created_at AND n.rowid > a.rowid))) AS newer_count,
        (SELECT f.stage_id FROM p11_stage_test_fact f

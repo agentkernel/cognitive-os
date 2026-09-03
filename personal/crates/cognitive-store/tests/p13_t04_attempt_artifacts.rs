@@ -637,6 +637,18 @@ fn p13_t04_stage_test_is_derived_from_evidence_and_acceptance_only_on_last_ring(
         return;
     };
     let artifact = ingest(&fixture, &attempt_id, &payload);
+    // Freshness is per Member: the researcher's later deliverable on the same
+    // task ref does not supersede the manager's ring-one artifact.
+    assert_eq!(
+        fixture
+            .artifacts
+            .get_artifact(&manager_artifact.artifact_id)
+            .expect("get")
+            .expect("row")
+            .freshness,
+        "current"
+    );
+    assert_eq!(artifact.freshness, "current");
     // Task channel / assistant cannot derive a stage test.
     let error = fixture
         .artifacts
