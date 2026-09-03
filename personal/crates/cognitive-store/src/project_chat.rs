@@ -1134,11 +1134,13 @@ struct StoredCandidate {
     candidate: Value,
 }
 
+type ChatCandidateColumns = (String, Option<String>, Option<String>, Option<String>);
+
 fn load_candidate_locked(
     conn: &Connection,
     turn_id: &str,
 ) -> Result<StoredCandidate, ProjectAggregateError> {
-    let row: Option<(String, Option<String>, Option<String>, Option<String>)> = conn
+    let row: Option<ChatCandidateColumns> = conn
         .query_row(
             "SELECT project_id, candidate_kind, candidate_digest, candidate_json
                FROM p13_project_chat_turn WHERE turn_id = ?1",

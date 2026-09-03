@@ -60,11 +60,11 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `cargo test -p cognitive-store --test p13_t06_project_chat --test p1_t01_layout_migrations` | **pass** 9/9 + 8/8 | `DEV-LINUX-NATIVE-01` | `08aa2928` | includes `p13_t06_same_timestamp_owner_turn_precedes_manager_reply`. |
 | 2026-09-03 | `cargo test -p kernel-server --bin kernel-server -- --test-threads=1 project_chat` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` | `08aa2928` | previously failing `manager_mention_…_canvas_confirm_applies` green; live-shape pin green. |
 | 2026-09-03 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **fail** | `DEV-LINUX-NATIVE-01` | `08aa2928` | `clippy::type_complexity` at `project_chat.rs` `load_candidate_locked` (`Option<(String, Option<String>, Option<String>, Option<String>)>`). |
-| 2026-09-03 | merge `origin/main@7fe3b839` (T05 lease-close totals 137/1 on main) | recorded | docs-only | uncommitted | Conflict only in `PERSONAL-DEVELOPMENT-PLAN.md`. Kept T06 in-progress + v39; T05 **done**/lease closed; this-branch 合计 167/137/2/1/11 (T06+T12 in-progress). T04 v37 / T05 v38 / T06 v39 unchanged. |
+| 2026-09-03 | merge `origin/main@7fe3b839` (T05 lease-close totals 137/1 on main) | recorded | docs-only | `06f49b04` | Conflict only in `PERSONAL-DEVELOPMENT-PLAN.md`. Kept T06 in-progress + v39; T05 **done**/lease closed; this-branch 合计 167/137/2/1/11 (T06+T12 in-progress). T04 v37 / T05 v38 / T06 v39 unchanged. |
 | 2026-09-03 | clippy `ChatCandidateColumns` alias | recorded | `DEV-WIN-GNU-01` | uncommitted | Named the four-column tuple so `-D warnings` no longer trips `type_complexity`. |
 
 ## Unique next
 
-1. Commit merge + clippy `ChatCandidateColumns` alias; push; keep PR #316 Draft.
+1. Push clippy alias + merge; keep PR #316 Draft.
 2. Linux clippy re-run at the new SHA, then live daemon negatives.
 3. Map every D01 acceptance item after required CI is green. Do not claim P13-T07.
