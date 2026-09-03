@@ -150,6 +150,20 @@ pub struct RuntimeImprovementRow {
     pub state: String,
 }
 
+/// Fields for one reflection-candidate insert. Bundled so
+/// `insert_candidate_locked` stays under clippy's argument limit.
+struct CandidateDraft<'a> {
+    project_id: &'a str,
+    employee_id: &'a str,
+    kind: &'a str,
+    source: &'a str,
+    attempt_id: Option<&'a str>,
+    evidence_id: Option<&'a str>,
+    occurrence_id: Option<&'a str>,
+    fact: &'a str,
+    now_ms: i64,
+}
+
 /// Proposal inputs. `new_blueprint_revision_id` is accepted only so the
 /// implicit-upgrade refusal is a real caller path, not a missing field.
 pub struct RuntimeImprovementSpec<'a> {
@@ -296,6 +310,7 @@ impl ReflectionStore {
         inserted.extend(generate_from_evidence_locked(&conn, project_id, now_ms)?);
         inserted.extend(generate_from_terminals_locked(&conn, project_id, now_ms)?);
         inserted.extend(generate_from_occurrences_locked(&conn, project_id, now_ms)?);
+        inserted.extend(generate_from_daily_locked(&conn, project_id, now_ms)?);
         Ok(inserted)
     }
 
@@ -758,15 +773,17 @@ fn generate_from_evidence_locked(
             format!("evidence={evidence_id}\nattempt={attempt_id}\ndisposition={disposition}");
         if let Some(row) = insert_candidate_locked(
             conn,
-            project_id,
-            &employee_id,
-            "key-result",
-            "verification-evidence",
-            Some(&attempt_id),
-            Some(&evidence_id),
-            None,
-            &fact,
-            now_ms,
+            &CandidateDraft {
+                project_id,
+                employee_id: &employee_id,
+                kind: "key-result",
+                source: "verification-evidence",
+                attempt_id: Some(&attempt_id),
+                evidence_id: Some(&evidence_id),
+                occurrence_id: None,
+                fact: &fact,
+                now_ms,
+            },
         )? {
             inserted.push(row);
         }
@@ -803,15 +820,17 @@ fn generate_from_terminals_locked(
             format!("attempt={attempt_id}\nterminal={terminal_kind}\nresponse={response_status}");
         if let Some(row) = insert_candidate_locked(
             conn,
-            project_id,
-            &employee_id,
-            "incident",
-            "attempt-terminal",
-            Some(&attempt_id),
-            None,
-            None,
-            &fact,
-            now_ms,
+            &CandidateDraft {
+                project_id,
+                employee_id: &employee_id,
+                kind: "incident",
+                source: "attempt-terminal",
+                attempt_id: Some(&attempt_id),
+                evidence_id: None,
+                occurrence_id: None,
+                fact: &fact,
+                now_ms,
+            },
         )? {
             inserted.push(row);
         }
@@ -850,15 +869,67 @@ fn generate_from_occurrences_locked(
         );
         if let Some(row) = insert_candidate_locked(
             conn,
-            project_id,
-            &employee_id,
-            "cycle",
-            "occurrence-ledger",
-            attempt_id.as_deref(),
-            None,
-            Some(&occurrence_id),
-            &fact,
-            now_ms,
+            &CandidateDraft {
+                project_id,
+                employee_id: &employee_id,
+                kind: "cycle",
+                source: "occurrence-ledger",
+                attempt_id: attempt_id.as_deref(),
+                evidence_id: None,
+                occurrence_id: Some(&occurrence_id),
+                fact: &fact,
+                now_ms,
+            },
+        )? {
+            inserted.push(row);
+        }
+    }
+    Ok(inserted)
+}
+
+/// One `daily` candidate per seated Member per UTC day that has a terminal
+/// Attempt. This is a rollup, not a key-result: `response done` / exit 0
+/// without evidence still yields `daily` and still must not become
+/// `key-result`.
+fn generate_from_daily_locked(
+    conn: &Connection,
+    project_id: &str,
+    now_ms: i64,
+) -> Result<Vec<ReflectionCandidateRow>, ProjectAggregateError> {
+    let mut statement = conn
+        .prepare(
+            "SELECT employee_id, date(terminal_at / 1000, 'unixepoch'), COUNT(*)
+               FROM p13_hosted_dsh_attempt
+              WHERE project_id = ?1
+                AND state IN ('terminal','unknown-outcome')
+                AND terminal_at IS NOT NULL
+              GROUP BY employee_id, date(terminal_at / 1000, 'unixepoch')",
+        )
+        .map_err(unavailable("daily facts for reflection"))?;
+    let facts: Vec<(String, String, i64)> = statement
+        .query_map([project_id], |row| {
+            Ok((row.get(0)?, row.get(1)?, row.get(2)?))
+        })
+        .map_err(unavailable("daily fact query"))?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(unavailable("daily fact rows"))?;
+    drop(statement);
+    let mut inserted = Vec::new();
+    for (employee_id, day, count) in facts {
+        let fact = format!("daily={day}\nemployee={employee_id}\nterminals={count}");
+        if let Some(row) = insert_candidate_locked(
+            conn,
+            &CandidateDraft {
+                project_id,
+                employee_id: &employee_id,
+                kind: "daily",
+                source: "attempt-terminal",
+                attempt_id: None,
+                evidence_id: None,
+                occurrence_id: None,
+                fact: &fact,
+                now_ms,
+            },
         )? {
             inserted.push(row);
         }
@@ -868,22 +939,14 @@ fn generate_from_occurrences_locked(
 
 fn insert_candidate_locked(
     conn: &Connection,
-    project_id: &str,
-    employee_id: &str,
-    kind: &str,
-    source: &str,
-    attempt_id: Option<&str>,
-    evidence_id: Option<&str>,
-    occurrence_id: Option<&str>,
-    fact: &str,
-    now_ms: i64,
+    draft: &CandidateDraft<'_>,
 ) -> Result<Option<ReflectionCandidateRow>, ProjectAggregateError> {
-    let fact_digest = format!("{:x}", Sha256::digest(fact.as_bytes()));
+    let fact_digest = format!("{:x}", Sha256::digest(draft.fact.as_bytes()));
     let exists: i64 = conn
         .query_row(
             "SELECT COUNT(*) FROM p13_reflection_candidate
               WHERE project_id = ?1 AND kind = ?2 AND fact_digest = ?3",
-            params![project_id, kind, fact_digest],
+            params![draft.project_id, draft.kind, fact_digest],
             |row| row.get(0),
         )
         .map_err(unavailable("existing reflection candidate"))?;
@@ -891,9 +954,9 @@ fn insert_candidate_locked(
         return Ok(None);
     }
     let body = json!({
-        "kind": kind,
-        "source": source,
-        "fact": fact,
+        "kind": draft.kind,
+        "source": draft.source,
+        "fact": draft.fact,
         "completion_claimed": false,
         "model_self_report": false,
     })
@@ -907,27 +970,27 @@ fn insert_candidate_locked(
          ) VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,0,0,?11)",
         params![
             candidate_id,
-            project_id,
-            employee_id,
-            kind,
-            source,
-            attempt_id,
-            evidence_id,
-            occurrence_id,
+            draft.project_id,
+            draft.employee_id,
+            draft.kind,
+            draft.source,
+            draft.attempt_id,
+            draft.evidence_id,
+            draft.occurrence_id,
             fact_digest,
             body,
-            now_ms
+            draft.now_ms
         ],
     )
     .map_err(unavailable("insert reflection candidate"))?;
     Ok(Some(ReflectionCandidateRow {
         candidate_id,
-        project_id: project_id.to_owned(),
-        employee_id: employee_id.to_owned(),
-        kind: kind.to_owned(),
-        source: source.to_owned(),
-        attempt_id: attempt_id.map(str::to_owned),
-        evidence_id: evidence_id.map(str::to_owned),
+        project_id: draft.project_id.to_owned(),
+        employee_id: draft.employee_id.to_owned(),
+        kind: draft.kind.to_owned(),
+        source: draft.source.to_owned(),
+        attempt_id: draft.attempt_id.map(str::to_owned),
+        evidence_id: draft.evidence_id.map(str::to_owned),
         fact_digest,
         completion_claimed: false,
     }))

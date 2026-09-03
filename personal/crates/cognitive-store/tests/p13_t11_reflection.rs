@@ -375,11 +375,20 @@ fn generate_from_failed_terminal_then_confirm_and_rollback_revision() {
         .reflections
         .generate_from_facts(&fixture.project_id, 80)
         .expect("generate");
-    assert_eq!(first.len(), 1);
-    assert_eq!(first[0].kind, "incident");
-    assert_eq!(first[0].source, "attempt-terminal");
-    assert_eq!(first[0].attempt_id.as_deref(), Some(attempt_id.as_str()));
-    assert!(!first[0].completion_claimed);
+    let incident = first
+        .iter()
+        .find(|row| row.kind == "incident")
+        .expect("failed terminal must yield an incident");
+    assert_eq!(incident.source, "attempt-terminal");
+    assert_eq!(incident.attempt_id.as_deref(), Some(attempt_id.as_str()));
+    assert!(!incident.completion_claimed);
+    let daily = first
+        .iter()
+        .find(|row| row.kind == "daily")
+        .expect("a terminal day must also yield a daily rollup");
+    assert_eq!(daily.source, "attempt-terminal");
+    assert_ne!(daily.kind, "key-result");
+    assert_eq!(first.len(), 2);
     let again = fixture
         .reflections
         .generate_from_facts(&fixture.project_id, 81)
@@ -396,7 +405,7 @@ fn generate_from_failed_terminal_then_confirm_and_rollback_revision() {
         .propose_runtime_improvement(
             ConfirmCaller::OwnerManagement,
             &RuntimeImprovementSpec {
-                candidate_id: &first[0].candidate_id,
+                candidate_id: &incident.candidate_id,
                 proposed_prompt: "cite sources before drafting",
                 proposed_tools: &["workspace-write".to_owned()],
                 new_blueprint_revision_id: None,
@@ -579,5 +588,22 @@ fn successful_looking_terminal_without_evidence_is_not_a_key_result() {
     assert!(
         generated.iter().all(|row| row.kind != "key-result"),
         "exit 0 / response done without evidence must not become a key-result: {generated:?}"
+    );
+    assert!(
+        generated.iter().any(|row| row.kind == "daily"),
+        "a terminal calendar day must yield a daily candidate: {generated:?}"
+    );
+}
+
+#[test]
+fn empty_project_day_is_not_a_daily_candidate() {
+    let fixture = fixture();
+    let generated = fixture
+        .reflections
+        .generate_from_facts(&fixture.project_id, 80)
+        .expect("generate");
+    assert!(
+        generated.iter().all(|row| row.kind != "daily"),
+        "no Attempt terminal means no daily rollup: {generated:?}"
     );
 }
