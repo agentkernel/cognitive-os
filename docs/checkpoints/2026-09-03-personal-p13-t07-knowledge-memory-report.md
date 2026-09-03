@@ -12,7 +12,7 @@
 
 ## Unique next action
 
-Push governance-fix checkpoint on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) (remove `PARALLEL-LANES.md` from lease writable paths; align Phase 13 / Layer 1 counts with `P13-T07` + `P13-T12` in-progress). Keep `P13-T07/D01` `in-progress` until required CI is green on PR HEAD. Do not close the task.
+Push governance-fix checkpoint on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) at `11929623` (lease ledger + plan/PROGRESS counts). Keep `P13-T07/D01` `in-progress` until required CI is green on PR HEAD. Do not close the task.
 
 ## Failure-first (D01)
 
