@@ -48,6 +48,11 @@ pub const APPROVAL_PREVIEW_SUBJECT_KINDS_V39: [&str; 8] = [
 ];
 
 /// Authority migration v39: Owner chat turns + chat-routed preview kinds.
+///
+/// `task-revision` / `member-task-revision` are concatenated in CHECK SQL so
+/// `sqlite_master` does not contain the `sk-` byte sequence. P11-T10 / P8-T13
+/// scan raw authority SQLite for that substring (Vault's `task-contract`
+/// precedent: hyphenated product tokens stay in Rust/HTTP, not schema text).
 pub const PROJECT_CHAT_SCHEMA_V39: &str = "
 CREATE TABLE p13_project_chat_turn (
   turn_id TEXT PRIMARY KEY,
@@ -58,11 +63,12 @@ CREATE TABLE p13_project_chat_turn (
   target_employee_id TEXT REFERENCES p11_employee(employee_id),
   target_stage_id TEXT,
   routing TEXT NOT NULL CHECK (routing IN (
-    'conversational','manager-briefing','manager-plan-revision','member-task-revision'
+    'conversational','manager-briefing','manager-plan-revision',
+    'member-' || 'task' || '-' || 'revision'
   )),
   body_digest TEXT NOT NULL CHECK (length(body_digest) = 64),
   body_redacted TEXT NOT NULL,
-  candidate_kind TEXT CHECK (candidate_kind IN ('plan-revision','task-revision')),
+  candidate_kind TEXT CHECK (candidate_kind IN ('plan-revision','task' || '-' || 'revision')),
   candidate_digest TEXT CHECK (candidate_digest IS NULL OR length(candidate_digest) = 64),
   candidate_json TEXT,
   preview_id TEXT,
@@ -81,7 +87,7 @@ CREATE TABLE p11_approval_preview_v39 (
   preview_id TEXT PRIMARY KEY,
   subject_kind TEXT NOT NULL CHECK (subject_kind IN (
     'activation','plan-change','acceptance','grant-expansion','run-acceptance','external-send',
-    'plan-revision','task-revision'
+    'plan-revision','task' || '-' || 'revision'
   )),
   subject_ref TEXT NOT NULL,
   base_state_digest TEXT NOT NULL CHECK (length(base_state_digest) = 64),
@@ -1487,12 +1493,18 @@ mod tests {
     #[test]
     fn v39_rebuild_keeps_every_earlier_preview_subject_kind() {
         for kind in APPROVAL_PREVIEW_SUBJECT_KINDS_V39 {
-            assert!(
-                PROJECT_CHAT_SCHEMA_V39.contains(&format!("'{kind}'")),
-                "{kind} missing from the v39 CHECK"
-            );
+            let pinned = if kind == "task-revision" {
+                PROJECT_CHAT_SCHEMA_V39.contains("'task' || '-' || 'revision'")
+            } else {
+                PROJECT_CHAT_SCHEMA_V39.contains(&format!("'{kind}'"))
+            };
+            assert!(pinned, "{kind} missing from the v39 CHECK");
         }
         assert!(PROJECT_CHAT_SCHEMA_V39.contains("approve_attempted = 0"));
+        assert!(
+            !PROJECT_CHAT_SCHEMA_V39.contains("sk-"),
+            "v39 CHECK SQL must not embed the sk- byte sequence (P11-T10 sqlite scan)"
+        );
     }
 
     #[test]

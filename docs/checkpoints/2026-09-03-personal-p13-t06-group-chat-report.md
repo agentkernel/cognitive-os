@@ -61,10 +61,13 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `cargo test -p kernel-server --bin kernel-server -- --test-threads=1 project_chat` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` | `08aa2928` | previously failing `manager_mention_…_canvas_confirm_applies` green; live-shape pin green. |
 | 2026-09-03 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **fail** | `DEV-LINUX-NATIVE-01` | `08aa2928` | `clippy::type_complexity` at `project_chat.rs` `load_candidate_locked` (`Option<(String, Option<String>, Option<String>, Option<String>)>`). |
 | 2026-09-03 | merge `origin/main@7fe3b839` (T05 lease-close totals 137/1 on main) | recorded | docs-only | `06f49b04` | Conflict only in `PERSONAL-DEVELOPMENT-PLAN.md`. Kept T06 in-progress + v39; T05 **done**/lease closed; this-branch 合计 167/137/2/1/11 (T06+T12 in-progress). T04 v37 / T05 v38 / T06 v39 unchanged. |
-| 2026-09-03 | clippy `ChatCandidateColumns` alias | recorded | `DEV-WIN-GNU-01` | uncommitted | Named the four-column tuple so `-D warnings` no longer trips `type_complexity`. |
+| 2026-09-03 | clippy `ChatCandidateColumns` alias | recorded | `DEV-WIN-GNU-01` | `aecc3fc4` | Named the four-column tuple so `-D warnings` no longer trips `type_complexity`. |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` store + kernel-server + clippy at `aecc3fc4` | **pass** 9/9+8/8, 7/7, clippy 0 | `DEV-LINUX-NATIVE-01` | `aecc3fc4` | clone `p13-t06-dd15dc51` fetched via host `:7890`; dirty=0. |
+| 2026-09-03 | Required CI [33733963941](https://github.com/agentkernel/cognitive-os/actions/runs/33733963941) ubuntu at `aecc3fc4` | **fail** | `CI-UBUNTU-01` | `aecc3fc4` | `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import`: v39 CHECK literals `task-revision` / `member-task-revision` persist `sk-` in `sqlite_master` (Vault `task-contract` precedent). |
+| 2026-09-03 | v39 CHECK concatenates `task`/`revision` so sqlite_master omits `sk-` | recorded | `DEV-WIN-GNU-01` | uncommitted | Product kind names unchanged. New store lock `p13_t06_authority_sqlite_omits_sk_substring_after_v39`. |
 
 ## Unique next
 
-1. Push clippy alias + merge; keep PR #316 Draft.
-2. Linux clippy re-run at the new SHA, then live daemon negatives.
+1. Push the sqlite `sk-` CHECK fix; keep PR #316 Draft.
+2. Linux store + `p11_t10_vault` + clippy at the new SHA, then live daemon negatives.
 3. Map every D01 acceptance item after required CI is green. Do not claim P13-T07.
