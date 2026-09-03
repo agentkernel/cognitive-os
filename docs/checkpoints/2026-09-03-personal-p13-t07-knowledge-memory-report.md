@@ -5,14 +5,14 @@
 - Product: CognitiveOS Personal 2.0.0
 - Lease: `lease/personal/P13-T07/knowledge-memory`
 - Branch: `personal/P13-T07-knowledge-memory` (worktree `d:\agent-kernel-wt-P13-T07`; `d:\agent-kernel` not used)
-- Base: `origin/main@8e0d497d`
+- Base: folding `origin/main@ef9baab2` (T06 merged at `main@23355afb`; prior T07 base was `8e0d497d`)
 - Claim ceiling: `hypothesis` (A7: local MSVC / Dual Track is not Gate / release / Profile / Windows qualification)
 - Evaluation routing: **OFF**
 - Host FS/privacy E2E: `not-run` until `P13-T13`
 
 ## Unique next action
 
-**Owner pause 2026-09-03.** Do not auto-continue. Resume only on fresh owner delivery instruction: wait for required CI green on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) HEAD (`e2db868b`), then complete `P13-T07/D01` acceptance assessment. Keep task `in-progress`; do not close until full acceptance.
+Fold `main@ef9baab2` into Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319), wait for required CI green on the merge HEAD, then complete `P13-T07/D01` formal acceptance and ready/merge. Slice status is `in-progress` (never `in-progress (owner-paused)`). Keep 0 fake Admit buttons.
 
 ## Failure-first (D01)
 
@@ -37,3 +37,5 @@
 | 2026-09-03 | Host FS/privacy E2E | **not-run** | `P13-T13` | — | recorded, not inferred pass |
 | 2026-09-03 | required CI run [33746065086](https://github.com/agentkernel/cognitive-os/actions/runs/33746065086) at `e1e276df` | **fail** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) | `check-consistency`: Phase 13 counts 13/5/1/0/7 vs task rows 13/5/2/0/6; lease owned `PARALLEL-LANES.md` |
 | 2026-09-03 | governance fix (lease ledger + plan/PROGRESS counts) | **pending** | worktree | after push | unique next: required CI green |
+| 2026-09-03 | required CI run [33748054839](https://github.com/agentkernel/cognitive-os/actions/runs/33748054839) at `5e2c5efc` | **fail** | `CI-UBUNTU-01` | PR #319 | `check-consistency`: `P13-T07/D01` status `in-progress (owner-paused)` is invalid; lease/slice mismatch |
+| 2026-09-03 | fold `origin/main@ef9baab2` (T06 done) | **in-progress** | worktree | merge in flight | restore T07 `in-progress`; regenerate handbook; 0 fake Admit |
