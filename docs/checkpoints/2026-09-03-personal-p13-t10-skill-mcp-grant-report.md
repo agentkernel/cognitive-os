@@ -10,7 +10,7 @@
 
 ## Unique next action
 
-Repair Ubuntu Clippy (`collapsible_if` in install-phase confirm) after required CI [33745410565](https://github.com/agentkernel/cognitive-os/actions/runs/33745410565) failed at `5a1d33e8`; re-run required CI + `DEV-LINUX-NATIVE-01` on the pushed repair HEAD. Do not merge until D01 acceptance. Supply-chain host E2E remains `not-run`.
+**Owner-paused (2026-09-03).** D01 implementation + required CI + `DEV-LINUX-NATIVE-01` are green at `d861d341` on Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318). Resume with D01 acceptance assessment → closure (plan, snapshot, handbook, handoff, Draft→ready, merge, lease/branch/main) when owner lifts pause. Supply-chain host E2E remains `not-run` until P13-T13.
 
 ## Failure-first (D01)
 
@@ -47,3 +47,11 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | Required CI [33745410565](https://github.com/agentkernel/cognitive-os/actions/runs/33745410565) ubuntu Clippy | **fail** | `CI-UBUNTU-01` | `5a1d33e8` | `clippy::collapsible_if` in `confirm` install-phase guards; rust tests had passed |
 | 2026-09-03 | Collapse install-phase confirm `if` chain; local `cargo clippy -p kernel-server --all-targets --locked -- -D warnings` | **pass** | local MSVC override | worktree | development evidence only |
 | 2026-09-03 | `DEV-LINUX-NATIVE-01` GitHub fetch of `5a1d33e8` | **fail** | `wuz@192.168.1.2` | `5a1d33e8` | `fatal: pack has 28 unresolved deltas`; bundle+SCP after the Clippy repair push |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` exact `d861d341` (`/home/wuz/cognitiveos-personal-worktrees/p13-t10-d861d341`, bundle fetch, `DIRTY=0`) store `p13_t10_capability_acquisition` | **pass** 6/6 | `DEV-LINUX-NATIVE-01` | `d861d341` | install ≠ grant; injection/hidden; marketplace/engine-store; unreviewed; update/compat/rollback; chat/task cannot install |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` `cargo test -p kernel-server http_capability_acquire` | **pass** 1/1 | `DEV-LINUX-NATIVE-01` | `d861d341` | `http_capability_acquire_install_is_not_grant_and_refusals` |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **pass** | `DEV-LINUX-NATIVE-01` | `d861d341` | focused crates; not a workspace substitute for required CI |
+| 2026-09-03 | Required CI [33747031610](https://github.com/agentkernel/cognitive-os/actions/runs/33747031610) `verify (ubuntu-latest)` | **pass** | `CI-UBUNTU-01` | `d861d341` | Clippy included; rustfmt / consistency / handbook / conformance all success |
+| 2026-09-03 | Required CI [33747031610](https://github.com/agentkernel/cognitive-os/actions/runs/33747031610) `verify (windows-latest)` | **pass** | `CI-WINDOWS-MSVC-01` | `d861d341` | 11m53s |
+| 2026-09-03 | Required CI [33747031610](https://github.com/agentkernel/cognitive-os/actions/runs/33747031610) `required-ci` | **pass** | GitHub | `d861d341` | all required checks green |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` bundle+SCP clone @ `d861d341` (worktree `/home/wuz/agent-kernel-worktrees/p13-t10-d861d341`) | recorded | `wuz@192.168.1.2` | `d861d341` | GitHub fetch broken on host; bundle route used |
+| 2026-09-03 | Owner pause | recorded | — | `d861d341` | finish in-flight CI/Linux only; no merge; no new card |
