@@ -559,7 +559,12 @@ impl ProjectAggregateStore {
         Self::reject_secret_shape(preview_bytes)?;
         if !matches!(
             subject_kind,
-            "activation" | "plan-change" | "acceptance" | "grant-expansion"
+            "activation"
+                | "plan-change"
+                | "acceptance"
+                | "grant-expansion"
+                | "run-acceptance"
+                | "external-send"
         ) {
             return Err(ProjectAggregateError::Invalid {
                 detail: "unsupported subject_kind",
@@ -602,6 +607,12 @@ impl ProjectAggregateStore {
             "plan-change" => self.plan_change_base_digest_locked(conn, subject_ref),
             "acceptance" => self.acceptance_base_digest_locked(conn, subject_ref),
             "grant-expansion" => Self::grant_expansion_base_digest_locked(conn, subject_ref),
+            "run-acceptance" => {
+                crate::attempt_artifacts::run_acceptance_base_digest_locked(conn, subject_ref)
+            }
+            "external-send" => {
+                crate::attempt_artifacts::external_send_base_digest_locked(conn, subject_ref)
+            }
             _ => Err(ProjectAggregateError::Invalid {
                 detail: "unsupported subject_kind",
             }),
@@ -870,6 +881,12 @@ impl ProjectAggregateStore {
             "plan-change" => self.confirm_stage_from_preview_locked(&conn, &preview.subject_ref)?,
             "acceptance" => self.accept_locked(&conn, &preview.subject_ref, now_ms)?,
             "grant-expansion" => Self::grant_expansion_locked(&conn, &preview.subject_ref, now_ms)?,
+            "run-acceptance" => {
+                crate::attempt_artifacts::accept_run_locked(&conn, &preview.subject_ref, now_ms)?
+            }
+            "external-send" => {
+                crate::attempt_artifacts::external_send_locked(&conn, &preview.subject_ref, now_ms)?
+            }
             _ => {
                 return Err(ProjectAggregateError::Invalid {
                     detail: "unsupported subject_kind",

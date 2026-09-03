@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:cab54eafb8f243dc3bc4b1ac6d310533fee9e3a6b233835cfcb1aab7ed3ac81b"
+fingerprint: "sha256:b6cbcb12e9f7acfb2ddef5f010c286c6ea9b56c19afa310844dfa468c500f31d"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---

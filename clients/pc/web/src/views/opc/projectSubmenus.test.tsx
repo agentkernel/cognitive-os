@@ -274,18 +274,59 @@ describe("P12-T03 Project four submenus", () => {
   });
 
   it("keeps outputs select-then-view and does not treat Knowledge files as authority", async () => {
-    const { host, root, calls } = await renderWork("#/projects/proj-1/outputs");
+    // P13-T04: outputs list real CAS-backed Attempt artifacts (not the axis).
+    const { host, root, calls } = await renderWork("#/projects/proj-1/outputs", {
+      "GET /management/project/v1/outputs": {
+        status: 200,
+        body: {
+          status: "ok",
+          artifacts: [
+            {
+              artifact_id: "artifact-1",
+              attempt_id: "dshattempt-1",
+              employee_id: "emp-1",
+              task_ref: "task://personal/p12-t03",
+              cas_ref: `sha256:${"a".repeat(64)}`,
+              byte_length: 12,
+              format: "text/markdown",
+              source: "hosted-dsh-child:candidate:DeliverableDraft",
+              source_frame_seq: 2,
+              freshness: "current",
+              verification_status: "not-run",
+              latest_evidence_id: null,
+              stage_id: null,
+              accepted_at: null,
+            },
+          ],
+        },
+      },
+      "GET /management/project/v1/outputs.detail": {
+        status: 200,
+        body: {
+          status: "ok",
+          artifact: { artifact_id: "artifact-1", cas_ref: `sha256:${"a".repeat(64)}`, verification_status: "not-run" },
+          evidence: [],
+          run_acceptance: null,
+          export: { exists: false, path: "none", is_authority: false },
+          files_are_authority: false,
+        },
+      },
+    });
     expect(host.querySelector("[data-page='opc-project-outputs']")).not.toBeNull();
     expect(host.textContent).toMatch(/no output selected/i);
     expect(host.querySelector("[data-region='opc-output-selected']")).toBeNull();
     const button = [...host.querySelectorAll("button")].find(
-      (candidate) => (candidate.textContent ?? "").trim() === "Intake",
+      (candidate) => (candidate.textContent ?? "").trim() === "artifact-1",
     );
     await act(async () => {
       button?.click();
     });
-    expect(host.querySelector("[data-region='opc-output-selected']")?.textContent).toContain("out-1");
+    await flush();
+    expect(host.querySelector("[data-region='opc-output-selected']")?.textContent).toContain(
+      `sha256:${"a".repeat(64)}`,
+    );
     expect(host.textContent).toMatch(/Files are not Project authority/i);
+    expect(calls.some((call) => call.pathname === "/management/project/v1/outputs")).toBe(true);
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index")).toBe(false);
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);

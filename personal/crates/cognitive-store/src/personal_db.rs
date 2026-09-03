@@ -5,6 +5,7 @@
 //! fail-closed adapter from P0-T04, and refuses concurrent migration via a
 //! runtime lock file. Cross-database atomicity is intentionally not claimed.
 
+use crate::attempt_artifacts::attempt_artifact_migration_entry;
 use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
     scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
@@ -116,7 +117,13 @@ impl PersonalDatabasePrepareReport {
 /// live X API remains not-run; not a P0 hero path), and
 /// v36 = hosted DSH artifact health/update/rollback facts plus the
 /// persist-before-dispatch Attempt / frame ledger (P13-T02; `completion_claimed`
-/// CHECK=0, `verification_status` CHECK='not-run'; no `success` terminal).
+/// CHECK=0, `verification_status` CHECK='not-run'; no `success` terminal), and
+/// v37 = Attempt artifacts in the daemon CAS (`p13_attempt_artifact`),
+/// independent verifier evidence (`p13_artifact_evidence`, append-only,
+/// verifier-identity CHECK), last-ring run acceptance (`p13_run_acceptance`,
+/// last-ring CHECK), external-send Intents (`p13_external_send`, `published`
+/// CHECK=0) plus the `run-acceptance` / `external-send` ApprovalPreview
+/// subject kinds (P13-T04; table rebuild, v30 precedent).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -158,6 +165,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         windows_host_migration_entry(),
         x_connector_migration_entry(),
         hosted_dsh_attempt_migration_entry(),
+        attempt_artifact_migration_entry(),
     ]
 }
 
