@@ -9,8 +9,8 @@ use cognitive_store::{
     HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec, HostedDshPlane, HostedDshStartSpec,
     PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
     ROUTINE_PROJECTION_ID, RosterProposal, RoutineRevisionSpec, RoutineStore, RoutineTriggerSpec,
-    SpeechArchiveSpec, SqliteAuthorityStore, VAULT_PROJECTION_ID, VaultImportSpec, VaultReadSpec,
-    VaultStore,
+    SecurityReview, SpeechArchiveSpec, SqliteAuthorityStore, VAULT_PROJECTION_ID, VaultImportSpec,
+    VaultReadSpec, VaultStore,
 };
 use serde_json::{Value, json};
 
@@ -59,6 +59,10 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/routine.ledger",
     "POST /management/project/v1/routine.checkpoint",
     "POST /management/project/v1/routine.resume",
+    "POST /management/project/v1/capability.discover",
+    "POST /management/project/v1/capability.acquire",
+    "POST /management/project/v1/capability.compat-test",
+    "POST /management/project/v1/capability.rollback",
     "GET /task/project/v1/list",
     "POST /task/project/v1/draft.apply",
     "POST /task/project/v1/draft.create",
@@ -94,6 +98,10 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /task/project/v1/routine.ledger",
     "POST /task/project/v1/routine.checkpoint",
     "POST /task/project/v1/routine.resume",
+    "POST /task/project/v1/capability.discover",
+    "POST /task/project/v1/capability.acquire",
+    "POST /task/project/v1/capability.compat-test",
+    "POST /task/project/v1/capability.rollback",
 ];
 
 #[derive(Clone, Copy, PartialEq, Eq)]
@@ -158,13 +166,15 @@ pub(crate) fn handle_with_assistant(
         "GET /management/project/v1/roster" => roster(method_path, &plane, &employees),
         "GET /management/project/v1/employee.catalog" => employee_catalog(method_path, &employees),
         "GET /management/project/v1/pending-previews" => pending_previews(method_path, &plane),
-        "GET /management/project/v1/preview-detail" => preview_detail(method_path, &plane),
+        "GET /management/project/v1/preview-detail" => {
+            preview_detail(method_path, &plane, &employees)
+        }
         "POST /management/project/v1/draft.apply" => draft_apply(body, &plane),
         "POST /management/project/v1/draft.create" => draft_create(body, &plane),
         "POST /management/project/v1/preview.request" => preview_request(body, &plane),
         "POST /management/project/v1/preview.reject" => preview_reject(body, &plane),
         "POST /management/project/v1/preview.narrow" => preview_narrow(body, &plane),
-        "POST /management/project/v1/confirm" => confirm(body, &plane),
+        "POST /management/project/v1/confirm" => confirm(body, &plane, &employees),
         "GET /management/project/v1/standing-policies" => standing_policies(&plane),
         "POST /management/project/v1/standing-policy.create" => {
             standing_policy_create(body, &plane)
@@ -209,6 +219,14 @@ pub(crate) fn handle_with_assistant(
         "GET /management/project/v1/routine.ledger" => routine_ledger(method_path, store),
         "POST /management/project/v1/routine.checkpoint" => routine_checkpoint(body, store),
         "POST /management/project/v1/routine.resume" => routine_resume(body, store),
+        "POST /management/project/v1/capability.discover" => capability_discover(body, &employees),
+        "POST /management/project/v1/capability.acquire" => {
+            capability_acquire(body, &plane, &employees)
+        }
+        "POST /management/project/v1/capability.compat-test" => {
+            capability_compat_test(body, &employees)
+        }
+        "POST /management/project/v1/capability.rollback" => capability_rollback(body, &employees),
         _ => error(
             404,
             "PROJECT_AGGREGATE_ROUTE_NOT_FOUND",
@@ -424,11 +442,31 @@ fn employee_catalog(method_path: &str, employees: &EmployeeStore) -> ResourceApi
         return error(400, "EMPLOYEE_ID_REQUIRED", "catalog requires employee_id");
     };
     match employees.tool_catalog(&project_id, &employee_id) {
-        Ok(catalog) => ok(json!({
-            "status": "ok",
-            "projection": "personal-private",
-            "catalog": catalog,
-        })),
+        Ok(catalog) => {
+            let installs = employees
+                .list_install_facts()
+                .map(|rows| {
+                    rows.into_iter()
+                        .map(|row| {
+                            json!({
+                                "install_id": row.install_id,
+                                "capability_ref": row.capability_ref,
+                                "version_pin": row.version_pin,
+                                "granted": catalog.iter().any(|item| item == &row.capability_ref),
+                            })
+                        })
+                        .collect::<Vec<_>>()
+                })
+                .unwrap_or_default();
+            ok(json!({
+                "status": "ok",
+                "projection": "personal-private",
+                "authority_note": "grant",
+                "catalog": catalog,
+                "installs": installs,
+                "install_is_not_grant": true,
+            }))
+        }
         Err(error) => store_error(error),
     }
 }
@@ -1268,7 +1306,11 @@ fn pending_json(row: &PendingPreviewRow) -> Value {
     })
 }
 
-fn preview_detail(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiResponse {
+fn preview_detail(
+    method_path: &str,
+    plane: &ProjectAggregateStore,
+    employees: &EmployeeStore,
+) -> ResourceApiResponse {
     let Some(preview_id) = query_parameter(method_path, "preview_id").filter(|v| !v.is_empty())
     else {
         return error(
@@ -1279,18 +1321,32 @@ fn preview_detail(method_path: &str, plane: &ProjectAggregateStore) -> ResourceA
     };
     match plane.preview_detail(&preview_id) {
         Ok(None) => error(404, "PREVIEW_NOT_FOUND", "preview not found"),
-        Ok(Some(detail)) => ok(json!({
-            "status": "ok",
-            "projection": "personal-private",
-            "preview_id": detail.preview_id,
-            "subject_kind": detail.subject_kind,
-            "base_state_digest": detail.base_state_digest,
-            "preview_digest": detail.preview_digest,
-            "preview_bytes_ref": detail.preview_bytes_ref,
-            "status": detail.status,
-            "receipt_ref": detail.receipt_ref,
-            "superseded_by": detail.superseded_by,
-        })),
+        Ok(Some(detail)) => {
+            let acquire = employees
+                .preview_acquire_ref(&detail.preview_id)
+                .ok()
+                .flatten();
+            let subject_ref = acquire
+                .as_ref()
+                .map(|(_, subject)| subject.as_str())
+                .unwrap_or("");
+            let grant_expansion = grant_expansion_review_json(subject_ref);
+            ok(json!({
+                "status": "ok",
+                "projection": "personal-private",
+                "preview_id": detail.preview_id,
+                "subject_kind": detail.subject_kind,
+                "subject_ref": subject_ref,
+                "base_state_digest": detail.base_state_digest,
+                "preview_digest": detail.preview_digest,
+                "preview_bytes_ref": detail.preview_bytes_ref,
+                "status": detail.status,
+                "receipt_ref": detail.receipt_ref,
+                "superseded_by": detail.superseded_by,
+                "grant_expansion": grant_expansion,
+                "chat_can_confirm": false,
+            }))
+        }
         Err(error) => store_error(error),
     }
 }
@@ -1494,7 +1550,11 @@ fn preview_narrow(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResp
     }
 }
 
-fn confirm(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
+fn confirm(
+    body: &[u8],
+    plane: &ProjectAggregateStore,
+    employees: &EmployeeStore,
+) -> ResourceApiResponse {
     let Some(document) = parse_json(body) else {
         return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
     };
@@ -1504,6 +1564,21 @@ fn confirm(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
     let Some(preview_digest) = document.get("preview_digest").and_then(Value::as_str) else {
         return error(400, "PREVIEW_DIGEST_REQUIRED", "preview_digest required");
     };
+    if let Ok(Some((kind, subject_ref))) = employees.preview_acquire_ref(preview_id) {
+        if kind == "grant-expansion" {
+            if let Some(phase) = acquire_phase(&subject_ref) {
+                if phase == "install" {
+                    return confirm_install_phase(
+                        plane,
+                        employees,
+                        preview_id,
+                        preview_digest,
+                        &subject_ref,
+                    );
+                }
+            }
+        }
+    }
     match plane.confirm_preview(
         ConfirmCaller::OwnerManagement,
         preview_id,
@@ -1515,9 +1590,322 @@ fn confirm(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
             "receipt_ref": result.receipt_ref,
             "result": result.kind,
             "new_ref": result.new_ref,
+            "granted": result.kind == "granted",
+            "install_is_not_grant": result.kind != "granted",
         })),
         Err(error) => store_error(error),
     }
+}
+
+fn capability_discover(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(review) = security_review_from_json(&document) else {
+        return error(422, "PROJECT_REJECTED", "unreviewed discovery refused");
+    };
+    match employees.admit_discovery(ConfirmCaller::OwnerManagement, &review) {
+        Ok(admitted) => ok(json!({
+            "status": "ok",
+            "discovered": true,
+            "granted": false,
+            "installed": false,
+            "install_is_not_grant": true,
+            "capability_ref": admitted.capability_ref,
+            "version_pin": admitted.version_pin,
+            "sources": admitted.sources,
+            "kind": admitted.kind,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn capability_acquire(
+    body: &[u8],
+    plane: &ProjectAggregateStore,
+    employees: &EmployeeStore,
+) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(project_id) = document.get("project_id").and_then(Value::as_str) else {
+        return error(400, "PROJECT_ID_REQUIRED", "project_id required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let Some(scope) = document.get("scope").and_then(Value::as_str) else {
+        return error(400, "SCOPE_REQUIRED", "scope required");
+    };
+    if scope.trim().is_empty() {
+        return error(422, "PROJECT_INVALID", "grant requires a scope");
+    };
+    let phase = document
+        .get("phase")
+        .and_then(Value::as_str)
+        .unwrap_or("install");
+    if phase != "install" && phase != "grant" {
+        return error(422, "PROJECT_INVALID", "phase must be install or grant");
+    }
+    let Some(review) = security_review_from_json(&document) else {
+        return error(422, "PROJECT_REJECTED", "unreviewed acquire refused");
+    };
+    if let Err(error) = employees.admit_discovery(ConfirmCaller::OwnerManagement, &review) {
+        return store_error(error);
+    }
+    if phase == "grant"
+        && !employees
+            .install_fact_exists(&review.capability_ref, Some(&review.version_pin))
+            .unwrap_or(false)
+    {
+        return error(
+            422,
+            "PROJECT_REJECTED",
+            "grant requires a reviewed InstallFact",
+        );
+    }
+    let subject = json!({
+        "project_id": project_id,
+        "employee_id": employee_id,
+        "capability_ref": review.capability_ref,
+        "scope": scope,
+        "phase": phase,
+        "version_pin": review.version_pin,
+        "kind": review.kind,
+        "review": {
+            "source": review.source,
+            "license": review.license,
+            "hidden_instruction": review.hidden_instruction,
+            "prompt_injection": review.prompt_injection,
+            "file_intent": review.file_intent,
+            "network_intent": review.network_intent,
+            "command_intent": review.command_intent,
+            "dependencies": review.dependencies,
+            "executable_code": review.executable_code,
+            "secret_access": review.secret_access,
+            "tool_permissions": review.tool_permissions,
+            "supply_chain": review.supply_chain,
+            "sources": review.sources,
+        }
+    });
+    let subject_ref = subject.to_string();
+    let preview_bytes = format!("grant-expansion\n{subject_ref}").into_bytes();
+    match plane.request_preview("grant-expansion", &subject_ref, &preview_bytes, now_ms()) {
+        Ok((preview_id, preview_digest)) => ok(json!({
+            "status": "ok",
+            "preview_id": preview_id,
+            "preview_digest": preview_digest,
+            "phase": phase,
+            "granted": false,
+            "installed": false,
+            "install_is_not_grant": true,
+            "chat_can_confirm": false,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn capability_compat_test(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(capability_ref) = document.get("capability_ref").and_then(Value::as_str) else {
+        return error(400, "CAPABILITY_REF_REQUIRED", "capability_ref required");
+    };
+    let Some(old_pin) = document.get("old_pin").and_then(Value::as_str) else {
+        return error(400, "OLD_PIN_REQUIRED", "old_pin required");
+    };
+    let Some(new_pin) = document.get("new_pin").and_then(Value::as_str) else {
+        return error(400, "NEW_PIN_REQUIRED", "new_pin required");
+    };
+    match employees.compat_test(capability_ref, old_pin, new_pin) {
+        Ok(compatibility) => ok(json!({
+            "status": "ok",
+            "compatibility": compatibility,
+            "granted": false,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn capability_rollback(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(capability_ref) = document.get("capability_ref").and_then(Value::as_str) else {
+        return error(400, "CAPABILITY_REF_REQUIRED", "capability_ref required");
+    };
+    let Some(version_pin) = document.get("version_pin").and_then(Value::as_str) else {
+        return error(400, "VERSION_PIN_REQUIRED", "version_pin required");
+    };
+    match employees.rollback_install(
+        ConfirmCaller::OwnerManagement,
+        capability_ref,
+        version_pin,
+        now_ms(),
+    ) {
+        Ok(marker_id) => ok(json!({
+            "status": "ok",
+            "rollback_id": marker_id,
+            "granted": false,
+            "install_is_not_grant": true,
+        })),
+        Err(error) => store_error(error),
+    }
+}
+
+fn confirm_install_phase(
+    plane: &ProjectAggregateStore,
+    employees: &EmployeeStore,
+    preview_id: &str,
+    preview_digest: &str,
+    subject_ref: &str,
+) -> ResourceApiResponse {
+    let Some(review) = security_review_from_subject_ref(subject_ref) else {
+        return error(422, "PROJECT_REJECTED", "unreviewed install refused");
+    };
+    match employees.record_reviewed_install_fact(ConfirmCaller::OwnerManagement, &review, now_ms())
+    {
+        Ok(install_id) => match plane.reject_preview(
+            ConfirmCaller::OwnerManagement,
+            preview_id,
+            preview_digest,
+            now_ms(),
+        ) {
+            Ok(receipt) => ok(json!({
+                "status": "ok",
+                "result": "installed",
+                "new_ref": install_id,
+                "receipt_ref": receipt,
+                "granted": false,
+                "install_is_not_grant": true,
+                "chat_can_confirm": false,
+            })),
+            Err(error) => store_error(error),
+        },
+        Err(error) => store_error(error),
+    }
+}
+
+fn acquire_phase(subject_ref: &str) -> Option<String> {
+    serde_json::from_str::<Value>(subject_ref)
+        .ok()
+        .and_then(|value| {
+            value
+                .get("phase")
+                .and_then(Value::as_str)
+                .map(str::to_owned)
+        })
+}
+
+fn grant_expansion_review_json(subject_ref: &str) -> Value {
+    let Ok(value) = serde_json::from_str::<Value>(subject_ref) else {
+        return Value::Null;
+    };
+    json!({
+        "phase": value.get("phase").and_then(Value::as_str).unwrap_or(""),
+        "capability_ref": value.get("capability_ref").and_then(Value::as_str).unwrap_or(""),
+        "scope": value.get("scope").and_then(Value::as_str).unwrap_or(""),
+        "version_pin": value.get("version_pin").and_then(Value::as_str).unwrap_or(""),
+        "kind": value.get("kind").and_then(Value::as_str).unwrap_or(""),
+        "review": value.get("review").cloned().unwrap_or(Value::Null),
+        "install_is_not_grant": true,
+        "chat_can_confirm": false,
+    })
+}
+
+fn security_review_from_subject_ref(subject_ref: &str) -> Option<SecurityReview> {
+    let value = serde_json::from_str::<Value>(subject_ref).ok()?;
+    security_review_from_json(&value)
+}
+
+fn security_review_from_json(document: &Value) -> Option<SecurityReview> {
+    let review = document.get("review").unwrap_or(document);
+    let capability_ref = document
+        .get("capability_ref")
+        .or_else(|| review.get("capability_ref"))
+        .and_then(Value::as_str)?;
+    let version_pin = document
+        .get("version_pin")
+        .or_else(|| review.get("version_pin"))
+        .and_then(Value::as_str)?;
+    let kind = document
+        .get("kind")
+        .or_else(|| review.get("kind"))
+        .and_then(Value::as_str)?;
+    let sources = review
+        .get("sources")
+        .or_else(|| document.get("sources"))
+        .and_then(Value::as_array)
+        .map(|items| {
+            items
+                .iter()
+                .filter_map(Value::as_str)
+                .map(str::to_owned)
+                .collect::<Vec<_>>()
+        })
+        .unwrap_or_default();
+    Some(SecurityReview {
+        capability_ref: capability_ref.to_owned(),
+        kind: kind.to_owned(),
+        version_pin: version_pin.to_owned(),
+        source: review
+            .get("source")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        license: review
+            .get("license")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        hidden_instruction: review
+            .get("hidden_instruction")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        prompt_injection: review
+            .get("prompt_injection")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        file_intent: review
+            .get("file_intent")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        network_intent: review
+            .get("network_intent")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        command_intent: review
+            .get("command_intent")
+            .and_then(Value::as_str)
+            .unwrap_or("")
+            .to_owned(),
+        dependencies: review
+            .get("dependencies")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
+        executable_code: review
+            .get("executable_code")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
+        secret_access: review
+            .get("secret_access")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
+        tool_permissions: review
+            .get("tool_permissions")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
+        supply_chain: review
+            .get("supply_chain")
+            .and_then(Value::as_str)
+            .map(str::to_owned),
+        sources,
+    })
 }
 
 pub(crate) fn parse_json(body: &[u8]) -> Option<Value> {
@@ -1607,6 +1995,10 @@ mod tests {
             "POST /task/project/v1/standing-policy.revoke",
             "GET /task/project/v1/standing-policies",
             "POST /task/project/v1/draft.create",
+            "POST /task/project/v1/capability.discover",
+            "POST /task/project/v1/capability.acquire",
+            "POST /task/project/v1/capability.compat-test",
+            "POST /task/project/v1/capability.rollback",
         ] {
             let response = handle(
                 path,
@@ -2029,6 +2421,172 @@ mod tests {
             &store,
         );
         assert!(catalog.body.contains("mcp:search"), "{}", catalog.body);
+    }
+
+    #[test]
+    fn http_capability_acquire_install_is_not_grant_and_refusals() {
+        use cognitive_store::{EmployeeStore, RosterProposal, StageSpec};
+        let (_tmp, store) = authority();
+        let plane = ProjectAggregateStore::from_authority_store(&store);
+        let employees = EmployeeStore::from_authority_store(&store);
+        let (draft_id, _) = plane.create_draft(b"payload", 1).unwrap();
+        plane.put_draft_charter(&draft_id, b"charter", 2).unwrap();
+        let (preview_id, digest) = plane
+            .request_preview("activation", &draft_id, b"bytes", 3)
+            .unwrap();
+        let project_id = plane
+            .confirm_preview(ConfirmCaller::OwnerManagement, &preview_id, &digest, 4)
+            .unwrap()
+            .new_ref;
+        let plan_id = plane
+            .apply_plan_revision(
+                &project_id,
+                &project_id,
+                &[StageSpec {
+                    stage_id: "s1".into(),
+                    title: "Manage".into(),
+                    objective: "coord".into(),
+                    output_contract_digest: ProjectAggregateStore::digest_hex(b"out"),
+                    acceptance_spec_ref: None,
+                    cadence_json: None,
+                    responsible_slot: "manager".into(),
+                    blocking_gap: None,
+                }],
+                5,
+            )
+            .unwrap();
+        let ids = employees
+            .register_roster(
+                ConfirmCaller::OwnerManagement,
+                &project_id,
+                &plan_id,
+                &[RosterProposal {
+                    slot: "manager".into(),
+                    specialization: "project-manager".into(),
+                    prompt: "coordinate".into(),
+                    tools_declared: vec![],
+                }],
+                6,
+            )
+            .unwrap();
+        employees
+            .request_seating(ConfirmCaller::OwnerManagement, &ids[0], 7)
+            .unwrap();
+        employees
+            .confirm_seating(
+                ConfirmCaller::OwnerManagement,
+                &ids[0],
+                Some("flash"),
+                true,
+                8,
+            )
+            .unwrap();
+        let review = json!({
+            "source": "https://example.invalid/mcp/search",
+            "license": "MIT",
+            "hidden_instruction": "none",
+            "prompt_injection": "none",
+            "file_intent": "none",
+            "network_intent": "declared",
+            "command_intent": "none",
+            "dependencies": "none",
+            "executable_code": "none",
+            "secret_access": "none",
+            "tool_permissions": "search",
+            "supply_chain": "pinned-origin",
+            "sources": ["https://example.invalid/mcp/search"]
+        });
+        let unreviewed = handle(
+            "POST /management/project/v1/capability.acquire",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[0],
+                "capability_ref": "mcp:search",
+                "version_pin": "1.0.0",
+                "kind": "mcp",
+                "scope": "project-a",
+                "phase": "install",
+                "review": { "source": "https://example.invalid/mcp/search" }
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(unreviewed.status, 422, "{}", unreviewed.body);
+        let acquired = handle(
+            "POST /management/project/v1/capability.acquire",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[0],
+                "capability_ref": "mcp:search",
+                "version_pin": "1.0.0",
+                "kind": "mcp",
+                "scope": "project-a",
+                "phase": "install",
+                "review": review
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(acquired.status, 200, "{}", acquired.body);
+        assert!(acquired.body.contains("install_is_not_grant"));
+        assert!(acquired.body.contains("\"granted\":false"));
+        let acquired_json = serde_json::from_str::<Value>(&acquired.body).unwrap();
+        let install_preview = acquired_json
+            .get("preview_id")
+            .and_then(Value::as_str)
+            .unwrap();
+        let install_digest = acquired_json
+            .get("preview_digest")
+            .and_then(Value::as_str)
+            .unwrap();
+        let confirmed = handle(
+            "POST /management/project/v1/confirm",
+            json!({"preview_id": install_preview, "preview_digest": install_digest})
+                .to_string()
+                .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        assert!(confirmed.body.contains("installed"));
+        assert!(confirmed.body.contains("\"granted\":false"));
+        let catalog = handle(
+            &format!(
+                "GET /management/project/v1/employee.catalog?project_id={project_id}&employee_id={}",
+                ids[0]
+            ),
+            b"",
+            &store,
+        );
+        assert!(
+            catalog.body.contains("install_is_not_grant"),
+            "{}",
+            catalog.body
+        );
+        assert!(catalog.body.contains("1.0.0"), "{}", catalog.body);
+        assert!(
+            !catalog.body.contains("\"catalog\":[\"mcp:search\"]"),
+            "install must not authorize: {}",
+            catalog.body
+        );
+        let grant_first = handle(
+            "POST /management/project/v1/capability.acquire",
+            json!({
+                "project_id": project_id,
+                "employee_id": ids[0],
+                "capability_ref": "mcp:other",
+                "version_pin": "1.0.0",
+                "kind": "mcp",
+                "scope": "project-a",
+                "phase": "grant",
+                "review": review
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(grant_first.status, 422, "{}", grant_first.body);
     }
 
     #[test]

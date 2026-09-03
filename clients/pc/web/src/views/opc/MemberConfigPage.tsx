@@ -1,7 +1,17 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { readJson } from "../../api";
 import { PageHeader } from "../../components/PageHeader";
 import { EmptyState } from "../../components/states";
+import {
+  CAPABILITY_ACQUIRE_PATH,
+  EMPTY_REVIEW,
+  acquireBody,
+  reviewIsComplete,
+  type AcquirePhase,
+  type SecurityReviewDraft,
+} from "../../data/projections/capabilityAcquire";
+import { hitlCanvasPath } from "../../data/projections/hitl";
 import {
   PROJECT_AXIS_PATH,
   PROJECT_CATALOG_PATH,
@@ -175,50 +185,66 @@ export function MemberConfigPage() {
             </>
           ) : null}
           {tab === "skills" ? (
-            <DaemonReadPanel
-              projection={catalog}
-              surface="Skills"
-              emptyTitle="Skills: no grant"
-              emptyBody={`GET ${PROJECT_CATALOG_PATH} is a grant catalog. Recipe mentions are not grants.`}
-              region="opc-member-skills"
-            >
-              {skillRows.length === 0 ? (
-                <EmptyState title="Skills: no grant">
-                  GET {PROJECT_CATALOG_PATH} listed no skill grant. A recipe mention is not a grant.
-                </EmptyState>
-              ) : (
-                <ul>
-                  {skillRows.map((row) => (
-                    <li key={row.capabilityRef}>
-                      <code className="cp-mono">{row.capabilityRef}</code>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </DaemonReadPanel>
+            <>
+              <DaemonReadPanel
+                projection={catalog}
+                surface="Skills"
+                emptyTitle="Skills: no grant"
+                emptyBody={`GET ${PROJECT_CATALOG_PATH} is a grant catalog. Recipe mentions are not grants.`}
+                region="opc-member-skills"
+              >
+                {skillRows.length === 0 ? (
+                  <EmptyState title="Skills: no grant">
+                    GET {PROJECT_CATALOG_PATH} listed no skill grant. A recipe mention is not a grant.
+                  </EmptyState>
+                ) : (
+                  <ul>
+                    {skillRows.map((row) => (
+                      <li key={row.capabilityRef}>
+                        <code className="cp-mono">{row.capabilityRef}</code>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </DaemonReadPanel>
+              <CapabilityAcquirePanel
+                projectId={projectId}
+                employeeId={memberId}
+                kind="skill"
+                defaultRef="skill:research"
+              />
+            </>
           ) : null}
           {tab === "tools" ? (
-            <DaemonReadPanel
-              projection={catalog}
-              surface="Tools"
-              emptyTitle="Tools: no grant"
-              emptyBody={`GET ${PROJECT_CATALOG_PATH} is a grant catalog. Recipe mentions are not grants.`}
-              region="opc-member-tools"
-            >
-              {toolRows.length === 0 ? (
-                <EmptyState title="Tools: no grant">
-                  GET {PROJECT_CATALOG_PATH} listed no tool grant. A recipe mention is not a grant.
-                </EmptyState>
-              ) : (
-                <ul>
-                  {toolRows.map((row) => (
-                    <li key={row.capabilityRef}>
-                      <code className="cp-mono">{row.capabilityRef}</code>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </DaemonReadPanel>
+            <>
+              <DaemonReadPanel
+                projection={catalog}
+                surface="Tools"
+                emptyTitle="Tools: no grant"
+                emptyBody={`GET ${PROJECT_CATALOG_PATH} is a grant catalog. Recipe mentions are not grants.`}
+                region="opc-member-tools"
+              >
+                {toolRows.length === 0 ? (
+                  <EmptyState title="Tools: no grant">
+                    GET {PROJECT_CATALOG_PATH} listed no tool grant. A recipe mention is not a grant.
+                  </EmptyState>
+                ) : (
+                  <ul>
+                    {toolRows.map((row) => (
+                      <li key={row.capabilityRef}>
+                        <code className="cp-mono">{row.capabilityRef}</code>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </DaemonReadPanel>
+              <CapabilityAcquirePanel
+                projectId={projectId}
+                employeeId={memberId}
+                kind="mcp"
+                defaultRef="mcp:search"
+              />
+            </>
           ) : null}
           {tab === "prompt" ? (
             <EmptyState title="Brief: no rewrite">
@@ -232,24 +258,166 @@ export function MemberConfigPage() {
             </EmptyState>
           ) : null}
           {tab === "perms" ? (
-            <DaemonReadPanel
-              projection={catalog}
-              surface="Perms"
-              emptyTitle="Perms: no grant"
-              emptyBody={`GET ${PROJECT_CATALOG_PATH} empty. A recipe mention is not a grant.`}
-              region="opc-member-perms"
-            >
-              <ul>
-                {grants.map((row) => (
-                  <li key={row.capabilityRef}>
-                    <code className="cp-mono">{row.capabilityRef}</code>
-                  </li>
-                ))}
-              </ul>
-            </DaemonReadPanel>
+            <>
+              <DaemonReadPanel
+                projection={catalog}
+                surface="Perms"
+                emptyTitle="Perms: no grant"
+                emptyBody={`GET ${PROJECT_CATALOG_PATH} empty. A recipe mention is not a grant.`}
+                region="opc-member-perms"
+              >
+                <ul>
+                  {grants.map((row) => (
+                    <li key={row.capabilityRef}>
+                      <code className="cp-mono">{row.capabilityRef}</code>
+                    </li>
+                  ))}
+                </ul>
+              </DaemonReadPanel>
+              <CapabilityAcquirePanel
+                projectId={projectId}
+                employeeId={memberId}
+                kind="tool"
+                defaultRef="tool:workspace-read"
+              />
+            </>
           ) : null}
         </>
       )}
     </section>
+  );
+}
+
+function CapabilityAcquirePanel({
+  projectId,
+  employeeId,
+  kind,
+  defaultRef,
+}: {
+  projectId: string;
+  employeeId: string;
+  kind: "skill" | "mcp" | "tool";
+  defaultRef: string;
+}) {
+  const [capabilityRef, setCapabilityRef] = useState(defaultRef);
+  const [versionPin, setVersionPin] = useState("1.0.0");
+  const [scope, setScope] = useState("project");
+  const [phase, setPhase] = useState<AcquirePhase>("install");
+  const [draft, setDraft] = useState<SecurityReviewDraft>(EMPTY_REVIEW);
+  const [error, setError] = useState<string | undefined>();
+  const [previewId, setPreviewId] = useState<string | undefined>();
+  const ready = reviewIsComplete(kind, draft) && capabilityRef.trim().length > 0 && scope.trim().length > 0;
+
+  async function requestPreview() {
+    setError(undefined);
+    setPreviewId(undefined);
+    if (!ready) {
+      setError("Structured security review is incomplete. Unreviewed acquire is refused.");
+      return;
+    }
+    const written = await readJson(CAPABILITY_ACQUIRE_PATH, "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(
+        acquireBody({
+          projectId,
+          employeeId,
+          capabilityRef: capabilityRef.trim(),
+          versionPin: versionPin.trim(),
+          kind,
+          scope: scope.trim(),
+          phase,
+          draft,
+        }),
+      ),
+    });
+    if (!written.ok) {
+      const record = written.body && typeof written.body === "object"
+        ? (written.body as Record<string, unknown>)
+        : {};
+      const message = typeof record.message === "string" ? record.message : `HTTP ${written.status}`;
+      setError(message);
+      return;
+    }
+    const record = written.body && typeof written.body === "object"
+      ? (written.body as Record<string, unknown>)
+      : {};
+    if (typeof record.preview_id === "string") {
+      setPreviewId(record.preview_id);
+    }
+  }
+
+  return (
+    <div className="cp-stack" data-region="opc-capability-acquire">
+      <p className="cp-quiet">
+        Assistant-led acquire: structured review, then exact Owner canvas preview.
+        Install is not a grant. Chat cannot Approve. Engine store is not chrome.
+      </p>
+      <label>
+        Capability
+        <input
+          value={capabilityRef}
+          onChange={(event) => setCapabilityRef(event.target.value)}
+        />
+      </label>
+      <label>
+        Version pin
+        <input value={versionPin} onChange={(event) => setVersionPin(event.target.value)} />
+      </label>
+      <label>
+        Grant scope
+        <input value={scope} onChange={(event) => setScope(event.target.value)} />
+      </label>
+      <label>
+        Phase
+        <select
+          value={phase}
+          onChange={(event) => setPhase(event.target.value === "grant" ? "grant" : "install")}
+        >
+          <option value="install">install (InstallFact only)</option>
+          <option value="grant">grant (requires InstallFact)</option>
+        </select>
+      </label>
+      {(
+        [
+          ["source", "Source"],
+          ["license", "License"],
+          ["sources", "Sources"],
+          ["hiddenInstruction", "Hidden instruction"],
+          ["promptInjection", "Prompt injection"],
+          ["fileIntent", "File intent"],
+          ["networkIntent", "Network intent"],
+          ["commandIntent", "Command intent"],
+          ["dependencies", "Dependencies"],
+          ["executableCode", "Executable code"],
+          ["secretAccess", "Secret access"],
+          ["toolPermissions", "Tool permissions"],
+          ["supplyChain", "Supply chain"],
+        ] as const
+      ).map(([key, label]) => (
+        <label key={key}>
+          {label}
+          <input
+            value={draft[key]}
+            onChange={(event) => setDraft({ ...draft, [key]: event.target.value })}
+          />
+        </label>
+      ))}
+      <button type="button" className="cp-button" onClick={() => void requestPreview()}>
+        Request acquire preview
+      </button>
+      {error ? (
+        <p data-acquire-error="true" className="cp-error">
+          {error}
+        </p>
+      ) : null}
+      {previewId ? (
+        <p data-region="opc-acquire-previewed">
+          Preview <code className="cp-mono">{previewId}</code> minted. Install is
+          not a grant.{" "}
+          <Link to={hitlCanvasPath(previewId, projectId)}>Review on canvas</Link>
+        </p>
+      ) : null}
+    </div>
   );
 }

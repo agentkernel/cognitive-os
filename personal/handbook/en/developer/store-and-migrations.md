@@ -13,7 +13,7 @@ sources:
   - path: personal/crates/cognitive-store/src/project_aggregate.rs
     symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "APPROVAL_PREVIEW_NARROW_SCHEMA_V29", "STANDING_APPROVAL_POLICY_SCHEMA_V30", "ProjectAggregateStore"]
   - path: personal/crates/cognitive-store/src/employee.rs
-    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec"]
+    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec", "SecurityReview", "InstallFactRow"]
   - path: personal/crates/cognitive-store/src/conversation.rs
     symbols: ["CONVERSATION_ARCHIVE_SCHEMA_V28", "ConversationStore", "CONVERSATION_ARCHIVE_PROJECTION_ID", "ArchiveReadSpec", "ArchiveAppendSpec"]
   - path: personal/crates/cognitive-store/src/assistant.rs
@@ -48,6 +48,7 @@ tests:
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
+  - personal/crates/cognitive-store/tests/p13_t10_capability_acquisition.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
   - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
@@ -61,7 +62,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:8b099beda67ecba2213babb73f0b7808739b82f2e2b42f026184a1e7c2f0d4b5"
+fingerprint: "sha256:040e27d9312680d73e547cbaf2eafc9c620a911f79f8b5a62e518c85829b8ebb"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -107,6 +108,8 @@ P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candid
 P13-T03 real inference also adds **no new migration**. `AssistantPlane::run_turn` now requires a daemon-observed `AssistantInferenceRecord` (protocol `cognitiveos.personal.assistant-inference/0.1`, bound `model_id`, `provider_round_trips ≥ 1`, bounded reply, the inferred object chain, and the daemon-derived citable URIs); the registered v26 candidate ops carry the inferred chain, the owner payload labelled as owner input, the reply digest, and the inject-order reference — never the echoed payload as the candidate. `validate_inferred_object_chain` is the single object-chain validator (closed kinds in chain order, one object per kind, every field `{value, provenance}` with typed provenance, `sources[]` uris only from fetched or owner-supplied URIs, closed schema); runtime parsing and HTTP call into it. `admit_turn_request` refuses ambient tools before any Pi process spawns. `provider_unbound_guidance()` is the fixed Settings pointer (`chat_input: false`, `silent_bind: false`, `candidate_registered: false`). `candidate_count` is a read-only accounting helper. The registration secret-shape guard treats `sk-` as a key prefix only at a token start (`risk-based`, `task-contract`, `desk-side` are prose); `bearer `, `api_key`, `x-api-key`, `ssv1:` and a token-start `sk-…` stay refused.
 
 P11-T09 HITL canvas reuses v26 `request_preview` / `confirm_preview` / `p11_approval_preview` plus v29 `superseded_by` and v30 grant-expansion / StandingApprovalPolicy. Management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*` are the durable caller; T05 announce+deep-link only; T06 `draft.apply` is not authority-approve. Host UI E2E is `not-run`. Settings chrome is T13. No second scheduler, no chat Approve, no Inbox L1.
+
+P13-T10 Skill/MCP acquire adds **no new migration**. It reuses v27 `p11_install_fact` / `p11_grant` and v30 `grant-expansion` previews. `SecurityReview` + `record_reviewed_install_fact` require a passed structured review before an InstallFact; the catalog stays empty until Owner confirms a grant-phase preview. Install-phase confirm writes only the InstallFact and consumes the preview (`granted: false`). Unreviewed install, hidden-instruction / prompt-injection, ambient/marketplace sources, chat/task callers, and ambient grant are refused. `compat_test` / `review_update` / `rollback_install` never silent-grant. Supply-chain host E2E is `not-run` until P13-T13. No second grant table, no engine store.
 
 P11-T07 hidden hosted DSH adds v31 `p11_hosted_dsh_child`. The Attempt-runner `start` caller is management HTTP `dsh.hosted.start`; task-channel aliases are 403. Digest/protocol mismatch, env/argv secrets, Pi-as-member-engine, Installed Agent chrome, and unknown child output (`success`/`ok`/`agent_end`) fail closed. Daemon Provider proxy `POST /provider/v1/dsh/chat/completions` remains the only secret-bearing path. Linux Path B is not Windows hosted qualification.
 

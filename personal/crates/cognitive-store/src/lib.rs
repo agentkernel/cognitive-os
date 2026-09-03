@@ -72,9 +72,9 @@ pub use conversation::{
     conversation_migration_entry,
 };
 pub use employee::{
-    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, MEMBER_BLUEPRINT_ID,
-    PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress, SpeechDecision,
-    employee_migration_entry,
+    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, InstallFactRow,
+    MEMBER_BLUEPRINT_ID, PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress,
+    SecurityReview, SpeechDecision, employee_migration_entry,
 };
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
 pub use hosted_dsh::{
