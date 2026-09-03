@@ -63,6 +63,13 @@
       "note": "DeepSeek Harness candidate-only AKP bridge and bounded transport"
     },
     {
+      "id": "pi-official-package-pin",
+      "sources": ["personal/crates/cognitive-runtime/src/installer.rs"],
+      "docs": ["ref.compatibility", "dev.agent-pi-lifecycle"],
+      "symbols": ["OFFICIAL_PI_PACKAGE", "OFFICIAL_PI_VERSION"],
+      "note": "single source of truth for the official Pi package name and version (P0-T09); routed pages must pin these symbols in their frontmatter sources (HB016) so a constant change is red until both pages are re-reviewed"
+    },
+    {
       "id": "agent-lifecycle-installer",
       "sources": ["personal/crates/cognitive-runtime/src/installer.rs", "personal/crates/cognitive-runtime/src/agent_registration.rs", "personal/crates/cognitive-runtime/src/linux_bundle*.rs", "personal/crates/cognitive-runtime/src/bin/linux_bundle*.rs", "personal/deploy/**"],
       "docs": ["user.install-first-conversation", "user.getting-started", "user.rc-and-support", "dev.installer-service", "dev.agent-pi-lifecycle"],

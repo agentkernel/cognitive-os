@@ -6,11 +6,18 @@
  *  2. every schema compiles under JSON Schema draft 2020-12 with all
  *     relative $refs resolvable;
  *  3. registry <-> schema <-> vector bidirectional orphan freedom;
- *  4. relative markdown links in living docs resolve;
+ *  4. relative markdown links in living docs resolve to tracked paths;
  *  5. traceability matrix and findings ledger are complete and their
- *     referenced paths exist;
+ *     referenced paths are tracked;
  *  6. Personal plan/trace/Gate facts, project identity, prompt status, and
- *     active ownership leases have one consistent source of truth.
+ *     active ownership leases have one consistent source of truth;
+ *  7. the Phase 13 build-order graph in the formal plan and its copy in the
+ *     Personal 2.0.0 dev-prep index have identical edge sets.
+ *
+ * Path existence is decided by `git ls-files` (P0-T09): a committed document
+ * that links a file which exists only in the author's working tree fails here
+ * exactly as it fails on a clean CI checkout. Outside a Git checkout the
+ * checker fails closed instead of consulting the filesystem.
  *
  * Exit code 0 = green; 1 = at least one violation, each printed with file
  * and reason. History/ is never scanned (frozen archive).
@@ -21,9 +28,11 @@ import path from "node:path";
 import { Ajv2020 } from "ajv/dist/2020.js";
 import addFormats from "ajv-formats";
 import {
+  isTrackedPath,
   listMarkdownFiles,
   loadRegistries,
   loadSchemas,
+  loadTrackedPaths,
   loadVectors,
   readText,
   readYaml,
@@ -33,6 +42,19 @@ import {
 
 const failures = [];
 const fail = (file, reason) => failures.push({ file, reason });
+
+// ---------- 0: tracked path index (fail closed outside a Git checkout)
+
+const trackedPaths = loadTrackedPaths();
+if (!trackedPaths) {
+  fail(
+    ".",
+    "TRACKED_PATHS_UNAVAILABLE: `git ls-files` failed, so tracked-only link/path checks cannot run; run the checker inside a Git checkout",
+  );
+}
+/** Repo-relative path is a tracked file or a directory holding tracked files. */
+const pathIsTracked = (rel) => Boolean(trackedPaths && isTrackedPath(trackedPaths, rel));
+const livingMarkdownFiles = trackedPaths ? listMarkdownFiles(trackedPaths) : listMarkdownFiles();
 
 function parseMarkdownTableRow(line) {
   if (!line.startsWith("|") || !line.endsWith("|")) {
@@ -175,8 +197,8 @@ if (registries) {
     }
     if (typeof req.owner_spec === "string") {
       const target = req.owner_spec.split("#")[0];
-      if (!existsSync(repoPath(...target.split("/")))) {
-        fail("core/specs/registry/requirements.yaml", `${req.id} owner_spec path missing: ${target}`);
+      if (!pathIsTracked(target)) {
+        fail("core/specs/registry/requirements.yaml", `${req.id} owner_spec path missing or untracked: ${target}`);
       }
       if (target.startsWith("History/")) {
         fail("core/specs/registry/requirements.yaml", `${req.id} owner_spec points into frozen History/`);
@@ -253,7 +275,7 @@ if (registries) {
     }
   }
   const mentionSources = [
-    ...listMarkdownFiles().filter((p) => {
+    ...livingMarkdownFiles.filter((p) => {
       const rel = toRepoRelative(p);
       return (
         rel.startsWith("core/specs/") ||
@@ -325,7 +347,7 @@ if (registries) {
   }
 }
 
-// ---------- 4: relative markdown links resolve (living docs; frozen architecture reviews excluded)
+// ---------- 4: relative markdown links resolve to tracked paths (living docs; frozen architecture reviews excluded)
 
 const FROZEN_DOCS = new Set([
   "core/docs/architecture/CognitiveOS-Architecture.md",
@@ -334,7 +356,7 @@ const FROZEN_DOCS = new Set([
   "core/docs/architecture/RFC-0001-cognitiveos-governance-context-access.md",
 ]);
 const linkPattern = /\[[^\]]*\]\(([^)\s]+)(?:\s+"[^"]*")?\)/g;
-for (const mdAbs of listMarkdownFiles()) {
+for (const mdAbs of livingMarkdownFiles) {
   const rel = toRepoRelative(mdAbs);
   if (FROZEN_DOCS.has(rel)) {
     continue;
@@ -350,10 +372,12 @@ for (const mdAbs of listMarkdownFiles()) {
       continue;
     }
     const resolved = path.resolve(path.dirname(mdAbs), target);
-    if (!existsSync(resolved)) {
-      fail(rel, `broken relative link: ${raw}`);
-    } else if (toRepoRelative(resolved).startsWith("History")) {
+    const resolvedRel = toRepoRelative(resolved);
+    if (resolvedRel.startsWith("History")) {
       fail(rel, `link into frozen History/: ${raw}`);
+    } else if (!pathIsTracked(resolvedRel)) {
+      const untrackedButPresent = existsSync(resolved) ? " (exists locally but is not tracked by Git)" : "";
+      fail(rel, `broken relative link: ${raw}${untrackedButPresent}`);
     }
   }
 }
@@ -374,7 +398,7 @@ if (registries) {
   // `REQ-007` tail misread as a requirement reference; a real requirement
   // id is never preceded by another id segment.
   const reqPattern = /(?<![A-Z0-9-])REQ-[A-Z0-9]+(?:-[A-Z0-9]+)*/g;
-  for (const mdAbs of listMarkdownFiles()) {
+  for (const mdAbs of livingMarkdownFiles) {
     const rel = toRepoRelative(mdAbs);
     if (FROZEN_DOCS.has(rel)) {
       continue;
@@ -419,8 +443,8 @@ if (!existsSync(matrixPath)) {
       for (const listField of ["vectors", "impl", "impl_tests", "evidence", "docs"]) {
         for (const p of entry[listField] ?? []) {
           const target = String(p).split("#")[0];
-          if (!existsSync(repoPath(...target.split("/")))) {
-            fail("docs/traceability/matrix.yaml", `${entry.id}.${listField} path missing: ${target}`);
+          if (!pathIsTracked(target)) {
+            fail("docs/traceability/matrix.yaml", `${entry.id}.${listField} path missing or untracked: ${target}`);
           }
         }
       }
@@ -622,10 +646,10 @@ if (!existsSync(personalTracePath)) {
     }
 
     for (const [sourceName, sourcePath] of Object.entries(personalTrace?.sources ?? {})) {
-      if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
+      if (typeof sourcePath !== "string" || !pathIsTracked(sourcePath)) {
         fail(
           "docs/plan/personal-trace.yaml",
-          `sources.${sourceName} must reference an existing repository path`,
+          `sources.${sourceName} must reference an existing tracked repository path`,
         );
       }
     }
@@ -721,18 +745,18 @@ if (!existsSync(projectScopePath)) {
       "architecture_design",
     ]) {
       const sourcePath = projectScope?.active_project?.[sourceField];
-      if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
+      if (typeof sourcePath !== "string" || !pathIsTracked(sourcePath)) {
         fail(
           "docs/governance/project-scope.yaml",
-          `active_project.${sourceField} must reference an existing repository path`,
+          `active_project.${sourceField} must reference an existing tracked repository path`,
         );
       }
     }
     for (const [sourceName, sourcePath] of Object.entries(projectScope?.canonical_sources ?? {})) {
-      if (typeof sourcePath !== "string" || !existsSync(repoPath(...sourcePath.split("/")))) {
+      if (typeof sourcePath !== "string" || !pathIsTracked(sourcePath)) {
         fail(
           "docs/governance/project-scope.yaml",
-          `canonical_sources.${sourceName} must reference an existing repository path`,
+          `canonical_sources.${sourceName} must reference an existing tracked repository path`,
         );
       }
     }
@@ -1538,6 +1562,101 @@ if (existsSync(progressPath) && existsSync(lanesPath)) {
   }
 }
 
+// ---------- 7: Phase 13 build-order graph — formal plan and dev-prep index edge sets are equal
+
+/**
+ * Extract the first ```mermaid fence inside the section that starts at
+ * `headingPattern` and ends at the next heading of the same or higher level.
+ */
+function extractSectionMermaid(text, headingPattern) {
+  const lines = text.split(/\r?\n/);
+  const headingIndex = lines.findIndex((line) => headingPattern.test(line));
+  if (headingIndex === -1) {
+    return undefined;
+  }
+  const headingLevel = lines[headingIndex].match(/^(#+)\s/)?.[1].length ?? 0;
+  let sectionEnd = lines.length;
+  for (let index = headingIndex + 1; index < lines.length; index += 1) {
+    const level = lines[index].match(/^(#+)\s/)?.[1].length;
+    if (level !== undefined && level <= headingLevel) {
+      sectionEnd = index;
+      break;
+    }
+  }
+  const section = lines.slice(headingIndex + 1, sectionEnd).join("\n");
+  return section.match(/```mermaid\s*\n([\s\S]*?)\n```/)?.[1];
+}
+
+/**
+ * Parse `A --> B` / `A -.-> B` edges from a mermaid flowchart body. Node ids
+ * are normalized by stripping a leading phase prefix (`P13T12a` → `T12a`,
+ * `P11T15` → `T15`) so the two graphs can use different id spellings while
+ * still being compared edge-for-edge, including solid/dashed kind.
+ */
+function parseBuildOrderEdges(mermaidBody) {
+  const normalizeNode = (id) => id.replace(/^P\d+/, "");
+  const edges = new Set();
+  for (const rawLine of mermaidBody.split(/\r?\n/)) {
+    const edgeMatch = rawLine.trim().match(/^([A-Za-z0-9_]+)\s*(-->|-\.->)\s*([A-Za-z0-9_]+)$/);
+    if (edgeMatch) {
+      edges.add(`${normalizeNode(edgeMatch[1])} ${edgeMatch[2]} ${normalizeNode(edgeMatch[3])}`);
+    }
+  }
+  return edges;
+}
+
+const devPrepIndexPath = repoPath("personal", "docs", "architecture", "personal-2.0.0-dev-prep-index.md");
+if (personalPlanText && existsSync(devPrepIndexPath)) {
+  const formalBuildOrder = extractSectionMermaid(
+    personalPlanText,
+    /^### Phase 13 - Personal 2\.0\.0 completion/,
+  );
+  const indexBuildOrder = extractSectionMermaid(readText(devPrepIndexPath), /^### Phase 13 build order/);
+  if (!formalBuildOrder) {
+    fail(
+      "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+      "BUILD_ORDER_GRAPH_MISSING: Phase 13 section has no mermaid build-order graph",
+    );
+  }
+  if (!indexBuildOrder) {
+    fail(
+      "personal/docs/architecture/personal-2.0.0-dev-prep-index.md",
+      "BUILD_ORDER_GRAPH_MISSING: no「Phase 13 build order」mermaid graph",
+    );
+  }
+  if (formalBuildOrder && indexBuildOrder) {
+    const formalEdges = parseBuildOrderEdges(formalBuildOrder);
+    const indexEdges = parseBuildOrderEdges(indexBuildOrder);
+    if (formalEdges.size === 0) {
+      fail(
+        "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md",
+        "BUILD_ORDER_GRAPH_EMPTY: Phase 13 build-order graph parsed to zero edges",
+      );
+    }
+    for (const edge of formalEdges) {
+      if (!indexEdges.has(edge)) {
+        fail(
+          "personal/docs/architecture/personal-2.0.0-dev-prep-index.md",
+          `BUILD_ORDER_EDGE_MISSING: formal plan edge absent from the dev-prep index graph: ${edge}`,
+        );
+      }
+    }
+    for (const edge of indexEdges) {
+      if (!formalEdges.has(edge)) {
+        fail(
+          "personal/docs/architecture/personal-2.0.0-dev-prep-index.md",
+          `BUILD_ORDER_EDGE_EXTRA: dev-prep index edge absent from the formal plan graph (the formal plan is authoritative): ${edge}`,
+        );
+      }
+    }
+  }
+} else if (personalPlanText) {
+  fail(
+    "personal/docs/architecture/personal-2.0.0-dev-prep-index.md",
+    "BUILD_ORDER_GRAPH_MISSING: dev-prep index is missing",
+  );
+}
+
 // ---------- report
 
 const schemaCount = schemas.length;
@@ -1554,7 +1673,7 @@ if (failures.length > 0) {
 }
 console.log(
   `check-consistency: OK (${reqCount} requirements, ${errCount} error codes, ` +
-    `${schemaCount} schemas, ${vectorCount} vectors, links, traceability, Personal plan/Gates, ` +
+    `${schemaCount} schemas, ${vectorCount} vectors, tracked-only links, traceability, Personal plan/Gates, ` +
     `design sources, command/environment routing, checkpoint delivery, task-atomic delivery, ` +
-    `prompt boundary, and leases verified)`,
+    `prompt boundary, leases, and Phase 13 build-order edge set verified)`,
 );

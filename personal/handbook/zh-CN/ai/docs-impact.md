@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:840ad92cf83ca04b31e1be4a2d6a4e3cf7426b40a53f3e972ad226defe029f64"
+fingerprint: "sha256:4db769b79fc7c6acef3e2e2c2a905fdb75c4e19ed3fea8b5e355caead4f85dc5"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -74,6 +74,12 @@ source map 有意让已采纳目标无法静默变化：
   含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；
   hypothesis；不是 Gate）。
+- `pi-official-package-pin`（`P0-T09`）把
+  `personal/crates/cognitive-runtime/src/installer.rs` 路由到 `ref.compatibility`
+  与 `dev.agent-pi-lifecycle`，并声明 `symbols`（`OFFICIAL_PI_PACKAGE`、
+  `OFFICIAL_PI_VERSION`）。带 `symbols` 的规则由手册检查 HB016 强制：每个被路由的
+  手写页（每个 locale）都必须在 frontmatter 中列出该 source 并带这些 symbols，因此
+  官方 Pi 包名只有一个事实源（代码常量），改名后两页复审前一直红灯。
 
 每次命中都必须保留：**当前 Linux 1.0/当前 API**、**已采纳 Windows OPC target**、
 **Requires-backend** 与 **Requires-environment/deferred**。绝不能从 design adoption、

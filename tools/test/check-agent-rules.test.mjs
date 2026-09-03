@@ -1,13 +1,23 @@
 import assert from "node:assert/strict";
+import { execFileSync } from "node:child_process";
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { test } from "node:test";
 import { fileURLToPath } from "node:url";
 
-import { checkAgentRules, isLocalOnlyPath } from "../src/check-agent-rules.mjs";
+import {
+  PATH_EXISTENCE_FILESYSTEM_FALLBACK,
+  PATH_EXISTENCE_TRACKED,
+  checkAgentRules,
+  isLocalOnlyPath,
+} from "../src/check-agent-rules.mjs";
 
 const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+function git(root, ...args) {
+  return execFileSync("git", ["-C", root, ...args], { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
+}
 
 function write(root, rel, contents) {
   const abs = path.join(root, ...rel.split("/"));
@@ -30,6 +40,61 @@ test("agent rules on the current repository tree reference only real paths, skil
   assert.deepEqual(failures, []);
   assert.ok(checked.rules >= 4, "expected the repository rule set to be scanned");
   assert.ok(checked.pathReferences > 20, "expected path references to be scanned");
+  assert.equal(checked.pathExistence, PATH_EXISTENCE_TRACKED, "the repository run must use git ls-files");
+});
+
+test("inside a Git checkout, a rule pointing at an untracked-but-present file fails; the same reference passes only once tracked", () => {
+  withFixture(
+    (root) => {
+      git(root, "init", "-q");
+      mkdirSync(path.join(root, "docs"));
+      write(root, "docs/tracked.md", "# tracked\n");
+      write(root, "docs/untracked.md", "# exists only in this working tree\n");
+      write(
+        root,
+        "AGENTS.md",
+        "# Entry\n\nRead `docs/tracked.md` and `docs/untracked.md`; see [draft](docs/untracked.md). Local: `.cursor/skills/`.\n",
+      );
+      write(root, ".cursor/rules/00-index.mdc", "---\ndescription: index\nalwaysApply: true\n---\n\nnothing\n");
+      git(root, "add", "--", "AGENTS.md", "docs/tracked.md", ".cursor/rules/00-index.mdc");
+    },
+    (root) => {
+      const first = checkAgentRules(root);
+      assert.equal(first.checked.pathExistence, PATH_EXISTENCE_TRACKED);
+      assert.deepEqual(
+        first.failures.map((f) => `${f.file}: ${f.message}`).sort(),
+        [
+          "AGENTS.md: broken relative link: docs/untracked.md (exists locally but is not tracked by Git)",
+          "AGENTS.md: referenced path does not exist: docs/untracked.md (exists locally but is not tracked by Git)",
+        ],
+      );
+      // Local-only assets stay a warning class even under tracked-only checking.
+      assert.match(
+        first.warnings.map((w) => `${w.file}: ${w.message}`).join("\n"),
+        /AGENTS\.md: referenced path does not exist: \.cursor\/skills \(local-only asset absent\)/,
+      );
+
+      git(root, "add", "--", "docs/untracked.md");
+      const second = checkAgentRules(root);
+      assert.deepEqual(second.failures, []);
+    },
+  );
+});
+
+test("outside a Git checkout the checker falls back to the filesystem and labels that mode", () => {
+  withFixture(
+    (root) => {
+      mkdirSync(path.join(root, "docs"));
+      write(root, "AGENTS.md", "# Entry\n\nRead `docs/plan.md`.\n");
+      write(root, "docs/plan.md", "# plan\n");
+      write(root, ".cursor/rules/00-index.mdc", "---\ndescription: index\nalwaysApply: true\n---\n\nnothing\n");
+    },
+    (root) => {
+      const { failures, checked } = checkAgentRules(root);
+      assert.deepEqual(failures, []);
+      assert.equal(checked.pathExistence, PATH_EXISTENCE_FILESYSTEM_FALLBACK);
+    },
+  );
 });
 
 test("local-only prefixes cover exactly the untracked editor assets", () => {
