@@ -70,8 +70,9 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | Required CI [33734948118](https://github.com/agentkernel/cognitive-os/actions/runs/33734948118) at `7ae9db50` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `7ae9db50` | resolve SUCCESS; ubuntu 4m14s SUCCESS; windows SUCCESS; required-ci SUCCESS. Live-validated implementation revision. |
 | 2026-09-03 | merge `origin/main@8e0d497d` (P0-T01/D02 closed PR #314) | recorded | docs-only | `6bc56525` | Conflict only in formal-plan header, Current snapshot unique-next / Active-lease, and validation-commands fingerprints. Folded P0-T01/D02 **done**. Do not claim sibling T07/T08/T10. |
 | 2026-09-03 | Required CI [33742029203](https://github.com/agentkernel/cognitive-os/actions/runs/33742029203) at `6bc56525` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `6bc56525` | resolve 2s; ubuntu 4m19s; windows 14m5s; required-ci 3s. Merge of `origin/main@8e0d497d`. |
-| 2026-09-03 | D01 acceptance mapped; lease closed in this delivery | recorded | docs-only | close HEAD | Ready/merge PR #316 after this close-head required CI. Parent next ready: `P13-T09`. |
+| 2026-09-03 | D01 acceptance mapped; lease closed in this delivery | recorded | docs-only | `9dfc071a` | Close-head required CI pending at commit time. |
+| 2026-09-03 | Required CI [33744849656](https://github.com/agentkernel/cognitive-os/actions/runs/33744849656) at `9dfc071a` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `9dfc071a` | resolve SUCCESS; ubuntu SUCCESS; windows SUCCESS; required-ci SUCCESS. Close-head for D01. |
 
 ## Unique next
 
-1. Ready/merge PR #316 after required CI on this close HEAD. Parent next ready card: `P13-T09`. Do not claim sibling-owned `P13-T07` / `T08` / `T10`.
+1. Owner Approve (Draft stays until clicked): `gh pr ready 316` then `gh pr merge 316 --merge`; post-merge fast-forward `main`, delete `personal/P13-T06-group-chat` + worktree `D:\agent-kernel-wt-p13-t06`, record merge SHA + closure-head CI. Parent next ready card: `P13-T09`. Do not claim sibling-owned `P13-T07` / `T08` / `T10`.
