@@ -33,7 +33,7 @@ non_claims:
 | `crates/cognitive-conformance` | 符合性 runner：89 向量、五态报告、41 项自检翻转 | `src/main.rs`、`src/exec/` |
 | `apps/kernel-server` | Personal daemon（`--personal`）：loopback HTTP、认证通道、readiness/doctor、Provider 代理、调度权威、tool executor、verification executor | `src/personal/server.rs`（`serve_personal_loopback`）、`scheduler_authority/`、`task_api.rs` |
 | `apps/admin-cli` | 两个二进制：`cognitive`（产品 CLI）与 `admin-cli`（管理回退） | `src/cognitive_main.rs`、`src/main.rs`、`src/personal_cli/` |
-| `apps/pi-agent-adapter` | 钉住版本的 Pi 子进程适配器；仅 `daemon-candidate` 可运行 | `src/main.rs`、`src/lib.rs` |
+| `apps/pi-agent-adapter` | 钉住版本的 Pi 子进程适配器；仅 `daemon-candidate` 与 `assistant-turn`（P13-T03 隐藏助手）可运行 | `src/main.rs`、`src/lib.rs` |
 | `packages/pi-cognitiveos` | Pi 扩展：daemon 发现/客户端、provider 桥、默认拒绝工具 | `src/extension.ts`（`registerCognitiveOsExtension`）、`src/daemon-client.ts` |
 | `packages/sdk-ts` | 通道隔离的 AKP 客户端 SDK：信封、传输、watch 消费 | `src/client.ts`、`src/channel.ts`、`src/watch.ts` |
 | `packages/contracts-ts` | canonical JSON/digest 孪生 + 55 个生成 TS 模块 + golden 输出器 | `src/canonical.ts`、`src/generated/` |

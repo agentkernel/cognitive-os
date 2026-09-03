@@ -29,7 +29,9 @@ use std::io::Write;
 use std::path::{Path, PathBuf};
 use std::process::{Command, Stdio};
 #[cfg(unix)]
-use std::sync::atomic::{AtomicU64, Ordering};
+use std::sync::Arc;
+#[cfg(unix)]
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
 use std::thread;
 use std::time::{Duration, Instant};
 
@@ -78,7 +80,7 @@ pub const PRIVATE_PI_CANDIDATE_FRAME_LIMIT: usize = 256 * 1024;
 #[cfg(unix)]
 const PRIVATE_COMPLETION_TIMEOUT: Duration = Duration::from_secs(65);
 #[cfg(unix)]
-const PRIVATE_ADAPTER_TIMEOUT: Duration = Duration::from_secs(70);
+pub(crate) const PRIVATE_ADAPTER_TIMEOUT: Duration = Duration::from_secs(70);
 #[cfg(unix)]
 static PRIVATE_SOCKET_SEQUENCE: AtomicU64 = AtomicU64::new(0);
 /// Linux `sockaddr_un.sun_path` length, including the terminating NUL.
@@ -94,6 +96,23 @@ pub struct PiConfig {
     extension_entry_path: PathBuf,
     candidate_adapter_path: Option<PathBuf>,
     candidate_extension_entry_path: Option<PathBuf>,
+}
+
+impl PiConfig {
+    /// Configured exact Pi executable.
+    pub(crate) fn executable_path(&self) -> &Path {
+        &self.executable_path
+    }
+
+    /// Configured `pi-agent-adapter` binary for daemon-private turns.
+    pub(crate) fn candidate_adapter_path(&self) -> Option<&Path> {
+        self.candidate_adapter_path.as_deref()
+    }
+
+    /// Configured daemon-private completion provider extension for Pi.
+    pub(crate) fn candidate_extension_entry_path(&self) -> Option<&Path> {
+        self.candidate_extension_entry_path.as_deref()
+    }
 }
 
 /// One bounded request sent over the daemon-supervised private Pi transport.
@@ -341,16 +360,21 @@ impl PrivatePiCandidateProcess {
     }
 }
 
+/// One-shot daemon-created Unix-domain completion endpoint. Pi's registered
+/// private provider extension connects here; the daemon forwards exactly one
+/// completion through the Provider proxy. `accepted()` is the daemon-side fact
+/// that a real Provider round trip was requested by the child.
 #[cfg(unix)]
-struct PrivateCompletionSocket {
+pub(crate) struct PrivateCompletionSocket {
     runtime_directory: PathBuf,
     socket_path: PathBuf,
     server: Option<thread::JoinHandle<Result<(), String>>>,
+    accepted: Arc<AtomicBool>,
 }
 
 #[cfg(unix)]
 impl PrivateCompletionSocket {
-    fn create_with_store(
+    pub(crate) fn create_with_store(
         config_dir: &Path,
         authority_store: Option<cognitive_store::SqliteAuthorityStore>,
     ) -> Result<Self, String> {
@@ -401,25 +425,39 @@ impl PrivateCompletionSocket {
             .set_nonblocking(true)
             .map_err(|_| "private completion socket could not be configured".to_owned())?;
         let provider_config_dir = config_dir.to_path_buf();
+        let accepted = Arc::new(AtomicBool::new(false));
+        let accepted_flag = Arc::clone(&accepted);
         let server = thread::spawn(move || {
-            serve_one_private_completion(listener, provider_config_dir, authority_store)
+            serve_one_private_completion(
+                listener,
+                provider_config_dir,
+                authority_store,
+                &accepted_flag,
+            )
         });
         Ok(Self {
             runtime_directory,
             socket_path,
             server: Some(server),
+            accepted,
         })
     }
 
-    fn path(&self) -> &Path {
+    pub(crate) fn path(&self) -> &Path {
         &self.socket_path
     }
 
-    fn runtime_dir(&self) -> &Path {
+    pub(crate) fn runtime_dir(&self) -> &Path {
         &self.runtime_directory
     }
 
-    fn finish(mut self) -> Result<(), String> {
+    /// Whether the child connected to this endpoint (a Provider round trip
+    /// was requested through the daemon). False means Pi never inferred.
+    pub(crate) fn accepted(&self) -> bool {
+        self.accepted.load(Ordering::Acquire)
+    }
+
+    pub(crate) fn finish(mut self) -> Result<(), String> {
         let result = self
             .server
             .take()
@@ -445,11 +483,15 @@ fn serve_one_private_completion(
     listener: UnixListener,
     config_dir: PathBuf,
     authority_store: Option<cognitive_store::SqliteAuthorityStore>,
+    accepted: &AtomicBool,
 ) -> Result<(), String> {
     let started = Instant::now();
     let stream = loop {
         match listener.accept() {
-            Ok((stream, _)) => break stream,
+            Ok((stream, _)) => {
+                accepted.store(true, Ordering::Release);
+                break stream;
+            }
             Err(error)
                 if error.kind() == std::io::ErrorKind::WouldBlock
                     && started.elapsed() < PRIVATE_COMPLETION_TIMEOUT =>
@@ -876,7 +918,7 @@ pub const PROBE_ENVIRONMENT_ALLOWLIST: [&str; 8] = [
 /// never copied. Linux entries exist so Node/Pi can locate `node`, UTF-8
 /// locale data, and TLS trust after `env_clear()`.
 #[cfg(unix)]
-const CANDIDATE_ENVIRONMENT_ALLOWLIST: [&str; 17] = [
+pub(crate) const CANDIDATE_ENVIRONMENT_ALLOWLIST: [&str; 17] = [
     "ComSpec",
     "PATH",
     "PATHEXT",
@@ -922,7 +964,7 @@ fn private_completion_socket_parent() -> PathBuf {
 }
 
 #[cfg(unix)]
-fn adapter_rejection_message(exit_code: Option<i32>, stderr: &[u8]) -> String {
+pub(crate) fn adapter_rejection_message(exit_code: Option<i32>, stderr: &[u8]) -> String {
     let diagnostic = redact_adapter_diagnostic(stderr);
     let exit_class =
         exit_code.map_or_else(|| "signal".to_owned(), |code| format!("exit code {code}"));
