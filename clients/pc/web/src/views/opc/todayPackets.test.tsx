@@ -94,6 +94,19 @@ function opcRoutes(
       status: 200,
       body: { status: "ok", previews: [] },
     },
+    "GET /management/project/v1/today.overview": {
+      status: 200,
+      body: {
+        status: "ok",
+        period: "today",
+        period_basis: "utc",
+        counts: { created: 0, live: 1, blocked: 0 },
+        rows: [],
+        kpi_wall: false,
+        verification_status: "not-run",
+        cost: "unknown",
+      },
+    },
     ...extras,
   };
 }

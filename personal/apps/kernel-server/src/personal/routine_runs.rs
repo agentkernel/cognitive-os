@@ -103,8 +103,11 @@ pub(crate) fn handle(
 }
 
 fn parse_route(method_path: &str) -> Option<(Channel, &'static str)> {
+    // Exact match on the path part: `routine.arm` is a prefix of
+    // `routine.arming.resume`, so `starts_with` alone would misroute.
+    let without_query = method_path.split('?').next().unwrap_or(method_path);
     for literal in ROUTE_LITERALS {
-        if method_path.starts_with(literal) {
+        if without_query == *literal {
             let channel = if literal.contains("/task/") {
                 Channel::Task
             } else {
@@ -1157,6 +1160,24 @@ process.stdin.on("end", () => {
             &harness.store,
         );
         assert_eq!(missing.status, 400);
+        // `routine.arm` is a prefix of `routine.arming.resume`; routing must be
+        // exact on the path part (CI run 33707129052 caught the prefix match).
+        let resume_missing = handle(
+            "POST /management/project/v1/routine.arming.resume",
+            br#"{}"#,
+            &harness.store,
+        );
+        assert_eq!(resume_missing.status, 400, "{}", resume_missing.body);
+        assert!(
+            resume_missing.body.contains("ARMING_ID_REQUIRED"),
+            "{}",
+            resume_missing.body
+        );
+        assert!(matches(
+            "GET /management/project/v1/routine.runs?project_id=p"
+        ));
+        let suffixed = format!("GET /management/project/v1/routine.runs{}", "-extra");
+        assert!(!matches(&suffixed));
 
         // A manual trigger before arming is Intent, not a run: the tick keeps
         // it visible as missed/not-armed and never dispatches.

@@ -1862,7 +1862,10 @@ mod tests {
         );
         assert_eq!(missing.status, 422, "{}", missing.body);
         assert!(missing.body.contains("expires_at required"));
-        let too_long = cognitive_store::now_ms() + cognitive_store::STANDING_POLICY_MAX_TTL_MS + 1;
+        // One minute past the maximum: the handler reads its own `now_ms` after
+        // this one, so a 1 ms margin raced the clock on CI (P13-T05 run 33707129052).
+        let too_long =
+            cognitive_store::now_ms() + cognitive_store::STANDING_POLICY_MAX_TTL_MS + 60_000;
         let over = handle(
             "POST /management/project/v1/standing-policy.create",
             json!({

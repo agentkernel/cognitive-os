@@ -65,7 +65,7 @@ tests:
   - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
   - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
-fingerprint: "sha256:da6ec29904b67cac3d9a53066330fa9ee79c32ba519fc8c71061278d5933879c"
+fingerprint: "sha256:433db1d86007d3d3e8a295bdedc35ca1d7e1fa08b42fd3c0736742f7783cb916"
 non_claims:
   - Route inventory lives in the generated HTTP reference; this page explains composition, not completeness.
 ---

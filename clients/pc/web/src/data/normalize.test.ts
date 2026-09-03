@@ -120,6 +120,20 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/host/v1/close.request")).toBe(true);
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
     expect(isKnownRoute("POST", "/management/agent-bindings/remove")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/routine.runs?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/today.overview?period=week")).toBe(true);
+    expect(
+      isKnownRoute("GET", "/management/project/v1/dsh.hosted.attempt.list?project_id=proj-1"),
+    ).toBe(true);
+  });
+
+  it("never whitelists Routine arming / instruction writes or a Start control from the UI", () => {
+    expect(isKnownRoute("POST", "/management/project/v1/routine.arm")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/routine.instruction")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/routine.trigger")).toBe(false);
+    expect(isKnownRoute("POST", "/management/project/v1/dsh.hosted.attempt.run")).toBe(false);
+    expect(isKnownRoute("GET", "/task/project/v1/routine.runs?project_id=proj-1")).toBe(false);
+    expect(isKnownRoute("GET", "/task/project/v1/today.overview")).toBe(false);
   });
 
   it("rejects unknown and forbidden routes", () => {
