@@ -2058,6 +2058,8 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T06 — Project group conversation + manager routing（`@manager` / `@member`）
 
+- **status:** in-progress — claimed 2026-09-03 on `lease/personal/P13-T06/group-chat`, branch `personal/P13-T06-group-chat` (worktree `D:\agent-kernel-wt-p13-t06` at `origin/main@327478d4`; authority migration v39).
+
 - **2.0.0 表面:** 右栏在 Project 内是群聊（Owner / manager / Members），在 Project 外
   是 Personal Assistant；`@manager` / `@member` 路由；manager-default speech；成员
   proactive speech 仅 mentioned / delivering / handoff / blocked / decision-request；

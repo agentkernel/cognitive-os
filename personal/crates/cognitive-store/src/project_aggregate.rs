@@ -335,7 +335,7 @@ impl ProjectAggregateStore {
         format!("{:x}", Sha256::digest(bytes))
     }
 
-    fn reject_secret_shape(bytes: &[u8]) -> Result<(), ProjectAggregateError> {
+    pub(crate) fn reject_secret_shape(bytes: &[u8]) -> Result<(), ProjectAggregateError> {
         let lowered = String::from_utf8_lossy(bytes).to_ascii_lowercase();
         if looks_like_secret(&lowered) {
             return Err(ProjectAggregateError::Invalid {
@@ -565,6 +565,8 @@ impl ProjectAggregateStore {
                 | "grant-expansion"
                 | "run-acceptance"
                 | "external-send"
+                | "plan-revision"
+                | "task-revision"
         ) {
             return Err(ProjectAggregateError::Invalid {
                 detail: "unsupported subject_kind",
@@ -612,6 +614,9 @@ impl ProjectAggregateStore {
             }
             "external-send" => {
                 crate::attempt_artifacts::external_send_base_digest_locked(conn, subject_ref)
+            }
+            "plan-revision" | "task-revision" => {
+                crate::project_chat::candidate_base_digest_locked(conn, subject_kind, subject_ref)
             }
             _ => Err(ProjectAggregateError::Invalid {
                 detail: "unsupported subject_kind",
@@ -886,6 +891,14 @@ impl ProjectAggregateStore {
             }
             "external-send" => {
                 crate::attempt_artifacts::external_send_locked(&conn, &preview.subject_ref, now_ms)?
+            }
+            "plan-revision" | "task-revision" => {
+                crate::project_chat::confirm_chat_candidate_locked(
+                    &conn,
+                    &preview.subject_kind,
+                    &preview.subject_ref,
+                    now_ms,
+                )?
             }
             _ => {
                 return Err(ProjectAggregateError::Invalid {
@@ -1191,6 +1204,24 @@ impl ProjectAggregateStore {
             Self::reject_secret_shape(stage.objective.as_bytes())?;
         }
         let conn = self.lock()?;
+        Self::apply_plan_revision_locked(&conn, target_project_id, stages, now_ms)
+    }
+
+    /// Materialize a new PlanRevision on an already-held writer connection.
+    /// Callers must have validated caller scope and secret shape; the canvas
+    /// Confirm of a chat-routed candidate (P13-T06) runs this inside the
+    /// preview transaction, where the aggregate lock is already held.
+    pub(crate) fn apply_plan_revision_locked(
+        conn: &Connection,
+        target_project_id: &str,
+        stages: &[StageSpec],
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        if stages.is_empty() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "plan requires at least one stage",
+            });
+        }
         let (seq, previous_plan): (i64, Option<String>) = conn
             .query_row(
                 "SELECT COALESCE((SELECT MAX(seq) FROM p11_plan_revision WHERE project_id = ?1), 0),
@@ -1908,6 +1939,8 @@ impl ProjectAggregateStore {
             "SELECT description FROM p11_gap",
             "SELECT preview_bytes_ref FROM p11_approval_preview",
             "SELECT subject_class, subject_ref FROM p11_standing_approval_policy",
+            "SELECT body_redacted FROM p11_conversation_archive",
+            "SELECT body_redacted, candidate_json FROM p13_project_chat_turn",
         ];
         for sql in tables {
             let mut statement = conn.prepare(sql).map_err(unavailable("leak scan"))?;
