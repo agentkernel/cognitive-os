@@ -56,6 +56,9 @@ pub(crate) struct HostedAttemptHost {
     pub config_dir: PathBuf,
     pub bootstrap_file: PathBuf,
     pub endpoint_file: PathBuf,
+    /// The daemon's single P3-T03 CAS root (`<data_dir>/artifacts`), where a
+    /// terminal Attempt's `DeliverableDraft` candidates are ingested (P13-T04).
+    pub artifact_root: PathBuf,
 }
 
 impl HostedAttemptHost {
@@ -64,6 +67,7 @@ impl HostedAttemptHost {
             config_dir: layout.config_dir().to_path_buf(),
             bootstrap_file: layout.local_bootstrap_secret_path(),
             endpoint_file: layout.state_dir().join(ENDPOINT_FILE_NAME),
+            artifact_root: super::attempt_artifacts::artifact_root(layout),
         }
     }
 
@@ -390,11 +394,13 @@ pub(crate) fn launch_hosted_attempt(
     let attempt_id = attempt.attempt_id.clone();
     let child_id = child.child_id.clone();
     let worker_employee_id = employee_id.to_owned();
+    let worker_artifact_root = host.artifact_root.clone();
     let handle = thread::Builder::new()
         .name(format!("hosted-dsh-{attempt_id}"))
         .spawn(move || {
             run_attempt_child(
                 &worker_store,
+                &worker_artifact_root,
                 &attempt_id,
                 &child_id,
                 &worker_employee_id,
@@ -489,9 +495,12 @@ fn attempt_run(
     attempt_response(&row, &fact, &runtime_binding_ref)
 }
 
-/// Broker thread body: spawn, observe frames, write the terminal observation.
+/// Broker thread body: spawn, observe frames, write the terminal observation,
+/// then hand the terminal run to the P13-T04 artifact ingest (CAS put +
+/// independent verifier) — daemon-side, never from the child.
 fn run_attempt_child(
     store: &SqliteAuthorityStore,
+    artifact_root: &Path,
     attempt_id: &str,
     child_id: &str,
     employee_id: &str,
@@ -509,7 +518,7 @@ fn run_attempt_child(
             let frames = run.ledger_frames();
             let _ = attempts.record_frames(attempt_id, &frames, now_ms());
             let response_status = run.response_status.clone();
-            attempts.record_terminal(
+            let terminal = attempts.record_terminal(
                 attempt_id,
                 &HostedAttemptTerminalSpec {
                     terminal_kind: run.terminal.as_str(),
@@ -525,7 +534,9 @@ fn run_attempt_child(
                     elapsed_ms: run.elapsed_ms,
                     now_ms: now_ms(),
                 },
-            )?
+            )?;
+            super::attempt_artifacts::ingest_terminal_run(store, artifact_root, attempt_id, &run);
+            terminal
         }
         Err(refused) => attempts.record_terminal(
             attempt_id,

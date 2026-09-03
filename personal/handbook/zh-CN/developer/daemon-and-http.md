@@ -38,6 +38,10 @@ sources:
     symbols: ["handle", "matches"]
   - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
     symbols: ["handle", "matches", "HostedAttemptHost"]
+  - path: personal/apps/kernel-server/src/personal/attempt_artifacts.rs
+    symbols: ["handle", "matches"]
+  - path: personal/apps/kernel-server/src/personal/routine_runs.rs
+    symbols: ["handle", "matches", "run_routine_tick"]
   - path: personal/crates/cognitive-store/src/hosted_dsh.rs
     symbols: ["HostedDshPlane", "HostedDshStartSpec", "HOSTED_DSH_ENGINE_ID"]
   - path: personal/crates/cognitive-store/src/hosted_dsh_attempt.rs
@@ -65,7 +69,7 @@ tests:
   - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
   - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
-fingerprint: "sha256:433db1d86007d3d3e8a295bdedc35ca1d7e1fa08b42fd3c0736742f7783cb916"
+fingerprint: "sha256:3ab85765cd6767539e4368255e2a9101134ec91debdb87de0cb69aa99fb79d50"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
@@ -162,6 +166,7 @@ X/Twitter connector walking skeleton 路由（`/management/connector/x/v1/{accou
 托管 DSH 真实 Attempt 路由（`POST /management/project/v1/dsh.hosted.attempt.run`、`GET …/dsh.hosted.attempt.list`、`GET …/dsh.hosted.attempt.detail`、`POST …/dsh.hosted.artifact.check`、`GET …/dsh.hosted.artifact.facts`；P13-T02）需要 management bearer，并在 Project 聚合匹配器之前分派。`attempt.run` 先从 `dsh.json` + 钉住文件 + 子脚本 digest 记一条 v36 artifact 事实（非 `pinned` 即 `HOSTED_ARTIFACT_UNHEALTHY` 422，不 spawn），再持久化 Attempt Intent、绑定 v31 子进程身份，然后由 daemon 线程运行 `cognitive-runtime` stdio broker：`env_clear` + 白名单环境、argv 只含路径与 pin、有界 Context（≤64 KiB，secret 形状被拒）作为一条 `request` 帧写入子进程 stdin（带 loopback daemon origin 与 bootstrap 文件*路径*），在墙钟超时与字节/帧上限下读回逐行 JSON 帧，Unix 上独立进程组使超时能连带杀掉 dsh 孙进程。每一帧都是观察；`provider_request`、非 loopback URL、`task_complete` / `effect` / `authority` 帧与无 operation 的 candidate 被拒并记录；自由文本与 `{"status":"success"}` 计为未知行。终态行由 daemon 写入（`exited` / `signaled` / `timed-out` / `spawn-failed`，永无 `success`；`completion_claimed=false`；`verification_status=not-run`）并清除子进程 pid；spawn 前的拒绝落为 durable `spawn-failed` 终态（`HOSTED_ATTEMPT_SPAWN_REFUSED` 422）。启动时把崩溃形状的行 reconcile 为 `unknown-outcome`。task 通道别名失败闭合（`HOSTED_ATTEMPT_CHANNEL_FORBIDDEN`）。仍带 session/bootstrap/`sk-` 形状的响应失败闭合（`HOSTED_ATTEMPT_REDACTION`）。Linux 真实 spawn 只是实现证据；Windows sandbox / ACL / supply-chain E2E 在 P13-T13 前为 `not-run`。
 
 Routine 武装 / runs 路由（`POST /management/project/v1/routine.arm`、`POST …/routine.instruction`、`POST …/routine.arming.resume`、`GET …/routine.armings`、`GET …/routine.runs`、`GET …/today.overview`；P13-T05）需要 management bearer，并在 Project 聚合匹配器之前分派。`routine.arm` 在 **G2 后**（否则 `ROUTINE_ARM_BEFORE_G2` 409）把一个当前 Routine revision 绑定到一个计划环节及其已就位的负责 Member，并从 revision body 读取 ③ 声明。此后 daemon 的周期性 scheduler tick（与私有 scheduler pass 同一个 `PeriodicSchedulerWorker`）是唯一派发者：把已观察到的 Attempt 终态写回为 occurrence 结果并提升最新的 queued occurrence，经 P11-T08 `routine.trigger` 受理触发到期的 interval schedule（P11-T02 宿主 paused / offline 时产生可见 `missed` 行），再经 `scheduler_entries` 租约（`personal-daemon-scheduler`，epoch fencing）每个未派发的 `active` occurrence，并通过与 `dsh.hosted.attempt.run` 相同的代码路径启动一个托管 Attempt（`task_ref = task://personal/routine/<occurrence>`）。通用 scheduler pass 跳过这些行。`routine.instruction` 在安全点应用新 revision（`continue` / `pause` / `restart`），永不改写运行中 Attempt 的 context。`routine.runs` 返回 armings、带派生 `dispatch_state` 的台账、宿主可派发性、汇总，以及 `dsh.hosted.attempt.list` / `.detail` 路径；`today.overview` 返回 created / live / blocked 计数与每个 live Project 一行（`period=today|week|month`，UTC）。这些响应中没有任何"完成"（`completion_claimed=false`、`verification_status=not-run`、无 `success` outcome）。task 通道别名失败闭合（`ROUTINE_RUNS_CHANNEL_FORBIDDEN`）。clock / sleep / restart 宿主 E2E 在 P13-T13 前为 `not-run`。
+Attempt 产物 / verifier / 验收 / 发布路由（`GET /management/project/v1/outputs`、`GET …/outputs.detail`、`GET …/outputs.open`、`POST …/outputs.export`、`POST …/attempt.artifact.verify`、`POST …/attempt.artifact.stage-test`、`POST …/run.acceptance.request`、`GET …/run.acceptance`、`GET …/publication.packet`、`POST …/publication.external-send.request`、`GET …/publication.sends`；P13-T04）需要 management bearer，在托管 Attempt 匹配器之后、Project 聚合匹配器之前分派。写托管 Attempt 终态行的 broker 线程同时把每个 `DeliverableDraft` 候选放入 daemon 唯一的 CAS（`<data_dir>/artifacts`，与 verification executor 组合的同一根目录）并运行一次独立 verifier `verifier://personal/attempt-artifact`；因此 `outputs` 列出的是真实 CAS 产物，带 `freshness`、`verification_status`、当前 StageTestPassed 指向的环节与 `accepted_at`。`outputs.open` 只在 CAS 重算 digest 成功后提供字节（被篡改的文件 → 409 `ATTEMPT_ARTIFACT_DIGEST_MISMATCH`）；`outputs.export` 把副本写入 Personal Home `data/projects/<project_id>/outputs/`，副本 `is_authority: false` 且永不回读。`attempt.artifact.stage-test` 只从 durable 事实推导 P11-T03 StageTestPassed；`run.acceptance.request` 铸造 `run-acceptance` ApprovalPreview，不在末环或末环无 passed evidence 支撑的当前 StageTestPassed 时 422，既有的 `POST /management/project/v1/confirm` 写入只追加的 `p13_run_acceptance` 事实。`publication.packet` 是只读 AUTONOMY 发布包（`planned: true`、`published: false`、`chat_can_confirm: false`、`connector: none-qualified`）；`publication.external-send.request` 铸造 `external-send` ApprovalPreview，确认后 Intent 变为 `planned`——v37 中 `published` 不可表示。task 通道别名失败闭合（`ATTEMPT_ARTIFACT_CHANNEL_FORBIDDEN`）。宿主打开文件 E2E 在 P13-T13 前为 `not-run`。
 
 management 的 `POST/GET /management/resource/v1/fault-profile` 为一个
 `task_ref` 持久化默认关闭、评测授权的固定 fault profile。普通 task 调用方被拒绝

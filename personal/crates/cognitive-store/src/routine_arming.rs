@@ -1,5 +1,5 @@
 //! Personal-private Routine arming + scheduler-driven occurrence ledger
-//! (P13-T05, authority migration v37).
+//! (P13-T05, authority migration v38).
 //!
 //! P11-T08 (v33) gave a Routine its revisions, Trigger admission, and the
 //! no-overlap / queue-latest / missed / coalesced ledger, and parked each
@@ -63,10 +63,11 @@ pub const ROUTINE_ATTEMPT_OUTCOMES: [&str; 8] = [
     "unknown-outcome",
 ];
 
-/// Authority migration v37: Routine arming + occurrence dispatch/outcome
+/// Authority migration v38: Routine arming + occurrence dispatch/outcome
 /// columns. `p11_routine_occurrence` is rebuilt (v30 precedent) so its
 /// disposition CHECK can name `attempted`; existing rows are preserved.
-pub const ROUTINE_ARMING_SCHEMA_V37: &str = "
+/// Numbered v38 because P13-T04 already landed Attempt artifacts as v37.
+pub const ROUTINE_ARMING_SCHEMA_V38: &str = "
 CREATE TABLE p13_routine_arming (
   arming_id TEXT PRIMARY KEY,
   project_id TEXT NOT NULL REFERENCES p11_project(project_id),
@@ -92,7 +93,7 @@ CREATE TABLE p13_routine_arming (
 ) STRICT;
 CREATE INDEX p13_routine_arming_project ON p13_routine_arming(project_id, state);
 CREATE INDEX p13_routine_arming_due ON p13_routine_arming(state, cadence_kind, next_due_at);
-CREATE TABLE p11_routine_occurrence_v37 (
+CREATE TABLE p11_routine_occurrence_v38 (
   occurrence_id TEXT PRIMARY KEY,
   routine_id TEXT NOT NULL,
   revision_id TEXT NOT NULL,
@@ -124,7 +125,7 @@ CREATE TABLE p11_routine_occurrence_v37 (
   completion_claimed INTEGER NOT NULL DEFAULT 0 CHECK (completion_claimed = 0),
   CHECK ((disposition = 'attempted') = (attempt_outcome IS NOT NULL))
 ) STRICT;
-INSERT INTO p11_routine_occurrence_v37 (
+INSERT INTO p11_routine_occurrence_v38 (
   occurrence_id, routine_id, revision_id, project_id, trigger_kind, trigger_source,
   requested_at, disposition, coalesced_by, miss_reason, policy_digest,
   scheduler_task_ref, checkpoint_json, recorded_at
@@ -135,16 +136,16 @@ SELECT occurrence_id, routine_id, revision_id, project_id, trigger_kind, trigger
   FROM p11_routine_occurrence;
 DROP INDEX IF EXISTS p11_routine_occurrence_scope;
 DROP TABLE p11_routine_occurrence;
-ALTER TABLE p11_routine_occurrence_v37 RENAME TO p11_routine_occurrence;
+ALTER TABLE p11_routine_occurrence_v38 RENAME TO p11_routine_occurrence;
 CREATE INDEX p11_routine_occurrence_scope
   ON p11_routine_occurrence(routine_id, disposition, recorded_at);
 CREATE INDEX p11_routine_occurrence_project_terminal
   ON p11_routine_occurrence(project_id, disposition, terminal_at);
 ";
 
-/// v37 migration entry.
+/// v38 migration entry.
 pub fn routine_arming_migration_entry() -> MigrationPlanEntry {
-    MigrationPlanEntry::new(37, ROUTINE_ARMING_SCHEMA_V37)
+    MigrationPlanEntry::new(38, ROUTINE_ARMING_SCHEMA_V38)
 }
 
 /// Canonical RFC 3339 UTC text for a millisecond epoch instant (scheduler

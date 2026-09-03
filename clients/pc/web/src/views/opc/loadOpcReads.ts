@@ -9,6 +9,20 @@ import {
   type PreviewDetailRow,
 } from "../../data/projections/hitl";
 import {
+  outputDetailKey,
+  outputDetailPath,
+  outputsKey,
+  outputsPath,
+  projectOutputDetail,
+  projectOutputs,
+  projectPublicationPacket,
+  publicationPacketKey,
+  publicationPacketPath,
+  type OutputArtifactRow,
+  type OutputDetailRow,
+  type PublicationPacketRow,
+} from "../../data/projections/outputs";
+import {
   firstLiveProjectId,
   firstReadyProjectId,
   PROJECTS_KEY,
@@ -226,6 +240,46 @@ export async function loadTodayOverviewForLiveProject(
     return;
   }
   await loadTodayOverview(period);
+}
+
+/** P13-T04: real CAS-backed artifacts of one Project (the outputs listbox). */
+export async function loadProjectOutputs(
+  projectId: string,
+): Promise<Projection<OutputArtifactRow[]>> {
+  return fetchProjection(
+    appProjections,
+    outputsKey(projectId),
+    outputsPath(projectId),
+    "management",
+    projectOutputs,
+  );
+}
+
+/** Select-then-view: detail (evidence, acceptance, export) only for the chosen artifact. */
+export async function loadOutputDetail(
+  artifactId: string,
+): Promise<Projection<OutputDetailRow[]>> {
+  return fetchProjection(
+    appProjections,
+    outputDetailKey(artifactId),
+    outputDetailPath(artifactId),
+    "management",
+    projectOutputDetail,
+  );
+}
+
+/** Read-only AUTONOMY publication packet; planned ≠ published. */
+export async function loadPublicationPacket(
+  projectId: string,
+  artifactId: string,
+): Promise<Projection<PublicationPacketRow[]>> {
+  return fetchProjection(
+    appProjections,
+    publicationPacketKey(projectId, artifactId),
+    publicationPacketPath(projectId, artifactId),
+    "management",
+    projectPublicationPacket,
+  );
 }
 
 /** Digest lives on preview-detail, never on the pending list. */

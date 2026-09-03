@@ -6,6 +6,7 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
+  - path: personal/apps/kernel-server/src/personal/attempt_artifacts.rs
   - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
   - path: personal/apps/kernel-server/src/personal/observation.rs
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
@@ -22,7 +23,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3e00ee4505a11d0a9ecbfb62b945e2bf24d77ce12b40c7215f76b763dab04507"
+fingerprint: "sha256:3424f19b79441af17264eb165972105bd3e92b50ef83f73972325407eb63a19e"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -192,6 +193,17 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/dsh.hosted.attempt.detail` | management | 一个托管 Attempt 及其脱敏帧台账（`observation` / `candidate` / `heartbeat` / `response` / `rejected`，每条 `authority_written=false`）。secret 形状在持久化前脱敏；残留形状使响应失败闭合。 |
 | `POST` | `/management/project/v1/dsh.hosted.artifact.check` | management | 观察已配置的托管 DSH artifact（`dsh.json` revision、`.cognitiveos-dsh-revision` 钉住文件、托管子脚本 digest）并追加一条 durable 事实。kind 由 daemon 推导：`health-check`、`update`（配置 revision 变化）或 `rollback`（回到上一个 revision）。health 为 `pinned` | `absent` | `corrupt` | `mismatch` | `script-missing`；只有 `pinned` 允许 spawn。绝不 spawn。 |
 | `GET` | `/management/project/v1/dsh.hosted.artifact.facts` | management | 最新托管 DSH artifact 事实与最新在前的历史（`limit` 1..=64）及 `admits_spawn`。事实仅追加。 |
+| `GET` | `/management/project/v1/outputs` | management | 一个 `project_id` 的 Attempt 产物（最新在前；P13-T04，`outputs` 先选后看的数据源）。每行是 CAS 引用（`sha256:` digest、字节长度、`text/markdown`）、来源候选帧、`freshness`（`current` | `superseded`）、`verification_status`（`not-run` | 最新独立 verifier 结论）、当前 StageTestPassed 指向它的环节，以及 `accepted_at`。同时列出 run 验收事实。文件永远不是权威；`host_file_open_e2e` 为 `not-run`。 |
+| `GET` | `/management/project/v1/outputs.detail` | management | 一个产物及其 evidence 历史（最新在前；verifier `verifier://personal/attempt-artifact`、principal `principal://personal/independent-verifier`、逐条 criteria 结果、报告 CAS 引用）、若有的 run 验收、`outputs.open` 路由，以及 Personal Home `data/` 导出副本是否存在（`is_authority: false`）。 |
+| `GET` | `/management/project/v1/outputs.open` | management | 直接从 daemon CAS 提供一个 `artifact_id` 的交付物字节（`text/markdown; charset=utf-8`）。读取时重新计算 digest：被篡改的 CAS 文件返回 409 `ATTEMPT_ARTIFACT_DIGEST_MISMATCH`，绝不下载。只有 `sha256:` CAS 引用可打开；路径与 `file://` 被拒。 |
+| `POST` | `/management/project/v1/outputs.export` | management | 把一个产物的 CAS 字节复制到 Personal Home `data/projects/<project_id>/outputs/`（暂存文件 + rename），供宿主应用打开。副本 `is_authority: false`、永不回读；宿主打开文件 E2E 在 P13-T13 前保持 `not-run`。 |
+| `POST` | `/management/project/v1/attempt.artifact.verify` | management | 运行独立 verifier `verifier://personal/attempt-artifact`（确定性：CAS 重读 digest、来源帧绑定、Attempt 终态、格式解析、非空、无 secret 形状；child 的 `response`/exit 记为 `not-used`）并追加一条 evidence，其报告字节放在同一 CAS。evidence 仅追加且不是验收。daemon 在入库时已自动运行一次。 |
+| `POST` | `/management/project/v1/attempt.artifact.stage-test` | management | 只从 durable 事实推导 `artifact_id` 在 `stage_id` 上的 StageTestPassed（P11-T03 `p11_stage_test_fact`）：真实就位、Attempt 成员持有该环节 slot、`current` 新鲜度、checked digest 等于产物 digest 的 passed evidence、CAS 重读、Attempt 终态。没有调用方布尔值。stage test 不是验收。 |
+| `POST` | `/management/project/v1/run.acceptance.request` | management | 为 `project_id` / `stage_id` 铸造 `run-acceptance` ApprovalPreview（P11-T09 形状）。不在当前计划末环、末环无 passed evidence 支撑的当前 StageTestPassed、或该事实已验收时拒绝。确认走 `POST /management/project/v1/confirm` 并带 preview-detail digest；聊天不能确认。 |
+| `GET` | `/management/project/v1/run.acceptance` | management | 一个 `project_id` 的 run 验收事实（仅追加；末环由 CHECK 钉住；每条绑定一个 StageTestPassed 事实、产物与 evidence；`acceptance_decision_ref`）。 |
+| `GET` | `/management/project/v1/publication.packet` | management | 一个已验证产物的只读 AUTONOMY 发布包（`preview` / `override` / `tiered_authority` / `observable` / `outcome_verify` / `memory_of_actions` / `yield`）。永远 `planned: true`、`published: false`、`chat_can_confirm: false`、`connector: none-qualified`。 |
+| `POST` | `/management/project/v1/publication.external-send.request` | management | 为一个已验证产物铸造 `external-send` ApprovalPreview，并把发送 Intent 记为 `previewed`（收件人只存 digest）。经 `POST /management/project/v1/confirm` 确认后变为 `planned`——persist-before-dispatch 且无合格连接器，`published` 由 schema CHECK 钉为 `false`。planned ≠ published。 |
+| `GET` | `/management/project/v1/publication.sends` | management | 一个 `project_id` 的 external-send Intent 台账（`previewed` | `planned` | `superseded`；`published` 永远 false；`published_any: false`）。 |
 | `POST` | `/management/project/v1/vault.import` | management | 导入一份带 rights/provenance 的 Markdown Vault 文件。secret-shape、路径遍历、把对话档案当 Vault、仅 CAS blob、以及无冲突记录的 last-write-wins 失败闭合。文件不是 Project 权威。宿主文件系统 E2E 为 `not-run`。 |
 | `POST` | `/management/project/v1/vault.index.rebuild` | management | 从已存文档重建派生 Vault 索引。不写入 Memory FTS。索引不是 Project 权威。 |
 | `GET` | `/management/project/v1/vault.index` | management | 查询一个 Project 的可重建 Vault 索引。跨项目 `caller_project_id` 视为检索越权。返回已文档化的 Context 注入顺序（当前 Task 合同 → 已固定决定 → 带出处摘录 → 摘要 → 旧叙述）。 |
@@ -252,6 +264,17 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/dsh.hosted.attempt.detail` | task | 禁止：托管 DSH Attempt 详情仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.artifact.check` | task | 禁止：托管 DSH artifact 检查仅限 management 通道。 |
 | `GET` | `/task/project/v1/dsh.hosted.artifact.facts` | task | 禁止：托管 DSH artifact 事实仅限 management 通道。 |
+| `GET` | `/task/project/v1/outputs` | task | 禁止：Attempt 产物列表仅限 management 通道。 |
+| `GET` | `/task/project/v1/outputs.detail` | task | 禁止：产物详情仅限 management 通道。 |
+| `GET` | `/task/project/v1/outputs.open` | task | 禁止：产物打开仅限 management 通道。 |
+| `POST` | `/task/project/v1/outputs.export` | task | 禁止：产物导出仅限 management 通道。 |
+| `POST` | `/task/project/v1/attempt.artifact.verify` | task | 禁止：独立 verifier 只在 management 通道调用；task 通道不能验证自己的产物。 |
+| `POST` | `/task/project/v1/attempt.artifact.stage-test` | task | 禁止：StageTestPassed 推导仅限 management 通道。 |
+| `POST` | `/task/project/v1/run.acceptance.request` | task | 禁止：run 验收预览仅限 management 通道。 |
+| `GET` | `/task/project/v1/run.acceptance` | task | 禁止：run 验收事实仅限 management 通道。 |
+| `GET` | `/task/project/v1/publication.packet` | task | 禁止：发布包仅限 management 通道。 |
+| `POST` | `/task/project/v1/publication.external-send.request` | task | 禁止：external-send 预览仅限 management 通道。 |
+| `GET` | `/task/project/v1/publication.sends` | task | 禁止：external-send 台账仅限 management 通道。 |
 | `POST` | `/task/project/v1/vault.import` | task | 禁止：Vault 导入仅限 management 通道。 |
 | `POST` | `/task/project/v1/vault.index.rebuild` | task | 禁止：Vault 索引重建仅限 management 通道。 |
 | `GET` | `/task/project/v1/vault.index` | task | 禁止：Vault 索引查询仅限 management 通道。 |

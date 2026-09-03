@@ -191,6 +191,7 @@ function buildHttpApi(readSource, trackedPaths) {
     "personal/apps/kernel-server/src/personal/windows_host.rs",
     "personal/apps/kernel-server/src/personal/x_connector.rs",
     "personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs",
+    "personal/apps/kernel-server/src/personal/attempt_artifacts.rs",
     "personal/apps/kernel-server/src/personal/routine_runs.rs",
   ];
   const corpusSources = [

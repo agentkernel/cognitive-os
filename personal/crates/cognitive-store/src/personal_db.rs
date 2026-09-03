@@ -5,6 +5,7 @@
 //! fail-closed adapter from P0-T04, and refuses concurrent migration via a
 //! runtime lock file. Cross-database atomicity is intentionally not claimed.
 
+use crate::attempt_artifacts::attempt_artifact_migration_entry;
 use crate::context_store::{
     context_authorization_fact_migration_entry, context_store_migration_entry,
     scheduler_execution_policy_migration_entry, workspace_context_source_migration_entry,
@@ -118,7 +119,13 @@ impl PersonalDatabasePrepareReport {
 /// v36 = hosted DSH artifact health/update/rollback facts plus the
 /// persist-before-dispatch Attempt / frame ledger (P13-T02; `completion_claimed`
 /// CHECK=0, `verification_status` CHECK='not-run'; no `success` terminal), and
-/// v37 = Routine arming after G2 plus occurrence dispatch / outcome columns
+/// v37 = Attempt artifacts in the daemon CAS (`p13_attempt_artifact`),
+/// independent verifier evidence (`p13_artifact_evidence`, append-only,
+/// verifier-identity CHECK), last-ring run acceptance (`p13_run_acceptance`,
+/// last-ring CHECK), external-send Intents (`p13_external_send`, `published`
+/// CHECK=0) plus the `run-acceptance` / `external-send` ApprovalPreview
+/// subject kinds (P13-T04; table rebuild, v30 precedent), and
+/// v38 = Routine arming after G2 plus occurrence dispatch / outcome columns
 /// (P13-T05; `p11_routine_occurrence` rebuilt to admit `attempted`;
 /// `completion_claimed` CHECK=0; outcomes are daemon-observed Attempt
 /// terminals, never `success`; the daemon scheduler tick is the only
@@ -164,6 +171,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         windows_host_migration_entry(),
         x_connector_migration_entry(),
         hosted_dsh_attempt_migration_entry(),
+        attempt_artifact_migration_entry(),
         routine_arming_migration_entry(),
     ]
 }

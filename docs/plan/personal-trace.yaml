@@ -473,6 +473,17 @@ personal_requirements:
     # DEV-LINUX-NATIVE-01 + required CI (PR #310); evidence_status stays
     # not-run until P13-T04/T05/T06/T11 close the remaining clauses and the
     # Windows-native cells are backfilled by P13-T13.
+    # 2026-09-03: the P13-T04 clause (artifacts land in CAS with digest /
+    # format / source / per-Member freshness; independent verifier
+    # verifier://personal/attempt-artifact produces append-only CAS-backed
+    # evidence; run acceptance happens only on the last ring through a
+    # StageTestPassed derived from evidence and a P11-T09 ApprovalPreview;
+    # outputs are openable from CAS with a non-authority data/ export;
+    # publication packages are AUTONOMY canvas previews where planned is never
+    # published; external-send is previewed then planned) is implemented and
+    # exercised on DEV-LINUX-NATIVE-01 + required CI (PR #313) including a live
+    # daemon E2E with a real pinned dsh deliverable; the host file-open cell is
+    # not-run until P13-T13.
     # 2026-09-03: the P13-T05 clause (Routine/Trigger arm from the confirmed
     # stage declarations after G2 with the daemon scheduler tick as the only
     # dispatcher; visible occurrence ledger no-overlap / queue-latest / missed /
@@ -481,8 +492,8 @@ personal_requirements:
     # live-project overview; checkpoints and process exit never completion) is
     # implemented and exercised live on DEV-LINUX-NATIVE-01 + required CI
     # (PR #315, ecd35ab0); clock / sleep / restart host cells stay not-run
-    # until P13-T13. Remaining clauses: P13-T04 (CAS / verifier / outputs /
-    # publication preview), P13-T06 (group conversation), P13-T11 (reflection).
+    # until P13-T13. evidence_status stays not-run until P13-T06 (group
+    # conversation) and P13-T11 (reflection) close their clauses.
     evidence_status: not-run
 
   - id: PERS-PR-050
