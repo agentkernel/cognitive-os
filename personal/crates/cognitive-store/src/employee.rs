@@ -158,6 +158,36 @@ pub struct HandoffSpec<'a> {
     pub now_ms: i64,
 }
 
+/// Structured Skill/MCP security review (P13-T10). Install is not a grant.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct SecurityReview {
+    pub capability_ref: String,
+    pub kind: String,
+    pub version_pin: String,
+    pub source: String,
+    pub license: String,
+    pub hidden_instruction: String,
+    pub prompt_injection: String,
+    pub file_intent: String,
+    pub network_intent: String,
+    pub command_intent: String,
+    pub dependencies: Option<String>,
+    pub executable_code: Option<String>,
+    pub secret_access: Option<String>,
+    pub tool_permissions: Option<String>,
+    pub supply_chain: Option<String>,
+    pub sources: Vec<String>,
+}
+
+/// One version-pinned InstallFact. Catalog grants are a separate table.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct InstallFactRow {
+    pub install_id: String,
+    pub capability_ref: String,
+    pub version_pin: String,
+    pub created_at: i64,
+}
+
 /// Durable Employee / Blueprint / Grant store on the authority writer.
 #[derive(Clone)]
 pub struct EmployeeStore {
@@ -924,6 +954,259 @@ impl EmployeeStore {
         Ok(seated > 0)
     }
 
+    /// Assistant-led discovery: sources required, marketplace/engine-store/ambient refused.
+    pub fn admit_discovery(
+        &self,
+        caller: ConfirmCaller,
+        review: &SecurityReview,
+    ) -> Result<SecurityReview, ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        self.validate_security_review(review)?;
+        Ok(review.clone())
+    }
+
+    /// Ambient grant (no Owner canvas preview) is never a Grant.
+    pub fn refuse_ambient_grant(
+        &self,
+        _project_id: &str,
+        _employee_id: &str,
+        _capability_ref: &str,
+        _scope: &str,
+    ) -> Result<String, ProjectAggregateError> {
+        Err(ProjectAggregateError::Forbidden {
+            detail: "ambient grant refused; grant-expansion canvas preview required",
+        })
+    }
+
+    pub fn preview_acquire_ref(
+        &self,
+        preview_id: &str,
+    ) -> Result<Option<(String, String)>, ProjectAggregateError> {
+        let conn = self.lock()?;
+        conn.query_row(
+            "SELECT subject_kind, subject_ref FROM p11_approval_preview WHERE preview_id = ?1",
+            [preview_id],
+            |row| Ok((row.get(0)?, row.get(1)?)),
+        )
+        .optional()
+        .map_err(unavailable("preview acquire ref"))
+    }
+
+    pub fn list_install_facts(&self) -> Result<Vec<InstallFactRow>, ProjectAggregateError> {
+        let conn = self.lock()?;
+        let mut statement = conn
+            .prepare(
+                "SELECT install_id, capability_ref, version_pin, created_at
+                   FROM p11_install_fact
+                  ORDER BY capability_ref, version_pin",
+            )
+            .map_err(unavailable("list install facts"))?;
+        let rows = statement
+            .query_map([], |row| {
+                Ok(InstallFactRow {
+                    install_id: row.get(0)?,
+                    capability_ref: row.get(1)?,
+                    version_pin: row.get(2)?,
+                    created_at: row.get(3)?,
+                })
+            })
+            .map_err(unavailable("install fact query"))?;
+        rows.collect::<Result<Vec<_>, _>>()
+            .map_err(unavailable("install fact rows"))
+    }
+
+    pub fn install_fact_exists(
+        &self,
+        capability_ref: &str,
+        version_pin: Option<&str>,
+    ) -> Result<bool, ProjectAggregateError> {
+        let conn = self.lock()?;
+        let count: i64 = if let Some(pin) = version_pin {
+            conn.query_row(
+                "SELECT COUNT(*) FROM p11_install_fact
+                  WHERE capability_ref = ?1 AND version_pin = ?2",
+                params![capability_ref, pin],
+                |row| row.get(0),
+            )
+            .map_err(unavailable("install fact pin"))?
+        } else {
+            conn.query_row(
+                "SELECT COUNT(*) FROM p11_install_fact WHERE capability_ref = ?1",
+                [capability_ref],
+                |row| row.get(0),
+            )
+            .map_err(unavailable("install fact exists"))?
+        };
+        Ok(count > 0)
+    }
+
+    /// Owner-only InstallFact after a passed review. Does not insert a Grant.
+    pub fn record_reviewed_install_fact(
+        &self,
+        caller: ConfirmCaller,
+        review: &SecurityReview,
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        self.validate_security_review(review)?;
+        if self.pin_is_rolled_back(&review.capability_ref, &review.version_pin)? {
+            return Err(ProjectAggregateError::Rejected {
+                detail: "rolled-back version_pin cannot be reinstalled",
+            });
+        }
+        self.record_install_fact(&review.capability_ref, &review.version_pin, now_ms)
+    }
+
+    pub fn review_update(
+        &self,
+        caller: ConfirmCaller,
+        review: &SecurityReview,
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        self.record_reviewed_install_fact(caller, review, now_ms)
+    }
+
+    pub fn compat_test(
+        &self,
+        capability_ref: &str,
+        old_pin: &str,
+        new_pin: &str,
+    ) -> Result<String, ProjectAggregateError> {
+        Self::reject_secret_shape(capability_ref.as_bytes())?;
+        Self::reject_secret_shape(old_pin.as_bytes())?;
+        Self::reject_secret_shape(new_pin.as_bytes())?;
+        if old_pin.is_empty() || new_pin.is_empty() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "compat_test requires version pins",
+            });
+        }
+        Ok(if major_pin(old_pin) == major_pin(new_pin) {
+            "compatible".to_owned()
+        } else {
+            "incompatible".to_owned()
+        })
+    }
+
+    pub fn rollback_install(
+        &self,
+        caller: ConfirmCaller,
+        capability_ref: &str,
+        version_pin: &str,
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        Self::require_owner(caller)?;
+        if !self.install_fact_exists(capability_ref, Some(version_pin))? {
+            return Err(ProjectAggregateError::NotFound {
+                detail: "install fact not found",
+            });
+        }
+        let marker = rollback_pin(version_pin);
+        self.record_install_fact(capability_ref, &marker, now_ms)
+    }
+
+    fn pin_is_rolled_back(
+        &self,
+        capability_ref: &str,
+        version_pin: &str,
+    ) -> Result<bool, ProjectAggregateError> {
+        self.install_fact_exists(capability_ref, Some(&rollback_pin(version_pin)))
+    }
+
+    fn validate_security_review(
+        &self,
+        review: &SecurityReview,
+    ) -> Result<(), ProjectAggregateError> {
+        Self::reject_secret_shape(review.capability_ref.as_bytes())?;
+        Self::reject_secret_shape(review.version_pin.as_bytes())?;
+        Self::reject_secret_shape(review.source.as_bytes())?;
+        Self::reject_secret_shape(review.license.as_bytes())?;
+        if review.capability_ref.trim().is_empty()
+            || review.version_pin.trim().is_empty()
+            || review.source.trim().is_empty()
+            || review.license.trim().is_empty()
+            || review.hidden_instruction.trim().is_empty()
+            || review.prompt_injection.trim().is_empty()
+            || review.file_intent.trim().is_empty()
+            || review.network_intent.trim().is_empty()
+            || review.command_intent.trim().is_empty()
+            || review.sources.is_empty()
+        {
+            return Err(ProjectAggregateError::Rejected {
+                detail: "unreviewed install refused",
+            });
+        }
+        let kind = review.kind.trim();
+        if kind != "skill" && kind != "mcp" && kind != "tool" {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "capability kind must be skill, mcp, or tool",
+            });
+        }
+        let lowered_ref = review.capability_ref.to_ascii_lowercase();
+        if lowered_ref.contains("marketplace")
+            || lowered_ref.contains("engine-store")
+            || lowered_ref.starts_with("resource:")
+        {
+            return Err(ProjectAggregateError::Rejected {
+                detail: "marketplace / engine store / generic Resource schema refused",
+            });
+        }
+        if review.hidden_instruction != "none" || review.prompt_injection != "none" {
+            return Err(ProjectAggregateError::Rejected {
+                detail: "hidden instruction or prompt-injection found",
+            });
+        }
+        for finding in [
+            review.file_intent.as_str(),
+            review.network_intent.as_str(),
+            review.command_intent.as_str(),
+        ] {
+            if finding != "none" && finding != "declared" {
+                return Err(ProjectAggregateError::Rejected {
+                    detail: "undeclared file/network/command intent",
+                });
+            }
+        }
+        if kind == "mcp" {
+            let extras = [
+                review.dependencies.as_deref(),
+                review.executable_code.as_deref(),
+                review.secret_access.as_deref(),
+                review.tool_permissions.as_deref(),
+                review.supply_chain.as_deref(),
+            ];
+            if extras
+                .iter()
+                .any(|item| item.unwrap_or("").trim().is_empty())
+            {
+                return Err(ProjectAggregateError::Rejected {
+                    detail: "unreviewed MCP extras refused",
+                });
+            }
+            if review.executable_code.as_deref() != Some("none")
+                || review.secret_access.as_deref() != Some("none")
+            {
+                return Err(ProjectAggregateError::Rejected {
+                    detail: "MCP executable code or Secret access refused",
+                });
+            }
+        }
+        for source in review.sources.iter().chain(std::iter::once(&review.source)) {
+            let trimmed = source.trim();
+            let lowered = trimmed.to_ascii_lowercase();
+            if trimmed.is_empty()
+                || lowered.starts_with("ambient:")
+                || lowered.contains("engine-store")
+                || lowered.contains("marketplace")
+                || !(lowered.starts_with("https://") || lowered.starts_with("owner://"))
+            {
+                return Err(ProjectAggregateError::Rejected {
+                    detail: "unpinned or ambient discovery source refused",
+                });
+            }
+        }
+        Ok(())
+    }
+
     pub fn record_install_fact(
         &self,
         capability_ref: &str,
@@ -1255,6 +1538,14 @@ pub(crate) fn reject_installed_agent_chrome(value: &str) -> Result<(), ProjectAg
 fn next_id(prefix: &str) -> Result<String, ProjectAggregateError> {
     let generated = uuid::Uuid::now_v7().as_hyphenated().to_string();
     Ok(format!("{prefix}-{generated}"))
+}
+
+fn major_pin(version_pin: &str) -> &str {
+    version_pin.split('.').next().unwrap_or(version_pin)
+}
+
+fn rollback_pin(version_pin: &str) -> String {
+    format!("{version_pin}:rolled-back")
 }
 
 fn unavailable(operation: &'static str) -> impl Fn(rusqlite::Error) -> ProjectAggregateError {

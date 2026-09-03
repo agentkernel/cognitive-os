@@ -32,6 +32,7 @@ use crate::project_aggregate::{
     approval_preview_narrow_migration_entry, project_aggregate_migration_entry,
     standing_approval_policy_migration_entry,
 };
+use crate::project_chat::project_chat_migration_entry;
 use crate::provider_control_plane::provider_control_plane_migration_entry;
 use crate::routine::routine_migration_entry;
 use crate::routine_arming::routine_arming_migration_entry;
@@ -129,7 +130,10 @@ impl PersonalDatabasePrepareReport {
 /// (P13-T05; `p11_routine_occurrence` rebuilt to admit `attempted`;
 /// `completion_claimed` CHECK=0; outcomes are daemon-observed Attempt
 /// terminals, never `success`; the daemon scheduler tick is the only
-/// dispatcher of `task://personal/routine/*` rows).
+/// dispatcher of `task://personal/routine/*` rows), and
+/// v39 = Project group chat Owner turns (`p13_project_chat_turn`; mention /
+/// routing / candidate envelope; chat never applies a PlanRevision; canvas
+/// Confirm is the only writer; secret-shaped body refused).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -173,6 +177,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         hosted_dsh_attempt_migration_entry(),
         attempt_artifact_migration_entry(),
         routine_arming_migration_entry(),
+        project_chat_migration_entry(),
     ]
 }
 

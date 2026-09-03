@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:923491f80da779f66671f6ef5869be0e14bc72802c1e75c26f34440f50f8714f"
+fingerprint: "sha256:e284d5c6924ce6727e19cec0ea4af36730f13437b11e5cfefa735dde4ca7b4c7"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---

@@ -12,6 +12,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
   - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
+  - path: personal/apps/kernel-server/src/personal/project_chat.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -24,7 +25,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:15de23a1b0ba24e3717a1316a3b9fe4620b1340ff9acd11b8b286c3b6d54f11e"
+fingerprint: "sha256:6799d359f69a3c025414090b3096c8d28dd866c46fce6460513080a5cc164725"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -170,7 +171,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/detail` | management | Personal-private Project detail. A Task ref is not a Project id (404). Unconfirmed drafts have no Project row. |
 | `GET` | `/management/project/v1/axis` | management | Current PlanRevision axis (stages, gap flags, confirm_status). Missing plan is empty/unavailable, not a fake wizard. |
 | `GET` | `/management/project/v1/roster` | management | Employee roster. Empty projection uses `authority_note: empty-roster`. Seated members list `employee_id`, state, responsible stages, model_bound, and current-manager flag. Not a third identity besides Employee. |
-| `GET` | `/management/project/v1/employee.catalog` | management | Grant catalog for one Employee in one Project. Recipe mention is not a grant. |
+| `GET` | `/management/project/v1/employee.catalog` | management | Grant catalog for one Employee in one Project. Recipe mention is not a grant. Also lists InstallFacts with `install_is_not_grant: true`. |
 | `GET` | `/management/project/v1/pending-previews` | management | Pending ApprovalPreview announcement list. Omits `preview_digest` (conversation/canvas announcement seam). |
 | `GET` | `/management/project/v1/preview-detail` | management | Canvas preview-detail: includes `preview_digest`, `receipt_ref`, and `superseded_by` for management confirm/reject/narrow. Not a chat Approve control. |
 | `POST` | `/management/project/v1/draft.apply` | management | Apply a candidate onto an open draft at exact `base_seq`. Wrong seq is conflict (N13). |
@@ -178,7 +179,15 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance / grant-expansion). Response includes `preview_digest` for canvas confirm. Secret-shaped bytes are rejected at registration. |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner-management reject of a pending ApprovalPreview. Leaves a receipt. The rejected digest is never confirmable. Not a chat Approve control. |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner-management narrow: mint a new pending preview and freeze the old row as superseded (`superseded_by`). Old digest is never confirmable. Stale is mechanical `base_state_digest` mismatch only. |
-| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. Stale digest is rejected. |
+| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. An install-phase grant-expansion writes only an InstallFact and consumes the preview (`granted: false`). Stale digest is rejected. Chat cannot Approve. |
+| `POST` | `/management/project/v1/capability.discover` | management | Admit an assistant-led Skill/MCP discovery candidate with pinned sources. Does not install or grant. Unreviewed / ambient / marketplace sources are refused. |
+| `POST` | `/management/project/v1/capability.acquire` | management | Mint a grant-expansion ApprovalPreview after a structured security review. `phase=install` or `phase=grant` (grant requires an InstallFact). Does not write a Grant. Chat/task aliases are 403. |
+| `POST` | `/management/project/v1/capability.compat-test` | management | Compare two version pins for the same capability. Compatible on the same major; never a grant. |
+| `POST` | `/management/project/v1/capability.rollback` | management | Owner-only rollback marker for a version-pinned InstallFact. The rolled-back pin cannot be reinstalled. Does not invent a Grant. |
+| `POST` | `/task/project/v1/capability.discover` | task | Forbidden: Skill/MCP discovery is management-channel only. |
+| `POST` | `/task/project/v1/capability.acquire` | task | Forbidden: Skill/MCP acquire is management-channel only. |
+| `POST` | `/task/project/v1/capability.compat-test` | task | Forbidden: compat-test is management-channel only. |
+| `POST` | `/task/project/v1/capability.rollback` | task | Forbidden: rollback is management-channel only. |
 | `GET` | `/management/project/v1/standing-policies` | management | Settings list of non-revoked StandingApprovalPolicy rows (time-box ≤7d). Chat cannot mint. Not Inbox L1. |
 | `POST` | `/management/project/v1/standing-policy.create` | management | Mint a time-boxed StandingApprovalPolicy. `expires_at` is required and must be ≤7 days from now. Missing or over-long expiry fails closed. |
 | `POST` | `/management/project/v1/standing-policy.revoke` | management | Settings revoke of one StandingApprovalPolicy. Chat/task aliases are 403. |
@@ -227,6 +236,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/routine.armings` | management | Newest-first arming history of one `project_id` (armed / paused / superseded), so instruction history stays visible. |
 | `GET` | `/management/project/v1/routine.runs` | management | The `runs` read (P13-T05): live armings, the occurrence ledger across the Project's Routines (active / queued / coalesced / missed / attempted with a derived `dispatch_state` such as `running`, `waiting-paused`, `waiting-host`), host dispatch availability from P11-T02 facts, a summary, and the pointer to the real Attempt history (`dsh.hosted.attempt.list` / `.detail`). Every row carries `completion_claimed=false` and `verification_status=not-run`; an outcome is a daemon-observed Attempt terminal, never `success`. |
 | `GET` | `/management/project/v1/today.overview` | management | Today live-Project overview (P13-T05): created / live / blocked counts and one row per live Project (status, Attempts done / failed / unknown in `period` = today|week|month on a UTC basis, summed daemon-observed duration or `null`, current stage from the live arming, running / queued / missed facts). `kpi_wall: false`; cost is `unknown`; `attempts_done` counts children that answered `done` and is never completion. |
+| `POST` | `/management/project/v1/chat.post` | management | Post one Owner group-chat turn inside a Project (P13-T06). The daemon routes `@manager` to a PlanRevision candidate + `plan-revision` ApprovalPreview and `@member` to a `task-revision` candidate bounded to that Member's responsible stage; un-addressed turns take the manager-default briefing. Chat never applies a PlanRevision and has no Approve (`approve_attempted` CHECK = 0). Secret-shaped bodies are 422 with a Settings pointer (SecretStore takeover). Confirm stays on the Projects canvas `confirm` route. |
+| `GET` | `/management/project/v1/chat.thread` | management | Read the Project group-chat thread (Owner turns plus daemon-composed manager / Member speech). Cross-Project reads fail closed. Management-channel only. |
 | `POST` | `/management/host/v1/home.admit` | management | Admit Personal Home `app/`+`data/` (P11-T02). Install root must end with `Personal Home`; GNU/WSL/Linux roots, ACL escape, and secret env/argv fail closed. Upgrade replaces app and preserves data. Native ACL E2E is `not-run`. |
 | `POST` | `/management/host/v1/daemon.bind` | management | Bind the single daemon to one admitted Home. Duplicate bind while bound/recovering/resumed fails closed. Tray role is observe-and-request only. |
 | `POST` | `/management/host/v1/close.request` | management | Typed close: background-or-pause is honored only when the daemon can honor background; otherwise the request is rejected (fake background forbidden). |
@@ -298,6 +309,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/routine.armings` | task | Forbidden: Routine arming history is management-channel only. |
 | `GET` | `/task/project/v1/routine.runs` | task | Forbidden: the runs ledger is management-channel only. |
 | `GET` | `/task/project/v1/today.overview` | task | Forbidden: the Today overview is management-channel only. |
+| `POST` | `/task/project/v1/chat.post` | task | Forbidden: Project group chat is management-channel only. Chat cannot Approve. |
+| `GET` | `/task/project/v1/chat.thread` | task | Forbidden: Project group-chat thread is management-channel only. |
 | `POST` | `/task/host/v1/home.admit` | task | Forbidden: Windows host admit is management-channel only. |
 | `POST` | `/task/host/v1/daemon.bind` | task | Forbidden: Windows host daemon bind is management-channel only. |
 | `POST` | `/task/host/v1/close.request` | task | Forbidden: Windows host close is management-channel only. |

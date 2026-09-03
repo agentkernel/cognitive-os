@@ -2065,6 +2065,8 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T06 — Project group conversation + manager routing（`@manager` / `@member`）
 
+- **status:** done (2026-09-03; PR [#316](https://github.com/agentkernel/cognitive-os/pull/316); lease `lease/personal/P13-T06/group-chat` closed in this delivery → PARALLEL-LANES §3.1; `P13-T06/D01` done; required CI [33742029203](https://github.com/agentkernel/cognitive-os/actions/runs/33742029203) **SUCCESS** at `6bc56525`; live-validated `7ae9db50`: store 10/10 + vault 9/9 + migrations 8/8, kernel-server 7/7, clippy clean, **live daemon E2E 7/7**; running report [P13-T06 report](../checkpoints/2026-09-03-personal-p13-t06-group-chat-report.md), closure [P13-T06 closure](../checkpoints/2026-09-03-personal-p13-t06-group-chat-closure.md)).
+
 - **2.0.0 表面:** 右栏在 Project 内是群聊（Owner / manager / Members），在 Project 外
   是 Personal Assistant；`@manager` / `@member` 路由；manager-default speech；成员
   proactive speech 仅 mentioned / delivering / handoff / blocked / decision-request；
@@ -2170,6 +2172,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T10 — Skill/MCP security-reviewed acquisition + scoped grant
 
+- **status (2026-09-03):** `done` — `P13-T10/D01` on `personal/P13-T10-skill-mcp-grant` (Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318); worktree `D:\agent-kernel-wt-P13-T10`; lease `lease/personal/P13-T10/skill-mcp-grant`). Formal acceptance: install ≠ grant; Request acquire preview only; no Activate. Validated implementation `d861d341`. No new migration. Supply-chain host E2E `not-run` until P13-T13.
 - **2.0.0 表面:** 成员 skills / tools / perms 标签可发起获取；助手主导发现 → 结构化
   安全评审展示 → 首次安装或扩权前 exact Owner 画布 preview → 版本锁定 capability
   artifact → 独立 Project/Member grant → 更新评审 / 兼容测试 / 回滚。广泛

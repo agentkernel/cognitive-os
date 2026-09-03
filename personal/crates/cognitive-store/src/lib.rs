@@ -36,6 +36,7 @@ pub mod migration;
 pub mod personal_backup;
 pub mod personal_db;
 pub mod project_aggregate;
+pub mod project_chat;
 pub mod provider_control_plane;
 pub mod routine;
 pub mod routine_arming;
@@ -72,9 +73,9 @@ pub use conversation::{
     conversation_migration_entry,
 };
 pub use employee::{
-    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, MEMBER_BLUEPRINT_ID,
-    PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress, SpeechDecision,
-    employee_migration_entry,
+    EMPLOYEE_SCHEMA_V27, EmployeeRow, EmployeeStore, HandoffSpec, InstallFactRow,
+    MEMBER_BLUEPRINT_ID, PROJECT_MANAGER_BLUEPRINT_ID, RosterProposal, SeatingProgress,
+    SecurityReview, SpeechDecision, employee_migration_entry,
 };
 pub use faults::{CrashHarness, CrashPoint, RecordedDispatch, ScriptedExecutor, ScriptedOutcome};
 pub use hosted_dsh::{
@@ -132,6 +133,12 @@ pub use project_aggregate::{
     StandingPolicyRow, approval_preview_narrow_migration_entry, project_aggregate_migration_entry,
     reject_closed_candidate_schema, standing_approval_policy_migration_entry,
     validate_assistant_provenance,
+};
+pub use project_chat::{
+    APPROVAL_PREVIEW_SUBJECT_KINDS_V39, CHAT_ANNOUNCE_KIND, CHAT_BODY_LIMIT, CHAT_MENTIONS,
+    CHAT_PROPOSAL_MAX_STAGES, CHAT_ROUTINGS, CHAT_THREAD_LIMIT, ChatParticipant, ChatReply,
+    ChatThread, ChatThreadRow, ChatTurnOutcome, ChatTurnSpec, PROJECT_CHAT_SCHEMA_V39,
+    ProjectChatStore, chat_secret_refusal_guidance, project_chat_migration_entry,
 };
 pub use provider_control_plane::{
     AgentProviderBindingRecord, BUILTIN_PRICE_TABLE_VERSION, CostOutcome, NewUsageEvent,

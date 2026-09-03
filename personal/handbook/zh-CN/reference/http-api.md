@@ -12,6 +12,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
   - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
+  - path: personal/apps/kernel-server/src/personal/project_chat.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -24,7 +25,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:15de23a1b0ba24e3717a1316a3b9fe4620b1340ff9acd11b8b286c3b6d54f11e"
+fingerprint: "sha256:6799d359f69a3c025414090b3096c8d28dd866c46fce6460513080a5cc164725"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -170,7 +171,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/detail` | management | Personal-private Project 详情。Task ref 不是 Project id（404）。未确认草稿没有 Project 行。 |
 | `GET` | `/management/project/v1/axis` | management | 当前 PlanRevision 流程轴（环、gap 标记、confirm_status）。无计划时为空/unavailable，不是假向导。 |
 | `GET` | `/management/project/v1/roster` | management | 员工花名册。空投影使用 `authority_note: empty-roster`。已就位成员列出 `employee_id`、state、负责环、model_bound 与 current-manager 标记。不是 Employee 之外的第三套身份。 |
-| `GET` | `/management/project/v1/employee.catalog` | management | 一个 Project 内一名 Employee 的 Grant 目录。配方提及不是授权。 |
+| `GET` | `/management/project/v1/employee.catalog` | management | 一个 Project 内一名 Employee 的 Grant 目录。配方提及不是授权。同时列出 InstallFact，并标明 `install_is_not_grant: true`。 |
 | `GET` | `/management/project/v1/pending-previews` | management | 待批 ApprovalPreview 宣布列表。省略 `preview_digest`（对话/画布宣布接缝）。 |
 | `GET` | `/management/project/v1/preview-detail` | management | 画布 preview-detail：含供 management 确认/拒绝/改窄的 `preview_digest`、`receipt_ref`、`superseded_by`。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/draft.apply` | management | 按精确 `base_seq` 把候选应用到未关闭草稿。错误 seq 为冲突（N13）。 |
@@ -178,7 +179,15 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance / grant-expansion）。响应含供画布确认的 `preview_digest`。secret 形态字节在登记时拒绝。 |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner management 拒绝待批 ApprovalPreview。留下 receipt。被拒 digest 永不可确认。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner management 改窄：签发新的 pending preview，旧行 `superseded`（`superseded_by`）。旧 digest 永不可确认。stale 只按机械 `base_state_digest` 不等判定。 |
-| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`；grant-expansion 写入 Grant。过期 digest 拒绝。 |
+| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`；grant-expansion 写入 Grant。install 阶段的 grant-expansion 只写 InstallFact 并消费 preview（`granted: false`）。过期 digest 拒绝。聊天不能 Approve。 |
+| `POST` | `/management/project/v1/capability.discover` | management | 接纳带钉住 sources 的助手主导 Skill/MCP 发现候选。不安装、不授权。未评审 / ambient / marketplace 来源拒绝。 |
+| `POST` | `/management/project/v1/capability.acquire` | management | 结构化安全评审后签发 grant-expansion ApprovalPreview。`phase=install` 或 `phase=grant`（grant 需要 InstallFact）。不写 Grant。聊天/task 别名为 403。 |
+| `POST` | `/management/project/v1/capability.compat-test` | management | 比较同一 capability 的两个 version pin。同主版本为 compatible；不是授权。 |
+| `POST` | `/management/project/v1/capability.rollback` | management | Owner 对已钉版本 InstallFact 写入回滚标记。被回滚的 pin 不能再安装。不发明 Grant。 |
+| `POST` | `/task/project/v1/capability.discover` | task | 禁止：Skill/MCP 发现仅限 management 通道。 |
+| `POST` | `/task/project/v1/capability.acquire` | task | 禁止：Skill/MCP 获取仅限 management 通道。 |
+| `POST` | `/task/project/v1/capability.compat-test` | task | 禁止：compat-test 仅限 management 通道。 |
+| `POST` | `/task/project/v1/capability.rollback` | task | 禁止：rollback 仅限 management 通道。 |
 | `GET` | `/management/project/v1/standing-policies` | management | Settings 列出未撤销的 StandingApprovalPolicy（时间盒 ≤7 天）。聊天不能签发。不是 Inbox 一级。 |
 | `POST` | `/management/project/v1/standing-policy.create` | management | 签发有时限的 StandingApprovalPolicy。`expires_at` 必填且距现在 ≤7 天。缺省或超长失败闭合。 |
 | `POST` | `/management/project/v1/standing-policy.revoke` | management | Settings 撤销一条 StandingApprovalPolicy。聊天/task 别名为 403。 |
@@ -227,6 +236,8 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/routine.armings` | management | 一个 `project_id` 的 arming 历史（最新在前；armed / paused / superseded），使指令历史可见。 |
 | `GET` | `/management/project/v1/routine.runs` | management | `runs` 读取（P13-T05）：live armings、该 Project 全部 Routine 的 occurrence 台账（active / queued / coalesced / missed / attempted，附派生 `dispatch_state` 如 `running`、`waiting-paused`、`waiting-host`）、来自 P11-T02 事实的宿主可派发性、汇总，以及指向真实 Attempt 历史（`dsh.hosted.attempt.list` / `.detail`）的路径。每行 `completion_claimed=false`、`verification_status=not-run`；outcome 是 daemon 观察到的 Attempt 终态，永无 `success`。 |
 | `GET` | `/management/project/v1/today.overview` | management | Today live Project 概览（P13-T05）：created / live / blocked 计数，以及每个 live Project 一行（状态、`period` = today|week|month（UTC）内 done / failed / unknown 的 Attempt 数、daemon 观察的时长合计或 `null`、来自 live arming 的当前环节、running / queued / missed 事实）。`kpi_wall: false`；cost 为 `unknown`；`attempts_done` 统计回答 `done` 的 child，永不等于完成。 |
+| `POST` | `/management/project/v1/chat.post` | management | 在 Project 内发布一条 Owner 群聊回合（P13-T06）。daemon 把 `@manager` 路由为 PlanRevision 候选 + `plan-revision` ApprovalPreview，把 `@member` 路由为仅限该成员负责环节的 `task-revision` 候选；未点名回合走 manager-default briefing。聊天永不落 PlanRevision，也无 Approve（`approve_attempted` CHECK = 0）。secret-shape 正文 422 并指向 Settings（SecretStore takeover）。确认仍走 Projects 画布 `confirm`。 |
+| `GET` | `/management/project/v1/chat.thread` | management | 读取 Project 群聊线程（Owner 回合加上 daemon 撰写的 manager / Member 发言）。跨 Project 读失败闭合。仅限 management 通道。 |
 | `POST` | `/management/host/v1/home.admit` | management | 受理 Personal Home `app/`+`data/`（P11-T02）。安装根必须以 `Personal Home` 结尾；GNU/WSL/Linux 根、ACL 逃逸、secret env/argv 失败闭合。升级替换 app、保留 data。原生 ACL E2E 为 `not-run`。 |
 | `POST` | `/management/host/v1/daemon.bind` | management | 把唯一 daemon 绑到已受理的 Home。已 bound/recovering/resumed 时重复绑定失败闭合。托盘角色仅 observe-and-request。 |
 | `POST` | `/management/host/v1/close.request` | management | 类型化关闭：仅当 daemon 能兑现 background 时才接受 background-or-pause；否则拒绝（禁止假 background）。 |
@@ -298,6 +309,8 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/routine.armings` | task | 禁止：Routine arming 历史仅限 management 通道。 |
 | `GET` | `/task/project/v1/routine.runs` | task | 禁止：runs 台账仅限 management 通道。 |
 | `GET` | `/task/project/v1/today.overview` | task | 禁止：Today 概览仅限 management 通道。 |
+| `POST` | `/task/project/v1/chat.post` | task | 禁止：Project 群聊仅限 management 通道。聊天不能 Approve。 |
+| `GET` | `/task/project/v1/chat.thread` | task | 禁止：Project 群聊线程仅限 management 通道。 |
 | `POST` | `/task/host/v1/home.admit` | task | 禁止：Windows host admit 仅限 management 通道。 |
 | `POST` | `/task/host/v1/daemon.bind` | task | 禁止：Windows host daemon bind 仅限 management 通道。 |
 | `POST` | `/task/host/v1/close.request` | task | 禁止：Windows host close 仅限 management 通道。 |

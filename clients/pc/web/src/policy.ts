@@ -26,7 +26,7 @@ export const SECRET_FIELD_NAMES = [
   "secretRef",
 ] as const;
 
-const SECRET_SHAPE = /(?:sk-|api[_-]?key|secret_ref|Bearer\s+[A-Za-z0-9._-]+)/i;
+const SECRET_SHAPE = /(?:(?<![A-Za-z0-9])sk-|api[_-]?key|secret_ref|Bearer\s+[A-Za-z0-9._-]+)/i;
 
 export function assertNoBrowserAuthorityTarget(target: string): void {
   if ((FORBIDDEN_BROWSER_TARGETS as readonly string[]).includes(target)) {

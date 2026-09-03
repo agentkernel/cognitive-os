@@ -38,6 +38,7 @@ use super::hosted_dsh_attempt;
 use super::lifecycle::{DaemonLifecycleError, DaemonSingleInstanceLock};
 use super::pinned_https;
 use super::project_aggregate;
+use super::project_chat;
 use super::provider_control_plane;
 use super::provider_proxy::{
     ProviderProxyError, ProviderProxyService, RustlsProviderTransport, SseToolCallNormalizer,
@@ -779,6 +780,16 @@ fn dispatch_http_route(
     }
     if routine_runs::matches(&method_path) {
         return handle_routine_runs_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            authority,
+            authority_store,
+        );
+    }
+    if project_chat::matches(&method_path) {
+        return handle_project_chat_route(
             stream,
             &method_path,
             headers,
@@ -2006,6 +2017,56 @@ fn handle_hosted_dsh_attempt_route(
     }
     let host = hosted_dsh_attempt::HostedAttemptHost::from_layout(layout);
     let response = hosted_dsh_attempt::handle(method_path, body, authority_store.as_ref(), &host);
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+/// P13-T06 Project group chat: management-channel only; task aliases 403.
+fn handle_project_chat_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if project_chat::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = project_chat::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = project_chat::handle(method_path, body, authority_store.as_ref());
     write_response(
         stream,
         response.status,

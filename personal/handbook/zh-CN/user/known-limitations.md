@@ -19,7 +19,7 @@ sources:
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:f17a3537dfae1ca155c8ca741268003d51b32aa8463781d19e138c618c6104b6"
+fingerprint: "sha256:b543703d966b52925d88696782667191f62a5367b6d9d38fca5ff2c170884ae9"
 non_claims:
   - 本清单对应记录的阅读基线；后续合并可能增减真实限制——指纹检查会标记过期。
 ---
@@ -70,6 +70,7 @@ non_claims:
   signing / B01-W。`P13-T03` 已关闭隐藏 Pi 助手缺口：四类 turn 现在真的经 daemon
   Provider 代理运行 exact pinned Pi（仅 Linux 证据；Windows Pi 路由在 `P13-T13` 前
   保持 `not-run`），Provider 未绑时给出 Settings 指路而非聊天框。
+- **Project 群聊永不 Approve**：在 Project 内右栏把 Owner / manager / Members 群聊叠在 Personal Assistant 之上；`@manager` / `@member` 铸造 digest 绑定 preview；Confirm 仍在 Projects 画布。secret-shape 聊天被拒并指向 Settings。Windows 宿主 E2E 在 `P13-T13` 前为 `not-run`。
 - 预算告警只观察/查询，不阻断也不改路 Provider 调用。
 - 自定义端点只允许 OpenAI 兼容；第三方 Anthropic 兼容 URL 被拒绝。`cognitive usage
   query` 与 `cognitive audit query` 无过滤器；用量 JSON 含带标签事件（`cost` /
