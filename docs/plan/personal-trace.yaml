@@ -492,8 +492,14 @@ personal_requirements:
     # live-project overview; checkpoints and process exit never completion) is
     # implemented and exercised live on DEV-LINUX-NATIVE-01 + required CI
     # (PR #315, ecd35ab0); clock / sleep / restart host cells stay not-run
-    # until P13-T13. evidence_status stays not-run until P13-T06 (group
-    # conversation) and P13-T11 (reflection) close their clauses.
+    # until P13-T13. 2026-09-03: the P13-T06 clause (Project group chat layered
+    # against the Personal Assistant; @manager → plan-revision preview; @member
+    # → that Member's task-revision only; canvas Confirm is the only PlanRevision
+    # writer; chat has no Approve; secret-shaped body refused → Settings; @ only
+    # into the unsent draft; speech rules are daemon record kinds) is implemented
+    # and exercised live on DEV-LINUX-NATIVE-01 + required CI (PR #316, 7ae9db50);
+    # rendered /ui/ review is P13-T12/D02. evidence_status stays not-run until
+    # P13-T11 (reflection) closes its clause.
     evidence_status: not-run
 
   - id: PERS-PR-050

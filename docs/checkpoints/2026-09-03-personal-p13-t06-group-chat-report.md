@@ -68,8 +68,10 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `DEV-LINUX-NATIVE-01` store `p13_t06` + `p11_t10_vault` + migrations; kernel-server `project_chat`; clippy | **pass** 10/10 + 9/9 + 8/8; 7/7; clippy 0 | `DEV-LINUX-NATIVE-01` | `7ae9db50` | clone dirty=0; `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import` green. |
 | 2026-09-03 | Live daemon negatives on `127.0.0.1:48786` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` | `7ae9db50` | scratch seed `~/cos-wt/p13t06-seed` (outside repo) → G1+plan+seated A/B; product HTTP: task-channel 403, Approve 403, secret 422, cross-thread 403, cross-member 403, unbounded thread 422, `@manager` preview 200 `chat_approve:false`. Bootstrap 600 never printed. Runtime removed; 48181/39245/48681 untouched. |
 | 2026-09-03 | Required CI [33734948118](https://github.com/agentkernel/cognitive-os/actions/runs/33734948118) at `7ae9db50` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `7ae9db50` | resolve SUCCESS; ubuntu 4m14s SUCCESS; windows SUCCESS; required-ci SUCCESS. Live-validated implementation revision. |
-| 2026-09-03 | merge `origin/main@8e0d497d` (P0-T01/D02 closed PR #314) | recorded | docs-only | merge HEAD | Conflict only in formal-plan header, Current snapshot unique-next / Active-lease, and validation-commands fingerprints. Kept T06 in-progress + v39; P0-T01/D02 **done**. Do not claim sibling T07/T08/T10. |
+| 2026-09-03 | merge `origin/main@8e0d497d` (P0-T01/D02 closed PR #314) | recorded | docs-only | `6bc56525` | Conflict only in formal-plan header, Current snapshot unique-next / Active-lease, and validation-commands fingerprints. Folded P0-T01/D02 **done**. Do not claim sibling T07/T08/T10. |
+| 2026-09-03 | Required CI [33742029203](https://github.com/agentkernel/cognitive-os/actions/runs/33742029203) at `6bc56525` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `6bc56525` | resolve 2s; ubuntu 4m19s; windows 14m5s; required-ci 3s. Merge of `origin/main@8e0d497d`. |
+| 2026-09-03 | D01 acceptance mapped; lease closed in this delivery | recorded | docs-only | close HEAD | Ready/merge PR #316 after this close-head required CI. Parent next ready: `P13-T09`. |
 
 ## Unique next
 
-1. Required CI on this merge HEAD (to-be-merged), then map D01, ready/merge PR #316, close lease. Parent next ready card after T06 close: `P13-T09`. Do not claim sibling-owned `P13-T07` / `T08` / `T10`.
+1. Ready/merge PR #316 after required CI on this close HEAD. Parent next ready card: `P13-T09`. Do not claim sibling-owned `P13-T07` / `T08` / `T10`.

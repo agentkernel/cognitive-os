@@ -2065,7 +2065,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T06 — Project group conversation + manager routing（`@manager` / `@member`）
 
-- **status:** in-progress — claimed 2026-09-03 on `lease/personal/P13-T06/group-chat`, branch `personal/P13-T06-group-chat` (worktree `D:\agent-kernel-wt-p13-t06` at `origin/main@327478d4`; authority migration v39).
+- **status:** done (2026-09-03; PR [#316](https://github.com/agentkernel/cognitive-os/pull/316); lease `lease/personal/P13-T06/group-chat` closed in this delivery → PARALLEL-LANES §3.1; `P13-T06/D01` done; required CI [33742029203](https://github.com/agentkernel/cognitive-os/actions/runs/33742029203) **SUCCESS** at `6bc56525`; live-validated `7ae9db50`: store 10/10 + vault 9/9 + migrations 8/8, kernel-server 7/7, clippy clean, **live daemon E2E 7/7**; running report [P13-T06 report](../checkpoints/2026-09-03-personal-p13-t06-group-chat-report.md), closure [P13-T06 closure](../checkpoints/2026-09-03-personal-p13-t06-group-chat-closure.md)).
 
 - **2.0.0 表面:** 右栏在 Project 内是群聊（Owner / manager / Members），在 Project 外
   是 Personal Assistant；`@manager` / `@member` 路由；manager-default speech；成员
