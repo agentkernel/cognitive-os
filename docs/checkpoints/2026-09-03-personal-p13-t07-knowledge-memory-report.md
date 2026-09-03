@@ -12,7 +12,7 @@
 
 ## Unique next action
 
-Push this D01 checkpoint as a Draft PR; required CI on the pushed HEAD. Keep `P13-T07/D01` `in-progress` until required CI is green. Do not close the task.
+Push governance-fix checkpoint on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) (remove `PARALLEL-LANES.md` from lease writable paths; align Phase 13 / Layer 1 counts with `P13-T07` + `P13-T12` in-progress). Keep `P13-T07/D01` `in-progress` until required CI is green on PR HEAD. Do not close the task.
 
 ## Failure-first (D01)
 
@@ -35,4 +35,5 @@ Push this D01 checkpoint as a Draft PR; required CI on the pushed HEAD. Keep `P1
 | 2026-09-03 | `cargo test -p kernel-server p13_t07 --locked` | **pass** 2/2 | same local MSVC | worktree, uncommitted | labeled/documents/task aliases + promote preview/confirm + auto-admit 404 then 201 |
 | 2026-09-03 | Dual Track vitest `knowledgeMemory` + `vault` + `knowledgeIngest` | **pass** 22/22 | `DEV-WIN-GNU-01` / Node | worktree, uncommitted | no new KNOWN_ROUTES; no Admit button |
 | 2026-09-03 | Host FS/privacy E2E | **not-run** | `P13-T13` | — | recorded, not inferred pass |
-| 2026-09-03 | required CI | **not-run** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | after push | unique next |
+| 2026-09-03 | required CI run [33746065086](https://github.com/agentkernel/cognitive-os/actions/runs/33746065086) at `e1e276df` | **fail** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) | `check-consistency`: Phase 13 counts 13/5/1/0/7 vs task rows 13/5/2/0/6; lease owned `PARALLEL-LANES.md` |
+| 2026-09-03 | governance fix (lease ledger + plan/PROGRESS counts) | **pending** | worktree | after push | unique next: required CI green |
