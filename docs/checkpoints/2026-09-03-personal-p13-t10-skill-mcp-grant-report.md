@@ -10,7 +10,7 @@
 
 ## Unique next action
 
-Push the D01 checkpoint; required CI at that head; Dual Track web tests on this worktree; `DEV-LINUX-NATIVE-01` focused store + kernel-server tests + clippy. Do not merge until D01 acceptance. Supply-chain host E2E remains `not-run`.
+Required CI + `DEV-LINUX-NATIVE-01` focused store + kernel-server + clippy on Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318) HEAD `0d6fc2af`. Do not merge until D01 acceptance. Supply-chain host E2E remains `not-run`.
 
 ## Failure-first (D01)
 
@@ -39,4 +39,5 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `cargo test -p kernel-server http_capability_acquire_install_is_not_grant_and_refusals --locked` | **pass** 1/1 | local MSVC override | worktree | syntax fix in acquire match arm; install ≠ grant |
 | 2026-09-03 | `clients/pc/web` focused vitest (memberConfig / capabilityAcquire / hitl / hitlConfirm) | **pass** 23/23 (4 files) | `DEV-WIN-GNU-01` (Node) | worktree | empty catalog still shows acquire; no Activate |
 | 2026-09-03 | `cargo fmt --all -- --check` / `generate-handbook` + `fill-handbook-fingerprints` / `check-handbook` / `generate-handbook --check` | **pass** | `DEV-WIN-GNU-01` + MSVC fmt | worktree | 58×2 handbook; 18 generated pages byte-identical |
-| 2026-09-03 | Required CI / `DEV-LINUX-NATIVE-01` | **not-run** | routed | pending push | exact-revision after Draft PR |
+| 2026-09-03 | D01 checkpoint pushed; Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318) opened | recorded | GitHub | `0d6fc2af` | Draft until full acceptance |
+| 2026-09-03 | Required CI / `DEV-LINUX-NATIVE-01` | **not-run** | routed | `0d6fc2af` | exact-revision after Draft PR |
