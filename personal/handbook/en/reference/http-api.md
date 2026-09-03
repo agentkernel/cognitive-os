@@ -17,13 +17,14 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: personal/apps/kernel-server/src/personal/routine_runs.rs
   - path: personal/apps/kernel-server/src/personal/server.rs
+  - path: personal/apps/kernel-server/src/personal/settings_connections.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/windows_host.rs
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3424f19b79441af17264eb165972105bd3e92b50ef83f73972325407eb63a19e"
+fingerprint: "sha256:ec5ba7d6287434b29c2b053831039ab73ad207968ea11366d048da49494b76dd"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -62,6 +63,12 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/agent-bindings` | management | Set one fixed binding. Optional expected_revision CAS; mismatch is HTTP 409 PROVIDER_BINDING_REVISION_STALE. Changing account or model without expected_revision is HTTP 409 PROVIDER_SILENT_REBIND_REJECTED. No auto fallback, load balancing, or implicit model switch. |
 | `POST` | `/management/agent-bindings/remove` | management | Remove one agent binding. |
 | `GET` | `/management/usage` | management | Query labelled usage: events with cost_label actual|estimated|unknown (unknown never 0), binding_explanation layers global→Project→employee→Task (missing layers unbound), and account vs quota fields. Secrets omitted. |
+| `POST` | `/management/settings/v1/connection.connect` | management | Settings Model Connections write: template or custom URL/compat + required API key + optional model. SecretStore takeover; response is connected/failed with secret presence only. Keyless persist is refused. Windows SecretStore host E2E is not-run until P13-T13. |
+| `GET` | `/management/settings/v1/diagnostics` | management | Collapsed Settings diagnostics: DSH/Pi exact version, health, update, rollback. Honest empty when engine health facts are absent (P13-T02 is not a mutex). |
+| `GET` | `/management/settings/v1/notifications` | management | Settings notification/recovery groups: missed, offline, resume. Empty groups when no home/host facts exist. Windows host E2E is not-run. |
+| `POST` | `/task/settings/v1/connection.connect` | task | Forbidden: Settings connections are management-channel only. |
+| `GET` | `/task/settings/v1/diagnostics` | task | Forbidden: Settings diagnostics are management-channel only. |
+| `GET` | `/task/settings/v1/notifications` | task | Forbidden: Settings notifications are management-channel only. |
 | `GET` | `/management/budgets` | management | List observe-only token/amount budgets. |
 | `POST` | `/management/budgets` | management | Set a monthly token/amount budget for an account or agent. Alerts do not block calls. |
 | `POST` | `/management/budgets/remove` | management | Remove one budget. |

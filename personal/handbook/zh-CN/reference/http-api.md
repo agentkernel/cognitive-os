@@ -17,13 +17,14 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: personal/apps/kernel-server/src/personal/routine_runs.rs
   - path: personal/apps/kernel-server/src/personal/server.rs
+  - path: personal/apps/kernel-server/src/personal/settings_connections.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/windows_host.rs
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3424f19b79441af17264eb165972105bd3e92b50ef83f73972325407eb63a19e"
+fingerprint: "sha256:ec5ba7d6287434b29c2b053831039ab73ad207968ea11366d048da49494b76dd"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -62,6 +63,12 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/agent-bindings` | management | 设置一个固定 binding。可选 expected_revision CAS；不匹配时 HTTP 409 PROVIDER_BINDING_REVISION_STALE。未带 expected_revision 就改账户或模型时 HTTP 409 PROVIDER_SILENT_REBIND_REJECTED。无自动回退、负载均衡或隐式模型切换。 |
 | `POST` | `/management/agent-bindings/remove` | management | 移除一个 agent binding。 |
 | `GET` | `/management/usage` | management | 查询带标签的用量：事件含 cost_label actual|estimated|unknown（unknown 绝不为 0）、binding_explanation 层 global→Project→employee→Task（缺失层 unbound），以及账户与配额字段分离。不返回 secret。 |
+| `POST` | `/management/settings/v1/connection.connect` | management | Settings Model Connections 写路径：模板或自定义 URL/兼容模式 + 必填 API key + 可选 model。经 SecretStore takeover；响应仅为 connected/failed 与 secret 是否存在。无 key 拒绝持久化。Windows SecretStore 宿主 E2E 在 P13-T13 前为 not-run。 |
+| `GET` | `/management/settings/v1/diagnostics` | management | 折叠的 Settings 诊断：DSH/Pi 精确版本、health、update、rollback。无引擎健康事实时诚实为空（P13-T02 非 mutex）。 |
+| `GET` | `/management/settings/v1/notifications` | management | Settings 通知/恢复分组：missed、offline、resume。无 home/host 事实时为空组。Windows 宿主 E2E 为 not-run。 |
+| `POST` | `/task/settings/v1/connection.connect` | task | 禁止：Settings 连接仅限 management 通道。 |
+| `GET` | `/task/settings/v1/diagnostics` | task | 禁止：Settings 诊断仅限 management 通道。 |
+| `GET` | `/task/settings/v1/notifications` | task | 禁止：Settings 通知仅限 management 通道。 |
 | `GET` | `/management/budgets` | management | 列出仅观察的 token/金额预算。 |
 | `POST` | `/management/budgets` | management | 为账户或 agent 设置月度 token/金额预算。告警不阻断调用。 |
 | `POST` | `/management/budgets/remove` | management | 移除一个预算。 |

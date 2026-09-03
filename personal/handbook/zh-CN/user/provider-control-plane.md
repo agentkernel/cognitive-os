@@ -14,6 +14,8 @@ sources:
     symbols: ["read_api_key_material"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
     symbols: ["PI_AGENT", "DSH_AGENT", "set_binding", "query_usage"]
+  - path: personal/apps/kernel-server/src/personal/settings_connections.rs
+    symbols: ["connect", "diagnostics", "notifications"]
   - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
   - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
@@ -31,7 +33,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:d87eae91c8bf8e2e5291fa03ac783a7f18e33a84eba0e95abf99bee7455902b4"
+fingerprint: "sha256:cf6088df3e60a8d0a602b8d0d09da621ca1833d80c0400164eb6fda9d1402c5f"
 non_claims:
   - 本页记录已交付的 daemon API、cognitive CLI 与当前 localhost Web UI 路径。不声称 live Secret Store 证明、live Provider/Pi/dsh 资格化、Gate、release、Profile、B01、Personal 2.0 桌面重设计/Account Hub 导入或 Agent-benefit。
 ---
@@ -60,6 +62,13 @@ Provider Control Plane 是 owner-local 的管理方式：管理**命名 LLM 账�
 key 只存进批准的 OS Secret Store、维护模型目录、把 Pi agent 与 DeepSeek harness
 （`dsh`）各自绑定到一组固定的 account+provider+model，并查询用量、仅观察的预算、
 告警与脱敏审计日志。
+
+daemon `/ui/` 的 OPC Settings（`#/settings`）是 Personal 2.0 的 Model
+Connections 写路径：主流模板下拉或自定义 URL/兼容模式，加上 key 与 model。
+`POST /management/settings/v1/connection.connect` 要求 key，一次性交给
+SecretStore，只返回 connected/failed 与 secret 是否存在。Settings 不再指路
+Linux-era `/providers`。用量单元格带 `actual` / `estimated` / `unknown` 标签
+（unknown 绝不为 0）。Windows SecretStore 宿主 E2E 在 P13-T13 前为 `not-run`。
 
 daemon 是唯一 writer。CLI 与 localhost Web UI 都是非权威客户端：它们从不打开
 SQLite 或 Secret Store。它们向 daemon 发送 management 通道 HTTP。浏览器不得在

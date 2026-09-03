@@ -53,6 +53,7 @@ use super::routine_runs;
 use super::scheduler_authority::{
     reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
+use super::settings_connections;
 use super::task_api::TaskApi;
 use super::tool_executor::{ProductionNativeToolExecutorRouter, ensure_builtin_native_descriptors};
 use super::tool_lifecycle;
@@ -731,6 +732,16 @@ fn dispatch_http_route(
             authority,
             authority_store,
             provider_control_plane::PI_AGENT,
+        );
+    }
+    if settings_connections::matches(&method_path) {
+        return handle_settings_connections_route(
+            stream,
+            &method_path,
+            headers,
+            body,
+            authority,
+            authority_store,
         );
     }
     if provider_control_plane::matches(&method_path) {
@@ -1739,6 +1750,55 @@ fn handle_task_fault_profile_forbidden(
 }
 
 #[allow(clippy::too_many_arguments)] // Shared daemon state is explicit at the connection boundary.
+fn handle_settings_connections_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if settings_connections::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = settings_connections::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = settings_connections::handle(method_path, body, authority_store.as_ref());
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
 fn handle_provider_control_plane_route(
     stream: &mut TcpStream,
     method_path: &str,
