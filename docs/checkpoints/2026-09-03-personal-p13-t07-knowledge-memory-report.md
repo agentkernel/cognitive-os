@@ -12,7 +12,7 @@
 
 ## Unique next action
 
-Push governance-fix checkpoint on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) at `11929623` (lease ledger + plan/PROGRESS counts). Keep `P13-T07/D01` `in-progress` until required CI is green on PR HEAD. Do not close the task.
+**Owner pause 2026-09-03.** Do not auto-continue. Resume only on fresh owner delivery instruction: wait for required CI green on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) HEAD (`0ca532ad`), then complete `P13-T07/D01` acceptance assessment. Keep task `in-progress`; do not close until full acceptance.
 
 ## Failure-first (D01)
 
