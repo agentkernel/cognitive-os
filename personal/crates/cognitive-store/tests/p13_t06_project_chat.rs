@@ -1104,7 +1104,8 @@ fn p13_t06_conversation_is_not_completion_and_reads_are_bounded() {
 fn p13_t06_authority_sqlite_omits_sk_substring_after_v39() {
     let s = stores();
     let _ = seated_project(&s);
-    let haystack = String::from_utf8_lossy(&std::fs::read(&s.path).expect("sqlite"));
+    let sqlite_bytes = std::fs::read(&s.path).expect("sqlite");
+    let haystack = String::from_utf8_lossy(&sqlite_bytes);
     assert!(
         !haystack.contains("sk-"),
         "v39 CHECK SQL must not persist the sk- byte sequence into sqlite_master"
