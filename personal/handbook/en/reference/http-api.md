@@ -25,7 +25,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:6799d359f69a3c025414090b3096c8d28dd866c46fce6460513080a5cc164725"
+fingerprint: "sha256:0e3475cbf1cda5562a9622cb93aea4b17741440f796ee19322f022fcf12bfa46"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
