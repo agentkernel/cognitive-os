@@ -166,8 +166,9 @@ export function KnowledgePage() {
         Ingest is POST {VAULT_IMPORT_PATH} (owner-paste). Import failure keeps the
         original fields. Labeled fragments come from GET vault.labeled. Memory
         inspect / correct / promote / forget stay on management HTTP. Chat
-        auto-admission is honest-empty while P13-T06 is absent. Files are not a
-        Charter. Host filesystem E2E is not-run until P13-T13.
+        auto-admission is honest-empty / Requires-backend (T06 turns are not
+        listed as admit candidates; 0 Admit buttons). Files are not a Charter.
+        Host filesystem E2E is not-run until P13-T13.
       </HonestyNote>
       <ProjectAuthorityPanel projection={projects} surface="Knowledge">
         {projectId ? (

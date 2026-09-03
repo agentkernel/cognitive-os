@@ -3,16 +3,16 @@
 - Task: `P13-T07` / slice `P13-T07/D01`
 - Change class: `implementation-only` (labeled Vault read + Memory auto-admit / promote on existing Memory tables; Knowledge `/ui/` caller; no new numbered migration; T06 owns `personal_db.rs` v39)
 - Product: CognitiveOS Personal 2.0.0
-- Lease: `lease/personal/P13-T07/knowledge-memory`
+- Lease: `lease/personal/P13-T07/knowledge-memory` (close this delivery → PARALLEL-LANES §3.1)
 - Branch: `personal/P13-T07-knowledge-memory` (worktree `d:\agent-kernel-wt-P13-T07`; `d:\agent-kernel` not used)
-- Base: folding `origin/main@2217722d` (T10 merged PR #318; T06 merged at `main@23355afb`)
-- Claim ceiling: `hypothesis` (A7: local MSVC / Dual Track is not Gate / release / Profile / Windows qualification)
+- Validated implementation HEAD: `6927efe6` (fold of `origin/main@2217722d` / T10 merged PR #318; T06 merged at `main@23355afb`)
+- Claim ceiling: `hypothesis` (A7: local MSVC / Dual Track / ordinary CI is not Gate / release / Profile / Windows qualification)
 - Evaluation routing: **OFF**
 - Host FS/privacy E2E: `not-run` until `P13-T13`
 
 ## Unique next action
 
-Required CI green on the folded HEAD of Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) after `origin/main@2217722d` (T10 merged), then `P13-T07/D01` formal acceptance and ready/merge. Slice status is `in-progress`. Auto-admit UI stays honest empty / Requires-backend (0 fake Admit buttons). Do not merge while a sibling ready/merge is in flight.
+D01 formal acceptance mapped. Required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS** at `6927efe6`. This closure commit is the merge candidate: keep Draft until required CI is SUCCESS on this HEAD, then `gh pr ready 319` + `gh pr merge 319 --merge`. Auto-admit UI stays honest empty / Requires-backend (0 fake Admit buttons). Do not merge while T08 #317 / T09 #321 / T11 #320 ready/merge is in flight. After merge: do not claim sibling-owned T08/T09/T11; no T12/T13/T15.
 
 ## Failure-first (D01)
 
@@ -42,4 +42,6 @@ Required CI green on the folded HEAD of Draft PR [#319](https://github.com/agent
 | 2026-09-03 | required CI run [33751771572](https://github.com/agentkernel/cognitive-os/actions/runs/33751771572) at `ad633b64` | **fail** | `CI-UBUNTU-01` | PR #319 | clippy `-D warnings`: `too_many_arguments` on `admit_text` / `prepare_admission` |
 | 2026-09-03 | clippy argument grouping (`AdmissionDraft`) | **pass** | local MSVC override | worktree | `cargo clippy -p cognitive-store --all-targets --locked -- -D warnings`; focused store 8/8 |
 | 2026-09-03 | required CI run [33752950398](https://github.com/agentkernel/cognitive-os/actions/runs/33752950398) at `070fd243` | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | PR #319 | resolve 4s, ubuntu 4m9s, windows 20m13s, required-ci 4s. HEAD became DIRTY after T10 merged at `main@2217722d`. |
-| 2026-09-03 | fold `origin/main@2217722d` (T10 done) | **pass** (local gates) | worktree | folding | `check:consistency` OK; `check-handbook` OK; `generate-handbook --check` OK; store 8/8; kernel-server 2/2; Dual Track 22/22; 0 fake Admit |
+| 2026-09-03 | fold `origin/main@2217722d` (T10 done) | **pass** (local gates) | worktree | `6927efe6` | `check:consistency` OK; `check-handbook` OK; `generate-handbook --check` OK; store 8/8; kernel-server 2/2; Dual Track 22/22; 0 fake Admit |
+| 2026-09-03 | required CI run [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) at `6927efe6` | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | PR #319 | resolve 2s; ubuntu 4m26s; windows 13m30s; required-ci 2s. Fold HEAD CLEAN vs `origin/main@2217722d`. |
+| 2026-09-03 | D01 formal acceptance + closure docs | **pending** | worktree | this commit | required CI must re-run on the closure HEAD before ready/merge |
