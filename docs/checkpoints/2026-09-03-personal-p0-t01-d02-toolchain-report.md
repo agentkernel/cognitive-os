@@ -6,8 +6,8 @@
 - Owner decision already given (2026-09-03): **(a) local-only override**. Tracked `rust-toolchain.toml` is not modified.
   `git check-ignore -v .cargo/config.toml` → exit 1 (not ignored), therefore no `.cargo/config.toml` is created; only
   `rustup override set` directory overrides are used.
-- Still-open owner sub-decision: `pnpm run verify:local` + `scripts/v01-auto-run.*` — re-pin to CI counts (89/62/27) or
-  deprecate/remove (§6). Not chosen here.
+- Owner chose Option A (2026-09-03): `pnpm run verify:local` + `scripts/v01-auto-run.*` re-pinned to CI counts 89/62/27
+  (`self_check_min` 41). Do not re-ask. See §6–§7.
 - Environment for every local unit: `DEV-WIN-GNU-01` (Windows 10 Pro 10.0.19045; Cursor Shell = Windows PowerShell 5.1.19041.6456)
 - Claim ceiling: `hypothesis`. Local development evidence only — the capability ceiling of this host is **unchanged**:
   not a supported product Windows environment, not `DEV-WINDOWS-NATIVE-OPC-01`, not B01-W; local Rust results never
@@ -151,5 +151,16 @@ constants. If the owner picks A, the follow-up inside this Slice is: re-pin, run
 override directory (recorded here as the authorizing Slice), update the handbook/AGENTS wording, and close P0-T01 back
 to `done`. If the owner picks B, the follow-up is the deletion set above plus a required-CI round.
 
-**Not decided here.** This is an owner boundary (Operating Model §2.4 item 3, tooling/support semantics); the Slice
-stays `in-progress` and this choice is the unique next action in `PROGRESS.md`.
+**Decided 2026-09-03: Option A.** Owner chose re-pin to CI counts 89/62/27. Implementation is in this worktree.
+Do not re-ask. Unique next: commit/push, required CI on the new HEAD, then close the lease.
+
+## 7. Option A follow-through (this delivery)
+
+| # | Unit | Instrument | Result | Notes |
+|---|---|---|---|---|
+| A1 | Re-pin | `scripts/v01-auto-run.ps1` + `.sh` | **applied** | `total_vectors 89 / pass 62 / not-run 27`; `self_check_min 41` (≥ CI `must_flip ≥ 40`); comment names `ci.yml` |
+| A2 | Pin-guard test | `tools/test/check.test.mjs` `verify:local orchestrators pin the same conformance counts as ci.yml` | **pass** (`pnpm --filter @cognitiveos/repo-tools test` 125/125) | Fails the moment either script drifts from `ci.yml` |
+| A3 | Connected wording | `AGENTS.md` §6; handbook `ai/validation-commands` + `user/known-limitations` (en + zh-CN) | **applied** | Orchestrator is usable only inside an MSVC-override directory; output is local development evidence, never Gate/release/Profile |
+| A4 | Full `pnpm run verify:local` | orchestrator end-to-end | **not-run this commit** | Disk budget + 15–25 min cargo/conformance; pin agreement is mechanically tested (A2); a green orchestrator run is local evidence only and is not required CI |
+
+Capability ceiling unchanged: this is not `DEV-WINDOWS-NATIVE-OPC-01` and does not lift GNU linker-121 product claims.

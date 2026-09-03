@@ -573,15 +573,14 @@ Pi 不可以：
   gitignore 故不用；tracked `rust-toolchain.toml` 未改，CI 不受影响）；MSVC 工具链补装 `rustfmt`/`clippy`；
   `rustc -vV` → `host: x86_64-pc-windows-msvc`；linker `D:\VSBuildTools` VS Build Tools 17.14.37、
   `link.exe` 14.44.35228.0（rustc 自行定位，无 PATH/vcvars 改动）。本机 cargo 结果与磁盘约束
-  （`CARGO_PROFILE_DEV_DEBUG=0` 会话变量）见 running report §3。剩余唯一项：owner 对 `verify:local`
-  子决策（重钉 89/62/27 vs 废弃移除）的选择；选定后完成该项、P0-T01 回到 `done`。
+  （`CARGO_PROFILE_DEV_DEBUG=0` 会话变量）见 running report §3。剩余唯一项：`verify:local` Option A 重钉落地（89/62/27）；完成后 P0-T01 回到 `done`。
 - **目标：** 让 `DEV-WIN-GNU-01` 具备 workspace Rust 本地迭代能力：`cargo build --workspace --locked`、`cargo test --workspace --locked -- --test-threads=1`、`cargo clippy --workspace --all-targets --locked -- -D warnings` 在本机通过。
 - **事实基线（2026-09-02 探测，未跑 cargo）：** 默认 host `x86_64-pc-windows-gnu`；rustup 已装 `1.97.1-x86_64-pc-windows-msvc` 与 `gnullvm`；`D:\VSBuildTools` 存在且 vswhere 报告 `VC.Tools.x86.x64`，但 `link.exe` 不在 Cursor Shell PATH；pwsh 7.6.5 已装；`core.autocrlf=true`（被 `.gitattributes eol=lf` 覆盖）。这些事实尚未写入环境登记，由本 Slice 写回。
-- **Owner 决策点（执行前必须确认）：** (a) 本机 override——`rustup override set 1.97.1-x86_64-pc-windows-msvc`（目录级）或本机 `.cargo/config.toml`（不提交），不改 tracked 文件，CI/其他机器不受影响；**推荐默认**。(b) 改 tracked `rust-toolchain.toml`——影响所有 clone 与 CI，corrective 决策，需 owner 明示。子决策：`pnpm run verify:local` + `scripts/v01-auto-run.*` 重钉到 CI 计数（89/62/27）还是废弃并从 `package.json` 移除。未确认前可做：事实探测、环境登记草稿、running report 骨架、connected-docs 改写草稿。
+- **Owner 决策点（已确认 2026-09-03）：** (a) 本机 override 已应用。子决策 Option A：`pnpm run verify:local` + `scripts/v01-auto-run.*` 重钉到 CI 计数 89/62/27。
 - **步骤：** 领取 lease（Lane-DOC + 工具面路径：`docs/plan/PERSONAL-TEST-ENVIRONMENTS.md`、`AGENTS.md`、`.cursor/rules/10-*.mdc`、`docs/governance/DEVELOPMENT-OPERATING-MODEL.md` §3.0、`personal/tests/baseline/README.md`、`tools/src/check-consistency.mjs` 6c 守卫片段、handbook 三页双语、`package.json`/`scripts/` 视子决策）→ P0-T01 改 `in-progress` 并同步进度汇总 → 决策点确认 → 执行切换 → 在本机跑三条 cargo 命令并记 running report（`rustc -vV`、`link.exe` 路径/版本、exact revision）→ 写回环境登记 §3（allowlist 扩展；**能力上限不变**）→ 改写 `RUST-LINK-DEV-WIN-GNU-01` 相关禁令为"历史 GNU 结论 + 当前 MSVC 允许面"（6c 守卫片段同步）→ handbook 双语 + 指纹 → required CI 仍绿 → 收口。
 - **validation environment：** `DEV-WIN-GNU-01`（执行对象）+ `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`。
 - **关闭门：** 三条 cargo 命令在本机 exact revision 上通过且记账；环境登记与全部引用文件同步；`check:consistency`（含 6c）、`check:handbook`、generator `--check`、`check:rules`、docs-sync 绿；required CI 绿。
-- **漂移检测负例：** 本机 Rust 证据被写成 Gate/Profile/Windows 产品支持或 `DEV-WINDOWS-NATIVE-OPC-01`；在 feature Slice 内顺手改工具链；只改 PATH/override 不写回登记；未确认决策点即改 `rust-toolchain.toml`；把过期 `verify:local` 当本地门。
+- **漂移检测负例：** 本机 Rust 证据被写成 Gate/Profile/Windows 产品支持或 `DEV-WINDOWS-NATIVE-OPC-01`；在 feature Slice 内顺手改工具链；只改 PATH/override 不写回登记；未确认决策点即改 `rust-toolchain.toml`；把过期 `verify:local` 当本地门（Option A 后仍不得把编排器输出当 Gate）。
 - **不阻塞：** 任何 P13 卡（旁支加速项）。
 
 ### P0-T02 — 冻结 Personal 需求、追踪与架构边界

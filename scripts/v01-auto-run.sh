@@ -25,7 +25,8 @@ RUN_DIR="$REPO_ROOT/artifacts/evidence/v01-auto-run/$RUN_ID"
 LOG_DIR="$RUN_DIR/logs"
 mkdir -p "$LOG_DIR" "$RUN_DIR/tmp"
 
-PIN_TOTAL=85 PIN_PASS=60 PIN_FAIL=0 PIN_NA=0 PIN_DD=0 PIN_NR=25 PIN_SC=41
+# Re-pinned 2026-09-03 (P0-T01/D02, owner Option A) to the counts pinned in .github/workflows/ci.yml (89/62/27; self-check corpus >= 40 there).
+PIN_TOTAL=89 PIN_PASS=62 PIN_FAIL=0 PIN_NA=0 PIN_DD=0 PIN_NR=27 PIN_SC=41
 
 LEVEL="L0"
 STOPPED=0

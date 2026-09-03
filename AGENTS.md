@@ -189,16 +189,19 @@ Ready/merge 前额外：`node tools/src/check-handbook.mjs`、`node tools/src/ge
   时记 `blocked`/`not-run`。登记细节见环境登记 §3。
 - 本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`；这只恢复
   钉住工具的发现（版本以 `rust-toolchain.toml` / 目录 override 为准）。
-- `pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）在本机仍不是可用门：它钉住过期的
-  符合性计数（85/60/25，CI 已钉 89/62/27），并引用可能已不存在的 crate/测试名；本机已有
-  pwsh 7.6.5，这不是阻碍。重钉或废弃由 `P0-T01/D02` 子决策（owner 待定）处理；用 §5 的单项命令。
+- `pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）自 2026-09-03（`P0-T01/D02`，
+  owner 选项 A 重钉）起**只在 MSVC override 目录内**可本机使用：计数已重钉到 `ci.yml` 的
+  89/62/27（repo-tools 测试守卫两份数字一致），需 pwsh 7 与会话变量 `CARGO_PROFILE_DEV_DEBUG=0`；
+  它跑 `cargo build`、focused `cargo test`、符合性 runner（含 `--self-check`）与 `check:consistency`，
+  产出 `artifacts/evidence/v01-auto-run/<run_id>/summary.json`。结果只是本地开发证据，不替代
+  required CI，也不升 Gate/release/Profile；非 override 目录仍禁止。日常仍优先用 §5 的单项命令。
 
 | 目的 | Windows PowerShell（本地） | CI / Linux（bash） |
 |---|---|---|
 | Rust 构建 / 测试 / lint | 仅在 MSVC override 目录（`rustc -vV` host = `x86_64-pc-windows-msvc`）：同右列命令，结果为本地开发证据；GNU host 目录禁止（路由） | `cargo build --workspace --locked`；`cargo test --workspace --locked -- --test-threads=1`；`cargo clippy --workspace --all-targets --locked -- -D warnings` |
 | TS 安装 / 构建 / 测试 | `pnpm install --frozen-lockfile` ; `pnpm -r build` ; `pnpm -r test` | 同左 |
 | 静态一致性 / handbook / 规则引用 | `pnpm run check:consistency` ; `pnpm run check:handbook` ; `pnpm run check:rules` | 同左 |
-| 符合性 runner | 禁止（路由） | `cargo run -p cognitive-conformance --bin conformance-runner` |
+| 符合性 runner | 仅在 MSVC override 目录（同上；含 `pnpm run verify:local` 一次性编排器）；GNU host 目录禁止（路由） | `cargo run -p cognitive-conformance --bin conformance-runner` |
 
 ## 7. 远程验证主机与 campaign guest 隔离
 

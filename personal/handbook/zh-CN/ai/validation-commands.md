@@ -169,8 +169,15 @@ consistency 检查、traceability 新鲜度、agent 规则引用检查（`check-
 handbook 检查与生成页字节比对、带固定五态计数与证据诚实断言的符合性 runner、
 错误实现自检、跨语言 golden digest 字节一致。
 
-## 已知过期入口
+## 本地一次性编排器（`verify:local`）
 
-`pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）钉住了过期的符合性计数
-（85/60/25，`ci.yml` 已钉 89/62/27），在本基线不是可用的本地门；请改用上面的单项命令。重钉
-还是移除是 `P0-T01/D02` 待 owner 决定的子决策。
+`pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.ps1` / `.sh`）自 2026-09-03
+（P0-T01/D02，owner 选项 A）起**在 MSVC override 目录内**可本地使用：其符合性计数已重钉到
+`ci.yml` 的 89/62/27（自检语料下限 41 ≥ CI 的 40），repo-tools 测试 `verify:local orchestrators
+pin the same conformance counts as ci.yml` 会在两份数字漂移时立刻失败。它依次运行
+`cargo build`、若干 focused `cargo test`、符合性 runner（含 `--self-check`）、`check:consistency`
+与 sdk-ts live 套件，然后写出 `artifacts/evidence/v01-auto-run/<run_id>/`（`summary.json` +
+`sha256-manifest.json`）。前提：Windows 上需 pwsh 7、`rustc -vV` 报 `host: x86_64-pc-windows-msvc`、
+本机磁盘预算下会话变量 `CARGO_PROFILE_DEV_DEBUG=0`。输出只是本地开发证据（绝不升 Gate /
+release / Profile）；绿色运行不代表任何 Profile 已实现，也不能替代 required CI。在非 override
+目录内仍禁止运行（GNU 链接）。

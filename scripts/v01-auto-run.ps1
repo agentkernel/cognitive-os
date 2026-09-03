@@ -33,13 +33,14 @@ if (-not $env:CI -or [string]::IsNullOrWhiteSpace($env:CI)) {
   $env:CI = "true"
 }
 
+# Re-pinned 2026-09-03 (P0-T01/D02, owner Option A) to the counts pinned in .github/workflows/ci.yml (89/62/27; self-check corpus >= 40 there).
 $Pinned = @{
-  total_vectors              = 85
-  pass                       = 60
+  total_vectors              = 89
+  pass                       = 62
   fail                       = 0
   "not-applicable"           = 0
   "documented-degradation"   = 0
-  "not-run"                  = 25
+  "not-run"                  = 27
   self_check_min             = 41
 }
 

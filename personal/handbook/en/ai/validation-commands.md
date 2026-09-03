@@ -182,10 +182,19 @@ byte equality, conformance runner with pinned five-state counts and
 evidence-honesty assertions, wrong-implementation self-check, cross-language golden
 digest byte equality.
 
-## Known stale entry
+## Local one-shot orchestrator (`verify:local`)
 
-`pnpm run verify:local` (the V01 orchestrator, `scripts/v01-auto-run.*`) pins
-outdated conformance counts (85/60/25 versus the 89/62/27 pinned in `ci.yml`)
-and is not a usable local gate at this baseline; prefer the individual commands
-above. Whether it is re-pinned or removed is the open `P0-T01/D02` owner
-sub-decision.
+`pnpm run verify:local` (the V01 orchestrator, `scripts/v01-auto-run.ps1` /
+`.sh`) is usable locally **inside an MSVC-override directory** since
+2026-09-03 (P0-T01/D02, owner Option A): its conformance pins were re-pinned
+to the `ci.yml` counts (89/62/27; self-check corpus floor 41 ≥ CI's 40) and the
+repo-tools test `verify:local orchestrators pin the same conformance counts as
+ci.yml` fails the moment the two copies drift. It runs `cargo build`, focused
+`cargo test`s, the conformance runner (+ `--self-check`), `check:consistency`
+and the sdk-ts live suite, then writes `artifacts/evidence/v01-auto-run/<run_id>/`
+(`summary.json` + `sha256-manifest.json`). Requirements: pwsh 7 on Windows,
+`rustc -vV` → `host: x86_64-pc-windows-msvc`, session
+`CARGO_PROFILE_DEV_DEBUG=0` on this machine's disk budget. Its output is local
+development evidence only (never Gate / release / Profile); a green run does
+not mean any Profile is implemented, and it is not a substitute for required
+CI. Outside an override directory it is still forbidden (GNU link).
