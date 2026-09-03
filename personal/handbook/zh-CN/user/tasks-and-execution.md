@@ -24,7 +24,7 @@ sources:
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:1f92af8168274f7b70a20bf641fdb5574bb452e62c25c5dc8d6f466a717ff41d"
+fingerprint: "sha256:469bc160fd86c9e8db90c71944e9cc084e9f45e313c77e42fcc2f13cc4bb0bba"
 non_claims:
   - 准入同一趟仍不消费 worker 授权、也不获取调度 lease；那是后续 tick 的事。不作 Gate、release、Profile 或 EVAL 升格。
 ---
@@ -85,6 +85,18 @@ revision。
 manual、scheduled 或 qualified event；同一 Routine 不 overlap，只保留 latest pending
 occurrence，记录 coalesced/missed work，并在 offline 后对 consequential catch-up 再次
 询问。
+
+自 P13-T05 起，Routine 只在 Project 通过 G2 联调验收后才能**武装**：武装指明计划环节
+及其已就位的负责 Member，且只有 daemon 自己的 scheduler tick 会触发 schedule、租约
+occurrence 并为它驱动一个托管 Attempt。`runs` 台账把每个 occurrence 显示为
+`active` / `queued` / `coalesced` / `missed` / `attempted`，并附 Attempt 的 daemon 观察结果
+（`done`、`failed`、`timed-out`、`unknown-outcome`……）——永不写成"完成"；验证在独立
+verifier（P13-T04）之前仍为 `not-run`。关闭窗口选择**暂停**或出现 offline 时段时，
+schedule 触发会落为带宿主原因的可见 `missed` 行；新的 Owner 指令成为一条 Routine
+revision，在安全点应用（`continue`、`pause`、`restart`），永不注入运行中的 prompt。
+Today 每个 live Project 一行（状态、周期内 done 的 Attempt 数、当前环节、时长合计或
+unknown）加 created / live / blocked 计数；周期切换为 today / week / month（UTC）。
+真实 Windows 宿主上的 clock / sleep / restart 行为在 P13-T13 前为 `not-run`。
 
 Digital Employee 通过 daemon-owned Task、artifact 与 handoff 协作。DSH 是目标默认
 runtime，但 process output 与 engine checkpoint 仍只是 observation。这些

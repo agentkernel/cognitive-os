@@ -152,7 +152,7 @@ override directory (recorded here as the authorizing Slice), update the handbook
 to `done`. If the owner picks B, the follow-up is the deletion set above plus a required-CI round.
 
 **Decided 2026-09-03: Option A.** Owner chose re-pin to CI counts 89/62/27. Implementation is in this worktree.
-Do not re-ask. Unique next: commit/push, required CI on the new HEAD, then close the lease.
+Do not re-ask. Unique next: required CI green on the merge HEAD, then ready/merge PR #314 and close the lease. This slice does not claim P13-T07.
 
 ## 7. Option A follow-through (this delivery)
 
@@ -164,3 +164,9 @@ Do not re-ask. Unique next: commit/push, required CI on the new HEAD, then close
 | A4 | Full `pnpm run verify:local` | orchestrator end-to-end | **not-run this commit** | Disk budget + 15–25 min cargo/conformance; pin agreement is mechanically tested (A2); a green orchestrator run is local evidence only and is not required CI |
 
 Capability ceiling unchanged: this is not `DEV-WINDOWS-NATIVE-OPC-01` and does not lift GNU linker-121 product claims.
+
+## 8. Merge `origin/main` (P13-T05 PR #315)
+
+| # | Unit | Instrument | Result | Notes |
+|---|---|---|---|---|
+| M1 | Sibling ledger | `git merge origin/main` (`327478d4` / T05 close `main@90437cb4`) | **applied** (this merge commit) | Remaining conflicts were `PROGRESS.md`, `PERSONAL-DEVELOPMENT-PLAN.md`, and bilingual `ai/validation-commands.md` fingerprints. Canonical resolution: Layer 1 **167 / 137 / 1 / 1 / 12 / 30** (T05 close; `P0-T01` stays `done` at task level; `P0-T01/D02` remains the open slice); Phase 13 **13 / 5 / 1 / 0 / 7**; keep Option A evidence 89/62/27; unique next = continue T06 PR #316 at `6ed02688` + P0 Option A PR #314, then claim T07/T08/T09/T10. Tracked `rust-toolchain.toml` untouched. This slice does not claim P13-T06 product work. **Required CI must re-run on this new merge HEAD** before Draft→ready→merge #314. |

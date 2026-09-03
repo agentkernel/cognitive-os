@@ -49,6 +49,7 @@ use super::readiness::{
 use super::resource_api::ResourceApi;
 use super::resource_manager;
 use super::route_observation;
+use super::routine_runs;
 use super::scheduler_authority::{
     reconcile_scheduler_recovery_with_store, run_private_scheduler_tick_with_store,
 };
@@ -338,6 +339,9 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
     let scheduler_executor_router = Arc::clone(&executor_router);
     let scheduler_artifact_store = Arc::clone(&artifact_store);
     let scheduler_config_dir = config.layout.config_dir().to_path_buf();
+    // P13-T05: the same daemon tick is the only dispatcher of Routine
+    // occurrences (`task://personal/routine/*`); there is no second scheduler.
+    let routine_host = hosted_dsh_attempt::HostedAttemptHost::from_layout(&config.layout);
     let mut scheduler_worker = PeriodicSchedulerWorker::spawn(SCHEDULER_TICK_INTERVAL, move || {
         run_private_scheduler_tick_with_store(
             scheduler_authority_store.as_ref(),
@@ -346,6 +350,17 @@ pub fn serve_personal_loopback(config: PersonalDaemonConfig) -> Result<(), Perso
             scheduler_executor_router.as_ref(),
             scheduler_artifact_store.as_ref(),
         )
+        .map_err(|error| error.to_string())?;
+        let report = routine_runs::run_routine_tick(
+            scheduler_authority_store.as_ref(),
+            &routine_host,
+            &mut scheduler_repository,
+            cognitive_store::now_ms(),
+        )?;
+        if !report.is_quiet() {
+            eprintln!("kernel-server personal routine tick: {report:?}");
+        }
+        Ok::<(), String>(())
     })
     .map_err(|error| PersonalDaemonError::Io {
         detail: format!("start periodic Personal scheduler worker: {error}"),
@@ -747,6 +762,16 @@ fn dispatch_http_route(
             headers,
             body,
             layout,
+            authority,
+            authority_store,
+        );
+    }
+    if routine_runs::matches(&method_path) {
+        return handle_routine_runs_route(
+            stream,
+            &method_path,
+            headers,
+            body,
             authority,
             authority_store,
         );
@@ -1972,6 +1997,57 @@ fn handle_attempt_artifacts_route(
     }
     let host = attempt_artifacts::ArtifactHost::from_layout(layout);
     let response = attempt_artifacts::handle(method_path, body, authority_store.as_ref(), &host);
+    write_response(
+        stream,
+        response.status,
+        response.content_type,
+        response.body.as_bytes(),
+    )
+}
+
+/// P13-T05 Routine arming / occurrence ledger / Today overview routes.
+/// Management only; task-channel aliases are 403 after bearer validation.
+fn handle_routine_runs_route(
+    stream: &mut TcpStream,
+    method_path: &str,
+    headers: &str,
+    body: &[u8],
+    authority: &Arc<Mutex<LocalSessionAuthority>>,
+    authority_store: &Arc<SqliteAuthorityStore>,
+) -> Result<(), String> {
+    if routine_runs::is_task_channel(method_path) {
+        let Some(token) = extract_bearer_token(headers) else {
+            return write_error_response(
+                stream,
+                401,
+                LocalAuthError::Unauthorized.code(),
+                "authorization bearer required",
+            );
+        };
+        let mut authority_guard = authority
+            .lock()
+            .map_err(|_| "session authority lock poisoned".to_owned())?;
+        if let Err(error) = authority_guard.authorize(&token, ChannelClass::Task, Instant::now()) {
+            let status = if matches!(error, LocalAuthError::ChannelBindingMismatch) {
+                403
+            } else {
+                401
+            };
+            return write_error_response(stream, status, error.code(), &error.to_string());
+        }
+        drop(authority_guard);
+        let response = routine_runs::channel_forbidden();
+        return write_response(
+            stream,
+            response.status,
+            response.content_type,
+            response.body.as_bytes(),
+        );
+    }
+    if let Err((status, error)) = authorize_daemon_administrator_request(headers, authority) {
+        return write_error_response(stream, status, error.code(), &error.to_string());
+    }
+    let response = routine_runs::handle(method_path, body, authority_store.as_ref());
     write_response(
         stream,
         response.status,

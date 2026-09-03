@@ -34,6 +34,7 @@ use crate::project_aggregate::{
 };
 use crate::provider_control_plane::provider_control_plane_migration_entry;
 use crate::routine::routine_migration_entry;
+use crate::routine_arming::routine_arming_migration_entry;
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
 use crate::skill_store::{
     skill_binding_revocation_migration_entry, skill_package_migration_entry,
@@ -123,7 +124,12 @@ impl PersonalDatabasePrepareReport {
 /// verifier-identity CHECK), last-ring run acceptance (`p13_run_acceptance`,
 /// last-ring CHECK), external-send Intents (`p13_external_send`, `published`
 /// CHECK=0) plus the `run-acceptance` / `external-send` ApprovalPreview
-/// subject kinds (P13-T04; table rebuild, v30 precedent).
+/// subject kinds (P13-T04; table rebuild, v30 precedent), and
+/// v38 = Routine arming after G2 plus occurrence dispatch / outcome columns
+/// (P13-T05; `p11_routine_occurrence` rebuilt to admit `attempted`;
+/// `completion_claimed` CHECK=0; outcomes are daemon-observed Attempt
+/// terminals, never `success`; the daemon scheduler tick is the only
+/// dispatcher of `task://personal/routine/*` rows).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -166,6 +172,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         x_connector_migration_entry(),
         hosted_dsh_attempt_migration_entry(),
         attempt_artifact_migration_entry(),
+        routine_arming_migration_entry(),
     ]
 }
 

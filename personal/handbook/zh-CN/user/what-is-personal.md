@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:d08819285acc7b1db347b357aebccde8944bf2676dd5673f472732db769c5dc6"
+fingerprint: "sha256:3a724bf6eeb751a7bc9dc4594428155833e28a19c9700f849da9fbdcea05ca32"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
