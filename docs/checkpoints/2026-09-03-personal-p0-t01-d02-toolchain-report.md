@@ -109,7 +109,12 @@ as the GNU-host history fact, the MSVC override added as the current local allow
 
 ## 5. Checkpoint, Draft PR, required CI
 
-_Appended below as each unit completes._
+| # | Unit | Instrument | Revision | Result | Notes |
+|---|---|---|---|---|---|
+| C1 | final static gates before commit | `fill-handbook-fingerprints` (6 pages); `check:consistency`; `check:handbook`; `generate-handbook --check`; `check:rules`; `git diff --check` | worktree → `e2ed3ddb` | **pass** | consistency OK; handbook OK (58×2); generator OK (18); agent-rules OK (5 local-only warnings); diff clean; staged set = 25 lease-owned files, no `.cargo/`, no `rust-toolchain.toml`, no Rust source |
+| C2 | commit + push + Draft PR | docs-sync-gate pre-commit/pre-push (OK); `git push -u`; `gh pr create --draft` | `e2ed3ddb` | **pass** | Draft PR [#314](https://github.com/agentkernel/cognitive-os/pull/314) "P0-T01/D02: local MSVC toolchain override for DEV-WIN-GNU-01" |
+| C3 | required CI | GitHub Actions `CI` — the `pull_request` event produced no run within ~4 minutes of PR creation (0 check-runs on the commit), so the workflow was started via `workflow_dispatch` on the same branch head as the recovery route (`gh workflow run CI --ref personal/P0-T01-D02-toolchain`) | `e2ed3ddb` | **pass** | run [33704289512](https://github.com/agentkernel/cognitive-os/actions/runs/33704289512) **SUCCESS**: resolve 4s; verify (ubuntu-latest) 3m58s; verify (windows-latest) 16m19s; required-ci 3s. CI resolved `rust-toolchain.toml` exactly as before (the local override is invisible to it) — this is the "CI unaffected" evidence. The PR's own check rollup stays empty until a `pull_request` run attaches (expected on the next push); the ready/merge step must see PR-attached green checks. |
+| C4 | closure-state checkpoint (this entry) | docs-only commit recording C3 in this report and in `PROGRESS.md`; push | see PROGRESS | **pass** | Slice stays `in-progress`, PR stays Draft; unique next action = owner `verify:local` sub-decision (§6) |
 
 ## 6. Owner sub-decision left open: `pnpm run verify:local` / `scripts/v01-auto-run.*`
 
