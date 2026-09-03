@@ -130,6 +130,7 @@ function HitlCanvasActions({
   }, [previewId]);
   const row = detail.data?.[0];
   const confirmable = detail.status === "ready" && previewIsConfirmable(row);
+  const expansion = row?.grantExpansion;
 
   async function postAction(path: string, body: Record<string, string>) {
     if (!confirmable || !row) {
@@ -242,6 +243,13 @@ function HitlCanvasActions({
         <p data-hitl-blocked="no-digest">
           preview-detail returned no digest. Confirm is not offered. The list
           row is never used as a digest.
+        </p>
+      ) : null}
+      {expansion ? (
+        <p className="cp-quiet" data-region="opc-hitl-grant-expansion">
+          grant-expansion {expansion.phase} · {expansion.capabilityRef} @{" "}
+          {expansion.versionPin} · scope {expansion.scope} · source {expansion.source}{" "}
+          · license {expansion.license}. Install is not a grant. Chat cannot Approve.
         </p>
       ) : null}
       <p className="cp-quiet">

@@ -44,6 +44,16 @@ export interface PendingPreviewRow {
   status: string;
 }
 
+export interface GrantExpansionReview {
+  phase: string;
+  capabilityRef: string;
+  scope: string;
+  versionPin: string;
+  kind: string;
+  source: string;
+  license: string;
+}
+
 export interface PreviewDetailRow {
   previewId: string;
   subjectKind: string;
@@ -52,6 +62,7 @@ export interface PreviewDetailRow {
   receiptRef: string;
   supersededBy: string;
   baseStateDigest: string;
+  grantExpansion: GrantExpansionReview | null;
 }
 
 export function projectPendingPreviews(body: unknown): PendingPreviewRow[] {
@@ -76,6 +87,20 @@ export function projectPreviewDetail(body: unknown): PreviewDetailRow[] {
   if (typeof record.preview_id !== "string" || record.preview_id.length === 0) {
     return [];
   }
+  const expansion = asRecord(record.grant_expansion);
+  const review = asRecord(expansion.review);
+  const grantExpansion =
+    typeof expansion.capability_ref === "string" && expansion.capability_ref.length > 0
+      ? {
+          phase: stated(expansion.phase),
+          capabilityRef: expansion.capability_ref,
+          scope: stated(expansion.scope),
+          versionPin: stated(expansion.version_pin),
+          kind: stated(expansion.kind),
+          source: stated(review.source),
+          license: stated(review.license),
+        }
+      : null;
   return [
     {
       previewId: record.preview_id,
@@ -85,8 +110,13 @@ export function projectPreviewDetail(body: unknown): PreviewDetailRow[] {
       receiptRef: typeof record.receipt_ref === "string" ? record.receipt_ref : "",
       supersededBy: typeof record.superseded_by === "string" ? record.superseded_by : "",
       baseStateDigest: typeof record.base_state_digest === "string" ? record.base_state_digest : "",
+      grantExpansion,
     },
   ];
+}
+
+function stated(value: unknown, fallback = "unknown"): string {
+  return typeof value === "string" && value.length > 0 ? value : fallback;
 }
 
 /** Confirm/narrow/reject only when daemon says pending and supplies a digest. */

@@ -72,6 +72,7 @@ describe("preview-detail projection (P12-T06)", () => {
         receiptRef: "",
         supersededBy: "",
         baseStateDigest: "",
+        grantExpansion: null,
       },
     ]);
     expect(projectPreviewDetail({ status: "ok" })).toEqual([]);
@@ -90,6 +91,7 @@ describe("preview-detail projection (P12-T06)", () => {
         receiptRef: "",
         supersededBy: "",
         baseStateDigest: "",
+        grantExpansion: null,
       }),
     ).toBe(false);
     expect(
@@ -101,6 +103,7 @@ describe("preview-detail projection (P12-T06)", () => {
         receiptRef: "",
         supersededBy: "",
         baseStateDigest: "",
+        grantExpansion: null,
       }),
     ).toBe(false);
     expect(
@@ -112,6 +115,7 @@ describe("preview-detail projection (P12-T06)", () => {
         receiptRef: "",
         supersededBy: "",
         baseStateDigest: "",
+        grantExpansion: null,
       }),
     ).toBe(true);
     expect(previewIsConfirmable(undefined)).toBe(false);

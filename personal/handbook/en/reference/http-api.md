@@ -24,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:4da5a5a100abb2c357e5c21091683566c80ce596dbf0c4bb6c2bd260cfba25da"
+fingerprint: "sha256:c2dcbc6f9714f499dbe4c498d5deb35a729f266816c5cc47f7de97d47c92ec01"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -176,7 +176,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/detail` | management | Personal-private Project detail. A Task ref is not a Project id (404). Unconfirmed drafts have no Project row. |
 | `GET` | `/management/project/v1/axis` | management | Current PlanRevision axis (stages, gap flags, confirm_status). Missing plan is empty/unavailable, not a fake wizard. |
 | `GET` | `/management/project/v1/roster` | management | Employee roster. Empty projection uses `authority_note: empty-roster`. Seated members list `employee_id`, state, responsible stages, model_bound, and current-manager flag. Not a third identity besides Employee. |
-| `GET` | `/management/project/v1/employee.catalog` | management | Grant catalog for one Employee in one Project. Recipe mention is not a grant. |
+| `GET` | `/management/project/v1/employee.catalog` | management | Grant catalog for one Employee in one Project. Recipe mention is not a grant. Also lists InstallFacts with `install_is_not_grant: true`. |
 | `GET` | `/management/project/v1/pending-previews` | management | Pending ApprovalPreview announcement list. Omits `preview_digest` (conversation/canvas announcement seam). |
 | `GET` | `/management/project/v1/preview-detail` | management | Canvas preview-detail: includes `preview_digest`, `receipt_ref`, and `superseded_by` for management confirm/reject/narrow. Not a chat Approve control. |
 | `POST` | `/management/project/v1/draft.apply` | management | Apply a candidate onto an open draft at exact `base_seq`. Wrong seq is conflict (N13). |
@@ -184,7 +184,15 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance / grant-expansion). Response includes `preview_digest` for canvas confirm. Secret-shaped bytes are rejected at registration. |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner-management reject of a pending ApprovalPreview. Leaves a receipt. The rejected digest is never confirmable. Not a chat Approve control. |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner-management narrow: mint a new pending preview and freeze the old row as superseded (`superseded_by`). Old digest is never confirmable. Stale is mechanical `base_state_digest` mismatch only. |
-| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. Stale digest is rejected. |
+| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. An install-phase grant-expansion writes only an InstallFact and consumes the preview (`granted: false`). Stale digest is rejected. Chat cannot Approve. |
+| `POST` | `/management/project/v1/capability.discover` | management | Admit an assistant-led Skill/MCP discovery candidate with pinned sources. Does not install or grant. Unreviewed / ambient / marketplace sources are refused. |
+| `POST` | `/management/project/v1/capability.acquire` | management | Mint a grant-expansion ApprovalPreview after a structured security review. `phase=install` or `phase=grant` (grant requires an InstallFact). Does not write a Grant. Chat/task aliases are 403. |
+| `POST` | `/management/project/v1/capability.compat-test` | management | Compare two version pins for the same capability. Compatible on the same major; never a grant. |
+| `POST` | `/management/project/v1/capability.rollback` | management | Owner-only rollback marker for a version-pinned InstallFact. The rolled-back pin cannot be reinstalled. Does not invent a Grant. |
+| `POST` | `/task/project/v1/capability.discover` | task | Forbidden: Skill/MCP discovery is management-channel only. |
+| `POST` | `/task/project/v1/capability.acquire` | task | Forbidden: Skill/MCP acquire is management-channel only. |
+| `POST` | `/task/project/v1/capability.compat-test` | task | Forbidden: compat-test is management-channel only. |
+| `POST` | `/task/project/v1/capability.rollback` | task | Forbidden: rollback is management-channel only. |
 | `GET` | `/management/project/v1/standing-policies` | management | Settings list of non-revoked StandingApprovalPolicy rows (time-box ≤7d). Chat cannot mint. Not Inbox L1. |
 | `POST` | `/management/project/v1/standing-policy.create` | management | Mint a time-boxed StandingApprovalPolicy. `expires_at` is required and must be ≤7 days from now. Missing or over-long expiry fails closed. |
 | `POST` | `/management/project/v1/standing-policy.revoke` | management | Settings revoke of one StandingApprovalPolicy. Chat/task aliases are 403. |

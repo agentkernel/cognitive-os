@@ -253,6 +253,68 @@ describe("P12-T04 select-then-configure + add member", () => {
     unmount(host, root);
   });
 
+  it("refuses an unreviewed acquire and does not mint a local grant", async () => {
+    const { host, root, calls } = await renderMember("#/projects/proj-1/members/emp-1", {
+      "GET /management/project/v1/roster": READY_ROSTER,
+    });
+    clickButton(host, "Skills");
+    await flush();
+    expect(host.querySelector("[data-region='opc-capability-acquire']")).not.toBeNull();
+    clickButton(host, "Request acquire preview");
+    await flush();
+    expect(host.querySelector("[data-acquire-error='true']")?.textContent).toMatch(/unreviewed/i);
+    expect(calls.some((call) => call.pathname === "/management/project/v1/capability.acquire")).toBe(
+      false,
+    );
+    expect(host.querySelector("[data-region='opc-acquire-previewed']")).toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("posts capability.acquire then deep-links the canvas without Activate", async () => {
+    const { host, root, calls } = await renderMember("#/projects/proj-1/members/emp-1", {
+      "GET /management/project/v1/roster": READY_ROSTER,
+      "POST /management/project/v1/capability.acquire": {
+        status: 200,
+        body: {
+          status: "ok",
+          preview_id: "prev-grant-1",
+          preview_digest: "digest-1",
+          granted: false,
+          install_is_not_grant: true,
+        },
+      },
+    });
+    clickButton(host, "Skills");
+    await flush();
+    const panel = host.querySelector("[data-region='opc-capability-acquire']");
+    expect(panel).not.toBeNull();
+    for (const input of panel?.querySelectorAll("input") ?? []) {
+      const current = (input as HTMLInputElement).value;
+      if (current.length === 0) {
+        act(() => {
+          const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+          native?.set?.call(input, "https://example.invalid/skill/research");
+          input.dispatchEvent(new Event("input", { bubbles: true }));
+        });
+      }
+    }
+    clickButton(host, "Request acquire preview");
+    await flush();
+    const acquire = calls.find((call) => call.pathname === "/management/project/v1/capability.acquire");
+    expect(acquire?.body).toMatchObject({
+      project_id: "proj-1",
+      employee_id: "emp-1",
+      phase: "install",
+    });
+    expect(host.querySelector("[data-region='opc-acquire-previewed']")?.textContent).toMatch(
+      /prev-grant-1/,
+    );
+    expect(host.querySelector("a[href*='preview=prev-grant-1']")).not.toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
   it("posts register then seat.request then seat.confirm on Write join", async () => {
     const { host, root, calls } = await renderMember("#/projects/proj-1/members/new", {
       "POST /management/project/v1/roster.register": {

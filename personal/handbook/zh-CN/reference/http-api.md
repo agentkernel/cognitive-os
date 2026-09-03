@@ -24,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:4da5a5a100abb2c357e5c21091683566c80ce596dbf0c4bb6c2bd260cfba25da"
+fingerprint: "sha256:c2dcbc6f9714f499dbe4c498d5deb35a729f266816c5cc47f7de97d47c92ec01"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -176,7 +176,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/detail` | management | Personal-private Project 详情。Task ref 不是 Project id（404）。未确认草稿没有 Project 行。 |
 | `GET` | `/management/project/v1/axis` | management | 当前 PlanRevision 流程轴（环、gap 标记、confirm_status）。无计划时为空/unavailable，不是假向导。 |
 | `GET` | `/management/project/v1/roster` | management | 员工花名册。空投影使用 `authority_note: empty-roster`。已就位成员列出 `employee_id`、state、负责环、model_bound 与 current-manager 标记。不是 Employee 之外的第三套身份。 |
-| `GET` | `/management/project/v1/employee.catalog` | management | 一个 Project 内一名 Employee 的 Grant 目录。配方提及不是授权。 |
+| `GET` | `/management/project/v1/employee.catalog` | management | 一个 Project 内一名 Employee 的 Grant 目录。配方提及不是授权。同时列出 InstallFact，并标明 `install_is_not_grant: true`。 |
 | `GET` | `/management/project/v1/pending-previews` | management | 待批 ApprovalPreview 宣布列表。省略 `preview_digest`（对话/画布宣布接缝）。 |
 | `GET` | `/management/project/v1/preview-detail` | management | 画布 preview-detail：含供 management 确认/拒绝/改窄的 `preview_digest`、`receipt_ref`、`superseded_by`。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/draft.apply` | management | 按精确 `base_seq` 把候选应用到未关闭草稿。错误 seq 为冲突（N13）。 |
@@ -184,7 +184,15 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/project/v1/preview.request` | management | 签发 digest 绑定的 ApprovalPreview（activation / plan-change / acceptance / grant-expansion）。响应含供画布确认的 `preview_digest`。secret 形态字节在登记时拒绝。 |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner management 拒绝待批 ApprovalPreview。留下 receipt。被拒 digest 永不可确认。不是聊天 Approve 控件。 |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner management 改窄：签发新的 pending preview，旧行 `superseded`（`superseded_by`）。旧 digest 永不可确认。stale 只按机械 `base_state_digest` 不等判定。 |
-| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`；grant-expansion 写入 Grant。过期 digest 拒绝。 |
+| `POST` | `/management/project/v1/confirm` | management | Owner management 确认 `{preview_id, preview_digest}`。G1 铸造 `creating` 的 Project；G2 写入 AcceptanceFact 后进入 `active`；grant-expansion 写入 Grant。install 阶段的 grant-expansion 只写 InstallFact 并消费 preview（`granted: false`）。过期 digest 拒绝。聊天不能 Approve。 |
+| `POST` | `/management/project/v1/capability.discover` | management | 接纳带钉住 sources 的助手主导 Skill/MCP 发现候选。不安装、不授权。未评审 / ambient / marketplace 来源拒绝。 |
+| `POST` | `/management/project/v1/capability.acquire` | management | 结构化安全评审后签发 grant-expansion ApprovalPreview。`phase=install` 或 `phase=grant`（grant 需要 InstallFact）。不写 Grant。聊天/task 别名为 403。 |
+| `POST` | `/management/project/v1/capability.compat-test` | management | 比较同一 capability 的两个 version pin。同主版本为 compatible；不是授权。 |
+| `POST` | `/management/project/v1/capability.rollback` | management | Owner 对已钉版本 InstallFact 写入回滚标记。被回滚的 pin 不能再安装。不发明 Grant。 |
+| `POST` | `/task/project/v1/capability.discover` | task | 禁止：Skill/MCP 发现仅限 management 通道。 |
+| `POST` | `/task/project/v1/capability.acquire` | task | 禁止：Skill/MCP 获取仅限 management 通道。 |
+| `POST` | `/task/project/v1/capability.compat-test` | task | 禁止：compat-test 仅限 management 通道。 |
+| `POST` | `/task/project/v1/capability.rollback` | task | 禁止：rollback 仅限 management 通道。 |
 | `GET` | `/management/project/v1/standing-policies` | management | Settings 列出未撤销的 StandingApprovalPolicy（时间盒 ≤7 天）。聊天不能签发。不是 Inbox 一级。 |
 | `POST` | `/management/project/v1/standing-policy.create` | management | 签发有时限的 StandingApprovalPolicy。`expires_at` 必填且距现在 ≤7 天。缺省或超长失败闭合。 |
 | `POST` | `/management/project/v1/standing-policy.revoke` | management | Settings 撤销一条 StandingApprovalPolicy。聊天/task 别名为 403。 |
