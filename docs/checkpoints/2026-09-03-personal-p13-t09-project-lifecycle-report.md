@@ -45,13 +45,18 @@ Local MSVC override (`rustc` host `x86_64-pc-windows-msvc`; `CARGO_PROFILE_DEV_D
 | `management_copy_archive_delete_restore_export_round_trip` | **pass 1/1** | live request-line trim; copy inactive; archive; preview+confirm; restore; export `is_authority:false` |
 | `pnpm test` focused web (`projectLifecycle` + `projectSubmenus`) | **pass 13/13** | 2 UI + 2 projection + 9 submenu regression; no Approve / FAKE_ACTION labels |
 | `cargo fmt --all` | **pass** | applied in this worktree |
-| `cargo clippy --workspace` | **not-run** | reserved for CI / exact-rev Linux |
-| required CI `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | **not-run** | Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) HEAD `6fe834d0` |
-| `DEV-LINUX-NATIVE-01` | **not-run** | exact revision `6fe834d0` after push |
+| `cargo clippy --workspace` | **pass** | `DEV-LINUX-NATIVE-01` at `8c681757` (`-D warnings`) |
+| required CI `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | **pass** | [33755849511](https://github.com/agentkernel/cognitive-os/actions/runs/33755849511) at `8c681757` (ubuntu 4m13s, windows 16m38s, required-ci 3s); workflow_dispatch (PR auto-trigger did not start) |
+| `DEV-LINUX-NATIVE-01` | **pass** | exact `8c681757` dirty=0; store 2/2 + `p11_t03_copy_excludes_secrets_and_inflight` 1/1; kernel-server 4/4; clippy clean |
 | Windows FS E2E | **not-run** | until P13-T13 |
+
+## Handbook (A8 interrupt)
+
+Kept (additive T09 only): `_meta/annotations/http-routes.json` (7 management + 7 task-forbidden routes); `tools/src/generate-handbook.mjs` (`project_lifecycle.rs` in `definitionSources`); bilingual `store-and-migrations.md`; regenerated `http-api` (en/zh); fingerprints on `validation-commands` + `conformance-and-testing` (both locales).
+
+Dropped: none of the listed T09 handbook files. Settings/SecretStore routes and `source-map.json` untouched.
 
 ## Next
 
-- Checkpoint `6fe834d0`; one Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321).
-- Required CI + exact-rev `DEV-LINUX-NATIVE-01` on that HEAD.
-- Windows FS E2E stays `not-run` until P13-T13.
+- Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) stays Draft.
+- Map formal acceptance; Windows FS E2E stays `not-run` until P13-T13.
