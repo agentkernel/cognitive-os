@@ -121,6 +121,8 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
     expect(isKnownRoute("POST", "/management/agent-bindings/remove")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/routine.runs?project_id=proj-1")).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/chat.post")).toBe(true);
+    expect(isKnownRoute("GET", "/management/project/v1/chat.thread?project_id=proj-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/today.overview?period=week")).toBe(true);
     expect(
       isKnownRoute("GET", "/management/project/v1/dsh.hosted.attempt.list?project_id=proj-1"),
@@ -133,6 +135,8 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/project/v1/routine.trigger")).toBe(false);
     expect(isKnownRoute("POST", "/management/project/v1/dsh.hosted.attempt.run")).toBe(false);
     expect(isKnownRoute("GET", "/task/project/v1/routine.runs?project_id=proj-1")).toBe(false);
+    expect(isKnownRoute("POST", "/task/project/v1/chat.post")).toBe(false);
+    expect(isKnownRoute("GET", "/task/project/v1/chat.thread")).toBe(false);
     expect(isKnownRoute("GET", "/task/project/v1/today.overview")).toBe(false);
   });
 

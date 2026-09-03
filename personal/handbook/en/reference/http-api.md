@@ -12,6 +12,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
   - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
+  - path: personal/apps/kernel-server/src/personal/project_chat.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -23,7 +24,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3424f19b79441af17264eb165972105bd3e92b50ef83f73972325407eb63a19e"
+fingerprint: "sha256:4e4d182266376ea50a15ed297950391b1b09e86b5217cf3c95fab712afafdeca"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -220,6 +221,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/routine.armings` | management | Newest-first arming history of one `project_id` (armed / paused / superseded), so instruction history stays visible. |
 | `GET` | `/management/project/v1/routine.runs` | management | The `runs` read (P13-T05): live armings, the occurrence ledger across the Project's Routines (active / queued / coalesced / missed / attempted with a derived `dispatch_state` such as `running`, `waiting-paused`, `waiting-host`), host dispatch availability from P11-T02 facts, a summary, and the pointer to the real Attempt history (`dsh.hosted.attempt.list` / `.detail`). Every row carries `completion_claimed=false` and `verification_status=not-run`; an outcome is a daemon-observed Attempt terminal, never `success`. |
 | `GET` | `/management/project/v1/today.overview` | management | Today live-Project overview (P13-T05): created / live / blocked counts and one row per live Project (status, Attempts done / failed / unknown in `period` = today|week|month on a UTC basis, summed daemon-observed duration or `null`, current stage from the live arming, running / queued / missed facts). `kpi_wall: false`; cost is `unknown`; `attempts_done` counts children that answered `done` and is never completion. |
+| `POST` | `/management/project/v1/chat.post` | management | Post one Owner group-chat turn inside a Project (P13-T06). The daemon routes `@manager` to a PlanRevision candidate + `plan-revision` ApprovalPreview and `@member` to a `task-revision` candidate bounded to that Member's responsible stage; un-addressed turns take the manager-default briefing. Chat never applies a PlanRevision and has no Approve (`approve_attempted` CHECK = 0). Secret-shaped bodies are 422 with a Settings pointer (SecretStore takeover). Confirm stays on the Projects canvas `confirm` route. |
+| `GET` | `/management/project/v1/chat.thread` | management | Read the Project group-chat thread (Owner turns plus daemon-composed manager / Member speech). Cross-Project reads fail closed. Management-channel only. |
 | `POST` | `/management/host/v1/home.admit` | management | Admit Personal Home `app/`+`data/` (P11-T02). Install root must end with `Personal Home`; GNU/WSL/Linux roots, ACL escape, and secret env/argv fail closed. Upgrade replaces app and preserves data. Native ACL E2E is `not-run`. |
 | `POST` | `/management/host/v1/daemon.bind` | management | Bind the single daemon to one admitted Home. Duplicate bind while bound/recovering/resumed fails closed. Tray role is observe-and-request only. |
 | `POST` | `/management/host/v1/close.request` | management | Typed close: background-or-pause is honored only when the daemon can honor background; otherwise the request is rejected (fake background forbidden). |
@@ -291,6 +294,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/routine.armings` | task | Forbidden: Routine arming history is management-channel only. |
 | `GET` | `/task/project/v1/routine.runs` | task | Forbidden: the runs ledger is management-channel only. |
 | `GET` | `/task/project/v1/today.overview` | task | Forbidden: the Today overview is management-channel only. |
+| `POST` | `/task/project/v1/chat.post` | task | Forbidden: Project group chat is management-channel only. Chat cannot Approve. |
+| `GET` | `/task/project/v1/chat.thread` | task | Forbidden: Project group-chat thread is management-channel only. |
 | `POST` | `/task/host/v1/home.admit` | task | Forbidden: Windows host admit is management-channel only. |
 | `POST` | `/task/host/v1/daemon.bind` | task | Forbidden: Windows host daemon bind is management-channel only. |
 | `POST` | `/task/host/v1/close.request` | task | Forbidden: Windows host close is management-channel only. |

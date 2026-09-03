@@ -34,6 +34,8 @@ sources:
     symbols: ["ATTEMPT_ARTIFACT_SCHEMA_V37", "AttemptArtifactStore"]
   - path: personal/crates/cognitive-store/src/routine_arming.rs
     symbols: ["ROUTINE_ARMING_SCHEMA_V38", "RoutineArmingStore"]
+  - path: personal/crates/cognitive-store/src/project_chat.rs
+    symbols: ["PROJECT_CHAT_SCHEMA_V39", "ProjectChatStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -63,7 +65,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:8b099beda67ecba2213babb73f0b7808739b82f2e2b42f026184a1e7c2f0d4b5"
+fingerprint: "sha256:fe09bbdbb0f7abc1f8cf1da8199088b8dc1bac782e8f8a25fb99b274ef99275b"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -73,10 +75,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v38）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v39）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v38）
+## 权威库迁移图（v1–v39）
 
 | 版本 | 新增 |
 |---|---|
@@ -102,6 +104,7 @@ non_claims:
 | v36 | 托管 DSH 真实 Attempt 循环（`p13_hosted_dsh_artifact_fact`、`p13_hosted_dsh_attempt`、`p13_hosted_dsh_attempt_frame`），标识 `cognitiveos.personal.hosted-dsh-attempt/0.1`（P13-T02）。artifact 事实只追加，kind 由 daemon 推导为 `health-check` / `update` / `rollback`，health 为 `pinned` / `absent` / `corrupt` / `mismatch` / `script-missing`；只有 `pinned` 允许 spawn。Attempt 行就是 persist-before-dispatch 的 Intent（`intent_persisted` CHECK=1）：`persisted` → `dispatched`（pid，Effect 标记）→ `terminal`（`exited` / `signaled` / `timed-out` / `spawn-failed`——没有 `success`），daemon 崩溃后为 `unknown-outcome`。`completion_claimed` CHECK=0，`verification_status` CHECK=`not-run`，`context_bytes` ≤ 65536。帧是只追加的观察（`authority_written` CHECK=0）。Attempt 永不删除。Windows sandbox / ACL / supply-chain E2E 为 `not-run`。 |
 | v37 | Attempt 产物 → CAS → 独立 verifier → 末环验收 → external send（`p13_attempt_artifact`、`p13_artifact_evidence`、`p13_run_acceptance`、`p13_external_send`），标识 `cognitiveos.personal.attempt-artifact/0.1`（P13-T04）。产物行是指向唯一 P3-T03 `ArtifactStore` CAS（`<data_dir>/artifacts`）的 `sha256:` 引用，另带格式、来源帧（`hosted-dsh-child:candidate:DeliverableDraft`、帧 seq、payload digest）与产出时间；新鲜度（`current` / `superseded`）按 Project + task + Member 推导，其他成员在同一 task ref 上的交付物不会使其失效。evidence 只追加，由 CHECK 钉住 verifier `verifier://personal/attempt-artifact` 与 principal `principal://personal/independent-verifier`；其报告字节放在同一 CAS。`p13_run_acceptance` 用 CHECK 钉住末环（`stage_position = stage_count - 1`），并绑定一个 StageTestPassed 事实、产物与 evidence。`p13_external_send` 是 persist-before-dispatch Intent，`published` CHECK=0、`connector` CHECK=`none-qualified`（planned ≠ published）。重建 `p11_approval_preview`，使 `subject_kind` 也接受 `run-acceptance` 与 `external-send`（v30 先例）。宿主打开文件 E2E 为 `not-run`。 |
 | v38 | G2 后的 Routine 武装 + occurrence 派发 / 结果列（`p13_routine_arming`；`p11_routine_occurrence` 重建），标识 `cognitiveos.personal.routine-arming/0.1`（P13-T05）。一条 arming 把一个当前 Routine revision 绑定到一个计划环节及其已就位的负责 Member（`armed_after` CHECK=`G2`；state `armed` / `paused` / `superseded`；`apply_mode` `arm` / `continue` / `pause` / `restart` / `resume`）；③ 声明（`cadence_kind` `manual` / `interval`、`interval_ms` ≥ 1000、`bounded_context` ≤ 65536、`attempt_timeout_ms` ≤ 30 分钟）连同 digest 从 revision body 复制。occurrence 表新增 `arming_id`、`attempt_id`、`lease_epoch`、`started_at`、`attempt_outcome`（`done` / `failed` / `blocked` / `unknown` / `timed-out` / `signaled` / `spawn-failed` / `unknown-outcome`——没有 `success`）、`outcome_detail`、`elapsed_ms`、`terminal_at`、`completion_claimed` CHECK=0，以及 disposition `attempted`（CHECK：`attempted` ⇔ 存在 outcome）。clock / sleep / restart 宿主 E2E 为 `not-run`。 |
+| v39 | Project 群聊 Owner 回合（`p13_project_chat_turn`）加上聊天路由的 ApprovalPreview 种类 `plan-revision` / `task-revision`（P13-T06）。仅 Owner 撰写（`author` CHECK=`owner`）；mention / routing CHECK；`approve_attempted` CHECK=0，schema 不能记录聊天 Approve。`@manager` 铸造 PlanRevision 候选与 digest 绑定 preview；`@member` 铸造仅限该成员负责环节的 task-revision 候选。画布 Confirm 是唯一写入者（preview 事务内 `apply_plan_revision_locked`）。重建 `p11_approval_preview` 并保留全部 v30 / v37 种类。secret-shape 正文在任何行存在之前被拒。 |
 
 P11-T07 隐藏托管 DSH 新增 v31 `p11_hosted_dsh_child`。Attempt-runner `start` 的真实调用者是 management HTTP `dsh.hosted.start`；task 通道别名 403。digest/protocol 不匹配、env/argv 含 secret、Pi 作 Member 引擎、Installed Agent chrome、未知子进程输出（`success`/`ok`/`agent_end`）一律失败闭合。daemon Provider 代理 `POST /provider/v1/dsh/chat/completions` 仍是唯一持 secret 路径。Linux Path B 不等于 Windows 托管资格。
 
@@ -126,10 +129,12 @@ P13-T02 托管 DSH 真实 Attempt 循环新增 v36。真实调用者是 manageme
 P13-T04 新增 v37。写 Attempt 终态的 broker 线程把该次运行交给 `AttemptArtifactStore::ingest_candidate`：只有 `terminal` Attempt 的 `DeliverableDraft` 候选帧、且其 canonical payload 的 digest 等于帧上已记录的 digest，才能成为产物；payload 与交付物文本都放入 CAS（文件与 `file://` 引用永不被接受——`resolve_openable_ref` 只接受 `sha256:`）。`verify_artifact` 是独立 verifier：确定性重读（CAS digest、来源帧绑定、Attempt 终态、UTF-8 / 非空 / 无 secret 形状）产生 `passed` / `failed` / `indeterminate` evidence；child 的 `response done`、exit code 与文本记为 `not-used`。`derive_stage_test` 只从 durable 事实（真实就位、成员持有该环节 slot、`current` 新鲜度、checked digest 等于产物 digest 的 passed evidence、CAS 重读、Attempt 终态）构造 P11-T03 `StageTestOracle` 并调用 `derive_stage_test_passed`；不存在调用方布尔值。`request_run_acceptance` 只为带 passed evidence 支撑的当前 StageTestPassed 的末环铸造 `run-acceptance` ApprovalPreview；`confirm_preview` 写入只追加的 `p13_run_acceptance` 事实。`publication_packet` 是只读 AUTONOMY 发布包（`planned: true`、`published: false`、`chat_can_confirm: false`）；`request_external_send` 铸造 `external-send` ApprovalPreview 与 `previewed` Intent，确认后变为 `planned`——永不 `published`。真实调用者是 management HTTP `outputs` / `outputs.detail` / `outputs.open` / `outputs.export` / `attempt.artifact.verify` / `attempt.artifact.stage-test` / `run.acceptance.request` / `run.acceptance` / `publication.packet` / `publication.external-send.request` / `publication.sends`；task 通道别名 403。
 P13-T05 Routine 武装新增 v38。HTTP 调用者是 management `routine.arm` / `routine.instruction` / `routine.arming.resume` / `routine.armings` / `routine.runs` / `today.overview`；周期性 daemon scheduler tick 是 `task://personal/routine/*` 行的**唯一**派发者（通用 scheduler pass 跳过它们；没有第二套 scheduler）。每一轮先把已观察到的 Attempt 终态写回为 occurrence 结果（`RoutineArmingStore::record_attempt_terminal`，再 queue-latest `promote_queued`），然后经 P11-T08 `admit_trigger` 路径触发到期的 interval arming（P11-T02 宿主 paused / offline 时该触发落为可见 `missed` 行，附 `host-unavailable:<reason>`），再用 `SchedulerRepository::acquire_eligible_lease`（owner `personal-daemon-scheduler`，epoch fencing）租约每个未派发的 `active` occurrence，并经 P13-T02 persist-before-dispatch 路径启动一个托管 Attempt；`bind_attempt` 拒绝不匹配的租约。未武装 Routine 的手动触发被标为 `missed`（`not-armed`），永不丢弃。新指令取代原 arming 并在安全点应用（`continue` / `pause` / `restart`）；运行中的 occurrence 保留其 revision 与 Attempt 的 context digest。G2 前武装被拒（`ROUTINE_ARM_BEFORE_G2`）；PlanRevision / 环节测试 / G2 的产品 HTTP 路径缺口仍归 P13-T04 / P13-T06。
 
+P13-T06 Project 群聊新增 v39。HTTP 调用者是 management `chat.post` / `chat.thread`；task 通道别名 403。带计划提案的 `@manager` 成为 `plan-revision` ApprovalPreview；`@member` 成为仅限该成员负责环节的 `task-revision` 候选。聊天永不落 PlanRevision（`confirm_chat_candidate_locked` 只从画布 Confirm 运行）。Approve 形状的正文在任何写入前 403；secret-shape 正文 422 并指向 Settings。跨 Project 读失败闭合。manager 与 Member 发言仍走 P11-T05 speech 路由器，发言规则是 daemon 记录类型，不是客户端过滤。`chat.thread` 按时间从旧到新合并 Owner 回合与已投递发言；Owner 回合与 manager announce 落在同一毫秒时，owner-message 排在 speech 前面。
+
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v38 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v39 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

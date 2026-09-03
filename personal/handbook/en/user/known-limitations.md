@@ -19,7 +19,7 @@ sources:
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:6cadca9690c756cd73be1ec3665fa7c4823cb978b7df88773f9b2e6cbffc452d"
+fingerprint: "sha256:5efcf94e6d6679babe5d973325b2980bb75bb687f89954a6a93283250a262cc1"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -86,6 +86,11 @@ current fact of the code.
   four turns now really run the exact pinned Pi through the daemon Provider
   proxy (Linux evidence only; the Windows Pi route stays `not-run` until
   `P13-T13`), and an unbound Provider yields a Settings pointer, not a chat box.
+- **Project group chat never Approves**: inside a Project the right rail layers
+  the Owner / manager / Members conversation over the Personal Assistant;
+  `@manager` / `@member` mint digest-bound previews; Confirm stays on the
+  Projects canvas. Secret-shaped chat is refused and pointed at Settings.
+  Windows host E2E is `not-run` until `P13-T13`.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no
