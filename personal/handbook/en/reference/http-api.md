@@ -13,6 +13,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
   - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
   - path: personal/apps/kernel-server/src/personal/project_chat.rs
+  - path: personal/apps/kernel-server/src/personal/project_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -25,7 +26,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:6799d359f69a3c025414090b3096c8d28dd866c46fce6460513080a5cc164725"
+fingerprint: "sha256:c25aab7e3c9ecd58525ac05c6220f470934ee5131b608a14653b82d2789af40a"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -238,6 +239,13 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/today.overview` | management | Today live-Project overview (P13-T05): created / live / blocked counts and one row per live Project (status, Attempts done / failed / unknown in `period` = today|week|month on a UTC basis, summed daemon-observed duration or `null`, current stage from the live arming, running / queued / missed facts). `kpi_wall: false`; cost is `unknown`; `attempts_done` counts children that answered `done` and is never completion. |
 | `POST` | `/management/project/v1/chat.post` | management | Post one Owner group-chat turn inside a Project (P13-T06). The daemon routes `@manager` to a PlanRevision candidate + `plan-revision` ApprovalPreview and `@member` to a `task-revision` candidate bounded to that Member's responsible stage; un-addressed turns take the manager-default briefing. Chat never applies a PlanRevision and has no Approve (`approve_attempted` CHECK = 0). Secret-shaped bodies are 422 with a Settings pointer (SecretStore takeover). Confirm stays on the Projects canvas `confirm` route. |
 | `GET` | `/management/project/v1/chat.thread` | management | Read the Project group-chat thread (Owner turns plus daemon-composed manager / Member speech). Cross-Project reads fail closed. Management-channel only. |
+| `POST` | `/management/project/v1/copy` | management | Copy a Project as an inactive 副本 (P13-T09). Inherit grant / seating / runtime flags fail closed. The copy never receives grants, seated Members, or armed Routines. Chat cannot Approve. |
+| `POST` | `/management/project/v1/archive` | management | Archive a Project after pausing armed Routine/Trigger armings (`skip_stop_triggers` is 422). Not a disaster backup. |
+| `POST` | `/management/project/v1/delete.preview` | management | Impact preview for logical delete. Live triggers or a non-archived Project fail closed. The `p11_project` row is not dropped. |
+| `POST` | `/management/project/v1/delete.confirm` | management | Second-confirm logical delete (digest + `second_confirm: true`). `physical_delete` is 422. Tombstone keeps the row (`deletion-preview` + plan ref `tombstone`). |
+| `POST` | `/management/project/v1/restore-point` | management | Record a same-disk local restore point. `claimed_as_backup` / `is_disaster_backup` fail closed. Not a disaster backup. |
+| `POST` | `/management/project/v1/export` | management | Export a Project without secrets (`include_secrets` is 422). The payload is not authority (`is_authority: false`) and is not a backup. |
+| `GET` | `/management/project/v1/lifecycle` | management | Project lifecycle projection: state, data dir, logical-delete flag, pending delete preview, and restore points labelled not a disaster backup. |
 | `POST` | `/management/host/v1/home.admit` | management | Admit Personal Home `app/`+`data/` (P11-T02). Install root must end with `Personal Home`; GNU/WSL/Linux roots, ACL escape, and secret env/argv fail closed. Upgrade replaces app and preserves data. Native ACL E2E is `not-run`. |
 | `POST` | `/management/host/v1/daemon.bind` | management | Bind the single daemon to one admitted Home. Duplicate bind while bound/recovering/resumed fails closed. Tray role is observe-and-request only. |
 | `POST` | `/management/host/v1/close.request` | management | Typed close: background-or-pause is honored only when the daemon can honor background; otherwise the request is rejected (fake background forbidden). |
@@ -311,6 +319,13 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/today.overview` | task | Forbidden: the Today overview is management-channel only. |
 | `POST` | `/task/project/v1/chat.post` | task | Forbidden: Project group chat is management-channel only. Chat cannot Approve. |
 | `GET` | `/task/project/v1/chat.thread` | task | Forbidden: Project group-chat thread is management-channel only. |
+| `POST` | `/task/project/v1/copy` | task | Forbidden: Project copy is management-channel only. |
+| `POST` | `/task/project/v1/archive` | task | Forbidden: Project archive is management-channel only. |
+| `POST` | `/task/project/v1/delete.preview` | task | Forbidden: Project delete preview is management-channel only. |
+| `POST` | `/task/project/v1/delete.confirm` | task | Forbidden: Project delete confirm is management-channel only. |
+| `POST` | `/task/project/v1/restore-point` | task | Forbidden: Project restore points are management-channel only. |
+| `POST` | `/task/project/v1/export` | task | Forbidden: Project export is management-channel only. |
+| `GET` | `/task/project/v1/lifecycle` | task | Forbidden: Project lifecycle read is management-channel only. |
 | `POST` | `/task/host/v1/home.admit` | task | Forbidden: Windows host admit is management-channel only. |
 | `POST` | `/task/host/v1/daemon.bind` | task | Forbidden: Windows host daemon bind is management-channel only. |
 | `POST` | `/task/host/v1/close.request` | task | Forbidden: Windows host close is management-channel only. |

@@ -1,12 +1,15 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
+import { readJson } from "../../api";
 import { PageHeader } from "../../components/PageHeader";
 import { HITL_KEY, type PendingPreviewRow } from "../../data/projections/hitl";
+import { PROJECT_COPY_PATH } from "../../data/projections/projectLifecycle";
 import { PROJECTS_KEY, PROJECT_LIST_PATH, type ProjectListRow } from "../../data/projections/projects";
 import { useProjection } from "../../data/useProjection";
 import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
 import { HitlCanvasTable } from "./HitlCanvasTable";
+import { httpErrorMessage } from "./httpError";
 import { loadPendingPreviewsForReadyProject, loadProjectList, readyProjectId } from "./loadOpcReads";
 import { ProjectAuthorityPanel } from "./ProjectAuthorityPanel";
 
@@ -23,6 +26,7 @@ export function ProjectsPage() {
   const projects = useProjection<ProjectListRow[]>(PROJECTS_KEY);
   const hitl = useProjection<PendingPreviewRow[]>(HITL_KEY);
   const projectId = readyProjectId(projects);
+  const [copyMessage, setCopyMessage] = useState("");
   const refresh = useCallback(async () => {
     const list = await loadProjectList();
     await loadPendingPreviewsForReadyProject(list);
@@ -58,7 +62,28 @@ export function ProjectsPage() {
               <tr key={row.projectId} data-row-key={row.projectId}>
                 <td>
                   <code className="cp-mono">{row.projectId}</code>{" "}
-                  <Link to={`/projects/${encodeURIComponent(row.projectId)}`}>Open</Link>
+                  <Link to={`/projects/${encodeURIComponent(row.projectId)}`}>Open</Link>{" "}
+                  <button
+                    type="button"
+                    className="cp-button"
+                    onClick={() => {
+                      void (async () => {
+                        const result = await readJson(PROJECT_COPY_PATH, "management", {
+                          method: "POST",
+                          headers: { "content-type": "application/json" },
+                          body: JSON.stringify({ project_id: row.projectId }),
+                        });
+                        if (!result.ok) {
+                          setCopyMessage(httpErrorMessage(result.status, result.body));
+                          return;
+                        }
+                        setCopyMessage("");
+                        await refresh();
+                      })();
+                    }}
+                  >
+                    Copy as 副本
+                  </button>
                 </td>
                 <td>{row.state}</td>
                 <td>{row.titleSummary}</td>
@@ -67,6 +92,7 @@ export function ProjectsPage() {
             ))}
           </tbody>
         </table>
+        {copyMessage ? <p className="cp-quiet">{copyMessage}</p> : null}
         {projectId ? (
           <DaemonReadPanel
             projection={hitl}
