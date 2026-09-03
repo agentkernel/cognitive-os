@@ -45,11 +45,30 @@ host to a supported release-validation environment without a separately
 reviewed toolchain decision.
 
 This result is registered as `RUST-LINK-DEV-WIN-GNU-01`. It is a persistent
-command-routing fact, not a diagnostic that feature work should reproduce.
-Normal Delivery Slices must not rerun local GNU `cargo build`, `cargo test`,
-`cargo clippy`, `cargo run`, `cargo bench`, or exhausted LLVM-MinGW/shim/PATH
-workarounds. Only a separately approved and leased P0-T01 toolchain-repair
-Slice may reassess this baseline.
+command-routing fact for the GNU host, not a diagnostic that feature work
+should reproduce. Normal Delivery Slices must not rerun local GNU `cargo
+build`, `cargo test`, `cargo clippy`, `cargo run`, `cargo bench`, or exhausted
+LLVM-MinGW/shim/PATH workarounds. Only a separately approved and leased P0-T01
+toolchain-repair Slice may reassess this baseline.
+
+## Local MSVC Override (P0-T01/D02, 2026-09-03)
+
+The owner chose a **local-only** repair: `rustup override set
+1.97.1-x86_64-pc-windows-msvc` for `D:\agent-kernel` and the task worktree,
+using the already installed MSVC toolchain and Visual Studio Build Tools
+17.14.37 at `D:\VSBuildTools` (`link.exe` 14.44.35228.0, found by rustc through
+the Visual Studio setup configuration; no PATH or `vcvars` change). The
+tracked `rust-toolchain.toml` is unchanged, so CI and every other clone are
+unaffected. Inside an override directory `rustc -vV` reports
+`host: x86_64-pc-windows-msvc` and the workspace `cargo build`, `cargo test`,
+`cargo clippy` and `cargo fmt` commands run locally; the executed results,
+exact revision and the disk-driven `CARGO_PROFILE_DEV_DEBUG=0` session setting
+are recorded in the
+[P0-T01/D02 running report](../../../docs/checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-report.md).
+Those results are local development evidence only; the supported
+release-validation combination remains CI Linux and hosted Windows/MSVC, and
+the host's capability ceiling in `PERSONAL-TEST-ENVIRONMENTS.md` §3 is
+unchanged.
 
 ## TypeScript Local Measurement
 
@@ -79,9 +98,10 @@ pnpm run check:consistency
 node tools/src/gen-matrix.mjs --check
 ```
 
-Run Rust compiling/linking commands only on a selected supported route such as
-`CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or an exact-revision
-`DEV-LINUX-NATIVE-01` worktree:
+Run Rust compiling/linking commands as **supported validation** only on a
+selected supported route such as `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or an
+exact-revision `DEV-LINUX-NATIVE-01` worktree (locally they may additionally
+be run for iteration inside a registered MSVC-override directory, see above):
 
 ```bash
 cargo build --workspace --locked

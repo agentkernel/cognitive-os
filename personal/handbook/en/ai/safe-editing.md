@@ -66,6 +66,11 @@ non_claims:
 
 - The local shell is Windows PowerShell 5.1: `&&`/`||` do not parse; use separate
   commands or `if ($LASTEXITCODE -eq 0) { … }`.
-- The local Windows GNU host cannot link Rust (registered linker exit 121): never
-  run workspace `cargo build/test/clippy/run/bench` there; route to CI or native
-  Linux (see [validation commands](validation-commands.md)).
+- The local Windows GNU host cannot link Rust (registered linker exit 121). Since
+  2026-09-03 the registered local directories carry a rustup override to the
+  installed MSVC toolchain: run workspace `cargo build/test/clippy` locally
+  **only** where `rustc -vV` reports `host: x86_64-pc-windows-msvc`, treat the
+  result as development evidence, and still route supported validation to CI
+  or native Linux (see [validation commands](validation-commands.md)). Never
+  edit `rust-toolchain.toml`, PATH or `.cargo/config.toml` to "fix" a linker
+  failure inside a feature task.

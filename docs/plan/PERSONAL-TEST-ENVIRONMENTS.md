@@ -38,23 +38,29 @@ known-invalid syntax or a known-unsupported linker:
 |---|---|---|
 | Multiple independent local commands | separate parallel Shell calls | joining them with `&&` or `||` under Windows PowerShell 5.1 |
 | Dependent local commands | separate calls, or `if ($LASTEXITCODE -eq 0) { <next-command> }` | bash command chaining unless the command explicitly starts in bash |
-| Local documentation, consistency, TypeScript or diff verification | `DEV-WIN-GNU-01` is eligible when the command does not trigger Rust compile/link | treating a PowerShell parser rejection as a test failure |
+| Local documentation, consistency, TypeScript or diff verification | `DEV-WIN-GNU-01` is eligible | treating a PowerShell parser rejection as a test failure |
 | Rust formatting | `DEV-WIN-GNU-01` may run `cargo fmt --all -- --check` | using formatting as build/test evidence |
-| Rust build/test/Clippy/run/bench | `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or exact-revision `DEV-LINUX-NATIVE-01` according to the required evidence | invoking these first on `DEV-WIN-GNU-01`, whose registered result is linker exit 121 |
-| Windows GNU toolchain repair | a separately approved and leased P0-T01 Delivery Slice with explicit acceptance | ad hoc LLVM-MinGW, shim, PATH, Rust pin or source workaround inside a feature Slice |
+| Local Rust build/test/Clippy iteration | `DEV-WIN-GNU-01` **only in a directory carrying the registered local MSVC `rustup override`** (§3; `rustc -vV` must report `host: x86_64-pc-windows-msvc`); results are local development evidence and are recorded in the Slice's running report | running them in a directory without the override (that is still the GNU host: linker exit 121); treating a local pass as supported-CI, Gate, release, Profile or Windows-support evidence |
+| Rust build/test/Clippy/run/bench as **supported validation** | `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or exact-revision `DEV-LINUX-NATIVE-01` according to the required evidence | substituting the local MSVC override result for the supported route; invoking anything Rust-linking on the GNU host |
+| Local toolchain change | a separately approved and leased P0-T01 Delivery Slice with explicit acceptance (`P0-T01/D02` registered the MSVC override) | ad hoc LLVM-MinGW, shim, PATH, Rust pin, `rust-toolchain.toml` or source workaround inside a feature Slice |
 
 `COMMAND-SHELL-PS51` means a command rejected by the local PowerShell parser
 did not execute and is recorded as `not-run`. `RUST-LINK-DEV-WIN-GNU-01`
-means the current GNU host's known linker exit 121 is an environment capability
-boundary, not a regression to reproduce for each Rust change. If the required
-supported route is unavailable, the validation and affected Delivery Slice
-remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
+is the registered **GNU-host** fact: with the default `x86_64-pc-windows-gnu`
+host (which `rust-toolchain.toml` still resolves to in any directory without
+the local override) workspace linking stops at linker exit 121; that fact is
+an environment boundary, not a regression to reproduce. Since `P0-T01/D02`
+(2026-09-03) the two registered local directories carry a rustup directory
+override to `1.97.1-x86_64-pc-windows-msvc`, which makes local Rust iteration
+possible there (§3) without changing the host's capability ceiling. If the
+required supported route is unavailable, the validation and affected Delivery
+Slice remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 
 ## 2. Environment summary
 
 | ID | Environment | Kind | Maximum current evidence scope |
 |---|---|---|---|
-| `DEV-WIN-GNU-01` | local Windows GNU/MinGW host | local development | TypeScript and non-linking checks only |
+| `DEV-WIN-GNU-01` | local Windows host (GNU default host; registered directories carry a local MSVC `rustup override` since 2026-09-03) | local development | TypeScript/static checks everywhere; local Rust build/test/Clippy iteration only inside the override directories — development evidence, never supported-CI/Gate/release/Profile |
 | `CI-UBUNTU-01` | GitHub `ubuntu-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
 | `CI-WINDOWS-MSVC-01` | GitHub `windows-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
 | `DEV-WINDOWS-NATIVE-OPC-01` | future qualified Windows 11 x86_64 development host | **not provisioned/qualified** | none; required for native Phase 11 host/DSH/UI/connector evidence |
@@ -68,30 +74,96 @@ remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `FIXTURE-PROVIDER-HTTPS-01` | loopback HTTPS Provider fixture | deterministic fixture | Provider transport implementation evidence |
 | `CONTRACT-RUNNERS-01` | golden/conformance/consistency runners | contract/tooling | scoped contract and tooling evidence |
 
-## 3. `DEV-WIN-GNU-01` — local Windows GNU/MinGW
+## 3. `DEV-WIN-GNU-01` — local Windows host (GNU default, local MSVC override)
 
-- **Recorded platform:** `x86_64-pc-windows-gnu`.
-- **Recorded tools:** Rust 1.97.1; local TypeScript baseline used Node 24.15.0
-  and pnpm 10.33.2.
-- **Command shell:** local Cursor commands use Windows PowerShell 5.1. Never
-  use `&&` or `||`; use parallel calls, separate dependent calls, or
-  `if ($LASTEXITCODE -eq 0) { <next-command> }`.
+The environment ID is retained for continuity with every earlier evidence
+record; it names the owner's local Windows development machine, whose rustup
+**default host** is still `x86_64-pc-windows-gnu`. Re-registered 2026-09-03 by
+`P0-T01/D02` (owner decision: local-only override, tracked
+`rust-toolchain.toml` unchanged).
+
+- **Recorded platform:** Windows 10 Pro 10.0.19045, x86_64. rustup 1.29.0
+  (`RUSTUP_HOME=D:\DevEnv\Rustup`, `CARGO_HOME=D:\DevEnv\Cargo`,
+  `CARGO_TARGET_DIR=D:\DevEnv\CargoTarget`); default host
+  `x86_64-pc-windows-gnu`; installed toolchains `stable-x86_64-pc-windows-gnu`,
+  `1.97.1-x86_64-pc-windows-gnu`, `1.97.1-x86_64-pc-windows-gnullvm`,
+  `1.97.1-x86_64-pc-windows-msvc` (with `rustfmt` + `clippy` added by
+  `P0-T01/D02`).
+- **Local MSVC override (the registered local Rust link path):**
+  `rustup override set 1.97.1-x86_64-pc-windows-msvc` is set for exactly
+  `D:\agent-kernel` and `D:\agent-kernel-wt-p0-t01`; it lives in rustup's own
+  settings, not in the repository, and takes precedence over
+  `rust-toolchain.toml` only in those directories (`.cargo/config.toml` is not
+  gitignored here and is therefore **not** used). In an override directory
+  `rustc -vV` reports `host: x86_64-pc-windows-msvc` for the same pinned
+  `1.97.1` release/commit as CI. Any new local worktree must set its own
+  override; `rustup override unset --path <dir>` reverts. No PATH,
+  environment-variable, `vcvars`, or machine-wide change is part of the
+  registration: rustc locates `link.exe` through the Visual Studio setup
+  configuration on its own.
+- **Linker:** Visual Studio Build Tools 17.14.37 (installationVersion
+  `17.14.37516.0`) at `D:\VSBuildTools`; MSVC toolset 14.44.35207;
+  `D:\VSBuildTools\VC\Tools\MSVC\14.44.35207\bin\Hostx64\x64\link.exe`
+  version 14.44.35228.0 (not on the Cursor Shell PATH — it does not need to
+  be); Windows SDK 10.0.26100.0.
+- **Recorded tools:** Rust 1.97.1 (`rustc 8bab26f4f 2026-07-14`, LLVM 22.1.6);
+  pnpm 10.33.2; Node 24.15.0 for the historical TypeScript baseline;
+  PowerShell 7.6.5 (`pwsh`) installed alongside the Windows PowerShell 5.1
+  Cursor Shell; Git `core.autocrlf=true` at system scope, overridden for every
+  tracked text path by `.gitattributes` `* text=auto eol=lf` (no local Git
+  change required).
+- **Command shell:** local Cursor commands use Windows PowerShell 5.1
+  (`COMMAND-SHELL-PS51`). Never use `&&` or `||`; use parallel calls,
+  separate dependent calls, or `if ($LASTEXITCODE -eq 0) { <next-command> }`.
+  If `cargo`/`rustup` are not on PATH: `$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`.
 - **Observed allowlist:** frozen pnpm install, workspace TS build/test, Node
-  tooling, documentation/static consistency, diff checks and Rust formatting.
-- **Known limitation (`RUST-LINK-DEV-WIN-GNU-01`):** workspace Rust
-  build/test/Clippy/run/bench is unsupported and fails during linking with exit
-  121, including the already exhausted LLVM-MinGW/shim retry.
-- **No-repeat rule:** do not run Rust compiling/linking commands on this host
-  merely to reconfirm the known result. Only an explicitly approved P0-T01
-  toolchain-repair Slice may retest or change linker/PATH/toolchain settings.
-- **Required transfer:** route Rust validation to supported Ubuntu CI,
-  Windows/MSVC CI, or an exact-revision native Linux worktree before the Slice
-  starts; if unavailable, record `blocked`/`not-run` rather than substituting
-  this host.
-- **Maximum evidence:** local TS/development checks actually executed.
-- **Cannot claim:** supported Windows Rust, Windows product install, B01-W,
+  tooling, documentation/static consistency, diff checks, Rust formatting,
+  and — **inside an override directory only** — `cargo build --workspace --locked`,
+  `cargo test --workspace --locked -- --test-threads=1`,
+  `cargo clippy --workspace --all-targets --locked -- -D warnings`,
+  `cargo fmt --all -- --check` (executed results and exact revision in the
+  `P0-T01/D02` running report). Local Rust iteration is development evidence
+  that helps a Slice reach a pushable checkpoint sooner; supported validation
+  is still the CI/native route below.
+- **Known local limitations of the override path (recorded 2026-09-03):**
+  (1) disk — `D:` holds `CARGO_TARGET_DIR` with only a few GB free; the full
+  workspace test build fits only with `CARGO_PROFILE_DEV_DEBUG=0` set in the
+  shell session (no persistent change; debuginfo level does not alter what
+  is compiled or asserted); (2) privilege — the Cursor Shell is not elevated,
+  `SeCreateSymbolicLinkPrivilege` is not held and Windows Developer Mode is
+  off, so the four `kernel-server` `tool_executor` unit tests whose fixture
+  creates a symlink/reparse point fail at fixture setup with OS error 1314
+  (`ERROR_PRIVILEGE_NOT_HELD`); they pass on the elevated hosted
+  `windows-latest` runner. Treat those four as `not-run (host privilege)`
+  locally — do not weaken or skip them in code; enabling Developer Mode or an
+  elevated shell is an owner-level machine setting, not a Slice action.
+- **Known limitation (`RUST-LINK-DEV-WIN-GNU-01`, GNU-host history):** with
+  the default `x86_64-pc-windows-gnu` host — i.e. in any directory **without**
+  the override, or if the override is unset — workspace Rust
+  build/test/Clippy/run/bench fails during linking with exit 121, including the
+  already exhausted LLVM-MinGW/shim retry (2026-07-25 baseline). The override
+  does not change that host fact; it routes around it.
+- **No-repeat rule:** do not run Rust compiling/linking commands on the GNU
+  host merely to reconfirm the known result, and do not "fix" a linker exit 121
+  by ad hoc PATH/toolchain/`rust-toolchain.toml` edits inside a feature Slice
+  — check `rustc -vV` reports `host: x86_64-pc-windows-msvc` first. Only an
+  explicitly approved P0-T01 toolchain-repair Slice may change
+  linker/PATH/toolchain settings or this registration.
+- **Required transfer:** route Rust **validation** (the evidence a Slice exit
+  or acceptance cites) to supported Ubuntu CI (`CI-UBUNTU-01`), Windows/MSVC CI
+  (`CI-WINDOWS-MSVC-01`), or an exact-revision native Linux worktree
+  (`DEV-LINUX-NATIVE-01`) before the Slice starts; if unavailable, record
+  `blocked`/`not-run` rather than substituting this host's local result.
+- **Maximum evidence:** local TS/development checks actually executed,
+  including local MSVC-override Rust build/test/Clippy results labelled as
+  such. Capability ceiling **unchanged** by `P0-T01/D02`.
+- **Cannot claim:** supported Windows Rust, `tested-supported-ci`, Windows
+  product install, `DEV-WINDOWS-NATIVE-OPC-01` qualification, B01-W,
   sandbox/containment, release or Profile.
-- **Evidence:** [`personal/tests/baseline/README.md`](../../personal/tests/baseline/README.md).
+- **Evidence:** [`personal/tests/baseline/README.md`](../../personal/tests/baseline/README.md)
+  (2026-07-25 GNU baseline);
+  [`P0-T01/D02` running report](../checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-report.md)
+  (2026-09-03 override fact probe and local cargo results).
 
 ## 4. `CI-UBUNTU-01` — supported Ubuntu ordinary CI
 

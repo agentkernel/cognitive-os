@@ -155,5 +155,7 @@ check (`tools/src/check-agent-rules.mjs`: frontmatter and path/skill/command
 references of `AGENTS.md`, `.cursor/rules`, `.cursor/commands`), handbook checks,
 conformance with pinned counts, wrong-implementation self-check, and golden digest
 byte-parity. Rust
-validation never runs on the registered-unsupported local Windows GNU host;
-native Linux evidence consumes pushed exact revisions only.
+validation never runs on the local Windows GNU host; the registered local
+MSVC-override directories (P0-T01/D02) may run the same cargo commands for
+development iteration only, never as the cited validation; native Linux
+evidence consumes pushed exact revisions only.

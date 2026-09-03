@@ -61,8 +61,10 @@ claim ceilings.
   staging; evidence redaction; claim ceilings (`hypothesis`/non-claim — no
   Gate, release, Profile, or Agent-benefit promotion).
 - `COMMAND-SHELL-PS51` and `RUST-LINK-DEV-WIN-GNU-01` still apply (`AGENTS.md`
-  §6): local shell is Windows PowerShell 5.1 (no `&&`/`||`), and Rust
-  build/test runs only on supported CI or exact-revision native Linux.
+  §6): local shell is Windows PowerShell 5.1 (no `&&`/`||`); Rust build/test as
+  campaign evidence runs only on supported CI or exact-revision native Linux
+  (the local MSVC-override directory is development iteration, not campaign
+  evidence).
 
 # Stop conditions
 

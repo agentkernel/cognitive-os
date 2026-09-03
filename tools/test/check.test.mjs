@@ -556,3 +556,55 @@ test("POSIX and Windows verify orchestrators share evidence safeguards", () => {
   assert.match(windowsScript, /CARGO_TARGET_DIR/);
   assert.match(windowsScript, /PERF004 report generation failed/);
 });
+
+test("verify:local orchestrators pin the same conformance counts as ci.yml", () => {
+  const repoRoot = path.resolve(toolsDir, "..");
+  const ci = readFileSync(path.join(repoRoot, ".github", "workflows", "ci.yml"), "utf8");
+  const posixScript = readFileSync(path.join(repoRoot, "scripts", "v01-auto-run.sh"), "utf8");
+  const windowsScript = readFileSync(path.join(repoRoot, "scripts", "v01-auto-run.ps1"), "utf8");
+
+  const ciPins = ci.match(
+    /const pinned = \{ total_vectors: (\d+), pass: (\d+), fail: (\d+), 'not-applicable': (\d+), 'documented-degradation': (\d+), 'not-run': (\d+) \}/,
+  );
+  assert.ok(ciPins, "ci.yml must pin the five-state conformance counts");
+  const ciSelfCheckMin = ci.match(/r\.must_flip\.length < (\d+)/);
+  assert.ok(ciSelfCheckMin, "ci.yml must pin the self-check corpus floor");
+  const expected = {
+    total: Number(ciPins[1]),
+    pass: Number(ciPins[2]),
+    fail: Number(ciPins[3]),
+    notApplicable: Number(ciPins[4]),
+    documentedDegradation: Number(ciPins[5]),
+    notRun: Number(ciPins[6]),
+  };
+
+  const posixPins = posixScript.match(
+    /PIN_TOTAL=(\d+) PIN_PASS=(\d+) PIN_FAIL=(\d+) PIN_NA=(\d+) PIN_DD=(\d+) PIN_NR=(\d+) PIN_SC=(\d+)/,
+  );
+  assert.ok(posixPins, "v01-auto-run.sh must carry the PIN_* line");
+  assert.deepEqual(
+    posixPins.slice(1, 7).map(Number),
+    Object.values(expected),
+    "v01-auto-run.sh pins drifted from ci.yml",
+  );
+  assert.ok(Number(posixPins[7]) >= Number(ciSelfCheckMin[1]), "v01-auto-run.sh self-check floor below ci.yml");
+
+  const readWindowsPin = (key) => {
+    const match = windowsScript.match(new RegExp(`^\\s*"?${key}"?\\s*=\\s*(\\d+)\\s*$`, "m"));
+    assert.ok(match, `v01-auto-run.ps1 must pin ${key}`);
+    return Number(match[1]);
+  };
+  assert.deepEqual(
+    {
+      total: readWindowsPin("total_vectors"),
+      pass: readWindowsPin("pass"),
+      fail: readWindowsPin("fail"),
+      notApplicable: readWindowsPin("not-applicable"),
+      documentedDegradation: readWindowsPin("documented-degradation"),
+      notRun: readWindowsPin("not-run"),
+    },
+    expected,
+    "v01-auto-run.ps1 pins drifted from ci.yml",
+  );
+  assert.ok(readWindowsPin("self_check_min") >= Number(ciSelfCheckMin[1]), "v01-auto-run.ps1 self-check floor below ci.yml");
+});

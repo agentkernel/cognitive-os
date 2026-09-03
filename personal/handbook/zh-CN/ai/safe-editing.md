@@ -57,6 +57,9 @@ non_claims:
 
 - 本地 shell 是 Windows PowerShell 5.1：`&&`/`||` 无法解析；使用分开的命令或
   `if ($LASTEXITCODE -eq 0) { … }`。
-- 本地 Windows GNU 主机无法链接 Rust（已登记 linker exit 121）：绝不在本机运行
-  workspace `cargo build/test/clippy/run/bench`；路由到 CI 或 native Linux（见
-  [验证命令](validation-commands.md)）。
+- 本地 Windows GNU 主机无法链接 Rust（已登记 linker exit 121）。自 2026-09-03 起，已登记的
+  本地目录带有指向本机已装 MSVC 工具链的 rustup override：**只**在 `rustc -vV` 报
+  `host: x86_64-pc-windows-msvc` 的目录里本机运行 workspace `cargo build/test/clippy`，结果
+  只算开发证据，supported validation 仍路由到 CI 或 native Linux（见
+  [验证命令](validation-commands.md)）。绝不在 feature 任务里改 `rust-toolchain.toml`、PATH 或
+  `.cargo/config.toml` 来"修" linker 失败。
