@@ -116,6 +116,9 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/management/project/v1/vault.index.rebuild")).toBe(true);
     expect(isKnownRoute("GET", "/management/project/v1/standing-policies")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/standing-policy.revoke")).toBe(true);
+    expect(isKnownRoute("POST", "/management/settings/v1/connection.connect")).toBe(true);
+    expect(isKnownRoute("GET", "/management/settings/v1/diagnostics")).toBe(true);
+    expect(isKnownRoute("GET", "/management/settings/v1/notifications?home_id=home-1")).toBe(true);
     expect(isKnownRoute("GET", "/management/host/v1/status?home_id=home-1")).toBe(true);
     expect(isKnownRoute("POST", "/management/host/v1/close.request")).toBe(true);
     expect(isKnownRoute("GET", "/task/evidence?task_ref=x")).toBe(true);
@@ -138,6 +141,8 @@ describe("route whitelist (R-1)", () => {
     expect(isKnownRoute("POST", "/task/project/v1/chat.post")).toBe(false);
     expect(isKnownRoute("GET", "/task/project/v1/chat.thread")).toBe(false);
     expect(isKnownRoute("GET", "/task/project/v1/today.overview")).toBe(false);
+    expect(isKnownRoute("POST", "/task/settings/v1/connection.connect")).toBe(false);
+    expect(isKnownRoute("GET", "/task/settings/v1/diagnostics")).toBe(false);
   });
 
   it("rejects unknown and forbidden routes", () => {
