@@ -56,9 +56,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | Local `node tools/src/check-consistency.mjs` after lease/progress/totals repair | **pass** | `DEV-WIN-GNU-01` (Node) | worktree, uncommitted | Removed ledger self-ownership; Active task lease now references both `lease/personal/DOC-PERSONAL-2.0-OPC-REFRAME/product-prototype-docs` and `lease/personal/P13-T06/group-chat`; 合计 already 167/137/2/1/11. |
 | 2026-09-03 | `DEV-LINUX-NATIVE-01` GitHub `git fetch` into `p13-t05-ecd35ab0` (direct + `http://127.0.0.1:7890` / `7899`) | fail (pack) | `DEV-LINUX-NATIVE-01` | — | `fatal: pack has 26 unresolved deltas` / `fetch-pack: invalid index-pack output`. Did not use `/home/wuz/agent-kernel`. Proxy probe 200. Host disk 94% (28G free). |
 | 2026-09-03 | Reused existing Linux clone `~/cognitiveos-personal-worktrees/p13-t06-dd15dc51` | recorded | `DEV-LINUX-NATIVE-01` | `dd15dc51` | Independent `.git`, `HEAD=dd15dc51`, dirty=0. `CARGO_TARGET_DIR` → T05 `target/`. This session independently re-ran store tests: **pass** 8/8 + 8/8. |
+| 2026-09-03 | Linux retest at `08aa2928` (bundle `HEAD --not dd15dc51` after GitHub pack fetch failed on the T05 object store) | recorded | `DEV-LINUX-NATIVE-01` | `08aa2928` | clone already at the SHA (dirty=0). |
+| 2026-09-03 | `cargo test -p cognitive-store --test p13_t06_project_chat --test p1_t01_layout_migrations` | **pass** 9/9 + 8/8 | `DEV-LINUX-NATIVE-01` | `08aa2928` | includes `p13_t06_same_timestamp_owner_turn_precedes_manager_reply`. |
+| 2026-09-03 | `cargo test -p kernel-server --bin kernel-server -- --test-threads=1 project_chat` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` | `08aa2928` | previously failing `manager_mention_…_canvas_confirm_applies` green; live-shape pin green. |
+| 2026-09-03 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **fail** | `DEV-LINUX-NATIVE-01` | `08aa2928` | `clippy::type_complexity` at `project_chat.rs` `load_candidate_locked` (`Option<(String, Option<String>, Option<String>, Option<String>)>`). |
+| 2026-09-03 | merge `origin/main@7fe3b839` (T05 lease-close totals 137/1 on main) | recorded | docs-only | uncommitted | Conflict only in `PERSONAL-DEVELOPMENT-PLAN.md`. Kept T06 in-progress + v39; T05 **done**/lease closed; this-branch 合计 167/137/2/1/11 (T06+T12 in-progress). T04 v37 / T05 v38 / T06 v39 unchanged. |
+| 2026-09-03 | clippy `ChatCandidateColumns` alias | recorded | `DEV-WIN-GNU-01` | uncommitted | Named the four-column tuple so `-D warnings` no longer trips `type_complexity`. |
 
 ## Unique next
 
-1. Checkpoint the consistency repair + same-timestamp thread order fix; keep PR #316 Draft.
-2. Exact-revision Linux at the new HEAD: store (now 9 tests) + kernel-server `project_chat` + clippy, then live daemon negatives.
-3. Map every D01 acceptance item, then ready/merge. Do not claim P13-T07.
+1. Commit merge + clippy `ChatCandidateColumns` alias; push; keep PR #316 Draft.
+2. Linux clippy re-run at the new SHA, then live daemon negatives.
+3. Map every D01 acceptance item after required CI is green. Do not claim P13-T07.
