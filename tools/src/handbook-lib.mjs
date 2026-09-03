@@ -335,6 +335,36 @@ export function runHandbookChecks(inputs) {
     }
   }
 
+  // ---- HB016: source-map `symbols` are pinned by every routed page ---------------------
+  // A rule may declare `symbols`; then each routed hand-written page (every
+  // locale) must list each rule source path in its frontmatter `sources` with
+  // all of those symbols, so renaming the source symbol (e.g. the official Pi
+  // package constant) turns the routed pages red instead of silently drifting.
+  for (const rule of sourceMap.rules ?? []) {
+    if (!Array.isArray(rule.symbols) || rule.symbols.length === 0) continue;
+    for (const docId of rule.docs ?? []) {
+      const doc = docsById.get(docId);
+      if (!doc || doc.generated) continue;
+      for (const { p } of docPaths(doc)) {
+        const fm = pages.get(p)?.frontmatter;
+        if (!fm) continue;
+        for (const sourceGlob of rule.sources ?? []) {
+          const regex = compileGlob(sourceGlob);
+          const declared = (fm.sources ?? []).filter((s) => typeof s?.path === "string" && regex.test(s.path));
+          const declaredSymbols = new Set(declared.flatMap((s) => s.symbols ?? []));
+          const missingSymbols = rule.symbols.filter((symbol) => !declaredSymbols.has(symbol));
+          if (declared.length === 0 || missingSymbols.length > 0) {
+            fail(
+              "HB016",
+              p,
+              `source-map rule ${rule.id} pins symbols on ${sourceGlob}; this page must declare that source with symbols [${rule.symbols.join(", ")}] (missing: ${declared.length === 0 ? "source entry" : missingSymbols.join(", ")})`,
+            );
+          }
+        }
+      }
+    }
+  }
+
   // ---- HB010: generated pages match generator output ------------------------------
   if (generatedOutputs) {
     for (const doc of docsById.values()) {

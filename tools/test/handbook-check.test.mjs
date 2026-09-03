@@ -207,6 +207,50 @@ test("missing stable symbol fails HB007", () => {
   assert.ok(rulesOf(runHandbookChecks(fixture)).includes("HB007"));
 });
 
+test("source-map symbols must be pinned by every routed page (HB016)", () => {
+  const fixture = greenFixture();
+  fixture.sourceMap.rules.push({
+    id: "demo-pin",
+    sources: ["crates/demo/src/lib.rs"],
+    docs: ["user.demo"],
+    symbols: ["admit_pi_launch"],
+  });
+  assert.deepEqual(runHandbookChecks(fixture), [], "page already pins the symbol → green");
+
+  // Drop the symbol from one locale only: that locale must go red.
+  fixture.pages.get("personal/handbook/zh-CN/user/demo.md").frontmatter.sources = [
+    { path: "crates/demo/src/lib.rs" },
+  ];
+  const diagnostics = runHandbookChecks(fixture);
+  const hits = diagnostics.filter((d) => d.rule === "HB016");
+  assert.equal(hits.length, 1, JSON.stringify(diagnostics));
+  assert.equal(hits[0].file, "personal/handbook/zh-CN/user/demo.md");
+  assert.match(hits[0].message, /demo-pin[\s\S]*admit_pi_launch[\s\S]*missing: admit_pi_launch/);
+
+  // Drop the source entry entirely: still red, naming the missing source entry.
+  fixture.pages.get("personal/handbook/zh-CN/user/demo.md").frontmatter.sources = [];
+  const missingEntry = runHandbookChecks(fixture).filter((d) => d.rule === "HB016");
+  assert.equal(missingEntry.length, 1);
+  assert.match(missingEntry[0].message, /missing: source entry/);
+});
+
+test("renaming a source-map-pinned symbol in the source fails HB007 on the routed page", () => {
+  const fixture = greenFixture();
+  fixture.sourceMap.rules.push({
+    id: "demo-pin",
+    sources: ["crates/demo/src/lib.rs"],
+    docs: ["user.demo"],
+    symbols: ["admit_pi_launch"],
+  });
+  fixture.readSource = (p) => {
+    if (p === "crates/demo/src/lib.rs") return "pub fn pi_launch_admission() {}\n";
+    throw new Error(`unreadable ${p}`);
+  };
+  const rules = rulesOf(runHandbookChecks(fixture));
+  assert.ok(rules.includes("HB007"), `expected HB007 in ${rules.join(",")}`);
+  assert.ok(rules.includes("HB008"), "changed source must also drift the fingerprint");
+});
+
 test("glob compiler handles ** and * boundaries", () => {
   assert.ok(compileGlob("crates/**").test("crates/a/b/c.rs"));
   assert.ok(!compileGlob("crates/*.rs").test("crates/a/b.rs"));

@@ -404,6 +404,71 @@ test("documentation lease rejects id/description delivery mismatch", () => {
   );
 });
 
+test("a committed document linking an untracked local file fails the tracked-only link check", () => {
+  // The target exists on disk (like the owner's untracked design drafts) but is
+  // not in `git ls-files`; the filesystem alone would have accepted the link.
+  const untrackedRel = `docs/checkpoints/.p0-t09-untracked-fixture-${process.pid}.md`;
+  const untrackedAbs = path.join(repositoryRoot, ...untrackedRel.split("/"));
+  writeFileSync(untrackedAbs, "# untracked fixture\n");
+  try {
+    const trackedList = execFileSync("git", ["-C", repositoryRoot, "ls-files", "--", untrackedRel], {
+      encoding: "utf8",
+    });
+    assert.equal(trackedList.trim(), "", "fixture file must stay untracked");
+    const result = runConsistencyFailureInjection({
+      "docs/plan/plan.md": (source) =>
+        `${source}\n\n[untracked fixture link](../checkpoints/${path.posix.basename(untrackedRel)})\n`,
+    });
+    assert.equal(result.status, 1, result.stdout);
+    assert.match(
+      result.stderr,
+      /docs\/plan\/plan\.md[\s\S]*broken relative link: \.\.\/checkpoints\/\.p0-t09-untracked-fixture-\d+\.md \(exists locally but is not tracked by Git\)/,
+    );
+  } finally {
+    rmSync(untrackedAbs, { force: true });
+  }
+});
+
+test("Phase 13 build-order edge sets must match between the formal plan and the dev-prep index", () => {
+  const result = runConsistencyFailureInjection({
+    "personal/docs/architecture/personal-2.0.0-dev-prep-index.md": (source) => {
+      assert.ok(source.includes("  P13T05 --> P13T13\n"), "index graph must contain P13T05 --> P13T13");
+      // Drop one formal edge and add one edge the formal plan does not have.
+      return source
+        .replace("  P13T05 --> P13T13\n", "")
+        .replace("  P13T13 --> P11T15\n", "  P13T13 --> P11T15\n  P13T09 --> P13T13\n");
+    },
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /BUILD_ORDER_EDGE_MISSING: formal plan edge absent from the dev-prep index graph: T05 --> T13/);
+  assert.match(result.stderr, /BUILD_ORDER_EDGE_EXTRA: dev-prep index edge absent from the formal plan graph .*: T09 --> T13/);
+  assert.doesNotMatch(result.stderr, /BUILD_ORDER_EDGE_(MISSING|EXTRA)[^\n]*T12b/);
+});
+
+test("Phase 13 build-order check distinguishes dashed from solid edges", () => {
+  const result = runConsistencyFailureInjection({
+    "docs/plan/PERSONAL-DEVELOPMENT-PLAN.md": (source) => {
+      assert.ok(source.includes("  T06 -.-> T07\n"), "formal graph must contain the dashed T06 -.-> T07 edge");
+      return source.replace("  T06 -.-> T07\n", "  T06 --> T07\n");
+    },
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /BUILD_ORDER_EDGE_MISSING: [^\n]*: T06 --> T07/);
+  assert.match(result.stderr, /BUILD_ORDER_EDGE_EXTRA: [^\n]*: T06 -\.-> T07/);
+});
+
+test("Phase 13 build-order check fails closed when the dev-prep index graph disappears", () => {
+  const result = runConsistencyFailureInjection({
+    "personal/docs/architecture/personal-2.0.0-dev-prep-index.md": (source) =>
+      source.replace("### Phase 13 build order", "### Phase 13 construction sequence"),
+  });
+
+  assert.equal(result.status, 1, result.stdout);
+  assert.match(result.stderr, /BUILD_ORDER_GRAPH_MISSING: no「Phase 13 build order」mermaid graph/);
+});
+
 test("B01 pass rejects incomplete arithmetic and threshold evidence", () => {
   const result = runConsistencyFailureInjection({
     "docs/plan/PROGRESS.md": (source) =>

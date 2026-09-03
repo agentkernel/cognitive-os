@@ -39,7 +39,10 @@ generated: false
    not a reason to skip handbook review.
 5. **Checks**: `node tools/src/check-handbook.mjs`,
    `node tools/src/generate-handbook.mjs --check`, and
-   `pnpm run check:consistency` must pass; CI runs them on every PR.
+   `pnpm run check:consistency` must pass; CI runs them on every PR. Path
+   existence in the consistency and agent-rule checkers is Git-tracked-only
+   (`git ls-files`, P0-T09): linking a file that exists only in your working
+   tree fails locally exactly as it fails in CI.
    Measurement-only C1/C2 paired instruments live in
    `tools/personal/c1-c2-paired/` and are covered by
    `tools/test/c1_c2_paired_p_arm.test.mjs` (broker, Secret Service get helper,
@@ -56,7 +59,7 @@ generated: false
 | Pre-commit / pre-push gate | `tools/src/docs-sync-gate.mjs` (`--staged` / `--push`): source-map routing, conditional handbook check set, fail-closed on unsynced mapped changes; wired through repo `.githooks/` — enable once per clone with `pnpm run hooks:install` |
 | Editor/AI guidance | `AGENTS.md` §5 quick table, the always-applied rule `.cursor/rules/10-…` (checkpoint/closure obligations) and the glob-attached rule `.cursor/rules/20-cognitiveos-personal-handbook-sync.mdc` (attached whenever `core/`, `personal/`, `tools/`, `.github/`, `.githooks/` or root manifests are edited; adapters only — this file + the contract own the policy) |
 | Non-Cursor AI tools | root `llms.txt` + [`personal/handbook/en/ai/README.md`](../en/ai/README.md) |
-| Machine gate (CI, unconditional) | `check-handbook.mjs` rules HB001–HB015 (manifest, pairing, links, sources, symbols, fingerprints, coverage, generated equality, forbidden content, source-set reproducibility) + generator `--check` byte equality |
+| Machine gate (CI, unconditional) | `check-handbook.mjs` rules HB001–HB016 (manifest, pairing, links, sources, symbols, fingerprints, coverage, generated equality, forbidden content, source-set reproducibility, and HB016: a `source-map.json` rule that declares `symbols` — e.g. `pi-official-package-pin` on `installer.rs` `OFFICIAL_PI_PACKAGE` — must be pinned by every routed hand-written page in every locale) + generator `--check` byte equality |
 | Task-closure gate | `check-handbook.mjs --diff-base <rev>` proves legacy docs changed only on the allowlist ([`legacy-change-allowlist.json`](legacy-change-allowlist.json)) |
 
 ## Failure semantics

@@ -7,7 +7,7 @@ status: implemented
 generated: false
 sources:
   - path: personal/crates/cognitive-runtime/src/installer.rs
-    symbols: ["install_package", "acquire_official_pi_durable"]
+    symbols: ["install_package", "acquire_official_pi_durable", "OFFICIAL_PI_PACKAGE", "OFFICIAL_PI_VERSION"]
   - path: personal/crates/cognitive-runtime/src/agent_registration.rs
     symbols: ["register_official_pi_agent_durable", "activate_official_pi_agent_durable"]
   - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
