@@ -346,7 +346,7 @@ fn dispatch_state(
 }
 
 fn bump(summary: &mut Value, key: &str) {
-    if let Some(count) = summary.get_mut(key).and_then(Value::as_i64) {
+    if let Some(count) = summary.get(key).and_then(Value::as_i64) {
         summary[key] = json!(count + 1);
     }
 }
