@@ -104,8 +104,13 @@ pub(crate) fn handle(
 
 fn parse_route(method_path: &str) -> Option<(Channel, &'static str)> {
     // Exact match on the path part: `routine.arm` is a prefix of
-    // `routine.arming.resume`, so `starts_with` alone would misroute.
-    let without_query = method_path.split('?').next().unwrap_or(method_path);
+    // `routine.arming.resume`, so `starts_with` alone would misroute. The live
+    // server hands over `"<METHOD> <path> "` (trailing space from
+    // `parse_request_line`), so the query and surrounding whitespace are
+    // stripped before comparing (the live E2E at `bafb3c9c` caught the
+    // untrimmed compare: every P13-T05 route fell through to the generic
+    // channel echo).
+    let without_query = method_path.split('?').next().unwrap_or(method_path).trim();
     for literal in ROUTE_LITERALS {
         if without_query == *literal {
             let channel = if literal.contains("/task/") {
@@ -1131,6 +1136,86 @@ process.stdin.on("end", () => {
         );
         assert_eq!(response.status, 200, "{}", response.body);
         serde_json::from_str(&response.body).unwrap()
+    }
+
+    /// The live server dispatches `"<METHOD> <path> "` (trailing space from
+    /// `parse_request_line`). At `bafb3c9c` the exact-match router compared
+    /// the untrimmed string, so on a real daemon every P13-T05 route fell
+    /// through to the generic channel echo (HTTP 200, no `arming`), while the
+    /// in-process tests — which pass untrailed strings — stayed green. This
+    /// test pins the live shape for both channels and keeps the exactness
+    /// that separates `routine.arm` from `routine.arming.resume`.
+    #[test]
+    fn routine_runs_routes_match_the_live_request_line_shape() {
+        let harness = harness(false);
+        for live in [
+            "POST /management/project/v1/routine.arm ",
+            "POST /management/project/v1/routine.instruction ",
+            "POST /management/project/v1/routine.arming.resume ",
+            "GET /management/project/v1/routine.armings?project_id=p ",
+            "GET /management/project/v1/routine.runs?project_id=p ",
+            "GET /management/project/v1/today.overview ",
+            "GET /management/project/v1/today.overview?period=week ",
+        ] {
+            assert!(
+                matches(live),
+                "{live:?} must match the live request-line shape"
+            );
+            assert!(!is_task_channel(live), "{live:?}");
+        }
+        for live in [
+            "POST /task/project/v1/routine.arm ",
+            "GET /task/project/v1/routine.runs?project_id=p ",
+            "GET /task/project/v1/today.overview ",
+        ] {
+            assert!(matches(live), "{live:?}");
+            assert!(is_task_channel(live), "{live:?}");
+            let forbidden = handle(live, b"{}", &harness.store);
+            assert_eq!(forbidden.status, 403, "{live:?} → {}", forbidden.body);
+        }
+        // Exactness is kept: neither a suffixed path nor a prefix of a longer
+        // route matches, and `routine.arm` still is not `routine.arming.resume`.
+        // (Built at runtime from the registered literal so the handbook route
+        // scanner does not read these negatives as unannotated routes.)
+        let (base, _) = ROUTE_LITERALS[0].rsplit_once('/').unwrap();
+        for suffix in [
+            "routine.arm-extra",
+            "routine.armin",
+            "routine.run",
+            "routine.arm/extra",
+        ] {
+            let stray = format!("{base}/{suffix} ");
+            assert!(!matches(&stray), "{stray:?} must not match");
+        }
+        let arm = handle(
+            "POST /management/project/v1/routine.arm ",
+            br#"{"project_id":"p"}"#,
+            &harness.store,
+        );
+        assert_eq!(arm.status, 400, "{}", arm.body);
+        assert!(
+            arm.body.contains("ROUTINE_ARM_FIELD_REQUIRED"),
+            "{}",
+            arm.body
+        );
+        let resume = handle(
+            "POST /management/project/v1/routine.arming.resume ",
+            br#"{}"#,
+            &harness.store,
+        );
+        assert_eq!(resume.status, 400, "{}", resume.body);
+        assert!(
+            resume.body.contains("ARMING_ID_REQUIRED"),
+            "{}",
+            resume.body
+        );
+        let overview = handle(
+            "GET /management/project/v1/today.overview ",
+            b"",
+            &harness.store,
+        );
+        assert_eq!(overview.status, 200, "{}", overview.body);
+        assert!(overview.body.contains(TODAY_OVERVIEW_PROJECTION_ID));
     }
 
     #[test]
