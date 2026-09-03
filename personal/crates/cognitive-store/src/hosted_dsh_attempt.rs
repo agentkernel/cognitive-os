@@ -283,6 +283,10 @@ impl HostedDshAttemptStore {
             })
     }
 
+    pub(crate) fn conn_arc(&self) -> Arc<Mutex<Connection>> {
+        Arc::clone(&self.conn)
+    }
+
     /// SHA-256 hex of the bounded Context bytes (same function the broker uses).
     pub fn context_digest(bounded_context: &str) -> String {
         format!("{:x}", Sha256::digest(bounded_context.as_bytes()))

@@ -42,7 +42,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/kernel-server/src/personal/fault_profile.rs
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
-fingerprint: "sha256:bbeba9454ff8bac2a1b5a595981eba4686a97032867766d839b509fc5b9c1409"
+fingerprint: "sha256:0090b135e634f79f11969d5416c42bb4a1bf475b3431d340a40c309aed44f489"
 non_claims:
   - 本页把缺口记录为记录基线上的事实；既不预测排期，也不贬低已测组件。
   - A7 评测 fixture 与本地/CI 观察证据不得升格为 Gate、release、Profile、B01 或 EVAL-003 结果。
@@ -76,6 +76,7 @@ P11-T08 Routine occurrence 复用本 daemon 调度器（`scheduler_entries`，`t
 | 公开钉住 HTTPS origin 登记表 | implemented，HTTP 调用；生产咨询 | management `GET/POST /management/resource/v1/http-origin` 需 campaign 授权（`P2-T25` 或 `PERSONAL-PERF-EVAL-*`）；task 调用方被拒绝。钉从不携带凭据、header 或 body。生产 HttpFetchReadOnly 按 Intent `task_ref` 咨询该表 |
 | 固定 post-state + verification request + Loop `ACT -> VERIFY` 发布 | implemented，生产调用 | WorkspaceRead 对账后，一个 fenced SQLite 事务校验当前闭合 Effect，并把两个追加式行与登记 Loop 转移一起提交 |
 | 独立 verifier + continuation loop | implemented，生产调用 | criteria 只从当前 Acceptance 条件推导；fixed-Effect 与 RegisteredCheck verifier 只接受各自登记身份。RegisteredCheck 从 CAS Evidence 重校验精确 descriptor/file digest 和全部安全观察；通过的报告进入 `VERIFY -> CONTINUE`，随后 checkpoint 绑定的一次性权威经 `CONTINUE -> OBSERVE` 消费，不完成 Task。WorkspaceRead 配 fixed-Effect verifier 仍发布 `ACT -> VERIFY`。在 RegisteredCheck 收口的 Task 上，闭合的中间 WorkspaceWrite/Patch/Search Effect 则走登记边 `ACT -> OBSERVE -> RESOLVE -> ORIENT -> DECIDE`，以便后续 tick 准入 RegisteredCheckRun；只有该 check 的独立 verification 可以完成 Task |
+| Personal 2.0 Attempt 产物 verifier（`verifier://personal/attempt-artifact`）+ 末环验收 | implemented，生产调用（P13-T04） | 写托管 Attempt 终态的 broker 线程把每个 `DeliverableDraft` 候选交给同一 daemon CAS，并以 `principal://personal/independent-verifier` 运行这一登记 verifier 身份：只做确定性重读（CAS digest、来源帧绑定、Attempt 终态、UTF-8 / 非空 / 无 secret 形状）；child 的 `response done`、exit code 与文本记为 `not-used`；evidence 只追加，报告放在 CAS。P11-T03 StageTestPassed 由该 evidence + 真实就位 + CAS 重读推导（无调用方 `passed`）；run 验收是 `run-acceptance` ApprovalPreview，不在末环即拒绝；这里不触碰上表的 core Task/Effect verifier 路径，也不完成任何 core Task |
 | A7 评测回环外部变更观察 | implemented，仅测试调用 | 评测自有幂等 fixture（有界 mutate/query/reset/cleanup 与持久请求/查询计数）；persist-before-dispatch Effect；默认关闭的授权故障点；持久变更后丢失应答时，重启只查询原键，以一次实际变更、零第二次 POST 完成对账；绑定独立验证且 `acceptance_ref` 保持为空。本地/fixture 证据不是 Gate、release、Profile、B01 或 EVAL-003 结果 |
 | 公开 Effect 历史与默认关闭 fault profile | implemented，HTTP 调用；生产咨询 | task 通道 `GET /task/effects` 返回不透明 original-key digest、stage、outcome/reconcile class、mutation count 仅 0/1 或缺省，以及 report refs，不含 receipt/参数；management `POST/GET /management/resource/v1/fault-profile` 默认关闭且需 campaign 授权；task 调用方被拒绝。生产 native dispatch 在四个固定点咨询已持久化 profile；缺失、默认关闭与未授权文件内容永不注入。重启只查询原 idempotency key；replacement key 不能绑定第二条 Intent；Indeterminate/open Effect 永不完成 Task |
 | 公开 Tool lifecycle、Agent 暴露与选择收据 | implemented，HTTP 调用 | management `GET/POST /management/resource/v1/tool*` overlay `enabled`/`disabled`/`quarantined`/`revoked`，不改 descriptor digest；`agent_exposed` 跟随 overlay 与已装配 executor 就绪。task 调用方不能变更 lifecycle。`GET /task/resource/v1/tool/exposure` 返回最窄暴露集合与 digest；`POST /task/resource/v1/tool/selection` 仅对该 digest 且已暴露的 operation_id 记录收据。prompt/body/receipt 重述与过期/扩权 candidate digest 失败闭合 |

@@ -473,6 +473,18 @@ personal_requirements:
     # DEV-LINUX-NATIVE-01 + required CI (PR #310); evidence_status stays
     # not-run until P13-T04/T05/T06/T11 close the remaining clauses and the
     # Windows-native cells are backfilled by P13-T13.
+    # 2026-09-03: the P13-T04 clause (artifacts land in CAS with digest /
+    # format / source / per-Member freshness; independent verifier
+    # verifier://personal/attempt-artifact produces append-only CAS-backed
+    # evidence; run acceptance happens only on the last ring through a
+    # StageTestPassed derived from evidence and a P11-T09 ApprovalPreview;
+    # outputs are openable from CAS with a non-authority data/ export;
+    # publication packages are AUTONOMY canvas previews where planned is never
+    # published; external-send is previewed then planned) is implemented and
+    # exercised on DEV-LINUX-NATIVE-01 + required CI (PR #313) including a live
+    # daemon E2E with a real pinned dsh deliverable; the host file-open cell is
+    # not-run until P13-T13. evidence_status stays not-run until P13-T05 /
+    # T06 / T11 close their clauses.
     evidence_status: not-run
 
   - id: PERS-PR-050

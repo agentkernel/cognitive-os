@@ -5,6 +5,7 @@
 //! (P1-T05). Not Task scheduling, Memory, MCP, or Provider proxy.
 
 mod assistant_inference;
+mod attempt_artifacts;
 mod auth;
 mod bounds;
 #[cfg_attr(not(test), allow(dead_code))]
