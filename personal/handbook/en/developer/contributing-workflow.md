@@ -10,7 +10,7 @@ sources:
     symbols: ["TASK-ATOMIC-DELIVERY-01", "CHECKPOINT-DELIVERY-01"]
   - path: docs/standards/docs-sync-contract.md
   - path: .github/workflows/ci.yml
-fingerprint: "sha256:40093bb2ac40a3edd6150d390fe4bb08bc2d696661bebd31da38cff5508e6001"
+fingerprint: "sha256:d0fb86ef5ffea5c90476f406106f1847873b69041dc659402972b1de721c635b"
 non_claims:
   - The Operating Model owns the binding workflow; this page is an oriented summary for contributors.
 ---

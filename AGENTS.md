@@ -155,7 +155,7 @@ REQ/F/IMP；没有关联时说明原因。写入前必须持有精确路径的�
 |---|---|---|---|
 | 任何提交 | `node tools/src/docs-sync-gate.mjs --staged`（hooks 已注册则自动）；`git diff --check` | — | 命中 `source-map.json` 的页面（双语）+ 指纹；否则 `DOCS_IMPACT_NONE="<具体理由>"` 并记入 commit/PR |
 | `core/specs/**`、`core/conformance/**` | `pnpm run check:consistency`；`node tools/src/gen-matrix.mjs --check` | codegen 再生成 + `git diff` 生成目录；conformance runner；golden digest | Lane-CTR 联动（registry/schema/bindings/transitions/vectors 一体）；`ref.*` handbook 页 |
-| Rust（`core/crates/**`、`personal/crates/**`、`personal/apps/**`） | `cargo fmt --all -- --check` 仅此 | `cargo build/test/clippy --workspace --locked`；focused failure-first test | `dev.*` / `ref.*` 映射页；HTTP 路由变化需生成页重生成 |
+| Rust（`core/crates/**`、`personal/crates/**`、`personal/apps/**`） | `cargo fmt --all -- --check`；在 MSVC override 目录（§6）可先本机 `cargo build/test/clippy --workspace --locked` 迭代（开发证据，不替代右列） | `cargo build/test/clippy --workspace --locked`；focused failure-first test | `dev.*` / `ref.*` 映射页；HTTP 路由变化需生成页重生成 |
 | TypeScript（`core/packages/**`、`personal/packages/**`、`personal/apps/agent-shell`、`tools/**`） | `pnpm -r build`；`pnpm -r test` | 同左（CI 复跑） | 映射页；`tools/` 变化联动 `meta.sync-policy` / `dev.conformance-testing` |
 | `clients/pc/web/**` | `pnpm test`、`pnpm build`（在该目录） | daemon `/ui/` 静态服务测试（Rust） | `clients/docs/**` 自有治理 |
 | `personal/handbook/**` | `node tools/src/check-handbook.mjs`；`node tools/src/generate-handbook.mjs --check`；手写页改后 `node tools/src/fill-handbook-fingerprints.mjs` | — | 双语同改；生成页只能重生成 |
@@ -172,22 +172,30 @@ Ready/merge 前额外：`node tools/src/check-handbook.mjs`、`node tools/src/ge
   `if ($LASTEXITCODE -eq 0) { <next-command> }` 或拆成后续调用。解析器拒绝的命令记
   `not-run`，不是测试失败。只有明确进入 bash（CI、`CLOUD-AGENT-LINUX-01`、Linux 主机）才可
   用 bash 连接符。PowerShell 启动慢：能用 Read/Grep/Glob 完成的文件操作不用 Shell。
-- **`RUST-LINK-DEV-WIN-GNU-01`：** 本机是已登记且不受支持的 `x86_64-pc-windows-gnu`
-  link host，workspace build/test/Clippy/run/bench 稳定在 linker exit 121 失败。除显式领取的
-  P0-T01 工具链修复 Slice 外，禁止重复运行这些命令，也禁止再试 LLVM-MinGW、shim、PATH、
-  toolchain pin 或源码 workaround。本机 allowlist：`cargo fmt`、文档/静态一致性、
-  Node/TypeScript 检查、diff 检查。需要 Rust build/test/Clippy 的 Slice 在开始前路由到
-  `CI-UBUNTU-01`、`CI-WINDOWS-MSVC-01` 或 exact-revision `DEV-LINUX-NATIVE-01`；环境不可用
-  时记 `blocked`/`not-run`。
+- **`RUST-LINK-DEV-WIN-GNU-01`（GNU host 历史事实）：** 本机 rustup 默认 host 是
+  `x86_64-pc-windows-gnu`；在该 host 下 workspace build/test/Clippy/run/bench 稳定失败于
+  linker exit 121（2026-07-25 基线，LLVM-MinGW/shim 重试已穷尽）。**本机 MSVC override（2026-09-03
+  `P0-T01/D02`，owner 选定本机 override）：** `D:\agent-kernel` 与登记的任务 worktree 目录级
+  `rustup override set 1.97.1-x86_64-pc-windows-msvc`（存于 rustup settings，不在仓库；tracked
+  `rust-toolchain.toml` 未改，CI 不受影响；linker 为 `D:\VSBuildTools` 的 `link.exe` 14.44）。
+  在 override 目录内、且 `rustc -vV` 报 `host: x86_64-pc-windows-msvc` 时，允许本机运行
+  `cargo build/test/clippy/fmt`（结果只是本地开发证据；本机磁盘紧张，测试构建需会话变量
+  `CARGO_PROFILE_DEV_DEBUG=0`；未提权 shell 下 4 个 symlink fixture 测试以 OS 1314 失败，记
+  `not-run (host privilege)`，不得跳过）。新 worktree 需自行
+  `rustup override set`；未 override 的目录仍是 GNU host，禁止在那里重跑 linking 命令，也禁止
+  用 PATH、shim、`rust-toolchain.toml` 或源码 workaround 绕过。**能力上限不变**：本机结果不是
+  supported CI、Gate、release、Profile 或 Windows 支持证据；Slice 的 supported validation 仍路由
+  到 `CI-UBUNTU-01`、`CI-WINDOWS-MSVC-01` 或 exact-revision `DEV-LINUX-NATIVE-01`；环境不可用
+  时记 `blocked`/`not-run`。登记细节见环境登记 §3。
 - 本机若 `cargo` 不在 PATH：`$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"`；这只恢复
-  钉住工具的发现（版本以 `rust-toolchain.toml` 为准），不授权在本机 GNU 运行 Rust linking。
-- `pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）在本机不是可用门：它钉住过期的
-  符合性计数（85/60/25，CI 已钉 89/62/27）且会在 GNU host 上执行被禁止的 `cargo build`；
-  本机已有 pwsh 7，这不是阻碍。重钉或废弃由 `P0-T01/D02` 子决策处理；用 §5 的单项命令。
+  钉住工具的发现（版本以 `rust-toolchain.toml` / 目录 override 为准）。
+- `pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）在本机仍不是可用门：它钉住过期的
+  符合性计数（85/60/25，CI 已钉 89/62/27），并引用可能已不存在的 crate/测试名；本机已有
+  pwsh 7.6.5，这不是阻碍。重钉或废弃由 `P0-T01/D02` 子决策（owner 待定）处理；用 §5 的单项命令。
 
 | 目的 | Windows PowerShell（本地） | CI / Linux（bash） |
 |---|---|---|
-| Rust 构建 / 测试 / lint | 禁止（路由） | `cargo build --workspace --locked`；`cargo test --workspace --locked -- --test-threads=1`；`cargo clippy --workspace --all-targets --locked -- -D warnings` |
+| Rust 构建 / 测试 / lint | 仅在 MSVC override 目录（`rustc -vV` host = `x86_64-pc-windows-msvc`）：同右列命令，结果为本地开发证据；GNU host 目录禁止（路由） | `cargo build --workspace --locked`；`cargo test --workspace --locked -- --test-threads=1`；`cargo clippy --workspace --all-targets --locked -- -D warnings` |
 | TS 安装 / 构建 / 测试 | `pnpm install --frozen-lockfile` ; `pnpm -r build` ; `pnpm -r test` | 同左 |
 | 静态一致性 / handbook / 规则引用 | `pnpm run check:consistency` ; `pnpm run check:handbook` ; `pnpm run check:rules` | 同左 |
 | 符合性 runner | 禁止（路由） | `cargo run -p cognitive-conformance --bin conformance-runner` |

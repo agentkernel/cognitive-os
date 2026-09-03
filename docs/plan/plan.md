@@ -564,8 +564,17 @@ Pi 不可以：
 - **安全/观测/回滚：** 不读取 secret；只生成 ignored artifacts；失败即恢复环境，不改源码。
 - **解锁/风险/不确定：** 解锁全部任务；Windows GNU 是否继续支持需在此关闭。
 
-#### P0-T01/D02 — 本机 Rust 工具链修复 Slice（2026-09-02 owner 指令登记；未执行）
+#### P0-T01/D02 — 本机 Rust 工具链修复 Slice（2026-09-02 owner 指令登记；2026-09-03 领取，`in-progress`）
 
+- **状态：** 以正式台账为准（`in-progress`；lease `lease/personal/P0-T01/toolchain-repair`，分支
+  `personal/P0-T01-D02-toolchain`；[running report](../checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-report.md)）。
+  owner 已选决策点 **(a) 本机 override** 并已应用：`rustup override set 1.97.1-x86_64-pc-windows-msvc`
+  于 `D:\agent-kernel` 与任务 worktree（override 存于 rustup settings；`.cargo/config.toml` 未被
+  gitignore 故不用；tracked `rust-toolchain.toml` 未改，CI 不受影响）；MSVC 工具链补装 `rustfmt`/`clippy`；
+  `rustc -vV` → `host: x86_64-pc-windows-msvc`；linker `D:\VSBuildTools` VS Build Tools 17.14.37、
+  `link.exe` 14.44.35228.0（rustc 自行定位，无 PATH/vcvars 改动）。本机 cargo 结果与磁盘约束
+  （`CARGO_PROFILE_DEV_DEBUG=0` 会话变量）见 running report §3。剩余唯一项：owner 对 `verify:local`
+  子决策（重钉 89/62/27 vs 废弃移除）的选择；选定后完成该项、P0-T01 回到 `done`。
 - **目标：** 让 `DEV-WIN-GNU-01` 具备 workspace Rust 本地迭代能力：`cargo build --workspace --locked`、`cargo test --workspace --locked -- --test-threads=1`、`cargo clippy --workspace --all-targets --locked -- -D warnings` 在本机通过。
 - **事实基线（2026-09-02 探测，未跑 cargo）：** 默认 host `x86_64-pc-windows-gnu`；rustup 已装 `1.97.1-x86_64-pc-windows-msvc` 与 `gnullvm`；`D:\VSBuildTools` 存在且 vswhere 报告 `VC.Tools.x86.x64`，但 `link.exe` 不在 Cursor Shell PATH；pwsh 7.6.5 已装；`core.autocrlf=true`（被 `.gitattributes eol=lf` 覆盖）。这些事实尚未写入环境登记，由本 Slice 写回。
 - **Owner 决策点（执行前必须确认）：** (a) 本机 override——`rustup override set 1.97.1-x86_64-pc-windows-msvc`（目录级）或本机 `.cargo/config.toml`（不提交），不改 tracked 文件，CI/其他机器不受影响；**推荐默认**。(b) 改 tracked `rust-toolchain.toml`——影响所有 clone 与 CI，corrective 决策，需 owner 明示。子决策：`pnpm run verify:local` + `scripts/v01-auto-run.*` 重钉到 CI 计数（89/62/27）还是废弃并从 `package.json` 移除。未确认前可做：事实探测、环境登记草稿、running report 骨架、connected-docs 改写草稿。

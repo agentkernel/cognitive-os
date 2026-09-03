@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:6321a412463975afc9a0cb7b31ed2d43b6d51a4a8e0197d32c1019c94bcc5e87"
+fingerprint: "sha256:b173c9f14af8f2053a107a6573bcc236b76ffaf77f9d1299e283381701ebc3b9"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -42,7 +42,7 @@ acceptance，不是 Phase 12 mutex；自 2026-09-02 起其验收前置 = Phase 1
 2.0 日常默认机。本地 Windows GNU、WSL、ordinary CI 与 Canvas 都不能替代
 Gate/release；可用前 native cell 记 `not-run`。`not-run` 永远不是 pass。
 
-## 全平台安全（含 Windows GNU 主机）
+## 全平台安全（含本地 Windows 主机）
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -86,10 +86,31 @@ cargo run -p cognitive-conformance --bin conformance-runner
 cargo run -p cognitive-contracts --bin contracts-codegen   # 之后 diff 生成目录
 ```
 
-绝不在本地 Windows GNU 主机运行上述命令：linker 失败（exit 121）是已登记的环境边界，
-不是需要复现的信号。`CLOUD-AGENT-LINUX-01` 可以运行整段命令——它是 native GNU/Linux
-link 主机——但其结果只是 container 级的 pre-CI 排查，绝不替代 required CI 或
-exact-revision native 证据。远程/native 验证只消费已推送的不可变 revision——绝不复制工作树。
+绝不在本地 Windows **GNU** 主机运行上述命令：linker 失败（exit 121）是已登记的环境边界，
+不是需要复现的信号。自 2026-09-03 起（P0-T01/D02，owner 决定），已登记的本地目录
+`D:\agent-kernel` 与当前任务 worktree 带有 `rustup override set 1.97.1-x86_64-pc-windows-msvc`；
+在那里——且仅当 `rustc -vV` 报 `host: x86_64-pc-windows-msvc` 时——下面四条 workspace 命令可在
+本机作为**开发迭代**运行（首次记录见 P0-T01/D02 running report；会话内设
+`CARGO_PROFILE_DEV_DEBUG=0` 使测试构建装进本机磁盘预算）：
+
+```powershell
+# 仅在已登记的 MSVC override 目录内；开发证据，不是 supported validation
+$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"   # cargo 不在 PATH 时
+rustc -vV                                              # 必须打印 host: x86_64-pc-windows-msvc
+$env:CARGO_PROFILE_DEV_DEBUG = "0"                     # 本机磁盘预算
+cargo build --workspace --locked
+cargo test --workspace --locked -- --test-threads=1
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo fmt --all -- --check
+```
+
+tracked 的 `rust-toolchain.toml` 未改，CI 看不到该 override。已知本机缺口：`kernel-server`
+`tool_executor` 中四个 symlink / reparse-point fixture 测试在未提权且未开 Developer Mode 的 shell
+里于 setup 阶段以 OS 错误 1314 失败（提权的 CI 上通过）——记为 `not-run (host privilege)`，绝不在
+代码里跳过。`CLOUD-AGENT-LINUX-01`
+可以运行整段命令——它是 native GNU/Linux link 主机——但其结果只是 container 级的 pre-CI
+排查，绝不替代 required CI 或 exact-revision native 证据。远程/native 验证只消费已推送的
+不可变 revision——绝不复制工作树。
 P2-T25 的聚焦 HTTP 覆盖在 `personal/apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 （lifecycle、selection 与钉住 HTTPS origin 登记表）。
 P2-T26 的聚焦 HTTP 覆盖在 `personal/apps/kernel-server/tests/p2_t26_observation_plane.rs`
@@ -150,5 +171,6 @@ handbook 检查与生成页字节比对、带固定五态计数与证据诚实�
 
 ## 已知过期入口
 
-`pnpm run verify:local`（V01 编排器）钉住了过期的符合性计数，在本基线不是可用的本地
-门；请改用上面的单项命令。
+`pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.*`）钉住了过期的符合性计数
+（85/60/25，`ci.yml` 已钉 89/62/27），在本基线不是可用的本地门；请改用上面的单项命令。重钉
+还是移除是 `P0-T01/D02` 待 owner 决定的子决策。
