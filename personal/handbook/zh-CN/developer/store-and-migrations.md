@@ -69,7 +69,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:0b2676be425888062901d901a2bb169e8583e98403b17be5518d6661b47a0be5"
+fingerprint: "sha256:f7168a09d1d9d438a8710279e2b8d7901f4b23a3e46d483e5983dfc06840548a"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -138,7 +138,7 @@ P13-T05 Routine 武装新增 v38。HTTP 调用者是 management `routine.arm` / 
 
 P13-T06 Project 群聊新增 v39。HTTP 调用者是 management `chat.post` / `chat.thread`；task 通道别名 403。带计划提案的 `@manager` 成为 `plan-revision` ApprovalPreview；`@member` 成为仅限该成员负责环节的 `task-revision` 候选。聊天永不落 PlanRevision（`confirm_chat_candidate_locked` 只从画布 Confirm 运行）。Approve 形状的正文在任何写入前 403；secret-shape 正文 422 并指向 Settings。跨 Project 读失败闭合。manager 与 Member 发言仍走 P11-T05 speech 路由器，发言规则是 daemon 记录类型，不是客户端过滤。`chat.thread` 按时间从旧到新合并 Owner 回合与已投递发言；Owner 回合与 manager announce 落在同一毫秒时，owner-message 排在 speech 前面。
 
-P13-T11 反思 / Member Runtime 新增 v40。候选由 Attempt / verification / evidence / occurrence 事实生成（`ReflectionStore::generate_from_facts`）；模型自报不是改进。某成员在某个 UTC 日至少有一条终态 Attempt 时产生 `daily` 汇总；`response done` / exit 0 且无 evidence 可以是 `daily`，不能是 `key-result`。Member Runtime 变更是新的 Employee revision，只在 Owner 确认 `member-runtime-revision` preview 后插入；回滚再追加一条恢复确认前配方的 revision。Role Template 提案需 Owner 确认，且不把 Employee 复制到另一 Project。该平面的 HTTP/UI 等兄弟文件释放（T08 `server.rs` / `mod.rs`，T10 MemberConfig），此前诚实记 **Requires-backend**。运行中 Attempt 的 prompt/context 改写被拒。
+P13-T11 反思 / Member Runtime 新增 v40。候选由 Attempt / verification / evidence / occurrence 事实生成（`ReflectionStore::generate_from_facts`）；模型自报不是改进。某成员在某个 UTC 日至少有一条终态 Attempt 时产生 `daily` 汇总；`response done` / exit 0 且无 evidence 可以是 `daily`，不能是 `key-result`。Member Runtime 变更是新的 Employee revision，只在 Owner 确认 `member-runtime-revision` preview 后插入；回滚再追加一条恢复确认前配方的 revision。Role Template 提案需 Owner 确认，且不把 Employee 复制到另一 Project。管理面 HTTP 从 kernel-server `project_aggregate.rs` 嵌套转发（`reflection.generate` / `list` / `improve.*` / `role-template.*`）；task 通道别名为 403。Owner canvas `POST /management/project/v1/confirm` 应用这些 preview。MemberConfig Reflection 页签是 `/ui/` 表面。运行中 Attempt 的 prompt/context 改写被拒。兄弟任务占用的 `http-routes.json` / `ref.http-api` 在 T07/T08/T09 合并时折入。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。

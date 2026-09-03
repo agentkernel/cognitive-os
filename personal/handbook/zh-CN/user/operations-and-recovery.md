@@ -181,6 +181,14 @@ SecretStore，永不进入 SQLite、argv 或浏览器存储。没有桌面控制
 
 步骤索引见 [Linux RC 操作地图](rc-and-support.md)。
 
+## 反思与 Member Runtime —— `partial`
+
+daemon `/ui/` 成员配置有 Reflection 页签。从事实生成走
+`POST /management/project/v1/reflection.generate`。模型自报不是改进。请求
+runtime preview 铸造 `member-runtime-revision` canvas；Apply 只在 Owner
+canvas Confirm（没有 Admit）。回滚追加一条新的 Employee revision。Role
+Template preview 不把成员复制到另一 Project。task 通道别名返回 403。
+
 ## 备份与恢复 —— `partial`
 
 `cognitive backup [--output <dir>]` 写入 digest 绑定的目录归档（config/data/state/

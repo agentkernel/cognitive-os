@@ -19,6 +19,10 @@ use super::assistant_inference::AssistantRuntime;
 use super::assistant_inference::UnconfiguredAssistantRuntime;
 use super::resource_api::ResourceApiResponse;
 
+/// P13-T11 reflection HTTP. Nested here so T08-owned `mod.rs` stays untouched.
+#[path = "reflection.rs"]
+mod reflection;
+
 const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/list",
     "GET /management/project/v1/detail",
@@ -111,11 +115,12 @@ enum Channel {
 }
 
 pub(crate) fn matches(method_path: &str) -> bool {
-    parse_route(method_path).is_some()
+    parse_route(method_path).is_some() || reflection::matches(method_path)
 }
 
 pub(crate) fn is_task_channel(method_path: &str) -> bool {
     parse_route(method_path).is_some_and(|(channel, _)| channel == Channel::Task)
+        || reflection::is_task_channel(method_path)
 }
 
 pub(crate) fn channel_forbidden() -> ResourceApiResponse {
@@ -146,6 +151,12 @@ pub(crate) fn handle_with_assistant(
     store: &SqliteAuthorityStore,
     assistant: &dyn AssistantRuntime,
 ) -> ResourceApiResponse {
+    if reflection::matches(method_path) {
+        if reflection::is_task_channel(method_path) {
+            return channel_forbidden();
+        }
+        return reflection::handle(method_path, body, store);
+    }
     let Some((channel, literal)) = parse_route(method_path) else {
         return error(
             404,
@@ -174,7 +185,7 @@ pub(crate) fn handle_with_assistant(
         "POST /management/project/v1/preview.request" => preview_request(body, &plane),
         "POST /management/project/v1/preview.reject" => preview_reject(body, &plane),
         "POST /management/project/v1/preview.narrow" => preview_narrow(body, &plane),
-        "POST /management/project/v1/confirm" => confirm(body, &plane, &employees),
+        "POST /management/project/v1/confirm" => confirm(body, store, &plane, &employees),
         "GET /management/project/v1/standing-policies" => standing_policies(&plane),
         "POST /management/project/v1/standing-policy.create" => {
             standing_policy_create(body, &plane)
@@ -1552,6 +1563,7 @@ fn preview_narrow(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResp
 
 fn confirm(
     body: &[u8],
+    store: &SqliteAuthorityStore,
     plane: &ProjectAggregateStore,
     employees: &EmployeeStore,
 ) -> ResourceApiResponse {
@@ -1564,6 +1576,9 @@ fn confirm(
     let Some(preview_digest) = document.get("preview_digest").and_then(Value::as_str) else {
         return error(400, "PREVIEW_DIGEST_REQUIRED", "preview_digest required");
     };
+    if let Some(owned) = reflection::confirm_if_owned(body, store) {
+        return owned;
+    }
     if let Ok(Some((kind, subject_ref))) = employees.preview_acquire_ref(preview_id)
         && kind == "grant-expansion"
         && let Some(phase) = acquire_phase(&subject_ref)

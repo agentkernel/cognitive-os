@@ -7,6 +7,7 @@ export const MEMBER_CONFIG_TABS = [
   { id: "prompt", label: "Brief" },
   { id: "loop", label: "Loop" },
   { id: "perms", label: "Perms" },
+  { id: "reflection", label: "Reflection" },
 ] as const;
 
 export type MemberConfigTabId = (typeof MEMBER_CONFIG_TABS)[number]["id"];

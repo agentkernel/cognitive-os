@@ -67,7 +67,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:0b2676be425888062901d901a2bb169e8583e98403b17be5518d6661b47a0be5"
+fingerprint: "sha256:f7168a09d1d9d438a8710279e2b8d7901f4b23a3e46d483e5983dfc06840548a"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -137,7 +137,7 @@ P13-T05 Routine arming adds v38. Management HTTP `routine.arm` / `routine.instru
 
 P13-T06 Project group chat adds v39. Management HTTP `chat.post` / `chat.thread` is the HTTP caller; task-channel aliases are 403. `@manager` with a plan proposal becomes a `plan-revision` ApprovalPreview; `@member` becomes a `task-revision` candidate bounded to that Member's own responsible stage. Chat never applies a PlanRevision (`confirm_chat_candidate_locked` runs only from canvas Confirm). Approve-shaped bodies are 403 before any write; secret-shaped bodies are 422 with a Settings pointer. Cross-Project reads fail closed. Manager and Member speech keep landing through the P11-T05 speech router so the speech rules are daemon record kinds, not a client filter. `chat.thread` merges Owner turns and delivered speech oldest-first; when an Owner turn and the manager announce share a millisecond, the owner-message stays ahead of speech.
 
-P13-T11 reflection / Member Runtime adds v40. Candidates are generated from Attempt / verification / evidence / occurrence facts (`ReflectionStore::generate_from_facts`); a model self-report is never an improvement. A UTC day with at least one terminal Attempt yields a `daily` rollup for that Member; `response done` / exit 0 without evidence is `daily` and is not a `key-result`. Member Runtime change is a new Employee revision minted only after Owner confirm of a `member-runtime-revision` preview; rollback appends a copy of the pre-confirm recipe. A Role Template proposal needs Owner confirm and does not copy the Employee into another Project. HTTP/UI for this plane wait on sibling file release (T08 `server.rs` / `mod.rs`, T10 MemberConfig) and stay **Requires-backend** until then. Running Attempt prompt/context rewrite is refused.
+P13-T11 reflection / Member Runtime adds v40. Candidates are generated from Attempt / verification / evidence / occurrence facts (`ReflectionStore::generate_from_facts`); a model self-report is never an improvement. A UTC day with at least one terminal Attempt yields a `daily` rollup for that Member; `response done` / exit 0 without evidence is `daily` and is not a `key-result`. Member Runtime change is a new Employee revision minted only after Owner confirm of a `member-runtime-revision` preview; rollback appends a copy of the pre-confirm recipe. A Role Template proposal needs Owner confirm and does not copy the Employee into another Project. Management HTTP is nested from kernel-server `project_aggregate.rs` (`reflection.generate` / `list` / `improve.*` / `role-template.*`); task-channel aliases are 403. Owner canvas `POST /management/project/v1/confirm` applies those previews. MemberConfig Reflection tab is the `/ui/` surface. Running Attempt prompt/context rewrite is refused. Sibling-owned `http-routes.json` / `ref.http-api` fold on T07/T08/T09 merge.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`

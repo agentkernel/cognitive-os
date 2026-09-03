@@ -5,9 +5,9 @@
 - Product: CognitiveOS Personal 2.0.0
 - Lease: `lease/personal/P13-T11/reflection-runtime`
 - Branch: `personal/P13-T11-reflection` (worktree `D:\agent-kernel-wt-P13-T11`)
-- Siblings avoided: T06 chat (`project_chat.rs`); T07 vault/memory + handbook `store-and-migrations`; T08 `server.rs` / `mod.rs` / Settings; T09 backup/lifecycle; T10 `employee.rs` / `lib.rs` / MemberConfig / kernel-server `project_aggregate.rs`; formal plan file
-- PR: none yet (Draft after first coherent checkpoint)
-- Claim ceiling: `hypothesis` (A7: local / CI / Linux-native evidence is not Gate / release / Profile; Dual Track `/ui/` deferred; Windows-native cells stay `not-run` until `P13-T13`)
+- Siblings avoided: T07 vault/Knowledge/Memory + `resource_api.rs`; T08 Settings/`server.rs`/`mod.rs`/normalize/source-map/`http-routes.json`; T09 lifecycle/`project_chat.rs`/store `project_aggregate.rs`; formal plan file
+- PR: Draft [#320](https://github.com/agentkernel/cognitive-os/pull/320)
+- Claim ceiling: `hypothesis` (A7: local / CI / Linux-native evidence is not Gate / release / Profile; Windows-native cells stay `not-run` until `P13-T13`)
 - Evaluation routing: **OFF**
 - Docs-sync: bilingual `dev.store-migrations` + fingerprint refresh on `user.operations-recovery` (mapped `personal_db.rs` / `p1_t01`). T07/T10 also list `store-and-migrations.md`; this is an additive v40 map row they fold on merge (they already share that page with each other). Code files still avoid sibling leases.
 
@@ -20,8 +20,10 @@ v39): `p13_reflection_candidate`, `p13_runtime_improvement`,
 `member-runtime-revision` and `role-template-proposal`. CHECK SQL concatenates
 those kind tokens so `sqlite_master` omits `sk-`.
 
-Module is nested at `cognitive_store::personal_db::reflection` via
-`#[path = "reflection.rs"]` so this slice does not edit `lib.rs`.
+Store module is nested at `cognitive_store::personal_db::reflection` and now
+also re-exported from `lib.rs` (T10 released that file). HTTP is nested from
+kernel-server `project_aggregate.rs` via `#[path = "reflection.rs"]` so T08
+`mod.rs` / `server.rs` stay untouched.
 
 ## Incremental validation log (TEST-REPORT-INCREMENTAL-01)
 
@@ -45,9 +47,15 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `cargo test -p cognitive-store --test p13_t11_reflection` after daily | **pass** 10/10 | local MSVC override | `de75a7cb` | Includes empty-day refusal; incident+daily on failed terminal; `response done` without evidence is daily not key-result. |
 | 2026-09-03 | `cargo clippy -p cognitive-store --all-targets --locked -- -D warnings` | **pass** | local MSVC override | `de75a7cb` | `CandidateDraft` bundle. |
 | 2026-09-03 | Required CI [33754680793](https://github.com/agentkernel/cognitive-os/actions/runs/33754680793) at `de75a7cb` | pending at rebase | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `de75a7cb` | ubuntu Clippy **passed** before rebase onto `main@2217722d`. |
-| 2026-09-03 | Rebase onto `origin/main@2217722d` | recorded | docs | rebase | T10 closed; T07/T08/T09 still own vault/Settings/`server.rs`/`mod.rs`/lifecycle. |
+| 2026-09-03 | Rebase onto `origin/main@2217722d` | recorded | docs | `05e0e4a1` parent | T10 closed; T07/T08/T09 still own vault/Settings/`server.rs`/`mod.rs`/lifecycle. |
+| 2026-09-03 | HTTP/UI real-caller slice | recorded | docs | uncommitted | Lease expanded. kernel-server nest + MemberConfig Reflection tab. 0 Admit. Canvas Confirm applies Member Runtime. |
+| 2026-09-03 | `cargo test -p cognitive-store --test p13_t11_reflection --locked` | **pass** 10/10 | local MSVC override | uncommitted | After rebase + `confirm_role_template_preview`. |
+| 2026-09-03 | `cargo test -p kernel-server --locked http_reflection` | **pass** 2/2 | local MSVC override | uncommitted | Task-channel/negatives + generate/confirm-via-canvas/rollback. |
+| 2026-09-03 | `pnpm test -- memberConfig.test.tsx memberReflection.test.ts` | **pass** 12/12 | `DEV-WIN-GNU-01` (Node; web `node_modules` junction) | uncommitted | Dual Track Reflection tab; 0 Admit; canvas deep-link. |
+| 2026-09-03 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **pass** | local MSVC override | uncommitted | Local development evidence. |
+| 2026-09-03 | `pnpm run check:consistency` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 275 requirements; leases OK. |
 
 ## Unique next
 
-1. Expand T11 lease for HTTP/UI on released T10 paths; failure-first HTTP/UI; keep Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320).
+1. Recheck required CI on the rebased + HTTP HEAD of Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320); keep Draft.
 2. Do not claim T07/T08/T09/T12/T13/T15. Do not merge until full T11 acceptance.

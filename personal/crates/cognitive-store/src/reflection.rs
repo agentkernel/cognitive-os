@@ -682,6 +682,60 @@ impl ReflectionStore {
         Ok((proposal_id, preview_id))
     }
 
+    /// Owner canvas confirm for a Role Template preview. Looks up the
+    /// proposal by `preview_id` and still refuses silent reuse.
+    pub fn confirm_role_template_preview(
+        &self,
+        caller: ConfirmCaller,
+        preview_id: &str,
+        preview_digest: &str,
+        now_ms: i64,
+    ) -> Result<String, ProjectAggregateError> {
+        EmployeeStore::require_owner(caller)?;
+        let conn = self.lock()?;
+        let (status, stored_digest, subject_kind): (String, String, String) = conn
+            .query_row(
+                "SELECT status, preview_digest, subject_kind FROM p11_approval_preview
+                  WHERE preview_id = ?1",
+                [preview_id],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .optional()
+            .map_err(unavailable("role template preview"))?
+            .ok_or(ProjectAggregateError::NotFound {
+                detail: "preview not found",
+            })?;
+        if subject_kind != ROLE_TEMPLATE_SUBJECT_KIND {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "preview subject_kind is not a Role Template proposal",
+            });
+        }
+        if status != "pending" {
+            return Err(ProjectAggregateError::Conflict {
+                detail: "preview is not pending",
+            });
+        }
+        if stored_digest != preview_digest {
+            return Err(ProjectAggregateError::Stale {
+                detail: "preview digest mismatch",
+            });
+        }
+        let proposal_id: String = conn
+            .query_row(
+                "SELECT proposal_id FROM p13_role_template_proposal WHERE preview_id = ?1",
+                [preview_id],
+                |row| row.get(0),
+            )
+            .optional()
+            .map_err(unavailable("role template by preview"))?
+            .ok_or(ProjectAggregateError::NotFound {
+                detail: "role template proposal not found",
+            })?;
+        drop(conn);
+        self.confirm_role_template(caller, &proposal_id, now_ms)?;
+        Ok(proposal_id)
+    }
+
     /// Confirm a Role Template proposal. Does not create or copy an Employee
     /// into another Project.
     pub fn confirm_role_template(

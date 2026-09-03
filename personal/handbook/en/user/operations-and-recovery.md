@@ -216,6 +216,15 @@ product path is:
 
 The step index is [Linux RC operator map](rc-and-support.md).
 
+## Reflection and Member Runtime — `partial`
+
+Daemon `/ui/` Member configuration has a Reflection tab. Generate from facts
+calls `POST /management/project/v1/reflection.generate`. A model self-report is
+not an improvement. Request runtime preview mints a `member-runtime-revision`
+canvas; Apply is Owner canvas Confirm only (no Admit). Rollback appends a new
+Employee revision. Role Template preview does not copy the Member into another
+Project. Task-channel aliases return 403.
+
 ## Backup and restore — `partial`
 
 `cognitive backup [--output <dir>]` writes a digest-bound directory archive of
