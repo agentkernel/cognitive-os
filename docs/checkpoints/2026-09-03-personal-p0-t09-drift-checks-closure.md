@@ -3,9 +3,9 @@
 - Task: `P0-T09` 计划/规则漂移的机械校验 (Phase 0) — status `done` with this delivery; Slice `P0-T09/D01` `done`
 - Change class: **implementation-only** (tool surface `tools/**`, handbook `_meta` + mapped pages); normative surface unchanged; formal plan build order not edited
 - Lease: `lease/personal/P0-T09/drift-checks` → closed in the merge-closure commit on `main` (PARALLEL-LANES §3.1)
-- Branch: `personal/P0-T09-drift-checks`; content head `64732c61`, ledger head `8f0d83b1`, closure head recorded in the PR
-- PR: [#312](https://github.com/agentkernel/cognitive-os/pull/312) — Draft → ready → merged (merge commit recorded in PROGRESS)
-- Required CI: [33678438650](https://github.com/agentkernel/cognitive-os/actions/runs/33678438650) **SUCCESS** at `8f0d83b1` (resolve 4s; verify ubuntu-latest 3m49s; verify windows-latest 18m37s; required-ci 3s)
+- Branch: `personal/P0-T09-drift-checks`; content head `64732c61`, ledger head `8f0d83b1`, merge head `ba4745a5` (origin/main P13-T02 PR #310 merged in; sibling ledger rows integrated); local + remote branch deleted, worktree removed
+- PR: [#312](https://github.com/agentkernel/cognitive-os/pull/312) — Draft → ready → **merged at `main@8badb83c`** (2026-09-03)
+- Required CI: [33678438650](https://github.com/agentkernel/cognitive-os/actions/runs/33678438650) **SUCCESS** at `8f0d83b1` (resolve 4s; verify ubuntu-latest 3m49s; verify windows-latest 18m37s; required-ci 3s); [33683607483](https://github.com/agentkernel/cognitive-os/actions/runs/33683607483) **SUCCESS** at merge head `ba4745a5` (resolve 2s; ubuntu-latest 3m49s; windows-latest 11m39s; required-ci 2s)
 - Running report: [2026-09-03-personal-p0-t09-drift-checks-report.md](2026-09-03-personal-p0-t09-drift-checks-report.md)
 
 ## Acceptance mapping (Phase 0 table row + `P0-T09/D01` slice row + plan.md 关闭门)
@@ -25,4 +25,4 @@ Claim ceiling `hypothesis`. Node tooling / handbook / ordinary-CI evidence only.
 
 ## Next unique action
 
-Claim `P0-T01/D02` (local Rust toolchain repair) with lease `lease/personal/P0-T01/toolchain-repair` on branch `personal/P0-T01-D02-toolchain` from fresh `origin/main`; owner has chosen option (a) local-only override.
+Closed. Claim `P0-T01/D02` (local Rust toolchain repair) with lease `lease/personal/P0-T01/toolchain-repair` on branch `personal/P0-T01-D02-toolchain` from fresh `origin/main`; owner has chosen option (a) local-only override; the `verify:local` re-pin-vs-deprecate sub-decision stays open for the owner.
