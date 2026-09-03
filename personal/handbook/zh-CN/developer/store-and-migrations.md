@@ -13,7 +13,7 @@ sources:
   - path: personal/crates/cognitive-store/src/project_aggregate.rs
     symbols: ["PROJECT_AGGREGATE_SCHEMA_V26", "APPROVAL_PREVIEW_NARROW_SCHEMA_V29", "STANDING_APPROVAL_POLICY_SCHEMA_V30", "ProjectAggregateStore"]
   - path: personal/crates/cognitive-store/src/employee.rs
-    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec"]
+    symbols: ["EMPLOYEE_SCHEMA_V27", "EmployeeStore", "HandoffSpec", "SecurityReview", "InstallFactRow"]
   - path: personal/crates/cognitive-store/src/conversation.rs
     symbols: ["CONVERSATION_ARCHIVE_SCHEMA_V28", "ConversationStore", "CONVERSATION_ARCHIVE_PROJECTION_ID", "ArchiveReadSpec", "ArchiveAppendSpec"]
   - path: personal/crates/cognitive-store/src/assistant.rs
@@ -50,6 +50,7 @@ tests:
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - personal/crates/cognitive-store/tests/p11_t03_project_aggregate.rs
   - personal/crates/cognitive-store/tests/p11_t04_employee.rs
+  - personal/crates/cognitive-store/tests/p13_t10_capability_acquisition.rs
   - personal/crates/cognitive-store/tests/p11_t05_conversation.rs
   - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
@@ -65,7 +66,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:fe09bbdbb0f7abc1f8cf1da8199088b8dc1bac782e8f8a25fb99b274ef99275b"
+fingerprint: "sha256:0b2676be425888062901d901a2bb169e8583e98403b17be5518d6661b47a0be5"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -113,6 +114,8 @@ P11-T06 隐藏 Pi Assistant **不新增迁移**。它复用 v26 `p11_candidate` 
 P13-T03 真实推理同样**不新增迁移**。`AssistantPlane::run_turn` 现在必须带 daemon 观测到的 `AssistantInferenceRecord`（协议 `cognitiveos.personal.assistant-inference/0.1`、已绑 `model_id`、`provider_round_trips ≥ 1`、有界 reply、推理出的对象链、daemon 推导的可引用 URI）；登记进 v26 的候选 ops 携带推理链、标记为 owner 输入的 owner payload、reply digest 与注入顺序引用——绝不把回显 payload 当候选。`validate_inferred_object_chain` 是唯一的对象链校验器（封闭 kind 按链序、每 kind 一个对象、每个字段 `{value, provenance}` 带 typed 出处、`sources[]` uri 只能来自已抓取或 owner 提供的 URI、封闭 schema）；runtime 解析与 HTTP 都调用它。`admit_turn_request` 在任何 Pi 进程启动前拒绝 ambient tool。`provider_unbound_guidance()` 是固定的 Settings 指路（`chat_input: false`、`silent_bind: false`、`candidate_registered: false`）。`candidate_count` 是只读计数辅助。登记时的 secret-shape 守卫只在 token 起始处把 `sk-` 当作 key 前缀（`risk-based`、`task-contract`、`desk-side` 是普通文本）；`bearer `、`api_key`、`x-api-key`、`ssv1:` 与 token 起始的 `sk-…` 仍被拒绝。
 
 P11-T09 HITL 画布复用 v26 `request_preview` / `confirm_preview` / `p11_approval_preview` 与 v29 `superseded_by`、v30 grant-expansion / StandingApprovalPolicy。真实调用者是 management HTTP `preview.reject` / `preview.narrow` / `confirm` / `standing-policy.*`；T05 只宣布+深链；T06 `draft.apply` 不是 authority-approve。宿主 UI E2E 为 `not-run`。Settings chrome 是 T13。无第二套调度器、无聊天 Approve、无 Inbox 一级。
+
+P13-T10 Skill/MCP 获取**不新增迁移**。复用 v27 `p11_install_fact` / `p11_grant` 与 v30 `grant-expansion` preview。`SecurityReview` + `record_reviewed_install_fact` 要求通过结构化评审后才写 InstallFact；Owner 确认 grant 阶段 preview 之前 catalog 为空。install 阶段 confirm 只写 InstallFact 并消费 preview（`granted: false`）。未评审安装、hidden-instruction / prompt-injection、ambient/marketplace 来源、聊天/task 调用方、ambient grant 一律拒绝。`compat_test` / `review_update` / `rollback_install` 从不静默授权。供应链宿主 E2E 在 P13-T13 前记 `not-run`。无第二套 grant 表，无 engine store。
 
 P11-T12 诚实 usage **不新增迁移**。它是对 v25 `llm_usage_events` / `agent_provider_bindings` / `provider_accounts` 的带标签读取：`cost_label` 为 `actual`（`provider_reported`+`priced`）、`estimated`（仅当确实记录了 `locally_estimated`+`priced`）或 `unknown`（序列化绝不为 JSON `0`）。`GET /management/usage` 同时返回四层 binding 说明；Project/employee/Task 层今日显式 `unbound`。账户身份与配额是分开的对象。静默改账户/模型会被拒绝。成员级预算硬停属 2.1 / Deferred。
 

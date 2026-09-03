@@ -2172,6 +2172,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T10 — Skill/MCP security-reviewed acquisition + scoped grant
 
+- **status (2026-09-03):** `done` — `P13-T10/D01` on `personal/P13-T10-skill-mcp-grant` (Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318); worktree `D:\agent-kernel-wt-P13-T10`; lease `lease/personal/P13-T10/skill-mcp-grant`). Formal acceptance: install ≠ grant; Request acquire preview only; no Activate. Validated implementation `d861d341`. No new migration. Supply-chain host E2E `not-run` until P13-T13.
 - **2.0.0 表面:** 成员 skills / tools / perms 标签可发起获取；助手主导发现 → 结构化
   安全评审展示 → 首次安装或扩权前 exact Owner 画布 preview → 版本锁定 capability
   artifact → 独立 Project/Member grant → 更新评审 / 兼容测试 / 回滚。广泛
