@@ -10,7 +10,21 @@
 
 ## Unique next action
 
-**Owner-paused (2026-09-03).** D01 implementation + required CI + `DEV-LINUX-NATIVE-01` are green at `d861d341` on Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318). Resume with D01 acceptance assessment → closure (plan, snapshot, handbook, handoff, Draft→ready, merge, lease/branch/main) when owner lifts pause. Supply-chain host E2E remains `not-run` until P13-T13.
+**D01 accepted (2026-09-03).** Install ≠ grant; chrome is **Request acquire preview** only; there is **no Activate**. Folded `origin/main` after T06 close (PR #316 at `main@23355afb`). Lease closed this delivery. Next: required CI green on this folded HEAD → `gh pr ready 318` → merge. Then claim **`P13-T09`** if still unclaimed. Do not claim sibling-owned `P13-T07` / `T08`. Supply-chain host E2E remains `not-run` until P13-T13.
+
+## Formal D01 acceptance map (plan card + Delivery Slice `P13-T10/D01`)
+
+| Acceptance item | Implementation | Focused negative(s) | Evidence |
+|---|---|---|---|
+| 助手主导发现（带 sources） | store `admit_discovery` + HTTP `POST capability.discover`; sources must be `https://` or `owner://` | N4 marketplace / engine-store / ambient / generic `resource:` refused | store `marketplace_engine_store_and_unpinned_sources_are_refused`; HTTP acquire refusals |
+| 结构化安全评审 | `SecurityReview` (source / license / hidden-instruction / prompt-injection / file·network·command intent; MCP: dependencies / executable / secret / tool perms / supply-chain) required before InstallFact | N2 incomplete review; N3 hidden / injection ≠ `none` | store `unreviewed_install_is_refused`, `injection_or_hidden_instruction_refuses_install`; HTTP 422 |
+| 首次安装/扩权前 exact Owner 画布 preview | `capability.acquire` mints a v30 `grant-expansion` preview (`granted: false`); member-config button is **Request acquire preview** and deep-links the canvas; chat cannot Confirm | N5 chat/task 403; N7 no Activate / Install / Confirm chrome | Dual Track `memberConfig.test.tsx` (Request acquire preview; `fakeActionLabels` empty); HTTP `chat_can_confirm: false` |
+| 版本锁定 capability artifact | InstallFact carries `version_pin`; `compat_test` / `review_update` / `rollback_install` never silent-grant | rollback refuses the rolled-back pin; catalog stays empty | store `update_review_compat_and_rollback_do_not_silent_grant` |
+| 独立 Project/Member grant | grant-phase preview requires an InstallFact; grant-phase confirm writes `p11_grant` with scope; install-phase confirm writes InstallFact only | N1 install ≠ grant; N6 ambient grant refused | store `reviewed_install_is_not_a_grant` (catalog empty; `invoke_tool` refused); HTTP confirm `"granted":false` and catalog has no `"catalog":["mcp:search"]` |
+| 更新评审 / 兼容测试 / 回滚 | HTTP `capability.compat-test` / `.rollback`; store `review_update` | never silent-grant | Linux store 6/6 at `d861d341` |
+| 关闭门 sentence: 发现 → 评审 → exact Owner 画布 preview → 版本锁定 → 按范围 grant → 更新/兼容/回滚 | vertical path above; Dual Track still uses **Request acquire preview** only | 安装即授权; 未评审自动安装; 聊天 Approve; ambient grant; engine store / marketplace; grant 无范围 | required CI [33747031610](https://github.com/agentkernel/cognitive-os/actions/runs/33747031610) **SUCCESS** @ `d861d341`; Linux store 6/6 + HTTP 1/1 + clippy |
+
+Honesty: implementation + supported validation are green at `d861d341`. Fold/acceptance commits after that SHA are documentation / sibling-ledger only. Supply-chain host E2E stays `not-run` until `P13-T13`. No Activate was invented.
 
 ## Failure-first (D01)
 
@@ -55,3 +69,6 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | Required CI [33747031610](https://github.com/agentkernel/cognitive-os/actions/runs/33747031610) `required-ci` | **pass** | GitHub | `d861d341` | all required checks green |
 | 2026-09-03 | `DEV-LINUX-NATIVE-01` bundle+SCP clone @ `d861d341` (worktree `/home/wuz/agent-kernel-worktrees/p13-t10-d861d341`) | recorded | `wuz@192.168.1.2` | `d861d341` | GitHub fetch broken on host; bundle route used |
 | 2026-09-03 | Owner pause | recorded | — | `d861d341` | finish in-flight CI/Linux only; no merge; no new card |
+| 2026-09-03 | Pause-docs commit `83c603b4` | recorded | GitHub | `83c603b4` | pushed; untracked `p13-t10-d861d341.bundle` left unstaged (A8) |
+| 2026-09-03 | Owner lifts pause for T10 closure; formal D01 acceptance map | recorded | docs | fold HEAD | install ≠ grant; Request acquire preview only; no Activate; no product gap found |
+| 2026-09-03 | Fold `origin/main` (T06 done PR #316 at `main@23355afb`) | recorded | worktree | fold HEAD | PROGRESS/plan T10 rows kept; T06 done facts from main; handbook fingerprints to regenerate |
