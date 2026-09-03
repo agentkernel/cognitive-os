@@ -61,7 +61,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:8b099beda67ecba2213babb73f0b7808739b82f2e2b42f026184a1e7c2f0d4b5"
+fingerprint: "sha256:3628bad3952ce84685fd680b05d0a205cfa20828111183b0cab89b7fcad71148"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -103,6 +103,11 @@ orders authority first and names the backup path on a second-phase failure.
 | v38 | Routine arming after G2 plus occurrence dispatch / outcome columns (`p13_routine_arming`; `p11_routine_occurrence` rebuilt) under `cognitiveos.personal.routine-arming/0.1` (P13-T05). An arming binds one current Routine revision to one plan stage and its seated responsible Member (`armed_after` CHECK=`G2`; state `armed` / `paused` / `superseded`; `apply_mode` `arm` / `continue` / `pause` / `restart` / `resume`); the ③ declaration (`cadence_kind` `manual` / `interval`, `interval_ms` ≥ 1000, `bounded_context` ≤ 65536, `attempt_timeout_ms` ≤ 30 min) is copied from the revision body with its digest. The occurrence table gains `arming_id`, `attempt_id`, `lease_epoch`, `started_at`, `attempt_outcome` (`done` / `failed` / `blocked` / `unknown` / `timed-out` / `signaled` / `spawn-failed` / `unknown-outcome` — there is no `success`), `outcome_detail`, `elapsed_ms`, `terminal_at`, `completion_claimed` CHECK=0, and the disposition `attempted` (CHECK: `attempted` ⇔ an outcome is present). Clock / sleep / restart host E2E is `not-run`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
+
+P13-T07 Knowledge/Memory labels also add **no new migration**. Labeled Vault
+reads and Memory auto-admit / cross-Project promote reuse `p11_vault_*` and
+`memory_candidates` / `memory_admission_decisions` / `memory_objects`. Files
+remain non-authority. Host filesystem E2E is `not-run`.
 
 P13-T03 real inference also adds **no new migration**. `AssistantPlane::run_turn` now requires a daemon-observed `AssistantInferenceRecord` (protocol `cognitiveos.personal.assistant-inference/0.1`, bound `model_id`, `provider_round_trips ≥ 1`, bounded reply, the inferred object chain, and the daemon-derived citable URIs); the registered v26 candidate ops carry the inferred chain, the owner payload labelled as owner input, the reply digest, and the inject-order reference — never the echoed payload as the candidate. `validate_inferred_object_chain` is the single object-chain validator (closed kinds in chain order, one object per kind, every field `{value, provenance}` with typed provenance, `sources[]` uris only from fetched or owner-supplied URIs, closed schema); runtime parsing and HTTP call into it. `admit_turn_request` refuses ambient tools before any Pi process spawns. `provider_unbound_guidance()` is the fixed Settings pointer (`chat_input: false`, `silent_bind: false`, `candidate_registered: false`). `candidate_count` is a read-only accounting helper. The registration secret-shape guard treats `sk-` as a key prefix only at a token start (`risk-based`, `task-contract`, `desk-side` are prose); `bearer `, `api_key`, `x-api-key`, `ssv1:` and a token-start `sk-…` stay refused.
 

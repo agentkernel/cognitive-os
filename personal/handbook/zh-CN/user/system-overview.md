@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:668a7fc2e06d13a163f4f9833b41f58bc9e37ffcd9435515cbd12e9f2d00f497"
+fingerprint: "sha256:e80695a6b0cf4ad6b683631bd6e0fd1cd03dc4250fd51d4faf15dcfe5fca5813"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -95,6 +95,8 @@ child、stdio broker 与 daemon Provider proxy。Conversation、archive/index/re
 Memory、Task、Effect 与 completion 属于 Personal。
 
 Knowledge 分开 Owner-shared source、Project Markdown Vault 与 employee-private Memory。
+`/ui/` 上的 Vault 片段展示出处、权利、新鲜度、排除与 untrusted-observation；文件不是
+Project 权威。
 Routine 支持 manual/schedule/qualified-event Trigger、no-overlap、queue-latest 与 visible
 missed work。HITL 只在画布。Provider binding 按 global→Project→employee→Task 解析；
 actual usage 与 Provider quota 分离；未知费用不得显示为 0；成员级预算属 2.1 / Deferred。

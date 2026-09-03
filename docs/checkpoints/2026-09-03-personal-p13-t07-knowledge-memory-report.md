@@ -1,0 +1,38 @@
+# P13-T07 Knowledge + Memory authority — running report
+
+- Task: `P13-T07` / slice `P13-T07/D01`
+- Change class: `implementation-only` (labeled Vault read + Memory auto-admit / promote on existing Memory tables; Knowledge `/ui/` caller; no new numbered migration; T06 owns `personal_db.rs` v39)
+- Product: CognitiveOS Personal 2.0.0
+- Lease: `lease/personal/P13-T07/knowledge-memory`
+- Branch: `personal/P13-T07-knowledge-memory` (worktree `d:\agent-kernel-wt-P13-T07`; `d:\agent-kernel` not used)
+- Base: `origin/main@8e0d497d`
+- Claim ceiling: `hypothesis` (A7: local MSVC / Dual Track is not Gate / release / Profile / Windows qualification)
+- Evaluation routing: **OFF**
+- Host FS/privacy E2E: `not-run` until `P13-T13`
+
+## Unique next action
+
+Push this D01 checkpoint as a Draft PR; required CI on the pushed HEAD. Keep `P13-T07/D01` `in-progress` until required CI is green. Do not close the task.
+
+## Failure-first (D01)
+
+| ID | Negative | Surface |
+|---|---|---|
+| N1 | Vault file cannot become Project authority (`apply_as_project_authority` Invalid) | store |
+| N2 | Cross-project labeled read is Forbidden | store + HTTP 403 |
+| N3 | Agent / task-channel cannot self-admit chat into Memory | store Forbidden + HTTP 403 aliases |
+| N4 | Secret-shaped chat is not admitted (archive already rejects `sk-`) | store |
+| N5 | Tombstoned Memory cannot be promoted or resurrected | store |
+| N6 | Unconfirmed promote does not copy Memory; confirm is digest-bound | store + HTTP |
+| N7 | Last-write-wins without a conflict record is rejected; import failure keeps original fields | existing Vault + Knowledge ingest |
+| N8 | No fake Admit button; auto-admit UI stays honest empty / Requires-backend while T06 archive is absent | Dual Track UI |
+
+## Incremental validation log (TEST-REPORT-INCREMENTAL-01)
+
+| Time | Unit | Result | Env | Revision | Notes |
+|---|---|---|---|---|---|
+| 2026-09-03 | `cargo test -p cognitive-store --test p13_t07_knowledge_memory --locked` | **pass** 8/8 | local MSVC override `1.97.1-x86_64-pc-windows-msvc`; `CARGO_PROFILE_DEV_DEBUG=0` | worktree, uncommitted | development evidence only |
+| 2026-09-03 | `cargo test -p kernel-server p13_t07 --locked` | **pass** 2/2 | same local MSVC | worktree, uncommitted | labeled/documents/task aliases + promote preview/confirm + auto-admit 404 then 201 |
+| 2026-09-03 | Dual Track vitest `knowledgeMemory` + `vault` + `knowledgeIngest` | **pass** 22/22 | `DEV-WIN-GNU-01` / Node | worktree, uncommitted | no new KNOWN_ROUTES; no Admit button |
+| 2026-09-03 | Host FS/privacy E2E | **not-run** | `P13-T13` | — | recorded, not inferred pass |
+| 2026-09-03 | required CI | **not-run** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | after push | unique next |

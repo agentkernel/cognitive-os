@@ -23,7 +23,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:3424f19b79441af17264eb165972105bd3e92b50ef83f73972325407eb63a19e"
+fingerprint: "sha256:628642179bab484814505742c465a43688227a4a1ec5c9ea8e4a5408bf79b797"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -117,6 +117,18 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/resource/v1/memory/correct` | task | 禁止：Memory correct 仅限 management 通道。 |
 | `POST` | `/task/resource/v1/memory/index.rebuild` | task | 禁止：Memory 索引重建仅限 management 通道。 |
 | `POST` | `/task/resource/v1/memory/review` | task | 禁止：Memory review/变更别名仅限 management 通道。 |
+| `GET` | `/management/resource/v1/vault.labeled` | management | 一个 Project 的带标签 Vault 索引：出处、权利、新鲜度、排除、untrusted-observation。文件不是 Project 权威。跨项目 caller 视为检索越权。 |
+| `GET` | `/management/resource/v1/vault.documents` | management | 派生索引尚未重建时，已存 Vault 文档仍可见（index_status=not-indexed）。文件不是 Project 权威。 |
+| `GET` | `/management/resource/v1/memory/promotes` | management | 列出以本 Project 为源或目标的跨 Project Memory promote 预览与已确认副本。 |
+| `POST` | `/management/resource/v1/memory/auto-admit.chat` | management | 仅 Owner：将一条会话归档记录接纳为可检查 Memory。助手自 admission 与 secret 形态正文失败闭合。 |
+| `POST` | `/management/resource/v1/memory/promote.request` | management | Owner 预览：将一条已接纳 Memory 复制到另一 Project。未确认预览不复制。摘要绑定。 |
+| `POST` | `/management/resource/v1/memory/promote.confirm` | management | Owner 确认 Memory promote 预览。预览摘要必须匹配。已 tombstone 的 Memory 不能 promote 或复活。 |
+| `GET` | `/task/resource/v1/vault.labeled` | task | 禁止：Vault 带标签索引仅限 management 通道。 |
+| `GET` | `/task/resource/v1/vault.documents` | task | 禁止：Vault 文档状态仅限 management 通道。 |
+| `GET` | `/task/resource/v1/memory/promotes` | task | 禁止：Memory promote 列表仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/auto-admit.chat` | task | 禁止：Memory 聊天自动准入仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/promote.request` | task | 禁止：Memory promote 请求仅限 management 通道。 |
+| `POST` | `/task/resource/v1/memory/promote.confirm` | task | 禁止：Memory promote 确认仅限 management 通道。 |
 | `POST` | `/management/resource/v1/skill/import` | management | 导入不可变的本地 Skill package/revision。 |
 | `POST` | `/management/resource/v1/skill/bind` | management | 将兼容的 Skill revision 绑定到目标 scope。 |
 | `POST` | `/management/resource/v1/skill/binding/revoke` | management | 追加不可变的 Skill binding 撤销记录。 |
