@@ -280,6 +280,32 @@ fn p13_t06_chat_has_no_approve() {
 }
 
 #[test]
+fn p13_t06_same_timestamp_owner_turn_precedes_manager_reply() {
+    let s = stores();
+    let (project_id, _plan, _ids) = seated_project(&s);
+    s.chat
+        .post_turn(&turn(
+            &project_id,
+            "manager",
+            None,
+            "@manager where are we this week?",
+            None,
+            100,
+        ))
+        .expect("post");
+    let thread = s
+        .chat
+        .read_thread(&project_id, &project_id, CHAT_THREAD_LIMIT)
+        .expect("thread");
+    assert_eq!(thread.rows.len(), 2, "{:?}", thread.rows);
+    assert_eq!(thread.rows[0].author, "owner");
+    assert_eq!(thread.rows[0].kind, "owner-message");
+    assert_eq!(thread.rows[1].author, "manager");
+    assert_eq!(thread.rows[1].kind, "announce");
+    assert_eq!(thread.rows[0].created_at, thread.rows[1].created_at);
+}
+
+#[test]
 fn p13_t06_chat_cannot_transfer_authority_between_members() {
     let s = stores();
     let (project_id, plan_id, ids) = seated_project(&s);

@@ -817,10 +817,16 @@ impl ProjectChatStore {
             }
         }
         drop(conn);
+        // Oldest-first after the reverse. Same `created_at` (Owner turn and the
+        // manager announce persist in one post) must stay causal: owner-message
+        // before speech. Lexicographic `conv-*` < `turn-*` used to invert that
+        // pair (observed on DEV-LINUX-NATIVE-01 kernel-server test).
         rows.sort_by(|a, b| {
-            b.created_at
-                .cmp(&a.created_at)
-                .then_with(|| b.row_id.cmp(&a.row_id))
+            b.created_at.cmp(&a.created_at).then_with(|| {
+                thread_tie_rank(b)
+                    .cmp(&thread_tie_rank(a))
+                    .then_with(|| b.row_id.cmp(&a.row_id))
+            })
         });
         let truncated = rows.len() > limit as usize;
         rows.truncate(limit as usize);
@@ -1402,6 +1408,13 @@ fn short_handle(employee_id: &str) -> String {
         .take(6)
         .collect();
     format!("member-{tail}")
+}
+
+/// Sort key used only as a same-timestamp tie-break. Owner turns rank before
+/// speech so a manager announce that shares `now_ms` with its triggering turn
+/// cannot leapfrog it because `conv-*` sorts before `turn-*`.
+fn thread_tie_rank(row: &ChatThreadRow) -> u8 {
+    if row.author == "owner" { 0 } else { 1 }
 }
 
 fn next_id(prefix: &str) -> Result<String, ProjectAggregateError> {
