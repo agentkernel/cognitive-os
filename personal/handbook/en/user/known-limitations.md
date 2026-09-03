@@ -127,8 +127,10 @@ current fact of the code.
   with an operational recovery, not a product-code fix.
 - Migration-backup files under `state/backups/` accumulate without pruning.
 - A crashed migration can leave a stale `migration.lock` requiring manual removal.
-- `pnpm run verify:local` pins outdated conformance counts (stale developer
-  entry point).
+- `pnpm run verify:local` (developer entry point) is usable only inside a
+  local MSVC-override directory; its pins now match `ci.yml` (re-pinned
+  2026-09-03) but its output is local development evidence, never a Gate,
+  release or Profile result.
 
 ## Platform
 

@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:bddd394e1bd1a67b4c72a3ad69b8e36584da7d10d62e893e9304bbb9a785b271"
+fingerprint: "sha256:d5e1cef9bec2510e0ae0caf503bd9dcfa7dd2c41e1a0cddf306293e1be9cb51a"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -44,7 +44,7 @@ are not provisioned; `B01-DESKTOP-002` is not the 2.0 daily default. Local
 Windows GNU, WSL, ordinary CI and Canvas cannot substitute Gate/release;
 record native cells `not-run` until available. `not-run` is never pass.
 
-## Safe on every platform (including the Windows GNU host)
+## Safe on every platform (including the local Windows host)
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -88,8 +88,32 @@ cargo run -p cognitive-conformance --bin conformance-runner
 cargo run -p cognitive-contracts --bin contracts-codegen   # then git diff generated trees
 ```
 
-Never run these on the local Windows GNU host: the linker failure (exit 121) is a
-registered environment boundary, not a signal to reproduce. `CLOUD-AGENT-LINUX-01`
+Never run these on the local Windows **GNU** host: the linker failure (exit 121) is a
+registered environment boundary, not a signal to reproduce. Since 2026-09-03
+(P0-T01/D02, owner decision) the registered local directories `D:\agent-kernel`
+and the current task worktree carry `rustup override set
+1.97.1-x86_64-pc-windows-msvc`; there — and only where `rustc -vV` reports
+`host: x86_64-pc-windows-msvc` — the four workspace commands below run locally
+as **development iteration** (recorded first in the P0-T01/D02 running report;
+`CARGO_PROFILE_DEV_DEBUG=0` in the session keeps the test build inside this
+machine's disk budget):
+
+```powershell
+# only inside a registered MSVC-override directory; development evidence, not supported validation
+$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"   # if cargo is not on PATH
+rustc -vV                                              # must print host: x86_64-pc-windows-msvc
+$env:CARGO_PROFILE_DEV_DEBUG = "0"                     # disk budget on this machine
+cargo build --workspace --locked
+cargo test --workspace --locked -- --test-threads=1
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo fmt --all -- --check
+```
+
+The tracked `rust-toolchain.toml` is unchanged and CI does not see the
+override. Known local gap: the four `kernel-server` `tool_executor` symlink /
+reparse-point fixture tests fail at setup with OS error 1314 in a non-elevated
+shell without Developer Mode (they pass on elevated CI) — record them as
+`not-run (host privilege)`, never skip them in code. `CLOUD-AGENT-LINUX-01`
 can run the whole block — it is a native GNU/Linux link host — but its results are
 container-class pre-CI triage, never a substitute for required CI or for
 exact-revision native evidence. Remote/native validation
@@ -158,7 +182,19 @@ byte equality, conformance runner with pinned five-state counts and
 evidence-honesty assertions, wrong-implementation self-check, cross-language golden
 digest byte equality.
 
-## Known stale entry
+## Local one-shot orchestrator (`verify:local`)
 
-`pnpm run verify:local` (the V01 orchestrator) pins outdated conformance counts and
-is not a usable local gate at this baseline; prefer the individual commands above.
+`pnpm run verify:local` (the V01 orchestrator, `scripts/v01-auto-run.ps1` /
+`.sh`) is usable locally **inside an MSVC-override directory** since
+2026-09-03 (P0-T01/D02, owner Option A): its conformance pins were re-pinned
+to the `ci.yml` counts (89/62/27; self-check corpus floor 41 ≥ CI's 40) and the
+repo-tools test `verify:local orchestrators pin the same conformance counts as
+ci.yml` fails the moment the two copies drift. It runs `cargo build`, focused
+`cargo test`s, the conformance runner (+ `--self-check`), `check:consistency`
+and the sdk-ts live suite, then writes `artifacts/evidence/v01-auto-run/<run_id>/`
+(`summary.json` + `sha256-manifest.json`). Requirements: pwsh 7 on Windows,
+`rustc -vV` → `host: x86_64-pc-windows-msvc`, session
+`CARGO_PROFILE_DEV_DEBUG=0` on this machine's disk budget. Its output is local
+development evidence only (never Gate / release / Profile); a green run does
+not mean any Profile is implemented, and it is not a substitute for required
+CI. Outside an override directory it is still forbidden (GNU link).

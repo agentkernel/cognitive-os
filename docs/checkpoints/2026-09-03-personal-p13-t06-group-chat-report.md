@@ -64,10 +64,12 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | clippy `ChatCandidateColumns` alias | recorded | `DEV-WIN-GNU-01` | `aecc3fc4` | Named the four-column tuple so `-D warnings` no longer trips `type_complexity`. |
 | 2026-09-03 | `DEV-LINUX-NATIVE-01` store + kernel-server + clippy at `aecc3fc4` | **pass** 9/9+8/8, 7/7, clippy 0 | `DEV-LINUX-NATIVE-01` | `aecc3fc4` | clone `p13-t06-dd15dc51` fetched via host `:7890`; dirty=0. |
 | 2026-09-03 | Required CI [33733963941](https://github.com/agentkernel/cognitive-os/actions/runs/33733963941) ubuntu at `aecc3fc4` | **fail** | `CI-UBUNTU-01` | `aecc3fc4` | `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import`: v39 CHECK literals `task-revision` / `member-task-revision` persist `sk-` in `sqlite_master` (Vault `task-contract` precedent). |
-| 2026-09-03 | v39 CHECK concatenates `task`/`revision` so sqlite_master omits `sk-` | recorded | `DEV-WIN-GNU-01` | uncommitted | Product kind names unchanged. New store lock `p13_t06_authority_sqlite_omits_sk_substring_after_v39`. |
+| 2026-09-03 | v39 CHECK concatenates `task`/`revision` so sqlite_master omits `sk-` | recorded | `DEV-WIN-GNU-01` | `e44f43ee` / `7ae9db50` | Product kind names unchanged. Store lock `p13_t06_authority_sqlite_omits_sk_substring_after_v39` (borrow fix in `7ae9db50`). |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` store `p13_t06` + `p11_t10_vault` + migrations; kernel-server `project_chat`; clippy | **pass** 10/10 + 9/9 + 8/8; 7/7; clippy 0 | `DEV-LINUX-NATIVE-01` | `7ae9db50` | clone dirty=0; `p11_t10_authority_sqlite_omits_secret_shape_bytes_after_import` green. |
+| 2026-09-03 | Live daemon negatives on `127.0.0.1:48786` | **pass** 7/7 | `DEV-LINUX-NATIVE-01` | `7ae9db50` | scratch seed `~/cos-wt/p13t06-seed` (outside repo) → G1+plan+seated A/B; product HTTP: task-channel 403, Approve 403, secret 422, cross-thread 403, cross-member 403, unbounded thread 422, `@manager` preview 200 `chat_approve:false`. Bootstrap 600 never printed. Runtime removed; 48181/39245/48681 untouched. |
+| 2026-09-03 | Required CI [33734948118](https://github.com/agentkernel/cognitive-os/actions/runs/33734948118) at `7ae9db50` | **SUCCESS** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `7ae9db50` | resolve SUCCESS; ubuntu 4m14s SUCCESS; windows SUCCESS; required-ci SUCCESS. Live-validated implementation revision. |
+| 2026-09-03 | merge `origin/main@8e0d497d` (P0-T01/D02 closed PR #314) | recorded | docs-only | merge HEAD | Conflict only in formal-plan header, Current snapshot unique-next / Active-lease, and validation-commands fingerprints. Kept T06 in-progress + v39; P0-T01/D02 **done**. Do not claim sibling T07/T08/T10. |
 
 ## Unique next
 
-1. Push the sqlite `sk-` CHECK fix; keep PR #316 Draft.
-2. Linux store + `p11_t10_vault` + clippy at the new SHA, then live daemon negatives.
-3. Map every D01 acceptance item after required CI is green. Do not claim P13-T07.
+1. Required CI on this merge HEAD (to-be-merged), then map D01, ready/merge PR #316, close lease. Parent next ready card after T06 close: `P13-T09`. Do not claim sibling-owned `P13-T07` / `T08` / `T10`.

@@ -82,9 +82,12 @@ prompts, and historical handoffs cannot override canonical repository facts.
 - Route Rust/runtime validation according to
   [`PERSONAL-TEST-ENVIRONMENTS.md`](../../docs/plan/PERSONAL-TEST-ENVIRONMENTS.md)
   §1.1 before writing the test: remote Linux consumes only pushed exact Git
-  revisions; the local Windows GNU host runs only `cargo fmt`, Node/TypeScript
-  and static checks (`AGENTS.md` §6). Local shell is Windows PowerShell 5.1 —
-  no `&&`/`||`.
+  revisions; on the local Windows host, `cargo fmt`, Node/TypeScript and
+  static checks run anywhere, while `cargo build/test/clippy` run only inside a
+  registered MSVC-override directory (`rustc -vV` → `host:
+  x86_64-pc-windows-msvc`) as development evidence — never on the GNU host,
+  never as supported validation (`AGENTS.md` §6). Local shell is Windows
+  PowerShell 5.1 — no `&&`/`||`.
 - Keep campaign guests isolated from ordinary development; after any deploy,
   debug, or daemon replace on `B01-Desktop-Linux-002`, end the turn with the
   owner SSH-forward command and local browser URLs exactly as
@@ -123,8 +126,9 @@ following:
   (record `blocked` + recovery action, then claim a non-overlapping ready task
   and continue); for ADR-0040-class MVP self-disposition under §2.3, record the
   Gate result and close the task instead of stopping;
-- local Windows GNU cannot run Rust (route to CI/Linux and continue eligible
-  work).
+- the local Windows GNU host cannot link Rust (use the registered local MSVC
+  override directory for iteration, route supported validation to CI/Linux,
+  and continue eligible work).
 
 Valid stop conditions are only: owner pause/scope change; a required
 interactive confirmation boundary (Operating Model §2.4; summarized in

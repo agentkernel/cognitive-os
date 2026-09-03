@@ -15,7 +15,7 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:c74a888cf10be926dddeae8158c630c151a871ba6c718aa62451cefd26bb2e7e"
+fingerprint: "sha256:4e12a0030b1f8b285184cc8086b4edd80d386b202083376c12edc561c2c03f28"
 non_claims:
   - Compilation on a platform is not product support; only the listed product target carries installation and service paths.
 ---
@@ -57,8 +57,11 @@ the tree — the Windows Credential Manager production secret backend plus
 inspectable bootstrap-installer and per-user scheduled-task templates
 (ADR-0052) — but the end-to-end Windows install campaign (B01-W) has not been
 executed, so no install parity is claimed and local files still carry no
-ACL hardening. The registered local Windows GNU host cannot link Rust at all.
-macOS has no CI lane and no backend.
+ACL hardening. The registered local Windows host cannot link Rust on its GNU
+default toolchain; since 2026-09-03 a local-only rustup override to the
+installed MSVC toolchain lets it build and test the workspace for development
+iteration, which changes nothing about Windows support. macOS has no CI lane
+and no backend.
 
 ## Client compatibility
 

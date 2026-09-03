@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:d0a89c6e8266f516581ddb211610a1b91f941dd94960c7946a0579c9142fd609"
+fingerprint: "sha256:939d439d5803cf22f108ce3a73b5b655683faadb9e8b11272921a71df5a294c7"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -27,7 +27,7 @@ owns what each environment may claim. Practical routing:
 | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (required PR checks) | full Rust + TS + conformance + drift gates | Gate/release/Profile promotion |
 | `DEV-LINUX-NATIVE-01` (native Linux host) | exact-revision native validation, experimental service/Pi work; consumes **pushed commits only** into a cleanable worktree | uncommitted code, production claims |
 | `CLOUD-AGENT-LINUX-01` (Cursor Cloud Agent pod) | full bash-shell Rust + TS iteration before pushing; bootstrapped by `.cursor/environment.json` | native systemd/Secret Service behavior, timing baselines, Gate/release/Profile |
-| Local Windows GNU host | pnpm builds/tests, `cargo fmt`, Node checkers, docs work | any workspace `cargo build/test/clippy/run` — registered linker exit 121 |
+| Local Windows host `DEV-WIN-GNU-01` (GNU default toolchain; registered directories carry a local MSVC `rustup override` since 2026-09-03) | pnpm builds/tests, `cargo fmt`, Node checkers, docs work anywhere; workspace `cargo build/test/clippy` **inside an override directory** (`rustc -vV` → `host: x86_64-pc-windows-msvc`) as development iteration | Rust linking on the GNU default host — registered linker exit 121; citing a local MSVC result as supported validation, Gate, release, Profile or Windows support |
 | `DEV-WINDOWS-NATIVE-OPC-01` | future qualified native Windows 11 Phase 11 host; currently not provisioned | any claim until qualification exists |
 | WSL2 | historical engineering evidence | Linux 1.0 or Windows OPC product-path claims |
 | `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures; since 2026-08-27 also the owner-authorized Personal 2.0 development-validation host (exact-revision disposable worktrees and task-declared cleanable roots only; frozen while a B01 campaign is active) | guest-baseline, snapshot, or credential changes outside a preregistered B01 campaign lease |
@@ -60,6 +60,30 @@ also what keeps handbook fingerprints platform-stable. On the local Windows
 host `git config core.autocrlf` reports `true`; that setting is overridden by
 the tracked `.gitattributes` rule `* text=auto eol=lf`, so checkouts and
 commits stay LF without any local Git configuration change.
+
+Local MSVC override on `DEV-WIN-GNU-01` (P0-T01/D02, owner decision
+2026-09-03, local-only): the machine's rustup default host is
+`x86_64-pc-windows-gnu`, so `rust-toolchain.toml` alone resolves to the GNU
+toolchain whose linking fails (exit 121). The repair is a rustup **directory
+override** — `rustup override set 1.97.1-x86_64-pc-windows-msvc` — recorded for
+`D:\agent-kernel` and the task worktree; it is stored in rustup's settings, not
+in the repository, so `rust-toolchain.toml`, CI and every other clone are
+unchanged (`.cargo/config.toml` is not gitignored here and is not used). The
+installed Visual Studio Build Tools 17.14.37 at `D:\VSBuildTools` provide
+`link.exe` 14.44.35228.0, which rustc finds by itself — no PATH or `vcvars`
+step. Check `rustc -vV` reports `host: x86_64-pc-windows-msvc` before running
+`cargo build --workspace --locked`, `cargo test --workspace --locked --
+--test-threads=1`, `cargo clippy --workspace --all-targets --locked -- -D
+warnings` or `cargo fmt --all -- --check`; a new local worktree needs its own
+`rustup override set`. On this disk-constrained machine the workspace test
+build needs `CARGO_PROFILE_DEV_DEBUG=0` (session environment variable) to
+fit, and the four `kernel-server` `tool_executor` tests whose fixture creates a
+symlink/reparse point fail at setup with OS error 1314 because the shell is not
+elevated and Developer Mode is off (they pass on the elevated CI runner; treat
+them as `not-run (host privilege)` locally, never skip them in code). Results
+are development evidence; the environments registry §3 keeps the capability
+ceiling unchanged. PowerShell 7.6.5 (`pwsh`) is installed but the
+Cursor Shell remains Windows PowerShell 5.1.
 
 Shell discipline on this Windows host: PowerShell 5.1 — no `&&`/`||`; sequence
 with separate invocations or `if ($LASTEXITCODE -eq 0) { … }`. Neither that

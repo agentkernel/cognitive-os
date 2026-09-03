@@ -373,17 +373,27 @@ to repeat inside every delivery:
    dependent commands use separate calls or
    `if ($LASTEXITCODE -eq 0) { <next-command> }`. A parser rejection before a
    process starts is `not-run`, not a failed build or test.
-2. **`RUST-LINK-DEV-WIN-GNU-01`:** the current local
+2. **`RUST-LINK-DEV-WIN-GNU-01`:** the local machine's default
    `x86_64-pc-windows-gnu` host is a registered unsupported Rust linking
-   environment. Workspace build, test, Clippy, run and bench commands are
-   known to stop at linker exit 121. Do not repeat them, and do not retry the
-   exhausted LLVM-MinGW/shim/PATH/toolchain-pin workarounds, unless an explicit
-   P0-T01 toolchain-repair Delivery Slice has been approved and leased.
-3. On `DEV-WIN-GNU-01`, only non-linking work is eligible: Rust formatting,
-   documentation/static consistency, Node/TypeScript checks and diff checks.
-   Rust build/test/Clippy validation must be routed before implementation to
-   `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or an exact-revision disposable
-   worktree on `DEV-LINUX-NATIVE-01`, according to the Slice's evidence need.
+   environment. On that host, workspace build, test, Clippy, run and bench
+   commands are known to stop at linker exit 121. Do not repeat them, and do
+   not retry the exhausted LLVM-MinGW/shim/PATH/toolchain-pin workarounds,
+   unless an explicit P0-T01 toolchain-repair Delivery Slice has been approved
+   and leased. `P0-T01/D02` (2026-09-03, owner decision) registered a
+   **local-only rustup directory override** to the installed
+   `1.97.1-x86_64-pc-windows-msvc` toolchain for the registered local
+   directories; the tracked `rust-toolchain.toml` is unchanged and CI is
+   unaffected.
+3. On `DEV-WIN-GNU-01`, Rust formatting, documentation/static consistency,
+   Node/TypeScript checks and diff checks are always eligible. Local Rust
+   build/test/Clippy **iteration** is eligible only inside a directory whose
+   `rustc -vV` reports `host: x86_64-pc-windows-msvc` (the registered
+   override), and its result is local development evidence. Rust
+   build/test/Clippy **validation** cited by a Slice exit must still be routed
+   before implementation to `CI-UBUNTU-01`, `CI-WINDOWS-MSVC-01`, or an
+   exact-revision disposable worktree on `DEV-LINUX-NATIVE-01`, according to
+   the Slice's evidence need; the local override never raises the host's
+   capability ceiling.
 4. If the selected supported environment is unavailable, try the other
    predeclared supported route and continue the same task. If no supported
    route can run, record the affected validation as `blocked` or `not-run` and

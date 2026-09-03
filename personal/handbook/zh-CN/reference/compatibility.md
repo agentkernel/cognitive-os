@@ -15,7 +15,7 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:c74a888cf10be926dddeae8158c630c151a871ba6c718aa62451cefd26bb2e7e"
+fingerprint: "sha256:4e12a0030b1f8b285184cc8086b4edd80d386b202083376c12edc561c2c03f28"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---
@@ -53,7 +53,9 @@ CI 在 Ubuntu 与 Windows MSVC 上构建并测试 workspace；那是工程证据
 品支持。仓库中现已存在 Windows 安装**表面**——Windows Credential Manager 生产
 secret 后端，以及可检查的引导安装器与按用户 scheduled-task 模板（ADR-0052）——但端到
 端 Windows 安装战役（B01-W）尚未执行，因此不声明安装对等，本地文件也仍无 ACL 加固。
-已登记的本地 Windows GNU 主机完全无法链接 Rust。macOS 无 CI 泳道也无后端。
+已登记的本地 Windows 主机在其 GNU 默认工具链下无法链接 Rust；自 2026-09-03 起，一个仅限本机的
+rustup override 指向已装的 MSVC 工具链，使其可以为开发迭代构建并测试 workspace，这不改变任何
+Windows 支持结论。macOS 无 CI 泳道也无后端。
 
 ## 客户端兼容性
 

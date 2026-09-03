@@ -101,7 +101,8 @@ non_claims:
   [open 正式登记缺陷](../../../../docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md)。
 - `state/backups/` 下的迁移备份只增不清。
 - 迁移中崩溃可能留下过期 `migration.lock`，需人工移除。
-- `pnpm run verify:local` 钉住过期符合性计数（过期的开发者入口）。
+- `pnpm run verify:local`（开发者入口）只能在本机 MSVC override 目录内使用；其计数已于
+  2026-09-03 重钉到 `ci.yml`，但输出只是本地开发证据，绝不是 Gate、release 或 Profile 结果。
 
 ## 平台
 

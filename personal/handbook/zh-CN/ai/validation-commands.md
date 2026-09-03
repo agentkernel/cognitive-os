@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:bddd394e1bd1a67b4c72a3ad69b8e36584da7d10d62e893e9304bbb9a785b271"
+fingerprint: "sha256:d5e1cef9bec2510e0ae0caf503bd9dcfa7dd2c41e1a0cddf306293e1be9cb51a"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -42,7 +42,7 @@ acceptance，不是 Phase 12 mutex；自 2026-09-02 起其验收前置 = Phase 1
 2.0 日常默认机。本地 Windows GNU、WSL、ordinary CI 与 Canvas 都不能替代
 Gate/release；可用前 native cell 记 `not-run`。`not-run` 永远不是 pass。
 
-## 全平台安全（含 Windows GNU 主机）
+## 全平台安全（含本地 Windows 主机）
 
 ```powershell
 pnpm install --frozen-lockfile
@@ -86,10 +86,31 @@ cargo run -p cognitive-conformance --bin conformance-runner
 cargo run -p cognitive-contracts --bin contracts-codegen   # 之后 diff 生成目录
 ```
 
-绝不在本地 Windows GNU 主机运行上述命令：linker 失败（exit 121）是已登记的环境边界，
-不是需要复现的信号。`CLOUD-AGENT-LINUX-01` 可以运行整段命令——它是 native GNU/Linux
-link 主机——但其结果只是 container 级的 pre-CI 排查，绝不替代 required CI 或
-exact-revision native 证据。远程/native 验证只消费已推送的不可变 revision——绝不复制工作树。
+绝不在本地 Windows **GNU** 主机运行上述命令：linker 失败（exit 121）是已登记的环境边界，
+不是需要复现的信号。自 2026-09-03 起（P0-T01/D02，owner 决定），已登记的本地目录
+`D:\agent-kernel` 与当前任务 worktree 带有 `rustup override set 1.97.1-x86_64-pc-windows-msvc`；
+在那里——且仅当 `rustc -vV` 报 `host: x86_64-pc-windows-msvc` 时——下面四条 workspace 命令可在
+本机作为**开发迭代**运行（首次记录见 P0-T01/D02 running report；会话内设
+`CARGO_PROFILE_DEV_DEBUG=0` 使测试构建装进本机磁盘预算）：
+
+```powershell
+# 仅在已登记的 MSVC override 目录内；开发证据，不是 supported validation
+$env:Path = "$env:USERPROFILE\.cargo\bin;$env:Path"   # cargo 不在 PATH 时
+rustc -vV                                              # 必须打印 host: x86_64-pc-windows-msvc
+$env:CARGO_PROFILE_DEV_DEBUG = "0"                     # 本机磁盘预算
+cargo build --workspace --locked
+cargo test --workspace --locked -- --test-threads=1
+cargo clippy --workspace --all-targets --locked -- -D warnings
+cargo fmt --all -- --check
+```
+
+tracked 的 `rust-toolchain.toml` 未改，CI 看不到该 override。已知本机缺口：`kernel-server`
+`tool_executor` 中四个 symlink / reparse-point fixture 测试在未提权且未开 Developer Mode 的 shell
+里于 setup 阶段以 OS 错误 1314 失败（提权的 CI 上通过）——记为 `not-run (host privilege)`，绝不在
+代码里跳过。`CLOUD-AGENT-LINUX-01`
+可以运行整段命令——它是 native GNU/Linux link 主机——但其结果只是 container 级的 pre-CI
+排查，绝不替代 required CI 或 exact-revision native 证据。远程/native 验证只消费已推送的
+不可变 revision——绝不复制工作树。
 P2-T25 的聚焦 HTTP 覆盖在 `personal/apps/kernel-server/tests/p2_t25_tool_lifecycle.rs`
 （lifecycle、selection 与钉住 HTTPS origin 登记表）。
 P2-T26 的聚焦 HTTP 覆盖在 `personal/apps/kernel-server/tests/p2_t26_observation_plane.rs`
@@ -148,7 +169,15 @@ consistency 检查、traceability 新鲜度、agent 规则引用检查（`check-
 handbook 检查与生成页字节比对、带固定五态计数与证据诚实断言的符合性 runner、
 错误实现自检、跨语言 golden digest 字节一致。
 
-## 已知过期入口
+## 本地一次性编排器（`verify:local`）
 
-`pnpm run verify:local`（V01 编排器）钉住了过期的符合性计数，在本基线不是可用的本地
-门；请改用上面的单项命令。
+`pnpm run verify:local`（V01 编排器，`scripts/v01-auto-run.ps1` / `.sh`）自 2026-09-03
+（P0-T01/D02，owner 选项 A）起**在 MSVC override 目录内**可本地使用：其符合性计数已重钉到
+`ci.yml` 的 89/62/27（自检语料下限 41 ≥ CI 的 40），repo-tools 测试 `verify:local orchestrators
+pin the same conformance counts as ci.yml` 会在两份数字漂移时立刻失败。它依次运行
+`cargo build`、若干 focused `cargo test`、符合性 runner（含 `--self-check`）、`check:consistency`
+与 sdk-ts live 套件，然后写出 `artifacts/evidence/v01-auto-run/<run_id>/`（`summary.json` +
+`sha256-manifest.json`）。前提：Windows 上需 pwsh 7、`rustc -vV` 报 `host: x86_64-pc-windows-msvc`、
+本机磁盘预算下会话变量 `CARGO_PROFILE_DEV_DEBUG=0`。输出只是本地开发证据（绝不升 Gate /
+release / Profile）；绿色运行不代表任何 Profile 已实现，也不能替代 required CI。在非 override
+目录内仍禁止运行（GNU 链接）。

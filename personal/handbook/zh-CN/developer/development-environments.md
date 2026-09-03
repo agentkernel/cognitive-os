@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:d0a89c6e8266f516581ddb211610a1b91f941dd94960c7946a0579c9142fd609"
+fingerprint: "sha256:939d439d5803cf22f108ce3a73b5b655683faadb9e8b11272921a71df5a294c7"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -27,7 +27,7 @@ non_claims:
 | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`（required PR 检查） | 完整 Rust + TS + 符合性 + 漂移门 | Gate/release/Profile 晋升 |
 | `DEV-LINUX-NATIVE-01`（native Linux 主机） | exact-revision native 验证、实验性服务/Pi 工作；只消费**已推送 commit** 到可清理 worktree | 未提交代码、生产声明 |
 | `CLOUD-AGENT-LINUX-01`（Cursor Cloud Agent pod） | 推送前的完整 bash shell Rust + TS 迭代；由 `.cursor/environment.json` 引导 | native systemd/Secret Service 行为、timing 基线、Gate/release/Profile |
-| 本地 Windows GNU 主机 | pnpm 构建/测试、`cargo fmt`、Node 检查器、文档工作 | 任何 workspace `cargo build/test/clippy/run`——已登记 linker exit 121 |
+| 本地 Windows 主机 `DEV-WIN-GNU-01`（GNU 默认工具链；已登记目录自 2026-09-03 起带本机 MSVC `rustup override`） | pnpm 构建/测试、`cargo fmt`、Node 检查器、文档工作（任何目录）；workspace `cargo build/test/clippy` **仅在 override 目录内**（`rustc -vV` → `host: x86_64-pc-windows-msvc`）作为开发迭代 | 在 GNU 默认 host 上做 Rust 链接——已登记 linker exit 121；把本机 MSVC 结果当 supported validation、Gate、release、Profile 或 Windows 支持 |
 | `DEV-WINDOWS-NATIVE-OPC-01` | future qualified native Windows 11 Phase 11 host；当前未 provision | qualification 前的任何 claim |
 | WSL2 | 历史工程证据 | Linux 1.0 或 Windows OPC 产品路径声明 |
 | `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest；自 2026-08-27 起同时为 owner 授权的 Personal 2.0 开发验证主机（仅限 exact-revision 一次性 worktree 与任务声明的可清理目录；B01 campaign 活动期间冻结开发用途） | 在预注册 B01 campaign lease 之外改变 guest 基线、快照或凭据 |
@@ -56,6 +56,24 @@ Gate/release；`not-run` 保持 `not-run`。
 原因。本机 Windows 主机 `git config core.autocrlf` 为 `true`；该设置被 tracked 的
 `.gitattributes` 规则 `* text=auto eol=lf` 覆盖，checkout 与 commit 均保持 LF，
 无需改任何本机 Git 配置。
+
+`DEV-WIN-GNU-01` 的本机 MSVC override（P0-T01/D02，owner 2026-09-03 决定，仅限本机）：本机
+rustup 默认 host 是 `x86_64-pc-windows-gnu`，因此仅凭 `rust-toolchain.toml` 会解析到链接失败
+（exit 121）的 GNU 工具链。修复方式是 rustup **目录 override**——
+`rustup override set 1.97.1-x86_64-pc-windows-msvc`——已为 `D:\agent-kernel` 与任务 worktree
+登记；它存放在 rustup 自己的 settings 中而不在仓库里，所以 `rust-toolchain.toml`、CI 与其他所有
+clone 都不变（本仓 `.cargo/config.toml` 未被 gitignore，故不使用）。已安装的 Visual Studio
+Build Tools 17.14.37（`D:\VSBuildTools`）提供 `link.exe` 14.44.35228.0，rustc 会自行找到——
+无需改 PATH 或 `vcvars`。运行 `cargo build --workspace --locked`、
+`cargo test --workspace --locked -- --test-threads=1`、
+`cargo clippy --workspace --all-targets --locked -- -D warnings` 或 `cargo fmt --all -- --check`
+之前先确认 `rustc -vV` 报 `host: x86_64-pc-windows-msvc`；新的本地 worktree 需要自己执行
+`rustup override set`。在这台磁盘紧张的机器上，workspace 测试构建需要会话环境变量
+`CARGO_PROFILE_DEV_DEBUG=0` 才装得下；另外 `kernel-server` `tool_executor` 中四个 fixture 需要
+创建 symlink/reparse point 的测试会在 setup 阶段以 OS 错误 1314 失败，因为 shell 未提权且
+Developer Mode 关闭（它们在提权的 CI runner 上通过；本机记为 `not-run (host privilege)`，绝不在
+代码里跳过）。结果只是开发证据；环境登记 §3 的能力上限不变。本机已装
+PowerShell 7.6.5（`pwsh`），但 Cursor Shell 仍是 Windows PowerShell 5.1。
 
 本 Windows 主机的 shell 纪律：PowerShell 5.1——无 `&&`/`||`；用分开的调用或
 `if ($LASTEXITCODE -eq 0) { … }` 串接。该规则与 GNU linker 上限都不适用于
