@@ -7,7 +7,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Worktree: `D:\agent-kernel-wt-P13-T08`
 - Lease: `lease/personal/P13-T08/settings-connections`
 - Change class: `implementation-only` (Settings/provider write path + Dual Track UI; no contract/axiom change)
-- Unique next: required CI on `f919e5c6` / Draft PR [#317](https://github.com/agentkernel/cognitive-os/pull/317); then `DEV-LINUX-NATIVE-01` SecretStore route. Windows SecretStore host E2E stays `not-run`
+- Unique next: required CI on the clippy-repair HEAD (Draft PR [#317](https://github.com/agentkernel/cognitive-os/pull/317)); then `DEV-LINUX-NATIVE-01` SecretStore route. Windows SecretStore host E2E stays `not-run`
 
 Product origin is daemon-served `/ui/`. Vite/canvas is not the product. Model Connections POSTs `/management/settings/v1/connection.connect` (key required; SecretStore takeover; connected/failed; secret presence only). Settings does not open `#/providers`. Usage cells are `actual` / `estimated` / `unknown` (unknown never 0). Diagnostics and state-lab stay collapsed. Windows SecretStore host E2E is `not-run` until `P13-T13`. P13-T02 engine health is 非 mutex (honest empty OK). Occupied T06 / T07 / T10 paths were not written.
 
@@ -24,3 +24,5 @@ Product origin is daemon-served `/ui/`. Vite/canvas is not the product. Model Co
 | Checkpoint commit + push + Draft PR [#317](https://github.com/agentkernel/cognitive-os/pull/317) | **pass** | GitHub | `f919e5c6` | Branch `personal/P13-T08-settings`. Docs-sync-gate OK on commit and push. Unique next = required CI. |
 | Windows SecretStore host E2E | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` unqualified | — | waits `P13-T13`; not a product fail |
 | `DEV-LINUX-NATIVE-01` SecretStore route | **not-run** | requires pushed exact revision | — | after Draft PR / push |
+| Required CI run [33745320126](https://github.com/agentkernel/cognitive-os/actions/runs/33745320126) `verify (ubuntu-latest)` | **fail** | `CI-UBUNTU-01` | `0335e407` | Clippy `-D warnings` on `settings_connections.rs`: `collapsible_if` (model add), `single_match` (host status), `expect_used` in test fixture helper. Workspace tests had already passed; this is a lint defect, not a product fail. Windows job was still pending. |
+| Clippy repair in `settings_connections.rs` + focused retest | **pass** | worktree MSVC override + `CARGO_PROFILE_DEV_DEBUG=0` | uncommitted | Collapsed the nested `if`; `if let Ok(status)` for host observe; `#[allow(clippy::expect_used)]` on the test module (same pattern as `provider_proxy` / `pi_runtime`). `cargo fmt --all -- --check` **pass**. `cargo test -p kernel-server --bin kernel-server --locked settings_connections` **7/7**. Local `cargo clippy -p kernel-server --all-targets --locked -- -D warnings` **pass**. Development evidence only. |

@@ -156,19 +156,19 @@ fn connect(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
         .and_then(Value::as_str)
         .unwrap_or("")
         .to_owned();
-    if let Some(model_id) = model.as_deref() {
-        if !account_id.is_empty() {
-            let _ = provider_control_plane::handle(
-                "POST /management/providers/models/add",
-                &json!({
-                    "account_id": account_id,
-                    "model_id": model_id,
-                })
-                .to_string()
-                .into_bytes(),
-                store,
-            );
-        }
+    if let Some(model_id) = model.as_deref()
+        && !account_id.is_empty()
+    {
+        let _ = provider_control_plane::handle(
+            "POST /management/providers/models/add",
+            &json!({
+                "account_id": account_id,
+                "model_id": model_id,
+            })
+            .to_string()
+            .into_bytes(),
+            store,
+        );
     }
     let connection_status = map_connection_status(
         account.get("status").and_then(Value::as_str).unwrap_or(""),
@@ -358,35 +358,33 @@ fn notifications(method_path: &str, store: &SqliteAuthorityStore) -> ResourceApi
     let mut missed = Vec::new();
     let mut offline = Vec::new();
     let mut resume = Vec::new();
-    if let Some(home_id) = home_id {
-        match WindowsHostStore::from_authority_store(store).observe_status(&home_id, None) {
-            Ok(status) => {
-                if status.missed_segments > 0 {
-                    missed.push(json!({
-                        "kind": "missed",
-                        "detail": format!("{} host segments", status.missed_segments),
-                        "source": "host",
-                    }));
-                }
-                if status.daemon_state == "offline"
-                    || status.daemon_state == "stopped"
-                    || status.close_disposition.as_deref() == Some("offline")
-                {
-                    offline.push(json!({
-                        "kind": "offline",
-                        "detail": status.daemon_state,
-                        "source": "host",
-                    }));
-                }
-                if status.resume_eligible {
-                    resume.push(json!({
-                        "kind": "resume",
-                        "detail": "resume-eligible-only",
-                        "source": "host",
-                    }));
-                }
-            }
-            Err(_) => {}
+    if let Some(home_id) = home_id
+        && let Ok(status) =
+            WindowsHostStore::from_authority_store(store).observe_status(&home_id, None)
+    {
+        if status.missed_segments > 0 {
+            missed.push(json!({
+                "kind": "missed",
+                "detail": format!("{} host segments", status.missed_segments),
+                "source": "host",
+            }));
+        }
+        if status.daemon_state == "offline"
+            || status.daemon_state == "stopped"
+            || status.close_disposition.as_deref() == Some("offline")
+        {
+            offline.push(json!({
+                "kind": "offline",
+                "detail": status.daemon_state,
+                "source": "host",
+            }));
+        }
+        if status.resume_eligible {
+            resume.push(json!({
+                "kind": "resume",
+                "detail": "resume-eligible-only",
+                "source": "host",
+            }));
         }
     }
     redacted_ok(json!({
@@ -462,7 +460,9 @@ fn error(status: u16, code: &str, message: &str) -> ResourceApiResponse {
     }
 }
 
+// Test fixture setup uses expect for filesystem/database construction.
 #[cfg(test)]
+#[allow(clippy::expect_used)]
 mod tests {
     use super::*;
     use cognitive_store::{PersonalDataLayout, prepare_personal_databases};
