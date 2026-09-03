@@ -2026,6 +2026,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T05 — Runs / Routine loop + Today run overview
 
+- **status:** in-progress (claimed 2026-09-03 on `lease/personal/P13-T05/routine-runs`, branch `personal/P13-T05-routine-runs`; `P13-T05/D01` in-progress; running report [P13-T05 report](../checkpoints/2026-09-03-personal-p13-t05-routine-runs-report.md)). Scope decision recorded at claim: the PlanRevision / stage-test / G2-acceptance product HTTP path gap found by P13-T02 is **not** widened into this card — arming fails closed before G2 (`ROUTINE_ARM_BEFORE_G2`), and the live E2E seeds a G2 fixture exactly as P13-T02 did; the gap stays owned by `P13-T04` (stage test / last-ring acceptance) and `P13-T06` (`@manager` plan revision).
 - **2.0.0 表面:** `project-runs` 显示真实 occurrence ledger + Attempt 历史；
   Routine/Trigger 按 ③「周期与触发」在 G2 后武装；`today` 每 live Project 一行
   （状态 / 今日完成次数 / 当前环节 / 时长）+ created/live/blocked 计数 + 周期切换；
