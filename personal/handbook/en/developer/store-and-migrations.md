@@ -57,7 +57,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:f714a6bc89834c5d71eac2366e06a051a8a705c4012e25f9d9eab62bc64b10eb"
+fingerprint: "sha256:a12004f2e3fa79a50206d3914e24a7c0a8a0de7fd412eca40db7f66a7d9d6048"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -67,11 +67,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v36) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v37) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v36)
+## Authority migration map (v1–v37)
 
 | Versions | Adds |
 |---|---|
@@ -95,6 +95,7 @@ orders authority first and names the backup path on a second-phase failure.
 | v34 | Windows host Personal Home / lifecycle / missed / ordered recovery (`p11_windows_host_home`, `p11_windows_host_daemon`, `p11_windows_host_dsh_child`, `p11_windows_host_offline_segment`, `p11_windows_host_recovery`, `p11_windows_host_restore_point`) under `cognitiveos.personal.windows-host/0.1`. Layout is `Personal Home/app/` + `Personal Home/data/`; upgrade replaces app and preserves data. Tray observes and requests; it does not write authority. Close background-or-pause is rejected unless the daemon can honor it. Same-disk versions are local restore points, not backups. Native tray/ACL/sleep/SecretStore E2E is `not-run`. |
 | v35 | X/Twitter connector account / preview / publish ledger (`p11_x_connector_account`, `p11_x_connector_preview`, `p11_x_connector_publish`) under `cognitiveos.personal.x-connector/0.1`. SecretStore `secret_ref` only. `is_p0_hero` and `platform_qualified` CHECK=0. Impressions stay the literal `unknown`. Receipt is not completion. Live X API E2E is `not-run`. |
 | v36 | Hosted DSH real Attempt loop (`p13_hosted_dsh_artifact_fact`, `p13_hosted_dsh_attempt`, `p13_hosted_dsh_attempt_frame`) under `cognitiveos.personal.hosted-dsh-attempt/0.1` (P13-T02). Artifact facts are append-only with derived kind `health-check` / `update` / `rollback` and health `pinned` / `absent` / `corrupt` / `mismatch` / `script-missing`; only `pinned` admits a spawn. The Attempt row is the persist-before-dispatch Intent (`intent_persisted` CHECK=1): `persisted` → `dispatched` (pid, Effect marker) → `terminal` (`exited` / `signaled` / `timed-out` / `spawn-failed` — there is no `success`), or `unknown-outcome` after a daemon crash. `completion_claimed` CHECK=0, `verification_status` CHECK=`not-run`, `context_bytes` ≤ 65536. Frames are append-only observations (`authority_written` CHECK=0). Attempts are never deleted. Windows sandbox / ACL / supply-chain E2E is `not-run`. |
+| v37 | Routine arming after G2 plus occurrence dispatch / outcome columns (`p13_routine_arming`; `p11_routine_occurrence` rebuilt) under `cognitiveos.personal.routine-arming/0.1` (P13-T05). An arming binds one current Routine revision to one plan stage and its seated responsible Member (`armed_after` CHECK=`G2`; state `armed` / `paused` / `superseded`; `apply_mode` `arm` / `continue` / `pause` / `restart` / `resume`); the ③ declaration (`cadence_kind` `manual` / `interval`, `interval_ms` ≥ 1000, `bounded_context` ≤ 65536, `attempt_timeout_ms` ≤ 30 min) is copied from the revision body with its digest. The occurrence table gains `arming_id`, `attempt_id`, `lease_epoch`, `started_at`, `attempt_outcome` (`done` / `failed` / `blocked` / `unknown` / `timed-out` / `signaled` / `spawn-failed` / `unknown-outcome` — there is no `success`), `outcome_detail`, `elapsed_ms`, `terminal_at`, `completion_claimed` CHECK=0, and the disposition `attempted` (CHECK: `attempted` ⇔ an outcome is present). Clock / sleep / restart host E2E is `not-run`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
@@ -116,12 +117,14 @@ P11-T14 X/Twitter connector adds v35. Management HTTP `connector/x/v1/{account.b
 
 P13-T02 hosted DSH real Attempt loop adds v36. Management HTTP `dsh.hosted.attempt.run` is the real caller: it records an artifact fact, calls `HostedDshAttemptStore::persist_intent` (seated Member, exact revision, `pinned` artifact, bounded secret-free Context) **before** the `cognitive-runtime` broker spawns the exact-artifact child, marks `dispatched` when the OS pid exists, appends every frame as an observation, and writes the terminal row itself. `reconcile_unknown_outcomes` runs at daemon startup so crash-shaped `persisted`/`dispatched` rows become `unknown-outcome`, never success. `dsh.hosted.attempt.list` / `detail` are the `runs` reads; `dsh.hosted.artifact.check` / `facts` expose health / update / rollback. Task-channel aliases are 403. Heartbeats, `response: done`, exit 0, and `agent_end`-shaped text change nothing but the observation ledger; completion belongs to the independent verifier (P13-T04). Linux real spawn is implementation evidence only.
 
+P13-T05 Routine arming adds v37. Management HTTP `routine.arm` / `routine.instruction` / `routine.arming.resume` / `routine.armings` / `routine.runs` / `today.overview` is the HTTP caller; the periodic daemon scheduler tick is the **only** dispatcher of `task://personal/routine/*` rows (the generic scheduler pass skips them; there is no second scheduler). Each pass first writes observed Attempt terminals back as occurrence outcomes (`RoutineArmingStore::record_attempt_terminal`, then queue-latest `promote_queued`), then fires due interval armings through the P11-T08 `admit_trigger` path (a paused / offline P11-T02 host makes the firing a visible `missed` row with `host-unavailable:<reason>`), then leases each undispatched `active` occurrence with `SchedulerRepository::acquire_eligible_lease` (owner `personal-daemon-scheduler`, epoch fenced) and launches one hosted Attempt through the P13-T02 persist-before-dispatch path; `bind_attempt` refuses a lease that does not match. A manual trigger on an un-armed Routine is marked `missed` (`not-armed`), never dropped. A new instruction supersedes the arming and applies at a safe point (`continue` / `pause` / `restart`); the running occurrence keeps its revision and its Attempt's context digest. Arming before G2 is refused (`ROUTINE_ARM_BEFORE_G2`); the PlanRevision / stage-test / G2 product HTTP path gap stays with P13-T04 / P13-T06.
+
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`
 (rebuildable; Vault searches do not use Memory FTS).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v36 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v37 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

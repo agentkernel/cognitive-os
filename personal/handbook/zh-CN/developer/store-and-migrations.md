@@ -57,7 +57,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:f714a6bc89834c5d71eac2366e06a051a8a705c4012e25f9d9eab62bc64b10eb"
+fingerprint: "sha256:a12004f2e3fa79a50206d3914e24a7c0a8a0de7fd412eca40db7f66a7d9d6048"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -67,10 +67,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v36）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v37）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v36）
+## 权威库迁移图（v1–v37）
 
 | 版本 | 新增 |
 |---|---|
@@ -94,6 +94,7 @@ non_claims:
 | v34 | Windows host Personal Home / 生命周期 / missed / 有序恢复（`p11_windows_host_home`、`p11_windows_host_daemon`、`p11_windows_host_dsh_child`、`p11_windows_host_offline_segment`、`p11_windows_host_recovery`、`p11_windows_host_restore_point`），标识 `cognitiveos.personal.windows-host/0.1`。布局为 `Personal Home/app/` + `Personal Home/data/`；升级替换 app、保留 data。托盘只观察与请求，不写权威。daemon 不能兑现时拒绝 close background-or-pause。同盘版本是本地 restore point，不是备份。原生 tray/ACL/sleep/SecretStore E2E 为 `not-run`。 |
 | v35 | X/Twitter connector 账户 / preview / 发布台账（`p11_x_connector_account`、`p11_x_connector_preview`、`p11_x_connector_publish`），标识 `cognitiveos.personal.x-connector/0.1`。仅 SecretStore `secret_ref`。`is_p0_hero` 与 `platform_qualified` CHECK=0。impressions 保持字面量 `unknown`。receipt 不是完成。live X API E2E 为 `not-run`。 |
 | v36 | 托管 DSH 真实 Attempt 循环（`p13_hosted_dsh_artifact_fact`、`p13_hosted_dsh_attempt`、`p13_hosted_dsh_attempt_frame`），标识 `cognitiveos.personal.hosted-dsh-attempt/0.1`（P13-T02）。artifact 事实只追加，kind 由 daemon 推导为 `health-check` / `update` / `rollback`，health 为 `pinned` / `absent` / `corrupt` / `mismatch` / `script-missing`；只有 `pinned` 允许 spawn。Attempt 行就是 persist-before-dispatch 的 Intent（`intent_persisted` CHECK=1）：`persisted` → `dispatched`（pid，Effect 标记）→ `terminal`（`exited` / `signaled` / `timed-out` / `spawn-failed`——没有 `success`），daemon 崩溃后为 `unknown-outcome`。`completion_claimed` CHECK=0，`verification_status` CHECK=`not-run`，`context_bytes` ≤ 65536。帧是只追加的观察（`authority_written` CHECK=0）。Attempt 永不删除。Windows sandbox / ACL / supply-chain E2E 为 `not-run`。 |
+| v37 | G2 后的 Routine 武装 + occurrence 派发 / 结果列（`p13_routine_arming`；`p11_routine_occurrence` 重建），标识 `cognitiveos.personal.routine-arming/0.1`（P13-T05）。一条 arming 把一个当前 Routine revision 绑定到一个计划环节及其已就位的负责 Member（`armed_after` CHECK=`G2`；state `armed` / `paused` / `superseded`；`apply_mode` `arm` / `continue` / `pause` / `restart` / `resume`）；③ 声明（`cadence_kind` `manual` / `interval`、`interval_ms` ≥ 1000、`bounded_context` ≤ 65536、`attempt_timeout_ms` ≤ 30 分钟）连同 digest 从 revision body 复制。occurrence 表新增 `arming_id`、`attempt_id`、`lease_epoch`、`started_at`、`attempt_outcome`（`done` / `failed` / `blocked` / `unknown` / `timed-out` / `signaled` / `spawn-failed` / `unknown-outcome`——没有 `success`）、`outcome_detail`、`elapsed_ms`、`terminal_at`、`completion_claimed` CHECK=0，以及 disposition `attempted`（CHECK：`attempted` ⇔ 存在 outcome）。clock / sleep / restart 宿主 E2E 为 `not-run`。 |
 
 P11-T07 隐藏托管 DSH 新增 v31 `p11_hosted_dsh_child`。Attempt-runner `start` 的真实调用者是 management HTTP `dsh.hosted.start`；task 通道别名 403。digest/protocol 不匹配、env/argv 含 secret、Pi 作 Member 引擎、Installed Agent chrome、未知子进程输出（`success`/`ok`/`agent_end`）一律失败闭合。daemon Provider 代理 `POST /provider/v1/dsh/chat/completions` 仍是唯一持 secret 路径。Linux Path B 不等于 Windows 托管资格。
 
@@ -115,10 +116,12 @@ P11-T14 X/Twitter connector 新增 v35。真实调用者是 management HTTP `con
 
 P13-T02 托管 DSH 真实 Attempt 循环新增 v36。真实调用者是 management HTTP `dsh.hosted.attempt.run`：先记 artifact 事实，再在 `cognitive-runtime` broker spawn exact-artifact 子进程**之前**调用 `HostedDshAttemptStore::persist_intent`（已就位 Member、精确 revision、`pinned` artifact、有界且无 secret 形状的 Context），OS pid 出现时标 `dispatched`，每一帧作为观察追加，终态行由 daemon 自己写入。`reconcile_unknown_outcomes` 在 daemon 启动时运行，把崩溃形状的 `persisted`/`dispatched` 行变为 `unknown-outcome`，永不变成 success。`dsh.hosted.attempt.list` / `detail` 是 `runs` 的读取；`dsh.hosted.artifact.check` / `facts` 暴露 health / update / rollback。task 通道别名 403。心跳、`response: done`、exit 0、`agent_end` 形状的文本只改变观察台账；完成权属于独立 verifier（P13-T04）。Linux 真实 spawn 只是实现证据。
 
+P13-T05 Routine 武装新增 v37。HTTP 调用者是 management `routine.arm` / `routine.instruction` / `routine.arming.resume` / `routine.armings` / `routine.runs` / `today.overview`；周期性 daemon scheduler tick 是 `task://personal/routine/*` 行的**唯一**派发者（通用 scheduler pass 跳过它们；没有第二套 scheduler）。每一轮先把已观察到的 Attempt 终态写回为 occurrence 结果（`RoutineArmingStore::record_attempt_terminal`，再 queue-latest `promote_queued`），然后经 P11-T08 `admit_trigger` 路径触发到期的 interval arming（P11-T02 宿主 paused / offline 时该触发落为可见 `missed` 行，附 `host-unavailable:<reason>`），再用 `SchedulerRepository::acquire_eligible_lease`（owner `personal-daemon-scheduler`，epoch fencing）租约每个未派发的 `active` occurrence，并经 P13-T02 persist-before-dispatch 路径启动一个托管 Attempt；`bind_attempt` 拒绝不匹配的租约。未武装 Routine 的手动触发被标为 `missed`（`not-armed`），永不丢弃。新指令取代原 arming 并在安全点应用（`continue` / `pause` / `restart`）；运行中的 occurrence 保留其 revision 与 Attempt 的 context digest。G2 前武装被拒（`ROUTINE_ARM_BEFORE_G2`）；PlanRevision / 环节测试 / G2 的产品 HTTP 路径缺口仍归 P13-T04 / P13-T06。
+
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v36 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v37 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

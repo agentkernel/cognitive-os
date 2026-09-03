@@ -232,63 +232,74 @@ fn attempt_detail(method_path: &str, store: &SqliteAuthorityStore) -> ResourceAp
     }
 }
 
-fn attempt_run(
-    body: &[u8],
+/// One hosted Attempt launch request. Shared by the management HTTP caller
+/// (`dsh.hosted.attempt.run`) and the daemon scheduler tick that drives
+/// Routine occurrences (P13-T05); both go through the same persist-before-
+/// dispatch path and the same fail-closed refusals.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub(crate) struct HostedAttemptLaunch {
+    pub employee_id: String,
+    /// `None` = the Employee's latest revision.
+    pub employee_revision_id: Option<String>,
+    pub task_ref: String,
+    pub bounded_context: String,
+    pub timeout: Duration,
+}
+
+/// What exists after a launch: the persisted (and by now dispatched or
+/// dispatching) Attempt row, the artifact fact that admitted it, the v31
+/// child binding, and the broker thread that will write the terminal.
+pub(crate) struct HostedAttemptLaunched {
+    pub row: HostedAttemptRow,
+    pub fact: HostedArtifactFact,
+    pub runtime_binding_ref: String,
+    pub handle: thread::JoinHandle<Result<HostedAttemptRow, ProjectAggregateError>>,
+}
+
+/// Persist the Intent, bind the child identity and spawn the exact-artifact
+/// child on a daemon thread. Every refusal is the same HTTP-shaped response
+/// the management route returns, so the scheduler tick records the identical
+/// code as an occurrence outcome detail.
+pub(crate) fn launch_hosted_attempt(
     store: &SqliteAuthorityStore,
     host: &HostedAttemptHost,
-) -> ResourceApiResponse {
-    let Some(document) = parse_json(body) else {
-        return error(400, "HOSTED_ATTEMPT_JSON_REQUIRED", "JSON body required");
-    };
-    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
-        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
-    };
-    let Some(task_ref) = document.get("task_ref").and_then(Value::as_str) else {
-        return error(400, "TASK_REF_REQUIRED", "task_ref required");
-    };
-    let Some(bounded_context) = document.get("bounded_context").and_then(Value::as_str) else {
-        return error(400, "BOUNDED_CONTEXT_REQUIRED", "bounded_context required");
-    };
-    let wait = document
-        .get("wait")
-        .and_then(Value::as_bool)
-        .unwrap_or(true);
-    let timeout = document
-        .get("timeout_ms")
-        .and_then(Value::as_u64)
-        .map(Duration::from_millis)
-        .unwrap_or(HOSTED_DEFAULT_TIMEOUT);
+    launch: &HostedAttemptLaunch,
+) -> Result<HostedAttemptLaunched, ResourceApiResponse> {
+    let employee_id = launch.employee_id.as_str();
+    let task_ref = launch.task_ref.as_str();
+    let bounded_context = launch.bounded_context.as_str();
+    let timeout = launch.timeout;
     if timeout.is_zero() || timeout > HOSTED_MAX_TIMEOUT {
-        return error(
+        return Err(error(
             422,
             "HOSTED_ATTEMPT_TIMEOUT_INVALID",
             "timeout_ms must be within (0, 30m]",
-        );
+        ));
     }
     let employees = EmployeeStore::from_authority_store(store);
     let latest_revision = match employees.latest_revision_id(employee_id) {
         Ok(Some(revision)) => revision,
         Ok(None) => {
-            return error(
+            return Err(error(
                 404,
                 "HOSTED_ATTEMPT_NOT_FOUND",
                 "employee revision not found",
-            );
+            ));
         }
-        Err(err) => return store_error(err),
+        Err(err) => return Err(store_error(err)),
     };
-    let employee_revision_id = document
-        .get("employee_revision_id")
-        .and_then(Value::as_str)
+    let employee_revision_id = launch
+        .employee_revision_id
+        .as_deref()
         .unwrap_or(latest_revision.as_str());
 
     // 1. Artifact health fact first: an unhealthy artifact never reaches spawn.
     let fact = match record_artifact_fact(store, &host.config_dir) {
         Ok(fact) => fact,
-        Err(err) => return store_error(err),
+        Err(err) => return Err(store_error(err)),
     };
     if !fact.admits_spawn() {
-        return ResourceApiResponse {
+        return Err(ResourceApiResponse {
             status: 422,
             body: json!({
                 "status": "error",
@@ -298,7 +309,7 @@ fn attempt_run(
             })
             .to_string(),
             content_type: "application/json",
-        };
+        });
     }
 
     // 2. Persist the Attempt Intent before anything is spawned.
@@ -315,21 +326,21 @@ fn attempt_run(
         },
     ) {
         Ok(attempt) => attempt,
-        Err(err) => return store_error(err),
+        Err(err) => return Err(store_error(err)),
     };
 
     // 3. Resolve the exact artifact and the launch plan (still nothing spawned).
     let artifact = match HostedDshArtifact::resolve(&host.config_dir) {
         Ok(artifact) => artifact,
-        Err(err) => return spawn_refused(&attempts, &attempt, &err.to_string()),
+        Err(err) => return Err(spawn_refused(&attempts, &attempt, &err.to_string())),
     };
     let plan = artifact.launch_plan(timeout);
     let Some(daemon_origin) = host.daemon_origin() else {
-        return spawn_refused(
+        return Err(spawn_refused(
             &attempts,
             &attempt,
             "daemon endpoint is not published; the child cannot reach the Provider proxy",
-        );
+        ));
     };
     let payload = HostedContextPayload {
         attempt_id: attempt.attempt_id.clone(),
@@ -367,10 +378,10 @@ fn attempt_run(
         },
     ) {
         Ok(child) => child,
-        Err(err) => return spawn_refused(&attempts, &attempt, &err.to_string()),
+        Err(err) => return Err(spawn_refused(&attempts, &attempt, &err.to_string())),
     };
     if let Err(err) = attempts.bind_child_identity(&attempt.attempt_id, &child.child_id) {
-        return store_error(err);
+        return Err(store_error(err));
     }
 
     // 5. Real spawn on a daemon thread; the terminal observation is written by
@@ -394,16 +405,78 @@ fn attempt_run(
     let handle = match handle {
         Ok(handle) => handle,
         Err(_) => {
-            return spawn_refused(
+            return Err(spawn_refused(
                 &attempts,
                 &attempt,
                 "daemon could not start the broker thread",
-            );
+            ));
         }
     };
+    let row = match attempts.get_attempt(&attempt.attempt_id) {
+        Ok(Some(row)) => row,
+        Ok(None) => return Err(error(404, "HOSTED_ATTEMPT_NOT_FOUND", "attempt not found")),
+        Err(err) => return Err(store_error(err)),
+    };
+    Ok(HostedAttemptLaunched {
+        row,
+        fact,
+        runtime_binding_ref: child.runtime_binding_ref,
+        handle,
+    })
+}
+
+fn attempt_run(
+    body: &[u8],
+    store: &SqliteAuthorityStore,
+    host: &HostedAttemptHost,
+) -> ResourceApiResponse {
+    let Some(document) = parse_json(body) else {
+        return error(400, "HOSTED_ATTEMPT_JSON_REQUIRED", "JSON body required");
+    };
+    let Some(employee_id) = document.get("employee_id").and_then(Value::as_str) else {
+        return error(400, "EMPLOYEE_ID_REQUIRED", "employee_id required");
+    };
+    let Some(task_ref) = document.get("task_ref").and_then(Value::as_str) else {
+        return error(400, "TASK_REF_REQUIRED", "task_ref required");
+    };
+    let Some(bounded_context) = document.get("bounded_context").and_then(Value::as_str) else {
+        return error(400, "BOUNDED_CONTEXT_REQUIRED", "bounded_context required");
+    };
+    let wait = document
+        .get("wait")
+        .and_then(Value::as_bool)
+        .unwrap_or(true);
+    let timeout = document
+        .get("timeout_ms")
+        .and_then(Value::as_u64)
+        .map(Duration::from_millis)
+        .unwrap_or(HOSTED_DEFAULT_TIMEOUT);
+    let launched = match launch_hosted_attempt(
+        store,
+        host,
+        &HostedAttemptLaunch {
+            employee_id: employee_id.to_owned(),
+            employee_revision_id: document
+                .get("employee_revision_id")
+                .and_then(Value::as_str)
+                .map(str::to_owned),
+            task_ref: task_ref.to_owned(),
+            bounded_context: bounded_context.to_owned(),
+            timeout,
+        },
+    ) {
+        Ok(launched) => launched,
+        Err(response) => return response,
+    };
+    let HostedAttemptLaunched {
+        row,
+        fact,
+        runtime_binding_ref,
+        handle,
+    } = launched;
     if wait {
         return match handle.join() {
-            Ok(Ok(row)) => attempt_response(&row, &fact, &child.runtime_binding_ref),
+            Ok(Ok(row)) => attempt_response(&row, &fact, &runtime_binding_ref),
             Ok(Err(err)) => store_error(err),
             Err(_) => error(
                 503,
@@ -413,11 +486,7 @@ fn attempt_run(
         };
     }
     drop(handle);
-    match attempts.get_attempt(&attempt.attempt_id) {
-        Ok(Some(row)) => attempt_response(&row, &fact, &child.runtime_binding_ref),
-        Ok(None) => error(404, "HOSTED_ATTEMPT_NOT_FOUND", "attempt not found"),
-        Err(err) => store_error(err),
-    }
+    attempt_response(&row, &fact, &runtime_binding_ref)
 }
 
 /// Broker thread body: spawn, observe frames, write the terminal observation.

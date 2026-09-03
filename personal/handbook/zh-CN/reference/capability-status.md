@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:9cd25c49e74840a547f7881eb0483b92b3969509d9316bc2bedb97585bf13f6b"
+fingerprint: "sha256:d29780fe4b25677d17edb8143b66f553a4dc7e09e7582b657fd908d62a6d304b"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -86,7 +86,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive 与 single composer 不存在；不得重解释 ADR-0058 `conversation-projection/0.1` |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget 已有，但 Conversation/Vault extraction/retrieval 与 privacy matrix 不存在 |
-| Routine/Trigger/Inbox/offline-missed recovery | partial（walking skeleton）+ Requires-backend | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；daemon `scheduler_entries` 是唯一调度权威。Dual Track L1 chrome 已在 `main`（`P11-T13`）；clock/sleep/restart 宿主 E2E 与 Inbox 一级仍缺（HITL 是 T09 画布）。 |
+| Routine/Trigger/Inbox/offline-missed recovery | partial（实现已存在）+ Requires-environment | v33 + management `routine.*` 已证明 no-overlap/queue-latest 与可见 missed ledger；v37 + `routine.arm` / `routine.instruction` / `routine.runs` / `today.overview`（P13-T05）在 G2 后武装 Routine，并让 daemon scheduler tick——`task://personal/routine/*` 行的唯一派发者——触发 schedule、租约每个 active occurrence、驱动一个托管 Attempt（P13-T02 路径）并把观察到的终态写回为 occurrence 结果（`attempted`，永无 `success`；`completion_claimed=false`）；P11-T02 宿主 paused / offline 时 schedule 触发落为可见 `missed` 行；新指令在安全点应用（`continue` / `pause` / `restart`）且不触碰运行中的 Attempt。Dual Track L1 chrome 已在 `main`（`P11-T13`）；Inbox 一级仍缺（HITL 是 T09 画布）；clock/sleep/restart 宿主 E2E 在 `P13-T13` 前为 `not-run`；Attempt 产出的独立验证归 `P13-T04`。 |
 | Windows host/tray/background（隐藏） | partial（walking skeleton）+ Requires-environment | v34 + management `host.*` 已证明 Personal Home `app/`/`data/`、close 诚实性、missed 时段与七步有序恢复。不是 chrome。不是第二套凭据平面。原生 install/tray/ACL/sleep/SecretStore E2E 在 `DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。 |
 | Provider global→Project→employee→Task binding 与 hard budget | Requires-backend | current fixed Agent binding 与 advisory budget 保持 partial；DSH/Pi 必须经 no-raw-secret daemon proxy |
 | X/Twitter connector（隐藏） | partial（walking skeleton）+ Requires-environment | v35 + management `connector/x.*` 已证明 SecretStore-only bind、原创 digest 绑定 preview、HITL confirm、persist-before-dispatch 与诚实 unknown readback。不是 P0 hero。不是业务结果。禁止 evasion。live X API / CAPTCHA / platform qualification 为 `not-run`。 |

@@ -30,6 +30,7 @@ mod registered_check;
 mod resource_api;
 mod resource_manager;
 mod route_observation;
+mod routine_runs;
 mod scheduler_authority;
 mod server;
 mod six_resource_doctor;

@@ -14,6 +14,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
+  - path: personal/apps/kernel-server/src/personal/routine_runs.rs
   - path: personal/apps/kernel-server/src/personal/server.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
@@ -21,7 +22,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:c83a1e41ca0ab15e1fee1262f75d3d4974b4aef70a2b23f208e1c493d0a8ef2f"
+fingerprint: "sha256:45391561cddcdcf4a4f5fab9b7320dd8081d4e3a1c3dd3172d5186a3594d7f9f"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -201,6 +202,12 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/routine.ledger` | management | 列出一条 Routine 的 active / queued / missed / coalesced occurrence。不是 Inbox 一级。需要 project_id 与 routine_id。 |
 | `POST` | `/management/project/v1/routine.checkpoint` | management | 持久化恢复 checkpoint。用 checkpoint 当完成一律拒绝（`checkpoint is not completion`）。 |
 | `POST` | `/management/project/v1/routine.resume` | management | 把 missed 的 internal occurrence 恢复到 daemon scheduler。consequential 自动恢复失败闭合。 |
+| `POST` | `/management/project/v1/routine.arm` | management | 在 G2 后武装一条当前 Routine revision（P13-T05）：绑定到已确认的计划环节及其已就位的负责 Member，并从 revision body 读取 ③ 声明（`cadence` manual|interval、`interval_ms` ≥ 1000、`bounded_context`、`attempt_timeout_ms`）。G2 前 → 409 `ROUTINE_ARM_BEFORE_G2`；未就位 / 非负责 Member、过期 revision、无效声明失败闭合。此后周期性 daemon scheduler tick 是唯一派发者：按 `routine.trigger` 语义触发到期 schedule、在 `scheduler_entries` 中租约每个 active occurrence 并驱动一个托管 Attempt（`dsh.hosted.attempt.*` 路径）。无 Start 按钮；手动触发仍走 `routine.trigger`。clock / sleep / restart 宿主 E2E 在 P13-T13 前为 `not-run`。 |
+| `POST` | `/management/project/v1/routine.instruction` | management | 把新的 Owner 指令（Routine 当前 revision）在安全点应用到 live arming：`continue` 从下一次 occurrence 生效，`pause` 停止新 occurrence，`restart` 把新 revision 的 occurrence 排在 active 之后（queue-latest）。运行中的 occurrence 与其 Attempt 永不被触碰（`running_prompt_injected: false`）。过期 revision 或已被取代的 arming → 409。 |
+| `POST` | `/management/project/v1/routine.arming.resume` | management | 以相同声明恢复一个 paused arming（新 arming seq；`next_due_at` 从现在重新计）。仅 `paused` 可恢复。 |
+| `GET` | `/management/project/v1/routine.armings` | management | 一个 `project_id` 的 arming 历史（最新在前；armed / paused / superseded），使指令历史可见。 |
+| `GET` | `/management/project/v1/routine.runs` | management | `runs` 读取（P13-T05）：live armings、该 Project 全部 Routine 的 occurrence 台账（active / queued / coalesced / missed / attempted，附派生 `dispatch_state` 如 `running`、`waiting-paused`、`waiting-host`）、来自 P11-T02 事实的宿主可派发性、汇总，以及指向真实 Attempt 历史（`dsh.hosted.attempt.list` / `.detail`）的路径。每行 `completion_claimed=false`、`verification_status=not-run`；outcome 是 daemon 观察到的 Attempt 终态，永无 `success`。 |
+| `GET` | `/management/project/v1/today.overview` | management | Today live Project 概览（P13-T05）：created / live / blocked 计数，以及每个 live Project 一行（状态、`period` = today|week|month（UTC）内 done / failed / unknown 的 Attempt 数、daemon 观察的时长合计或 `null`、来自 live arming 的当前环节、running / queued / missed 事实）。`kpi_wall: false`；cost 为 `unknown`；`attempts_done` 统计回答 `done` 的 child，永不等于完成。 |
 | `POST` | `/management/host/v1/home.admit` | management | 受理 Personal Home `app/`+`data/`（P11-T02）。安装根必须以 `Personal Home` 结尾；GNU/WSL/Linux 根、ACL 逃逸、secret env/argv 失败闭合。升级替换 app、保留 data。原生 ACL E2E 为 `not-run`。 |
 | `POST` | `/management/host/v1/daemon.bind` | management | 把唯一 daemon 绑到已受理的 Home。已 bound/recovering/resumed 时重复绑定失败闭合。托盘角色仅 observe-and-request。 |
 | `POST` | `/management/host/v1/close.request` | management | 类型化关闭：仅当 daemon 能兑现 background 时才接受 background-or-pause；否则拒绝（禁止假 background）。 |
@@ -255,6 +262,12 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/routine.ledger` | task | 禁止：Routine ledger 仅限 management 通道。 |
 | `POST` | `/task/project/v1/routine.checkpoint` | task | 禁止：Routine checkpoint 仅限 management 通道。 |
 | `POST` | `/task/project/v1/routine.resume` | task | 禁止：Routine resume 仅限 management 通道。 |
+| `POST` | `/task/project/v1/routine.arm` | task | 禁止：Routine 武装仅限 management 通道。 |
+| `POST` | `/task/project/v1/routine.instruction` | task | 禁止：Routine 指令仅限 management 通道。 |
+| `POST` | `/task/project/v1/routine.arming.resume` | task | 禁止：Routine arming 恢复仅限 management 通道。 |
+| `GET` | `/task/project/v1/routine.armings` | task | 禁止：Routine arming 历史仅限 management 通道。 |
+| `GET` | `/task/project/v1/routine.runs` | task | 禁止：runs 台账仅限 management 通道。 |
+| `GET` | `/task/project/v1/today.overview` | task | 禁止：Today 概览仅限 management 通道。 |
 | `POST` | `/task/host/v1/home.admit` | task | 禁止：Windows host admit 仅限 management 通道。 |
 | `POST` | `/task/host/v1/daemon.bind` | task | 禁止：Windows host daemon bind 仅限 management 通道。 |
 | `POST` | `/task/host/v1/close.request` | task | 禁止：Windows host close 仅限 management 通道。 |

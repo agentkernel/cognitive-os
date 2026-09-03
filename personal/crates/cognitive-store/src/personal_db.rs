@@ -33,6 +33,7 @@ use crate::project_aggregate::{
 };
 use crate::provider_control_plane::provider_control_plane_migration_entry;
 use crate::routine::routine_migration_entry;
+use crate::routine_arming::routine_arming_migration_entry;
 use crate::scheduler::{scheduler_binding_migration_entry, scheduler_migration_entry};
 use crate::skill_store::{
     skill_binding_revocation_migration_entry, skill_package_migration_entry,
@@ -116,7 +117,12 @@ impl PersonalDatabasePrepareReport {
 /// live X API remains not-run; not a P0 hero path), and
 /// v36 = hosted DSH artifact health/update/rollback facts plus the
 /// persist-before-dispatch Attempt / frame ledger (P13-T02; `completion_claimed`
-/// CHECK=0, `verification_status` CHECK='not-run'; no `success` terminal).
+/// CHECK=0, `verification_status` CHECK='not-run'; no `success` terminal), and
+/// v37 = Routine arming after G2 plus occurrence dispatch / outcome columns
+/// (P13-T05; `p11_routine_occurrence` rebuilt to admit `attempted`;
+/// `completion_claimed` CHECK=0; outcomes are daemon-observed Attempt
+/// terminals, never `success`; the daemon scheduler tick is the only
+/// dispatcher of `task://personal/routine/*` rows).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -158,6 +164,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         windows_host_migration_entry(),
         x_connector_migration_entry(),
         hosted_dsh_attempt_migration_entry(),
+        routine_arming_migration_entry(),
     ]
 }
 

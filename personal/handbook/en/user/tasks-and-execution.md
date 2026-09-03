@@ -24,7 +24,7 @@ sources:
 tests:
   - personal/crates/cognitive-runtime/tests/p2_t01_task_application_service.rs
   - personal/crates/cognitive-store/tests/m5_intent_chain.rs
-fingerprint: "sha256:1f92af8168274f7b70a20bf641fdb5574bb452e62c25c5dc8d6f466a717ff41d"
+fingerprint: "sha256:469bc160fd86c9e8db90c71944e9cc084e9f45e313c77e42fcc2f13cc4bb0bba"
 non_claims:
   - Admission still does not consume the worker authorization or acquire a scheduler lease on the same pass; a later tick does. No Gate, release, Profile, or EVAL promotion.
 ---
@@ -103,6 +103,23 @@ Each retry/fork creates a new Attempt and preserves the prior failure/evidence.
 Routine triggers may be manual, scheduled or qualified events; the same Routine
 does not overlap, keeps only the latest pending occurrence, records coalesced/
 missed work and asks for consequential catch-up after offline time.
+
+Since P13-T05 a Routine is **armed** only after the Project passed G2 joint
+acceptance: the arming names the plan stage and its seated responsible Member,
+and the daemon's own scheduler tick is the only thing that fires schedules,
+leases an occurrence and drives one hosted Attempt for it. The `runs` ledger
+shows every occurrence as `active` / `queued` / `coalesced` / `missed` /
+`attempted` with the Attempt's daemon-observed outcome (`done`, `failed`,
+`timed-out`, `unknown-outcome`, …) — never "completed"; verification is still
+`not-run` until the independent verifier (P13-T04). A closed window that chose
+**pause**, or an offline segment, turns a schedule firing into a visible
+`missed` row with the host reason; a new Owner instruction becomes a Routine
+revision applied at a safe point (`continue`, `pause`, `restart`) and is never
+injected into a running prompt. Today lists one row per live Project (state,
+Attempts done in the period, current stage, summed duration or unknown) plus
+created / live / blocked counts; the period toggle is today / week / month on a
+UTC basis. Clock / sleep / restart behaviour on a real Windows host is `not-run`
+until P13-T13.
 
 Digital employees coordinate through daemon-owned Tasks, artifacts and
 handoffs. DSH is the target default runtime, but process output and engine
