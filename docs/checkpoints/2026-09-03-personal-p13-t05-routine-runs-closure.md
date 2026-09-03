@@ -51,4 +51,4 @@ Linux: E2E daemon stopped, runtime roots `…/p13-t05-{bafb3c9c,ecd35ab0}-runtim
 
 ## 5. Unique next
 
-Owner-directed pause: after `P13-T04`, `P13-T05`, `P13-T06` and `P0-T01/D02` close, **no new claims**. Ready cards per the Phase 13 build order when the owner resumes: `P13-T07`, `P13-T08`, `P13-T09`, `P13-T10`, `P13-T11` (after T04 / T05). Do not claim `P11-T15`.
+Owner instruction 2026-09-03 supersedes the pause. Continue `P13-T06` from disk (v39 after T05 took v38) and `P0-T01/D02` Option A (already chosen; do not re-ask). Do not claim `P13-T07` until those two close. After they close, ready Phase 13 cards: `P13-T07` (T06 dashed, not mutex), `P13-T08`, `P13-T09`, `P13-T10` (T03+T04 satisfied), `P13-T11` (T05/D01 now done). Do not claim `P11-T15`.
