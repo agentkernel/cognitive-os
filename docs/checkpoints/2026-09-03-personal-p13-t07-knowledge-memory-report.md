@@ -12,7 +12,7 @@
 
 ## Unique next action
 
-**Owner pause 2026-09-03.** Do not auto-continue. Resume only on fresh owner delivery instruction: wait for required CI green on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) HEAD (`0ca532ad`), then complete `P13-T07/D01` acceptance assessment. Keep task `in-progress`; do not close until full acceptance.
+**Owner pause 2026-09-03.** Do not auto-continue. Resume only on fresh owner delivery instruction: wait for required CI green on Draft PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) HEAD (`e2db868b`), then complete `P13-T07/D01` acceptance assessment. Keep task `in-progress`; do not close until full acceptance.
 
 ## Failure-first (D01)
 
