@@ -7,8 +7,8 @@
 //! `P13-T13`. Engine health is honest-empty when P13-T02 facts are absent.
 
 use cognitive_store::{
-    ASSISTANT_PI_PIN, HOSTED_DSH_ARTIFACT_DIGEST, HostedDshAttemptStore, SqliteAuthorityStore,
-    WindowsHostStore,
+    ASSISTANT_PI_PIN, HOSTED_DSH_ARTIFACT_DIGEST, HostedDshAttemptStore, ProviderAccountRecord,
+    ProviderControlPlaneStore, SqliteAuthorityStore, WindowsHostStore,
 };
 use serde_json::{Value, json};
 
@@ -142,56 +142,72 @@ fn connect(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
         &create_body.to_string().into_bytes(),
         store,
     );
+    if let Some(account) =
+        stored_account(store, &mapped.display_name).filter(|row| row.secret_ref.is_some())
+    {
+        if let Some(model_id) = model.as_deref() {
+            let _ = provider_control_plane::handle(
+                "POST /management/providers/models/add",
+                &json!({
+                    "account_id": account.account_id,
+                    "model_id": model_id,
+                })
+                .to_string()
+                .into_bytes(),
+                store,
+            );
+        }
+        if let Some(receipt) =
+            connection_receipt_for_name(store, &mapped.display_name, model.as_deref())
+        {
+            return receipt;
+        }
+    }
     if created.status >= 300 {
         return rewrite_failed(created);
     }
-    let parsed = parse_json_object(&created.body);
-    let account = parsed
-        .get("account")
-        .and_then(Value::as_object)
-        .cloned()
-        .unwrap_or_default();
-    let account_id = account
-        .get("id")
-        .and_then(Value::as_str)
-        .unwrap_or("")
-        .to_owned();
-    if let Some(model_id) = model.as_deref()
-        && !account_id.is_empty()
-    {
-        let _ = provider_control_plane::handle(
-            "POST /management/providers/models/add",
-            &json!({
-                "account_id": account_id,
-                "model_id": model_id,
-            })
-            .to_string()
-            .into_bytes(),
-            store,
-        );
+    match connection_receipt_for_name(store, &mapped.display_name, model.as_deref()) {
+        Some(receipt) => receipt,
+        None => rewrite_failed(created),
     }
-    let connection_status = map_connection_status(
-        account.get("status").and_then(Value::as_str).unwrap_or(""),
-        account.get("last_discovery_error").and_then(Value::as_str),
-    );
-    let secret = if account.get("secret_ref").and_then(Value::as_str).is_some() {
+}
+
+fn stored_account(
+    store: &SqliteAuthorityStore,
+    display_name: &str,
+) -> Option<ProviderAccountRecord> {
+    ProviderControlPlaneStore::from_authority_store(store)
+        .get_account_by_name(display_name)
+        .ok()
+        .flatten()
+}
+
+fn connection_receipt_for_name(
+    store: &SqliteAuthorityStore,
+    display_name: &str,
+    model: Option<&str>,
+) -> Option<ResourceApiResponse> {
+    let account = stored_account(store, display_name)?;
+    let connection_status =
+        map_connection_status(&account.status, account.last_discovery_error.as_deref());
+    let secret = if account.secret_ref.is_some() {
         "present"
     } else {
         "absent"
     };
-    redacted_ok(json!({
+    Some(redacted_ok(json!({
         "status": "ok",
         "connection": {
-            "id": account_id,
-            "display_name": account.get("display_name").cloned().unwrap_or(json!("unknown")),
-            "provider_kind": mapped.provider_kind,
+            "id": account.account_id,
+            "display_name": account.display_name,
+            "provider_kind": account.provider_kind,
             "connection_status": connection_status,
             "secret": secret,
             "model_id": model,
-            "last_discovery_error": account.get("last_discovery_error").cloned().unwrap_or(Value::Null),
+            "last_discovery_error": account.last_discovery_error,
         },
         "windows_secretstore_e2e": "not-run",
-    }))
+    })))
 }
 
 struct MappedTemplate {
@@ -481,6 +497,54 @@ mod tests {
         prepare_personal_databases(&layout).expect("prepare");
         let store = SqliteAuthorityStore::open(&layout.authority_database_path()).expect("open");
         (temporary, store)
+    }
+
+    #[test]
+    fn connection_receipt_uses_store_secret_presence_not_pcp_account_object() {
+        let (_tmp, store) = store();
+        let plane = ProviderControlPlaneStore::from_authority_store(&store);
+        plane
+            .insert_account(&ProviderAccountRecord {
+                account_id: "acct-t08-receipt".to_owned(),
+                display_name: "t08-receipt".to_owned(),
+                provider_kind: "openai_compatible".to_owned(),
+                endpoint: "https://api.deepseek.com".to_owned(),
+                secret_ref: Some("opaque-t08-ref".to_owned()),
+                allow_private_network: false,
+                allow_insecure_http: false,
+                network_scope: "public".to_owned(),
+                status: "degraded".to_owned(),
+                catalog_revision: 0,
+                last_discovery_error: Some("upstream".to_owned()),
+                created_at_ms: 1,
+                updated_at_ms: 1,
+            })
+            .expect("insert");
+        let response =
+            connection_receipt_for_name(&store, "t08-receipt", Some("deepseek-v4-flash"))
+                .expect("store receipt");
+        assert_eq!(response.status, 200, "{}", response.body);
+        assert!(
+            response.body.contains("\"secret\":\"present\""),
+            "{}",
+            response.body
+        );
+        assert!(
+            response.body.contains("\"connection_status\":\"failed\""),
+            "{}",
+            response.body
+        );
+        assert!(
+            response.body.contains("acct-t08-receipt"),
+            "{}",
+            response.body
+        );
+        assert!(
+            !response.body.contains("opaque-t08-ref"),
+            "{}",
+            response.body
+        );
+        assert!(!response.body.contains("api_key"), "{}", response.body);
     }
 
     #[test]
