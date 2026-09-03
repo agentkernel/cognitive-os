@@ -274,8 +274,8 @@
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化 Windows |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
-| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 8 | 1 | 0 | 4 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，PR #316；lease closed）；P13-T12 in-progress（D01 视觉规格 docs-only done）；P13-T10 **done**（Skill/MCP reviewed acquire，PR #318；lease 本交付关闭）；P13-T08 **done**（Settings，PR #317）；T07、T09、T11、T13 not-started；P11-T15 是其验收出口，不自动 release |
-| **合计** | **167** | **140** | **1** | **1** | **9** | 另有 16 cancelled；无新 Gate pass |
+| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 8 | 2 | 0 | 3 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，PR #316；lease closed）；P13-T12 in-progress（D01 视觉规格 docs-only done）；P13-T10 **done**（Skill/MCP reviewed acquire，PR #318；lease 本交付关闭）；P13-T08 **done**（Settings，PR #317）；P13-T11 in-progress（Draft PR #320）；T07、T09、T13 not-started；P11-T15 是其验收出口，不自动 release |
+| **合计** | **167** | **140** | **2** | **1** | **8** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
