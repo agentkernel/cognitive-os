@@ -54,8 +54,30 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `pnpm test -- memberConfig.test.tsx memberReflection.test.ts` | **pass** 12/12 | `DEV-WIN-GNU-01` (Node; web `node_modules` junction) | uncommitted | Dual Track Reflection tab; 0 Admit; canvas deep-link. |
 | 2026-09-03 | `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **pass** | local MSVC override | uncommitted | Local development evidence. |
 | 2026-09-03 | `pnpm run check:consistency` | **pass** | `DEV-WIN-GNU-01` | uncommitted | 275 requirements; leases OK. |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` worktree `p13-t11-40155c42` | recorded | Linux (`hal9000`) | `40155c42` | dirty=0; exact SHA; `CARGO_TARGET_DIR` reused from `p13-t05-ecd35ab0/target`. |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` `cargo test -p cognitive-store --test p13_t11_reflection --locked` | **pass** 10/10 | Linux | `40155c42` | empty-day / self-report / implicit Blueprint / running inject / never-completion / no reuse / daily vs key-result / confirm+rollback / v40 tables. |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` `cargo test -p kernel-server --locked http_reflection` | **pass** 2/2 | Linux | `40155c42` | `http_reflection_generate_confirm_via_canvas_and_rollback`; `http_reflection_task_channel_and_negatives_are_refused`. Worktree dirty=0. |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` | **pass** | Linux | `40155c42` | Finished `dev` 40.86s; log END 2026-09-03T13:14:42Z. |
+| 2026-09-03 | Required CI [33758397573](https://github.com/agentkernel/cognitive-os/actions/runs/33758397573) | **pass** | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | `40155c42` | resolve 4s; ubuntu 5m49s; windows 16m24s; required-ci 3s. |
+
+## D01 acceptance map (formal close gate)
+
+Formal-plan T11 row stays `not-started` (T07/T08/T09 lease `PERSONAL-DEVELOPMENT-PLAN.md`). Operational status lives in PROGRESS Current snapshot only.
+
+| Close-gate item | Implementation | Failure-first / negative | Evidence on `40155c42` |
+|---|---|---|---|
+| Daemon generates 关键结果 / 日 / 周期 / 事件 from Attempt / verification / evidence / occurrence facts (not model prose) | `ReflectionStore::generate_from_facts` + `POST …/reflection.generate`; kinds `key-result` / `daily` / `cycle` / `incident` | empty day ≠ daily; `response done` / exit 0 without evidence is `daily` not `key-result`; `admit-self-report` 422 | store 10/10 + HTTP 2/2 on `DEV-LINUX-NATIVE-01` at `40155c42` (dirty=0) |
+| Member Runtime improvement = new `p11_employee_revision` after Owner preview | `propose_runtime_improvement` + canvas `POST …/confirm` via `confirm_if_owned`; no revision insert until consume | implicit Blueprint 422; UI has no Admit / Confirm / Approve button; chat_can_confirm false | Linux HTTP confirm-via-canvas; web 12/12 local |
+| Rollback appends another revision | `POST …/reflection.improve.rollback` | only `active` can roll back | Linux HTTP rollback |
+| Cross-Project Role Template needs Owner confirm; does not copy Employee | `propose_role_template` + `confirm_role_template_preview` | silent reuse Forbidden / HTTP 403 | Linux store + HTTP reuse 403 |
+| No silent inject into a running Attempt | `overwrite_running_attempt_context` + propose-while-running | injection 422 | Linux store `running_attempt_prompt_injection_is_refused` |
+| Reflection is never completion | `claim_reflection_is_completion` + `POST …/reflection.as-completion` | 422 `never completion`; `completion_claimed` CHECK=0 | Linux store + HTTP |
+| Task-channel aliases fail closed | nested `matches` + `channel_forbidden` | HTTP 403 | Linux `http_reflection_task_channel_and_negatives_are_refused` |
+| Product origin = daemon `/ui/` | MemberConfig Reflection tab | 0 Admit | Dual Track 12/12. Rendered `/ui/` review remains `P13-T12/D02` |
+
+Required CI on `40155c42` is **green**. Linux store/HTTP/clippy **pass**. Formal-plan T11 row stays `not-started` (sibling lock). D01 is not formally closed until that row can be updated and the Draft is ready/merged without colliding with #319 / #317 / #321.
 
 ## Unique next
 
-1. Recheck required CI on the rebased + HTTP HEAD of Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320); keep Draft.
-2. Do not claim T07/T08/T09/T12/T13/T15. Do not merge until full T11 acceptance.
+1. Persist this report + PROGRESS T11 rows; keep Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320). Do not ready/merge until formal-plan T11 can be updated and siblings #319 / #317 / #321 are not merging in the same instant.
+2. Do not claim T07/T08/T09/T12/T13/T15. Rebase onto `origin/main` only if it moves past `2217722d` before ready.
