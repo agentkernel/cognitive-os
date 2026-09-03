@@ -1080,6 +1080,15 @@ pub(crate) fn run_private_scheduler_tick_with_store_and_proposer(
         if scheduler_row.cancel_requested {
             return Ok(());
         }
+        // P13-T05: Routine occurrence rows carry no Task contract; the same
+        // daemon tick dispatches them through `routine_runs::run_routine_tick`
+        // (hosted Attempt under the fenced lease). Not a second scheduler.
+        if scheduler_row
+            .task_ref
+            .starts_with(cognitive_store::ROUTINE_TASK_REF_PREFIX)
+        {
+            return Ok(());
+        }
         if scheduler_row.state == SchedulerState::Leased.as_str() {
             return reconcile_leased_native_scheduler_row(
                 authority_store,

@@ -48,6 +48,23 @@ import {
   type ProjectDetailRow,
   type ProjectRosterRow,
 } from "../../data/projections/projectWork";
+import {
+  attemptHistoryKey,
+  attemptListPath,
+  projectAttemptHistory,
+  projectRoutineRuns,
+  routineRunsKey,
+  routineRunsPath,
+  type AttemptHistoryRow,
+  type RoutineRunsView,
+} from "../../data/projections/routineRuns";
+import {
+  projectTodayOverview,
+  TODAY_OVERVIEW_KEY,
+  todayOverviewPath,
+  type TodayOverviewView,
+  type TodayPeriod,
+} from "../../data/projections/todayOverview";
 import { appProjections } from "../../data/store";
 import type { Projection } from "../../data/store";
 
@@ -171,6 +188,58 @@ export async function loadPendingPreviewsForProject(projectId: string): Promise<
     "management",
     projectPendingPreviews,
   );
+}
+
+/** P13-T05/D02: occurrence ledger + armings for one Project. No routine_id is invented. */
+export async function loadRoutineRuns(
+  projectId: string,
+): Promise<Projection<RoutineRunsView[]>> {
+  return fetchProjection(
+    appProjections,
+    routineRunsKey(projectId),
+    routineRunsPath(projectId),
+    "management",
+    projectRoutineRuns,
+  );
+}
+
+/** P13-T05/D02: real Attempt history (P13-T02 `dsh.hosted.attempt.list`). */
+export async function loadAttemptHistory(
+  projectId: string,
+): Promise<Projection<AttemptHistoryRow[]>> {
+  return fetchProjection(
+    appProjections,
+    attemptHistoryKey(projectId),
+    attemptListPath(projectId),
+    "management",
+    projectAttemptHistory,
+  );
+}
+
+/**
+ * P13-T05/D02: Today run overview for one period. Only fetched when the list
+ * has a live Project (creating-only and empty homes stay only-create).
+ */
+export async function loadTodayOverview(
+  period: TodayPeriod,
+): Promise<Projection<TodayOverviewView[]>> {
+  return fetchProjection(
+    appProjections,
+    TODAY_OVERVIEW_KEY,
+    todayOverviewPath(period),
+    "management",
+    projectTodayOverview,
+  );
+}
+
+export async function loadTodayOverviewForLiveProject(
+  list: Projection<ProjectListRow[]>,
+  period: TodayPeriod,
+): Promise<void> {
+  if (!liveProjectId(list)) {
+    return;
+  }
+  await loadTodayOverview(period);
 }
 
 /** P13-T04: real CAS-backed artifacts of one Project (the outputs listbox). */

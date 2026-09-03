@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:8d33cbf2fd059b0916f6b804f3924a27b90744b5ce24e8cfa6b7b1850cf07295"
+fingerprint: "sha256:ecd33a7ce038d68beddcf54eaf9263a42b58a64d7a4988624c832414dfeb423b"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -90,7 +90,7 @@ and Agent requires independent qualification.
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive and single composer are absent; ADR-0058 `conversation-projection/0.1` must not be reinterpreted |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | no OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion product path |
 | Semantic Memory privacy/correct/forget integration | Requires-backend | current Memory admission/forget exists, but Conversation/Vault extraction/retrieval integration and privacy matrix do not |
-| Routine/Trigger/Inbox/offline-missed recovery | partial (walking skeleton) + Requires-backend | v33 + management `routine.*` prove no-overlap/queue-latest and a visible missed ledger; daemon `scheduler_entries` is the only schedule authority. Dual Track L1 chrome is on `main` (`P11-T13`); clock/sleep/restart host E2E and Inbox L1 remain absent (HITL is T09 canvas). |
+| Routine/Trigger/Inbox/offline-missed recovery | partial (implementation exists) + Requires-environment | v33 + management `routine.*` prove no-overlap/queue-latest and a visible missed ledger; v38 + `routine.arm` / `routine.instruction` / `routine.runs` / `today.overview` (P13-T05) arm a Routine after G2 and let the daemon scheduler tick — the only dispatcher of `task://personal/routine/*` rows — fire schedules, lease each active occurrence, drive one hosted Attempt (P13-T02 path) and write the observed terminal back as an occurrence outcome (`attempted`, never `success`; `completion_claimed=false`); paused / offline P11-T02 host state lands schedule firings as visible `missed` rows; a new instruction applies at a safe point (`continue` / `pause` / `restart`) without touching the running Attempt. Dual Track L1 chrome is on `main` (`P11-T13`); Inbox L1 remains absent (HITL is T09 canvas); clock/sleep/restart host E2E is `not-run` until `P13-T13`; independent verification of Attempt output is `P13-T04`. |
 | Windows host/tray/background (hidden) | partial (walking skeleton) + Requires-environment | v34 + management `host.*` prove Personal Home `app/`/`data/`, close honesty, missed segments, and ordered seven-step recovery. Not chrome. Not a second credential plane. Native install/tray/ACL/sleep/SecretStore E2E is `not-run` until `DEV-WINDOWS-NATIVE-OPC-01`. |
 | Provider global→Project→employee→Task binding and hard budgets | Requires-backend | current fixed Agent binding and advisory budgets remain partial; DSH/Pi raw-secret-free daemon proxy is required |
 | X/Twitter connector (hidden) | partial (walking skeleton) + Requires-environment | v35 + management `connector/x.*` prove SecretStore-only bind, original digest-bound preview, HITL confirm, persist-before-dispatch, and honest unknown readback. Not P0 hero. Not a business result. Evasion forbidden. Live X API / CAPTCHA / platform qualification is `not-run`. |

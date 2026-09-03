@@ -15,6 +15,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
+  - path: personal/apps/kernel-server/src/personal/routine_runs.rs
   - path: personal/apps/kernel-server/src/personal/server.rs
   - path: personal/apps/kernel-server/src/personal/task_api.rs
   - path: personal/apps/kernel-server/src/personal/tool_lifecycle.rs
@@ -22,7 +23,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:bb026f9f72d17ae157d50a278479a06b5180625c324724313190a2db27cd0456"
+fingerprint: "sha256:3424f19b79441af17264eb165972105bd3e92b50ef83f73972325407eb63a19e"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -213,6 +214,12 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/routine.ledger` | management | List active / queued / missed / coalesced occurrences for one Routine. Not Inbox L1. Requires project_id and routine_id. |
 | `POST` | `/management/project/v1/routine.checkpoint` | management | Persist recovery checkpoint bytes. Completing from a checkpoint is rejected (`checkpoint is not completion`). |
 | `POST` | `/management/project/v1/routine.resume` | management | Resume a missed internal occurrence onto the daemon scheduler. Consequential auto-resume fail-closes. |
+| `POST` | `/management/project/v1/routine.arm` | management | Arm one current Routine revision after G2 (P13-T05): binds it to a confirmed plan stage and its seated responsible Member and reads the ③ declaration (`cadence` manual|interval, `interval_ms` ≥ 1000, `bounded_context`, `attempt_timeout_ms`) from the revision body. Before G2 → 409 `ROUTINE_ARM_BEFORE_G2`; unseated / non-responsible Member, stale revision, or invalid declaration fail closed. From then on the periodic daemon scheduler tick is the only dispatcher: it fires due schedules through `routine.trigger` semantics, leases each active occurrence in `scheduler_entries` and drives one hosted Attempt (`dsh.hosted.attempt.*` path). No Start button; manual triggers stay on `routine.trigger`. Clock / sleep / restart host E2E is `not-run` until P13-T13. |
+| `POST` | `/management/project/v1/routine.instruction` | management | Apply a new Owner instruction (the Routine's current revision) to a live arming at a safe point: `continue` takes effect from the next occurrence, `pause` stops new occurrences, `restart` queues a new-revision occurrence behind the active one (queue-latest). The running occurrence and its Attempt are never touched (`running_prompt_injected: false`). Stale revision or superseded arming → 409. |
+| `POST` | `/management/project/v1/routine.arming.resume` | management | Resume a paused arming with the same declaration (new arming seq; `next_due_at` restarts from now). Only `paused` may resume. |
+| `GET` | `/management/project/v1/routine.armings` | management | Newest-first arming history of one `project_id` (armed / paused / superseded), so instruction history stays visible. |
+| `GET` | `/management/project/v1/routine.runs` | management | The `runs` read (P13-T05): live armings, the occurrence ledger across the Project's Routines (active / queued / coalesced / missed / attempted with a derived `dispatch_state` such as `running`, `waiting-paused`, `waiting-host`), host dispatch availability from P11-T02 facts, a summary, and the pointer to the real Attempt history (`dsh.hosted.attempt.list` / `.detail`). Every row carries `completion_claimed=false` and `verification_status=not-run`; an outcome is a daemon-observed Attempt terminal, never `success`. |
+| `GET` | `/management/project/v1/today.overview` | management | Today live-Project overview (P13-T05): created / live / blocked counts and one row per live Project (status, Attempts done / failed / unknown in `period` = today|week|month on a UTC basis, summed daemon-observed duration or `null`, current stage from the live arming, running / queued / missed facts). `kpi_wall: false`; cost is `unknown`; `attempts_done` counts children that answered `done` and is never completion. |
 | `POST` | `/management/host/v1/home.admit` | management | Admit Personal Home `app/`+`data/` (P11-T02). Install root must end with `Personal Home`; GNU/WSL/Linux roots, ACL escape, and secret env/argv fail closed. Upgrade replaces app and preserves data. Native ACL E2E is `not-run`. |
 | `POST` | `/management/host/v1/daemon.bind` | management | Bind the single daemon to one admitted Home. Duplicate bind while bound/recovering/resumed fails closed. Tray role is observe-and-request only. |
 | `POST` | `/management/host/v1/close.request` | management | Typed close: background-or-pause is honored only when the daemon can honor background; otherwise the request is rejected (fake background forbidden). |
@@ -278,6 +285,12 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/routine.ledger` | task | Forbidden: Routine ledger is management-channel only. |
 | `POST` | `/task/project/v1/routine.checkpoint` | task | Forbidden: Routine checkpoint is management-channel only. |
 | `POST` | `/task/project/v1/routine.resume` | task | Forbidden: Routine resume is management-channel only. |
+| `POST` | `/task/project/v1/routine.arm` | task | Forbidden: Routine arming is management-channel only. |
+| `POST` | `/task/project/v1/routine.instruction` | task | Forbidden: Routine instruction is management-channel only. |
+| `POST` | `/task/project/v1/routine.arming.resume` | task | Forbidden: Routine arming resume is management-channel only. |
+| `GET` | `/task/project/v1/routine.armings` | task | Forbidden: Routine arming history is management-channel only. |
+| `GET` | `/task/project/v1/routine.runs` | task | Forbidden: the runs ledger is management-channel only. |
+| `GET` | `/task/project/v1/today.overview` | task | Forbidden: the Today overview is management-channel only. |
 | `POST` | `/task/host/v1/home.admit` | task | Forbidden: Windows host admit is management-channel only. |
 | `POST` | `/task/host/v1/daemon.bind` | task | Forbidden: Windows host daemon bind is management-channel only. |
 | `POST` | `/task/host/v1/close.request` | task | Forbidden: Windows host close is management-channel only. |

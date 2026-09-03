@@ -38,6 +38,7 @@ pub mod personal_db;
 pub mod project_aggregate;
 pub mod provider_control_plane;
 pub mod routine;
+pub mod routine_arming;
 pub mod scheduler;
 pub mod skill_store;
 pub mod sqlite;
@@ -144,6 +145,15 @@ pub use routine::{
     ROUTINE_PROJECTION_ID, ROUTINE_SCHEMA_V33, RoutineOccurrence, RoutineRevision,
     RoutineRevisionSpec, RoutineStore, RoutineTriggerSpec, routine_migration_entry,
     routine_scheduler_task_ref,
+};
+pub use routine_arming::{
+    HostDispatchAvailability, ROUTINE_ARMING_MIN_INTERVAL_MS, ROUTINE_ARMING_PROJECTION_ID,
+    ROUTINE_ARMING_SCHEMA_V38, ROUTINE_ATTEMPT_DEFAULT_TIMEOUT_MS, ROUTINE_ATTEMPT_MAX_TIMEOUT_MS,
+    ROUTINE_ATTEMPT_OUTCOMES, ROUTINE_SCHEDULER_LEASE_OWNER, ROUTINE_TASK_REF_PREFIX,
+    RoutineArmSpec, RoutineArming, RoutineArmingStore, RoutineDeclaration,
+    RoutineInstructionOutcome, RoutineInstructionSpec, RoutineLedgerRow,
+    TODAY_OVERVIEW_PROJECTION_ID, TodayOverview, TodayProjectRow, canonical_timestamp_from_ms,
+    routine_arming_migration_entry,
 };
 pub use sqlite::SqliteAuthorityStore;
 pub use vault::{
