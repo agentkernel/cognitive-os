@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:6321a412463975afc9a0cb7b31ed2d43b6d51a4a8e0197d32c1019c94bcc5e87"
+fingerprint: "sha256:ee66bd8e7ac965282b74565aa0b940e6610f34f049316b114616b82a4cacbf9c"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---

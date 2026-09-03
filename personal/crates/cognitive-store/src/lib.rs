@@ -17,6 +17,7 @@
 
 pub mod artifact_store;
 pub mod assistant;
+pub mod attempt_artifacts;
 pub mod clock;
 pub mod context_store;
 pub mod conversation;
@@ -49,6 +50,14 @@ pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use assistant::{
     ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
     ASSISTANT_RESEARCH_FETCH_FAMILY, AssistantPlane, AssistantTurnOutcome, AssistantTurnSpec,
+};
+pub use attempt_artifacts::{
+    ATTEMPT_ARTIFACT_FORMAT_MARKDOWN, ATTEMPT_ARTIFACT_MAX_BYTES, ATTEMPT_ARTIFACT_PROJECTION_ID,
+    ATTEMPT_ARTIFACT_SCHEMA_V37, ATTEMPT_ARTIFACT_SOURCE, ATTEMPT_ARTIFACT_VERIFIER_PRINCIPAL,
+    ATTEMPT_ARTIFACT_VERIFIER_REF, ATTEMPT_ARTIFACT_VERIFIER_VERSION, ArtifactEvidenceRow,
+    ArtifactIngestSpec, AttemptArtifactRow, AttemptArtifactStore, EXTERNAL_SEND_CONNECTOR_NONE,
+    EXTERNAL_SEND_SUBJECT_KIND, ExternalSendRow, ExternalSendSpec, RUN_ACCEPTANCE_SUBJECT_KIND,
+    RunAcceptanceRow, attempt_artifact_migration_entry, deliverable_has_secret_shape,
 };
 pub use clock::SystemClock;
 pub use conversation::{

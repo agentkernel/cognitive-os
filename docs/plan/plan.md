@@ -1994,6 +1994,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T04 — Independent verification + openable outputs + publication package
 
+- **status:** in-progress (claimed 2026-09-03 on `personal/P13-T04-artifacts-verifier`; lease `lease/personal/P13-T04/artifacts-verifier`; `P13-T04/D01` in-progress; running report [2026-09-03 P13-T04 report](../checkpoints/2026-09-03-personal-p13-t04-artifacts-verifier-report.md)). Implementation shape: v37 `p13_attempt_artifact` / `p13_artifact_evidence` / `p13_run_acceptance`; the daemon ingests each terminal Attempt's `DeliverableDraft` candidate into the P3-T03 `ArtifactStore` CAS; independent verifier `verifier://personal/attempt-artifact` (deterministic: CAS re-read digest, source-frame binding, terminal Attempt, format parse, non-empty, no secret shape) writes append-only evidence whose report bytes live in the same CAS; `StageTestOracle` is derived from durable facts, never from caller booleans; `run-acceptance` and `external-send` join the P11-T09 ApprovalPreview subject kinds (v37 rebuild of the CHECK, v30 precedent).
 - **2.0.0 表面:** `project-outputs` select-then-view 显示真实产物并可打开；run 验收
   **只在末环**；发布包 = 完整 AUTONOMY packet 画布预览；planned ≠ published；
   聊天无 Confirm。

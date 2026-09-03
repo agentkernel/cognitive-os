@@ -59,7 +59,7 @@ tests:
   - personal/packages/dsh-akp-adapter/src/index.test.ts
   - personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.test.mjs
   - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
-fingerprint: "sha256:61c6eebccf888acae6f923434f1cc162bd7919eb96898fbfe860477549c4dab3"
+fingerprint: "sha256:deab5471b6cbc72f599ab119a4572058cebb6acaf6b9930fd798031ae9bbcd80"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---

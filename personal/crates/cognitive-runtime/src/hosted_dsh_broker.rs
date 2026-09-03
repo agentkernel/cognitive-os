@@ -241,7 +241,17 @@ pub struct HostedFrame {
     pub operation: Option<String>,
     pub payload_digest: Option<String>,
     pub text_redacted: String,
+    /// Canonical JSON of a `candidate` payload, retained in memory only so the
+    /// daemon can put the observed bytes into its CAS after the terminal
+    /// observation (P13-T04). `None` for every other frame kind and for
+    /// payloads above `HOSTED_CANDIDATE_PAYLOAD_MAX_BYTES`. Never written to
+    /// the observation ledger and never redacted — the ingest path refuses
+    /// secret-shaped deliverables instead of storing a redacted copy.
+    pub payload_canonical: Option<String>,
 }
+
+/// Canonical candidate payload ceiling retained for CAS ingest (bytes).
+pub const HOSTED_CANDIDATE_PAYLOAD_MAX_BYTES: usize = 256 * 1024;
 
 /// Frame refused by the broker (recorded, never acted upon).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -662,10 +672,15 @@ fn classify_frame(stream: &mut FrameStream, seq: u64, parsed: &Value, raw: &str)
         });
         return;
     }
-    let payload_digest = parsed.get("payload").map(|payload| {
-        let canonical =
-            serde_json_canonicalizer::to_string(payload).unwrap_or_else(|_| payload.to_string());
-        format!("{:x}", Sha256::digest(canonical.as_bytes()))
+    let payload_canonical_json = parsed.get("payload").map(|payload| {
+        serde_json_canonicalizer::to_string(payload).unwrap_or_else(|_| payload.to_string())
+    });
+    let payload_digest = payload_canonical_json
+        .as_deref()
+        .map(|canonical| format!("{:x}", Sha256::digest(canonical.as_bytes())));
+    let payload_canonical = payload_canonical_json.filter(|canonical| {
+        frame_kind == HostedFrameKind::Candidate
+            && canonical.len() <= HOSTED_CANDIDATE_PAYLOAD_MAX_BYTES
     });
     if frame_kind == HostedFrameKind::Response {
         let status = parsed
@@ -689,6 +704,7 @@ fn classify_frame(stream: &mut FrameStream, seq: u64, parsed: &Value, raw: &str)
         operation,
         payload_digest,
         text_redacted: text,
+        payload_canonical,
     });
 }
 
@@ -1140,6 +1156,19 @@ mod tests {
         );
         assert!(!stream.accepted[0].text_redacted.contains("abc123"));
         assert!(stream.accepted[1].payload_digest.is_some());
+        // P13-T04: the candidate's canonical payload is retained in memory for
+        // CAS ingest and hashes to the recorded digest; other frames retain none.
+        let canonical = stream.accepted[1]
+            .payload_canonical
+            .as_deref()
+            .expect("candidate payload retained");
+        assert_eq!(canonical, "{\"target\":\"a.txt\"}");
+        assert_eq!(
+            stream.accepted[1].payload_digest.as_deref(),
+            Some(format!("{:x}", Sha256::digest(canonical.as_bytes())).as_str())
+        );
+        assert!(stream.accepted[0].payload_canonical.is_none());
+        assert!(stream.accepted[2].payload_canonical.is_none());
         assert_eq!(stream.response_status.as_deref(), Some("done"));
     }
 

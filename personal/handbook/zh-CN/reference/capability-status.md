@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:545c2974e512cc3b7d7bd42b2b46a9ef1c0f30cb141edd289424e80cf41c06e0"
+fingerprint: "sha256:1b0620b52041e8bf59d33a35f20f6b04a49fe6834927a8fa2c1417c982a0de5e"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -82,6 +82,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | 没有完整 authority/projection；employee identity 必须与 runtime/process 分离 |
 | Pi-backed Personal Assistant | Requires-backend | Pi 是 hidden、candidate-only target engine；current Pi Shell/Linux qualification 不构成 OPC Assistant |
 | 隐藏托管 DSH 真实 Attempt 循环 | partial（实现已存在）+ Requires-environment | v36 + management `dsh.hosted.attempt.run` / `attempt.list` / `attempt.detail` / `artifact.check` / `artifact.facts` 已证明 persist-before-dispatch Intent、经 daemon stdio broker 真实 spawn exact-artifact 子进程（stdin 递交有界 Context、白名单 env、仅 Path B）、candidates/observations 只追加台账、daemon 写入且永不为 `success` 的终态、`completion_claimed=false`、崩溃 → `unknown-outcome`，以及 artifact health/update/rollback 事实。不是 Installed Agent chrome，不是原生 DSH UI，不是 Pi 当 Member 引擎。Linux 真实 spawn 只是实现证据；Windows sandbox / ACL / supply-chain E2E 在 `P13-T13` 前为 `not-run`。所产文本的独立验证属于 `P13-T04`。 |
+| Attempt 产物 → CAS → 独立 verifier → 末环验收 → 发布预览 | partial（实现已存在）+ Requires-environment | v37 + management `outputs` / `outputs.detail` / `outputs.open` / `outputs.export` / `attempt.artifact.verify` / `attempt.artifact.stage-test` / `run.acceptance.request` / `run.acceptance` / `publication.packet` / `publication.external-send.request` / `publication.sends`（P13-T04）。终态托管 Attempt 的 `DeliverableDraft` 候选带 digest / 格式 / 来源帧 / 新鲜度进入唯一的 P3-T03 CAS；独立 verifier `verifier://personal/attempt-artifact` 重读 CAS 字节并追加 evidence（报告放在同一 CAS）；StageTestPassed 由该 evidence + 真实就位 + CAS 重读推导（无调用方 `passed`）；run 验收是 `run-acceptance` ApprovalPreview，不在末环即拒绝；发布包是 `planned: true` / `published: false` 的 AUTONOMY 发布包；external send 是 `external-send` ApprovalPreview，确认只记 `planned` Intent——`published` 不可表示。模型文本、`response done`、exit 0、HTTP 回执与文件永远不是完成。宿主打开文件 E2E 在 `P13-T13` 前为 `not-run`。 |
 | Preinstalled managed DSH Installed Agent | Requires-backend + Requires-environment | existing dsh Path B 不是 exact Windows artifact/isolated child/sandbox/update/rollback qualification；没有 native DSH UI/conversation target |
 | Personal Conversation archive/index/retrieval | Requires-backend | Personal-owned scoped archive 与 single composer 不存在；不得重解释 ADR-0058 `conversation-projection/0.1` |
 | Knowledge/Markdown Vault/episodic retrieval | Requires-backend | 没有 OPC Personal Home/import/OCR/index/Vault/conflict/Obsidian companion 产品路径 |

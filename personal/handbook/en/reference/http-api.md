@@ -6,6 +6,7 @@ audience: [developer, ai]
 status: implemented
 generated: true
 sources:
+  - path: personal/apps/kernel-server/src/personal/attempt_artifacts.rs
   - path: personal/apps/kernel-server/src/personal/hosted_dsh_attempt.rs
   - path: personal/apps/kernel-server/src/personal/observation.rs
   - path: personal/apps/kernel-server/src/personal/pi_runtime.rs
@@ -21,7 +22,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:aea4867e5d90c9f2fa8537c95cf0785cdea9ab694bfc7a6ff1310fac6c6b0cf7"
+fingerprint: "sha256:4038ce7fd22088660135dab73c5707d2088b2c65dbec4b6340f166a8853e726a"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -190,6 +191,17 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/management/project/v1/dsh.hosted.attempt.detail` | management | One hosted Attempt plus its redacted frame ledger (`observation` / `candidate` / `heartbeat` / `response` / `rejected`, each `authority_written=false`). Secret shapes are redacted before persistence; a surviving shape fails the response closed. |
 | `POST` | `/management/project/v1/dsh.hosted.artifact.check` | management | Observe the configured hosted DSH artifact (`dsh.json` revision, `.cognitiveos-dsh-revision` pin file, hosted child script digest) and append a durable fact. Kind is derived: `health-check`, `update` (configured revision changed), or `rollback` (returned to the previous revision). Health `pinned` | `absent` | `corrupt` | `mismatch` | `script-missing`; only `pinned` admits a spawn. Never spawns. |
 | `GET` | `/management/project/v1/dsh.hosted.artifact.facts` | management | Latest hosted DSH artifact fact plus newest-first history (`limit` 1..=64) and `admits_spawn`. Facts are append-only. |
+| `GET` | `/management/project/v1/outputs` | management | Newest-first Attempt artifacts of one `project_id` (P13-T04; the `outputs` select-then-view source). Each row is a CAS reference (`sha256:` digest, byte length, `text/markdown`), its source candidate frame, `freshness` (`current` | `superseded`), `verification_status` (`not-run` | latest independent-verifier disposition), the stage whose current StageTestPassed points at it, and `accepted_at`. Also lists run acceptances. Files are never authority; `host_file_open_e2e` is `not-run`. |
+| `GET` | `/management/project/v1/outputs.detail` | management | One artifact plus its newest-first evidence history (verifier `verifier://personal/attempt-artifact`, principal `principal://personal/independent-verifier`, per-criterion results, report CAS ref), its run acceptance if any, the `outputs.open` route, and whether a Personal Home `data/` export copy exists (`is_authority: false`). |
+| `GET` | `/management/project/v1/outputs.open` | management | Serve the deliverable bytes of one `artifact_id` straight from the daemon CAS (`text/markdown; charset=utf-8`). Bytes are re-hashed on read: a tampered CAS file is 409 `ATTEMPT_ARTIFACT_DIGEST_MISMATCH`, never a download. Only `sha256:` CAS refs are openable; paths and `file://` are refused. |
+| `POST` | `/management/project/v1/outputs.export` | management | Write a copy of one artifact's CAS bytes into Personal Home `data/projects/<project_id>/outputs/` (staging file + rename) so a host application can open it. The copy is `is_authority: false` and is never read back; host file-open E2E stays `not-run` until P13-T13. |
+| `POST` | `/management/project/v1/attempt.artifact.verify` | management | Run the independent verifier `verifier://personal/attempt-artifact` (deterministic: CAS re-read digest, source-frame binding, terminal Attempt, format parse, non-empty, no secret shape; the child's `response`/exit are recorded `not-used`) and append one evidence row whose report bytes live in the same CAS. Evidence is append-only and is not acceptance. The daemon already runs this once at ingest. |
+| `POST` | `/management/project/v1/attempt.artifact.stage-test` | management | Derive StageTestPassed (P11-T03 `p11_stage_test_fact`) for `artifact_id` on `stage_id` from durable facts only: real seating, the Attempt's Member holding the stage slot, `current` freshness, passed evidence whose checked digest equals the artifact digest, a CAS re-read, and a terminal Attempt. No caller boolean. A stage test is not acceptance. |
+| `POST` | `/management/project/v1/run.acceptance.request` | management | Mint a `run-acceptance` ApprovalPreview (P11-T09 shape) for `project_id` / `stage_id`. Refused off the last ring of the current plan, without a current StageTestPassed backed by passed evidence, or once that fact was accepted. Confirm goes through `POST /management/project/v1/confirm` with the preview-detail digest; chat cannot confirm. |
+| `GET` | `/management/project/v1/run.acceptance` | management | Append-only run acceptance facts of one `project_id` (last ring pinned by CHECK; each bound to one StageTestPassed fact, artifact and evidence; `acceptance_decision_ref`). |
+| `GET` | `/management/project/v1/publication.packet` | management | Read-only AUTONOMY publication packet for one verified artifact (`preview` / `override` / `tiered_authority` / `observable` / `outcome_verify` / `memory_of_actions` / `yield`). Always `planned: true`, `published: false`, `chat_can_confirm: false`, `connector: none-qualified`. |
+| `POST` | `/management/project/v1/publication.external-send.request` | management | Mint an `external-send` ApprovalPreview for one verified artifact and record the send Intent as `previewed` (recipients hashed, never stored). Confirm via `POST /management/project/v1/confirm` moves it to `planned` — persist-before-dispatch with no qualified connector, so `published` is `false` by schema CHECK. Planned ≠ published. |
+| `GET` | `/management/project/v1/publication.sends` | management | External-send Intent ledger of one `project_id` (`previewed` | `planned` | `superseded`; `published` always false; `published_any: false`). |
 | `POST` | `/management/project/v1/vault.import` | management | Import one Markdown Vault file with rights and provenance. Secret-shape, path traversal, conversation-archive-as-Vault, CAS-only blobs, and last-write-wins without a conflict record fail closed. Files are not Project authority. Host filesystem E2E is `not-run`. |
 | `POST` | `/management/project/v1/vault.index.rebuild` | management | Rebuild the derived Vault index from stored documents. Does not write Memory FTS. Index is not Project authority. |
 | `GET` | `/management/project/v1/vault.index` | management | Query the rebuildable Vault index for one Project. Cross-project `caller_project_id` is retrieval overreach. Returns documented Context inject order (task contract → fixed decisions → sourced excerpts → summaries → older narrative). |
@@ -243,6 +255,17 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `GET` | `/task/project/v1/dsh.hosted.attempt.detail` | task | Forbidden: hosted DSH Attempt detail is management-channel only. |
 | `POST` | `/task/project/v1/dsh.hosted.artifact.check` | task | Forbidden: hosted DSH artifact check is management-channel only. |
 | `GET` | `/task/project/v1/dsh.hosted.artifact.facts` | task | Forbidden: hosted DSH artifact facts are management-channel only. |
+| `GET` | `/task/project/v1/outputs` | task | Forbidden: Attempt artifact list is management-channel only. |
+| `GET` | `/task/project/v1/outputs.detail` | task | Forbidden: artifact detail is management-channel only. |
+| `GET` | `/task/project/v1/outputs.open` | task | Forbidden: artifact open is management-channel only. |
+| `POST` | `/task/project/v1/outputs.export` | task | Forbidden: artifact export is management-channel only. |
+| `POST` | `/task/project/v1/attempt.artifact.verify` | task | Forbidden: the independent verifier is invoked on the management channel only; a task-channel caller cannot verify its own artifact. |
+| `POST` | `/task/project/v1/attempt.artifact.stage-test` | task | Forbidden: StageTestPassed derivation is management-channel only. |
+| `POST` | `/task/project/v1/run.acceptance.request` | task | Forbidden: run acceptance preview is management-channel only. |
+| `GET` | `/task/project/v1/run.acceptance` | task | Forbidden: run acceptance facts are management-channel only. |
+| `GET` | `/task/project/v1/publication.packet` | task | Forbidden: publication packet is management-channel only. |
+| `POST` | `/task/project/v1/publication.external-send.request` | task | Forbidden: external-send preview is management-channel only. |
+| `GET` | `/task/project/v1/publication.sends` | task | Forbidden: external-send ledger is management-channel only. |
 | `POST` | `/task/project/v1/vault.import` | task | Forbidden: Vault import is management-channel only. |
 | `POST` | `/task/project/v1/vault.index.rebuild` | task | Forbidden: Vault index rebuild is management-channel only. |
 | `GET` | `/task/project/v1/vault.index` | task | Forbidden: Vault index query is management-channel only. |
