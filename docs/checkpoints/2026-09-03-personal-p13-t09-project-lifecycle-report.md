@@ -46,12 +46,12 @@ Local MSVC override (`rustc` host `x86_64-pc-windows-msvc`; `CARGO_PROFILE_DEV_D
 | `pnpm test` focused web (`projectLifecycle` + `projectSubmenus`) | **pass 13/13** | 2 UI + 2 projection + 9 submenu regression; no Approve / FAKE_ACTION labels |
 | `cargo fmt --all` | **pass** | applied in this worktree |
 | `cargo clippy --workspace` | **not-run** | reserved for CI / exact-rev Linux |
-| required CI `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | **not-run** | needs this checkpoint push |
-| `DEV-LINUX-NATIVE-01` | **not-run** | after push, exact revision |
+| required CI `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | **not-run** | Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) HEAD `6fe834d0` |
+| `DEV-LINUX-NATIVE-01` | **not-run** | exact revision `6fe834d0` after push |
 | Windows FS E2E | **not-run** | until P13-T13 |
 
 ## Next
 
-- Coordinator expanded the T09 lease for additive T09 handbook files. `check-handbook` OK (58×2); `generate-handbook --check` OK.
-- Checkpoint commit + one Draft PR; then required CI + exact-rev `DEV-LINUX-NATIVE-01`.
+- Checkpoint `6fe834d0`; one Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321).
+- Required CI + exact-rev `DEV-LINUX-NATIVE-01` on that HEAD.
 - Windows FS E2E stays `not-run` until P13-T13.
