@@ -1564,20 +1564,12 @@ fn confirm(
     let Some(preview_digest) = document.get("preview_digest").and_then(Value::as_str) else {
         return error(400, "PREVIEW_DIGEST_REQUIRED", "preview_digest required");
     };
-    if let Ok(Some((kind, subject_ref))) = employees.preview_acquire_ref(preview_id) {
-        if kind == "grant-expansion" {
-            if let Some(phase) = acquire_phase(&subject_ref) {
-                if phase == "install" {
-                    return confirm_install_phase(
-                        plane,
-                        employees,
-                        preview_id,
-                        preview_digest,
-                        &subject_ref,
-                    );
-                }
-            }
-        }
+    if let Ok(Some((kind, subject_ref))) = employees.preview_acquire_ref(preview_id)
+        && kind == "grant-expansion"
+        && let Some(phase) = acquire_phase(&subject_ref)
+        && phase == "install"
+    {
+        return confirm_install_phase(plane, employees, preview_id, preview_digest, &subject_ref);
     }
     match plane.confirm_preview(
         ConfirmCaller::OwnerManagement,

@@ -10,7 +10,7 @@
 
 ## Unique next action
 
-Required CI + `DEV-LINUX-NATIVE-01` focused store + kernel-server + clippy on Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318) HEAD `0d6fc2af`. Do not merge until D01 acceptance. Supply-chain host E2E remains `not-run`.
+Repair Ubuntu Clippy (`collapsible_if` in install-phase confirm) after required CI [33745410565](https://github.com/agentkernel/cognitive-os/actions/runs/33745410565) failed at `5a1d33e8`; re-run required CI + `DEV-LINUX-NATIVE-01` on the pushed repair HEAD. Do not merge until D01 acceptance. Supply-chain host E2E remains `not-run`.
 
 ## Failure-first (D01)
 
@@ -41,3 +41,9 @@ Units are appended **immediately** after each finishes. `not-run` is never pass.
 | 2026-09-03 | `cargo fmt --all -- --check` / `generate-handbook` + `fill-handbook-fingerprints` / `check-handbook` / `generate-handbook --check` | **pass** | `DEV-WIN-GNU-01` + MSVC fmt | worktree | 58×2 handbook; 18 generated pages byte-identical |
 | 2026-09-03 | D01 checkpoint pushed; Draft PR [#318](https://github.com/agentkernel/cognitive-os/pull/318) opened | recorded | GitHub | `0d6fc2af` | Draft until full acceptance |
 | 2026-09-03 | Required CI / `DEV-LINUX-NATIVE-01` | **not-run** | routed | `0d6fc2af` | exact-revision after Draft PR |
+| 2026-09-03 | Dual Track focused vitest first run | **fail** 2/23 | `DEV-WIN-GNU-01` (Node) | worktree | acquire panel was inside `DaemonReadPanel`; empty catalog returned only EmptyState |
+| 2026-09-03 | Dual Track focused vitest after sibling-panel fix | **pass** 23/23 | `DEV-WIN-GNU-01` (Node) | later committed in `0d6fc2af` | panel is a sibling of the catalog panel |
+| 2026-09-03 | Required CI [33745159652](https://github.com/agentkernel/cognitive-os/actions/runs/33745159652) | **cancelled** | `CI-UBUNTU-01` | `0d6fc2af` | superseded by persist push; not required-CI green |
+| 2026-09-03 | Required CI [33745410565](https://github.com/agentkernel/cognitive-os/actions/runs/33745410565) ubuntu Clippy | **fail** | `CI-UBUNTU-01` | `5a1d33e8` | `clippy::collapsible_if` in `confirm` install-phase guards; rust tests had passed |
+| 2026-09-03 | Collapse install-phase confirm `if` chain; local `cargo clippy -p kernel-server --all-targets --locked -- -D warnings` | **pass** | local MSVC override | worktree | development evidence only |
+| 2026-09-03 | `DEV-LINUX-NATIVE-01` GitHub fetch of `5a1d33e8` | **fail** | `wuz@192.168.1.2` | `5a1d33e8` | `fatal: pack has 28 unresolved deltas`; bundle+SCP after the Clippy repair push |

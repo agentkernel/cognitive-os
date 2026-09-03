@@ -23,7 +23,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:97f1ae1b89360b0f418bdcd1c17e9991112889badeee128dd9d04653f0c39b65"
+fingerprint: "sha256:62449ad4f3d98621a833244e127da7ca0f13a0dcded80e3b45e30500d1267a08"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"

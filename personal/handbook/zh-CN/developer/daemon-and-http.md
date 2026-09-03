@@ -69,7 +69,7 @@ tests:
   - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
   - personal/crates/cognitive-store/tests/p11_t14_x_connector.rs
-fingerprint: "sha256:f1575e2b51156870a160d1b46cd6453a951152fd3df8eea49131ff9e91ba6d52"
+fingerprint: "sha256:b9b8a0e1d3c21451776ed6f6244cd01149e15ba1f58c188b130428f390b075e3"
 non_claims:
   - 路由清单在生成的 HTTP 参考中；本页解释组合方式，不承诺完整枚举。
 ---
