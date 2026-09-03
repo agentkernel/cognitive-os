@@ -93,8 +93,16 @@ pub(crate) fn handle(
 }
 
 fn parse_route(method_path: &str) -> Option<(Channel, &'static str)> {
+    // Exact match on the path part. The live server hands over
+    // `"<METHOD> <path> "` (trailing space from `parse_request_line`);
+    // P13-T05's untrimmed compare let every new route fall through to the
+    // generic channel echo. Query and surrounding whitespace are stripped
+    // before comparing so in-process tests and the live daemon share one
+    // matcher. `starts_with` is not used: `chat.post` must not match a
+    // suffixed path.
+    let without_query = method_path.split('?').next().unwrap_or(method_path).trim();
     for literal in ROUTE_LITERALS {
-        if method_path.starts_with(literal) {
+        if without_query == *literal {
             let channel = if literal.contains("/task/") {
                 Channel::Task
             } else {
@@ -703,5 +711,72 @@ mod tests {
         );
         assert_eq!(json["reply_reason"], json!("member-mentioned"));
         assert!(json["preview_id"].as_str().is_some());
+    }
+
+    /// The live server dispatches `"<METHOD> <path> "` (trailing space from
+    /// `parse_request_line`). In-process tests historically passed untrailed
+    /// strings, so a matcher that compared the raw request line stayed green
+    /// in cargo test and 200-echoed on the daemon (P13-T05 at `bafb3c9c`).
+    /// This pins the live shape for both channels and keeps exactness.
+    #[test]
+    fn project_chat_routes_match_the_live_request_line_shape() {
+        let (_tmp, store) = authority();
+        for live in [
+            "POST /management/project/v1/chat.post ",
+            "GET /management/project/v1/chat.thread?project_id=p&limit=32 ",
+        ] {
+            assert!(
+                matches(live),
+                "{live:?} must match the live request-line shape"
+            );
+            assert!(!is_task_channel(live), "{live:?}");
+        }
+        for live in [
+            "POST /task/project/v1/chat.post ",
+            "GET /task/project/v1/chat.thread?project_id=p&limit=1 ",
+        ] {
+            assert!(matches(live), "{live:?}");
+            assert!(is_task_channel(live), "{live:?}");
+            let forbidden = handle(live, br#"{"project_id":"x","body":"hi"}"#, &store);
+            assert_eq!(forbidden.status, 403, "{live:?} → {}", forbidden.body);
+            assert!(forbidden.body.contains("PROJECT_CHAT_CHANNEL_FORBIDDEN"));
+        }
+        // Exactness: neither a suffixed path nor a truncated prefix matches.
+        // Built at runtime so the handbook route scanner does not treat the
+        // negatives as unannotated literals.
+        let (base, _) = ROUTE_LITERALS[0].rsplit_once('/').unwrap();
+        for suffix in [
+            "chat.post-extra",
+            "chat.pos",
+            "chat.threa",
+            "chat.post/extra",
+        ] {
+            let stray = format!("{base}/{suffix} ");
+            assert!(!matches(&stray), "{stray:?} must not match");
+        }
+        let missing_body = handle(
+            "POST /management/project/v1/chat.post ",
+            br#"{"project_id":"p"}"#,
+            &store,
+        );
+        assert_eq!(missing_body.status, 400, "{}", missing_body.body);
+        assert!(
+            missing_body.body.contains("CHAT_BODY_REQUIRED"),
+            "{}",
+            missing_body.body
+        );
+        let unbounded = handle(
+            "GET /management/project/v1/chat.thread?project_id=p ",
+            b"",
+            &store,
+        );
+        assert_eq!(unbounded.status, 422, "{}", unbounded.body);
+        assert!(
+            unbounded
+                .body
+                .contains("unbounded conversation resume rejected"),
+            "{}",
+            unbounded.body
+        );
     }
 }
