@@ -19,7 +19,7 @@ sources:
 tests:
   - personal/apps/kernel-server/tests/p2_t18_local_token_csprng.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
-fingerprint: "sha256:2120f39e3c28e0a2955ab456dcb0d405a3a05bd7f9ad3218ab8623108fbc5376"
+fingerprint: "sha256:ecf5cd4f1e220e6941e83d929f2636e96fbf3112b4ad55736c6d88c65cfa18d9"
 non_claims:
   - This list reflects the recorded reading baseline; the live limitation set may shrink or grow with later merges — the fingerprint check flags staleness.
 ---
@@ -77,12 +77,15 @@ current fact of the code.
   pixel replica, not 2.1, and not T15. Dual Track: no authority yields empty or
   Requires-backend; zero fake Create/Activate/Approve.
 - **Phase 12 closing does not mean a Member really works**: as of 2026-09-02
-  hosted DSH is a start skeleton, the hidden Pi assistant never calls Pi,
-  `runs`/`outputs` show only the process axis, Settings still defers connections
-  to the legacy `/providers` page, Memory correct/forget has no OPC surface, no
-  visual specification exists, and the Windows native environment is not
-  provisioned. Formal-plan **Phase 13** (`P13-T01`–`T13`) owns these gaps card
-  by card; Phase 13 done is still not release / signing / B01-W.
+  hosted DSH is a start skeleton, `runs`/`outputs` show only the process axis,
+  Settings still defers connections to the legacy `/providers` page, Memory
+  correct/forget has no OPC surface, no visual specification exists, and the
+  Windows native environment is not provisioned. Formal-plan **Phase 13**
+  (`P13-T01`–`T13`) owns these gaps card by card; Phase 13 done is still not
+  release / signing / B01-W. `P13-T03` closed the hidden Pi assistant gap: its
+  four turns now really run the exact pinned Pi through the daemon Provider
+  proxy (Linux evidence only; the Windows Pi route stays `not-run` until
+  `P13-T13`), and an unbound Provider yields a Settings pointer, not a chat box.
 - Budget alerts are observe/query only; they do not block or reroute Provider calls.
 - Custom endpoints are OpenAI-compatible only; third-party Anthropic-compatible
   URLs are refused. `cognitive usage query` and `cognitive audit query` take no

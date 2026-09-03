@@ -50,12 +50,12 @@ record native cells `not-run` until available. `not-run` is never pass.
 pnpm install --frozen-lockfile
 pnpm -r build
 pnpm -r test
-pnpm run check:consistency          # tools/src/check-consistency.mjs
+pnpm run check:consistency          # tools/src/check-consistency.mjs (links/paths are git-tracked-only; also Phase 13 build-order edge set)
 node tools/src/gen-matrix.mjs --check
 node tools/src/check-handbook.mjs   # handbook drift gate
 node tools/src/generate-handbook.mjs --check
 node tools/src/docs-sync-gate.mjs --staged   # pre-commit docs-sync gate (--push / --range)
-pnpm run check:rules                # tools/src/check-agent-rules.mjs: AGENTS.md / .cursor/rules / .cursor/commands references and frontmatter
+pnpm run check:rules                # tools/src/check-agent-rules.mjs: AGENTS.md / .cursor/rules / .cursor/commands references and frontmatter (git-tracked-only paths; local-only assets warn when absent)
 pnpm run hooks:install              # once per clone: registers .githooks pre-commit/pre-push
 # bash hosts (Cloud Agent / Linux) bootstrap everything at once:
 #   bash scripts/setup-dev-env.sh   # deps + pinned toolchain + docs-sync hooks

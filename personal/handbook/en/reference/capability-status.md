@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:1b0620b52041e8bf59d33a35f20f6b04a49fe6834927a8fa2c1417c982a0de5e"
+fingerprint: "sha256:8d33cbf2fd059b0916f6b804f3924a27b90744b5ce24e8cfa6b7b1850cf07295"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---

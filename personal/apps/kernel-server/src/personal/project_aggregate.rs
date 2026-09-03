@@ -4,17 +4,19 @@
 //! Task-channel writes are 403 (N12).
 
 use cognitive_store::{
-    ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL, ArchiveAppendSpec,
-    ArchiveReadSpec, AssistantPlane, AssistantTurnSpec, CONTEXT_INJECT_ORDER,
-    CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
-    HOSTED_DSH_ARTIFACT_DIGEST, HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec,
-    HostedDshPlane, HostedDshStartSpec, PendingPreviewRow, ProjectAggregateError,
-    ProjectAggregateStore, ProjectRow, ROUTINE_PROJECTION_ID, RosterProposal, RoutineRevisionSpec,
-    RoutineStore, RoutineTriggerSpec, SpeechArchiveSpec, SqliteAuthorityStore, VAULT_PROJECTION_ID,
-    VaultImportSpec, VaultReadSpec, VaultStore, reject_closed_candidate_schema,
+    ArchiveAppendSpec, ArchiveReadSpec, CONTEXT_INJECT_ORDER, CONVERSATION_ARCHIVE_PROJECTION_ID,
+    ConfirmCaller, ConversationStore, EmployeeStore, HOSTED_DSH_ARTIFACT_DIGEST,
+    HOSTED_DSH_ENGINE_ID, HOSTED_DSH_PROTOCOL, HandoffSpec, HostedDshPlane, HostedDshStartSpec,
+    PendingPreviewRow, ProjectAggregateError, ProjectAggregateStore, ProjectRow,
+    ROUTINE_PROJECTION_ID, RosterProposal, RoutineRevisionSpec, RoutineStore, RoutineTriggerSpec,
+    SpeechArchiveSpec, SqliteAuthorityStore, VAULT_PROJECTION_ID, VaultImportSpec, VaultReadSpec,
+    VaultStore,
 };
 use serde_json::{Value, json};
 
+use super::assistant_inference::AssistantRuntime;
+#[cfg(test)]
+use super::assistant_inference::UnconfiguredAssistantRuntime;
 use super::resource_api::ResourceApiResponse;
 
 const ROUTE_LITERALS: &[&str] = &[
@@ -44,6 +46,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /management/project/v1/conversation.record",
     "POST /management/project/v1/handoff.record",
     "POST /management/project/v1/assistant.turn",
+    "GET /management/project/v1/assistant.status",
     "POST /management/project/v1/dsh.hosted.start",
     "POST /management/project/v1/dsh.hosted.observe-exit",
     "POST /management/project/v1/vault.import",
@@ -78,6 +81,7 @@ const ROUTE_LITERALS: &[&str] = &[
     "GET /task/project/v1/conversation.record",
     "POST /task/project/v1/handoff.record",
     "POST /task/project/v1/assistant.turn",
+    "GET /task/project/v1/assistant.status",
     "POST /task/project/v1/dsh.hosted.start",
     "POST /task/project/v1/dsh.hosted.observe-exit",
     "POST /task/project/v1/vault.import",
@@ -114,10 +118,25 @@ pub(crate) fn channel_forbidden() -> ResourceApiResponse {
     )
 }
 
+/// Store-only entry (unit tests): the assistant routes see no configured
+/// runtime, so `assistant.turn` answers with the Settings pointer and registers
+/// nothing.
+#[cfg(test)]
 pub(crate) fn handle(
     method_path: &str,
     body: &[u8],
     store: &SqliteAuthorityStore,
+) -> ResourceApiResponse {
+    handle_with_assistant(method_path, body, store, &UnconfiguredAssistantRuntime)
+}
+
+/// Daemon entry: `assistant.turn` / `assistant.status` run against the
+/// composition root's exact-Pi runtime (P13-T03).
+pub(crate) fn handle_with_assistant(
+    method_path: &str,
+    body: &[u8],
+    store: &SqliteAuthorityStore,
+    assistant: &dyn AssistantRuntime,
 ) -> ResourceApiResponse {
     let Some((channel, literal)) = parse_route(method_path) else {
         return error(
@@ -170,7 +189,12 @@ pub(crate) fn handle(
             conversation_record(method_path, &conversations)
         }
         "POST /management/project/v1/handoff.record" => handoff_record(body, &employees),
-        "POST /management/project/v1/assistant.turn" => assistant_turn(body, store),
+        "POST /management/project/v1/assistant.turn" => {
+            super::assistant_inference::handle_turn(body, store, assistant)
+        }
+        "GET /management/project/v1/assistant.status" => {
+            super::assistant_inference::handle_status(assistant)
+        }
         "POST /management/project/v1/dsh.hosted.start" => dsh_hosted_start(body, store),
         "POST /management/project/v1/dsh.hosted.observe-exit" => {
             dsh_hosted_observe_exit(body, store)
@@ -742,89 +766,6 @@ fn handoff_record(body: &[u8], employees: &EmployeeStore) -> ResourceApiResponse
         },
     ) {
         Ok(handoff_id) => ok(json!({ "status": "ok", "handoff_id": handoff_id })),
-        Err(error) => store_error(error),
-    }
-}
-
-fn assistant_turn(body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
-    if reject_closed_candidate_schema(body).is_err() {
-        return error(
-            422,
-            "ASSISTANT_SCHEMA_CLOSED",
-            "closed candidate schema: grant/secret/trigger-arm fields rejected",
-        );
-    }
-    let Some(document) = parse_json(body) else {
-        return error(400, "PROJECT_JSON_REQUIRED", "JSON body required");
-    };
-    let Some(kind) = document.get("kind").and_then(Value::as_str) else {
-        return error(400, "ASSISTANT_KIND_REQUIRED", "kind required");
-    };
-    let Some(draft_id) = document.get("draft_id").and_then(Value::as_str) else {
-        return error(400, "DRAFT_ID_REQUIRED", "draft_id required");
-    };
-    let Some(object_kind) = document.get("object_kind").and_then(Value::as_str) else {
-        return error(400, "OBJECT_KIND_REQUIRED", "object_kind required");
-    };
-    let payload = document
-        .get("payload")
-        .cloned()
-        .unwrap_or_else(|| json!({}));
-    let provenance_json = match document.get("provenance") {
-        Some(Value::Object(_)) => document
-            .get("provenance")
-            .cloned()
-            .and_then(|value| serde_json::to_string(&value).ok()),
-        Some(Value::String(raw)) => Some(raw.clone()),
-        Some(_) | None => None,
-    };
-    let Some(provenance_json) = provenance_json else {
-        return error(
-            422,
-            "ASSISTANT_PROVENANCE_REQUIRED",
-            "typed provenance required (sources | owner-stated | assistant-assumption)",
-        );
-    };
-    let project_id = document
-        .get("project_id")
-        .and_then(Value::as_str)
-        .filter(|value| !value.is_empty());
-    let tool_owned: Vec<String> = document
-        .get("tools")
-        .and_then(Value::as_array)
-        .map(|items| {
-            items
-                .iter()
-                .filter_map(Value::as_str)
-                .map(ToOwned::to_owned)
-                .collect()
-        })
-        .unwrap_or_default();
-    let tools: Vec<&str> = tool_owned.iter().map(String::as_str).collect();
-    let plane = AssistantPlane::from_authority_store(store);
-    match plane.run_turn(&AssistantTurnSpec {
-        kind,
-        draft_id,
-        object_kind,
-        payload: &payload,
-        provenance_json: &provenance_json,
-        project_id,
-        tools: &tools,
-        now_ms: now_ms(),
-    }) {
-        Ok(outcome) => ok(json!({
-            "status": "ok",
-            "engine": ASSISTANT_ENGINE_ID,
-            "pi_pin": ASSISTANT_PI_PIN,
-            "protocol": ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
-            "installed_agent": false,
-            "candidate_id": outcome.candidate_id,
-            "candidate_digest": outcome.candidate_digest,
-            "preview_id": outcome.preview_id,
-            "object_kind": outcome.object_kind,
-            "context_refs": outcome.context_refs,
-            "observation_only": true,
-        })),
         Err(error) => store_error(error),
     }
 }
@@ -1579,7 +1520,7 @@ fn confirm(body: &[u8], plane: &ProjectAggregateStore) -> ResourceApiResponse {
     }
 }
 
-fn parse_json(body: &[u8]) -> Option<Value> {
+pub(crate) fn parse_json(body: &[u8]) -> Option<Value> {
     serde_json::from_slice(body).ok()
 }
 
@@ -1596,11 +1537,11 @@ fn query_parameter(method_path: &str, name: &str) -> Option<String> {
     None
 }
 
-fn now_ms() -> i64 {
+pub(crate) fn now_ms() -> i64 {
     cognitive_store::now_ms()
 }
 
-fn ok(body: Value) -> ResourceApiResponse {
+pub(crate) fn ok(body: Value) -> ResourceApiResponse {
     ResourceApiResponse {
         status: 200,
         body: body.to_string(),
@@ -1608,7 +1549,7 @@ fn ok(body: Value) -> ResourceApiResponse {
     }
 }
 
-fn error(status: u16, code: &str, message: &str) -> ResourceApiResponse {
+pub(crate) fn error(status: u16, code: &str, message: &str) -> ResourceApiResponse {
     ResourceApiResponse {
         status,
         body: json!({"status":"error","code": code, "message": message}).to_string(),
@@ -1616,7 +1557,7 @@ fn error(status: u16, code: &str, message: &str) -> ResourceApiResponse {
     }
 }
 
-fn store_error(err: ProjectAggregateError) -> ResourceApiResponse {
+pub(crate) fn store_error(err: ProjectAggregateError) -> ResourceApiResponse {
     match err {
         ProjectAggregateError::Forbidden { detail } => error(403, "PROJECT_FORBIDDEN", detail),
         ProjectAggregateError::NotFound { detail } => error(404, "PROJECT_NOT_FOUND", detail),
@@ -1635,7 +1576,9 @@ fn store_error(err: ProjectAggregateError) -> ResourceApiResponse {
 #[allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
 mod tests {
     use super::*;
-    use cognitive_store::{ConfirmCaller, PersonalDataLayout, prepare_personal_databases};
+    use cognitive_store::{
+        ASSISTANT_ENGINE_ID, ConfirmCaller, PersonalDataLayout, prepare_personal_databases,
+    };
     use tempfile::TempDir;
 
     fn authority() -> (TempDir, SqliteAuthorityStore) {
@@ -2510,24 +2453,40 @@ mod tests {
             &store,
         );
         assert_eq!(task.status, 403);
-        let proposed = handle(
+        let propose_body = json!({
+            "kind": "propose",
+            "draft_id": draft_id,
+            "object_kind": "charter",
+            "payload": {"title": "research charter"},
+            "provenance": {"kind": "owner-stated"}
+        })
+        .to_string();
+        // P13-T03: without a bound Provider the store-only entry points at
+        // Settings and echoes nothing back as a candidate.
+        let unbound = handle(
             "POST /management/project/v1/assistant.turn",
-            json!({
-                "kind": "propose",
-                "draft_id": draft_id,
-                "object_kind": "charter",
-                "payload": {"title": "research charter"},
-                "provenance": {"kind": "owner-stated"}
-            })
-            .to_string()
-            .as_bytes(),
+            propose_body.as_bytes(),
             &store,
+        );
+        assert_eq!(unbound.status, 409, "{}", unbound.body);
+        assert!(unbound.body.contains("ASSISTANT_PROVIDER_UNBOUND"));
+        assert!(!unbound.body.contains("candidate_digest"));
+        let runtime = super::super::assistant_inference::tests::ScriptedAssistantRuntime::bound(
+            r#"{"reply":"Candidate charter; owner review required.","objects":[{"object_kind":"charter","fields":{"title":{"value":"research charter","provenance":{"kind":"owner-stated"}}}}]}"#,
+            1,
+        );
+        let proposed = handle_with_assistant(
+            "POST /management/project/v1/assistant.turn",
+            propose_body.as_bytes(),
+            &store,
+            &runtime,
         );
         assert_eq!(proposed.status, 200, "{}", proposed.body);
         assert!(proposed.body.contains("candidate_digest"));
         assert!(proposed.body.contains("preview_id"));
         assert!(proposed.body.contains(ASSISTANT_ENGINE_ID));
         assert!(proposed.body.contains("\"installed_agent\":false"));
+        assert!(proposed.body.contains("\"provider_round_trips\":1"));
         assert!(!proposed.body.contains("Approve"));
         assert!(!proposed.body.contains("preview_digest"));
         let (g1_draft, _) = plane.create_draft(b"g1", 2).unwrap();

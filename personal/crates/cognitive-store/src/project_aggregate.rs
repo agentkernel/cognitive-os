@@ -2268,11 +2268,24 @@ fn next_id(prefix: &str) -> Result<String, ProjectAggregateError> {
 
 fn looks_like_secret(detail: &str) -> bool {
     let lowered = detail.to_ascii_lowercase();
-    lowered.contains("sk-")
+    contains_key_prefix_token(&lowered, "sk-")
         || lowered.contains("bearer ")
         || lowered.contains("api_key")
         || lowered.contains("x-api-key")
         || lowered.contains("ssv1:")
+}
+
+/// `sk-` counts as a key prefix only at a token start. Ordinary hyphenated
+/// words such as `risk-based`, `task-contract`, or `desk-side` are owner and
+/// assistant prose, not Provider material; a real key never has a letter or
+/// digit immediately before its prefix.
+fn contains_key_prefix_token(lowered: &str, prefix: &str) -> bool {
+    lowered.match_indices(prefix).any(|(index, _)| {
+        lowered[..index]
+            .chars()
+            .next_back()
+            .is_none_or(|previous| !previous.is_ascii_alphanumeric())
+    })
 }
 
 fn unavailable(operation: &'static str) -> impl Fn(rusqlite::Error) -> ProjectAggregateError {

@@ -22,7 +22,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:4038ce7fd22088660135dab73c5707d2088b2c65dbec4b6340f166a8853e726a"
+fingerprint: "sha256:bb026f9f72d17ae157d50a278479a06b5180625c324724313190a2db27cd0456"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -183,7 +183,8 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/conversation.archive` | management | 有界按 Project 索引 Personal-private 对话档案引用。必须带 `limit` 1..=32；缺省或超限视为无界 resume。`include_bodies` 拒绝。只返回 record_id/digest。不重解释 ADR-0058 `conversation-projection/0.1`。 |
 | `GET` | `/management/project/v1/conversation.record` | management | 在同一 Project 内读取单条档案正文。不是整库倾倒。跨范围 record_id 失败闭合。 |
 | `POST` | `/management/project/v1/handoff.record` | management | 记录 `authority_stays=1` 的 handoff 行。聊天不能转移权威。 |
-| `POST` | `/management/project/v1/assistant.turn` | management | 隐藏 Pi Personal Assistant（exact Pi 0.81.1 / `cognitiveos.private-candidate/1`）：explain/navigate/research/propose 把带 digest 的草稿候选登记进 daemon，并强制 typed 出处（`sources` | `owner-stated` | `assistant-assumption`）；research/propose 另发 daemon preview 宣布。只产 candidate：无 Approve、无 archive/SecretStore/Memory/权威写；除 research 的 `HttpFetchReadOnly` 外 default-deny。Pi 不是 Installed Agent。封闭 schema 拒绝 grant/secret/trigger-arm 字段。 |
+| `POST` | `/management/project/v1/assistant.turn` | management | 隐藏 Pi Personal Assistant 真实推理（P13-T03；exact Pi 0.81.1，帧 `cognitiveos.personal.assistant-inference/0.1`）：explain/navigate/research/propose 按 T10 注入顺序组装有界 Context，经 `pi-agent-adapter assistant-turn` 真实调用 exact Pi 一次，Provider 只经 daemon 一次性私有 completion socket（`agent://personal/pi` 绑定）到达；把 Pi 最终文本解析为封闭候选对象链（business-brief → research-run → charter/axis/roster/recipe），每个字段带 typed 出处（`sources` | `owner-stated` | `assistant-assumption`），再登记为带 digest 的草稿候选（research/propose 另发 daemon preview 宣布）。响应含 `reply`、`chain`、`model_id`、`provider_round_trips`、有界 `context` 层与 `research.fetched/refused`。Provider 未绑 → HTTP 409 `ASSISTANT_PROVIDER_UNBOUND` 并指路 Settings，不登记任何东西。回显（零 Provider 往返）、纯文本、伪造 `sources[]`、无出处字段、ambient tool（Pi 启动前 403）、越出 schema 的链一律 422 拒绝且不登记。research fetch：`research_targets[]`（≤4）只经 `HttpFetchReadOnly` 预校验器对 `task://personal/assistant-research` 的 pinned origins；被拒目标只报告、绝不抓取。只产 candidate：无 Approve、无 archive/SecretStore/Memory/权威写。Pi 不是 Installed Agent。Windows Pi 路由在 P13-T13 前为 `not-run`。 |
+| `GET` | `/management/project/v1/assistant.status` | management | 创建页助手聊天可渲染的状态（P13-T03）：`ready`（`agent://personal/pi` 已绑 Provider 且 exact Pi 已配置；`chat_input: true`）、`provider_unbound`（指路 Settings，`chat_input: false`，不静默绑模型、不索要 key）或 `pi_unavailable`（已绑但本 daemon 未配置 exact Pi 运行时）。只由 daemon 事实推导，绝不来自客户端。携带 engine / pin / protocol 标识、已绑时的 `model_id` 以及 pinned research origin 数量。 |
 | `POST` | `/management/project/v1/dsh.hosted.start` | management | 隐藏托管 DSH Attempt-runner start：把托管子进程身份（artifact digest / protocol / 可选观测 pid）持久绑定到 Employee `runtime_binding_ref`。复用 Path B `POST /provider/v1/dsh/chat/completions` 作为唯一持 secret 路径。Windows GNU 上 isolated spawn 失败闭合。不是 Installed Agent chrome。Windows OPC E2E 为 `not-run`。 |
 | `POST` | `/management/project/v1/dsh.hosted.observe-exit` | management | 观察托管 DSH 子进程退出。清除 pid 观测。不删除 Employee、对话档案或 Memory。 |
 | `POST` | `/management/project/v1/dsh.hosted.attempt.run` | management | 隐藏托管 DSH 真实 Attempt 循环（P13-T02）：先记 artifact 健康事实（未钉住 → 422，不 spawn），再持久化 Attempt Intent 并绑定 v31 子进程身份，然后 daemon broker 以 stdin 递交有界 Context（≤64 KiB，secret-shape 被拒）真实 spawn exact-artifact 子进程，并把 `observation` / `candidate` / `heartbeat` / `response` 帧作为观察回收。终态观察由 daemon 写入（`exited` / `signaled` / `timed-out` / `spawn-failed`；永无 `success`）；`completion_claimed` 恒为 `false`，verification 保持 `not-run`。直连 Provider 帧被拒并记录；Path A / API key / native MCP 标志不会 spawn。`wait`（默认 true）最多阻塞 `timeout_ms`（≤30 分钟）。Windows sandbox / ACL / supply-chain E2E 在 P13-T13 前为 `not-run`。 |
@@ -248,6 +249,7 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/conversation.record` | task | 禁止：对话单条读取仅限 management 通道。 |
 | `POST` | `/task/project/v1/handoff.record` | task | 禁止：handoff 记录仅限 management 通道。 |
 | `POST` | `/task/project/v1/assistant.turn` | task | 禁止：隐藏助手仅限 management 通道。 |
+| `GET` | `/task/project/v1/assistant.status` | task | 禁止：隐藏助手状态仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.start` | task | 禁止：托管 DSH 进程绑定仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.observe-exit` | task | 禁止：托管 DSH 退出观察仅限 management 通道。 |
 | `POST` | `/task/project/v1/dsh.hosted.attempt.run` | task | 禁止：托管 DSH Attempt 运行仅限 management 通道。 |

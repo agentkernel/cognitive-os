@@ -21,7 +21,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:22e923efa7fdf9796c5c89c27096700a31772202dea1781579b0619d5a6c9b11"
+fingerprint: "sha256:c537a3c21f6a8b90404fa8296a89fce5682ab2a7d7364cbf4de060bc81fe5f7e"
 non_claims:
   - Pi remains a candidate-producing client; nothing in the shell can advance authority state, and conversation quality/benefit is not claimed.
 ---
@@ -127,3 +127,15 @@ exceed Linux `UNIX_PATH_MAX`; Pi `--work-dir`/`--config-dir` may still live
 under the runtime root. Adapter and Pi stderr is a redacted `daemon.log` fact
 when the adapter rejects. See
 [Agent and Pi lifecycle](../developer/agent-and-pi-lifecycle.md).
+
+The same locked-down child also powers the **hidden Personal Assistant** behind
+the create wizard and the right rail (P13-T03): explain / navigate / research /
+propose turns really run the exact pinned Pi once through the daemon, the
+Provider is reached only through the daemon's private proxy, and the reply is
+registered as a candidate object chain in which every field says where it came
+from (`sources` / owner-stated / assistant-assumption). If no Provider is bound
+to the assistant, the create page shows a pointer to Settings instead of a chat
+box — it never asks for a key in chat and never binds a model silently. Nothing
+the assistant says is written, approved, or executed until you confirm on the
+canvas. This Pi route is validated on Linux only; on Windows it remains
+`not-run` until P13-T13.

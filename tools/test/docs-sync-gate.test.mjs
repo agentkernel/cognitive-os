@@ -1,6 +1,24 @@
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { test } from "node:test";
+import { fileURLToPath } from "node:url";
 import { decideDocsSync, routeChangedPaths } from "../src/docs-sync-gate.mjs";
+
+const REPO_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..", "..");
+
+test("the live source map routes installer.rs to the Pi package pages and fails closed without a handbook update (P0-T09)", () => {
+  const liveSourceMap = JSON.parse(
+    readFileSync(path.join(REPO_ROOT, "personal", "handbook", "_meta", "source-map.json"), "utf8"),
+  );
+  const route = routeChangedPaths(["personal/crates/cognitive-runtime/src/installer.rs"], liveSourceMap);
+  const pin = route.impacted.find((rule) => rule.id === "pi-official-package-pin");
+  assert.ok(pin, "installer.rs must hit the pi-official-package-pin rule");
+  assert.deepEqual(pin.docs, ["ref.compatibility", "dev.agent-pi-lifecycle"]);
+  const liveRule = liveSourceMap.rules.find((rule) => rule.id === "pi-official-package-pin");
+  assert.deepEqual(liveRule.symbols, ["OFFICIAL_PI_PACKAGE", "OFFICIAL_PI_VERSION"]);
+  assert.equal(decideDocsSync({ ...route, allowNoneReason: undefined }).verdict, "fail");
+});
 
 const SOURCE_MAP = {
   rules: [

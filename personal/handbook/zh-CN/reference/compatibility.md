@@ -10,10 +10,12 @@ sources:
   - path: package.json
   - path: personal/apps/admin-cli/src/personal_cli/pi.rs
     symbols: ["PINNED_PI_VERSION"]
+  - path: personal/crates/cognitive-runtime/src/installer.rs
+    symbols: ["OFFICIAL_PI_PACKAGE", "OFFICIAL_PI_VERSION"]
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:e134eb589f7e2ff6c5b9cf1b689a0aea44542317fc9fe7167afa605d0769398f"
+fingerprint: "sha256:c74a888cf10be926dddeae8158c630c151a871ba6c718aa62451cefd26bb2e7e"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---

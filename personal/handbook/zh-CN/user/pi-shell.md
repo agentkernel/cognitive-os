@@ -21,7 +21,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t31_live_daemon_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/apps/admin-cli/tests/p2_t33_private_candidate_host_path.rs
-fingerprint: "sha256:22e923efa7fdf9796c5c89c27096700a31772202dea1781579b0619d5a6c9b11"
+fingerprint: "sha256:c537a3c21f6a8b90404fa8296a89fce5682ab2a7d7364cbf4de060bc81fe5f7e"
 non_claims:
   - Pi 始终是只产 candidate 的客户端；shell 中任何行为都不能推进权威状态，也不声明对话质量/收益。
 ---
@@ -104,3 +104,11 @@ CognitiveOS state/runtime/config 目录内的路径一律拒绝。阶段计时�
 Pi 的 `--work-dir`/`--config-dir` 仍可落在 runtime root 下。适配器或 Pi 拒绝时，
 stderr 会以脱敏形式出现在 `daemon.log`。见
 [Agent 与 Pi 生命周期](../developer/agent-and-pi-lifecycle.md)。
+
+同一个受限子进程也驱动创建向导与右栏背后的**隐藏 Personal Assistant**（P13-T03）：
+explain / navigate / research / propose 四类 turn 真的经 daemon 运行 exact pinned Pi
+一次，Provider 只经 daemon 私有代理到达，回复被登记为候选对象链，其中每个字段都注明
+来源（`sources` / owner-stated / assistant-assumption）。若助手未绑 Provider，创建页
+显示指向 Settings 的指路而不是聊天框——绝不在聊天里索要 key，也绝不静默绑模型。助手
+说的任何内容在你于画布确认之前都不会被写入、批准或执行。该 Pi 路由只在 Linux 上验证；
+Windows 上在 P13-T13 之前保持 `not-run`。

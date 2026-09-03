@@ -188,6 +188,58 @@ pub fn extract_daemon_candidate_response_from_pi_events(
     }
 }
 
+/// Extract the single final assistant text from Pi's RPC event stream for the
+/// hidden-assistant turn (P13-T03). The assistant has no tools at all: any
+/// `tool_execution_*` event — Workspace* included — is an ambient tool attempt
+/// and fails closed. Exactly one finalized assistant `message_end` with one
+/// text block is accepted; the text itself stays untrusted until the daemon
+/// parses it into a validated candidate object chain.
+pub fn extract_assistant_text_from_pi_events(event_stream: &str) -> Result<String, String> {
+    let events = parse_rpc_jsonl_records(event_stream)
+        .map_err(|error| format!("Pi assistant event stream is invalid: {error}"))?;
+    let mut final_text: Option<String> = None;
+    for event in events {
+        let event_type = event.get("type").and_then(Value::as_str);
+        if matches!(
+            event_type,
+            Some("tool_execution_start" | "tool_execution_update" | "tool_execution_end")
+        ) {
+            return Err("Pi assistant event stream attempted a tool operation".to_owned());
+        }
+        if event_type != Some("message_end") {
+            continue;
+        }
+        let message = event
+            .get("message")
+            .and_then(Value::as_object)
+            .ok_or_else(|| "Pi assistant final message is malformed".to_owned())?;
+        if message.get("role").and_then(Value::as_str) != Some("assistant") {
+            continue;
+        }
+        if message.get("stopReason").and_then(Value::as_str) == Some("error") {
+            return Err("Pi assistant final message reports a Provider error".to_owned());
+        }
+        let content = message
+            .get("content")
+            .and_then(Value::as_array)
+            .ok_or_else(|| "Pi assistant final message content is malformed".to_owned())?;
+        if content.len() != 1 {
+            return Err("Pi assistant final message must contain one text block".to_owned());
+        }
+        let text = content[0]
+            .as_object()
+            .filter(|block| block.get("type").and_then(Value::as_str) == Some("text"))
+            .and_then(|block| block.get("text").and_then(Value::as_str))
+            .ok_or_else(|| "Pi assistant final message must contain one text block".to_owned())?;
+        if final_text.replace(text.to_owned()).is_some() {
+            return Err("Pi assistant event stream has multiple final responses".to_owned());
+        }
+    }
+    final_text
+        .filter(|text| !text.trim().is_empty())
+        .ok_or_else(|| "Pi assistant event stream has no final assistant response".to_owned())
+}
+
 fn is_daemon_governed_workspace_tool(tool_name: &str) -> bool {
     matches!(
         tool_name.trim().to_ascii_lowercase().as_str(),

@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:2c71e1f2e00071da459093d86001609ca67d7788adbebe7f3767195cee3ce219"
+fingerprint: "sha256:cd07aa0182c55c427c46bd02da26e9ced03bda6eeb5074f137893a999a6a85e4"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---

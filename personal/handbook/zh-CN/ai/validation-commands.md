@@ -48,12 +48,12 @@ Gate/release；可用前 native cell 记 `not-run`。`not-run` 永远不是 pass
 pnpm install --frozen-lockfile
 pnpm -r build
 pnpm -r test
-pnpm run check:consistency          # tools/src/check-consistency.mjs
+pnpm run check:consistency          # tools/src/check-consistency.mjs（链接/路径只认 git tracked；含 Phase 13 建造顺序边集合比对）
 node tools/src/gen-matrix.mjs --check
 node tools/src/check-handbook.mjs   # 手册防漂移门
 node tools/src/generate-handbook.mjs --check
 node tools/src/docs-sync-gate.mjs --staged   # commit 前文档同步门（--push / --range）
-pnpm run check:rules                # tools/src/check-agent-rules.mjs：AGENTS.md / .cursor/rules / .cursor/commands 引用与 frontmatter
+pnpm run check:rules                # tools/src/check-agent-rules.mjs：AGENTS.md / .cursor/rules / .cursor/commands 引用与 frontmatter（路径只认 git tracked；本地专用资产缺失时告警）
 pnpm run hooks:install              # 每克隆一次：注册 .githooks pre-commit/pre-push
 # bash 主机（Cloud Agent / Linux）可一次性引导：
 #   bash scripts/setup-dev-env.sh   # 依赖 + 钉住的工具链 + docs-sync hooks

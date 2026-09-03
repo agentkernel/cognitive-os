@@ -4,13 +4,27 @@
 //! no archive/SecretStore/authority writes, candidate-only preview handoff.
 
 use cognitive_store::{
-    ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
-    ASSISTANT_RESEARCH_FETCH_FAMILY, ArchiveAppendSpec, AssistantPlane, AssistantTurnSpec,
+    ASSISTANT_ENGINE_ID, ASSISTANT_INFERENCE_PROTOCOL, ASSISTANT_PI_PIN,
+    ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL, ASSISTANT_RESEARCH_FETCH_FAMILY, ArchiveAppendSpec,
+    AssistantInferenceRecord, AssistantPlane, AssistantTurnSpec,
     CONVERSATION_ARCHIVE_PROJECTION_ID, ConfirmCaller, ConversationStore, EmployeeStore,
     PersonalDataLayout, ProjectAggregateError, ProjectAggregateStore, prepare_personal_databases,
 };
 use serde_json::json;
 use tempfile::TempDir;
+
+/// P13-T03: turns need a daemon-observed inference; this is the minimal chain
+/// for the requested object kind (owner-stated provenance, no cited sources).
+fn inferred_chain(object_kind: &str) -> serde_json::Value {
+    json!([
+        {
+            "object_kind": object_kind,
+            "fields": {
+                "title": {"value": "brief", "provenance": {"kind": "owner-stated"}}
+            }
+        }
+    ])
+}
 
 fn stores() -> (
     TempDir,
@@ -52,6 +66,7 @@ fn turn<'a>(
     payload: &'a serde_json::Value,
     provenance_json: &'a str,
     tools: &'a [&'a str],
+    inference: &'a AssistantInferenceRecord<'a>,
 ) -> AssistantTurnSpec<'a> {
     AssistantTurnSpec {
         kind,
@@ -61,7 +76,19 @@ fn turn<'a>(
         provenance_json,
         project_id: None,
         tools,
+        inference,
         now_ms: 40,
+    }
+}
+
+fn inference<'a>(objects: &'a serde_json::Value) -> AssistantInferenceRecord<'a> {
+    AssistantInferenceRecord {
+        protocol: ASSISTANT_INFERENCE_PROTOCOL,
+        model_id: "deepseek-chat",
+        provider_round_trips: 1,
+        objects,
+        reply: "candidate proposed; owner review required",
+        allowed_source_uris: &[],
     }
 }
 
@@ -266,6 +293,8 @@ fn vertical_turns_register_candidate_and_preview_handoff() {
     let sources = provenance("sources");
     let owner_stated = provenance("owner-stated");
     let assumption = provenance("assistant-assumption");
+    let brief_chain = inferred_chain("business-brief");
+    let brief_inference = inference(&brief_chain);
     let explain = assistant
         .run_turn(&turn(
             "explain",
@@ -274,6 +303,7 @@ fn vertical_turns_register_candidate_and_preview_handoff() {
             &payload,
             &sources,
             &[],
+            &brief_inference,
         ))
         .expect("explain");
     assert!(explain.preview_id.is_none());
@@ -281,6 +311,8 @@ fn vertical_turns_register_candidate_and_preview_handoff() {
     assert_eq!(explain.pi_pin, ASSISTANT_PI_PIN);
     assert_eq!(explain.protocol, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL);
     assert_eq!(explain.candidate_digest.len(), 64);
+    let axis_chain = inferred_chain("axis");
+    let axis_inference = inference(&axis_chain);
     assistant
         .run_turn(&turn(
             "navigate",
@@ -289,11 +321,14 @@ fn vertical_turns_register_candidate_and_preview_handoff() {
             &payload,
             &owner_stated,
             &[],
+            &axis_inference,
         ))
         .expect("navigate");
     let (research_draft, _) = projects
         .create_draft(b"research", 11)
         .expect("research draft");
+    let research_chain = inferred_chain("research-run");
+    let research_inference = inference(&research_chain);
     let research = assistant
         .run_turn(&turn(
             "research",
@@ -302,12 +337,15 @@ fn vertical_turns_register_candidate_and_preview_handoff() {
             &payload,
             &assumption,
             &[ASSISTANT_RESEARCH_FETCH_FAMILY],
+            &research_inference,
         ))
         .expect("research");
     assert!(research.preview_id.is_some());
     let (propose_draft, _) = projects
         .create_draft(b"propose", 12)
         .expect("propose draft");
+    let charter_chain = inferred_chain("charter");
+    let charter_inference = inference(&charter_chain);
     let propose = assistant
         .run_turn(&turn(
             "propose",
@@ -316,6 +354,7 @@ fn vertical_turns_register_candidate_and_preview_handoff() {
             &payload,
             &owner_stated,
             &[],
+            &charter_inference,
         ))
         .expect("propose");
     assert!(propose.preview_id.is_some());

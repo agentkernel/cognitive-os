@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:9a2caca614ff81ac879c707041da80b9601a7927d521271a87729cd39cb0960c"
+fingerprint: "sha256:b6cbcb12e9f7acfb2ddef5f010c286c6ea9b56c19afa310844dfa468c500f31d"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---
@@ -79,7 +79,22 @@ snapshot 登记的 `DOC-<id>`，且只能拥有精确的 plan/product/architectu
 report/closure 文件——不得整目录——以及同一 lease 语法检查器面）、命令/环境路由
 文本、checkpoint-delivery 与 task-atomic 措辞等。
 `tools/src/gen-matrix.mjs --check` 保持 `docs/traceability/matrix.yaml` 新鲜。两者
-在 CI 与本地（`pnpm run check:consistency`）都运行。手册新增自己的检查器
+在 CI 与本地（`pnpm run check:consistency`）都运行。
+
+自 `P0-T09` 起，`check-consistency.mjs` 与 `check-agent-rules.mjs` 的路径存在性由
+`git ls-files` 决定而不是文件系统：已提交文档或规则链接到只存在于作者工作树的文件时，
+本机即以 CI 相同的信息红灯（`… (exists locally but is not tracked by Git)`），且未跟踪的
+本地 Markdown 不参与扫描，本机与 CI 结论一致。不在 Git checkout 内时一致性检查器
+fail closed（`TRACKED_PATHS_UNAVAILABLE`）；规则检查器仅为其 focused fixture 回退到
+文件系统并明示模式（`path existence = …`）。owner 本机未跟踪的编辑器资产
+（`.cursor/skills/`、`.cursor/commands/`、规则 30/40、`.cursor/mcp.json`）保持
+"缺失告警 / 存在严格检查"。同一检查器还解析 `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`
+的 Phase 13 建造顺序 mermaid 与 `personal/docs/architecture/personal-2.0.0-dev-prep-index.md`
+中的副本，要求边集合完全相等（含实线/虚线；节点 id 去掉 `P13`/`P11` 前缀后比较）——
+缺边/多边即 `BUILD_ORDER_EDGE_MISSING` / `BUILD_ORDER_EDGE_EXTRA`；正式计划为权威，
+绝不为迎合索引反向修改。
+
+手册新增自己的检查器
 （`check-handbook.mjs`）与生成器漂移门——见
 [`_meta/sync-policy.md`](../../_meta/sync-policy.md)。HTTP 路由生成还会读取
 `personal/apps/kernel-server/src/personal/tool_lifecycle.rs`、

@@ -7,7 +7,7 @@ status: implemented
 generated: false
 sources:
   - path: personal/crates/cognitive-runtime/src/installer.rs
-    symbols: ["install_package", "acquire_official_pi_durable"]
+    symbols: ["install_package", "acquire_official_pi_durable", "OFFICIAL_PI_PACKAGE", "OFFICIAL_PI_VERSION"]
   - path: personal/crates/cognitive-runtime/src/agent_registration.rs
     symbols: ["register_official_pi_agent_durable", "activate_official_pi_agent_durable"]
   - path: personal/crates/cognitive-runtime/src/pi_launcher.rs
@@ -59,7 +59,7 @@ tests:
   - personal/packages/dsh-akp-adapter/src/index.test.ts
   - personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.test.mjs
   - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
-fingerprint: "sha256:deab5471b6cbc72f599ab119a4572058cebb6acaf6b9930fd798031ae9bbcd80"
+fingerprint: "sha256:59ae905bac3507f2bd8424c342df576a3d10ca95e1ca1f04da2a6852cb997dd8"
 non_claims:
   - Pi 的资格化证据不转移给任何其他 agent；Codex 资格化是 fixture 身份矩阵，无网络/二进制声明。B09 类 Gate 记账由正式计划拥有。
 ---
@@ -106,7 +106,8 @@ shell 宿主的 Provider 路径有一个显式启用、非权威的 campaign obs
 
 ## candidate 生产角色
 
-`pi-agent-adapter`（钉住适配器，仅 `daemon-candidate` 能力）运行受限 Pi 子进程：禁
+`pi-agent-adapter`（钉住适配器；`daemon-candidate` 与 P13-T03 的
+`assistant-turn` 是唯一可运行的两个动词）运行受限 Pi 子进程：禁
 用内置文件系统/shell 工具、skill、会话与扩展发现（`--no-builtin-tools`）、环境白名
 单、带字节上限与截止的一次性私有 socketpair、结构化 `AdapterOutcome`（绝非权威状
 态）。CognitiveOS 扩展对外广告 daemon 治理的
@@ -125,6 +126,25 @@ socket 绑在 `$XDG_RUNTIME_DIR/cognitiveos/`（其次进程临时目录，再�
 stderr 经 `sk-` / `api_key=` / `token=` 脱敏后保留尾部真实错误在 `daemon.log`；退出码 2 表示 usage 错误、3 表示运行时失败，令公开 skip 可归因。私有
 candidate 的 Provider 代理在转发前剥离 `tools`/`tool_choice`，接受可含
 `role=assistant` 的单条文本 choice，并拒绝 `tool_calls`。
+
+## 隐藏助手推理角色（P13-T03）
+
+`pi-agent-adapter assistant-turn` 是第二个也是唯一另一个可运行动词。daemon 在适配器
+stdin 写入一个 `cognitiveos.personal.assistant-inference/0.1` 请求帧（turn kind、
+封闭 object kind、draft/project id、带 typed 出处的 owner payload、按 T10 注入顺序
+的有界 Context 层、daemon 推导的可引用 URI——绝不含 bearer、bootstrap secret、凭据、
+capability 或权威事实；未知字段被拒绝）。适配器校验 exact Pi 钉，以
+`--no-builtin-tools --no-extensions --no-skills --no-context-files --no-session
+--no-approve --mode rpc` 加且仅加 daemon 私有 completion provider 扩展启动 Pi，把
+唯一渲染好的 prompt 经 Pi RPC stdin（绝非 argv）送入，并把恰好一条已定稿的助手
+文本作为未信任响应帧返回。任何 `tool_execution_*` 事件（内置或 Workspace*）、
+Provider 错误、多条终稿或非文本终稿都失败闭合。Provider 凭据永不到达适配器或 Pi：
+扩展把 Pi 唯一一次非流式 completion 经 daemon 创建的一次性 Unix-domain socket 转发，
+daemon 记录该 socket 是否真的被接受（`provider_round_trips`）；Pi 从未推理的 turn
+被当作回显拒绝。随后 daemon（`cognitive-runtime` `pi_inference` +
+`cognitive-store` `assistant`）把文本解析为带 typed 出处的封闭候选对象链，并经
+v26 候选路径登记。该路径的 Linux 证据不转移到 Windows；Windows Pi 路由在 P13-T13
+前保持 `not-run`。
 
 ## Pi 之外
 

@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:840ad92cf83ca04b31e1be4a2d6a4e3cf7426b40a53f3e972ad226defe029f64"
+fingerprint: "sha256:4db769b79fc7c6acef3e2e2c2a905fdb75c4e19ed3fea8b5e355caead4f85dc5"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -87,6 +87,14 @@ silently:
   Owner-journey hardness assessment
   ([`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md);
   hypothesis; not Gate).
+- `pi-official-package-pin` (`P0-T09`) routes
+  `personal/crates/cognitive-runtime/src/installer.rs` to `ref.compatibility`
+  and `dev.agent-pi-lifecycle` and declares `symbols`
+  (`OFFICIAL_PI_PACKAGE`, `OFFICIAL_PI_VERSION`). A rule with `symbols` is
+  enforced by handbook check HB016: every routed hand-written page, in every
+  locale, must list that source with those symbols in its frontmatter, so the
+  official Pi package name has exactly one source of truth (the code constant)
+  and a rename is red until both pages are re-reviewed.
 
 For every hit, preserve explicit truth columns: **current Linux 1.0/current
 API**, **adopted Windows OPC target**, **Requires-backend**, and

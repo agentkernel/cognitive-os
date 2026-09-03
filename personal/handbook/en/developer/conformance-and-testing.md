@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:9a2caca614ff81ac879c707041da80b9601a7927d521271a87729cd39cb0960c"
+fingerprint: "sha256:b6cbcb12e9f7acfb2ddef5f010c286c6ea9b56c19afa310844dfa468c500f31d"
 non_claims:
   - Green CI is engineering evidence only; it never promotes Gate, release, or Profile claims (axiom A7).
 ---
@@ -87,7 +87,28 @@ the directory — and the same lease-grammar checker surface),
 command/environment routing text, checkpoint-delivery and task-atomic wording,
 and more. `tools/src/gen-matrix.mjs --check` keeps
 `docs/traceability/matrix.yaml` fresh. Both run in CI and locally
-(`pnpm run check:consistency`). The handbook adds its own checker
+(`pnpm run check:consistency`).
+
+Since `P0-T09`, path existence in `check-consistency.mjs` and
+`check-agent-rules.mjs` is decided by `git ls-files`, not by the filesystem: a
+committed document or rule that links a file which exists only in the author's
+working tree fails locally with the same message CI would print (`… (exists
+locally but is not tracked by Git)`), and untracked local Markdown is not
+scanned, so the local and CI verdicts are identical. Outside a Git checkout the
+consistency checker fails closed (`TRACKED_PATHS_UNAVAILABLE`); the agent-rule
+checker falls back to the filesystem only for its focused fixtures and labels
+that mode (`path existence = …`). The owner's untracked local editor assets
+(`.cursor/skills/`, `.cursor/commands/`, rules 30/40, `.cursor/mcp.json`) keep
+their warn-when-absent / strict-when-present behaviour. The same checker also
+parses the Phase 13 build-order mermaid graph in
+`docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` and its copy in
+`personal/docs/architecture/personal-2.0.0-dev-prep-index.md` and requires
+identical edge sets (solid vs dashed included; ids normalized by dropping the
+`P13`/`P11` prefix) — a missing or extra edge is `BUILD_ORDER_EDGE_MISSING` /
+`BUILD_ORDER_EDGE_EXTRA`; the formal plan is authoritative and is never edited
+to match the index.
+
+The handbook adds its own checker
 (`check-handbook.mjs`) and generator drift gate — see
 [`_meta/sync-policy.md`](../../_meta/sync-policy.md). HTTP route generation
 also reads `personal/apps/kernel-server/src/personal/tool_lifecycle.rs`,
