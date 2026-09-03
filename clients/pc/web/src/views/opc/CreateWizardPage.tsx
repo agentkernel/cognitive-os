@@ -3,6 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { readJson } from "../../api";
 import { PageHeader } from "../../components/PageHeader";
 import { HonestyNote } from "../../state/HonestyNote";
+import { CreateAssistantChat } from "./CreateAssistantChat";
 
 const STEPS = [
   { id: "create-init", title: "Charter" },
@@ -307,6 +308,7 @@ export function CreateWizardPage() {
           Daemon returned <code className="cp-mono">{projectId}</code>.
         </p>
       ) : null}
+      <CreateAssistantChat step={current} title={title} />
       <p>
         <Link to="/">Back to Today</Link>
       </p>

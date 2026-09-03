@@ -7,9 +7,14 @@
 
 #[cfg(test)]
 use cognitive_runtime::SandboxPlatform;
+use cognitive_runtime::{
+    ASSISTANT_INFERENCE_FRAME_LIMIT, ASSISTANT_INFERENCE_PROTOCOL, AssistantInferenceRequest,
+    AssistantInferenceResponse, parse_assistant_inference_request, render_assistant_prompt,
+};
 use pi_agent_adapter::{
     DAEMON_CANDIDATE_FRAME_LIMIT, DaemonCandidateRequest, PiCompatibilityPin,
-    extract_daemon_candidate_response_from_pi_events, parse_daemon_candidate_request,
+    extract_assistant_text_from_pi_events, extract_daemon_candidate_response_from_pi_events,
+    parse_daemon_candidate_request,
 };
 use serde_json::{Value, json};
 use std::collections::{BTreeMap, BTreeSet};
@@ -30,8 +35,8 @@ const P0_T06_EXTENSION_FIXTURE: &str =
 const P0_T06_EXTENSION_STATUS_COMMAND: &str = "/cognitiveos-p0-t06-status";
 const DAEMON_CANDIDATE_PROVIDER_ID: &str = "cognitiveos-private-candidate";
 const DAEMON_CANDIDATE_TIMEOUT: Duration = Duration::from_secs(60);
-const USAGE: &str = "pi-agent-adapter <daemon-candidate|run|evaluate|extension-load> --pi <path> --model <model> --work-dir <dir> --config-dir <pi-dir> [--extension <candidate-extension-path> --runs <1..=20> --expected-text <text>]
-Note: run/evaluate/extension-load no longer inject Provider secrets. Use daemon-candidate with the daemon Provider proxy.";
+const USAGE: &str = "pi-agent-adapter <daemon-candidate|assistant-turn|run|evaluate|extension-load> --pi <path> --model <model> --work-dir <dir> --config-dir <pi-dir> [--extension <candidate-extension-path> --runs <1..=20> --expected-text <text>]
+Note: run/evaluate/extension-load no longer inject Provider secrets. Use daemon-candidate or assistant-turn with the daemon Provider proxy.";
 
 fn expired_local_native_provider_exception_message() -> String {
     format!(
@@ -75,7 +80,7 @@ fn is_usage_error(args: &[String]) -> bool {
     }
     !matches!(
         verb.as_str(),
-        "run" | "evaluate" | "extension-load" | "daemon-candidate"
+        "run" | "evaluate" | "extension-load" | "daemon-candidate" | "assistant-turn"
     )
 }
 
@@ -89,8 +94,127 @@ fn run(args: &[String]) -> Result<Value, String> {
         "evaluate" => evaluate_candidates(&flags),
         "extension-load" => extension_load_record(&flags),
         "daemon-candidate" => daemon_candidate(&flags),
+        "assistant-turn" => assistant_turn(&flags),
         _ => Err(format!("unsupported verb `{verb}`")),
     }
+}
+
+/// Invoke exact Pi once for the hidden Personal Assistant (P13-T03). The
+/// daemon writes an `AssistantInferenceRequest` on stdin; Pi runs with no
+/// tools, no extensions except the daemon-private completion provider, and no
+/// session; its single final text is returned untrusted for daemon validation.
+/// The Provider credential never reaches this process: the registered provider
+/// extension forwards completions over the daemon-created private socket.
+fn assistant_turn(flags: &ParsedFlags) -> Result<Value, String> {
+    let pi = required(flags, "pi")?;
+    let model = required(flags, "model")?;
+    let work_dir = required(flags, "work-dir")?;
+    let config_dir = required(flags, "config-dir")?;
+    let extension = required(flags, "extension")?;
+    let request = read_assistant_inference_request()?;
+
+    verify_pinned_pi_version(pi)?;
+    if !std::path::Path::new(extension).is_file() {
+        return Err("assistant turn provider extension file is missing".to_owned());
+    }
+    let mut child = candidate_only_command(pi)
+        .arg("--provider")
+        .arg(DAEMON_CANDIDATE_PROVIDER_ID)
+        .arg("--model")
+        .arg(model)
+        .arg("-e")
+        .arg(extension)
+        .arg("--no-builtin-tools")
+        .arg("--no-extensions")
+        .arg("--no-skills")
+        .arg("--no-context-files")
+        .arg("--no-session")
+        .arg("--no-approve")
+        .arg("--mode")
+        .arg("rpc")
+        .current_dir(work_dir)
+        .env("HOME", config_dir)
+        .env("PI_CODING_AGENT_DIR", config_dir)
+        .env("COGNITIVEOS_PRIVATE_COMPLETION_MODEL", model)
+        .env("PI_TELEMETRY", "0")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .map_err(|error| format!("assistant turn Pi launch failed: {error}"))?;
+    let (stdout_reader, agent_end_receiver) = collect_candidate_event_stream(
+        child
+            .stdout
+            .take()
+            .ok_or_else(|| "assistant turn Pi stdout was not captured".to_owned())?
+            .take((ASSISTANT_INFERENCE_FRAME_LIMIT + 1) as u64),
+    );
+    let stderr_reader = collect_child_stream(
+        child
+            .stderr
+            .take()
+            .ok_or_else(|| "assistant turn Pi stderr was not captured".to_owned())?
+            .take((ASSISTANT_INFERENCE_FRAME_LIMIT + 1) as u64),
+    );
+    let mut stdin = child
+        .stdin
+        .take()
+        .ok_or_else(|| "assistant turn Pi stdin was not captured".to_owned())?;
+    write_rpc_prompt(
+        &mut stdin,
+        "assistant-turn",
+        &render_assistant_prompt(&request),
+    )?;
+    let (close_stdin_sender, close_stdin_receiver) = mpsc::channel();
+    let stdin_holder = thread::spawn(move || {
+        let _stdin = stdin;
+        let _ = close_stdin_receiver.recv();
+    });
+
+    let started = Instant::now();
+    let exit_status = wait_for_candidate_exit(
+        &mut child,
+        started,
+        &agent_end_receiver,
+        &close_stdin_sender,
+    )?;
+    let _ = close_stdin_sender.send(());
+    let _ = stdin_holder.join();
+    let stdout = join_child_stream(stdout_reader, "stdout")?;
+    let stderr = join_child_stream(stderr_reader, "stderr")?;
+    if stdout.len() > ASSISTANT_INFERENCE_FRAME_LIMIT {
+        return Err("assistant turn Pi stdout exceeds transport limit".to_owned());
+    }
+    if !exit_status.success() {
+        let diagnostic = redact_child_diagnostic(&stderr);
+        if diagnostic.is_empty() {
+            return Err("assistant turn Pi exited unsuccessfully".to_owned());
+        }
+        return Err(format!(
+            "assistant turn Pi exited unsuccessfully: {diagnostic}"
+        ));
+    }
+    let event_stream = std::str::from_utf8(&stdout)
+        .map_err(|_| "assistant turn Pi emitted non-UTF-8 output".to_owned())?;
+    let assistant_text = extract_assistant_text_from_pi_events(event_stream)?;
+    let response_model = pi_agent_adapter::observed_response_models(event_stream)
+        .into_iter()
+        .next();
+    serde_json::to_value(AssistantInferenceResponse {
+        protocol: ASSISTANT_INFERENCE_PROTOCOL.to_owned(),
+        assistant_text,
+        response_model,
+    })
+    .map_err(|error| format!("assistant turn response serialization failed: {error}"))
+}
+
+fn read_assistant_inference_request() -> Result<AssistantInferenceRequest, String> {
+    let mut frame = Vec::new();
+    std::io::stdin()
+        .take((ASSISTANT_INFERENCE_FRAME_LIMIT + 1) as u64)
+        .read_to_end(&mut frame)
+        .map_err(|error| format!("assistant inference request read failed: {error}"))?;
+    parse_assistant_inference_request(&frame)
 }
 
 /// Invoke the daemon-private Pi candidate protocol once. The request travels

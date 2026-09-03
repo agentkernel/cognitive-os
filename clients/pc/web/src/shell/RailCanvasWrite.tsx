@@ -2,11 +2,14 @@ import { useState, type FormEvent, type KeyboardEvent } from "react";
 import { Link } from "react-router-dom";
 import { readJson } from "../api";
 import {
+  ASSISTANT_SETTINGS_ROUTE,
   ASSISTANT_TURN_PATH,
   DRAFT_APPLY_PATH,
+  isProviderUnbound,
   projectAssistantTurn,
   projectDraftApply,
   railWriteReady,
+  type AssistantTurnRow,
   type DraftApplyRow,
 } from "../data/projections/assistant";
 import { hitlCanvasPath } from "../data/projections/hitl";
@@ -21,9 +24,11 @@ function jsonField(body: unknown, key: string): string | undefined {
 }
 
 /**
- * Right-rail edit → review → write canvas (P12-T09).
- * Owner posts assistant.turn then draft.apply. Chat cannot Approve.
+ * Right-rail edit → review → write canvas (P12-T09; P13-T03 real inference).
+ * Owner posts assistant.turn (daemon runs exact Pi and registers a candidate
+ * chain with typed provenance) then draft.apply. Chat cannot Approve.
  * Preview bypass is refused: Write to canvas exists only after review.
+ * When no Provider is bound the rail points at Settings and applies nothing.
  */
 export function RailCanvasWrite() {
   const [draftId, setDraftId] = useState("");
@@ -34,11 +39,15 @@ export function RailCanvasWrite() {
   const [error, setError] = useState<string | undefined>();
   const [written, setWritten] = useState<DraftApplyRow | undefined>();
   const [previewId, setPreviewId] = useState<string | undefined>();
+  const [turn, setTurn] = useState<AssistantTurnRow | undefined>();
+  const [providerUnbound, setProviderUnbound] = useState(false);
 
   function goReview(event?: FormEvent) {
     event?.preventDefault();
     setError(undefined);
     setWritten(undefined);
+    setTurn(undefined);
+    setProviderUnbound(false);
     const ready = railWriteReady({ draftId, baseSeq, text });
     if (!ready.ok) {
       setError(ready.reason);
@@ -78,20 +87,26 @@ export function RailCanvasWrite() {
           provenance: { kind: "owner-stated" },
         }),
       });
+      if (isProviderUnbound(proposed.status, proposed.body)) {
+        setProviderUnbound(true);
+        setStep("edit");
+        return;
+      }
       if (!proposed.ok) {
         setError(
           `${httpErrorMessage(proposed.status, proposed.body)} Candidate was not applied. Chat cannot Approve.`,
         );
         return;
       }
-      const turn = projectAssistantTurn(proposed.body);
-      const digest = turn?.candidateDigest ?? jsonField(proposed.body, "candidate_digest");
+      const proposedTurn = projectAssistantTurn(proposed.body);
+      const digest = proposedTurn?.candidateDigest ?? jsonField(proposed.body, "candidate_digest");
       if (!digest) {
         setError("assistant.turn returned no candidate_digest. Canvas was not written.");
         return;
       }
-      if (turn?.previewId) {
-        setPreviewId(turn.previewId);
+      setTurn(proposedTurn);
+      if (proposedTurn?.previewId) {
+        setPreviewId(proposedTurn.previewId);
       }
       const applied = await readJson(DRAFT_APPLY_PATH, "management", {
         method: "POST",
@@ -197,6 +212,25 @@ export function RailCanvasWrite() {
           </p>
         </div>
       )}
+      {providerUnbound ? (
+        <p data-region="opc-rail-provider-unbound">
+          No model is connected to the assistant, so nothing was proposed or applied.{" "}
+          <Link to={ASSISTANT_SETTINGS_ROUTE} className="cp-button">
+            Open Settings to connect a Provider
+          </Link>{" "}
+          <span className="cp-quiet">The rail does not accept keys or bind a model silently.</span>
+        </p>
+      ) : null}
+      {turn?.reply ? (
+        <p className="cp-quiet" data-region="opc-rail-assistant-reply">
+          Assistant: {turn.reply}
+          {turn.modelId ? ` · ${turn.modelId}` : ""}
+          {` · ${turn.providerRoundTrips} Provider round trip${turn.providerRoundTrips === 1 ? "" : "s"}`}
+          {turn.chain.length > 0
+            ? ` · candidate chain: ${turn.chain.map((object) => object.objectKind).join(" → ")}`
+            : ""}
+        </p>
+      ) : null}
       {previewId ? (
         <p className="cp-quiet" data-region="opc-rail-preview-announce">
           Preview {previewId} is announce-only.{" "}

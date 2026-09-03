@@ -481,6 +481,14 @@ personal_requirements:
     direct_registry_requirements: []
     tasks: [P13-T03, P13-T10]
     gates: []
+    # 2026-09-03: the P13-T03 clause (hidden Pi Assistant really infers through
+    # exact Pi via the daemon Provider proxy for explain/navigate/research/
+    # propose; closed candidate object chain with typed provenance; honest
+    # Settings guidance when no Provider is bound; candidate-only, no
+    # authority/secret/archive/Memory write) is implemented and exercised on
+    # DEV-LINUX-NATIVE-01 + required CI (PR #311); evidence_status stays
+    # not-run until P13-T10 closes the Skill/MCP acquisition clause and the
+    # Windows Pi route is backfilled by P13-T13.
     evidence_status: not-run
 
   - id: PERS-PR-051

@@ -4,6 +4,7 @@
 //! locking, fail-closed HTTP front door, and readiness/status/doctor projection
 //! (P1-T05). Not Task scheduling, Memory, MCP, or Provider proxy.
 
+mod assistant_inference;
 mod auth;
 mod bounds;
 #[cfg_attr(not(test), allow(dead_code))]

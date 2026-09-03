@@ -59,7 +59,7 @@ tests:
   - personal/packages/dsh-akp-adapter/src/index.test.ts
   - personal/packages/dsh-akp-adapter/scripts/hosted-attempt-child.test.mjs
   - personal/crates/cognitive-runtime/tests/p13_t02_hosted_dsh_broker.rs
-fingerprint: "sha256:61c6eebccf888acae6f923434f1cc162bd7919eb96898fbfe860477549c4dab3"
+fingerprint: "sha256:1fca04be0fad51387cc7a4199f0d05bfb2a56d731c2c8526f36e4802cb5975a1"
 non_claims:
   - Pi qualification evidence transfers to no other agent; Codex qualification is a fixture-identity matrix with no network/binary claim. B09-class Gate accounting is owned by the formal plan.
 ---
@@ -116,7 +116,8 @@ accepted from a runner-built object.
 
 ## Candidate production role
 
-`pi-agent-adapter` (pinned adapter, `daemon-candidate` capability only) runs the
+`pi-agent-adapter` (pinned adapter; `daemon-candidate` and the P13-T03
+`assistant-turn` verbs are the only operational capabilities) runs the
 locked-down Pi child: built-in filesystem/shell tools, skills, sessions and
 extension discovery disabled (`--no-builtin-tools`), env allowlist, one-shot
 private socketpair with byte caps and deadlines, structured `AdapterOutcome`
@@ -142,6 +143,30 @@ or Provider keys. Adapter/Pi stderr retains its redacted tail error on
 failures, so a public skip stays attributable. The private-candidate Provider proxy
 strips `tools`/`tool_choice` before forward, accepts one text choice that may
 include `role=assistant`, and refuses `tool_calls`.
+
+## Hidden assistant inference role (P13-T03)
+
+`pi-agent-adapter assistant-turn` is the second and only other operational verb.
+The daemon writes one `cognitiveos.personal.assistant-inference/0.1` request
+frame on the adapter's stdin (turn kind, closed object kind, draft/project ids,
+owner payload with typed provenance, bounded Context layers in T10 inject order,
+and the daemon-derived citable URIs — never a bearer, bootstrap secret,
+credential, capability, or authority fact; unknown fields are refused). The
+adapter verifies the exact Pi pin, launches Pi with `--no-builtin-tools
+--no-extensions --no-skills --no-context-files --no-session --no-approve --mode
+rpc` plus only the daemon-private completion provider extension, sends the
+single rendered prompt over Pi RPC stdin (never argv), and returns exactly one
+finalized assistant text as an untrusted response frame. Any
+`tool_execution_*` event (built-in or Workspace*), a Provider error, multiple
+finals, or a non-text final fails closed. The Provider credential never reaches
+the adapter or Pi: the extension forwards Pi's one non-streaming completion over
+the daemon-created one-shot Unix-domain socket, and the daemon records whether
+that socket was actually accepted (`provider_round_trips`); a turn whose Pi
+never inferred is refused as an echo. The daemon (`cognitive-runtime`
+`pi_inference` + `cognitive-store` `assistant`) then parses the text into the
+closed candidate object chain with typed provenance and registers it through
+the v26 candidate path. Linux evidence for this route does not transfer to
+Windows; the Windows Pi route stays `not-run` until P13-T13.
 
 ## Beyond Pi
 

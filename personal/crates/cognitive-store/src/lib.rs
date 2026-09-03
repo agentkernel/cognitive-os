@@ -47,8 +47,11 @@ pub mod x_connector;
 
 pub use artifact_store::{ArtifactStore, ArtifactStoreError};
 pub use assistant::{
-    ASSISTANT_ENGINE_ID, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
-    ASSISTANT_RESEARCH_FETCH_FAMILY, AssistantPlane, AssistantTurnOutcome, AssistantTurnSpec,
+    ASSISTANT_CHAIN_MAX_OBJECTS, ASSISTANT_ENGINE_ID, ASSISTANT_INFERENCE_PROTOCOL,
+    ASSISTANT_OBJECT_KINDS, ASSISTANT_PI_PIN, ASSISTANT_PRIVATE_CANDIDATE_PROTOCOL,
+    ASSISTANT_REPLY_LIMIT, ASSISTANT_RESEARCH_FETCH_FAMILY, ASSISTANT_SETTINGS_ROUTE,
+    ASSISTANT_TURN_KINDS, AssistantInferenceRecord, AssistantPlane, AssistantTurnOutcome,
+    AssistantTurnSpec, provider_unbound_guidance, validate_inferred_object_chain,
 };
 pub use clock::SystemClock;
 pub use conversation::{
