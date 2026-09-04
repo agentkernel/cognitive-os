@@ -3,7 +3,7 @@
 - Task: `P13-T09` **done** / slice `P13-T09/D01` **done** (single Delivery Slice)
 - Change class: `implementation-only` (Project copy / archive / delete / restore-point / export on existing authority tables; **no new applied migration** — `project_lifecycle_migration_entry()` only reserves v41 and is not registered; T11 holds v40 / `personal_db.rs`; no `core/specs`, no contract or negative weakened)
 - Lease: `lease/personal/P13-T09/project-lifecycle` → PARALLEL-LANES §3.1 (closed in this delivery)
-- Branch / PR: `personal/P13-T09-project-lifecycle` (worktree `D:\agent-kernel-wt-P13-T09`) → PR [#321](https://github.com/agentkernel/cognitive-os/pull/321)
+- Branch / PR: `personal/P13-T09-project-lifecycle` (worktree `D:\agent-kernel-wt-P13-T09`) → **merged** PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) at `main@7575ebcd` (2026-09-04; closure HEAD `9801a959` required CI [33845147914](https://github.com/agentkernel/cognitive-os/actions/runs/33845147914) **SUCCESS**; local + remote branch deleted, worktree removed)
 - Implementation revision: `0e34d3cb` … `3d4001b0` (rebased onto `main@22718d74`, T08 merged); fold HEAD `0898af16` (merge of `origin/main@763b7909`, T07 merged PR #319; conflicts only in plan docs, bilingual `store-and-migrations`, regenerated `ref.http-api`)
 - Required CI: [33761616553](https://github.com/agentkernel/cognitive-os/actions/runs/33761616553) **SUCCESS** at `3d4001b0`; fold HEAD `0898af16` [33843008228](https://github.com/agentkernel/cognitive-os/actions/runs/33843008228) **SUCCESS**
 - `DEV-LINUX-NATIVE-01` exact revision: pre-fold `8c681757` (store 2/2 + 1/1, kernel-server 4/4, clippy clean); fold HEAD `0898af16` **pass** (store 2/2 + 1/1, kernel-server 2/2 + 1/1 + 1/1, clippy clean; §2)
@@ -45,4 +45,4 @@ Not T07 Knowledge/Memory, not T08 Settings chrome, not T10 grants, not T11 refle
 
 ## 4. Unique next
 
-Ready/merge PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) once required CI is green on the closure HEAD. After merge: fast-forward `main`, delete the task branch, remove the worktree, record `main@<merge>` in PROGRESS / plan / PARALLEL-LANES §3.1, then continue serially with `P13-T11` (Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320)). Do not claim T12/T13/T15 in this closure.
+Done: PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) merged at `main@7575ebcd`; `main` fast-forwarded, task branch deleted, worktree removed, merge fact recorded in PROGRESS / plan / PARALLEL-LANES §3.1. Serial continuation: `P13-T11` (Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320)), then `P13-T12/D02`. T13/T15 not claimed here.
