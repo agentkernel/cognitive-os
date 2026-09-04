@@ -173,3 +173,9 @@ WHERE NOT EXISTS (SELECT 1 FROM memory_object_versions WHERE memory_id = memory_
 pub fn memory_version_migration_entry() -> MigrationPlanEntry {
     MigrationPlanEntry::new(20, MEMORY_VERSION_SCHEMA_V20)
 }
+
+#[path = "knowledge_memory.rs"]
+mod knowledge_memory;
+pub use knowledge_memory::{
+    ChatAdmission, KnowledgeMemoryStore, MemoryPromoteRow, PROMOTE_PURPOSE, PROMOTE_PURPOSE_COPY,
+};

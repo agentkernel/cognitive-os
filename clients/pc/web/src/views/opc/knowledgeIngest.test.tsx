@@ -109,6 +109,7 @@ function fakeActionLabels(host: HTMLElement): string[] {
       if (
         node.closest("[data-region='opc-hitl-actions']") ||
         node.closest("[data-region='opc-vault-ingest']") ||
+        node.closest("[data-region='opc-knowledge-memory']") ||
         node.closest("[data-region='opc-rail-write']")
       ) {
         continue;
@@ -156,6 +157,18 @@ function knowledgeRoutes(extras: Record<string, RouteResponse> = {}): Record<str
     "GET /management/resource/v1/list": {
       status: 200,
       body: { status: "ok", family: "memory", resources: [] },
+    },
+    "GET /management/resource/v1/vault.labeled": {
+      status: 200,
+      body: { status: "ok", is_authority: false, entries: [] },
+    },
+    "GET /management/resource/v1/vault.documents": {
+      status: 200,
+      body: { status: "ok", is_authority: false, documents: [] },
+    },
+    "GET /management/resource/v1/memory/promotes": {
+      status: 200,
+      body: { status: "ok", promotes: [] },
     },
     ...extras,
   };

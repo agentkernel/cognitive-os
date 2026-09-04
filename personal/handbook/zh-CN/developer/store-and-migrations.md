@@ -69,7 +69,7 @@ tests:
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
   - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
-fingerprint: "sha256:bd8798654fbd0f0f213a2ad81624e0248ffa587b6a6c4969f098201886d5b2db"
+fingerprint: "sha256:aa43fac01f034662cb5f562ba514923cf3029c53d4502fd2ccd2278f8d9b4395"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -136,6 +136,11 @@ P13-T04 新增 v37。写 Attempt 终态的 broker 线程把该次运行交给 `A
 P13-T05 Routine 武装新增 v38。HTTP 调用者是 management `routine.arm` / `routine.instruction` / `routine.arming.resume` / `routine.armings` / `routine.runs` / `today.overview`；周期性 daemon scheduler tick 是 `task://personal/routine/*` 行的**唯一**派发者（通用 scheduler pass 跳过它们；没有第二套 scheduler）。每一轮先把已观察到的 Attempt 终态写回为 occurrence 结果（`RoutineArmingStore::record_attempt_terminal`，再 queue-latest `promote_queued`），然后经 P11-T08 `admit_trigger` 路径触发到期的 interval arming（P11-T02 宿主 paused / offline 时该触发落为可见 `missed` 行，附 `host-unavailable:<reason>`），再用 `SchedulerRepository::acquire_eligible_lease`（owner `personal-daemon-scheduler`，epoch fencing）租约每个未派发的 `active` occurrence，并经 P13-T02 persist-before-dispatch 路径启动一个托管 Attempt；`bind_attempt` 拒绝不匹配的租约。未武装 Routine 的手动触发被标为 `missed`（`not-armed`），永不丢弃。新指令取代原 arming 并在安全点应用（`continue` / `pause` / `restart`）；运行中的 occurrence 保留其 revision 与 Attempt 的 context digest。G2 前武装被拒（`ROUTINE_ARM_BEFORE_G2`）；PlanRevision / 环节测试 / G2 的产品 HTTP 路径缺口仍归 P13-T04 / P13-T06。
 
 P13-T06 Project 群聊新增 v39。HTTP 调用者是 management `chat.post` / `chat.thread`；task 通道别名 403。带计划提案的 `@manager` 成为 `plan-revision` ApprovalPreview；`@member` 成为仅限该成员负责环节的 `task-revision` 候选。聊天永不落 PlanRevision（`confirm_chat_candidate_locked` 只从画布 Confirm 运行）。Approve 形状的正文在任何写入前 403；secret-shape 正文 422 并指向 Settings。跨 Project 读失败闭合。manager 与 Member 发言仍走 P11-T05 speech 路由器，发言规则是 daemon 记录类型，不是客户端过滤。`chat.thread` 按时间从旧到新合并 Owner 回合与已投递发言；Owner 回合与 manager announce 落在同一毫秒时，owner-message 排在 speech 前面。
+
+P13-T07 Knowledge/Memory 标签同样**不新增迁移**。带标签 Vault 读取与 Memory
+自动准入 / 跨 Project promote 复用 `p11_vault_*` 与 `memory_candidates` /
+`memory_admission_decisions` / `memory_objects`。文件仍不是权威。宿主文件系统
+E2E 为 `not-run`。
 
 P13-T09 项目生命周期**本切片不登记新的已应用迁移**。`project_lifecycle_migration_entry()` 预留 **v41**（`p13_project_lifecycle_event`），待后续在 `personal_db.rs` 注册（该文件与 v40 由 P13-T11 持有）。运行时 copy / archive / delete / export / restore-point 使用既有 `p11_project`、`p13_routine_arming`、`p11_grant`、`p11_employee` 与 `p11_windows_host_*`。复制落为 `inactive`，拒绝继承 grant/就位/runtime。归档先暂停 `armed` Routine。删除是影响预览加二次确认；墓碑为 `state='deletion-preview'` 且 `current_plan_revision_id='tombstone'`，永不 DROP 行。导出默认排除 secret，且不是权威。同盘 restore point 的 `is_backup=0`。HTTP 调用者是 management `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle`；task 通道别名 403。Windows FS E2E 在 P13-T13 之前为 `not-run`。
 

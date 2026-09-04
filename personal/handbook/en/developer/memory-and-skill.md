@@ -11,6 +11,8 @@ sources:
     symbols: ["admit_memory_candidate"]
   - path: personal/crates/cognitive-store/src/memory_privacy.rs
     symbols: ["screen_memory_admission", "recall_episodic_memory", "forget_episodic_memory"]
+  - path: personal/crates/cognitive-store/src/knowledge_memory.rs
+    symbols: ["KnowledgeMemoryStore", "auto_admit_chat", "request_promote", "confirm_promote"]
   - path: core/crates/cognitive-kernel/src/memory_admission.rs
     symbols: ["decide_memory_admission"]
   - path: personal/crates/cognitive-store/src/sqlite/harness_skill.rs
@@ -25,7 +27,8 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:07bec088a18aea59ae1127b8333c88f026976ba7e3e3601d4112102d7da42a98"
+  - personal/crates/cognitive-store/tests/p13_t07_knowledge_memory.rs
+fingerprint: "sha256:819182730280e81fcbe3a669eb1e30a5969d43624dae763bd2f8084e78771333"
 non_claims:
   - Lifecycle correctness evidence is focused-test evidence; B08-class Gate accounting is owned by the formal plan.
 ---
@@ -72,6 +75,17 @@ bindings keep their exact pins — they never drift to a successor.
 The management channel publishes lifecycle preconditions, admits Memory
 remember/recall/correct/forget/index.rebuild plus Skill
 import/revision-inspect/bind/supersede/revoke without direct SQLite access.
+P13-T07 adds management `vault.labeled` / `vault.documents` (provenance,
+rights, freshness, exclusion, untrusted-observation; files stay
+`is_authority=false`; a stored document remains visible as `not-indexed`)
+and `memory/auto-admit.chat` / `memory/promote.request` /
+`memory/promote.confirm` / `GET memory/promotes` on the existing Memory
+tables. Owner only; task aliases 403; Assistant self-admission and
+tombstone promote fail closed; an unconfirmed promote does not copy. Chat
+auto-admission stays honest-empty / Requires-backend on the Knowledge
+surface (P13-T06 group-chat exists; this surface does not list those turns
+as admit candidates and has no Admit button). Host filesystem E2E is
+`not-run`.
 Task-channel Memory mutation aliases (`/task/resource/v1/memory/*`) return
 `403 RESOURCE_MEMORY_CHANNEL_FORBIDDEN`. The common Resource Manager (`GET
 /management/resource/v1/list|inspect`) projects non-tombstoned Memory objects

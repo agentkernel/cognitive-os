@@ -67,7 +67,7 @@ tests:
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
   - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
-fingerprint: "sha256:bd8798654fbd0f0f213a2ad81624e0248ffa587b6a6c4969f098201886d5b2db"
+fingerprint: "sha256:aa43fac01f034662cb5f562ba514923cf3029c53d4502fd2ccd2278f8d9b4395"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -135,6 +135,11 @@ P13-T04 adds v37. The broker thread that writes the Attempt terminal hands the r
 P13-T05 Routine arming adds v38. Management HTTP `routine.arm` / `routine.instruction` / `routine.arming.resume` / `routine.armings` / `routine.runs` / `today.overview` is the HTTP caller; the periodic daemon scheduler tick is the **only** dispatcher of `task://personal/routine/*` rows (the generic scheduler pass skips them; there is no second scheduler). Each pass first writes observed Attempt terminals back as occurrence outcomes (`RoutineArmingStore::record_attempt_terminal`, then queue-latest `promote_queued`), then fires due interval armings through the P11-T08 `admit_trigger` path (a paused / offline P11-T02 host makes the firing a visible `missed` row with `host-unavailable:<reason>`), then leases each undispatched `active` occurrence with `SchedulerRepository::acquire_eligible_lease` (owner `personal-daemon-scheduler`, epoch fenced) and launches one hosted Attempt through the P13-T02 persist-before-dispatch path; `bind_attempt` refuses a lease that does not match. A manual trigger on an un-armed Routine is marked `missed` (`not-armed`), never dropped. A new instruction supersedes the arming and applies at a safe point (`continue` / `pause` / `restart`); the running occurrence keeps its revision and its Attempt's context digest. Arming before G2 is refused (`ROUTINE_ARM_BEFORE_G2`); the PlanRevision / stage-test / G2 product HTTP path gap stays with P13-T04 / P13-T06.
 
 P13-T06 Project group chat adds v39. Management HTTP `chat.post` / `chat.thread` is the HTTP caller; task-channel aliases are 403. `@manager` with a plan proposal becomes a `plan-revision` ApprovalPreview; `@member` becomes a `task-revision` candidate bounded to that Member's own responsible stage. Chat never applies a PlanRevision (`confirm_chat_candidate_locked` runs only from canvas Confirm). Approve-shaped bodies are 403 before any write; secret-shaped bodies are 422 with a Settings pointer. Cross-Project reads fail closed. Manager and Member speech keep landing through the P11-T05 speech router so the speech rules are daemon record kinds, not a client filter. `chat.thread` merges Owner turns and delivered speech oldest-first; when an Owner turn and the manager announce share a millisecond, the owner-message stays ahead of speech.
+
+P13-T07 Knowledge/Memory labels also add **no new migration**. Labeled Vault
+reads and Memory auto-admit / cross-Project promote reuse `p11_vault_*` and
+`memory_candidates` / `memory_admission_decisions` / `memory_objects`. Files
+remain non-authority. Host filesystem E2E is `not-run`.
 
 P13-T09 Project lifecycle **does not register a new applied migration this slice**. `project_lifecycle_migration_entry()` reserves **v41** (`p13_project_lifecycle_event`) for a later `personal_db.rs` registration (that file and v40 are held by P13-T11). Runtime copy / archive / delete / export / restore-point uses existing `p11_project`, `p13_routine_arming`, `p11_grant`, `p11_employee`, and `p11_windows_host_*`. Copy lands `inactive` and refuses inherit grant/seating/runtime. Archive pauses `armed` Routines first. Delete is impact preview plus second confirmation; the tombstone is `state='deletion-preview'` with `current_plan_revision_id='tombstone'` and never DROPs the row. Export default-excludes secrets and is not authority. Same-disk restore points set `is_backup=0`. Management HTTP `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle` is the caller; task-channel aliases are 403. Windows FS E2E is `not-run` until P13-T13.
 
