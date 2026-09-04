@@ -11,6 +11,15 @@ use rusqlite::{Connection, OptionalExtension, params};
 use sha2::{Digest, Sha256};
 use std::sync::{Arc, Mutex};
 
+#[path = "project_lifecycle.rs"]
+mod project_lifecycle;
+pub use project_lifecycle::{
+    DeletePreviewView, LifecycleArchiveSpec, LifecycleCopySpec, LifecycleDeleteConfirmSpec,
+    LifecycleDeletePreviewSpec, LifecycleEventView, LifecycleExportSpec, LifecycleRestoreSpec,
+    ProjectExportView, ProjectLifecycleStore, ProjectLifecycleView, RestorePointView,
+    project_lifecycle_migration_entry,
+};
+
 /// Authority migration v26: Personal-private Project aggregate tables.
 pub const PROJECT_AGGREGATE_SCHEMA_V26: &str = "
 CREATE TABLE p11_draft (
@@ -1650,6 +1659,9 @@ impl ProjectAggregateStore {
                 detail: "copy excludes inflight tasks",
             });
         }
+        // P13-T09: a seated or granted source may be copied. The 副本 is a
+        // charter-only inactive row and never receives employees, grants,
+        // plans, or armed Routines.
         let copy_id = next_id("project")?;
         let copy_charter = next_id("charter")?;
         let copy_draft = next_id("draft")?;

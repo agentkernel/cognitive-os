@@ -22,6 +22,7 @@ import {
   loadProjectAxis,
   loadProjectDetail,
 } from "./loadOpcReads";
+import { ProjectLifecyclePanel } from "./ProjectLifecyclePanel";
 import { ProjectWorkNav } from "./ProjectWorkNav";
 
 /**
@@ -149,6 +150,14 @@ export function ProjectDetailPage() {
           </tbody>
         </table>
       </DaemonReadPanel>
+      {projectId && detail.status === "ready" && row ? (
+        <ProjectLifecyclePanel
+          projectId={projectId}
+          onChanged={() => {
+            void refresh();
+          }}
+        />
+      ) : null}
       {projectId ? (
         <DaemonReadPanel
           projection={hitl}

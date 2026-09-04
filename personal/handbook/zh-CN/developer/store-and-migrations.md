@@ -36,6 +36,8 @@ sources:
     symbols: ["ROUTINE_ARMING_SCHEMA_V38", "RoutineArmingStore"]
   - path: personal/crates/cognitive-store/src/project_chat.rs
     symbols: ["PROJECT_CHAT_SCHEMA_V39", "ProjectChatStore"]
+  - path: personal/crates/cognitive-store/src/project_lifecycle.rs
+    symbols: ["project_lifecycle_migration_entry", "ProjectLifecycleStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -66,7 +68,8 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:8664631d729257ffac42b691a0fe88051868bce967febf33221ac75e10241e19"
+  - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
+fingerprint: "sha256:aa43fac01f034662cb5f562ba514923cf3029c53d4502fd2ccd2278f8d9b4395"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -138,6 +141,8 @@ P13-T07 Knowledge/Memory 标签同样**不新增迁移**。带标签 Vault 读�
 自动准入 / 跨 Project promote 复用 `p11_vault_*` 与 `memory_candidates` /
 `memory_admission_decisions` / `memory_objects`。文件仍不是权威。宿主文件系统
 E2E 为 `not-run`。
+
+P13-T09 项目生命周期**本切片不登记新的已应用迁移**。`project_lifecycle_migration_entry()` 预留 **v41**（`p13_project_lifecycle_event`），待后续在 `personal_db.rs` 注册（该文件与 v40 由 P13-T11 持有）。运行时 copy / archive / delete / export / restore-point 使用既有 `p11_project`、`p13_routine_arming`、`p11_grant`、`p11_employee` 与 `p11_windows_host_*`。复制落为 `inactive`，拒绝继承 grant/就位/runtime。归档先暂停 `armed` Routine。删除是影响预览加二次确认；墓碑为 `state='deletion-preview'` 且 `current_plan_revision_id='tombstone'`，永不 DROP 行。导出默认排除 secret，且不是权威。同盘 restore point 的 `is_backup=0`。HTTP 调用者是 management `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle`；task 通道别名 403。Windows FS E2E 在 P13-T13 之前为 `not-run`。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。

@@ -13,6 +13,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/pinned_https.rs
   - path: personal/apps/kernel-server/src/personal/project_aggregate.rs
   - path: personal/apps/kernel-server/src/personal/project_chat.rs
+  - path: personal/apps/kernel-server/src/personal/project_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
@@ -25,7 +26,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:077b268581c785cd9be8216e92783c59aea7dbb2128ffdcbb7cc747cdbc034f3"
+fingerprint: "sha256:013b0b9cc96bd733de3676281235f2e91fbb826e2836420ecfacb88b859d2d33"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -250,6 +251,13 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/management/project/v1/today.overview` | management | Today live Project 概览（P13-T05）：created / live / blocked 计数，以及每个 live Project 一行（状态、`period` = today|week|month（UTC）内 done / failed / unknown 的 Attempt 数、daemon 观察的时长合计或 `null`、来自 live arming 的当前环节、running / queued / missed 事实）。`kpi_wall: false`；cost 为 `unknown`；`attempts_done` 统计回答 `done` 的 child，永不等于完成。 |
 | `POST` | `/management/project/v1/chat.post` | management | 在 Project 内发布一条 Owner 群聊回合（P13-T06）。daemon 把 `@manager` 路由为 PlanRevision 候选 + `plan-revision` ApprovalPreview，把 `@member` 路由为仅限该成员负责环节的 `task-revision` 候选；未点名回合走 manager-default briefing。聊天永不落 PlanRevision，也无 Approve（`approve_attempted` CHECK = 0）。secret-shape 正文 422 并指向 Settings（SecretStore takeover）。确认仍走 Projects 画布 `confirm`。 |
 | `GET` | `/management/project/v1/chat.thread` | management | 读取 Project 群聊线程（Owner 回合加上 daemon 撰写的 manager / Member 发言）。跨 Project 读失败闭合。仅限 management 通道。 |
+| `POST` | `/management/project/v1/copy` | management | 把 Project 复制为 inactive 副本（P13-T09）。继承 grant / 就位 / runtime 标志失败闭合。副本永不获得 grant、已就位 Member 或已武装 Routine。聊天不能 Approve。 |
+| `POST` | `/management/project/v1/archive` | management | 先暂停已武装 Routine/Trigger 再归档 Project（`skip_stop_triggers` 为 422）。不是灾难备份。 |
+| `POST` | `/management/project/v1/delete.preview` | management | 逻辑删除的影响预览。仍有 live trigger 或尚未归档时失败闭合。不 DROP `p11_project` 行。 |
+| `POST` | `/management/project/v1/delete.confirm` | management | 二次确认的逻辑删除（digest + `second_confirm: true`）。`physical_delete` 为 422。墓碑保留行（`deletion-preview` + plan ref `tombstone`）。 |
+| `POST` | `/management/project/v1/restore-point` | management | 记录同盘本地 restore point。`claimed_as_backup` / `is_disaster_backup` 失败闭合。不是灾难备份。 |
+| `POST` | `/management/project/v1/export` | management | 导出 Project 且排除 secret（`include_secrets` 为 422）。载荷不是权威（`is_authority: false`），也不是备份。 |
+| `GET` | `/management/project/v1/lifecycle` | management | Project 生命周期投影：状态、data 目录、逻辑删除标志、待确认删除预览，以及标明非灾备的 restore point。 |
 | `POST` | `/management/host/v1/home.admit` | management | 受理 Personal Home `app/`+`data/`（P11-T02）。安装根必须以 `Personal Home` 结尾；GNU/WSL/Linux 根、ACL 逃逸、secret env/argv 失败闭合。升级替换 app、保留 data。原生 ACL E2E 为 `not-run`。 |
 | `POST` | `/management/host/v1/daemon.bind` | management | 把唯一 daemon 绑到已受理的 Home。已 bound/recovering/resumed 时重复绑定失败闭合。托盘角色仅 observe-and-request。 |
 | `POST` | `/management/host/v1/close.request` | management | 类型化关闭：仅当 daemon 能兑现 background 时才接受 background-or-pause；否则拒绝（禁止假 background）。 |
@@ -323,6 +331,13 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `GET` | `/task/project/v1/today.overview` | task | 禁止：Today 概览仅限 management 通道。 |
 | `POST` | `/task/project/v1/chat.post` | task | 禁止：Project 群聊仅限 management 通道。聊天不能 Approve。 |
 | `GET` | `/task/project/v1/chat.thread` | task | 禁止：Project 群聊线程仅限 management 通道。 |
+| `POST` | `/task/project/v1/copy` | task | 禁止：Project 复制仅限 management 通道。 |
+| `POST` | `/task/project/v1/archive` | task | 禁止：Project 归档仅限 management 通道。 |
+| `POST` | `/task/project/v1/delete.preview` | task | 禁止：Project 删除预览仅限 management 通道。 |
+| `POST` | `/task/project/v1/delete.confirm` | task | 禁止：Project 删除确认仅限 management 通道。 |
+| `POST` | `/task/project/v1/restore-point` | task | 禁止：Project restore point 仅限 management 通道。 |
+| `POST` | `/task/project/v1/export` | task | 禁止：Project 导出仅限 management 通道。 |
+| `GET` | `/task/project/v1/lifecycle` | task | 禁止：Project 生命周期读取仅限 management 通道。 |
 | `POST` | `/task/host/v1/home.admit` | task | 禁止：Windows host admit 仅限 management 通道。 |
 | `POST` | `/task/host/v1/daemon.bind` | task | 禁止：Windows host daemon bind 仅限 management 通道。 |
 | `POST` | `/task/host/v1/close.request` | task | 禁止：Windows host close 仅限 management 通道。 |
