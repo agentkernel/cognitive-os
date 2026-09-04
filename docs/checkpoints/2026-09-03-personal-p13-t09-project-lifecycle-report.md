@@ -48,6 +48,10 @@ Local MSVC override (`rustc` host `x86_64-pc-windows-msvc`; `CARGO_PROFILE_DEV_D
 | `cargo clippy --workspace` | **pass** | `DEV-LINUX-NATIVE-01` at `8c681757` (`-D warnings`) |
 | required CI `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | **pass** | [33755849511](https://github.com/agentkernel/cognitive-os/actions/runs/33755849511) at `8c681757` (ubuntu 4m13s, windows 16m38s, required-ci 3s); workflow_dispatch (PR auto-trigger did not start) |
 | `DEV-LINUX-NATIVE-01` | **pass** | exact `8c681757` dirty=0; store 2/2 + `p11_t03_copy_excludes_secrets_and_inflight` 1/1; kernel-server 4/4; clippy clean |
+| required CI at rebased HEAD `3d4001b0` (on `main@22718d74`, T08 merged) | **pass** | [33761616553](https://github.com/agentkernel/cognitive-os/actions/runs/33761616553) |
+| 2026-09-04 fold `origin/main@763b7909` (T07 merged PR #319) → `0898af16` | recorded | conflicts only in plan docs, bilingual `store-and-migrations` (T07 + T09 paragraphs kept, fingerprints refreshed), regenerated `ref.http-api`; `check:consistency` / `check-handbook` / `generate-handbook --check` / `docs-sync-gate` **pass** |
+| `DEV-LINUX-NATIVE-01` at fold HEAD `0898af16` (worktree `~/cognitiveos-personal-worktrees/p13-t09-0898af16`, dirty=0; log START `2026-09-04T06:09:07Z` → END `06:10:58Z`) | **pass** | store `p13_t09_project_lifecycle` 2/2; `p11_t03_copy_excludes_secrets_and_inflight` 1/1; kernel-server `task_channel_aliases_are_forbidden` 2/2, `inherit_export_secret_and_backup_claims_are_refused` 1/1, `management_copy_archive_delete_restore_export_round_trip` 1/1; `cargo clippy -p cognitive-store -p kernel-server --all-targets --locked -- -D warnings` clean |
+| required CI at fold HEAD `0898af16` | see closure | [33843008228](https://github.com/agentkernel/cognitive-os/actions/runs/33843008228) **SUCCESS** |
 | Windows FS E2E | **not-run** | until P13-T13 |
 
 ## Handbook (A8 interrupt)
@@ -58,5 +62,5 @@ Dropped: none of the listed T09 handbook files. Settings/SecretStore routes and 
 
 ## Next
 
-- Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) stays Draft.
-- Map formal acceptance; Windows FS E2E stays `not-run` until P13-T13.
+- Formal acceptance mapped in the [closure](2026-09-04-personal-p13-t09-project-lifecycle-closure.md); Windows FS E2E stays `not-run` until P13-T13.
+- Required CI on the closure HEAD → ready/merge PR [#321](https://github.com/agentkernel/cognitive-os/pull/321) → record `main@<merge>` → continue serially with `P13-T11` (Draft PR #320).
