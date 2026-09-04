@@ -29,11 +29,13 @@ use cognitive_kernel::ports::{
     SkillPackageRow, SkillRevisionRow, SkillRevisionSupersedeRequest, SkillStore, StorePortError,
     WorkspaceContextSourceRow,
 };
+use cognitive_store::memory_store::KnowledgeMemoryStore;
+use cognitive_store::vault::{VaultReadSpec, VaultStore};
 use cognitive_store::{
-    EmployeeStore, EpisodicRecallSpec, ProjectAggregateError, SqliteAuthorityStore, SystemClock,
-    UuidV7Generator, admit_memory_candidate, canonical_episodic_scope, forget_episodic_memory,
-    load_memory_governance_scope, rebuild_episodic_memory_index, recall_episodic_memory,
-    require_employee_in_project, screen_memory_admission,
+    ConfirmCaller, EmployeeStore, EpisodicRecallSpec, ProjectAggregateError, SqliteAuthorityStore,
+    SystemClock, UuidV7Generator, admit_memory_candidate, canonical_episodic_scope,
+    forget_episodic_memory, load_memory_governance_scope, rebuild_episodic_memory_index,
+    recall_episodic_memory, require_employee_in_project, screen_memory_admission,
 };
 use serde_json::{Value, json};
 
@@ -638,12 +640,36 @@ impl ResourceApi {
             || method_path.starts_with("POST /task/resource/v1/memory/correct")
             || method_path.starts_with("POST /task/resource/v1/memory/index.rebuild")
             || method_path.starts_with("POST /task/resource/v1/memory/review")
+            || method_path.starts_with("POST /task/resource/v1/memory/auto-admit.chat")
+            || method_path.starts_with("POST /task/resource/v1/memory/promote.request")
+            || method_path.starts_with("POST /task/resource/v1/memory/promote.confirm")
+            || method_path.starts_with("GET /task/resource/v1/vault.labeled")
+            || method_path.starts_with("GET /task/resource/v1/vault.documents")
+            || method_path.starts_with("GET /task/resource/v1/memory/promotes")
         {
             return error(
                 403,
                 "RESOURCE_MEMORY_CHANNEL_FORBIDDEN",
                 "Memory mutations are management-channel only",
             );
+        }
+        if method_path.starts_with("GET /management/resource/v1/vault.labeled") {
+            return self.vault_labeled(method_path, store);
+        }
+        if method_path.starts_with("GET /management/resource/v1/vault.documents") {
+            return self.vault_documents(method_path, store);
+        }
+        if method_path.starts_with("GET /management/resource/v1/memory/promotes") {
+            return self.memory_promotes(method_path, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/memory/auto-admit.chat") {
+            return self.auto_admit_chat(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/memory/promote.request") {
+            return self.promote_request(body, store);
+        }
+        if method_path.starts_with("POST /management/resource/v1/memory/promote.confirm") {
+            return self.promote_confirm(body, store);
         }
         if method_path.starts_with("POST /management/resource/v1/memory/forget") {
             return self.forget_memory(body, store);
@@ -1288,6 +1314,210 @@ impl ResourceApi {
                 "RESOURCE_SKILL_UNAVAILABLE",
                 "Skill authority store is unavailable",
             ),
+        }
+    }
+
+    fn vault_labeled(
+        &self,
+        method_path: &str,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let Some(spec) = vault_read_from_path(method_path) else {
+            return error(
+                400,
+                "RESOURCE_VAULT_PROJECT_REQUIRED",
+                "project_id required",
+            );
+        };
+        let vault = VaultStore::from_authority_store(store);
+        match vault.read_labeled_index(&spec) {
+            Ok(entries) => json_response(
+                200,
+                json!({
+                    "status": "ok",
+                    "is_authority": false,
+                    "entries": entries.iter().map(|entry| json!({
+                        "entry_id": entry.entry_id,
+                        "document_id": entry.document_id,
+                        "relative_path": entry.relative_path,
+                        "excerpt": entry.excerpt,
+                        "layer": entry.layer,
+                        "provenance_source_uri": entry.provenance_source_uri,
+                        "rights_class": entry.rights_class,
+                        "freshness": entry.freshness,
+                        "exclusion": entry.exclusion,
+                        "exclusion_reason": entry.exclusion_reason,
+                        "untrusted_observation": entry.untrusted_observation,
+                        "is_authority": entry.is_authority,
+                    })).collect::<Vec<_>>(),
+                }),
+            ),
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn vault_documents(
+        &self,
+        method_path: &str,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let Some(spec) = vault_read_from_path(method_path) else {
+            return error(
+                400,
+                "RESOURCE_VAULT_PROJECT_REQUIRED",
+                "project_id required",
+            );
+        };
+        let vault = VaultStore::from_authority_store(store);
+        match vault.list_document_statuses(&spec) {
+            Ok(rows) => json_response(
+                200,
+                json!({
+                    "status": "ok",
+                    "is_authority": false,
+                    "documents": rows.iter().map(|row| json!({
+                        "document_id": row.document_id,
+                        "relative_path": row.relative_path,
+                        "provenance_source_uri": row.provenance_source_uri,
+                        "index_status": row.index_status,
+                    })).collect::<Vec<_>>(),
+                }),
+            ),
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn memory_promotes(
+        &self,
+        method_path: &str,
+        store: &SqliteAuthorityStore,
+    ) -> ResourceApiResponse {
+        let query = method_path
+            .split_once('?')
+            .map(|(_, query)| query)
+            .unwrap_or("");
+        let Some(project_id) =
+            query_parameter(query, "project_id").filter(|value| !value.is_empty())
+        else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PROJECT_REQUIRED",
+                "project_id required",
+            );
+        };
+        let knowledge = KnowledgeMemoryStore::from_authority_store(store);
+        match knowledge.list_promotes(project_id) {
+            Ok(rows) => json_response(
+                200,
+                json!({
+                    "status": "ok",
+                    "promotes": rows.iter().map(promote_json).collect::<Vec<_>>(),
+                }),
+            ),
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn auto_admit_chat(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory auto-admit payload is invalid",
+            );
+        };
+        let (Some(projection_id), Some(project_id), Some(record_id)) = (
+            string_field(&document, "projection_id"),
+            string_field(&document, "project_id"),
+            string_field(&document, "record_id"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "auto-admit requires projection_id, project_id, and record_id",
+            );
+        };
+        let knowledge = KnowledgeMemoryStore::from_authority_store(store);
+        match knowledge.auto_admit_chat(
+            ConfirmCaller::OwnerManagement,
+            &projection_id,
+            &project_id,
+            &record_id,
+            now_unix_seconds().saturating_mul(1000),
+        ) {
+            Ok(admitted) => json_response(
+                201,
+                json!({
+                    "status": "admitted",
+                    "memory_id": admitted.memory_id,
+                    "inspectable": true,
+                }),
+            ),
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn promote_request(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory promote payload is invalid",
+            );
+        };
+        let (Some(memory_id), Some(from_project_id), Some(to_project_id), Some(to_employee_id)) = (
+            string_field(&document, "memory_id"),
+            string_field(&document, "from_project_id"),
+            string_field(&document, "to_project_id"),
+            string_field(&document, "to_employee_id"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "promote.request requires memory_id, from_project_id, to_project_id, to_employee_id",
+            );
+        };
+        let knowledge = KnowledgeMemoryStore::from_authority_store(store);
+        match knowledge.request_promote(
+            ConfirmCaller::OwnerManagement,
+            &memory_id,
+            &from_project_id,
+            &to_project_id,
+            &to_employee_id,
+            now_unix_seconds().saturating_mul(1000),
+        ) {
+            Ok(pending) => json_response(201, promote_json(&pending)),
+            Err(error) => privacy_error(error),
+        }
+    }
+
+    fn promote_confirm(&self, body: &[u8], store: &SqliteAuthorityStore) -> ResourceApiResponse {
+        let Ok(document) = serde_json::from_slice::<Value>(body) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "Memory promote confirm payload is invalid",
+            );
+        };
+        let (Some(promote_id), Some(preview_digest)) = (
+            string_field(&document, "promote_id"),
+            string_field(&document, "preview_digest"),
+        ) else {
+            return error(
+                400,
+                "RESOURCE_MEMORY_PAYLOAD_INVALID",
+                "promote.confirm requires promote_id and preview_digest",
+            );
+        };
+        let knowledge = KnowledgeMemoryStore::from_authority_store(store);
+        match knowledge.confirm_promote(
+            ConfirmCaller::OwnerManagement,
+            &promote_id,
+            &preview_digest,
+            now_unix_seconds().saturating_mul(1000),
+        ) {
+            Ok(confirmed) => json_response(200, promote_json(&confirmed)),
+            Err(error) => privacy_error(error),
         }
     }
 
@@ -2237,6 +2467,33 @@ fn require_scoped_employee(
     require_employee_in_project(&employees, project_id, employee_id).map_err(privacy_error)
 }
 
+fn vault_read_from_path(method_path: &str) -> Option<VaultReadSpec<'_>> {
+    let query = method_path
+        .split_once('?')
+        .map(|(_, query)| query)
+        .unwrap_or("");
+    let project_id = query_parameter(query, "project_id").filter(|value| !value.is_empty())?;
+    let caller = query_parameter(query, "caller_project_id")
+        .filter(|value| !value.is_empty())
+        .unwrap_or(project_id);
+    Some(VaultReadSpec {
+        caller_project_id: caller,
+        target_project_id: project_id,
+    })
+}
+
+fn promote_json(row: &cognitive_store::memory_store::MemoryPromoteRow) -> Value {
+    json!({
+        "status": row.status,
+        "promote_id": row.promote_id,
+        "memory_id": row.memory_id,
+        "from_project_id": row.from_project_id,
+        "to_project_id": row.to_project_id,
+        "preview_digest": row.preview_digest,
+        "promoted_memory_id": row.promoted_memory_id,
+    })
+}
+
 fn privacy_error(cause: ProjectAggregateError) -> ResourceApiResponse {
     match cause {
         ProjectAggregateError::Forbidden { detail } => {
@@ -2289,7 +2546,7 @@ mod p11_t11_tests {
     };
     use tempfile::TempDir;
 
-    fn authority() -> (
+    pub(crate) fn authority() -> (
         TempDir,
         SqliteAuthorityStore,
         ResourceApi,
@@ -2326,7 +2583,7 @@ mod p11_t11_tests {
         }
     }
 
-    fn activate_project(store: &SqliteAuthorityStore) -> String {
+    pub(crate) fn activate_project(store: &SqliteAuthorityStore) -> String {
         let plane = ProjectAggregateStore::from_authority_store(store);
         let (draft_id, _) = plane.create_draft(b"charter-v1", 10).unwrap();
         plane
@@ -2346,7 +2603,7 @@ mod p11_t11_tests {
             .new_ref
     }
 
-    fn roster(store: &SqliteAuthorityStore, project_id: &str) -> Vec<String> {
+    pub(crate) fn roster(store: &SqliteAuthorityStore, project_id: &str) -> Vec<String> {
         let projects = ProjectAggregateStore::from_authority_store(store);
         let employees = EmployeeStore::from_authority_store(store);
         let plan_id = projects
@@ -2384,7 +2641,7 @@ mod p11_t11_tests {
             .unwrap()
     }
 
-    fn remember_body(project_id: &str, employee_id: &str, text: &str) -> String {
+    pub(crate) fn remember_body(project_id: &str, employee_id: &str, text: &str) -> String {
         // HTTP remember runs admit_memory_candidate with maximum_retention_seconds
         // 31_536_000. A far-future 4_000_000_000 expiry is a correct 409 policy
         // mismatch (Reject vs requested Admit), not a happy-path 201. P4 409
@@ -2588,5 +2845,183 @@ mod p11_t11_tests {
         );
         assert_eq!(cross.status, 403, "{}", cross.body);
         assert!(cross.body.contains("RESOURCE_MEMORY_SCOPE_FORBIDDEN"));
+    }
+}
+
+#[cfg(test)]
+#[allow(clippy::expect_used, clippy::unwrap_used, clippy::panic)]
+mod p13_t07_tests {
+    use super::*;
+    use cognitive_store::{
+        ArchiveAppendSpec, CONVERSATION_ARCHIVE_PROJECTION_ID, ConversationStore, VaultImportSpec,
+        VaultStore,
+    };
+
+    fn import_note(store: &SqliteAuthorityStore, project_id: &str, path: &str, body: &str) {
+        VaultStore::from_authority_store(store)
+            .import(
+                ConfirmCaller::OwnerManagement,
+                &VaultImportSpec {
+                    project_id,
+                    relative_path: path,
+                    rights_class: "owner-owned",
+                    provenance_json: r#"{"source_uri":"owner-paste:t07"}"#,
+                    source_kind: "owner-paste",
+                    body,
+                    cas_ref: None,
+                    conflict_policy: None,
+                    now_ms: 9_000,
+                },
+            )
+            .expect("import");
+    }
+
+    #[test]
+    fn p13_t07_labeled_documents_and_task_aliases() {
+        let (_tmp, store, api, _data_dir) = super::p11_t11_tests::authority();
+        let project_id = super::p11_t11_tests::activate_project(&store);
+        import_note(&store, &project_id, "notes/pending.md", "Stored pending.");
+        let documents = api.handle_authority_or_mutation(
+            &format!("GET /management/resource/v1/vault.documents?project_id={project_id}&caller_project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(documents.status, 200, "{}", documents.body);
+        assert!(documents.body.contains("not-indexed"), "{}", documents.body);
+        VaultStore::from_authority_store(&store)
+            .rebuild_index(ConfirmCaller::OwnerManagement, &project_id, 9_100)
+            .expect("rebuild");
+        let labeled = api.handle_authority_or_mutation(
+            &format!("GET /management/resource/v1/vault.labeled?project_id={project_id}&caller_project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(labeled.status, 200, "{}", labeled.body);
+        assert!(labeled.body.contains("owner-owned"), "{}", labeled.body);
+        assert!(
+            labeled.body.contains("\"is_authority\":false"),
+            "{}",
+            labeled.body
+        );
+        let overreach = api.handle_authority_or_mutation(
+            &format!("GET /management/resource/v1/vault.labeled?project_id={project_id}&caller_project_id=task://personal/other"),
+            b"",
+            &store,
+        );
+        assert_eq!(overreach.status, 403, "{}", overreach.body);
+        for path in [
+            "GET /task/resource/v1/vault.labeled",
+            "GET /task/resource/v1/vault.documents",
+            "GET /task/resource/v1/memory/promotes",
+            "POST /task/resource/v1/memory/auto-admit.chat",
+            "POST /task/resource/v1/memory/promote.request",
+            "POST /task/resource/v1/memory/promote.confirm",
+        ] {
+            let task = api.handle_authority_or_mutation(path, b"{}", &store);
+            assert_eq!(task.status, 403, "{path}: {}", task.body);
+        }
+    }
+
+    #[test]
+    fn p13_t07_promote_preview_then_confirm_on_management_http() {
+        let (_tmp, store, api, _data_dir) = super::p11_t11_tests::authority();
+        let from_project = super::p11_t11_tests::activate_project(&store);
+        let to_project = super::p11_t11_tests::activate_project(&store);
+        let from_ids = super::p11_t11_tests::roster(&store, &from_project);
+        let to_ids = super::p11_t11_tests::roster(&store, &to_project);
+        let remembered = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/remember",
+            super::p11_t11_tests::remember_body(
+                &from_project,
+                &from_ids[1],
+                "p13t07 promote lantern hangs east",
+            )
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(remembered.status, 201, "{}", remembered.body);
+        let memory_id = serde_json::from_str::<Value>(&remembered.body)
+            .unwrap()
+            .get("memory_id")
+            .and_then(Value::as_str)
+            .unwrap()
+            .to_owned();
+        let pending = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/promote.request",
+            json!({
+                "memory_id": memory_id,
+                "from_project_id": from_project,
+                "to_project_id": to_project,
+                "to_employee_id": to_ids[1],
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(pending.status, 201, "{}", pending.body);
+        assert!(
+            pending.body.contains("\"status\":\"pending\""),
+            "{}",
+            pending.body
+        );
+        let pending_json = serde_json::from_str::<Value>(&pending.body).unwrap();
+        let confirmed = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/promote.confirm",
+            json!({
+                "promote_id": pending_json.get("promote_id").and_then(Value::as_str),
+                "preview_digest": pending_json.get("preview_digest").and_then(Value::as_str),
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        assert!(
+            confirmed.body.contains("\"status\":\"confirmed\""),
+            "{}",
+            confirmed.body
+        );
+        let auto = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/auto-admit.chat",
+            json!({
+                "projection_id": CONVERSATION_ARCHIVE_PROJECTION_ID,
+                "project_id": from_project,
+                "record_id": "missing-archive",
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(auto.status, 404, "{}", auto.body);
+        let record_id = ConversationStore::from_authority_store(&store)
+            .append(
+                ConfirmCaller::OwnerManagement,
+                &ArchiveAppendSpec {
+                    projection_id: CONVERSATION_ARCHIVE_PROJECTION_ID,
+                    project_id: &from_project,
+                    employee_id: &from_ids[1],
+                    kind: "note",
+                    body: "Archive note admitted over HTTP.",
+                    now_ms: 10_000,
+                },
+            )
+            .expect("archive");
+        let admitted = api.handle_authority_or_mutation(
+            "POST /management/resource/v1/memory/auto-admit.chat",
+            json!({
+                "projection_id": CONVERSATION_ARCHIVE_PROJECTION_ID,
+                "project_id": from_project,
+                "record_id": record_id,
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(admitted.status, 201, "{}", admitted.body);
+        assert!(
+            admitted.body.contains("\"inspectable\":true"),
+            "{}",
+            admitted.body
+        );
     }
 }

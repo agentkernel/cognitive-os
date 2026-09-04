@@ -25,7 +25,7 @@ tests:
   - tools/test/p7_t05_web_ui_inventory.test.mjs
   - tools/test/personal-rc-gate.test.mjs
   - .github/workflows/ci.yml
-fingerprint: "sha256:25dfb012a8ffe84ba221c95d748c7bde565f663479395a422aac98634fbd6467"
+fingerprint: "sha256:646888a9f1f7000b1ea777d3f3a271710acc7d84f173430ed9f2977daf033f10"
 non_claims:
   - CI 全绿只是工程证据；绝不升格为 Gate、release 或 Profile 声明（公理 A7）。
 ---

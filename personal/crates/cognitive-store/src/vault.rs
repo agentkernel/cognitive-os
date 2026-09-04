@@ -146,6 +146,32 @@ pub struct VaultIndexEntry {
     pub rebuilt_at: i64,
 }
 
+/// Index excerpt plus the P13-T07 label surface. Files stay non-authority.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VaultLabeledEntry {
+    pub entry_id: String,
+    pub document_id: String,
+    pub relative_path: String,
+    pub excerpt: String,
+    pub layer: String,
+    pub provenance_source_uri: String,
+    pub rights_class: String,
+    pub freshness: String,
+    pub exclusion: String,
+    pub exclusion_reason: String,
+    pub untrusted_observation: bool,
+    pub is_authority: bool,
+}
+
+/// Import visibility: a stored document remains visible when not indexed.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct VaultDocumentStatus {
+    pub document_id: String,
+    pub relative_path: String,
+    pub provenance_source_uri: String,
+    pub index_status: String,
+}
+
 /// Fail-closed conflict record. Last-write-wins without this row is rejected.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VaultConflict {
@@ -297,6 +323,64 @@ impl VaultStore {
             }
         }
         Ok(written)
+    }
+
+    /// Labeled index query. Cross-project caller is retrieval overreach.
+    pub fn read_labeled_index(
+        &self,
+        spec: &VaultReadSpec<'_>,
+    ) -> Result<Vec<VaultLabeledEntry>, ProjectAggregateError> {
+        reject_cross_project(spec.caller_project_id, spec.target_project_id)?;
+        let documents = {
+            let conn = self.lock()?;
+            load_documents(&conn, spec.target_project_id)?
+        };
+        let entries = self.read_index(spec)?;
+        let current_by_path = current_document_ids(&documents);
+        Ok(entries
+            .into_iter()
+            .filter_map(|entry| {
+                let document = documents
+                    .iter()
+                    .find(|row| row.document_id == entry.document_id)?;
+                Some(label_entry(
+                    &entry,
+                    document,
+                    current_by_path.contains(&entry.document_id),
+                ))
+            })
+            .collect())
+    }
+
+    /// Stored documents stay visible when the derived index has not rebuilt.
+    pub fn list_document_statuses(
+        &self,
+        spec: &VaultReadSpec<'_>,
+    ) -> Result<Vec<VaultDocumentStatus>, ProjectAggregateError> {
+        reject_cross_project(spec.caller_project_id, spec.target_project_id)?;
+        let conn = self.lock()?;
+        let documents = load_documents(&conn, spec.target_project_id)?;
+        let mut statuses = Vec::new();
+        for document in documents {
+            let indexed: i64 = conn
+                .query_row(
+                    "SELECT COUNT(*) FROM p11_vault_index_entry WHERE document_id = ?1",
+                    params![document.document_id],
+                    |row| row.get(0),
+                )
+                .map_err(unavailable("count vault index for document"))?;
+            statuses.push(VaultDocumentStatus {
+                document_id: document.document_id,
+                relative_path: document.relative_path,
+                provenance_source_uri: provenance_source_uri(&document.provenance_json),
+                index_status: if indexed > 0 {
+                    "indexed".to_owned()
+                } else {
+                    "not-indexed".to_owned()
+                },
+            });
+        }
+        Ok(statuses)
     }
 
     /// Scoped index query. Cross-project caller is retrieval overreach.
@@ -707,6 +791,72 @@ fn require_provenance_object(provenance_json: &str) -> Result<(), ProjectAggrega
         });
     }
     Ok(())
+}
+
+fn current_document_ids(documents: &[VaultDocument]) -> std::collections::HashSet<String> {
+    let mut latest: std::collections::BTreeMap<&str, &VaultDocument> =
+        std::collections::BTreeMap::new();
+    for document in documents {
+        match latest.get(document.relative_path.as_str()) {
+            Some(incumbent)
+                if incumbent.imported_at > document.imported_at
+                    || (incumbent.imported_at == document.imported_at
+                        && incumbent.document_id > document.document_id) => {}
+            _ => {
+                latest.insert(&document.relative_path, document);
+            }
+        }
+    }
+    latest
+        .into_values()
+        .map(|document| document.document_id.clone())
+        .collect()
+}
+
+fn label_entry(
+    entry: &VaultIndexEntry,
+    document: &VaultDocument,
+    current: bool,
+) -> VaultLabeledEntry {
+    let citation_only = document.rights_class == "citation-only";
+    VaultLabeledEntry {
+        entry_id: entry.entry_id.clone(),
+        document_id: entry.document_id.clone(),
+        relative_path: document.relative_path.clone(),
+        excerpt: entry.excerpt.clone(),
+        layer: entry.layer.clone(),
+        provenance_source_uri: provenance_source_uri(&document.provenance_json),
+        rights_class: document.rights_class.clone(),
+        freshness: if current {
+            "current".to_owned()
+        } else {
+            "superseded".to_owned()
+        },
+        exclusion: if citation_only {
+            "excluded".to_owned()
+        } else {
+            "included".to_owned()
+        },
+        exclusion_reason: if citation_only {
+            "citation-only".to_owned()
+        } else {
+            String::new()
+        },
+        untrusted_observation: citation_only,
+        is_authority: document.is_authority != 0,
+    }
+}
+
+fn provenance_source_uri(provenance_json: &str) -> String {
+    serde_json::from_str::<serde_json::Value>(provenance_json)
+        .ok()
+        .and_then(|value| {
+            value
+                .get("source_uri")
+                .and_then(serde_json::Value::as_str)
+                .map(ToOwned::to_owned)
+        })
+        .unwrap_or_else(|| "unknown".to_owned())
 }
 
 fn digest_hex(bytes: &[u8]) -> String {

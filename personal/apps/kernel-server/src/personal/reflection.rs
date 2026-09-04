@@ -12,7 +12,7 @@ use serde_json::{Value, json};
 use super::super::resource_api::ResourceApiResponse;
 use super::{error, now_ms, ok, parse_json, store_error};
 
-const TASK: &str = "/task/project/v1/";
+const TASK: &str = "/task/";
 
 const LITERALS: &[&str] = &[
     "POST /management/project/v1/reflection.generate",
@@ -109,11 +109,11 @@ pub(crate) fn handle(
             "no reflection route matched",
         );
     };
+    if literal.contains(TASK) {
+        return super::channel_forbidden();
+    }
     let reflections = ReflectionStore::from_authority_store(store);
-    let name = literal
-        .strip_prefix("POST /management/project/v1/")
-        .or_else(|| literal.strip_prefix("GET /management/project/v1/"))
-        .unwrap_or(literal);
+    let name = literal.rsplit('/').next().unwrap_or(literal);
     match name {
         "reflection.generate" => generate(body, &reflections),
         "reflection.list" => list(method_path, &reflections),

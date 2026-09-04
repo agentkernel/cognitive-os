@@ -38,6 +38,8 @@ sources:
     symbols: ["PROJECT_CHAT_SCHEMA_V39", "ProjectChatStore"]
   - path: personal/crates/cognitive-store/src/reflection.rs
     symbols: ["REFLECTION_SCHEMA_V40", "ReflectionStore"]
+  - path: personal/crates/cognitive-store/src/project_lifecycle.rs
+    symbols: ["project_lifecycle_migration_entry", "ProjectLifecycleStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -69,7 +71,8 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:f7168a09d1d9d438a8710279e2b8d7901f4b23a3e46d483e5983dfc06840548a"
+  - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
+fingerprint: "sha256:fdd23fc92c4ca86a1d852888fdac81a71c81c8313b712306150ddc3f1b2771ab"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -138,7 +141,14 @@ P13-T05 Routine 武装新增 v38。HTTP 调用者是 management `routine.arm` / 
 
 P13-T06 Project 群聊新增 v39。HTTP 调用者是 management `chat.post` / `chat.thread`；task 通道别名 403。带计划提案的 `@manager` 成为 `plan-revision` ApprovalPreview；`@member` 成为仅限该成员负责环节的 `task-revision` 候选。聊天永不落 PlanRevision（`confirm_chat_candidate_locked` 只从画布 Confirm 运行）。Approve 形状的正文在任何写入前 403；secret-shape 正文 422 并指向 Settings。跨 Project 读失败闭合。manager 与 Member 发言仍走 P11-T05 speech 路由器，发言规则是 daemon 记录类型，不是客户端过滤。`chat.thread` 按时间从旧到新合并 Owner 回合与已投递发言；Owner 回合与 manager announce 落在同一毫秒时，owner-message 排在 speech 前面。
 
-P13-T11 反思 / Member Runtime 新增 v40。候选由 Attempt / verification / evidence / occurrence 事实生成（`ReflectionStore::generate_from_facts`）；模型自报不是改进。某成员在某个 UTC 日至少有一条终态 Attempt 时产生 `daily` 汇总；`response done` / exit 0 且无 evidence 可以是 `daily`，不能是 `key-result`。Member Runtime 变更是新的 Employee revision，只在 Owner 确认 `member-runtime-revision` preview 后插入；回滚再追加一条恢复确认前配方的 revision。Role Template 提案需 Owner 确认，且不把 Employee 复制到另一 Project。管理面 HTTP 从 kernel-server `project_aggregate.rs` 嵌套转发（`reflection.generate` / `list` / `improve.*` / `role-template.*`）；task 通道别名为 403。Owner canvas `POST /management/project/v1/confirm` 应用这些 preview。MemberConfig Reflection 页签是 `/ui/` 表面。运行中 Attempt 的 prompt/context 改写被拒。兄弟任务占用的 `http-routes.json` / `ref.http-api` 在 T07/T08/T09 合并时折入。
+P13-T07 Knowledge/Memory 标签同样**不新增迁移**。带标签 Vault 读取与 Memory
+自动准入 / 跨 Project promote 复用 `p11_vault_*` 与 `memory_candidates` /
+`memory_admission_decisions` / `memory_objects`。文件仍不是权威。宿主文件系统
+E2E 为 `not-run`。
+
+P13-T09 项目生命周期**本切片不登记新的已应用迁移**。`project_lifecycle_migration_entry()` 预留 **v41**（`p13_project_lifecycle_event`），待后续在 `personal_db.rs` 注册（v40 是下文的 P13-T11 反思）。运行时 copy / archive / delete / export / restore-point 使用既有 `p11_project`、`p13_routine_arming`、`p11_grant`、`p11_employee` 与 `p11_windows_host_*`。复制落为 `inactive`，拒绝继承 grant/就位/runtime。归档先暂停 `armed` Routine。删除是影响预览加二次确认；墓碑为 `state='deletion-preview'` 且 `current_plan_revision_id='tombstone'`，永不 DROP 行。导出默认排除 secret，且不是权威。同盘 restore point 的 `is_backup=0`。HTTP 调用者是 management `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle`；task 通道别名 403。Windows FS E2E 在 P13-T13 之前为 `not-run`。
+
+P13-T11 反思 / Member Runtime 新增 v40。候选由 Attempt / verification / evidence / occurrence 事实生成（`ReflectionStore::generate_from_facts`）；模型自报不是改进。某成员在某个 UTC 日至少有一条终态 Attempt 时产生 `daily` 汇总；`response done` / exit 0 且无 evidence 可以是 `daily`，不能是 `key-result`。Member Runtime 变更是新的 Employee revision，只在 Owner 确认 `member-runtime-revision` preview 后插入；回滚再追加一条恢复确认前配方的 revision。Role Template 提案需 Owner 确认，且不把 Employee 复制到另一 Project。管理面 HTTP 从 kernel-server `project_aggregate.rs` 嵌套转发（`reflection.generate` / `list` / `improve.*` / `role-template.*`）；task 通道别名为 403。Owner canvas `POST /management/project/v1/confirm` 应用这些 preview。MemberConfig Reflection 页签是 `/ui/` 表面。运行中 Attempt 的 prompt/context 改写被拒。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。

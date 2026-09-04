@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:d2d20dd782f910c00c9ce7058eab6de88dc3c5d410a32734337dfbb06ae62a67"
+fingerprint: "sha256:6f69760ed817f15a539cc767f6b7f2d9db1890b007358a99ad9d8a6f79a38829"
 non_claims:
   - 资源族在权威存储中的存在不等于完整的用户工作流；各族缺口见下文与已知限制页。
 ---
@@ -32,7 +32,7 @@ Linux 1.0 与当前 API 分别治理六个资源族。它们有意**不**共享�
 
 | 族 | 是什么 | 今天的用户可及面 |
 |---|---|---|
-| **Memory** | 经接纳的持久知识，带 scope、purpose、provenance、版本、过期、遗忘/tombstone | 经 daemon 路由 `remember`/`forget`/explain；全文检索是权威过滤之后的可重建 FTS5 索引；不自动收割对话 |
+| **Memory** | 经接纳的持久知识，带 scope、purpose、provenance、版本、过期、遗忘/tombstone | 经 daemon 路由 `remember`/`forget`/explain；inspect/correct/promote/forget 走 management HTTP；全文检索是权威过滤之后的可重建 FTS5 索引；聊天自动准入仅 Owner，归档来源未到前保持空列表 |
 | **Skill** | 不可变的本地导入包/修订及其绑定 | 经 daemon 路由 import/bind/revoke/explain；脚本绝不自行执行 |
 | **Tool** | 七个静态原生操作（workspace 读/搜/写/patch、进程检查、HTTP 抓取、登记检查） | 目录、overlay lifecycle 与校验器已实现；投影将注册、overlay 状态与执行就绪分开报告（已装配族在启用时为 `execution_ready`）；Agent 暴露跟随 overlay 与就绪；HTTP 抓取在 campaign 钉住 HTTPS origin 之前保持失败闭合；执行需要受治理 Effect 路径（见 [Task 与执行](tasks-and-execution.md)） |
 | **Context** | 每 Task 的授权输入请求 + 带显式损失的解析视图 | 全部在 daemon 侧：元数据先行过滤、逐 body 重授权、封存视图、digest 绑定缓存 |

@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
   projectVaultConflicts,
+  projectVaultDocuments,
   projectVaultIndex,
   projectVaultInjectOrder,
+  projectVaultLabeled,
   vaultConflictsPath,
+  vaultDocumentsPath,
   vaultImportIsAuthority,
   vaultIndexPath,
+  vaultLabeledPath,
+  VAULT_DOCUMENTS_PATH,
   VAULT_IMPORT_PATH,
+  VAULT_LABELED_PATH,
   VAULT_REBUILD_PATH,
 } from "./vault";
 
@@ -95,5 +101,77 @@ describe("vault Why this fragment + conflicts (P12-T07)", () => {
     expect(vaultImportIsAuthority({ status: "ok", is_authority: true })).toBe(true);
     expect(VAULT_IMPORT_PATH).toBe("/management/project/v1/vault.import");
     expect(VAULT_REBUILD_PATH).toBe("/management/project/v1/vault.index.rebuild");
+  });
+});
+
+describe("vault labeled index + document status (P13-T07)", () => {
+  it("maps provenance/rights/freshness/exclusion and never treats files as authority", () => {
+    const rows = projectVaultLabeled({
+      status: "ok",
+      is_authority: false,
+      entries: [
+        {
+          entry_id: "ent-1",
+          document_id: "doc-1",
+          relative_path: "notes/owned.md",
+          excerpt: "Owned excerpt",
+          layer: "sourced-excerpt",
+          provenance_source_uri: "owner-paste:owned",
+          rights_class: "owner-owned",
+          freshness: "current",
+          exclusion: "included",
+          exclusion_reason: "",
+          untrusted_observation: false,
+          is_authority: false,
+        },
+        {
+          entry_id: "ent-2",
+          document_id: "doc-2",
+          relative_path: "notes/cite.md",
+          excerpt: "Cite",
+          layer: "sourced-excerpt",
+          provenance_source_uri: "https://example.invalid/cite",
+          rights_class: "citation-only",
+          freshness: "current",
+          exclusion: "excluded",
+          exclusion_reason: "citation-only",
+          untrusted_observation: true,
+          is_authority: false,
+        },
+      ],
+    });
+    expect(rows[0]?.freshness).toBe("current");
+    expect(rows[1]?.exclusion).toBe("excluded");
+    expect(rows[1]?.untrustedObservation).toBe(true);
+    expect(rows.every((row) => row.isAuthority === false)).toBe(true);
+    expect(projectVaultLabeled({ status: "ok", entries: [] })).toEqual([]);
+  });
+
+  it("keeps not-indexed documents visible", () => {
+    expect(
+      projectVaultDocuments({
+        documents: [
+          {
+            document_id: "doc-pending",
+            relative_path: "notes/pending.md",
+            provenance_source_uri: "owner-paste:pending",
+            index_status: "not-indexed",
+          },
+        ],
+      }),
+    ).toEqual([
+      {
+        documentId: "doc-pending",
+        relativePath: "notes/pending.md",
+        provenanceSourceUri: "owner-paste:pending",
+        indexStatus: "not-indexed",
+      },
+    ]);
+    expect(vaultLabeledPath("proj-1")).toBe(
+      `${VAULT_LABELED_PATH}?project_id=proj-1&caller_project_id=proj-1`,
+    );
+    expect(vaultDocumentsPath("proj-1")).toBe(
+      `${VAULT_DOCUMENTS_PATH}?project_id=proj-1&caller_project_id=proj-1`,
+    );
   });
 });

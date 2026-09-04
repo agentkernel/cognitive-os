@@ -38,6 +38,8 @@ sources:
     symbols: ["PROJECT_CHAT_SCHEMA_V39", "ProjectChatStore"]
   - path: personal/crates/cognitive-store/src/reflection.rs
     symbols: ["REFLECTION_SCHEMA_V40", "ReflectionStore"]
+  - path: personal/crates/cognitive-store/src/project_lifecycle.rs
+    symbols: ["project_lifecycle_migration_entry", "ProjectLifecycleStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
     symbols: ["execute_sqlite_migration_plan"]
   - path: personal/crates/cognitive-store/src/provider_control_plane.rs
@@ -67,7 +69,8 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:f7168a09d1d9d438a8710279e2b8d7901f4b23a3e46d483e5983dfc06840548a"
+  - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
+fingerprint: "sha256:fdd23fc92c4ca86a1d852888fdac81a71c81c8313b712306150ddc3f1b2771ab"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -137,7 +140,14 @@ P13-T05 Routine arming adds v38. Management HTTP `routine.arm` / `routine.instru
 
 P13-T06 Project group chat adds v39. Management HTTP `chat.post` / `chat.thread` is the HTTP caller; task-channel aliases are 403. `@manager` with a plan proposal becomes a `plan-revision` ApprovalPreview; `@member` becomes a `task-revision` candidate bounded to that Member's own responsible stage. Chat never applies a PlanRevision (`confirm_chat_candidate_locked` runs only from canvas Confirm). Approve-shaped bodies are 403 before any write; secret-shaped bodies are 422 with a Settings pointer. Cross-Project reads fail closed. Manager and Member speech keep landing through the P11-T05 speech router so the speech rules are daemon record kinds, not a client filter. `chat.thread` merges Owner turns and delivered speech oldest-first; when an Owner turn and the manager announce share a millisecond, the owner-message stays ahead of speech.
 
-P13-T11 reflection / Member Runtime adds v40. Candidates are generated from Attempt / verification / evidence / occurrence facts (`ReflectionStore::generate_from_facts`); a model self-report is never an improvement. A UTC day with at least one terminal Attempt yields a `daily` rollup for that Member; `response done` / exit 0 without evidence is `daily` and is not a `key-result`. Member Runtime change is a new Employee revision minted only after Owner confirm of a `member-runtime-revision` preview; rollback appends a copy of the pre-confirm recipe. A Role Template proposal needs Owner confirm and does not copy the Employee into another Project. Management HTTP is nested from kernel-server `project_aggregate.rs` (`reflection.generate` / `list` / `improve.*` / `role-template.*`); task-channel aliases are 403. Owner canvas `POST /management/project/v1/confirm` applies those previews. MemberConfig Reflection tab is the `/ui/` surface. Running Attempt prompt/context rewrite is refused. Sibling-owned `http-routes.json` / `ref.http-api` fold on T07/T08/T09 merge.
+P13-T07 Knowledge/Memory labels also add **no new migration**. Labeled Vault
+reads and Memory auto-admit / cross-Project promote reuse `p11_vault_*` and
+`memory_candidates` / `memory_admission_decisions` / `memory_objects`. Files
+remain non-authority. Host filesystem E2E is `not-run`.
+
+P13-T09 Project lifecycle **does not register a new applied migration this slice**. `project_lifecycle_migration_entry()` reserves **v41** (`p13_project_lifecycle_event`) for a later `personal_db.rs` registration (v40 is P13-T11 reflection, below). Runtime copy / archive / delete / export / restore-point uses existing `p11_project`, `p13_routine_arming`, `p11_grant`, `p11_employee`, and `p11_windows_host_*`. Copy lands `inactive` and refuses inherit grant/seating/runtime. Archive pauses `armed` Routines first. Delete is impact preview plus second confirmation; the tombstone is `state='deletion-preview'` with `current_plan_revision_id='tombstone'` and never DROPs the row. Export default-excludes secrets and is not authority. Same-disk restore points set `is_backup=0`. Management HTTP `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle` is the caller; task-channel aliases are 403. Windows FS E2E is `not-run` until P13-T13.
+
+P13-T11 reflection / Member Runtime adds v40. Candidates are generated from Attempt / verification / evidence / occurrence facts (`ReflectionStore::generate_from_facts`); a model self-report is never an improvement. A UTC day with at least one terminal Attempt yields a `daily` rollup for that Member; `response done` / exit 0 without evidence is `daily` and is not a `key-result`. Member Runtime change is a new Employee revision minted only after Owner confirm of a `member-runtime-revision` preview; rollback appends a copy of the pre-confirm recipe. A Role Template proposal needs Owner confirm and does not copy the Employee into another Project. Management HTTP is nested from kernel-server `project_aggregate.rs` (`reflection.generate` / `list` / `improve.*` / `role-template.*`); task-channel aliases are 403. Owner canvas `POST /management/project/v1/confirm` applies those previews. MemberConfig Reflection tab is the `/ui/` surface. Running Attempt prompt/context rewrite is refused.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`

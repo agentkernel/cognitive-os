@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:668a7fc2e06d13a163f4f9833b41f58bc9e37ffcd9435515cbd12e9f2d00f497"
+fingerprint: "sha256:e80695a6b0cf4ad6b683631bd6e0fd1cd03dc4250fd51d4faf15dcfe5fca5813"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -101,7 +101,9 @@ Provider proxy. Personal owns Conversation, archive/index/retrieval, Memory,
 Task, Effect and completion.
 
 Knowledge separates Owner-shared sources, Project Markdown Vault and employee-
-private Memory. Routines use manual/schedule/qualified-event triggers with no
+private Memory. Vault fragments on `/ui/` show provenance, rights, freshness,
+exclusion, and untrusted-observation; files are not Project authority.
+Routines use manual/schedule/qualified-event triggers with no
 overlap, queue-latest and visible missed work. HITL is canvas-only. Provider
 binding resolves global to Project to employee to Task; actual usage stays
 distinct from Provider quota; unknown cost is never shown as 0; member-level

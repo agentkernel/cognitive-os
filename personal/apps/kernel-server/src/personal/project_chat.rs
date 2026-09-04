@@ -21,6 +21,9 @@ use serde_json::{Value, json};
 use super::project_aggregate::{error, now_ms, ok, parse_json, store_error};
 use super::resource_api::ResourceApiResponse;
 
+#[path = "project_lifecycle.rs"]
+mod project_lifecycle;
+
 const ROUTE_LITERALS: &[&str] = &[
     "POST /management/project/v1/chat.post",
     "GET /management/project/v1/chat.thread",
@@ -50,11 +53,12 @@ enum Channel {
 }
 
 pub(crate) fn matches(method_path: &str) -> bool {
-    parse_route(method_path).is_some()
+    parse_route(method_path).is_some() || project_lifecycle::matches(method_path)
 }
 
 pub(crate) fn is_task_channel(method_path: &str) -> bool {
     parse_route(method_path).is_some_and(|(channel, _)| channel == Channel::Task)
+        || project_lifecycle::is_task_channel(method_path)
 }
 
 pub(crate) fn channel_forbidden() -> ResourceApiResponse {
@@ -70,6 +74,9 @@ pub(crate) fn handle(
     body: &[u8],
     store: &SqliteAuthorityStore,
 ) -> ResourceApiResponse {
+    if project_lifecycle::matches(method_path) {
+        return project_lifecycle::handle(method_path, body, store);
+    }
     let Some((channel, literal)) = parse_route(method_path) else {
         return error(
             404,
