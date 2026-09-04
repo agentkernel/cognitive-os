@@ -11,6 +11,8 @@ sources:
     symbols: ["admit_memory_candidate"]
   - path: personal/crates/cognitive-store/src/memory_privacy.rs
     symbols: ["screen_memory_admission", "recall_episodic_memory", "forget_episodic_memory"]
+  - path: personal/crates/cognitive-store/src/knowledge_memory.rs
+    symbols: ["KnowledgeMemoryStore", "auto_admit_chat", "request_promote", "confirm_promote"]
   - path: core/crates/cognitive-kernel/src/memory_admission.rs
     symbols: ["decide_memory_admission"]
   - path: personal/crates/cognitive-store/src/sqlite/harness_skill.rs
@@ -25,7 +27,8 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/apps/kernel-server/tests/p4_t05_resource_api.rs
   - personal/apps/kernel-server/tests/p8_t12_resource_manager.rs
-fingerprint: "sha256:07bec088a18aea59ae1127b8333c88f026976ba7e3e3601d4112102d7da42a98"
+  - personal/crates/cognitive-store/tests/p13_t07_knowledge_memory.rs
+fingerprint: "sha256:819182730280e81fcbe3a669eb1e30a5969d43624dae763bd2f8084e78771333"
 non_claims:
   - 生命周期正确性证据是聚焦测试证据；B08 类 Gate 记账由正式计划拥有。
 ---
@@ -64,7 +67,16 @@ revision 只允许一个后继，既有绑定保持精确 pin——绝不漂移�
 
 management 通道发布生命周期前置条件，并在不直连 SQLite 的情况下完成 Memory
 remember/recall/correct/forget/index.rebuild 与 Skill
-import/revision-inspect/bind/supersede/revoke。task 通道 Memory 变更别名
+import/revision-inspect/bind/supersede/revoke。
+P13-T07 在既有 Memory 表上增加 management `vault.labeled` / `vault.documents`
+（出处、权利、新鲜度、排除、untrusted-observation；文件保持
+`is_authority=false`；未重建时原件以 `not-indexed` 可见）以及
+`memory/auto-admit.chat` / `memory/promote.request` /
+`memory/promote.confirm` / `GET memory/promotes`。仅 Owner；task 别名 403；
+助手自 admission 与 tombstone promote 失败闭合；未确认 promote 不复制。
+聊天自动准入在 Knowledge 表面保持诚实空列表 / Requires-backend（P13-T06
+群聊已存在；本表面不把那些 turn 列为 admit 候选，也没有 Admit 按钮）。
+宿主文件系统 E2E 为 `not-run`。task 通道 Memory 变更别名
 （`/task/resource/v1/memory/*`）返回 `403 RESOURCE_MEMORY_CHANNEL_FORBIDDEN`。
 通用 Resource Manager（`GET /management/resource/v1/list|inspect`）从同一权威行投影
 未墓碑 Memory 对象与 Skill binding；它不是通用 Resource 表，Memory forget 仍是族

@@ -64,7 +64,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
-fingerprint: "sha256:0b2676be425888062901d901a2bb169e8583e98403b17be5518d6661b47a0be5"
+fingerprint: "sha256:8664631d729257ffac42b691a0fe88051868bce967febf33221ac75e10241e19"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -132,6 +132,11 @@ P13-T04 adds v37. The broker thread that writes the Attempt terminal hands the r
 P13-T05 Routine arming adds v38. Management HTTP `routine.arm` / `routine.instruction` / `routine.arming.resume` / `routine.armings` / `routine.runs` / `today.overview` is the HTTP caller; the periodic daemon scheduler tick is the **only** dispatcher of `task://personal/routine/*` rows (the generic scheduler pass skips them; there is no second scheduler). Each pass first writes observed Attempt terminals back as occurrence outcomes (`RoutineArmingStore::record_attempt_terminal`, then queue-latest `promote_queued`), then fires due interval armings through the P11-T08 `admit_trigger` path (a paused / offline P11-T02 host makes the firing a visible `missed` row with `host-unavailable:<reason>`), then leases each undispatched `active` occurrence with `SchedulerRepository::acquire_eligible_lease` (owner `personal-daemon-scheduler`, epoch fenced) and launches one hosted Attempt through the P13-T02 persist-before-dispatch path; `bind_attempt` refuses a lease that does not match. A manual trigger on an un-armed Routine is marked `missed` (`not-armed`), never dropped. A new instruction supersedes the arming and applies at a safe point (`continue` / `pause` / `restart`); the running occurrence keeps its revision and its Attempt's context digest. Arming before G2 is refused (`ROUTINE_ARM_BEFORE_G2`); the PlanRevision / stage-test / G2 product HTTP path gap stays with P13-T04 / P13-T06.
 
 P13-T06 Project group chat adds v39. Management HTTP `chat.post` / `chat.thread` is the HTTP caller; task-channel aliases are 403. `@manager` with a plan proposal becomes a `plan-revision` ApprovalPreview; `@member` becomes a `task-revision` candidate bounded to that Member's own responsible stage. Chat never applies a PlanRevision (`confirm_chat_candidate_locked` runs only from canvas Confirm). Approve-shaped bodies are 403 before any write; secret-shaped bodies are 422 with a Settings pointer. Cross-Project reads fail closed. Manager and Member speech keep landing through the P11-T05 speech router so the speech rules are daemon record kinds, not a client filter. `chat.thread` merges Owner turns and delivered speech oldest-first; when an Owner turn and the manager announce share a millisecond, the owner-message stays ahead of speech.
+
+P13-T07 Knowledge/Memory labels also add **no new migration**. Labeled Vault
+reads and Memory auto-admit / cross-Project promote reuse `p11_vault_*` and
+`memory_candidates` / `memory_admission_decisions` / `memory_objects`. Files
+remain non-authority. Host filesystem E2E is `not-run`.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`

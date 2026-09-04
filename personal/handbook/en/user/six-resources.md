@@ -19,7 +19,7 @@ tests:
   - personal/crates/cognitive-store/tests/p4_t01_memory_store.rs
   - personal/crates/cognitive-store/tests/p4_t04_skill_store.rs
   - personal/crates/cognitive-store/tests/m5_context_store.rs
-fingerprint: "sha256:d2d20dd782f910c00c9ce7058eab6de88dc3c5d410a32734337dfbb06ae62a67"
+fingerprint: "sha256:6f69760ed817f15a539cc767f6b7f2d9db1890b007358a99ad9d8a6f79a38829"
 non_claims:
   - Family presence in authority storage does not claim complete user-facing workflows; per-family gaps are listed below and in known-limitations.
 ---
@@ -33,7 +33,7 @@ so the honest label is `partial`.
 
 | Family | What it is | Today's user-facing reach |
 |---|---|---|
-| **Memory** | admitted durable knowledge with scope, purpose, provenance, versions, expiry, forget/tombstone | `remember`/`forget`/explain via daemon routes; full-text search is a rebuildable FTS5 index behind authority filters; no automatic conversation harvesting |
+| **Memory** | admitted durable knowledge with scope, purpose, provenance, versions, expiry, forget/tombstone | `remember`/`forget`/explain via daemon routes; inspect/correct/promote/forget on management HTTP; full-text search is a rebuildable FTS5 index behind authority filters; chat auto-admission is Owner-only and stays empty until the archive source exists |
 | **Skill** | immutable locally imported package/revision with bindings | import/bind/revoke/explain via daemon routes; scripts never execute by themselves |
 | **Tool** | seven static native operations (workspace read/search/write/patch, process check, HTTP fetch, registered check) | catalog, overlay lifecycle, and validators implemented; the projection reports registration, overlay state, and execution readiness separately (assembled families report `execution_ready` when enabled); Agent exposure follows overlay plus readiness; HTTP fetch stays fail-closed until a campaign pins an HTTPS origin; execution requires the governed Effect path (see [Tasks and execution](tasks-and-execution.md)) |
 | **Context** | per-Task authorized input request + resolved view with explicit losses | fully daemon-side: metadata-first filtering, per-body reauthorization, sealed views, digest-bound caches |

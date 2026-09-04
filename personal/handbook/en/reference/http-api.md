@@ -25,7 +25,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:6799d359f69a3c025414090b3096c8d28dd866c46fce6460513080a5cc164725"
+fingerprint: "sha256:077b268581c785cd9be8216e92783c59aea7dbb2128ffdcbb7cc747cdbc034f3"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -125,6 +125,18 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/resource/v1/memory/correct` | task | Forbidden: Memory correct is management-channel only. |
 | `POST` | `/task/resource/v1/memory/index.rebuild` | task | Forbidden: Memory index rebuild is management-channel only. |
 | `POST` | `/task/resource/v1/memory/review` | task | Forbidden: Memory review/mutation aliases are management-channel only. |
+| `GET` | `/management/resource/v1/vault.labeled` | management | Labeled Vault index for one Project: provenance, rights, freshness, exclusion, untrusted-observation. Files are not Project authority. Cross-project caller is retrieval overreach. |
+| `GET` | `/management/resource/v1/vault.documents` | management | Stored Vault documents remain visible when the derived index has not rebuilt (index_status=not-indexed). Files are not Project authority. |
+| `GET` | `/management/resource/v1/memory/promotes` | management | List cross-Project Memory promote previews and confirmed copies that mention this Project as source or target. |
+| `POST` | `/management/resource/v1/memory/auto-admit.chat` | management | Owner-only: admit one conversation-archive record into inspectable Memory. Assistant self-admission and secret-shaped text fail closed. |
+| `POST` | `/management/resource/v1/memory/promote.request` | management | Owner preview to copy one admitted Memory into another Project. Unconfirmed preview does not copy. Digest-bound. |
+| `POST` | `/management/resource/v1/memory/promote.confirm` | management | Owner confirm of a Memory promote preview. Preview digest must match. Tombstoned Memory cannot be promoted or resurrected. |
+| `GET` | `/task/resource/v1/vault.labeled` | task | Forbidden: Vault labeled index is management-channel only. |
+| `GET` | `/task/resource/v1/vault.documents` | task | Forbidden: Vault document status is management-channel only. |
+| `GET` | `/task/resource/v1/memory/promotes` | task | Forbidden: Memory promote list is management-channel only. |
+| `POST` | `/task/resource/v1/memory/auto-admit.chat` | task | Forbidden: Memory chat auto-admission is management-channel only. |
+| `POST` | `/task/resource/v1/memory/promote.request` | task | Forbidden: Memory promote request is management-channel only. |
+| `POST` | `/task/resource/v1/memory/promote.confirm` | task | Forbidden: Memory promote confirm is management-channel only. |
 | `POST` | `/management/resource/v1/skill/import` | management | Import an immutable local Skill package/revision. |
 | `POST` | `/management/resource/v1/skill/bind` | management | Bind a compatible Skill revision to a scope target. |
 | `POST` | `/management/resource/v1/skill/binding/revoke` | management | Append an immutable Skill binding revocation. |
