@@ -6,6 +6,8 @@
 - Branch: `personal/P13-T07-knowledge-memory` (worktree `D:\agent-kernel-wt-P13-T07`; PR [#319](https://github.com/agentkernel/cognitive-os/pull/319))
 - Validated implementation HEAD: `6927efe6` (parents `070fd243` + `origin/main@2217722d` / T10 merged PR #318)
 - Required CI on validated HEAD: [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS** (resolve 2s, ubuntu 4m26s, windows 13m30s, required-ci 2s)
+- Fold HEAD `bbe661b5` (parents `c2820523` + `origin/main@22718d74` / T08 merged PR #317; conflicts only in plan docs + regenerated `ref.http-api`): required CI [33837343012](https://github.com/agentkernel/cognitive-os/actions/runs/33837343012) **SUCCESS**
+- **Merged** 2026-09-04: PR [#319](https://github.com/agentkernel/cognitive-os/pull/319) at `main@015afcb8`; local + remote task branch deleted; worktree removed; lease closed → PARALLEL-LANES §3.1
 - Claim ceiling: `hypothesis` (A7: local MSVC / Dual Track / ordinary CI is not Gate / release / Profile / Windows qualification)
 - Evaluation routing: **OFF**
 - Host FS/privacy E2E: `not-run` until `P13-T13`
@@ -45,4 +47,4 @@ Not T06 (source, already merged), not T08 Settings, not T09 lifecycle, not T10 g
 
 ## 4. Unique next
 
-Keep Draft until required CI is SUCCESS on this closure HEAD, then ready/merge PR [#319](https://github.com/agentkernel/cognitive-os/pull/319). After merge: persist next action. Do **not** claim sibling-owned `P13-T08` (#317) / `T09` (#321) / `T11` (#320). Do not claim T12/T13/T15.
+Consumed: merged at `main@015afcb8`. Serial continuation (owner instruction 2026-09-04): close `P13-T09` (Draft PR [#321](https://github.com/agentkernel/cognitive-os/pull/321)) next, then `P13-T11` (Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320)), then `P13-T12/D02`; `P13-T13` waits for the owner host and an owner disk decision before any local test.
