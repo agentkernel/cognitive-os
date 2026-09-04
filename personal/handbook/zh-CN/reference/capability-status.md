@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:bc2056fc26a3930620c3ceec56f13c7f7f4166b13fddc743d230125304f5c953"
+fingerprint: "sha256:3f2efaf4a89b32f77db5e17a825d6d80ffdb0426a658ea890256952296f21683"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---

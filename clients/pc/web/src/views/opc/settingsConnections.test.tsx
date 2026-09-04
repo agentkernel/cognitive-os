@@ -144,6 +144,7 @@ afterEach(() => {
 describe("P12-T08 Settings connections / retract / CloseBackground", () => {
   it("whitelists Settings write routes and keeps mint/task aliases off the client", () => {
     expect(isKnownRoute("POST", "/management/project/v1/standing-policy.revoke")).toBe(true);
+    expect(isKnownRoute("POST", "/management/settings/v1/connection.connect")).toBe(true);
     expect(isKnownRoute("POST", "/management/host/v1/close.request")).toBe(true);
     expect(isKnownRoute("GET", "/management/host/v1/status")).toBe(true);
     expect(isKnownRoute("POST", "/management/project/v1/standing-policy.create")).toBe(false);
@@ -157,7 +158,7 @@ describe("P12-T08 Settings connections / retract / CloseBackground", () => {
       /no model connection/i,
     );
     expect(host.textContent).toMatch(/never 0/);
-    expect(host.querySelector("[data-row-key]")).toBeNull();
+    expect(host.querySelector("[data-region='opc-connections'] [data-row-key]")).toBeNull();
     expect(calls.some((call) => call.pathname === "/management/providers/accounts")).toBe(true);
     expect(calls.some((call) => call.method === "POST")).toBe(false);
     expect(fakeActionLabels(host)).toEqual([]);
@@ -197,7 +198,7 @@ describe("P12-T08 Settings connections / retract / CloseBackground", () => {
       },
     });
     expect(host.querySelector("[data-row-key='acct-1']")).not.toBeNull();
-    expect(host.querySelector("[data-usage='acct-1']")?.textContent).toBe("cost_unavailable");
+    expect(host.querySelector("[data-usage='acct-1']")?.textContent).toBe("unknown");
     expect(host.querySelector("[data-usage='acct-1']")?.textContent).not.toBe("0");
     expect(host.textContent).toContain("present");
     expect(host.textContent).not.toContain("ss://provider/acct-1");

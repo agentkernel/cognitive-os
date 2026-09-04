@@ -194,6 +194,7 @@ function buildHttpApi(readSource, trackedPaths) {
     "personal/apps/kernel-server/src/personal/attempt_artifacts.rs",
     "personal/apps/kernel-server/src/personal/routine_runs.rs",
     "personal/apps/kernel-server/src/personal/project_chat.rs",
+    "personal/apps/kernel-server/src/personal/settings_connections.rs",
   ];
   const corpusSources = [
     ...definitionSources,

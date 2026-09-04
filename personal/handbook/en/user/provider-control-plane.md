@@ -14,6 +14,8 @@ sources:
     symbols: ["read_api_key_material"]
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
     symbols: ["PI_AGENT", "DSH_AGENT", "set_binding", "query_usage"]
+  - path: personal/apps/kernel-server/src/personal/settings_connections.rs
+    symbols: ["connect", "diagnostics", "notifications"]
   - path: personal/apps/kernel-server/src/personal/provider_proxy.rs
     symbols: ["BindingMismatch"]
   - path: personal/crates/cognitive-secret/src/endpoint_trust.rs
@@ -31,7 +33,7 @@ tests:
   - personal/crates/cognitive-store/tests/p8_t13_provider_store.rs
   - personal/crates/cognitive-store/tests/p11_t12_honest_usage.rs
   - personal/apps/admin-cli/src/personal_cli/mod.rs
-fingerprint: "sha256:d87eae91c8bf8e2e5291fa03ac783a7f18e33a84eba0e95abf99bee7455902b4"
+fingerprint: "sha256:5bee07b20555a860cb56bf7ca311e6153bff0eeeccaf06e04b96da603b7f3f1b"
 non_claims:
   - This page documents the shipped daemon API, cognitive CLI, and current localhost Web UI path. It does not claim live Secret Store proof, live Provider/Pi/dsh qualification, Gate, release, Profile, B01, the Personal 2.0 desktop redesign/Account Hub import, or Agent-benefit.
 ---
@@ -65,6 +67,14 @@ accounts**, store API keys only in an approved OS Secret Store, keep a model
 catalog, bind the Pi agent and the DeepSeek harness (`dsh`) to one fixed
 account+provider+model each, and query usage, observe-only budgets, alerts, and
 a redacted audit log.
+
+OPC Settings on daemon `/ui/` (`#/settings`) is the Personal 2.0 write path
+for Model Connections: a mainstream template dropdown or custom
+URL/compatible mode, plus key and model. `POST /management/settings/v1/connection.connect`
+requires the key, hands it to SecretStore once, and returns connected/failed
+with secret presence only. Settings does not detour to Linux-era `/providers`.
+Usage cells are source-labelled `actual` / `estimated` / `unknown` (unknown is
+never 0). Windows SecretStore host E2E remains `not-run` until P13-T13.
 
 The daemon is the only writer. The CLI and the localhost Web UI are
 non-authority clients: they never open SQLite or the Secret Store. They send

@@ -149,6 +149,8 @@ export interface UsageEventView {
   costMicros?: number;
   /** Verbatim daemon vocabulary: "priced" | "cost_unavailable" | … */
   costStatus: string;
+  /** Product label `actual` | `estimated` | `unknown` from P11-T12. */
+  costLabel?: string;
 }
 
 export function projectUsageEvents(body: unknown): UsageEventView[] {
@@ -161,6 +163,10 @@ export function projectUsageEvents(body: unknown): UsageEventView[] {
       costMicros:
         record.cost_micros == null || !Number.isFinite(cost) ? undefined : cost,
       costStatus: String(record.cost_status ?? "unknown"),
+      costLabel:
+        typeof record.cost_label === "string" && record.cost_label.length > 0
+          ? record.cost_label
+          : undefined,
     };
   });
 }

@@ -35,6 +35,7 @@ mod route_observation;
 mod routine_runs;
 mod scheduler_authority;
 mod server;
+mod settings_connections;
 mod six_resource_doctor;
 mod skill_package;
 mod task_api;
