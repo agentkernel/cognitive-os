@@ -2319,7 +2319,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T02 — 创建向导 = 原型 ①–⑤（不是五张 note textarea）
 
-- **status:** `in-progress`. Claim ceiling `hypothesis`. Draft PR [#329](https://github.com/agentkernel/cognitive-os/pull/329); D01 Dual Track done; D02 JOURNEY pass; folding `origin/main@299f4afb`.
+- **status:** `done`. Claim ceiling `hypothesis`. Merged PR [#329](https://github.com/agentkernel/cognitive-os/pull/329) at `main@c9bb291d`; D01 Dual Track done; D02 JOURNEY pass.
 - **EVAL-016:** J1 blocker 2. Oracle: [user-journeys.md](../../personal/docs/product/user-journeys.md) §1 + v9 `create-process` / `create-members` / `create-test` / `create-joint`.
 - **依赖:** P14-T01；P12-T02 五段骨架；P11-T03/T04。**不依赖 T07/T08。**
 - **垂直切片:** D01：failure-first Dual Track — ①–⑤ 表面替换 note textarea；0 假 Activate。
@@ -2380,7 +2380,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T07 — Settings 真 L1 + IA（藏 9×9；不广告 Linux 1.0 Home/Work/Agents；palette intercept）
 
-- **status:** `not-started`. Claim ceiling `hypothesis`. 可与创建链并行。
+- **status:** `done` (2026-09-06, PR [#327](https://github.com/agentkernel/cognitive-os/pull/327)). Claim ceiling `hypothesis`. Folded `origin/main@299f4afb` (T08). Do not claim T02/T03/T04/T08/T05. Do not claim T06 until T03 is done.
 - **EVAL-016:** J6 / J8 / J12 / J20.
 - **依赖:** P14-T01；P13-T08；P12-T08.
 - **垂直切片:** D01：Settings L1 `role=link`；默认隐藏 9×9 state-lab；Linux 1.0 Home/Work/Agents 不作为 2.0 目的地；palette 拦截。
