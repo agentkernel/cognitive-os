@@ -367,10 +367,14 @@ impl ProjectAggregateStore {
         project_id: &str,
     ) -> Result<Option<ProjectRow>, ProjectAggregateError> {
         let conn = self.lock()?;
+        ensure_write_facts_locked(&conn)?;
         conn.query_row(
-            "SELECT project_id, state, current_charter_revision_id, current_plan_revision_id,
-                    created_at, activated_at, accepted_at
-               FROM p11_project WHERE project_id = ?1",
+            "SELECT p.project_id, p.state, p.current_charter_revision_id, p.current_plan_revision_id,
+                    p.created_at, p.activated_at, p.accepted_at,
+                    COALESCE(f.title_summary, 'unknown')
+               FROM p11_project p
+               LEFT JOIN p14_write_project_facts f ON f.project_id = p.project_id
+              WHERE p.project_id = ?1",
             [project_id],
             map_project_row,
         )
@@ -384,9 +388,11 @@ impl ProjectAggregateStore {
         now_ms: i64,
     ) -> Result<(String, String), ProjectAggregateError> {
         Self::reject_secret_shape(payload)?;
+        let payload_utf8 = utf8_text(payload, "draft payload must be utf-8")?;
         let draft_id = next_id("draft")?;
         let payload_digest = Self::digest_hex(payload);
         let conn = self.lock()?;
+        ensure_write_facts_locked(&conn)?;
         conn.execute(
             "INSERT INTO p11_draft (
                 draft_id, kind, base_seq, payload_digest, state, activated_project_id, created_at, updated_at
@@ -394,6 +400,13 @@ impl ProjectAggregateStore {
             params![draft_id, payload_digest, now_ms],
         )
         .map_err(unavailable("insert draft"))?;
+        conn.execute(
+            "INSERT INTO p14_write_project_facts (
+                draft_id, payload_utf8, charter_utf8, title_summary, project_id
+             ) VALUES (?1,?2,'','unknown',NULL)",
+            params![draft_id, payload_utf8],
+        )
+        .map_err(unavailable("insert write-project facts"))?;
         Ok((draft_id, payload_digest))
     }
 
@@ -405,9 +418,11 @@ impl ProjectAggregateStore {
     ) -> Result<(String, String), ProjectAggregateError> {
         let _ = now_ms;
         Self::reject_secret_shape(content)?;
+        let charter_utf8 = utf8_text(content, "draft charter must be utf-8")?;
         let charter_revision_id = next_id("charter")?;
         let content_digest = Self::digest_hex(content);
         let conn = self.lock()?;
+        ensure_write_facts_locked(&conn)?;
         let exists: i64 = conn
             .query_row(
                 "SELECT COUNT(*) FROM p11_draft WHERE draft_id = ?1 AND state = 'open'",
@@ -427,6 +442,21 @@ impl ProjectAggregateStore {
             params![charter_revision_id, draft_id, content_digest],
         )
         .map_err(unavailable("insert charter"))?;
+        let updated = conn
+            .execute(
+                "UPDATE p14_write_project_facts SET charter_utf8 = ?1 WHERE draft_id = ?2",
+                params![charter_utf8, draft_id],
+            )
+            .map_err(unavailable("update write-project charter"))?;
+        if updated == 0 {
+            conn.execute(
+                "INSERT INTO p14_write_project_facts (
+                    draft_id, payload_utf8, charter_utf8, title_summary, project_id
+                 ) VALUES (?1,'',?2,'unknown',NULL)",
+                params![draft_id, charter_utf8],
+            )
+            .map_err(unavailable("insert write-project charter"))?;
+        }
         Ok((charter_revision_id, content_digest))
     }
 
@@ -891,7 +921,7 @@ impl ProjectAggregateStore {
             });
         }
         let result = match preview.subject_kind.as_str() {
-            "activation" => self.activate_locked(&conn, &preview.subject_ref, now_ms)?,
+            "activation" => Self::activate_locked(&conn, &preview.subject_ref, now_ms)?,
             "plan-change" => self.confirm_stage_from_preview_locked(&conn, &preview.subject_ref)?,
             "acceptance" => self.accept_locked(&conn, &preview.subject_ref, now_ms)?,
             "grant-expansion" => Self::grant_expansion_locked(&conn, &preview.subject_ref, now_ms)?,
@@ -1032,11 +1062,32 @@ impl ProjectAggregateStore {
     }
 
     fn activate_locked(
-        &self,
         conn: &Connection,
         draft_id: &str,
         now_ms: i64,
     ) -> Result<ConfirmResult, ProjectAggregateError> {
+        conn.execute_batch("BEGIN IMMEDIATE")
+            .map_err(unavailable("begin write-project activate"))?;
+        let result = Self::activate_body_locked(conn, draft_id, now_ms);
+        match result {
+            Ok(outcome) => {
+                conn.execute_batch("COMMIT")
+                    .map_err(unavailable("commit write-project activate"))?;
+                Ok(outcome)
+            }
+            Err(error) => {
+                let _ = conn.execute_batch("ROLLBACK");
+                Err(error)
+            }
+        }
+    }
+
+    fn activate_body_locked(
+        conn: &Connection,
+        draft_id: &str,
+        now_ms: i64,
+    ) -> Result<ConfirmResult, ProjectAggregateError> {
+        ensure_write_facts_locked(conn)?;
         let charter: Option<(String, String)> = conn
             .query_row(
                 "SELECT charter_revision_id, content_digest FROM p11_charter_revision
@@ -1051,15 +1102,57 @@ impl ProjectAggregateStore {
                 detail: "G1 rejected: no confirmed charter revision",
             });
         };
+        let facts: Option<(String, String)> = conn
+            .query_row(
+                "SELECT payload_utf8, charter_utf8 FROM p14_write_project_facts WHERE draft_id = ?1",
+                [draft_id],
+                |row| Ok((row.get(0)?, row.get(1)?)),
+            )
+            .optional()
+            .map_err(unavailable("load write-project facts"))?;
+        let (payload_utf8, charter_utf8) = facts.unwrap_or_default();
+        let title = owner_title_from_payload(&payload_utf8)?.to_owned();
+        let dual_track_stages = if charter_declares_process(&charter_utf8) {
+            let stages = parse_dual_track_stages(&charter_utf8)?;
+            if stages.is_empty() {
+                return Err(ProjectAggregateError::Invalid {
+                    detail: "Write Project requires a PlanRevision axis",
+                });
+            }
+            Some(stages)
+        } else {
+            None
+        };
         let project_id = next_id("project")?;
-        conn.execute(
-            "INSERT INTO p11_project (
-                project_id, state, current_charter_revision_id, current_plan_revision_id,
-                created_at, activated_at, accepted_at
-             ) VALUES (?1,'creating',?2,NULL,?3,?3,NULL)",
-            params![project_id, charter_revision_id, now_ms],
-        )
-        .map_err(unavailable("insert project"))?;
+        if dual_track_stages.is_some() {
+            conn.execute(
+                "INSERT INTO p11_project (
+                    project_id, state, current_charter_revision_id, current_plan_revision_id,
+                    created_at, activated_at, accepted_at
+                 ) VALUES (?1,'active',?2,NULL,?3,?3,?3)",
+                params![project_id, charter_revision_id, now_ms],
+            )
+            .map_err(unavailable("insert live project"))?;
+        } else {
+            conn.execute(
+                "INSERT INTO p11_project (
+                    project_id, state, current_charter_revision_id, current_plan_revision_id,
+                    created_at, activated_at, accepted_at
+                 ) VALUES (?1,'creating',?2,NULL,?3,?3,NULL)",
+                params![project_id, charter_revision_id, now_ms],
+            )
+            .map_err(unavailable("insert project"))?;
+        }
+        if let Some(stages) = dual_track_stages.as_ref() {
+            Self::apply_plan_revision_locked(conn, &project_id, stages, now_ms)?;
+            conn.execute(
+                "UPDATE p14_write_project_facts
+                    SET title_summary = ?1, project_id = ?2
+                  WHERE draft_id = ?3",
+                params![title, project_id, draft_id],
+            )
+            .map_err(unavailable("bind write-project title"))?;
+        }
         conn.execute(
             "UPDATE p11_charter_revision
                 SET project_id = ?1, status = 'confirmed', confirmed_at = ?2
@@ -1693,11 +1786,15 @@ impl ProjectAggregateStore {
     pub fn list_projects(&self, limit: i64) -> Result<Vec<ProjectRow>, ProjectAggregateError> {
         let cap = limit.clamp(1, 64);
         let conn = self.lock()?;
+        ensure_write_facts_locked(&conn)?;
         let mut statement = conn
             .prepare(
-                "SELECT project_id, state, current_charter_revision_id, current_plan_revision_id,
-                        created_at, activated_at, accepted_at
-                   FROM p11_project ORDER BY created_at LIMIT ?1",
+                "SELECT p.project_id, p.state, p.current_charter_revision_id, p.current_plan_revision_id,
+                        p.created_at, p.activated_at, p.accepted_at,
+                        COALESCE(f.title_summary, 'unknown')
+                   FROM p11_project p
+                   LEFT JOIN p14_write_project_facts f ON f.project_id = p.project_id
+                  ORDER BY p.created_at LIMIT ?1",
             )
             .map_err(unavailable("list projects"))?;
         let rows = statement
@@ -1943,6 +2040,7 @@ impl ProjectAggregateStore {
 
     pub fn leak_scan_contains(&self, needle: &str) -> Result<bool, ProjectAggregateError> {
         let conn = self.lock()?;
+        ensure_write_facts_locked(&conn)?;
         let tables = [
             "SELECT payload_digest, draft_id FROM p11_draft",
             "SELECT ops_digest, sources_json FROM p11_candidate",
@@ -1953,6 +2051,7 @@ impl ProjectAggregateStore {
             "SELECT subject_class, subject_ref FROM p11_standing_approval_policy",
             "SELECT body_redacted FROM p11_conversation_archive",
             "SELECT body_redacted, candidate_json FROM p13_project_chat_turn",
+            "SELECT payload_utf8, charter_utf8, title_summary FROM p14_write_project_facts",
         ];
         for sql in tables {
             let mut statement = conn.prepare(sql).map_err(unavailable("leak scan"))?;
@@ -1999,6 +2098,8 @@ pub struct ProjectRow {
     pub created_at: i64,
     pub activated_at: i64,
     pub accepted_at: Option<i64>,
+    /// Owner-typed Dual Track title after Write Project; otherwise `unknown`.
+    pub title_summary: String,
 }
 
 /// Stage projection row.
@@ -2082,6 +2183,127 @@ struct PreviewLookup {
     status: String,
 }
 
+const WRITE_PROJECT_FACTS_SQL: &str = "
+CREATE TABLE IF NOT EXISTS p14_write_project_facts (
+  draft_id TEXT PRIMARY KEY,
+  payload_utf8 TEXT NOT NULL,
+  charter_utf8 TEXT NOT NULL DEFAULT '',
+  title_summary TEXT NOT NULL DEFAULT 'unknown',
+  project_id TEXT
+) STRICT;
+";
+
+fn ensure_write_facts_locked(conn: &Connection) -> Result<(), ProjectAggregateError> {
+    conn.execute_batch(WRITE_PROJECT_FACTS_SQL)
+        .map_err(unavailable("ensure write-project facts"))
+}
+
+fn utf8_text<'a>(bytes: &'a [u8], what: &'static str) -> Result<&'a str, ProjectAggregateError> {
+    std::str::from_utf8(bytes).map_err(|_| ProjectAggregateError::Invalid { detail: what })
+}
+
+fn owner_title_from_payload(payload: &str) -> Result<&str, ProjectAggregateError> {
+    let title = payload.trim();
+    if title.is_empty() {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "Write Project title must not be empty",
+        });
+    }
+    if title.eq_ignore_ascii_case("unknown") {
+        return Err(ProjectAggregateError::Invalid {
+            detail: "Write Project title must not be unknown",
+        });
+    }
+    Ok(title)
+}
+
+fn charter_declares_process(charter: &str) -> bool {
+    charter.lines().any(|line| {
+        let trimmed = line.trim();
+        trimmed == "process:" || trimmed.starts_with("process:")
+    })
+}
+
+fn parse_dual_track_stages(charter: &str) -> Result<Vec<StageSpec>, ProjectAggregateError> {
+    let mut in_process = false;
+    let mut stages = Vec::new();
+    let mut seen = std::collections::BTreeSet::new();
+    for line in charter.lines() {
+        let trimmed = line.trim();
+        if !in_process {
+            if trimmed == "process:" || trimmed.starts_with("process:") {
+                in_process = true;
+            }
+            continue;
+        }
+        if trimmed.is_empty() {
+            continue;
+        }
+        if !trimmed.starts_with('-') {
+            break;
+        }
+        let item = trimmed.trim_start_matches('-').trim();
+        let (name, rest) = match item.split_once(':') {
+            Some((name, rest)) => (name.trim(), rest.trim()),
+            None => (item, ""),
+        };
+        if name.is_empty() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "Write Project process ring is missing a name",
+            });
+        }
+        let stage_id = name
+            .split(|c: char| c == '(' || c.is_whitespace())
+            .next()
+            .unwrap_or("")
+            .chars()
+            .map(|c| {
+                if c.is_ascii_alphanumeric() {
+                    c.to_ascii_lowercase()
+                } else {
+                    '-'
+                }
+            })
+            .collect::<String>()
+            .trim_matches('-')
+            .to_owned();
+        if stage_id.is_empty() {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "Write Project process ring is missing a stage id",
+            });
+        }
+        if !seen.insert(stage_id.clone()) {
+            return Err(ProjectAggregateError::Invalid {
+                detail: "Write Project process rings must have unique ids",
+            });
+        }
+        let responsible_slot = rest
+            .split(';')
+            .find_map(|part| {
+                let part = part.trim();
+                part.strip_prefix("rights=").map(str::trim)
+            })
+            .filter(|slot| !slot.is_empty() && *slot != "(none)")
+            .unwrap_or("owner")
+            .to_owned();
+        stages.push(StageSpec {
+            stage_id,
+            title: name.to_owned(),
+            objective: if rest.is_empty() {
+                format!("{name} ring")
+            } else {
+                rest.to_owned()
+            },
+            output_contract_digest: ProjectAggregateStore::digest_hex(item.as_bytes()),
+            acceptance_spec_ref: None,
+            cadence_json: Some(r#"{"kind":"manual"}"#.to_owned()),
+            responsible_slot,
+            blocking_gap: None,
+        });
+    }
+    Ok(stages)
+}
+
 fn map_project_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ProjectRow> {
     Ok(ProjectRow {
         project_id: row.get(0)?,
@@ -2091,6 +2313,7 @@ fn map_project_row(row: &rusqlite::Row<'_>) -> rusqlite::Result<ProjectRow> {
         created_at: row.get(4)?,
         activated_at: row.get(5)?,
         accepted_at: row.get(6)?,
+        title_summary: row.get(7)?,
     })
 }
 

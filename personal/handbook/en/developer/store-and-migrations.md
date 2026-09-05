@@ -70,7 +70,7 @@ tests:
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
   - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
-fingerprint: "sha256:fdd23fc92c4ca86a1d852888fdac81a71c81c8313b712306150ddc3f1b2771ab"
+fingerprint: "sha256:af5be58f9732e34deaa6fb1e2b175bc2e50571bb5a59e1ded2ec4ced05f891f7"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -148,6 +148,8 @@ remain non-authority. Host filesystem E2E is `not-run`.
 P13-T09 Project lifecycle **does not register a new applied migration this slice**. `project_lifecycle_migration_entry()` reserves **v41** (`p13_project_lifecycle_event`) for a later `personal_db.rs` registration (v40 is P13-T11 reflection, below). Runtime copy / archive / delete / export / restore-point uses existing `p11_project`, `p13_routine_arming`, `p11_grant`, `p11_employee`, and `p11_windows_host_*`. Copy lands `inactive` and refuses inherit grant/seating/runtime. Archive pauses `armed` Routines first. Delete is impact preview plus second confirmation; the tombstone is `state='deletion-preview'` with `current_plan_revision_id='tombstone'` and never DROPs the row. Export default-excludes secrets and is not authority. Same-disk restore points set `is_backup=0`. Management HTTP `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle` is the caller; task-channel aliases are 403. Windows FS E2E is `not-run` until P13-T13.
 
 P13-T11 reflection / Member Runtime adds v40. Candidates are generated from Attempt / verification / evidence / occurrence facts (`ReflectionStore::generate_from_facts`); a model self-report is never an improvement. A UTC day with at least one terminal Attempt yields a `daily` rollup for that Member; `response done` / exit 0 without evidence is `daily` and is not a `key-result`. Member Runtime change is a new Employee revision minted only after Owner confirm of a `member-runtime-revision` preview; rollback appends a copy of the pre-confirm recipe. A Role Template proposal needs Owner confirm and does not copy the Employee into another Project. Management HTTP is nested from kernel-server `project_aggregate.rs` (`reflection.generate` / `list` / `improve.*` / `role-template.*`); task-channel aliases are 403. Owner canvas `POST /management/project/v1/confirm` applies those previews. MemberConfig Reflection tab is the `/ui/` surface. Running Attempt prompt/context rewrite is refused.
+
+P14-T03 Dual Track Write Project adds **no numbered migration** (v41 remains reserved for P13-T09 lifecycle events). `create_draft` / `put_draft_charter` persist payload and charter UTF-8 on the same authority connection in sidecar table `p14_write_project_facts` (`CREATE TABLE IF NOT EXISTS`, not a `schema_migrations` step). Confirm of an Owner title plus Dual Track `process:` rings mints `p11_project` as `active` with `accepted_at` and a PlanRevision axis; empty title, title `unknown`, and a `process:` section with no rings fail closed and insert no row. A G1 charter without a `process:` section still mints `creating` (P11 walking-skeleton fixtures). List/detail `title_summary` is the Owner-typed Dual Track title; otherwise `unknown`.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`

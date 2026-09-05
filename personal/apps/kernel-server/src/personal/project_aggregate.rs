@@ -278,7 +278,7 @@ fn project_list_json(project: &ProjectRow) -> Value {
     json!({
         "project_id": project.project_id,
         "state": project.state,
-        "title_summary": "unknown",
+        "title_summary": project.title_summary,
         "created_at": project.created_at,
         "activated_at": project.activated_at,
         "accepted_at": project.accepted_at,
@@ -317,6 +317,7 @@ fn detail(method_path: &str, plane: &ProjectAggregateStore) -> ResourceApiRespon
                     "project": {
                         "project_id": project.project_id,
                         "state": project.state,
+                        "title_summary": project.title_summary,
                         "created_at": project.created_at,
                         "activated_at": project.activated_at,
                         "accepted_at": project.accepted_at,
@@ -2617,6 +2618,164 @@ mod tests {
         assert!(list.body.contains("creating"));
         assert!(list.body.contains("\"cost\":\"unknown\""));
         assert!(!list.body.contains("\"cost\":0"));
+    }
+
+    fn dual_track_charter(title: &str) -> String {
+        format!(
+            "title: {title}\n\n\
+             goal_and_trigger_confirmed: yes\n\n\
+             process:\n\
+             - collect (收集): confirmed; input=facts; method=read; rights=owner\n\
+             - analyze (分析): confirmed; input=facts; method=think; rights=owner\n\
+             - draft (起草): confirmed; input=analysis; method=write; rights=owner\n\n\
+             honesty: owner-recorded Dual Track draft; local notes are not Project authority.\n"
+        )
+    }
+
+    #[test]
+    fn write_project_http_mints_titled_live_project_with_axis() {
+        let (_tmp, store) = authority();
+        let created = handle(
+            "POST /management/project/v1/draft.create",
+            json!({
+                "payload": "Alpha",
+                "charter": dual_track_charter("Alpha")
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(created.status, 200, "{}", created.body);
+        let created_json = serde_json::from_str::<Value>(&created.body).unwrap();
+        let draft_id = created_json
+            .get("draft_id")
+            .and_then(Value::as_str)
+            .expect("draft_id");
+        let previewed = handle(
+            "POST /management/project/v1/preview.request",
+            json!({
+                "subject_kind": "activation",
+                "subject_ref": draft_id
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(previewed.status, 200, "{}", previewed.body);
+        let preview_json = serde_json::from_str::<Value>(&previewed.body).unwrap();
+        let preview_id = preview_json
+            .get("preview_id")
+            .and_then(Value::as_str)
+            .expect("preview_id");
+        let preview_digest = preview_json
+            .get("preview_digest")
+            .and_then(Value::as_str)
+            .expect("preview_digest");
+        let confirmed = handle(
+            "POST /management/project/v1/confirm",
+            json!({
+                "preview_id": preview_id,
+                "preview_digest": preview_digest
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        let list = handle("GET /management/project/v1/list", b"", &store);
+        assert_eq!(list.status, 200, "{}", list.body);
+        assert!(list.body.contains("\"state\":\"active\""), "{}", list.body);
+        assert!(
+            list.body.contains("\"title_summary\":\"Alpha\""),
+            "{}",
+            list.body
+        );
+        assert!(
+            !list.body.contains("\"state\":\"creating\""),
+            "{}",
+            list.body
+        );
+        let list_json = serde_json::from_str::<Value>(&list.body).unwrap();
+        let project_id = list_json["projects"][0]["project_id"]
+            .as_str()
+            .expect("project_id");
+        let detail = handle(
+            &format!("GET /management/project/v1/detail?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(detail.status, 200, "{}", detail.body);
+        assert!(
+            detail.body.contains("\"title_summary\":\"Alpha\""),
+            "{}",
+            detail.body
+        );
+        assert!(detail.body.contains("plan_revision_id"), "{}", detail.body);
+    }
+
+    #[test]
+    fn write_project_http_refuses_empty_unknown_and_no_axis() {
+        let (_tmp, store) = authority();
+        for (payload, charter) in [
+            ("", dual_track_charter("Alpha")),
+            ("unknown", dual_track_charter("unknown")),
+            (
+                "Alpha",
+                "title: Alpha\n\ngoal_and_trigger_confirmed: yes\n\nprocess:\n".to_owned(),
+            ),
+        ] {
+            let created = handle(
+                "POST /management/project/v1/draft.create",
+                json!({ "payload": payload, "charter": charter })
+                    .to_string()
+                    .as_bytes(),
+                &store,
+            );
+            assert_eq!(created.status, 200, "{}", created.body);
+            let created_json = serde_json::from_str::<Value>(&created.body).unwrap();
+            let draft_id = created_json
+                .get("draft_id")
+                .and_then(Value::as_str)
+                .expect("draft_id");
+            let previewed = handle(
+                "POST /management/project/v1/preview.request",
+                json!({
+                    "subject_kind": "activation",
+                    "subject_ref": draft_id
+                })
+                .to_string()
+                .as_bytes(),
+                &store,
+            );
+            assert_eq!(previewed.status, 200, "{}", previewed.body);
+            let preview_json = serde_json::from_str::<Value>(&previewed.body).unwrap();
+            let preview_id = preview_json
+                .get("preview_id")
+                .and_then(Value::as_str)
+                .expect("preview_id");
+            let preview_digest = preview_json
+                .get("preview_digest")
+                .and_then(Value::as_str)
+                .expect("preview_digest");
+            let confirmed = handle(
+                "POST /management/project/v1/confirm",
+                json!({
+                    "preview_id": preview_id,
+                    "preview_digest": preview_digest
+                })
+                .to_string()
+                .as_bytes(),
+                &store,
+            );
+            assert_eq!(confirmed.status, 422, "{payload} {}", confirmed.body);
+            assert!(
+                confirmed.body.contains("PROJECT_INVALID"),
+                "{payload} {}",
+                confirmed.body
+            );
+        }
+        let list = handle("GET /management/project/v1/list", b"", &store);
+        assert!(!list.body.contains("\"project_id\""), "{}", list.body);
     }
 
     #[test]
