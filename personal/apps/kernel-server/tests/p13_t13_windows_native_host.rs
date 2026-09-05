@@ -10,6 +10,7 @@
 //! It is not Gate, release, Profile, B01-W, or a signed installer.
 
 #![allow(clippy::unwrap_used, clippy::expect_used, clippy::panic)]
+#![cfg_attr(not(windows), allow(unused))]
 
 mod common;
 
