@@ -3,7 +3,7 @@
 - Task / slice: `P14-T04/D01` Dual Track member join on real PlanRevision slots
 - Lease: `lease/personal/P14-T04/member-join`
 - Branch: `personal/P14-T04-member-join`
-- Draft PR: pending first coherent commit
+- Draft PR: [#331](https://github.com/agentkernel/cognitive-os/pull/331) (Draft; D01 Dual Track at `fe498997`)
 - Change class: `implementation-only` (Dual Track process-ring ids become PlanRevision `responsible_slot`; write join seats those slots; no `core/specs`; no numbered migration — v41 remains reserved). Handbook: `dev.store-migrations` + `dev.daemon-http-surface` + regenerated `ref.http-api` (both locales).
 - Claim ceiling: `hypothesis`
 - Product origin: daemon `/ui/` (`http://127.0.0.1:48681/ui/`) — Vite is not the product source
