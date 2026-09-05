@@ -123,9 +123,11 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   设计系统；不改 CSS）与
   [冻结 v9 ↔ `/ui/` 对照清单](../../../docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
   （维护索引 19/19 模块，加九态 × 九表面、键盘/焦点、200%/窄窗、宿主主题、NVDA
-  各格）。`P13-T12/D02` 已在 `/ui/` `c8691923`（`DEV-LINUX-NATIVE-01` + 宿主
+  各格）。`P13-T12/D02` **done**（PR [#322](https://github.com/agentkernel/cognitive-os/pull/322)；
+  fold HEAD `bba4aa47`）：已在 `/ui/` `c8691923`（`DEV-LINUX-NATIVE-01` + 宿主
   Chrome）记账；剩余 `not-run` 是缺 NVDA、缺 Windows 原生 chrome，或一次性
-  runtime 没有 live Project。两份文档都不是 Gate、release 或 T15 证据。
+  runtime 没有 live Project。任务 `P13-T12` 已关闭。两份文档都不是 Gate、release
+  或 T15 证据。Unique next：`P13-T13` remains excluded / not claimed。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
 - HITL **只**在项目中心画布；Today 用深链进入。不要把独立
