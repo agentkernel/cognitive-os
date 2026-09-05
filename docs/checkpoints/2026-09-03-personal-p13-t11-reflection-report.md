@@ -79,4 +79,4 @@ Required CI on `40155c42` is **green**. Linux store/HTTP/clippy **pass**. Contin
 
 ## Unique next
 
-Superseded 2026-09-05: wait required CI on the closure HEAD of Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320), then ready/merge. Do not claim T12/T13.
+Superseded 2026-09-05: merged PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) at `main@fa3c1dab`. Do not claim T12/T13.

@@ -53,4 +53,4 @@ Units after the 2026-09-03 log. `not-run` is never pass.
 
 ## Unique next
 
-Wait required CI on the **closure HEAD** of Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) (this report + formal-plan/PROGRESS/trace). If all required checks including Windows are SUCCESS: ready/merge and record `main@<merge>`. This session does not claim `P13-T12` / `P13-T13`.
+Merged PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) at `main@fa3c1dab`. Unique next: sibling continues `P13-T12/D02`; this session does not claim `P13-T12` / `P13-T13`.

@@ -3,9 +3,9 @@
 - Task: `P13-T11` **done** / slice `P13-T11/D01` **done** (single Delivery Slice)
 - Change class: `implementation-only` (authority store v40 + nested management HTTP + MemberConfig Reflection tab; no `core/specs`, no Lane-CTR, no contract or negative weakened)
 - Lease: `lease/personal/P13-T11/reflection-runtime` → PARALLEL-LANES §3.1 (closed in this delivery)
-- Branch / PR: `personal/P13-T11-reflection` (worktree `D:\agent-kernel-wt-P13-T11`) → Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) (ready/merge after required CI on this closure HEAD)
+- Branch / PR: merged PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) at `main@fa3c1dab` (closure HEAD `56f9de61`; worktree + task branch removed)
 - Implementation revision: `96077df9` … `40155c42` (HTTP/UI + Linux/CI); fold HEAD `3bb9b050` (merge of `origin/main@c8691923`, T07 #319 + T09 #321; `reflection.rs` registered as generated `ref.http-api` source)
-- Required CI: [33758397573](https://github.com/agentkernel/cognitive-os/actions/runs/33758397573) **SUCCESS** at `40155c42`; fold HEAD `3bb9b050` [33896709599](https://github.com/agentkernel/cognitive-os/actions/runs/33896709599) **SUCCESS** (resolve, ubuntu, windows, required-ci)
+- Required CI: [33758397573](https://github.com/agentkernel/cognitive-os/actions/runs/33758397573) **SUCCESS** at `40155c42`; fold HEAD `3bb9b050` [33896709599](https://github.com/agentkernel/cognitive-os/actions/runs/33896709599) **SUCCESS**; closure HEAD `56f9de61` [33949770791](https://github.com/agentkernel/cognitive-os/actions/runs/33949770791) **SUCCESS** (resolve, ubuntu, windows, required-ci)
 - `DEV-LINUX-NATIVE-01` exact revision: `40155c42` store 10/10 + HTTP 2/2 + clippy; fold HEAD `3bb9b050` **pass** (store 10/10, kernel-server `http_reflection` 2/2, clippy `-D warnings` clean; §2)
 - Running report: [P13-T11 report](2026-09-05-personal-p13-t11-report.md) (prior log [2026-09-03](2026-09-03-personal-p13-t11-reflection-report.md))
 - Claim ceiling: `hypothesis` (A7: Dual Track / ordinary CI / Linux native close "the implementation exists" only). Windows-native cells stay **not-run** until `P13-T13`. Not Gate / release / Profile / B01 / Windows support.
@@ -44,4 +44,4 @@ Not T12/D02 rendered `/ui/` review (sibling). Not T13 Windows host E2E. No live 
 
 ## 4. Unique next
 
-Acceptance on fold HEAD `3bb9b050` is honest. Unique next: wait required CI on this closure HEAD of Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320); if all required checks including Windows SUCCESS, ready/merge and record `main@<merge>`. This session does not claim `P13-T12` / `P13-T13`.
+Merged PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) at `main@fa3c1dab`. Closure HEAD `56f9de61` required CI [33949770791](https://github.com/agentkernel/cognitive-os/actions/runs/33949770791) **SUCCESS**. Unique next: sibling continues `P13-T12/D02`; this session does not claim `P13-T12` / `P13-T13`.
