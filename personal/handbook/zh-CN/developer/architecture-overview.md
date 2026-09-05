@@ -127,8 +127,7 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   fold HEAD `bba4aa47`）：已在 `/ui/` `c8691923`（`DEV-LINUX-NATIVE-01` + 宿主
   Chrome）记账；剩余 `not-run` 是缺 NVDA、缺 Windows 原生 chrome，或一次性
   runtime 没有 live Project。任务 `P13-T12` 已关闭。两份文档都不是 Gate、release
-  或 T15 证据。Unique next：`DOC-LOCAL-RUNTIME-HOST` 收口后可在本机领取 `P13-T13`；
-  不领取 `P11-T15`。
+  或 T15 证据。Unique next：继续 `P13-T13` 至 required CI 后收口；T13 合并前不领取 `P11-T15`。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
 - HITL **只**在项目中心画布；Today 用深链进入。不要把独立

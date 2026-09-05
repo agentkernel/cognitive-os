@@ -145,8 +145,8 @@ authority.
   (`DEV-LINUX-NATIVE-01` + host Chrome); remaining `not-run` is missing NVDA,
   missing Windows native chrome, or a disposable runtime without a live
   Project. Task `P13-T12` is closed. Neither document is Gate, release, or T15
-  evidence. Unique next: after `DOC-LOCAL-RUNTIME-HOST`, `P13-T13` is claimable
-  on this designated local host; do not claim `P11-T15`.
+  evidence. Unique next: continue `P13-T13` through required CI then close;
+  do not claim `P11-T15` until T13 is merged.
 - Authority object English id is **Employee**. Product chrome may still say
   **Member Runtime** until post-completion architecture/handbook wording
   reconciliation. This handbook page does not rewrite product journeys.
