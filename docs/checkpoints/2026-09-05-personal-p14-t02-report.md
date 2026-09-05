@@ -7,7 +7,7 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Worktree: `D:\agent-kernel`
 - Lease: `lease/personal/P14-T02/create-wizard`
 - Change class: `implementation-only` (Dual Track `/ui/` create wizard surfaces; existing P11-T03 confirm-before-activate; no contract/axiom change)
-- Unique next: required CI green on the D02 report HEAD, then write closure, ready/merge, close lease, claim `P14-T03`.
+- Unique next: ready/merge PR [#329](https://github.com/agentkernel/cognitive-os/pull/329) after required CI on the closure HEAD, then claim `P14-T03`.
 
 Do not claim T07 (Settings L1 / palette / state-lab) or T08 (Knowledge files/why/import). Do not reopen EVAL-016 / Phase 13 / P11-T15.
 
@@ -35,4 +35,6 @@ Do not claim T07 (Settings L1 / palette / state-lab) or T08 (Knowledge files/why
 | J19 retired routes | **pass** | `#/inbox`, `#/team`, `#/hitl/prev-1` | `1118076c` | Each shows region **No such route** / “This address does not exist in the Control Plane.” |
 | Closed Phase 14 journey regression beyond J1 | **not-run** | — | `1118076c` | No other Phase 14 implementation task is closed on this HEAD. T07/T08 are sibling-owned; not claimed here. |
 | Windows native chrome JOURNEY | **not-run** | `DEV-WINDOWS-NATIVE-OPC-01` | — | Walk used local Cursor browser against forwarded guest `/ui/`, not Windows-native daemon chrome. |
-| `CI-WINDOWS-MSVC-01` at `1118076c` | pending at walk | `CI-WINDOWS-MSVC-01` | `1118076c` | Job in-progress during D02. Re-check on the report HEAD before ready/merge. |
+| `CI-WINDOWS-MSVC-01` at `1118076c` | superseded | `CI-WINDOWS-MSVC-01` | `1118076c` | D02 report HEAD `c9de0907` is the validated merge candidate below. |
+| Required CI at D02 report HEAD `c9de0907` | **pass** | `CI-UBUNTU-01` + `CI-WINDOWS-MSVC-01` | `c9de0907` | Run [33976523572](https://github.com/agentkernel/cognitive-os/actions/runs/33976523572): resolve 4s, ubuntu 3m58s, windows 17m21s, required-ci 3s — all **SUCCESS**. |
+| T02 closure written | **pass** | plan | this commit | [closure](2026-09-05-personal-p14-t02-closure.md). Lease close + ready/merge after this HEAD's required CI. |
