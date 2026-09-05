@@ -2358,7 +2358,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T05 — 从 Project chrome 走 2.0 Attempt / Runs / Outputs
 
-- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T05/D01`. Draft PR [#332](https://github.com/agentkernel/cognitive-os/pull/332) at `d72c2847`.
+- **status:** `done` (2026-09-06, PR [#332](https://github.com/agentkernel/cognitive-os/pull/332)). Claim ceiling `hypothesis`. Validated `cf6d09e3` required CI [33991619494](https://github.com/agentkernel/cognitive-os/actions/runs/33991619494) **SUCCESS**. Do not claim T07/T08. T06 stays in-progress on PR [#333](https://github.com/agentkernel/cognitive-os/pull/333).
 - **EVAL-016:** J14 + empty Runs/Outputs.
 - **依赖:** P14-T03；P13-T02；P13-T04。
 - **垂直切片:** D01：Project chrome 启动 2.0 Attempt（非 `#/work`）；Runs/Outputs 读真实 ledger/产物或诚实 empty。
@@ -2369,7 +2369,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T06 — Today live 决策包 + 每 Project 运行概览
 
-- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T06/D01`. Draft PR [#333](https://github.com/agentkernel/cognitive-os/pull/333) at `1c9941c6`.
+- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T06/D02`. Draft PR [#333](https://github.com/agentkernel/cognitive-os/pull/333). Fold `origin/main@d9cee39d` (T05 #332).
 - **EVAL-016:** J2.
 - **依赖:** P14-T03；P12-T05；P13-T05.
 - **垂直切片:** D01：激活后 Today 决策包 + 每 live Project 一行；failure-first：KPI 墙、未激活仍画 live 包。
