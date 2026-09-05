@@ -208,6 +208,7 @@ export const KNOWN_ROUTES: readonly KnownRoute[] = [
   { method: "GET", path: "/management/project/v1/chat.thread", channel: "management" },
   { method: "GET", path: "/management/project/v1/today.overview", channel: "management" },
   { method: "GET", path: "/management/project/v1/dsh.hosted.attempt.list", channel: "management" },
+  { method: "POST", path: "/management/project/v1/dsh.hosted.attempt.run", channel: "management" },
   { method: "GET", path: "/management/host/v1/status", channel: "management" },
   { method: "POST", path: "/management/host/v1/close.request", channel: "management" },
   { method: "GET", path: "/management/resource/v1/list", channel: "management" },

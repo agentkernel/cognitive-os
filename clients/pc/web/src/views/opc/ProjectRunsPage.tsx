@@ -1,13 +1,21 @@
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { readJson } from "../../api";
 import { PageHeader } from "../../components/PageHeader";
 import {
   PROJECT_AXIS_PATH,
+  PROJECT_DETAIL_PATH,
+  PROJECT_ROSTER_PATH,
   projectAxisKey,
+  projectDetailKey,
+  projectRosterKey,
   type ProjectAxisStageRow,
+  type ProjectDetailRow,
+  type ProjectRosterRow,
 } from "../../data/projections/projectWork";
 import {
   ATTEMPT_LIST_PATH,
+  ATTEMPT_RUN_PATH,
   attemptHistoryKey,
   ROUTINE_RUNS_PATH,
   routineRunsKey,
@@ -17,21 +25,32 @@ import {
 import { useProjection } from "../../data/useProjection";
 import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
-import { loadAttemptHistory, loadProjectAxis, loadRoutineRuns } from "./loadOpcReads";
+import { httpErrorMessage } from "./httpError";
+import {
+  loadAttemptHistory,
+  loadProjectAxis,
+  loadProjectDetail,
+  loadProjectRoster,
+  loadRoutineRuns,
+} from "./loadOpcReads";
 import { ProjectWorkNav } from "./ProjectWorkNav";
 
 /**
  * Runs — PlanRevision axis (P12-T03) + the real Routine occurrence ledger and
- * Attempt history (P13-T05/D02). Every row is a daemon fact: the scheduler
- * tick is the only dispatcher, a receipt is not completion, verification is
- * `not-run`. There is no Start, Approve, or Complete control on this page;
- * manual triggers stay on the management `routine.trigger` Intent route.
+ * Attempt history (P13-T05/D02). P14-T05/D01 adds Write Attempt from this
+ * Project chrome: management `dsh.hosted.attempt.run`, never Linux 1.0 `#/work`.
+ * There is no Start / Run now / Trigger / Approve / Complete control; a receipt
+ * is not completion.
  */
 export function ProjectRunsPage() {
   const { projectId = "" } = useParams();
   const axis = useProjection<ProjectAxisStageRow[]>(projectAxisKey(projectId));
   const runs = useProjection<RoutineRunsView[]>(routineRunsKey(projectId));
   const attempts = useProjection<AttemptHistoryRow[]>(attemptHistoryKey(projectId));
+  const detail = useProjection<ProjectDetailRow[]>(projectDetailKey(projectId));
+  const roster = useProjection<ProjectRosterRow[]>(projectRosterKey(projectId));
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | undefined>();
   const refresh = useCallback(async () => {
     if (projectId.length === 0) {
       return;
@@ -40,13 +59,51 @@ export function ProjectRunsPage() {
       loadProjectAxis(projectId),
       loadRoutineRuns(projectId),
       loadAttemptHistory(projectId),
+      loadProjectDetail(projectId),
+      loadProjectRoster(projectId),
     ]);
   }, [projectId]);
   useEffect(() => {
     void refresh();
+    setError(undefined);
   }, [refresh]);
 
   const view = runs.status === "ready" || runs.status === "stale" ? runs.data?.[0] : undefined;
+  const projectState = detail.data?.[0]?.state;
+  const seated = useMemo(
+    () => (roster.data ?? []).filter((row) => row.state === "seated"),
+    [roster.data],
+  );
+  const seatedEmployee = seated[0];
+  const canWriteAttempt = projectState === "active" && seatedEmployee !== undefined;
+
+  async function writeAttempt() {
+    if (!canWriteAttempt || !seatedEmployee) {
+      setError("Write Attempt needs a live Project and a seated Member. Nothing was dispatched.");
+      return;
+    }
+    setBusy(true);
+    setError(undefined);
+    try {
+      const launched = await readJson(ATTEMPT_RUN_PATH, "management", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          employee_id: seatedEmployee.employeeId,
+          task_ref: `task://personal/project/${projectId}`,
+          bounded_context: "Owner-started hosted Attempt from Project runs chrome.",
+          wait: false,
+        }),
+      });
+      if (!launched.ok) {
+        setError(httpErrorMessage(launched.status, launched.body));
+        return;
+      }
+      await loadAttemptHistory(projectId);
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <section data-page="opc-project-runs">
@@ -55,11 +112,13 @@ export function ProjectRunsPage() {
         lede="Routine occurrence ledger, Attempt history, and the current PlanRevision axis. Not a renamed Work timeline."
       />
       <HonestyNote>
-        Product origin is daemon-served hash /ui/. GET {ROUTINE_RUNS_PATH} is the
+        Product origin is daemon-served hash /ui/. Vite preview is not the product
+        origin. This chrome is not Linux 1.0 #/work. GET {ROUTINE_RUNS_PATH} is the
         occurrence ledger the daemon scheduler tick writes; GET {ATTEMPT_LIST_PATH}{" "}
-        is the Attempt history. A receipt or process exit is never completion and
-        verification stays not-run. No Start, Approve, or Complete control lives
-        here; manual triggers are Intent on the management channel.
+        is the Attempt history. Write Attempt posts {ATTEMPT_RUN_PATH} on the
+        management channel only when a live Project has a seated Member. A receipt
+        or process exit is never completion and verification stays not-run. No
+        Start, Run now, Approve, or Complete control lives here.
       </HonestyNote>
       <p className="cp-quiet">
         <Link to="/projects">Projects list</Link>
@@ -71,6 +130,30 @@ export function ProjectRunsPage() {
         ) : null}
       </p>
       {projectId ? <ProjectWorkNav projectId={projectId} /> : null}
+
+      <p className="cp-quiet" data-region="opc-write-attempt">
+        GET {PROJECT_DETAIL_PATH} state {projectState ?? "unknown"}. GET{" "}
+        {PROJECT_ROSTER_PATH} seated {seated.length === 0 ? "none" : seated.map((row) => row.employeeId).join(", ")}.
+        {!canWriteAttempt
+          ? " Write Attempt needs a live Project and a seated Member. Nothing was dispatched."
+          : null}
+      </p>
+      <p className="cp-quiet">
+        <button
+          type="button"
+          className="cp-button cp-button--primary"
+          data-write-attempt={canWriteAttempt ? "ready" : "blocked"}
+          onClick={() => void writeAttempt()}
+          disabled={busy || !canWriteAttempt}
+        >
+          Write Attempt
+        </button>
+      </p>
+      {error ? (
+        <p className="cp-stateview" role="alert" data-attempt-error="true">
+          {error} No Attempt was invented locally.
+        </p>
+      ) : null}
 
       <DaemonReadPanel
         projection={runs}

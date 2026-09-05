@@ -433,4 +433,34 @@ describe("P13-T04 outputs select-then-view", () => {
     expect(host.textContent).not.toMatch(/no openable artifact yet/i);
     unmount(host, root);
   });
+
+  it("keeps an empty CAS list honest and never routes Outputs through Linux 1.0 #/work or Vite", async () => {
+    const { host, root, calls } = await renderOutputs({
+      "GET /management/project/v1/outputs": {
+        status: 200,
+        body: {
+          status: "ok",
+          artifacts: [],
+          run_acceptances: [],
+          files_are_authority: false,
+          chat_can_confirm: false,
+        },
+      },
+    });
+    expect(host.querySelector("[data-page='opc-project-outputs']")?.textContent).toMatch(
+      /no openable artifact yet/i,
+    );
+    expect(host.textContent).toMatch(/not a Knowledge file list/);
+    expect(host.textContent).toMatch(/Vite preview is not the product origin/);
+    expect(host.textContent).toMatch(/not Linux 1\.0 #\/work/);
+    expect(
+      [...host.querySelectorAll("a")]
+        .map((node) => node.getAttribute("href") ?? "")
+        .filter((href) => href.includes("/work")),
+    ).toEqual([]);
+    expect(host.querySelector("[data-row-key='artifact-1']")).toBeNull();
+    expect(calls.some((call) => call.pathname.startsWith("/task/"))).toBe(false);
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
 });
