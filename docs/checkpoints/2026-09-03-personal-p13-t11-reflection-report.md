@@ -75,9 +75,8 @@ Formal-plan T11 row stays `not-started` (T07/T08/T09 lease `PERSONAL-DEVELOPMENT
 | Task-channel aliases fail closed | nested `matches` + `channel_forbidden` | HTTP 403 | Linux `http_reflection_task_channel_and_negatives_are_refused` |
 | Product origin = daemon `/ui/` | MemberConfig Reflection tab | 0 Admit | Dual Track 12/12. Rendered `/ui/` review remains `P13-T12/D02` |
 
-Required CI on `40155c42` is **green**. Linux store/HTTP/clippy **pass**. Formal-plan T11 row stays `not-started` (sibling lock). D01 is not formally closed until that row can be updated and the Draft is ready/merged without colliding with #319 / #317 / #321.
+Required CI on `40155c42` is **green**. Linux store/HTTP/clippy **pass**. Continued on 2026-09-05: fold HEAD `3bb9b050` Linux 10/10 + 2/2 + clippy and required CI [33896709599](https://github.com/agentkernel/cognitive-os/actions/runs/33896709599) **SUCCESS**. Canonical running report: [2026-09-05 report](2026-09-05-personal-p13-t11-report.md); [closure](2026-09-05-personal-p13-t11-closure.md).
 
 ## Unique next
 
-1. Persist this report + PROGRESS T11 rows; keep Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320). Do not ready/merge until formal-plan T11 can be updated and siblings #319 / #317 / #321 are not merging in the same instant.
-2. Do not claim T07/T08/T09/T12/T13/T15. Rebase onto `origin/main` only if it moves past `2217722d` before ready.
+Superseded 2026-09-05: wait required CI on the closure HEAD of Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320), then ready/merge. Do not claim T12/T13.
