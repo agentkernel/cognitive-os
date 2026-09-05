@@ -540,9 +540,8 @@ personal_requirements:
     direct_registry_requirements: []
     tasks: [P13-T01, P13-T12, P13-T13, P11-T15]
     gates: []
-    # 2026-09-05: P13-T13 merged at main@4ca9b046 (D01-qualified).
-    # P11-T15/D01 in-progress: N=15 frozen; 1 pass / 1 partial / 13 not-run. Draft PR #325.
-    # evidence_status stays not-run until T15 closes (not release).
+    # 2026-09-05: P11-T15 done. N=15 retained 1 pass / 1 partial / 13 not-run.
+    # evidence_status stays not-run (T15 done is not release).
     evidence_status: not-run
 
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness

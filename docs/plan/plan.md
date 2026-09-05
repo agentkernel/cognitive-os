@@ -1706,9 +1706,9 @@ formal acceptance.
   unknown metrics=0、scraped、P0 hero、secret 进日志/DOM。
 - **硬门:** 适用 Phase 11 四条。
 
-### P11-T15 — Fixed-denominator Windows OPC acceptance (in-progress; Phase 13 验收出口)
+### P11-T15 — Fixed-denominator Windows OPC acceptance (done; Phase 13 验收出口)
 
-- **status:** `in-progress` (2026-09-05; exact `main@4ca9b046`; lease `lease/personal/P11-T15/windows-opc-acceptance`; Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325); N=15 frozen; cell 1 **partial**, cell 2 **pass**, cells 3–15 **not-run**; [report](../checkpoints/2026-09-05-personal-p11-t15-report.md)).
+- **status:** `done` (2026-09-05; exact `main@4ca9b046`; Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325); validated `e55adb82` required CI [33963162039](https://github.com/agentkernel/cognitive-os/actions/runs/33963162039) **SUCCESS**; N=15 frozen; cell 1 **partial**, cell 2 **pass**, cells 3–15 **not-run**; lease closed → PARALLEL-LANES §3.1; [report](../checkpoints/2026-09-05-personal-p11-t15-report.md); [closure](../checkpoints/2026-09-05-personal-p11-t15-closure.md)).
 - **2.0.0 表面:** N=15 固定分母已在领取时冻结。**不是** Phase 12 prototype completeness mutex。不自动
   release。
 - **依赖:** `acceptance_requires` = **`P13-T02..T13` done** + `P13-T13` 已把

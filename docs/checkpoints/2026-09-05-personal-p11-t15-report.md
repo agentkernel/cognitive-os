@@ -15,7 +15,7 @@
 
 ## Unique next action
 
-Continue `P11-T15/D01`: retain every started cell; required CI on the to-merge HEAD of Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325). Do not auto-release. Cells 3–15 remain honest `not-run` (missing live Provider / Pi / sandbox / sleep / host FS).
+Task closed. Unique next: no remaining ready `P*-T*` implementation task. Do not auto-claim P6. `P7-T07` stays blocked. Evaluation routing OFF.
 
 ## Frozen N=15 preregistration (claim 2026-09-05)
 
@@ -48,7 +48,7 @@ Oracle = the scene text in plan.md T15. Record format = this table (`pass` / `fa
 | 2026-09-05 | Unrendered `install.ps1` re-run | **pass** (fail-closed) | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` | system PowerShell exit **64**; stderr `release policy is not rendered`. Not a release installer. |
 | 2026-09-05 | `kernel-server --test p13_t13_windows_native_host` | **pass 2/2** | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` | Live unsigned daemon admits Windows `Personal Home`; GNU 422; task 403; `daemon.bind`; `/ui/` 503 without bundle / 200 with fixture `data/cognitiveos/ui/index.html`. |
 | 2026-09-05 | Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325) | recorded | GitHub | `85e2821e` | Claim/status + handbook routing. Required CI started (resolve **SUCCESS**; ubuntu/windows in progress). |
-| 2026-09-05 | Dual Track empty Home dump-dom | **pass** | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` product + local `clients/pc/web` dist | Disposable `kernel-server --personal` `:48791`; dist copied to runtime `data/cognitiveos/ui`; host Chrome headless CDP; session gate from file (never printed). `[data-page=opc-today]`; Start create → `#/projects/new`; empty-home copy; rail hidden; L1 Today/Projects/Knowledge; Team=0; Inbox=0; 0 fake Create/Activate/Approve. Honesty copy contains “Vite is not the product origin” (not a Vite preview). |
+| 2026-09-05 | Required CI on `e55adb82` | **pass** | GitHub | `e55adb82` | [33963162039](https://github.com/agentkernel/cognitive-os/actions/runs/33963162039) **SUCCESS** (resolve 3s; ubuntu 4m36s; windows 14m49s; required-ci 4s). |
 
 ## N=15 cell grid (started; retain every cell)
 

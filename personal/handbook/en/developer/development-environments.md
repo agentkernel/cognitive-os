@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:ae40674151ddaa54c7d4e433d65b41928b66bf602ed26477e47bba46cc9295f2"
+fingerprint: "sha256:fec2fb4cddd9598700a555cef98872033b0e5a89ec53b6e5d0e19b0a4f6fdb68"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -37,7 +37,7 @@ Phase 11 Personal 2.0.0 routing: T03/T04 daily authority tests use
 `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (plus exact-revision `DEV-LINUX-NATIVE-01`
 when a native daemon/store is required). T02/T07 native host/DSH E2E stay
 `DEV-WINDOWS-NATIVE-OPC-01` = D01-qualified 2026-09-05 (`P13-T13`); hung native
-cells that lack a capability stay honest `not-run`. `P11-T15` is in-progress on this qualified host (N=15 frozen at `main@4ca9b046`). T09 is HITL on canvas, not a first-level Inbox. `B01-DESKTOP-002`
+cells that lack a capability stay honest `not-run`. `P11-T15` is done on this qualified host (N=15 frozen at `main@4ca9b046`; 1 pass / 1 partial / 13 not-run). T09 is HITL on canvas, not a first-level Inbox. `B01-DESKTOP-002`
 is campaign-only, not the 2.0 daily default. `P11-T15` N=15 acceptance
 runs on this preregistered qualified Windows revision and is **not** the
 Phase 12 prototype-completeness mutex. Phase 12 Dual Track UI work uses
@@ -51,7 +51,7 @@ P13-T12/D02 rendered / NVDA / 200% / host-theme review against exact-revision
 guest daemon `/ui/` (SSH tunnel) is implementation evidence only; `DOC-LOCAL-RUNTIME-HOST`
 (2026-09-05) designated this local host as `DEV-WINDOWS-NATIVE-OPC-01` (OS version
 is not a provision gate). `P13-T13/D01` qualified the unsigned path on 2026-09-05;
-D02 accounted hung cells pass/fail/`not-run`. `P11-T15` is in-progress after T13 closed. Local cargo, WSL,
+D02 accounted hung cells pass/fail/`not-run`. `P11-T15` is done after T13 closed. Local cargo, WSL,
 Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
 `not-run` remains `not-run`.
 

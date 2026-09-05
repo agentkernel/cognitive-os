@@ -15,7 +15,7 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:0ed3e7071f797f276b7b6c9f5da479608d88a13b7ee9fd158e1065894e789777"
+fingerprint: "sha256:611b8bba647af5fda44eb2a841d0f04b6e98d5f55a3174aa7f8285543c288741"
 non_claims:
   - Compilation on a platform is not product support; only the listed product target carries installation and service paths.
 ---
@@ -32,7 +32,7 @@ are explicitly refused by the Pi launch admission path.
 Personal 2.0 is Windows-first and remains `Requires-backend` plus
 `Requires-environment`. The qualified native Windows OPC development
 environment is D01-qualified on this local host (2026-09-05; OS version is not a
-provision gate) by `P13-T13`. `P11-T15` is in-progress on this host (N=15 frozen at `main@4ca9b046`). Hung native cells without a capability stay `not-run`. B01-W is not provisioned. The target runtime is preinstalled
+provision gate) by `P13-T13`. `P11-T15` is done on this host (N=15 frozen at `main@4ca9b046`; 1 pass / 1 partial / 13 not-run). Hung native cells without a capability stay `not-run`. B01-W is not provisioned. The target runtime is preinstalled
 managed DSH; Pi is the hidden Personal Assistant engine. Existing Linux Pi/dsh,
 WSL, ordinary CI, Canvas, CLI, Provider, model, account, adapter, or Windows GNU
 evidence transfers no Windows support or DSH qualification. Hermes, Codex,
