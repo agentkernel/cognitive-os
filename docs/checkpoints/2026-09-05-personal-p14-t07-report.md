@@ -40,4 +40,4 @@
 
 ## Unique next
 
-Ready/merge PR [#327](https://github.com/agentkernel/cognitive-os/pull/327) after required CI on the closure HEAD. Formal plan three-column stays `not-started` until last merger (T08 listed `PERSONAL-DEVELOPMENT-PLAN.md`). Do not claim T02/T03/T04/T08/T05. T03 is not done — do not claim T06.
+Folded `origin/main@299f4afb` (T08 #328). Ready/merge PR [#327](https://github.com/agentkernel/cognitive-os/pull/327) after required CI on the fold HEAD. Formal plan three-column marks T07 `done` (T08 lease already closed). Do not claim T02/T03/T04/T08/T05. T03 is not done — do not claim T06.

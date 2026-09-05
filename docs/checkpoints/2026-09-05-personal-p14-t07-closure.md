@@ -8,7 +8,7 @@
 - Guest `/ui/`: `B01-Desktop-Linux-002` `127.0.0.1:48681`. SPA `634da855` served on kernel pin `711a5a7c` (Dual Track-only; kernel binary unchanged). Product origin = daemon `/ui/`. Vite is not the product origin. dsh `3080` is not 小白 chrome.
 - Running report: [P14-T07 report](2026-09-05-personal-p14-t07-report.md)
 - Claim ceiling: `hypothesis`. Not Gate / release / Profile / B01 / EVAL-016 revival.
-- Formal plan three-column / Phase 14 counts / `personal-trace.yaml`: **last merger** (`P14-T08` listed `PERSONAL-DEVELOPMENT-PLAN.md` + `plan.md`). This delivery does not overlap that lease.
+- Formal plan three-column / Phase 14 counts / `personal-trace.yaml`: last merger after T08 closed. T07 three-column is `done` in this fold. T08 three-column remains `done`.
 
 ## 1. Acceptance mapping
 

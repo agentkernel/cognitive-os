@@ -2381,7 +2381,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T07 — Settings 真 L1 + IA（藏 9×9；不广告 Linux 1.0 Home/Work/Agents；palette intercept）
 
-- **status:** `not-started`. Claim ceiling `hypothesis`. 可与创建链并行。
+- **status:** `done` (2026-09-06, PR [#327](https://github.com/agentkernel/cognitive-os/pull/327)). Claim ceiling `hypothesis`. Folded `origin/main@299f4afb` (T08). Do not claim T02/T03/T04/T08/T05. Do not claim T06 until T03 is done.
 - **EVAL-016:** J6 / J8 / J12 / J20.
 - **依赖:** P14-T01；P13-T08；P12-T08.
 - **垂直切片:** D01：Settings L1 `role=link`；默认隐藏 9×9 state-lab；Linux 1.0 Home/Work/Agents 不作为 2.0 目的地；palette 拦截。
@@ -2392,7 +2392,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T08 — Knowledge v9 IA（files / why / import）
 
-- **status:** `not-started`. Claim ceiling `hypothesis`. 可与创建链并行。
+- **status:** `done` (2026-09-05, PR [#328](https://github.com/agentkernel/cognitive-os/pull/328)). Claim ceiling `hypothesis`. 可与创建链并行。 Do not claim T02/T03/T04 or T07/T06.
 - **EVAL-016:** J5.
 - **依赖:** P14-T01；P13-T07；P12-T07.
 - **垂直切片:** D01：files / Why this fragment / import 表面；failure-first：file-as-authority、secret ingest。
