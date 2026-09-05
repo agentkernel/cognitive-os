@@ -540,9 +540,10 @@ personal_requirements:
     direct_registry_requirements: []
     tasks: [P13-T01, P13-T12, P13-T13, P11-T15]
     gates: []
-    # 2026-09-03: the P13-T12/D01 visual specification and v9 comparison
-    # checklist are written (documentation-only); evidence_status stays not-run
-    # until P13-T12/D02 records the rendered cells on an exact /ui/ revision.
+    # 2026-09-05: P13-T12/D02 recorded rendered cells on /ui/ c8691923
+    # (DEV-LINUX-NATIVE-01 + host Chrome). NVDA 10× not-run; Windows native
+    # chrome / FC not-run until P13-T13. evidence_status stays not-run until
+    # PERS-PR-052's native-host backfill clause is also satisfied.
     evidence_status: not-run
 
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness

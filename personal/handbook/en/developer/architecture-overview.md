@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:a880380c99f2dba4804d1940e7a1936bf8827e5a0ccca123c4a104d2b26e55e0"
+fingerprint: "sha256:c59fcdb61733caace3f4775766a32c0e1bbc8987c2a017f0473d2941107527bc"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -139,9 +139,13 @@ authority.
   IA unchanged; not a second design system; no CSS edit) and the
   [frozen v9 ↔ `/ui/` comparison checklist](../../../docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
   (19/19 maintenance-index modules plus the nine × nine, keyboard/focus,
-  200%/narrow, host-theme and NVDA cell grids). Every checklist judgement is
-  `not-run` until `P13-T12/D02` records it on an exact `/ui/` revision;
-  neither document is Gate, release, or T15 evidence.
+  200%/narrow, host-theme and NVDA cell grids). `P13-T12/D02` is **done**
+  (PR [#322](https://github.com/agentkernel/cognitive-os/pull/322); fold HEAD
+  `bba4aa47`): those cells were recorded on `/ui/` `c8691923`
+  (`DEV-LINUX-NATIVE-01` + host Chrome); remaining `not-run` is missing NVDA,
+  missing Windows native chrome, or a disposable runtime without a live
+  Project. Task `P13-T12` is closed. Neither document is Gate, release, or T15
+  evidence. Unique next: `P13-T13` remains excluded / not claimed.
 - Authority object English id is **Employee**. Product chrome may still say
   **Member Runtime** until post-completion architecture/handbook wording
   reconciliation. This handbook page does not rewrite product journeys.

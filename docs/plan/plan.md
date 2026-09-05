@@ -2256,7 +2256,9 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
   State Lab 静态图；把 rendered review 写成 Windows native 资格。
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`（D01 documentation-only
   出口写明）。
-- **D01 done（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；lease `lease/personal/P13-T12/visual-spec` 已关闭；D02 `ready`）:** 视觉规格
+- **status:** done (2026-09-05; PR [#322](https://github.com/agentkernel/cognitive-os/pull/322); `P13-T12/D01` done PR #308; `P13-T12/D02` done; fold HEAD `bba4aa47` required CI [33951377929](https://github.com/agentkernel/cognitive-os/actions/runs/33951377929) **SUCCESS**; lease closed → PARALLEL-LANES §3.1). Claim ceiling `hypothesis`. Windows native chrome / NVDA `not-run` until P13-T13.
+- **D02 done（2026-09-05，PR [#322](https://github.com/agentkernel/cognitive-os/pull/322)，fold HEAD `bba4aa47`，`/ui/` pin `c8691923`）。** Chrome/Linux 格已填：modules 7/1/1/10；Grid A 81 fail；Grid B 7/5/10/35；Grid C 5/15/0/16；Grid D 18/0/0/22；Grid E 10 not-run（NVDA 未装）。见 [D02 report](../checkpoints/2026-09-05-personal-p13-t12-d02-report.md)；[D02 closure](../checkpoints/2026-09-05-personal-p13-t12-d02-closure.md)。Unique next：`P13-T13` remains excluded / not claimed；不领取 T15。
+- **D01 done（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；lease `lease/personal/P13-T12/visual-spec` 已关闭）:** 视觉规格
   [`personal-2.0-opc-visual-ui-spec.md`](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md)
   与对照清单
   [`personal-2.0-opc-v9-ui-comparison-checklist.md`](../../personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)

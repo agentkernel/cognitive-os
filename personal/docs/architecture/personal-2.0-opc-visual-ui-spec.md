@@ -41,8 +41,9 @@
 - Lease: `lease/personal/P13-T12/visual-spec`. Claim ceiling `hypothesis`.
 - Non-claims: nothing here proves rendered behaviour, contrast, NVDA
   announcement, 200% layout, Windows native chrome, usability, Gate, release,
-  Profile, or `P11-T15` acceptance. NVDA / 200% / host-theme / State Lab nine
-  states × nine surfaces stay **not-run** until `P13-T12/D02`.
+  Profile, or `P11-T15` acceptance. D02 cell judgements live in the companion
+  checklist and [D02 report](../../../docs/checkpoints/2026-09-05-personal-p13-t12-d02-report.md);
+  they are implementation evidence only.
 
 ---
 
@@ -644,6 +645,7 @@ No new hue, no new type size, no new spacing step is proposed. The
 | j | v9 has a standalone `hitl` scene; `/ui/` renders HITL as the `?preview=` canvas on `#/projects/:id` with a Today deep link. | v9 `SCENES`; mapping Owner decision #4 | Owner decision #4 wins (already resolved in the mapping); the checklist row `M-HITL` uses the canvas route. |
 | k | v9 draws 44 px targets on every control; `app.css` keeps compact desktop rows and raises to 44 px only under `pointer: coarse`. | v9 CSS; `app.css` 1275–1285 | §4 rule: 44 px on consequential controls (HITL actions, wizard nav, composer) and under coarse pointers; compact elsewhere. D02 measures the consequential set. |
 | l | The task brief cites `clients/docs/design/09|11|24-*.md`; on `main` those files are tracked only under `clients/docs/design/legacy-control-plane-20260827/`. | `git ls-files` | Links point at the tracked legacy paths; no untracked local file is linked. |
+| m | Document first heading on daemon `/ui/` is brand `h1` "CognitiveOS Personal"; the space title is `h2` inside `#main`. Spec §7 K1 wants the space title as the first heading. | dump-dom `P13-T12/D02` at `c8691923` | Recorded; Grid B K1 `fail` on executable surfaces. Not an IA change. |
 
 ---
 
