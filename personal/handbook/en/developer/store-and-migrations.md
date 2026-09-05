@@ -36,6 +36,8 @@ sources:
     symbols: ["ROUTINE_ARMING_SCHEMA_V38", "RoutineArmingStore"]
   - path: personal/crates/cognitive-store/src/project_chat.rs
     symbols: ["PROJECT_CHAT_SCHEMA_V39", "ProjectChatStore"]
+  - path: personal/crates/cognitive-store/src/reflection.rs
+    symbols: ["REFLECTION_SCHEMA_V40", "ReflectionStore"]
   - path: personal/crates/cognitive-store/src/project_lifecycle.rs
     symbols: ["project_lifecycle_migration_entry", "ProjectLifecycleStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
@@ -57,6 +59,7 @@ tests:
   - personal/crates/cognitive-store/tests/p11_t06_assistant.rs
   - personal/crates/cognitive-store/tests/p11_t07_hosted_dsh.rs
   - personal/crates/cognitive-store/tests/p13_t02_hosted_dsh_attempt.rs
+  - personal/crates/cognitive-store/tests/p13_t11_reflection.rs
   - personal/crates/cognitive-store/tests/p11_t10_vault.rs
   - personal/crates/cognitive-store/tests/p11_t08_routine.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
@@ -67,7 +70,7 @@ tests:
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
   - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
-fingerprint: "sha256:aa43fac01f034662cb5f562ba514923cf3029c53d4502fd2ccd2278f8d9b4395"
+fingerprint: "sha256:fdd23fc92c4ca86a1d852888fdac81a71c81c8313b712306150ddc3f1b2771ab"
 non_claims:
   - Cross-database atomicity between authority and installation SQLite files is explicitly not claimed.
 ---
@@ -77,11 +80,11 @@ non_claims:
 `cognitive-store` is the single-writer SQLite WAL adapter behind the kernel ports.
 `SqliteAuthorityStore` is cloneable: clones share one connection mutex so the
 Personal daemon can hand the same writer to HTTP Task admission and the periodic
-scheduler tick. Two databases under XDG state: **authority** (migrations v1–v39) and
+scheduler tick. Two databases under XDG state: **authority** (migrations v1–v40) and
 **installation** (v1–v4). No cross-database atomicity is claimed; preparation
 orders authority first and names the backup path on a second-phase failure.
 
-## Authority migration map (v1–v39)
+## Authority migration map (v1–v40)
 
 | Versions | Adds |
 |---|---|
@@ -108,6 +111,7 @@ orders authority first and names the backup path on a second-phase failure.
 | v37 | Attempt artifacts → CAS → independent verifier → last-ring acceptance → external send (`p13_attempt_artifact`, `p13_artifact_evidence`, `p13_run_acceptance`, `p13_external_send`) under `cognitiveos.personal.attempt-artifact/0.1` (P13-T04). An artifact row is a `sha256:` reference into the single P3-T03 `ArtifactStore` CAS (`<data_dir>/artifacts`) plus format, source frame (`hosted-dsh-child:candidate:DeliverableDraft`, frame seq, payload digest) and produced-at; freshness (`current` / `superseded`) is derived per Project + task + Member, so another Member's deliverable on the same task ref never supersedes it. Evidence is append-only and pinned by CHECK to verifier `verifier://personal/attempt-artifact` and principal `principal://personal/independent-verifier`; its report bytes live in the same CAS. `p13_run_acceptance` pins the last ring by CHECK (`stage_position = stage_count - 1`) and binds one StageTestPassed fact, artifact and evidence. `p13_external_send` is a persist-before-dispatch Intent whose `published` CHECK=0 and `connector` CHECK=`none-qualified` (planned ≠ published). Rebuilds `p11_approval_preview` so `subject_kind` also admits `run-acceptance` and `external-send` (v30 precedent). Host file-open E2E is `not-run`. |
 | v38 | Routine arming after G2 plus occurrence dispatch / outcome columns (`p13_routine_arming`; `p11_routine_occurrence` rebuilt) under `cognitiveos.personal.routine-arming/0.1` (P13-T05). An arming binds one current Routine revision to one plan stage and its seated responsible Member (`armed_after` CHECK=`G2`; state `armed` / `paused` / `superseded`; `apply_mode` `arm` / `continue` / `pause` / `restart` / `resume`); the ③ declaration (`cadence_kind` `manual` / `interval`, `interval_ms` ≥ 1000, `bounded_context` ≤ 65536, `attempt_timeout_ms` ≤ 30 min) is copied from the revision body with its digest. The occurrence table gains `arming_id`, `attempt_id`, `lease_epoch`, `started_at`, `attempt_outcome` (`done` / `failed` / `blocked` / `unknown` / `timed-out` / `signaled` / `spawn-failed` / `unknown-outcome` — there is no `success`), `outcome_detail`, `elapsed_ms`, `terminal_at`, `completion_claimed` CHECK=0, and the disposition `attempted` (CHECK: `attempted` ⇔ an outcome is present). Clock / sleep / restart host E2E is `not-run`. |
 | v39 | Project group chat Owner turns (`p13_project_chat_turn`) plus chat-routed ApprovalPreview kinds `plan-revision` / `task-revision` (P13-T06). Owner-authored only (`author` CHECK=`owner`); mention / routing CHECKs; `approve_attempted` CHECK=0 so the schema cannot record a chat Approve. `@manager` mints a PlanRevision candidate and a digest-bound preview; `@member` mints a task-revision candidate bounded to that Member's responsible stage. Canvas Confirm is the only writer (`apply_plan_revision_locked` inside the preview transaction). Rebuilds `p11_approval_preview` keeping every v30 / v37 kind. Secret-shaped bodies are refused before any row exists. |
+| v40 | Daemon-generated reflection candidates (`p13_reflection_candidate`) plus versioned Member Runtime improvement (`p13_runtime_improvement`) and cross-Project Role Template proposals (`p13_role_template_proposal`) (P13-T11). Kinds `key-result` / `daily` / `cycle` / `incident`; sources `attempt-terminal` / `verification-evidence` / `occurrence-ledger`. `daily` is one UTC-day rollup per Member from terminal Attempts (not a key-result). `completion_claimed` CHECK=0, `model_self_report` CHECK=0, `implicit_blueprint` CHECK=0, `silent_reuse` CHECK=0. A new `p11_employee_revision` is inserted only after Owner preview confirm; rollback appends another revision. Rebuilds `p11_approval_preview` for `member-runtime-revision` / `role-template-proposal` (v39 kinds kept). CHECK SQL concatenates those kind tokens so `sqlite_master` omits `sk-`. |
 
 P11-T06 Hidden Pi Assistant adds **no new migration**. It reuses v26 `p11_candidate` / `p11_approval_preview` and T05 read-only archive context. Assistant register requires typed provenance (`sources[]` | `owner-stated` | `assistant-assumption`); a non-null blob is rejected. Closed candidate JSON forbids `grant` / `secret` / `trigger-arm`. `draft.apply` targeting a Project/Employee/Grant/confirmed charter is rejected. The assistant plane cannot write archive, SecretStore, Memory, or confirm/apply authority. Default-deny tools; research may name existing `HttpFetchReadOnly` only. Exact Pi `0.81.1` and `cognitiveos.private-candidate/1` are identity pins, not a second scheduler or Installed Agent.
 
@@ -141,14 +145,16 @@ reads and Memory auto-admit / cross-Project promote reuse `p11_vault_*` and
 `memory_candidates` / `memory_admission_decisions` / `memory_objects`. Files
 remain non-authority. Host filesystem E2E is `not-run`.
 
-P13-T09 Project lifecycle **does not register a new applied migration this slice**. `project_lifecycle_migration_entry()` reserves **v41** (`p13_project_lifecycle_event`) for a later `personal_db.rs` registration (that file and v40 are held by P13-T11). Runtime copy / archive / delete / export / restore-point uses existing `p11_project`, `p13_routine_arming`, `p11_grant`, `p11_employee`, and `p11_windows_host_*`. Copy lands `inactive` and refuses inherit grant/seating/runtime. Archive pauses `armed` Routines first. Delete is impact preview plus second confirmation; the tombstone is `state='deletion-preview'` with `current_plan_revision_id='tombstone'` and never DROPs the row. Export default-excludes secrets and is not authority. Same-disk restore points set `is_backup=0`. Management HTTP `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle` is the caller; task-channel aliases are 403. Windows FS E2E is `not-run` until P13-T13.
+P13-T09 Project lifecycle **does not register a new applied migration this slice**. `project_lifecycle_migration_entry()` reserves **v41** (`p13_project_lifecycle_event`) for a later `personal_db.rs` registration (v40 is P13-T11 reflection, below). Runtime copy / archive / delete / export / restore-point uses existing `p11_project`, `p13_routine_arming`, `p11_grant`, `p11_employee`, and `p11_windows_host_*`. Copy lands `inactive` and refuses inherit grant/seating/runtime. Archive pauses `armed` Routines first. Delete is impact preview plus second confirmation; the tombstone is `state='deletion-preview'` with `current_plan_revision_id='tombstone'` and never DROPs the row. Export default-excludes secrets and is not authority. Same-disk restore points set `is_backup=0`. Management HTTP `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle` is the caller; task-channel aliases are 403. Windows FS E2E is `not-run` until P13-T13.
+
+P13-T11 reflection / Member Runtime adds v40. Candidates are generated from Attempt / verification / evidence / occurrence facts (`ReflectionStore::generate_from_facts`); a model self-report is never an improvement. A UTC day with at least one terminal Attempt yields a `daily` rollup for that Member; `response done` / exit 0 without evidence is `daily` and is not a `key-result`. Member Runtime change is a new Employee revision minted only after Owner confirm of a `member-runtime-revision` preview; rollback appends a copy of the pre-confirm recipe. A Role Template proposal needs Owner confirm and does not copy the Employee into another Project. Management HTTP is nested from kernel-server `project_aggregate.rs` (`reflection.generate` / `list` / `improve.*` / `role-template.*`); task-channel aliases are 403. Owner canvas `POST /management/project/v1/confirm` applies those previews. MemberConfig Reflection tab is the `/ui/` surface. Running Attempt prompt/context rewrite is refused.
 
 Nearly every durable table carries BEFORE UPDATE/DELETE triggers that abort with
 "append-only"; derived tables are `memory_search_fts` and `p11_vault_index_entry`
 (rebuildable; Vault searches do not use Memory FTS).
 
 **Load-bearing nuance**: `SqliteAuthorityStore::open` bootstraps schema constants
-v1–v17 only; v18–v39 tables exist only after `prepare_personal_databases` runs the
+v1–v17 only; v18–v40 tables exist only after `prepare_personal_databases` runs the
 versioned plan (production paths and P4 tests always do).
 
 ## Migration engine

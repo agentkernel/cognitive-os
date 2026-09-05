@@ -36,6 +36,8 @@ sources:
     symbols: ["ROUTINE_ARMING_SCHEMA_V38", "RoutineArmingStore"]
   - path: personal/crates/cognitive-store/src/project_chat.rs
     symbols: ["PROJECT_CHAT_SCHEMA_V39", "ProjectChatStore"]
+  - path: personal/crates/cognitive-store/src/reflection.rs
+    symbols: ["REFLECTION_SCHEMA_V40", "ReflectionStore"]
   - path: personal/crates/cognitive-store/src/project_lifecycle.rs
     symbols: ["project_lifecycle_migration_entry", "ProjectLifecycleStore"]
   - path: personal/crates/cognitive-store/src/migration.rs
@@ -59,6 +61,7 @@ tests:
   - personal/crates/cognitive-store/tests/p13_t02_hosted_dsh_attempt.rs
   - personal/crates/cognitive-store/tests/p13_t04_attempt_artifacts.rs
   - personal/crates/cognitive-store/tests/p13_t05_routine_arming.rs
+  - personal/crates/cognitive-store/tests/p13_t11_reflection.rs
   - personal/crates/cognitive-store/tests/p11_t10_vault.rs
   - personal/crates/cognitive-store/tests/p11_t08_routine.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
@@ -69,7 +72,7 @@ tests:
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
   - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
-fingerprint: "sha256:aa43fac01f034662cb5f562ba514923cf3029c53d4502fd2ccd2278f8d9b4395"
+fingerprint: "sha256:fdd23fc92c4ca86a1d852888fdac81a71c81c8313b712306150ddc3f1b2771ab"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -79,10 +82,10 @@ non_claims:
 `cognitive-store` 是 kernel 端口背后的单写者 SQLite WAL 适配器。`SqliteAuthorityStore`
 可克隆：克隆共享同一连接互斥，使 Personal daemon 能把同一个 writer 交给 HTTP Task
 准入与周期调度 tick。XDG state 下两个数
-据库：**authority**（迁移 v1–v39）与 **installation**（v1–v4）。不声明跨库原子性；
+据库：**authority**（迁移 v1–v40）与 **installation**（v1–v4）。不声明跨库原子性；
 准备流程先 authority 后 installation，第二阶段失败时报错并指明备份路径。
 
-## 权威库迁移图（v1–v39）
+## 权威库迁移图（v1–v40）
 
 | 版本 | 新增 |
 |---|---|
@@ -109,6 +112,7 @@ non_claims:
 | v37 | Attempt 产物 → CAS → 独立 verifier → 末环验收 → external send（`p13_attempt_artifact`、`p13_artifact_evidence`、`p13_run_acceptance`、`p13_external_send`），标识 `cognitiveos.personal.attempt-artifact/0.1`（P13-T04）。产物行是指向唯一 P3-T03 `ArtifactStore` CAS（`<data_dir>/artifacts`）的 `sha256:` 引用，另带格式、来源帧（`hosted-dsh-child:candidate:DeliverableDraft`、帧 seq、payload digest）与产出时间；新鲜度（`current` / `superseded`）按 Project + task + Member 推导，其他成员在同一 task ref 上的交付物不会使其失效。evidence 只追加，由 CHECK 钉住 verifier `verifier://personal/attempt-artifact` 与 principal `principal://personal/independent-verifier`；其报告字节放在同一 CAS。`p13_run_acceptance` 用 CHECK 钉住末环（`stage_position = stage_count - 1`），并绑定一个 StageTestPassed 事实、产物与 evidence。`p13_external_send` 是 persist-before-dispatch Intent，`published` CHECK=0、`connector` CHECK=`none-qualified`（planned ≠ published）。重建 `p11_approval_preview`，使 `subject_kind` 也接受 `run-acceptance` 与 `external-send`（v30 先例）。宿主打开文件 E2E 为 `not-run`。 |
 | v38 | G2 后的 Routine 武装 + occurrence 派发 / 结果列（`p13_routine_arming`；`p11_routine_occurrence` 重建），标识 `cognitiveos.personal.routine-arming/0.1`（P13-T05）。一条 arming 把一个当前 Routine revision 绑定到一个计划环节及其已就位的负责 Member（`armed_after` CHECK=`G2`；state `armed` / `paused` / `superseded`；`apply_mode` `arm` / `continue` / `pause` / `restart` / `resume`）；③ 声明（`cadence_kind` `manual` / `interval`、`interval_ms` ≥ 1000、`bounded_context` ≤ 65536、`attempt_timeout_ms` ≤ 30 分钟）连同 digest 从 revision body 复制。occurrence 表新增 `arming_id`、`attempt_id`、`lease_epoch`、`started_at`、`attempt_outcome`（`done` / `failed` / `blocked` / `unknown` / `timed-out` / `signaled` / `spawn-failed` / `unknown-outcome`——没有 `success`）、`outcome_detail`、`elapsed_ms`、`terminal_at`、`completion_claimed` CHECK=0，以及 disposition `attempted`（CHECK：`attempted` ⇔ 存在 outcome）。clock / sleep / restart 宿主 E2E 为 `not-run`。 |
 | v39 | Project 群聊 Owner 回合（`p13_project_chat_turn`）加上聊天路由的 ApprovalPreview 种类 `plan-revision` / `task-revision`（P13-T06）。仅 Owner 撰写（`author` CHECK=`owner`）；mention / routing CHECK；`approve_attempted` CHECK=0，schema 不能记录聊天 Approve。`@manager` 铸造 PlanRevision 候选与 digest 绑定 preview；`@member` 铸造仅限该成员负责环节的 task-revision 候选。画布 Confirm 是唯一写入者（preview 事务内 `apply_plan_revision_locked`）。重建 `p11_approval_preview` 并保留全部 v30 / v37 种类。secret-shape 正文在任何行存在之前被拒。 |
+| v40 | daemon 从事实生成的反思候选（`p13_reflection_candidate`）加上版本化 Member Runtime 改进（`p13_runtime_improvement`）与跨 Project Role Template 提案（`p13_role_template_proposal`）（P13-T11）。种类 `key-result` / `daily` / `cycle` / `incident`；来源 `attempt-terminal` / `verification-evidence` / `occurrence-ledger`。`daily` 是每个成员每个 UTC 日的终态 Attempt 汇总（不是 key-result）。`completion_claimed` CHECK=0，`model_self_report` CHECK=0，`implicit_blueprint` CHECK=0，`silent_reuse` CHECK=0。新的 `p11_employee_revision` 只在 Owner preview 确认后插入；回滚再追加一条 revision。重建 `p11_approval_preview` 以接纳 `member-runtime-revision` / `role-template-proposal`（保留 v39 种类）。CHECK SQL 拼接这些 kind 词，使 `sqlite_master` 不含 `sk-`。 |
 
 P11-T07 隐藏托管 DSH 新增 v31 `p11_hosted_dsh_child`。Attempt-runner `start` 的真实调用者是 management HTTP `dsh.hosted.start`；task 通道别名 403。digest/protocol 不匹配、env/argv 含 secret、Pi 作 Member 引擎、Installed Agent chrome、未知子进程输出（`success`/`ok`/`agent_end`）一律失败闭合。daemon Provider 代理 `POST /provider/v1/dsh/chat/completions` 仍是唯一持 secret 路径。Linux Path B 不等于 Windows 托管资格。
 
@@ -142,12 +146,14 @@ P13-T07 Knowledge/Memory 标签同样**不新增迁移**。带标签 Vault 读�
 `memory_admission_decisions` / `memory_objects`。文件仍不是权威。宿主文件系统
 E2E 为 `not-run`。
 
-P13-T09 项目生命周期**本切片不登记新的已应用迁移**。`project_lifecycle_migration_entry()` 预留 **v41**（`p13_project_lifecycle_event`），待后续在 `personal_db.rs` 注册（该文件与 v40 由 P13-T11 持有）。运行时 copy / archive / delete / export / restore-point 使用既有 `p11_project`、`p13_routine_arming`、`p11_grant`、`p11_employee` 与 `p11_windows_host_*`。复制落为 `inactive`，拒绝继承 grant/就位/runtime。归档先暂停 `armed` Routine。删除是影响预览加二次确认；墓碑为 `state='deletion-preview'` 且 `current_plan_revision_id='tombstone'`，永不 DROP 行。导出默认排除 secret，且不是权威。同盘 restore point 的 `is_backup=0`。HTTP 调用者是 management `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle`；task 通道别名 403。Windows FS E2E 在 P13-T13 之前为 `not-run`。
+P13-T09 项目生命周期**本切片不登记新的已应用迁移**。`project_lifecycle_migration_entry()` 预留 **v41**（`p13_project_lifecycle_event`），待后续在 `personal_db.rs` 注册（v40 是下文的 P13-T11 反思）。运行时 copy / archive / delete / export / restore-point 使用既有 `p11_project`、`p13_routine_arming`、`p11_grant`、`p11_employee` 与 `p11_windows_host_*`。复制落为 `inactive`，拒绝继承 grant/就位/runtime。归档先暂停 `armed` Routine。删除是影响预览加二次确认；墓碑为 `state='deletion-preview'` 且 `current_plan_revision_id='tombstone'`，永不 DROP 行。导出默认排除 secret，且不是权威。同盘 restore point 的 `is_backup=0`。HTTP 调用者是 management `copy` / `archive` / `delete.preview` / `delete.confirm` / `restore-point` / `export` / `GET lifecycle`；task 通道别名 403。Windows FS E2E 在 P13-T13 之前为 `not-run`。
+
+P13-T11 反思 / Member Runtime 新增 v40。候选由 Attempt / verification / evidence / occurrence 事实生成（`ReflectionStore::generate_from_facts`）；模型自报不是改进。某成员在某个 UTC 日至少有一条终态 Attempt 时产生 `daily` 汇总；`response done` / exit 0 且无 evidence 可以是 `daily`，不能是 `key-result`。Member Runtime 变更是新的 Employee revision，只在 Owner 确认 `member-runtime-revision` preview 后插入；回滚再追加一条恢复确认前配方的 revision。Role Template 提案需 Owner 确认，且不把 Employee 复制到另一 Project。管理面 HTTP 从 kernel-server `project_aggregate.rs` 嵌套转发（`reflection.generate` / `list` / `improve.*` / `role-template.*`）；task 通道别名为 403。Owner canvas `POST /management/project/v1/confirm` 应用这些 preview。MemberConfig Reflection 页签是 `/ui/` 表面。运行中 Attempt 的 prompt/context 改写被拒。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。
 
-**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v39 的
+**承重细节**：`SqliteAuthorityStore::open` 只引导 v1–v17 的 schema 常量；v18–v40 的
 表只有在 `prepare_personal_databases` 执行版本化计划后才存在（生产路径与 P4 测试都
 会执行）。
 

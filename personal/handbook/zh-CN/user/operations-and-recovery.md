@@ -37,7 +37,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
-fingerprint: "sha256:d0671a407e3d7b315385e2fa045f7121e6a2fe8cc748f4b3c072664dd1ec7362"
+fingerprint: "sha256:f87bd697910ef94b16069d339ea9fbc66e91d05118ea3186e2c54675a3243750"
 non_claims:
   - "`ready` 是配置/存活投影，不是实时 Provider 或端到端保证。备份/恢复排除 secret，且不复制 authority SQLite。"
 ---
@@ -180,6 +180,14 @@ SecretStore，永不进入 SQLite、argv 或浏览器存储。没有桌面控制
 - **managed Pi 卸载** 仍走下方备份/恢复中的 `admin-cli` 生命周期。
 
 步骤索引见 [Linux RC 操作地图](rc-and-support.md)。
+
+## 反思与 Member Runtime —— `partial`
+
+daemon `/ui/` 成员配置有 Reflection 页签。从事实生成走
+`POST /management/project/v1/reflection.generate`。模型自报不是改进。请求
+runtime preview 铸造 `member-runtime-revision` canvas；Apply 只在 Owner
+canvas Confirm（没有 Admit）。回滚追加一条新的 Employee revision。Role
+Template preview 不把成员复制到另一 Project。task 通道别名返回 403。
 
 ## 备份与恢复 —— `partial`
 

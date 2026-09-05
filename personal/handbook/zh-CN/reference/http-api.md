@@ -15,6 +15,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/project_chat.rs
   - path: personal/apps/kernel-server/src/personal/project_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: personal/apps/kernel-server/src/personal/reflection.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: personal/apps/kernel-server/src/personal/routine_runs.rs
@@ -26,7 +27,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:013b0b9cc96bd733de3676281235f2e91fbb826e2836420ecfacb88b859d2d33"
+fingerprint: "sha256:0aedb722431a35bf70ebbc8bcb5e01c985819d76c165563f4f4e827cb84e2d6a"
 non_claims:
   - "本页为生成的参考资料，不构成任何 Gate、release、Profile 或收益结论。"
   - "此处列出的接口面不构成超出所链接源码的支持或稳定性承诺。"
@@ -258,6 +259,17 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/management/project/v1/restore-point` | management | 记录同盘本地 restore point。`claimed_as_backup` / `is_disaster_backup` 失败闭合。不是灾难备份。 |
 | `POST` | `/management/project/v1/export` | management | 导出 Project 且排除 secret（`include_secrets` 为 422）。载荷不是权威（`is_authority: false`），也不是备份。 |
 | `GET` | `/management/project/v1/lifecycle` | management | Project 生命周期投影：状态、data 目录、逻辑删除标志、待确认删除预览，以及标明非灾备的 restore point。 |
+| `POST` | `/management/project/v1/reflection.generate` | management | 仅从 daemon 事实为 Project 生成反思候选（P13-T11）：终态 Attempt、verifier evidence 与 occurrence 台账变成 `key-result` / `daily` / `cycle` / `incident` 行。空的 UTC 日不产生 `daily`；`response done` / exit 0 且无 evidence 只是 `daily`，永不是 `key-result`。`completion_claimed` 与 `model_self_report` 恒为 false。 |
+| `GET` | `/management/project/v1/reflection.list` | management | 列出某 Project（可选某 Member）的反思候选。只读；仅限 management 通道。 |
+| `POST` | `/management/project/v1/reflection.improve.propose` | management | 由反思候选提出 Member Runtime 改进。只铸造 `member-runtime-revision` ApprovalPreview；Owner 在 Projects 画布 `confirm` 路由确认前不写入 `p11_employee_revision`。隐式 Blueprint 升级与针对运行中 Attempt 的提案为 422。 |
+| `POST` | `/management/project/v1/reflection.improve.confirm` | management | Owner 确认 `member-runtime-revision` preview（digest 绑定）。追加一条新的 Employee revision；对该 subject kind 等价于画布 `confirm` 路由。 |
+| `POST` | `/management/project/v1/reflection.improve.rollback` | management | 回滚已确认的 Member Runtime 改进：再追加一条恢复确认前配方的 Employee revision。只有 `active` 改进可回滚；历史不被改写。 |
+| `POST` | `/management/project/v1/reflection.role-template.propose` | management | 由某 Member 的 runtime 提出跨 Project Role Template。铸造 `role-template-proposal` ApprovalPreview；Owner 确认前不共享任何内容，且 Employee 永不复制到另一 Project。 |
+| `POST` | `/management/project/v1/reflection.role-template.confirm` | management | Owner 确认 `role-template-proposal` preview（digest 绑定）。把提案记为 confirmed，且 `copied_employee: false`、`granted: false`。 |
+| `POST` | `/management/project/v1/reflection.admit-self-report` | management | 负向路由：把模型自报当作改进恒为 422。成员自己的声称永不改变其 runtime。 |
+| `POST` | `/management/project/v1/reflection.as-completion` | management | 负向路由：把反思当作环节或运行完成恒为 422（`completion_claimed` CHECK = 0）。完成归独立 verifier 与画布。 |
+| `POST` | `/management/project/v1/reflection.inject-attempt` | management | 负向路由：改写运行中 Attempt 的 prompt / context 恒为 422。改进只在 Owner 确认后作用于未来的 Attempt。 |
+| `POST` | `/management/project/v1/reflection.reuse-member` | management | 负向路由：把 Member 静默复用到另一 Project 为 403。跨 Project 共享只能经 Owner 确认的 Role Template 提案。 |
 | `POST` | `/management/host/v1/home.admit` | management | 受理 Personal Home `app/`+`data/`（P11-T02）。安装根必须以 `Personal Home` 结尾；GNU/WSL/Linux 根、ACL 逃逸、secret env/argv 失败闭合。升级替换 app、保留 data。原生 ACL E2E 为 `not-run`。 |
 | `POST` | `/management/host/v1/daemon.bind` | management | 把唯一 daemon 绑到已受理的 Home。已 bound/recovering/resumed 时重复绑定失败闭合。托盘角色仅 observe-and-request。 |
 | `POST` | `/management/host/v1/close.request` | management | 类型化关闭：仅当 daemon 能兑现 background 时才接受 background-or-pause；否则拒绝（禁止假 background）。 |
@@ -338,6 +350,17 @@ Personal daemon 在 loopback 监听器上提供的路由（外加 daemon 创建�
 | `POST` | `/task/project/v1/restore-point` | task | 禁止：Project restore point 仅限 management 通道。 |
 | `POST` | `/task/project/v1/export` | task | 禁止：Project 导出仅限 management 通道。 |
 | `GET` | `/task/project/v1/lifecycle` | task | 禁止：Project 生命周期读取仅限 management 通道。 |
+| `POST` | `/task/project/v1/reflection.generate` | task | 禁止：反思生成仅限 management 通道。 |
+| `GET` | `/task/project/v1/reflection.list` | task | 禁止：反思列表仅限 management 通道。 |
+| `POST` | `/task/project/v1/reflection.improve.propose` | task | 禁止：Member Runtime 改进提案仅限 management 通道。 |
+| `POST` | `/task/project/v1/reflection.improve.confirm` | task | 禁止：task 通道永不能确认 Member Runtime revision。 |
+| `POST` | `/task/project/v1/reflection.improve.rollback` | task | 禁止：回滚仅限 management 通道。 |
+| `POST` | `/task/project/v1/reflection.role-template.propose` | task | 禁止：Role Template 提案仅限 management 通道。 |
+| `POST` | `/task/project/v1/reflection.role-template.confirm` | task | 禁止：task 通道永不能确认 Role Template 提案。 |
+| `POST` | `/task/project/v1/reflection.admit-self-report` | task | 禁止：仅限 management 通道（且在那里也是 422）。 |
+| `POST` | `/task/project/v1/reflection.as-completion` | task | 禁止：仅限 management 通道（且在那里也是 422）。 |
+| `POST` | `/task/project/v1/reflection.inject-attempt` | task | 禁止：仅限 management 通道（且在那里也是 422）。 |
+| `POST` | `/task/project/v1/reflection.reuse-member` | task | 禁止：仅限 management 通道（且在那里也是 403）。 |
 | `POST` | `/task/host/v1/home.admit` | task | 禁止：Windows host admit 仅限 management 通道。 |
 | `POST` | `/task/host/v1/daemon.bind` | task | 禁止：Windows host daemon bind 仅限 management 通道。 |
 | `POST` | `/task/host/v1/close.request` | task | 禁止：Windows host close 仅限 management 通道。 |

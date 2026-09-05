@@ -13,6 +13,17 @@ import {
 } from "../../data/projections/capabilityAcquire";
 import { hitlCanvasPath } from "../../data/projections/hitl";
 import {
+  REFLECTION_GENERATE_PATH,
+  REFLECTION_IMPROVE_PROPOSE_PATH,
+  REFLECTION_IMPROVE_ROLLBACK_PATH,
+  REFLECTION_ROLE_TEMPLATE_PROPOSE_PATH,
+  generateBody,
+  proposeImprovementBody,
+  reflectionListPath,
+  roleTemplateBody,
+  rollbackBody,
+} from "../../data/projections/memberReflection";
+import {
   PROJECT_AXIS_PATH,
   PROJECT_CATALOG_PATH,
   PROJECT_ROSTER_PATH,
@@ -45,7 +56,8 @@ function assignedStages(member: ProjectRosterRow, stages: ProjectAxisStageRow[])
 }
 
 /**
- * Select-then-configure (P12-T04). Eight tabs. No member budget, no engine store.
+ * Select-then-configure (P12-T04) plus P13-T11 Reflection. No member budget,
+ * no engine store, no Admit.
  */
 export function MemberConfigPage() {
   const { projectId = "", memberId = "" } = useParams();
@@ -79,7 +91,7 @@ export function MemberConfigPage() {
     <section data-page="opc-member-config">
       <PageHeader
         title="Member configuration"
-        lede="Select the member, then configure duty, contracts, grants, brief, loop, and perms."
+        lede="Select the member, then configure duty, contracts, grants, brief, loop, perms, and reflection."
       />
       <HonestyNote>
         Product origin is daemon-served hash /ui/. GET {PROJECT_ROSTER_PATH} is the
@@ -282,6 +294,9 @@ export function MemberConfigPage() {
               />
             </>
           ) : null}
+          {tab === "reflection" ? (
+            <MemberReflectionPanel projectId={projectId} employeeId={memberId} />
+          ) : null}
         </>
       )}
     </section>
@@ -416,6 +431,214 @@ function CapabilityAcquirePanel({
           Preview <code className="cp-mono">{previewId}</code> minted. Install is
           not a grant.{" "}
           <Link to={hitlCanvasPath(previewId, projectId)}>Review on canvas</Link>
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+type ReflectionCandidate = {
+  candidateId: string;
+  kind: string;
+  source: string;
+};
+
+function MemberReflectionPanel({
+  projectId,
+  employeeId,
+}: {
+  projectId: string;
+  employeeId: string;
+}) {
+  const [candidates, setCandidates] = useState<ReflectionCandidate[]>([]);
+  const [selected, setSelected] = useState("");
+  const [prompt, setPrompt] = useState("");
+  const [error, setError] = useState<string | undefined>();
+  const [previewId, setPreviewId] = useState<string | undefined>();
+  const [improvementId, setImprovementId] = useState<string | undefined>();
+  const [rolePreviewId, setRolePreviewId] = useState<string | undefined>();
+
+  function readError(written: { status: number; body: unknown }, fallback: string): string {
+    const record = written.body && typeof written.body === "object"
+      ? (written.body as Record<string, unknown>)
+      : {};
+    return typeof record.message === "string" ? record.message : fallback;
+  }
+
+  async function generateFromFacts() {
+    setError(undefined);
+    const written = await readJson(REFLECTION_GENERATE_PATH, "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(generateBody(projectId)),
+    });
+    if (!written.ok) {
+      setError(readError(written, `HTTP ${written.status}`));
+      return;
+    }
+    await reloadList();
+  }
+
+  async function reloadList() {
+    const listed = await readJson(reflectionListPath(projectId, employeeId), "management");
+    if (!listed.ok) {
+      setError(readError(listed, `HTTP ${listed.status}`));
+      return;
+    }
+    const record = listed.body && typeof listed.body === "object"
+      ? (listed.body as Record<string, unknown>)
+      : {};
+    const rows = Array.isArray(record.candidates) ? record.candidates : [];
+    const next: ReflectionCandidate[] = [];
+    for (const item of rows) {
+      if (!item || typeof item !== "object") {
+        continue;
+      }
+      const row = item as Record<string, unknown>;
+      if (typeof row.candidate_id === "string") {
+        next.push({
+          candidateId: row.candidate_id,
+          kind: typeof row.kind === "string" ? row.kind : "unknown",
+          source: typeof row.source === "string" ? row.source : "unknown",
+        });
+      }
+    }
+    setCandidates(next);
+    if (selected.length === 0 && next[0]) {
+      setSelected(next[0].candidateId);
+    }
+  }
+
+  async function requestRuntimePreview() {
+    setError(undefined);
+    setPreviewId(undefined);
+    if (selected.trim().length === 0 || prompt.trim().length === 0) {
+      setError("A daemon-generated candidate and a proposed prompt are required.");
+      return;
+    }
+    const written = await readJson(REFLECTION_IMPROVE_PROPOSE_PATH, "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(
+        proposeImprovementBody({
+          candidateId: selected.trim(),
+          proposedPrompt: prompt.trim(),
+          proposedTools: [],
+        }),
+      ),
+    });
+    if (!written.ok) {
+      setError(readError(written, `HTTP ${written.status}`));
+      return;
+    }
+    const record = written.body && typeof written.body === "object"
+      ? (written.body as Record<string, unknown>)
+      : {};
+    if (typeof record.preview_id === "string") {
+      setPreviewId(record.preview_id);
+    }
+    if (typeof record.improvement_id === "string") {
+      setImprovementId(record.improvement_id);
+    }
+  }
+
+  async function requestRoleTemplatePreview() {
+    setError(undefined);
+    setRolePreviewId(undefined);
+    const written = await readJson(REFLECTION_ROLE_TEMPLATE_PROPOSE_PATH, "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(roleTemplateBody(employeeId)),
+    });
+    if (!written.ok) {
+      setError(readError(written, `HTTP ${written.status}`));
+      return;
+    }
+    const record = written.body && typeof written.body === "object"
+      ? (written.body as Record<string, unknown>)
+      : {};
+    if (typeof record.preview_id === "string") {
+      setRolePreviewId(record.preview_id);
+    }
+  }
+
+  async function rollbackLast() {
+    setError(undefined);
+    if (!improvementId) {
+      setError("No active runtime improvement id is held on this page.");
+      return;
+    }
+    const written = await readJson(REFLECTION_IMPROVE_ROLLBACK_PATH, "management", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(rollbackBody(improvementId)),
+    });
+    if (!written.ok) {
+      setError(readError(written, `HTTP ${written.status}`));
+    }
+  }
+
+  return (
+    <div className="cp-stack" data-region="opc-member-reflection">
+      <p className="cp-quiet">
+        Daemon generates key-result / daily / cycle / incident from Attempt,
+        verification, and occurrence facts. A model self-report is not an
+        improvement. Owner canvas is the only Apply. Chat cannot apply a revision.
+      </p>
+      <button type="button" className="cp-button" onClick={() => void generateFromFacts()}>
+        Generate from facts
+      </button>
+      {candidates.length === 0 ? (
+        <EmptyState title="Reflection: no candidate">
+          POST {REFLECTION_GENERATE_PATH} did not yield a fact-backed candidate
+          for this Member. Empty day is not a daily.
+        </EmptyState>
+      ) : (
+        <ul data-region="opc-reflection-candidates">
+          {candidates.map((row) => (
+            <li key={row.candidateId}>
+              <label>
+                <input
+                  type="radio"
+                  name="reflection-candidate"
+                  checked={selected === row.candidateId}
+                  onChange={() => setSelected(row.candidateId)}
+                />
+                <code className="cp-mono">{row.kind}</code> {row.source}{" "}
+                <code className="cp-mono">{row.candidateId}</code>
+              </label>
+            </li>
+          ))}
+        </ul>
+      )}
+      <label>
+        Proposed brief
+        <input value={prompt} onChange={(event) => setPrompt(event.target.value)} />
+      </label>
+      <button type="button" className="cp-button" onClick={() => void requestRuntimePreview()}>
+        Request runtime preview
+      </button>
+      <button type="button" className="cp-button" onClick={() => void requestRoleTemplatePreview()}>
+        Request role-template preview
+      </button>
+      <button type="button" className="cp-button" onClick={() => void rollbackLast()}>
+        Rollback last revision
+      </button>
+      {error ? (
+        <p data-reflection-error="true" className="cp-error">
+          {error}
+        </p>
+      ) : null}
+      {previewId ? (
+        <p data-region="opc-reflection-previewed">
+          Runtime preview <code className="cp-mono">{previewId}</code>.{" "}
+          <Link to={hitlCanvasPath(previewId, projectId)}>Review on canvas</Link>
+        </p>
+      ) : null}
+      {rolePreviewId ? (
+        <p data-region="opc-role-template-previewed">
+          Role Template preview <code className="cp-mono">{rolePreviewId}</code>.{" "}
+          <Link to={hitlCanvasPath(rolePreviewId, projectId)}>Review on canvas</Link>
         </p>
       ) : null}
     </div>

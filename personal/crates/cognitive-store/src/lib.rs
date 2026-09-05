@@ -122,6 +122,11 @@ pub use personal_backup::{
     restore_personal_backup_archive, restore_personal_backup_archive_with_options,
     validate_backup_inventory, write_personal_backup_archive, write_personal_backup_archive_to,
 };
+pub use personal_db::reflection::{
+    MEMBER_RUNTIME_SUBJECT_KIND, REFLECTION_PROJECTION_ID, ROLE_TEMPLATE_SUBJECT_KIND,
+    ReflectionCandidateRow, ReflectionStore, RuntimeImprovementRow, RuntimeImprovementSpec,
+    reflection_migration_entry,
+};
 pub use personal_db::{
     PersonalDatabasePrepareReport, apply_database_migration_plan, authority_migration_plan,
     installation_migration_plan, prepare_personal_databases,

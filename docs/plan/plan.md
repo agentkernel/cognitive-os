@@ -2224,6 +2224,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 - **漂移检测负例:** 模型自报即改进；隐式 Blueprint 升级；运行中 prompt 注入；反思
   当完成；跨 Project 静默复用 Member。
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
+- **status:** done (2026-09-05; Draft PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) fold HEAD `3bb9b050`; lease `lease/personal/P13-T11/reflection-runtime` closed this delivery → PARALLEL-LANES §3.1; `P13-T11/D01` done; fold-HEAD required CI [33896709599](https://github.com/agentkernel/cognitive-os/actions/runs/33896709599) **SUCCESS**; `DEV-LINUX-NATIVE-01` at `3bb9b050`: store 10/10 + HTTP 2/2 + clippy; Dual Track 12/12; [report](../checkpoints/2026-09-05-personal-p13-t11-report.md), [closure](../checkpoints/2026-09-05-personal-p13-t11-closure.md)). Claim ceiling `hypothesis`. Rendered `/ui/` review is `P13-T12/D02`. Windows-native cells `not-run` until P13-T13.
 
 ### P13-T12 — Visual spec + accessibility / visual qualification
 

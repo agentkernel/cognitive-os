@@ -57,6 +57,11 @@ use std::fs::{self, File, OpenOptions};
 use std::path::{Path, PathBuf};
 use std::time::{SystemTime, UNIX_EPOCH};
 
+/// P13-T11 reflection / Member Runtime improvement. Nested here so the
+/// module is public without editing `lib.rs` (sibling P13-T10 owns that file).
+#[path = "reflection.rs"]
+pub mod reflection;
+
 /// Local report from preparing both Personal databases. Not release evidence.
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct PersonalDatabasePrepareReport {
@@ -133,7 +138,14 @@ impl PersonalDatabasePrepareReport {
 /// dispatcher of `task://personal/routine/*` rows), and
 /// v39 = Project group chat Owner turns (`p13_project_chat_turn`; mention /
 /// routing / candidate envelope; chat never applies a PlanRevision; canvas
-/// Confirm is the only writer; secret-shaped body refused).
+/// Confirm is the only writer; secret-shaped body refused), and
+/// v40 = daemon-generated reflection candidates (`p13_reflection_candidate`)
+/// plus versioned Member Runtime improvement (`p13_runtime_improvement`) and
+/// cross-Project Role Template proposals (`p13_role_template_proposal`)
+/// (P13-T11; `completion_claimed` CHECK=0; `model_self_report` CHECK=0;
+/// `implicit_blueprint` CHECK=0; `silent_reuse` CHECK=0; Owner preview
+/// required; rebuilds `p11_approval_preview` for `member-runtime-revision`
+/// and `role-template-proposal`).
 /// P11-T12 honest usage is a labelled read of v25 usage/bindings (no new
 /// migration): unknown cost never serializes as 0; Project/employee/Task
 /// Provider bindings are explicit unbound.
@@ -178,6 +190,7 @@ pub fn authority_migration_plan() -> Vec<MigrationPlanEntry> {
         attempt_artifact_migration_entry(),
         routine_arming_migration_entry(),
         project_chat_migration_entry(),
+        reflection::reflection_migration_entry(),
     ]
 }
 
