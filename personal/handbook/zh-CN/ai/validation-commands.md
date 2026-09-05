@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:3e61c430e34c18a786517f697a2a6d39d002bf6f03aa93a60584411a0d0ec22b"
+fingerprint: "sha256:61a360b404f90748669760940c780b254671de0596d2eaf5b40a470dec50bf9d"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -41,6 +41,9 @@ Personal 2.0 Phase 11（Personal 2.0.0 chrome）把 T03/T04 日常权威测试�
 原生格由 P13-T13 回填）。本机宿主 D01 已资格化（2026-09-05）；B01-W 尚未 provision；`B01-DESKTOP-002` 不是
 2.0 日常默认机。本机 cargo、WSL、ordinary CI 与 Canvas 都不能替代
 Gate/release；缺能力的 native cell 记 `not-run`。`not-run` 永远不是 pass。
+Phase 14 残差 `/ui/` 收口（EVAL-016 已关闭）的浏览器证据走
+`PERSONAL-TEST-ENVIRONMENTS.md` §5.4 **`JOURNEY-BROWSER-SYNC-01`**：产品源是
+daemon `/ui/`，不是 Vite；回归已关闭旅程包；不是 EVAL campaign。
 
 ## 全平台安全（含本地 Windows 主机）
 

@@ -2296,6 +2296,111 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
   签名/release 声称；用 B01-DESKTOP-002 冒充 Windows。
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
 
+### P14-T01 — Phase 14 docs/plan 登记 + `JOURNEY-BROWSER-SYNC-01` (documentation-only)
+
+- **status:** `done`（2026-09-05，`DOC-P14-GAP-CLOSE` 本工作树；owner 本回合未要求
+  commit / required CI）。Unique next = wait for a **fresh owner delivery
+  instruction** before claiming `P14-T02`. Campaign close ≠ auto-implement.
+- **Outcome:** Phase 14 + `P14-T02..T08` registered inside the existing
+  `PERSONAL-DEVELOPMENT-PLAN.md`（三栏、负例、Slices、`implementation_requires`）；
+  命名节 **`JOURNEY-BROWSER-SYNC-01`**；plan.md / trace / environments /
+  PROGRESS / dev-prep index / handbook synced。Phase 13 / `P11-T15` 保持 **done**。
+- **Boundaries:** documentation/plan only; no product code, contracts,
+  negatives, tests, support, Gate, or qualification. Does not reopen EVAL-016.
+- **Acceptance:** Phase 14 cards complete; named `JOURNEY-BROWSER-SYNC-01`
+  heading present in this plan and in `PERSONAL-TEST-ENVIRONMENTS.md`;
+  `check:consistency` / handbook / docs-sync；documentation-only.
+- **Validation:** local Markdown/link/anchor/fence/terminology,
+  `check:consistency`, `check:handbook`, generator `--check`, fingerprint,
+  docs-sync, diff/lint. Required CI not a mutex this turn (no commit asked).
+- **不可做:** 新开平行计划/PRD；重开 Phase 13 / EVAL-016；只在 PROGRESS 广告而不写卡；
+  canvas/Vite 当产品源。
+- **硬门:** documentation-only 出口写明；不触碰 code/contracts/tests。
+
+### P14-T02 — 创建向导 = 原型 ①–⑤（不是五张 note textarea）
+
+- **status:** `not-started`. Claim ceiling `hypothesis`. Unique next after
+  owner delivery instruction.
+- **EVAL-016:** J1 blocker 2. Oracle: [user-journeys.md](../../personal/docs/product/user-journeys.md) §1 + v9 `create-process` / `create-members` / `create-test` / `create-joint`.
+- **依赖:** P14-T01；P12-T02 五段骨架；P11-T03/T04。**不依赖 T07/T08。**
+- **垂直切片:** D01：failure-first Dual Track — ①–⑤ 表面替换 note textarea；0 假 Activate。
+  D02：真实 `/ui/` caller 走完 ①–⑤ + **`JOURNEY-BROWSER-SYNC-01`**。
+- **acceptance:** 向导接到既有 confirm-before-activate；无权威不写 Project。
+- **不可做:** 五张 textarea 冒充 ①–⑤；假 Create/Activate；Vite 当产品源；secret 进 DOM。
+- **validation environment:** Dual Track TS + required CI；exact-revision guest
+  daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01`。Windows chrome `not-run` unless
+  qualified。`DEV-WIN-GNU-01` 禁 Rust link。
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01` + `TEST-REPORT-INCREMENTAL-01`。
+
+### P14-T03 — Write Project 激活 live 具名 Project
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **EVAL-016:** J1 blocker 1.
+- **依赖:** P14-T02（紧耦合：Owner 必须从 `/ui/` 得到 live 具名 Project）；P11-T03 PlanRevision。
+- **垂直切片:** D01：Write 持久化 titled live Project + PlanRevision axis；离开 `creating`；
+  failure-first：空标题/`unknown`、无 axis 仍标 live 被拒。
+  D02：真实 `/ui/` J1 激活 + **`JOURNEY-BROWSER-SYNC-01`**。
+- **acceptance:** 列表/详情标题 = Owner 所写；axis 存在；不卡 `creating`。
+- **不可做:** 标 live 但 title=`unknown`；把 fail-closed 写成 pass。
+- **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
+
+### P14-T04 — 成员加入落在真实 PlanRevision 槽
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **EVAL-016:** J4.
+- **依赖:** P14-T03。
+- **垂直切片:** D01：激活后 responsible slots 存在；write join 落席；failure-first：无槽仍假装加入、聊天 Approve 被拒。
+  D02：真实 `/ui/` J4 + **`JOURNEY-BROWSER-SYNC-01`**（含 J1 回归）。
+- **acceptance:** 「no PlanRevision slots」不再挡住 Owner。
+- **不可做:** 无槽仍假装加入；Install 商店；聊天 Approve。
+- **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
+
+### P14-T05 — 从 Project chrome 走 2.0 Attempt / Runs / Outputs
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **EVAL-016:** J14 + empty Runs/Outputs.
+- **依赖:** P14-T03；P13-T02；P13-T04。
+- **垂直切片:** D01：Project chrome 启动 2.0 Attempt（非 `#/work`）；Runs/Outputs 读真实 ledger/产物或诚实 empty。
+  D02：真实 `/ui/` J14 + **`JOURNEY-BROWSER-SYNC-01`**。
+- **不可做:** `#/work` 冒充 2.0；无权威却渲染可点 Run；Vite 当产品源。
+- **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
+
+### P14-T06 — Today live 决策包 + 每 Project 运行概览
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **EVAL-016:** J2.
+- **依赖:** P14-T03；P12-T05；P13-T05.
+- **垂直切片:** D01：激活后 Today 决策包 + 每 live Project 一行；failure-first：KPI 墙、未激活仍画 live 包。
+  D02：真实 `/ui/` J2 + **`JOURNEY-BROWSER-SYNC-01`**。
+- **不可做:** KPI 墙；把 T13 empty chrome 写成 packet 已验收。
+- **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
+
+### P14-T07 — Settings 真 L1 + IA（藏 9×9；不广告 Linux 1.0 Home/Work/Agents；palette intercept）
+
+- **status:** `not-started`. Claim ceiling `hypothesis`. 可与创建链并行。
+- **EVAL-016:** J6 / J8 / J12 / J20.
+- **依赖:** P14-T01；P13-T08；P12-T08.
+- **垂直切片:** D01：Settings L1 `role=link`；默认隐藏 9×9 state-lab；Linux 1.0 Home/Work/Agents 不作为 2.0 目的地；palette 拦截。
+  D02：`/settings/model-connections` 或 hub 可走；真实 `/ui/` + **`JOURNEY-BROWSER-SYNC-01`**。
+- **不可做:** 假 Connect；raw secret 进 DOM；state-lab 一级。
+- **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。Windows chrome `not-run` unless qualified.
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。HITL Confirm / Routine miss / Assistant create-conversation 无独立 caller 时可作本卡切片。
+
+### P14-T08 — Knowledge v9 IA（files / why / import）
+
+- **status:** `not-started`. Claim ceiling `hypothesis`. 可与创建链并行。
+- **EVAL-016:** J5.
+- **依赖:** P14-T01；P13-T07；P12-T07.
+- **垂直切片:** D01：files / Why this fragment / import 表面；failure-first：file-as-authority、secret ingest。
+  D02：真实 `/ui/` J5 + **`JOURNEY-BROWSER-SYNC-01`**。
+- **不可做:** HTTP paste 冒充 v9 IA；捆绑 Obsidian。
+- **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
+
 ---
 
 # 12. 机器可读 typed dependency 图
@@ -2364,6 +2469,11 @@ phases:
     acceptance_requires: [P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13]
     exit: P11-T15
     claim_boundary: HYPOTHESIS_NOT_RELEASE_NOT_SIGNING_NOT_B01W_NOT_2_1
+  P14:
+    implementation_requires: [P14-T01]
+    acceptance_requires: [P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
+    claim_boundary: HYPOTHESIS_NOT_GATE_NOT_RELEASE_NOT_EVAL_CAMPAIGN
+    notes: JOURNEY_BROWSER_SYNC_01_ON_EACH_CLOSED_JOURNEY
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -2379,6 +2489,7 @@ post_1_0:
   WINDOWS_OPC_2_0: [P11-T01, P11-T02, P11-T03, P11-T04, P11-T05, P11-T06, P11-T07, P11-T08, P11-T09, P11-T10, P11-T11, P11-T12, P11-T13, P11-T14, P11-T15]
   FROZEN_PROTOTYPE_UI_COMPLETENESS: [P12-T01, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
   PERSONAL_2_0_0_COMPLETION: [P13-T01, P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13, P11-T15]
+  PERSONAL_2_0_0_PROTOTYPE_GAP_CLOSE: [P14-T01, P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -2649,6 +2760,31 @@ tasks:
     acceptance_requires: [DEV_WINDOWS_NATIVE_OPC_01_QUALIFIED, HUNG_NATIVE_E2E_BACKFILLED]
     notes: DESIGNATED_2026_09_05_OS_VERSION_NOT_A_GATE_QUALIFICATION_STILL_T13
     promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
+  P14-T01:
+    implementation_requires: [OWNER_2026_09_05_INSTRUCTION, EVAL_016_CLOSED, P13-T01]
+    acceptance_requires: [PHASE_14_CARDS, JOURNEY_BROWSER_SYNC_01_NAMED_HEADING]
+    notes: DOCUMENTATION_ONLY_DONE_THIS_WORKTREE
+  P14-T02:
+    implementation_requires: [P14-T01, P12-T02, P11-T03, P11-T04]
+    acceptance_requires: [CREATE_WIZARD_1_TO_5, JOURNEY_BROWSER_SYNC_01]
+  P14-T03:
+    implementation_requires: [P14-T02, P11-T03]
+    acceptance_requires: [LIVE_NAMED_PROJECT, PLAN_REVISION_AXIS, JOURNEY_BROWSER_SYNC_01]
+  P14-T04:
+    implementation_requires: [P14-T03, P12-T04]
+    acceptance_requires: [MEMBER_JOIN_REAL_SLOTS, JOURNEY_BROWSER_SYNC_01]
+  P14-T05:
+    implementation_requires: [P14-T03, P13-T02, P13-T04]
+    acceptance_requires: [ATTEMPT_RUNS_OUTPUTS_FROM_PROJECT_CHROME, JOURNEY_BROWSER_SYNC_01]
+  P14-T06:
+    implementation_requires: [P14-T03, P12-T05, P13-T05]
+    acceptance_requires: [TODAY_LIVE_DECISION_PACKET, JOURNEY_BROWSER_SYNC_01]
+  P14-T07:
+    implementation_requires: [P14-T01, P13-T08, P12-T08]
+    acceptance_requires: [SETTINGS_L1_LINK, HIDDEN_STATE_LAB, MODEL_CONNECTIONS_HUB, JOURNEY_BROWSER_SYNC_01]
+  P14-T08:
+    implementation_requires: [P14-T01, P13-T07, P12-T07]
+    acceptance_requires: [KNOWLEDGE_V9_FILES_WHY_IMPORT, JOURNEY_BROWSER_SYNC_01]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。

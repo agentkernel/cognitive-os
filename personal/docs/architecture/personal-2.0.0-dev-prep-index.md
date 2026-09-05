@@ -289,6 +289,40 @@ machine check.
   qualified; freeze the 15-scenario preregistration on the plan.md T15 card
   first. T15 done ≠ release.
 
+### Phase 14 build order (implementation windows after `P14-T01` docs-only close)
+
+Residual gap-close after closed EVAL-016. **Do not edit** the Phase 13 mermaid
+above. This graph is a new section; keep it in sync with the formal plan
+「Phase 14 - Personal 2.0.0 prototype-gap close after EVAL-016」mermaid.
+
+```mermaid
+flowchart TD
+  T01[T01_docs_only]
+  T02[T02_create_wizard_1_to_5]
+  T03[T03_write_activates_live_project]
+  T04[T04_member_join_real_slots]
+  T05[T05_attempt_runs_outputs_from_project]
+  T06[T06_today_live_decision_packet]
+  T07[T07_settings_l1_and_ia]
+  T08[T08_knowledge_v9_ia]
+  T01 --> T02
+  T02 --> T03
+  T03 --> T04
+  T03 --> T05
+  T03 --> T06
+  T01 --> T07
+  T01 --> T08
+```
+
+- `P14-T01` is documentation-only **done** (this worktree). Do not auto-claim
+  `P14-T02` after EVAL-016 close; wait for a fresh owner delivery instruction.
+- `P14-T03` is tightly coupled to T02: the Owner must get a live named Project
+  from `/ui/`.
+- `P14-T07` / `P14-T08` may run in parallel with the create chain after T01
+  (separate leases / non-overlapping paths).
+- Every implementation close executes **`JOURNEY-BROWSER-SYNC-01`** on daemon
+  `/ui/` (never Vite).
+
 ## Parallel window path rule
 
 Implementation window A (`P11-T03`) and Visual UI window B must not write the

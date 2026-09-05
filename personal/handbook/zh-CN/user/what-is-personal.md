@@ -93,6 +93,8 @@ Digital Employee。
 Attempt 循环、隐藏 Pi 真实推理、可打开产出与发布预览、运行/例程闭环、群聊路由、
 Knowledge/Memory/Settings 表面、生命周期与还原点、Skill/MCP 评审授权、反思改进、
 视觉与 a11y 资格化、Windows 原生宿主资格化。`P11-T15` 是其验收出口，
-**不是** prototype completeness mutex，也不是 release；Canvas 与 ordinary CI 不执行也不提升它。没有 human
+**不是** prototype completeness mutex，也不是 release。**Phase 14**（`P14-T01`–`T08`）
+承接 EVAL-016 测量后的 live `/ui/` 残差；每闭环旅程按 `JOURNEY-BROWSER-SYNC-01`
+在 daemon `/ui/` 上重测。Canvas 与 ordinary CI 不执行也不提升它。没有 human
 desirability、usability、adoption、WTP、support、release、Gate、Profile 或
 Agent-benefit evidence。

@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:5857f470798120c5c6a39cf0173d7f77508da9b9df5d840d53a6d10047afa9df"
+fingerprint: "sha256:363e3f6fcc5ad73fdc302be14a66222c1e15cd0f177791c0bba9590aeb41dad5"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -106,7 +106,9 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   表面、P13-T08 Settings Model Connections/诊断/state-lab、P13-T09 生命周期与还原点、
   P13-T10 Skill/MCP 评审授权、P13-T11 反思改进、P13-T12 视觉规格 + a11y 资格化、
   P13-T13 Windows 原生宿主资格化；`P11-T15` N=15 是验收出口（不是 release）。
-  `P11-T15` 验收前置 = Phase 13 done + 资格化 Windows。单模块维护入口：
+  `P11-T15` 验收前置 = Phase 13 done + 资格化 Windows。**Phase 14**（`P14-T01`–`T08`）
+  是已关闭 EVAL-016 之后的 live `/ui/` 残差收口；旅程闭环走 `JOURNEY-BROWSER-SYNC-01`
+  （产品源 = daemon `/ui/`，不是 Vite）。单模块维护入口：
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
   该索引同时收录设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；

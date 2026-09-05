@@ -544,6 +544,14 @@ personal_requirements:
     # evidence_status stays not-run (T15 done is not release).
     evidence_status: not-run
 
+  - id: PERS-PR-053
+    classification: product-only
+    statement: After closed EVAL-016, live daemon /ui/ still fails the 小白 Owner job versus frozen prototype v9 and user-journeys. Phase 14 closes that residual without reopening Phase 13 or EVAL-016 - create wizard equals prototype steps 1-5; Write Project activates a live named Project with a PlanRevision axis; members join real slots; Attempt/Runs/Outputs start from Project chrome; Today is a live decision packet; Settings is a real L1 link with the 9x9 state-lab hidden from default chrome; Knowledge uses v9 files/why/import IA. Each closed journey is re-tested in a real browser on daemon /ui/ under JOURNEY-BROWSER-SYNC-01. Not Gate, release, Profile, or an EVAL campaign.
+    direct_registry_requirements: []
+    tasks: [P14-T01, P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
+    gates: []
+    evidence_status: not-run
+
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness
 # execution plan and do not create task, requirement, Gate, or evidence status.
 benchmark_readiness_packages:

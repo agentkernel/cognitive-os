@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:e284d5c6924ce6727e19cec0ea4af36730f13437b11e5cfefa735dde4ca7b4c7"
+fingerprint: "sha256:8a201a8c19ea633a640a8821cce71fdebeb70b1d72cff8b3a09cf65f308ced66"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -66,6 +66,8 @@ silently:
   2026-09-02) is registered in the same formal plan: walking skeleton →
   prototype-grade product + design goals; `P11-T15` acceptance now requires
   Phase 13 done + a qualified Windows host; not release / signing / B01-W.
+  **Phase 14** (`P14-T01`–`T08`) is the residual live-`/ui/` close after
+  EVAL-016; journey closes use `JOURNEY-BROWSER-SYNC-01` (§5.4).
 - `personal-2-opc-v9-implementation-mapping` routes the design-frozen
   Personal 2.0.0 Scene → daemon mapping
   (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`;
@@ -81,6 +83,7 @@ silently:
   `dev.architecture-overview` and this page. Plan cards aligned 2026-08-30;
   Phase 12 `P12-T01`–`T09` done 2026-09-01 (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302));
   the Phase 13 build order and the 2026-09-02 gap check are recorded in that index;
+  Phase 14 build order is a **new** section (Phase 13 mermaid untouched);
   documentation only; not implementation, Gate, or a T15 claim.
   The OPC design corpus (`clients/docs/design/opc-2.0/`, including the
   maintenance index) catalogues a 2026-08-30 informative Design-Agent /

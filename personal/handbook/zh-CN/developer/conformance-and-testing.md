@@ -93,6 +93,9 @@ fail closed（`TRACKED_PATHS_UNAVAILABLE`）；规则检查器仅为其 focused 
 中的副本，要求边集合完全相等（含实线/虚线；节点 id 去掉 `P13`/`P11` 前缀后比较）——
 缺边/多边即 `BUILD_ORDER_EDGE_MISSING` / `BUILD_ORDER_EDGE_EXTRA`；正式计划为权威，
 绝不为迎合索引反向修改。
+Phase 14 mermaid 放在**新节**（`### Phase 14 - …` / `### Phase 14 build order`），
+**不**进入上述 P0-T09 比较。Phase 14 `/ui/` 旅程闭环走计划约定
+`JOURNEY-BROWSER-SYNC-01`（不是第二套 Operating Model ID）。
 
 手册新增自己的检查器
 （`check-handbook.mjs`）与生成器漂移门——见

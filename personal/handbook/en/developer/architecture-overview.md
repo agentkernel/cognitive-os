@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:5857f470798120c5c6a39cf0173d7f77508da9b9df5d840d53a6d10047afa9df"
+fingerprint: "sha256:363e3f6fcc5ad73fdc302be14a66222c1e15cd0f177791c0bba9590aeb41dad5"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -118,7 +118,9 @@ authority.
   grants, P13-T11 reflection, P13-T12 visual spec + a11y qualification,
   P13-T13 Windows native host qualification; `P11-T15` N=15 is the exit (not
   release) and its acceptance now requires Phase 13 done + a qualified
-  Windows host. One-module PM/UI work starts at
+  Windows host. **Phase 14** (`P14-T01`–`T08`) is the residual live-`/ui/`
+  gap-close after closed EVAL-016; journey closes use `JOURNEY-BROWSER-SYNC-01`
+  on daemon `/ui/` (never Vite). One-module PM/UI work starts at
   [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
   That index also catalogues an informative Design-Agent / Owner-journey
   hardness assessment

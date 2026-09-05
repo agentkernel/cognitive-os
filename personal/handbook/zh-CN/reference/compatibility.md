@@ -15,7 +15,7 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:611b8bba647af5fda44eb2a841d0f04b6e98d5f55a3174aa7f8285543c288741"
+fingerprint: "sha256:174bb3d9398724ecb8ca03ea37e22a993a58f4383438fef0a981659026933938"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---

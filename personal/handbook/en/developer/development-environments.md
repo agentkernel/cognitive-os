@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:fec2fb4cddd9598700a555cef98872033b0e5a89ec53b6e5d0e19b0a4f6fdb68"
+fingerprint: "sha256:182f25cef20fd9c6f145ab1f3350c8782b65fcf6e754616f30e4d69688d3d2a4"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -51,6 +51,8 @@ P13-T12/D02 rendered / NVDA / 200% / host-theme review against exact-revision
 guest daemon `/ui/` (SSH tunnel) is implementation evidence only; `DOC-LOCAL-RUNTIME-HOST`
 (2026-09-05) designated this local host as `DEV-WINDOWS-NATIVE-OPC-01` (OS version
 is not a provision gate). `P13-T13/D01` qualified the unsigned path on 2026-09-05;
+Phase 14 `/ui/` journey closes use **`JOURNEY-BROWSER-SYNC-01`** (§5.4): exact-revision
+guest daemon `/ui/` via the owner SSH tunnel; never Vite; re-run the growing pack.
 D02 accounted hung cells pass/fail/`not-run`. `P11-T15` is done after T13 closed. Local cargo, WSL,
 Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
 `not-run` remains `not-run`.

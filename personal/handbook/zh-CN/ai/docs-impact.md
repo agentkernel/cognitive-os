@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:e284d5c6924ce6727e19cec0ea4af36730f13437b11e5cfefa735dde4ca7b4c7"
+fingerprint: "sha256:8a201a8c19ea633a640a8821cce71fdebeb70b1d72cff8b3a09cf65f308ced66"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -57,7 +57,8 @@ source map 有意让已采纳目标无法静默变化：
   的功能完备（非像素复制、非 2.1、非 T15）。**Phase 13**（`P13-T01`–`T13`，
   2026-09-02）同样登记在既有正式计划内：walking skeleton → 原型程度 + 设计目标；
   `P11-T15` 验收前置改为 Phase 13 done + 资格化 Windows；不是 release / signing /
-  B01-W。
+  B01-W。**Phase 14**（`P14-T01`–`T08`）是 EVAL-016 之后的 live `/ui/` 残差收口；
+  旅程闭环走 `JOURNEY-BROWSER-SYNC-01`（§5.4）。
 - `personal-2-opc-v9-implementation-mapping` 路由已定档 Personal 2.0.0 Scene →
   daemon 映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`；
   历史文件名与规则 id 含 v9，不是产品版本）
@@ -70,6 +71,7 @@ source map 有意让已采纳目标无法静默变化：
   `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；Phase 12
   `P12-T01`–`T09` 于 2026-09-01 done（merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）；
   Phase 13 建造顺序与 2026-09-02 差距核对已写入该索引；
+  Phase 14 建造顺序是**新节**（不改 Phase 13 mermaid）；
   仅文档；不是实现、Gate 或 T15 领取。OPC 设计语料（`clients/docs/design/opc-2.0/`，
   含维护索引）收录 2026-08-30 设计 Agent / Owner 旅程难点研判
   （[`13-personal-20-agent-design-difficulty-and-journey-assessment.md`](../../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md)；
