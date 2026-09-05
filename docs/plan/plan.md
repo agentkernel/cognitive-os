@@ -1706,10 +1706,10 @@ formal acceptance.
   unknown metrics=0、scraped、P0 hero、secret 进日志/DOM。
 - **硬门:** 适用 Phase 11 四条。
 
-### P11-T15 — Fixed-denominator Windows OPC acceptance (unparked; Phase 13 验收出口)
+### P11-T15 — Fixed-denominator Windows OPC acceptance (in-progress; Phase 13 验收出口)
 
-- **2.0.0 表面:** unparked；N=15 固定分母预注册草案见下（`P13-T01` 登记，领取时
-  冻结为 preregistration）。**不是** Phase 12 prototype completeness mutex。不自动
+- **status:** `in-progress` (2026-09-05; exact `main@4ca9b046`; lease `lease/personal/P11-T15/windows-opc-acceptance`; N=15 frozen; cell 1 **partial**, cells 2–15 **not-run**; [report](../checkpoints/2026-09-05-personal-p11-t15-report.md)).
+- **2.0.0 表面:** N=15 固定分母已在领取时冻结。**不是** Phase 12 prototype completeness mutex。不自动
   release。
 - **依赖:** `acceptance_requires` = **`P13-T02..T13` done** + `P13-T13` 已把
   `DEV-WINDOWS-NATIVE-OPC-01` 资格化。可与 P13 非重叠 lease 并行准备 preregistration

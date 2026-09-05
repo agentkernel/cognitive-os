@@ -15,7 +15,7 @@ sources:
   - path: personal/docs/product/linux-1.0-scope.md
   - path: docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md
   - path: docs/plan/PERSONAL-TEST-ENVIRONMENTS.md
-fingerprint: "sha256:e3cd316d1a8522d127829d4b05b68f3b46b4b2021b6f6bdc8c515d27b95c8aec"
+fingerprint: "sha256:5aebb34a201775d21700e2e2c8f102811ed32d7ab230265344f5cda4b8b01562"
 non_claims:
   - 在某平台可编译不等于产品支持；只有所列产品目标带安装与服务路径。
 ---
@@ -30,7 +30,7 @@ Windows 原生主机被 Pi 启动准入路径显式拒绝。
 
 Personal 2.0 是 Windows-first，仍为 `Requires-backend` +
 `Requires-environment`。native Windows OPC 开发宿主已于 2026-09-05 由 `P13-T13/D01`
-资格化为本机（OS 版本不是供给门槛）；缺能力的挂单格保持 `not-run`。B01-W 未 provision。目标 runtime 是 preinstalled managed DSH；Pi 是 hidden Personal
+资格化为本机（OS 版本不是供给门槛）；`P11-T15` 在本机 `in-progress`（N=15 冻结于 `main@4ca9b046`）；缺能力的挂单格保持 `not-run`。B01-W 未 provision。目标 runtime 是 preinstalled managed DSH；Pi 是 hidden Personal
 Assistant engine。Existing Linux Pi/dsh、WSL、ordinary CI、Canvas、CLI、Provider、
 model、account、adapter 或 Windows GNU evidence 都不转移 Windows support/DSH
 qualification。Hermes、Codex、Cursor 等是 future candidates。native mobile/E2E
