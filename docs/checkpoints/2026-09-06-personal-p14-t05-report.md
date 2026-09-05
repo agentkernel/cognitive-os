@@ -30,7 +30,7 @@ Observed fail on Dual Track: Linux 1.0 `#/work` is not 2.0 Attempt chrome; Vite 
 | D01 Dual Track | pass | `0e4c4984` / `d72c2847`; web **33/33**; Draft PR [#332](https://github.com/agentkernel/cognitive-os/pull/332) |
 | Fold `origin/main@a6247f09` (T04) | pass | merge `ed041b9c`; last-merger keeps T04 **done**, T05 **in-progress**, T06 **in-progress**; adjacent T05/T06/DOC-REFRAME lease rows, no blank line, no duplicate T05 row |
 | Lease-ledger CI fix | pass | `cf6d09e3` drops `PARALLEL-LANES.md` from T05 writable paths (lease must not own the ledger) |
-| Required CI at `cf6d09e3` | pending | [33991619494](https://github.com/agentkernel/cognitive-os/actions/runs/33991619494): resolve **SUCCESS**; ubuntu **SUCCESS**; windows **IN_PROGRESS** at report write |
+| Required CI at `cf6d09e3` | pass | [33991619494](https://github.com/agentkernel/cognitive-os/actions/runs/33991619494) **SUCCESS** (resolve, ubuntu, windows 20m54s, required-ci) |
 | Exact-revision Linux build | pass | `wuz@192.168.1.2` worktree `/home/wuz/cognitiveos-personal-worktrees/p14-t05-cf6d09e3`; `HEAD=cf6d09e3`; dirty=0; `kernel-server` ELF 42795608; UI dist `index-BxtJu4NK.js` |
 | Guest daemon replace on 48681 | pass | PID 2671617 `kernel-server --personal --bind 127.0.0.1:48681`; product binary `cf6d09e3`; `/ui/` GET 200 serves `index-BxtJu4NK.js`. `cognitive dsh web` restarted on 3080 (PID 2672166). Left `:48181` untouched (PID 166715, `cos-current`). |
 | J0 gate + unauthenticated fail-closed | pass | Empty Issue → `management HTTP 401; task HTTP 401. Bootstrap discarded.` Gate remained. Bare `GET /management/project/v1/list` without bearer **401**. Empty JSON `/local/session` **400**. Same-origin one-shot `/ui/.boot-once` fill (file deleted immediately; secret not in Git/chat/report). Header `principal://local/owner · mgmt+task`. |
@@ -44,4 +44,4 @@ Observed fail on Dual Track: Linux 1.0 `#/work` is not 2.0 Attempt chrome; Vite 
 
 ## Unique next
 
-Required CI green on `cf6d09e3`, then write closure, ready/merge PR [#332](https://github.com/agentkernel/cognitive-os/pull/332), close lease. T06 D02 on the same guest with pushed T06 HEAD if #333 is still open and no sibling is already walking D02.
+Ready/merge PR [#332](https://github.com/agentkernel/cognitive-os/pull/332) on this closure HEAD. Unique next after T05 close: `P14-T06/D02` on the same guest with the pushed T06 HEAD (PR [#333](https://github.com/agentkernel/cognitive-os/pull/333) still OPEN Draft at `3012db11`; sibling D02 not in flight). Do not claim T07/T08.
