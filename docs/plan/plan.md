@@ -2257,7 +2257,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`（D01 documentation-only
   出口写明）。
 - **status:** done (2026-09-05; PR [#322](https://github.com/agentkernel/cognitive-os/pull/322); `P13-T12/D01` done PR #308; `P13-T12/D02` done; fold HEAD `bba4aa47` required CI [33951377929](https://github.com/agentkernel/cognitive-os/actions/runs/33951377929) **SUCCESS**; lease closed → PARALLEL-LANES §3.1). Claim ceiling `hypothesis`. Windows native chrome / NVDA `not-run` until P13-T13.
-- **D02 done（2026-09-05，PR [#322](https://github.com/agentkernel/cognitive-os/pull/322)，fold HEAD `bba4aa47`，`/ui/` pin `c8691923`）。** Chrome/Linux 格已填：modules 7/1/1/10；Grid A 81 fail；Grid B 7/5/10/35；Grid C 5/15/0/16；Grid D 18/0/0/22；Grid E 10 not-run（NVDA 未装）。见 [D02 report](../checkpoints/2026-09-05-personal-p13-t12-d02-report.md)；[D02 closure](../checkpoints/2026-09-05-personal-p13-t12-d02-closure.md)。Unique next：`P13-T13` remains excluded / not claimed；不领取 T15。
+- **D02 done（2026-09-05，PR [#322](https://github.com/agentkernel/cognitive-os/pull/322)，fold HEAD `bba4aa47`，`/ui/` pin `c8691923`）。** Chrome/Linux 格已填：modules 7/1/1/10；Grid A 81 fail；Grid B 7/5/10/35；Grid C 5/15/0/16；Grid D 18/0/0/22；Grid E 10 not-run（NVDA 未装）。见 [D02 report](../checkpoints/2026-09-05-personal-p13-t12-d02-report.md)；[D02 closure](../checkpoints/2026-09-05-personal-p13-t12-d02-closure.md)。Unique next：本机已指定为 `DEV-WINDOWS-NATIVE-OPC-01`（`DOC-LOCAL-RUNTIME-HOST`）；该 DOC 收口后可领取 `P13-T13`；不领取 T15。
 - **D01 done（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；lease `lease/personal/P13-T12/visual-spec` 已关闭）:** 视觉规格
   [`personal-2.0-opc-visual-ui-spec.md`](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md)
   与对照清单
@@ -2272,11 +2272,12 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 - **2.0.0 表面:** 无新 chrome；把所有 `Requires-environment` / `not-run` 变成真实
   pass / fail。
-- **依赖:** owner 提供 Windows 11 x86_64 宿主；`PERSONAL-TEST-ENVIRONMENTS.md`
-  登记修订；P11-T02；P13-T02；P13-T05；P13-T08；P10-T18 历史 unsigned dev path。
-  **宿主未到位时本卡 `blocked`，不挡任何其他卡。**
-- **垂直切片:** D01：provision + qualify `DEV-WINDOWS-NATIVE-OPC-01`（image / tools /
-  pins 写回登记）；unsigned 开发安装路径可在该宿主运行。D02：挂单原生 E2E 回填并
+- **依赖:** 本机已由 owner 2026-09-05 指定为项目运行测试宿主（不要求 Windows 11；
+  OS 版本只作记录）；`PERSONAL-TEST-ENVIRONMENTS.md` 已登记 `DEV-WINDOWS-NATIVE-OPC-01`
+  = 与 `DEV-WIN-GNU-01` 同一台机器；P11-T02；P13-T02；P13-T05；P13-T08；P10-T18 历史
+  unsigned dev path。**指定后本卡可领取；指定 ≠ qualified。**
+- **垂直切片:** D01：qualify `DEV-WINDOWS-NATIVE-OPC-01`（unsigned 开发安装路径在本机
+  实际运行；image / tools / pins 写回登记）。D02：挂单原生 E2E 回填并
   逐格记 pass / fail：T02 install / tray / sleep / SecretStore；P13-T02 sandbox / ACL /
   supply chain；P13-T05 clock / sleep / restart；P13-T08 SecretStore / proxy；P13-T04
   文件打开；UI 原生 E2E；live X（T14）可继续 `not-run`。
@@ -2286,11 +2287,11 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 - **本仓 foundation:** P11-T02 host walking skeleton（v34 + `host.*`）、P7-T07 D02
   inspectable bootstrap installer + Credential Manager 后端、P10-T18 免签名路径文档。
 - **禁止再造:** 第二套安装器；用 B01-DESKTOP-002 冒充 Windows。
-- **validation environment:** `DEV-WINDOWS-NATIVE-OPC-01`（本卡负责资格化并写回
-  登记）；`CI-WINDOWS-MSVC-01` compile。
-- **关闭门:** 环境登记从 not provisioned/qualified 变为 qualified；挂单原生 E2E 在该
+- **validation environment:** `DEV-WINDOWS-NATIVE-OPC-01`（指定已完成；本卡负责
+  资格化并写回 pins）；`CI-WINDOWS-MSVC-01` compile。
+- **关闭门:** 环境登记从 designated 变为 qualified；挂单原生 E2E 在该
   环境实际跑过并逐格记账；unsigned 开发安装路径可运行。
-- **漂移检测负例:** CI/GNU/WSL/Linux 当原生资格；`not-run` 写 pass；B01-W 当日常机；
+- **漂移检测负例:** CI/WSL/Linux 当原生资格；`not-run` 写 pass；cargo 当原生 E2E；B01-W 当日常机；
   签名/release 声称；用 B01-DESKTOP-002 冒充 Windows。
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`。
 
@@ -2643,9 +2644,9 @@ tasks:
     acceptance_requires: [VISUAL_SPEC_D01, STATE_LAB_KEYBOARD_NVDA_200_HOST_THEME_D02]
     notes: D01_DOCUMENTATION_ONLY_PARALLEL_D02_AFTER_P13_T04_T05_T07_T08
   P13-T13:
-    implementation_requires: [OWNER_PROVISIONED_WINDOWS_11_HOST, P11-T02, P13-T02, P13-T05, P13-T08]
+    implementation_requires: [OWNER_DESIGNATED_LOCAL_RUNTIME_HOST, P11-T02, P13-T02, P13-T05, P13-T08]
     acceptance_requires: [DEV_WINDOWS_NATIVE_OPC_01_QUALIFIED, HUNG_NATIVE_E2E_BACKFILLED]
-    notes: BLOCKED_UNTIL_HOST_DOES_NOT_BLOCK_OTHER_CARDS
+    notes: DESIGNATED_2026_09_05_OS_VERSION_NOT_A_GATE_QUALIFICATION_STILL_T13
     promotion_requires: [PRODUCTION_SIGNING, B01-W, OWNER_RELEASE_DISPOSITION]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar

@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:c59fcdb61733caace3f4775766a32c0e1bbc8987c2a017f0473d2941107527bc"
+fingerprint: "sha256:5857f470798120c5c6a39cf0173d7f77508da9b9df5d840d53a6d10047afa9df"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -145,7 +145,8 @@ authority.
   (`DEV-LINUX-NATIVE-01` + host Chrome); remaining `not-run` is missing NVDA,
   missing Windows native chrome, or a disposable runtime without a live
   Project. Task `P13-T12` is closed. Neither document is Gate, release, or T15
-  evidence. Unique next: `P13-T13` remains excluded / not claimed.
+  evidence. Unique next: after `DOC-LOCAL-RUNTIME-HOST`, `P13-T13` is claimable
+  on this designated local host; do not claim `P11-T15`.
 - Authority object English id is **Employee**. Product chrome may still say
   **Member Runtime** until post-completion architecture/handbook wording
   reconciliation. This handbook page does not rewrite product journeys.

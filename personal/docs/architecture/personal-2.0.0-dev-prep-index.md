@@ -281,8 +281,10 @@ machine check.
 - `P13-T07` / `P13-T08` / `P13-T09` may start on P11 authority before the
   main chain closes (dashed edges are sources, not mutexes); they must not
   fake data the daemon does not have.
-- `P13-T13` is `blocked` until the owner provides a Windows 11 x86_64 host;
-  it never blocks another card — their Windows cells simply stay `not-run`.
+- `P13-T13` is claimable after the 2026-09-05 local-host designation
+  (`DOC-LOCAL-RUNTIME-HOST`; OS version is not a provision gate). It never
+  blocks another card — their Windows cells simply stay `not-run` until T13
+  backfills them. Designation is not qualification.
 - `P11-T15` claims only after `P13-T02..T13` are done and the host is
   qualified; freeze the 15-scenario preregistration on the plan.md T15 card
   first. T15 done ≠ release.

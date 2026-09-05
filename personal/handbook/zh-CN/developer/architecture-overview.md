@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:c59fcdb61733caace3f4775766a32c0e1bbc8987c2a017f0473d2941107527bc"
+fingerprint: "sha256:5857f470798120c5c6a39cf0173d7f77508da9b9df5d840d53a6d10047afa9df"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -127,7 +127,8 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   fold HEAD `bba4aa47`）：已在 `/ui/` `c8691923`（`DEV-LINUX-NATIVE-01` + 宿主
   Chrome）记账；剩余 `not-run` 是缺 NVDA、缺 Windows 原生 chrome，或一次性
   runtime 没有 live Project。任务 `P13-T12` 已关闭。两份文档都不是 Gate、release
-  或 T15 证据。Unique next：`P13-T13` remains excluded / not claimed。
+  或 T15 证据。Unique next：`DOC-LOCAL-RUNTIME-HOST` 收口后可在本机领取 `P13-T13`；
+  不领取 `P11-T15`。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
 - HITL **只**在项目中心画布；Today 用深链进入。不要把独立

@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:939d439d5803cf22f108ce3a73b5b655683faadb9e8b11272921a71df5a294c7"
+fingerprint: "sha256:45ea41169665d96ab75f9225911746d66d63e79020756f8953094450194dfa3d"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---
@@ -28,7 +28,7 @@ owns what each environment may claim. Practical routing:
 | `DEV-LINUX-NATIVE-01` (native Linux host) | exact-revision native validation, experimental service/Pi work; consumes **pushed commits only** into a cleanable worktree | uncommitted code, production claims |
 | `CLOUD-AGENT-LINUX-01` (Cursor Cloud Agent pod) | full bash-shell Rust + TS iteration before pushing; bootstrapped by `.cursor/environment.json` | native systemd/Secret Service behavior, timing baselines, Gate/release/Profile |
 | Local Windows host `DEV-WIN-GNU-01` (GNU default toolchain; registered directories carry a local MSVC `rustup override` since 2026-09-03) | pnpm builds/tests, `cargo fmt`, Node checkers, docs work anywhere; workspace `cargo build/test/clippy` **inside an override directory** (`rustc -vV` → `host: x86_64-pc-windows-msvc`) as development iteration | Rust linking on the GNU default host — registered linker exit 121; citing a local MSVC result as supported validation, Gate, release, Profile or Windows support |
-| `DEV-WINDOWS-NATIVE-OPC-01` | future qualified native Windows 11 Phase 11 host; currently not provisioned | any claim until qualification exists |
+| `DEV-WINDOWS-NATIVE-OPC-01` | designated local project-runtime host (same machine as `DEV-WIN-GNU-01`; 2026-09-05; OS version is not a provision gate) | citing cargo as native install/tray/sleep E2E; Gate/release/Profile; B01-W |
 | WSL2 | historical engineering evidence | Linux 1.0 or Windows OPC product-path claims |
 | `B01-Desktop-Linux-002` | dedicated Gate-campaign guest under preregistered procedures; since 2026-08-27 also the owner-authorized Personal 2.0 development-validation host (exact-revision disposable worktrees and task-declared cleanable roots only; frozen while a B01 campaign is active) | guest-baseline, snapshot, or credential changes outside a preregistered B01 campaign lease |
 | `B01-W-DESKTOP-001` | registered-but-not-provisioned Windows Gate guest (B01-W) | anything until provisioned per its preregistration |
@@ -41,15 +41,16 @@ qualified. T09 is HITL on canvas, not a first-level Inbox. `B01-DESKTOP-002`
 is campaign-only, not the 2.0 daily default. Unparked T15 N=15 acceptance
 still needs one preregistered qualified Windows revision and is **not** the
 Phase 12 prototype-completeness mutex. Phase 12 Dual Track UI work uses
-`DEV-WIN-GNU-01` TS plus required CI; native UI E2E stays `not-run` until
-`DEV-WINDOWS-NATIVE-OPC-01`. Phase 13 routing
+`DEV-WIN-GNU-01` TS plus required CI; native UI E2E stays `not-run` until `DEV-WINDOWS-NATIVE-OPC-01` is qualified by `P13-T13`.
+Phase 13 routing
 (`PERSONAL-TEST-ENVIRONMENTS.md` §5.2): P13-T02/T03 real child/Pi paths and
 the other authority cards use `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` plus pushed
 exact-revision `DEV-LINUX-NATIVE-01`; `/ui/` surfaces use Dual Track TS; the
 P13-T12/D02 rendered / NVDA / 200% / host-theme review against exact-revision
-guest daemon `/ui/` (SSH tunnel) is implementation evidence only; only P13-T13
-may register `DEV-WINDOWS-NATIVE-OPC-01` as qualified and backfill the hung
-native cells, and T15 runs only after that. Local GNU, WSL,
+guest daemon `/ui/` (SSH tunnel) is implementation evidence only; `DOC-LOCAL-RUNTIME-HOST`
+(2026-09-05) designated this local host as `DEV-WINDOWS-NATIVE-OPC-01` (OS version
+is not a provision gate). Only `P13-T13` may mark it qualified and backfill the hung
+native cells, and T15 runs only after that. Local cargo, WSL,
 Linux, ordinary CI and Canvas are explicit non-substitutes for Gate/release;
 `not-run` remains `not-run`.
 
