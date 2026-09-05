@@ -33,6 +33,7 @@ Finish `P14-T08/D01` Dual Track + required CI, then `P14-T08/D02` exact-revision
 
 | Time | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|---|
-| 2026-09-05 | Dual Track `knowledgeIa` + `knowledgeIngest` + `knowledgeMemory` + `opcIa` | **pass** 41/41 | `DEV-WIN-GNU-01` / Node vitest | worktree, uncommitted | development evidence only |
-| 2026-09-05 | `pnpm run check:consistency` | **pass** | local Node | worktree, uncommitted | 275 requirements; leases + Layer 1 counts |
-| 2026-09-05 | Host FS / live `/ui/` J5 | **not-run** | `P14-T08/D02` | — | D02 after D01 CI |
+| 2026-09-05 | Dual Track `knowledgeIa` + `knowledgeIngest` + `knowledgeMemory` + `opcIa` | **pass** 41/41 | `DEV-WIN-GNU-01` / Node vitest | `6223b277` | development evidence only |
+| 2026-09-05 | `pnpm run check:consistency` | **pass** | local Node | `6223b277` | 275 requirements; leases + Layer 1 counts |
+| 2026-09-05 | `pnpm build` (`tsc --noEmit` + vite) | **fail then pass** | `DEV-WIN-GNU-01` | worktree | first fail TS2783 FileList mock `length` spread; fixed; knowledgeIa 7/7 |
+| 2026-09-05 | Host FS / live `/ui/` J5 | **not-run** | `P14-T08/D02` | — | D02 after this tsc fix is pushed |

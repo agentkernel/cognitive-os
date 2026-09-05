@@ -95,11 +95,13 @@ function clickButton(host: HTMLElement, text: string) {
 }
 
 function setFiles(input: HTMLInputElement, files: File[]) {
-  const list = {
+  const list: FileList & Record<number, File> = {
     length: files.length,
     item: (index: number) => files[index] ?? null,
-    ...files,
-  };
+  } as FileList & Record<number, File>;
+  files.forEach((file, index) => {
+    list[index] = file;
+  });
   Object.defineProperty(input, "files", { configurable: true, value: list });
   act(() => {
     input.dispatchEvent(new Event("change", { bubbles: true }));
