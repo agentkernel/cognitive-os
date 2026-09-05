@@ -2346,7 +2346,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T04 — 成员加入落在真实 PlanRevision 槽
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T04/D01`. Do not claim T05/T06/T07/T08.
 - **EVAL-016:** J4.
 - **依赖:** P14-T03。
 - **垂直切片:** D01：激活后 responsible slots 存在；write join 落席；failure-first：无槽仍假装加入、聊天 Approve 被拒。

@@ -72,7 +72,7 @@ tests:
   - personal/crates/cognitive-store/tests/m2_acceptance.rs
   - personal/crates/cognitive-store/tests/p2_t03_worker_authorization.rs
   - personal/crates/cognitive-store/tests/p13_t09_project_lifecycle.rs
-fingerprint: "sha256:af5be58f9732e34deaa6fb1e2b175bc2e50571bb5a59e1ded2ec4ced05f891f7"
+fingerprint: "sha256:7b31d67c6b1b6d6b9a46f1f2300e0ed70f2a0ef424ac9dfe42b32773c30df23f"
 non_claims:
   - 明确不声明 authority 与 installation 两个 SQLite 文件之间的跨库原子性。
 ---
@@ -150,7 +150,7 @@ P13-T09 项目生命周期**本切片不登记新的已应用迁移**。`project
 
 P13-T11 反思 / Member Runtime 新增 v40。候选由 Attempt / verification / evidence / occurrence 事实生成（`ReflectionStore::generate_from_facts`）；模型自报不是改进。某成员在某个 UTC 日至少有一条终态 Attempt 时产生 `daily` 汇总；`response done` / exit 0 且无 evidence 可以是 `daily`，不能是 `key-result`。Member Runtime 变更是新的 Employee revision，只在 Owner 确认 `member-runtime-revision` preview 后插入；回滚再追加一条恢复确认前配方的 revision。Role Template 提案需 Owner 确认，且不把 Employee 复制到另一 Project。管理面 HTTP 从 kernel-server `project_aggregate.rs` 嵌套转发（`reflection.generate` / `list` / `improve.*` / `role-template.*`）；task 通道别名为 403。Owner canvas `POST /management/project/v1/confirm` 应用这些 preview。MemberConfig Reflection 页签是 `/ui/` 表面。运行中 Attempt 的 prompt/context 改写被拒。
 
-P14-T03 Dual Track Write Project **不新增编号迁移**（v41 仍预留给 P13-T09 生命周期事件）。`create_draft` / `put_draft_charter` 在同一权威连接上把 payload 与 charter UTF-8 写入旁路表 `p14_write_project_facts`（`CREATE TABLE IF NOT EXISTS`，不是 `schema_migrations` 步骤）。Owner 标题加 Dual Track `process:` 环的 confirm 把 `p11_project` 铸为 `active`（带 `accepted_at`）并铸造 PlanRevision 轴；空标题、标题 `unknown`、有 `process:` 无环则 fail-closed 且不插行。没有 `process:` 节的 G1 charter 仍铸造 `creating`（P11 walking-skeleton 夹具）。列表/详情的 `title_summary` 是 Owner Dual Track 标题；否则为 `unknown`。
+P14-T03 Dual Track Write Project **不新增编号迁移**（v41 仍预留给 P13-T09 生命周期事件）。`create_draft` / `put_draft_charter` 在同一权威连接上把 payload 与 charter UTF-8 写入旁路表 `p14_write_project_facts`（`CREATE TABLE IF NOT EXISTS`，不是 `schema_migrations` 步骤）。Owner 标题加 Dual Track `process:` 环的 confirm 把 `p11_project` 铸为 `active`（带 `accepted_at`）并铸造 PlanRevision 轴；空标题、标题 `unknown`、有 `process:` 无环则 fail-closed 且不插行。没有 `process:` 节的 G1 charter 仍铸造 `creating`（P11 walking-skeleton 夹具）。列表/详情的 `title_summary` 是 Owner Dual Track 标题；否则为 `unknown`。P14-T04 Dual Track write-join **仍不新增编号迁移**。`parse_dual_track_stages` 把每个 PlanRevision `responsible_slot` 设为 process 环 id（`collect` / `analyze` / `draft`）；`rights=` 是 Owner 访问说明，不是坍缩的 `owner` 花名册槽。write join 落在这些槽上；轴上没有的槽被拒绝；没有 `process:` 的 G1 仍停在 `creating`，不能假装加入。
 
 几乎所有持久表都带 BEFORE UPDATE/DELETE 触发器（"append-only" abort）；派生表是
 `memory_search_fts` 与 `p11_vault_index_entry`（可重建；Vault 检索不走 Memory FTS）。

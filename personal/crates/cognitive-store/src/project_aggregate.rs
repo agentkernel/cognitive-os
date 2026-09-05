@@ -2277,15 +2277,9 @@ fn parse_dual_track_stages(charter: &str) -> Result<Vec<StageSpec>, ProjectAggre
                 detail: "Write Project process rings must have unique ids",
             });
         }
-        let responsible_slot = rest
-            .split(';')
-            .find_map(|part| {
-                let part = part.trim();
-                part.strip_prefix("rights=").map(str::trim)
-            })
-            .filter(|slot| !slot.is_empty() && *slot != "(none)")
-            .unwrap_or("owner")
-            .to_owned();
+        // Ring id is the PlanRevision seating slot (③). `rights=` is Owner
+        // access, not a collapsed "owner" roster slot.
+        let responsible_slot = stage_id.clone();
         stages.push(StageSpec {
             stage_id,
             title: name.to_owned(),
