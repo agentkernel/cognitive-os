@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:1780c0b9dd2dbe2a9663132cfa9d2237895d68a7578057a5a9ed1009b66c67dc"
+fingerprint: "sha256:3e61c430e34c18a786517f697a2a6d39d002bf6f03aa93a60584411a0d0ec22b"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -33,10 +33,11 @@ Personal 2.0 Phase 11 (Personal 2.0.0 chrome) routes daily Project/Employee
 authority tests to `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` (plus exact-revision
 `DEV-LINUX-NATIVE-01` when a native daemon/store is required). Host/DSH native
 E2E stays on D01-qualified `DEV-WINDOWS-NATIVE-OPC-01`. Hung cells without a
-capability stay honest `not-run`. Unparked T15 still needs a preregistered N=15
-acceptance at one qualified Windows revision and is not the Phase 12 mutex;
-since 2026-09-02 its acceptance requires Phase 13 `P13-T02`–`T13` done plus
-`P13-T13` qualifying the Windows host. Phase 12 Dual Track UI uses
+capability stay honest `not-run`. `P11-T15` is done on this qualified host
+(2026-09-05; N=15 frozen at `main@4ca9b046`; 1 pass / 1 partial / 13 not-run)
+and is not the Phase 12 mutex;
+acceptance required Phase 13 `P13-T02`–`T13` done plus `P13-T13` qualifying the
+Windows host, and that precondition is now met. Phase 12 Dual Track UI uses
 `DEV-WIN-GNU-01` TS plus required CI. Phase 13 card routing is in
 `PERSONAL-TEST-ENVIRONMENTS.md` §5.2 (Linux native closes "implementation
 exists" only; Windows native cells are backfilled by P13-T13). The native host is

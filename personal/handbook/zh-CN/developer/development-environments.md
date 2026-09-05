@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:69f61c6c77a8aac7134ced95565c80d577f5797c5b6171368bd0a1edacd8a634"
+fingerprint: "sha256:fec2fb4cddd9598700a555cef98872033b0e5a89ec53b6e5d0e19b0a4f6fdb68"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -36,10 +36,10 @@ non_claims:
 Phase 11 Personal 2.0.0 路由：T03/T04 日常权威测试用 `CI-UBUNTU-01` /
 `CI-WINDOWS-MSVC-01`（需要 native daemon/store 时加已 push 的 exact-revision
 `DEV-LINUX-NATIVE-01`）。T02/T07 原生 host/DSH E2E 仍是
-`DEV-WINDOWS-NATIVE-OPC-01` = D01 已资格化（2026-09-05，`P13-T13`）；缺能力的挂单格保持诚实 `not-run`。
+`DEV-WINDOWS-NATIVE-OPC-01` = D01 已资格化（2026-09-05，`P13-T13`）；缺能力的挂单格保持诚实 `not-run`。`P11-T15` 在本资格化宿主上 **done**（N=15 冻结于 `main@4ca9b046`；1 pass / 1 partial / 13 not-run）。
 T09 是画布 HITL，不是一级 Inbox。`B01-DESKTOP-002` 仅 campaign，不是 2.0 日常
-默认机。unparked 的 T15 N=15 acceptance 仍需同一 preregistered qualified
-Windows revision，**不是** Phase 12 prototype completeness mutex。Phase 12 Dual Track
+默认机。`P11-T15` N=15 acceptance 在本 preregistered qualified
+Windows revision 上执行，**不是** Phase 12 prototype completeness mutex。Phase 12 Dual Track
 UI 用 `DEV-WIN-GNU-01` TS 加 required CI；产品 chrome 原生 UI E2E 仍 `not-run`
 （fixture `/ui/` 200 不是该格）。Phase 13 路由
 （`PERSONAL-TEST-ENVIRONMENTS.md` §5.2）：P13-T02/T03 真实 child/Pi 路径与其余权威卡用
@@ -48,7 +48,7 @@ UI 用 `DEV-WIN-GNU-01` TS 加 required CI；产品 chrome 原生 UI E2E 仍 `no
 exact-revision guest daemon `/ui/`（SSH 隧道）只是 implementation evidence；
 `DOC-LOCAL-RUNTIME-HOST`（2026-09-05）已把本机指定为 `DEV-WINDOWS-NATIVE-OPC-01`
 （OS 版本不是供给门槛）。`P13-T13/D01` 已于 2026-09-05 资格化 unsigned 路径；
-D02 已逐格记 pass/fail/`not-run`。T15 只在 T13 收口后执行。本机 cargo、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
+D02 已逐格记 pass/fail/`not-run`。`P11-T15` 在 T13 收口后 **done**。本机 cargo、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
 Gate/release；`not-run` 保持 `not-run`。
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22

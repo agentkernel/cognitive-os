@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:1780c0b9dd2dbe2a9663132cfa9d2237895d68a7578057a5a9ed1009b66c67dc"
+fingerprint: "sha256:3e61c430e34c18a786517f697a2a6d39d002bf6f03aa93a60584411a0d0ec22b"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---
@@ -33,9 +33,9 @@ Personal 2.0 Phase 11（Personal 2.0.0 chrome）把 T03/T04 日常权威测试�
 `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01`（需要 native daemon/store 时加 exact-revision
 `DEV-LINUX-NATIVE-01`）。host/DSH 原生 E2E 走 D01 已资格化的
 `DEV-WINDOWS-NATIVE-OPC-01`（缺能力的挂单格保持诚实 `not-run`）。
-unparked 的 T15 仍需同一 qualified Windows revision 上的 preregistered N=15
-acceptance，不是 Phase 12 mutex；自 2026-09-02 起其验收前置 = Phase 13
-`P13-T02`–`T13` done + `P13-T13` 资格化本机 Windows 宿主。Phase 12 Dual Track UI 用
+`P11-T15` 已在本资格化宿主上 **done**（2026-09-05；N=15 冻结于
+`main@4ca9b046`；1 pass / 1 partial / 13 not-run），不是 Phase 12 mutex；验收前置 = Phase 13
+`P13-T02`–`T13` done + `P13-T13` 资格化本机 Windows 宿主，现已满足。Phase 12 Dual Track UI 用
 `DEV-WIN-GNU-01` TS 加 required CI。Phase 13 卡的验证路由见
 `PERSONAL-TEST-ENVIRONMENTS.md` §5.2（Linux native 只关闭"实现已存在"，Windows
 原生格由 P13-T13 回填）。本机宿主 D01 已资格化（2026-09-05）；B01-W 尚未 provision；`B01-DESKTOP-002` 不是
