@@ -1,7 +1,7 @@
 # P14-T07 Settings L1 + IA — running validation report
 
 - Task: `P14-T07` / slices `P14-T07/D01` then `P14-T07/D02`
-- Lease: `lease/personal/P14-T07/settings-ia`
+- Lease: `lease/personal/P14-T07/settings-ia` **closed** → PARALLEL-LANES §3.1
 - Branch: `personal/P14-T07-settings-l1` (worktree `D:\agent-kernel-p14-t07`)
 - Claim ceiling: `hypothesis`. Not Gate / release / Profile / B01 / EVAL-016 revival.
 - Product origin: daemon `/ui/`. Vite is not the product origin. dsh is not 小白 chrome.
@@ -19,7 +19,7 @@
 | Slice | Status | Notes |
 |---|---|---|
 | `P14-T07/D01` | `done` | Dual Track 72/516. Settings L1; 9×9 unmounted; Linux 1.0 hashes 404; palette Escape capture; `#/settings/model-connections` SecretStore hub |
-| `P14-T07/D02` | `in-progress` | guest `/ui/` J6/J8/J12/J20 + `JOURNEY-BROWSER-SYNC-01` J0/J10/J18/J19 **pass** at SPA `634da855` on `B01-Desktop-Linux-002` `127.0.0.1:48681`; required CI windows still pending |
+| `P14-T07/D02` | `done` | guest `/ui/` J6/J8/J12/J20 + `JOURNEY-BROWSER-SYNC-01` J0/J10/J18/J19 **pass** at SPA `634da855` on `B01-Desktop-Linux-002` `127.0.0.1:48681`; required CI [33975415810](https://github.com/agentkernel/cognitive-os/actions/runs/33975415810) **SUCCESS** at `7264b68d` |
 
 ## Validation log (TEST-REPORT-INCREMENTAL-01)
 
@@ -28,7 +28,8 @@
 | 2026-09-05 | Dual Track `pnpm test` in `clients/pc/web` (MSVC not required; TS only) | **pass** 72 files / 516 tests |
 | 2026-09-05 | `ownerChromeIa.test.tsx` (failure-first then green) | **pass**: Settings L1 link; 0× `data-state-lab-cell` by default; `#/home` `#/work` `#/work/new` `#/agents` `#/providers` `#/bindings` `#/tasks` = No such route; palette does not advertise retired hashes; `#/settings/model-connections` SecretStore form; Escape closes palette |
 | 2026-09-05 | leftover Home/Work/Agents/Providers suites | **pass** via test-only `LinuxLegacyApp` (not product chrome) |
-| 2026-09-05 | required CI run [33974591057](https://github.com/agentkernel/cognitive-os/actions/runs/33974591057) at `634da855` | ubuntu **pass** 6m58s; windows **pending**; resolve **pass** |
+| 2026-09-05 | required CI run [33974591057](https://github.com/agentkernel/cognitive-os/actions/runs/33974591057) at `634da855` | superseded by fold CI |
+| 2026-09-05 | required CI run [33975415810](https://github.com/agentkernel/cognitive-os/actions/runs/33975415810) at `7264b68d` | **SUCCESS** — resolve 2s; ubuntu 4m29s; windows 17m17s; required-ci 2s |
 | 2026-09-05 | guest `/ui/` J0 gate | **pass** — bootstrap secret into password field; not a Provider key; session issued; Vite is not the product origin |
 | 2026-09-05 | guest `/ui/` J8 Settings | **pass** — Primary `role=link` Settings current; `#/settings` and `#/settings/model-connections` both show Model Connections; `Hand key to SecretStore` disabled with empty key; 0 fake Connect buttons; 0 `#/home` `#/work` `#/agents` `#/providers` leftover links |
 | 2026-09-05 | guest `/ui/` J6/J12 chrome | **pass** — default Settings `data-state-lab-cell` count **0**; open Advanced state-lab → **81** cells; close → **0** (unmounted). HITL pending preview **not-run** (no ApprovalPreview after EVAL-016 creating Project; T03/T04) |
@@ -39,4 +40,4 @@
 
 ## Unique next
 
-Rebase onto `origin/main` (`adb20828`, #326 merged). Wait required CI on the rebased HEAD / PR [#327](https://github.com/agentkernel/cognitive-os/pull/327). Then ready/merge, close lease, ff `main`. Do not claim T02/T03/T04/T08/T05. After merge, claim T06 only if T03 is already done.
+Ready/merge PR [#327](https://github.com/agentkernel/cognitive-os/pull/327) after required CI on the closure HEAD. Formal plan three-column stays `not-started` until last merger (T08 listed `PERSONAL-DEVELOPMENT-PLAN.md`). Do not claim T02/T03/T04/T08/T05. T03 is not done — do not claim T06.
