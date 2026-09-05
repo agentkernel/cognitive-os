@@ -2319,7 +2319,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T02 — 创建向导 = 原型 ①–⑤（不是五张 note textarea）
 
-- **status:** `done`. Claim ceiling `hypothesis`. Merged PR [#329](https://github.com/agentkernel/cognitive-os/pull/329) at `main@c9bb291d`; D01 Dual Track done; D02 JOURNEY pass.
+- **status:** `done`. Claim ceiling `hypothesis`. Merged PR [#329](https://github.com/agentkernel/cognitive-os/pull/329) at `main@c9bb291d`; D01 Dual Track done; D02 JOURNEY pass. Fold HEAD `8246eeef` required CI [33979311081](https://github.com/agentkernel/cognitive-os/actions/runs/33979311081) **SUCCESS**.
 - **EVAL-016:** J1 blocker 2. Oracle: [user-journeys.md](../../personal/docs/product/user-journeys.md) §1 + v9 `create-process` / `create-members` / `create-test` / `create-joint`.
 - **依赖:** P14-T01；P12-T02 五段骨架；P11-T03/T04。**不依赖 T07/T08。**
 - **垂直切片:** D01：failure-first Dual Track — ①–⑤ 表面替换 note textarea；0 假 Activate。
@@ -2333,7 +2333,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T03 — Write Project 激活 live 具名 Project
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `done`. Claim ceiling `hypothesis`. PR [#330](https://github.com/agentkernel/cognitive-os/pull/330).
 - **EVAL-016:** J1 blocker 1.
 - **依赖:** P14-T02（紧耦合：Owner 必须从 `/ui/` 得到 live 具名 Project）；P11-T03 PlanRevision。
 - **垂直切片:** D01：Write 持久化 titled live Project + PlanRevision axis；离开 `creating`；

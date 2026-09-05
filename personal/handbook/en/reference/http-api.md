@@ -27,7 +27,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:0aedb722431a35bf70ebbc8bcb5e01c985819d76c165563f4f4e827cb84e2d6a"
+fingerprint: "sha256:c10fbbd16a5e98f4ea47e15c3f340fca114d12f971f3db0a1091c7b3485d4cf2"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -181,8 +181,8 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/resource/v1/restore` | task | Forbidden: backup/restore are management-channel only. |
 | `POST` | `/task/backup` | task | Forbidden alias of the management backup writer. |
 | `POST` | `/task/restore` | task | Forbidden alias of the management restore writer. |
-| `GET` | `/management/project/v1/list` | management | Personal-private Project list from v26 `p11_project` rows. Empty list has no fake buttons. Cost is `unknown` and is never serialized as 0. Not Task-row impersonation and not P7-T05 inventory. |
-| `GET` | `/management/project/v1/detail` | management | Personal-private Project detail. A Task ref is not a Project id (404). Unconfirmed drafts have no Project row. |
+| `GET` | `/management/project/v1/list` | management | Personal-private Project list from v26 `p11_project` rows. Dual Track Write Project rows expose the Owner-typed `title_summary`; otherwise `unknown`. Empty list has no fake buttons. Cost is `unknown` and is never serialized as 0. Not Task-row impersonation and not P7-T05 inventory. |
+| `GET` | `/management/project/v1/detail` | management | Personal-private Project detail including `title_summary` and current PlanRevision when present. A Task ref is not a Project id (404). Unconfirmed drafts have no Project row. |
 | `GET` | `/management/project/v1/axis` | management | Current PlanRevision axis (stages, gap flags, confirm_status). Missing plan is empty/unavailable, not a fake wizard. |
 | `GET` | `/management/project/v1/roster` | management | Employee roster. Empty projection uses `authority_note: empty-roster`. Seated members list `employee_id`, state, responsible stages, model_bound, and current-manager flag. Not a third identity besides Employee. |
 | `GET` | `/management/project/v1/employee.catalog` | management | Grant catalog for one Employee in one Project. Recipe mention is not a grant. Also lists InstallFacts with `install_is_not_grant: true`. |
@@ -193,7 +193,7 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/preview.request` | management | Mint a digest-bound ApprovalPreview (activation / plan-change / acceptance / grant-expansion). Response includes `preview_digest` for canvas confirm. Secret-shaped bytes are rejected at registration. |
 | `POST` | `/management/project/v1/preview.reject` | management | Owner-management reject of a pending ApprovalPreview. Leaves a receipt. The rejected digest is never confirmable. Not a chat Approve control. |
 | `POST` | `/management/project/v1/preview.narrow` | management | Owner-management narrow: mint a new pending preview and freeze the old row as superseded (`superseded_by`). Old digest is never confirmable. Stale is mechanical `base_state_digest` mismatch only. |
-| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. G1 mints Project in `creating`; G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. An install-phase grant-expansion writes only an InstallFact and consumes the preview (`granted: false`). Stale digest is rejected. Chat cannot Approve. |
+| `POST` | `/management/project/v1/confirm` | management | Owner-management confirm of `{preview_id, preview_digest}`. Dual Track Write Project (Owner title plus process rings) mints an `active` Project with a PlanRevision axis and refuses empty/`unknown` title or a process section with no rings. G1 without a process section still mints `creating`. G2 writes AcceptanceFact then `active`; grant-expansion inserts a Grant. An install-phase grant-expansion writes only an InstallFact and consumes the preview (`granted: false`). Stale digest is rejected. Chat cannot Approve. |
 | `POST` | `/management/project/v1/capability.discover` | management | Admit an assistant-led Skill/MCP discovery candidate with pinned sources. Does not install or grant. Unreviewed / ambient / marketplace sources are refused. |
 | `POST` | `/management/project/v1/capability.acquire` | management | Mint a grant-expansion ApprovalPreview after a structured security review. `phase=install` or `phase=grant` (grant requires an InstallFact). Does not write a Grant. Chat/task aliases are 403. |
 | `POST` | `/management/project/v1/capability.compat-test` | management | Compare two version pins for the same capability. Compatible on the same major; never a grant. |
