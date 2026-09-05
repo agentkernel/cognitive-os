@@ -15,6 +15,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/project_chat.rs
   - path: personal/apps/kernel-server/src/personal/project_lifecycle.rs
   - path: personal/apps/kernel-server/src/personal/provider_control_plane.rs
+  - path: personal/apps/kernel-server/src/personal/reflection.rs
   - path: personal/apps/kernel-server/src/personal/resource_api.rs
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: personal/apps/kernel-server/src/personal/routine_runs.rs
@@ -26,7 +27,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/x_connector.rs
   - path: personal/handbook/_meta/annotations/http-routes.json
   - path: personal/packages/pi-cognitiveos/src/daemon-client.ts
-fingerprint: "sha256:013b0b9cc96bd733de3676281235f2e91fbb826e2836420ecfacb88b859d2d33"
+fingerprint: "sha256:0aedb722431a35bf70ebbc8bcb5e01c985819d76c165563f4f4e827cb84e2d6a"
 non_claims:
   - "This page is generated reference material; it asserts no Gate, release, Profile, or benefit result."
   - "Presence of a surface here is not a support or stability promise beyond the linked sources."
@@ -258,6 +259,17 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/management/project/v1/restore-point` | management | Record a same-disk local restore point. `claimed_as_backup` / `is_disaster_backup` fail closed. Not a disaster backup. |
 | `POST` | `/management/project/v1/export` | management | Export a Project without secrets (`include_secrets` is 422). The payload is not authority (`is_authority: false`) and is not a backup. |
 | `GET` | `/management/project/v1/lifecycle` | management | Project lifecycle projection: state, data dir, logical-delete flag, pending delete preview, and restore points labelled not a disaster backup. |
+| `POST` | `/management/project/v1/reflection.generate` | management | Generate reflection candidates for a Project from daemon facts only (P13-T11): terminal Attempts, verifier evidence, and the occurrence ledger become `key-result` / `daily` / `cycle` / `incident` rows. An empty UTC day yields no `daily`; `response done` / exit 0 without evidence is `daily`, never `key-result`. `completion_claimed` and `model_self_report` are always false. |
+| `GET` | `/management/project/v1/reflection.list` | management | List reflection candidates for one Project (optionally one Member). Read-only; management-channel only. |
+| `POST` | `/management/project/v1/reflection.improve.propose` | management | Propose a Member Runtime improvement from a reflection candidate. Mints a `member-runtime-revision` ApprovalPreview only; no `p11_employee_revision` is written until the Owner confirms on the Projects canvas `confirm` route. Implicit Blueprint upgrade and proposals against a running Attempt are 422. |
+| `POST` | `/management/project/v1/reflection.improve.confirm` | management | Owner confirm of a `member-runtime-revision` preview (digest-bound). Appends a new Employee revision; equivalent to the canvas `confirm` route for this subject kind. |
+| `POST` | `/management/project/v1/reflection.improve.rollback` | management | Roll back a confirmed Member Runtime improvement by appending another Employee revision that restores the pre-confirm recipe. Only `active` improvements can roll back; history is never rewritten. |
+| `POST` | `/management/project/v1/reflection.role-template.propose` | management | Propose a cross-Project Role Template from a Member's runtime. Mints a `role-template-proposal` ApprovalPreview; nothing is shared until the Owner confirms, and the Employee is never copied into another Project. |
+| `POST` | `/management/project/v1/reflection.role-template.confirm` | management | Owner confirm of a `role-template-proposal` preview (digest-bound). Records the proposal as confirmed with `copied_employee: false` and `granted: false`. |
+| `POST` | `/management/project/v1/reflection.admit-self-report` | management | Negative route: admitting a model self-report as an improvement is always 422. A Member's own claim never changes its runtime. |
+| `POST` | `/management/project/v1/reflection.as-completion` | management | Negative route: claiming a reflection as stage or run completion is always 422 (`completion_claimed` CHECK = 0). Completion belongs to the independent verifier and the canvas. |
+| `POST` | `/management/project/v1/reflection.inject-attempt` | management | Negative route: rewriting the prompt / context of a running Attempt is always 422. Improvements apply only to future Attempts after Owner confirm. |
+| `POST` | `/management/project/v1/reflection.reuse-member` | management | Negative route: silently reusing a Member in another Project is 403. Cross-Project sharing goes through a Role Template proposal that the Owner confirms. |
 | `POST` | `/management/host/v1/home.admit` | management | Admit Personal Home `app/`+`data/` (P11-T02). Install root must end with `Personal Home`; GNU/WSL/Linux roots, ACL escape, and secret env/argv fail closed. Upgrade replaces app and preserves data. Native ACL E2E is `not-run`. |
 | `POST` | `/management/host/v1/daemon.bind` | management | Bind the single daemon to one admitted Home. Duplicate bind while bound/recovering/resumed fails closed. Tray role is observe-and-request only. |
 | `POST` | `/management/host/v1/close.request` | management | Typed close: background-or-pause is honored only when the daemon can honor background; otherwise the request is rejected (fake background forbidden). |
@@ -338,6 +350,17 @@ Routes served by the Personal daemon on its loopback listener (plus the daemon-c
 | `POST` | `/task/project/v1/restore-point` | task | Forbidden: Project restore points are management-channel only. |
 | `POST` | `/task/project/v1/export` | task | Forbidden: Project export is management-channel only. |
 | `GET` | `/task/project/v1/lifecycle` | task | Forbidden: Project lifecycle read is management-channel only. |
+| `POST` | `/task/project/v1/reflection.generate` | task | Forbidden: reflection generation is management-channel only. |
+| `GET` | `/task/project/v1/reflection.list` | task | Forbidden: the reflection list is management-channel only. |
+| `POST` | `/task/project/v1/reflection.improve.propose` | task | Forbidden: Member Runtime improvement proposals are management-channel only. |
+| `POST` | `/task/project/v1/reflection.improve.confirm` | task | Forbidden: a task channel can never confirm a Member Runtime revision. |
+| `POST` | `/task/project/v1/reflection.improve.rollback` | task | Forbidden: rollback is management-channel only. |
+| `POST` | `/task/project/v1/reflection.role-template.propose` | task | Forbidden: Role Template proposals are management-channel only. |
+| `POST` | `/task/project/v1/reflection.role-template.confirm` | task | Forbidden: a task channel can never confirm a Role Template proposal. |
+| `POST` | `/task/project/v1/reflection.admit-self-report` | task | Forbidden: management-channel only (and 422 there). |
+| `POST` | `/task/project/v1/reflection.as-completion` | task | Forbidden: management-channel only (and 422 there). |
+| `POST` | `/task/project/v1/reflection.inject-attempt` | task | Forbidden: management-channel only (and 422 there). |
+| `POST` | `/task/project/v1/reflection.reuse-member` | task | Forbidden: management-channel only (and 403 there). |
 | `POST` | `/task/host/v1/home.admit` | task | Forbidden: Windows host admit is management-channel only. |
 | `POST` | `/task/host/v1/daemon.bind` | task | Forbidden: Windows host daemon bind is management-channel only. |
 | `POST` | `/task/host/v1/close.request` | task | Forbidden: Windows host close is management-channel only. |

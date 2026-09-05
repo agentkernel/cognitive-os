@@ -234,13 +234,23 @@ describe("P12-T04 select-then-configure + add member", () => {
     unmount(host, root);
   });
 
-  it("opens eight tabs after a roster row is selected and does not Install", async () => {
+  it("opens duty through reflection tabs after a roster row is selected and does not Install", async () => {
     const { host, root, calls } = await renderMember("#/projects/proj-1/members/emp-1", {
       "GET /management/project/v1/roster": READY_ROSTER,
     });
     expect(host.querySelector("[data-page='opc-member-config']")).not.toBeNull();
     const tabs = [...host.querySelectorAll("[role='tab']")].map((node) => (node.textContent ?? "").trim());
-    expect(tabs).toEqual(["Duty", "Input", "Output", "Skills", "Tools", "Brief", "Loop", "Perms"]);
+    expect(tabs).toEqual([
+      "Duty",
+      "Input",
+      "Output",
+      "Skills",
+      "Tools",
+      "Brief",
+      "Loop",
+      "Perms",
+      "Reflection",
+    ]);
     expect(host.querySelector("input[name='budget']")).toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     clickButton(host, "Skills");
@@ -311,6 +321,85 @@ describe("P12-T04 select-then-configure + add member", () => {
       /prev-grant-1/,
     );
     expect(host.querySelector("a[href*='preview=prev-grant-1']")).not.toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("posts reflection.generate then runtime preview and never Admit", async () => {
+    const { host, root, calls } = await renderMember("#/projects/proj-1/members/emp-1", {
+      "GET /management/project/v1/roster": READY_ROSTER,
+      "POST /management/project/v1/reflection.generate": {
+        status: 200,
+        body: {
+          status: "ok",
+          generated: [
+            {
+              candidate_id: "cand-1",
+              kind: "incident",
+              source: "attempt-terminal",
+              employee_id: "emp-1",
+              completion_claimed: false,
+            },
+          ],
+        },
+      },
+      "GET /management/project/v1/reflection.list": {
+        status: 200,
+        body: {
+          status: "ok",
+          candidates: [
+            {
+              candidate_id: "cand-1",
+              kind: "incident",
+              source: "attempt-terminal",
+              employee_id: "emp-1",
+              completion_claimed: false,
+            },
+          ],
+        },
+      },
+      "POST /management/project/v1/reflection.improve.propose": {
+        status: 200,
+        body: {
+          status: "ok",
+          preview_id: "prev-runtime-1",
+          preview_digest: "digest-runtime",
+          improvement_id: "improve-1",
+          state: "preview",
+          granted: false,
+        },
+      },
+    });
+    clickButton(host, "Reflection");
+    await flush();
+    expect(host.querySelector("[data-region='opc-member-reflection']")).not.toBeNull();
+    expect(host.textContent).toMatch(/cannot apply a revision/i);
+    clickButton(host, "Generate from facts");
+    await flush();
+    expect(
+      calls.some((call) => call.pathname === "/management/project/v1/reflection.generate"),
+    ).toBe(true);
+    const prompt = host.querySelector("[data-region='opc-member-reflection'] input:not([type='radio'])");
+    expect(prompt).not.toBeNull();
+    act(() => {
+      const native = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, "value");
+      native?.set?.call(prompt, "tighten research");
+      prompt?.dispatchEvent(new Event("input", { bubbles: true }));
+    });
+    clickButton(host, "Request runtime preview");
+    await flush();
+    const propose = calls.find(
+      (call) => call.pathname === "/management/project/v1/reflection.improve.propose",
+    );
+    expect(propose?.body).toMatchObject({
+      candidate_id: "cand-1",
+      proposed_prompt: "tighten research",
+    });
+    expect(host.querySelector("[data-region='opc-reflection-previewed']")?.textContent).toMatch(
+      /prev-runtime-1/,
+    );
+    expect(host.querySelector("a[href*='preview=prev-runtime-1']")).not.toBeNull();
+    expect(host.textContent).not.toMatch(/\bAdmit\b/);
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });

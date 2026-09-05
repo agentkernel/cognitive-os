@@ -498,8 +498,16 @@ personal_requirements:
     # writer; chat has no Approve; secret-shaped body refused → Settings; @ only
     # into the unsent draft; speech rules are daemon record kinds) is implemented
     # and exercised live on DEV-LINUX-NATIVE-01 + required CI (PR #316, 7ae9db50);
-    # rendered /ui/ review is P13-T12/D02. evidence_status stays not-run until
-    # P13-T11 (reflection) closes its clause.
+    # rendered /ui/ review is P13-T12/D02.
+    # 2026-09-05: the P13-T11 clause (daemon-generated reflection candidates
+    # from Attempt / verification / evidence / occurrence facts; Member Runtime
+    # improvement is a new Employee revision after Owner preview confirm and
+    # is rollbackable; cross-Project Role Template needs Owner confirm and
+    # copies no Employee; model self-report / implicit Blueprint / running
+    # Attempt injection / reflection-as-completion / silent reuse refused) is
+    # implemented and exercised on DEV-LINUX-NATIVE-01 + required CI (PR #320,
+    # fold HEAD 3bb9b050). evidence_status stays not-run until P13-T13
+    # backfills Windows-native cells in sibling clauses.
     evidence_status: not-run
 
   - id: PERS-PR-050

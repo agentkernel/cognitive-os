@@ -37,7 +37,7 @@ tests:
   - personal/apps/admin-cli/tests/p2_t32_public_daemon_start_scheduler.rs
   - personal/crates/cognitive-store/tests/p1_t01_layout_migrations.rs
   - personal/crates/cognitive-store/tests/p11_t02_windows_host.rs
-fingerprint: "sha256:d0671a407e3d7b315385e2fa045f7121e6a2fe8cc748f4b3c072664dd1ec7362"
+fingerprint: "sha256:f87bd697910ef94b16069d339ea9fbc66e91d05118ea3186e2c54675a3243750"
 non_claims:
   - "`ready` is a configuration/liveness projection, not a live Provider or end-to-end guarantee. Backup/restore excludes secrets and does not copy authority SQLite."
 ---
@@ -215,6 +215,15 @@ product path is:
   backup/restore below.
 
 The step index is [Linux RC operator map](rc-and-support.md).
+
+## Reflection and Member Runtime — `partial`
+
+Daemon `/ui/` Member configuration has a Reflection tab. Generate from facts
+calls `POST /management/project/v1/reflection.generate`. A model self-report is
+not an improvement. Request runtime preview mints a `member-runtime-revision`
+canvas; Apply is Owner canvas Confirm only (no Admit). Rollback appends a new
+Employee revision. Role Template preview does not copy the Member into another
+Project. Task-channel aliases return 403.
 
 ## Backup and restore — `partial`
 
