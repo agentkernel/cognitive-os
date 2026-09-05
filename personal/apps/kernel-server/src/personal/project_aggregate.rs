@@ -2779,6 +2779,200 @@ mod tests {
     }
 
     #[test]
+    fn dual_track_http_join_seats_ring_slots_and_refuses_chat() {
+        let (_tmp, store) = authority();
+        let created = handle(
+            "POST /management/project/v1/draft.create",
+            json!({
+                "payload": "Alpha",
+                "charter": dual_track_charter("Alpha")
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(created.status, 200, "{}", created.body);
+        let draft_id = serde_json::from_str::<Value>(&created.body)
+            .unwrap()
+            .get("draft_id")
+            .and_then(Value::as_str)
+            .expect("draft_id")
+            .to_owned();
+        let previewed = handle(
+            "POST /management/project/v1/preview.request",
+            json!({
+                "subject_kind": "activation",
+                "subject_ref": draft_id
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(previewed.status, 200, "{}", previewed.body);
+        let preview_json = serde_json::from_str::<Value>(&previewed.body).unwrap();
+        let preview_id = preview_json
+            .get("preview_id")
+            .and_then(Value::as_str)
+            .expect("preview_id");
+        let preview_digest = preview_json
+            .get("preview_digest")
+            .and_then(Value::as_str)
+            .expect("preview_digest");
+        let confirmed = handle(
+            "POST /management/project/v1/confirm",
+            json!({
+                "preview_id": preview_id,
+                "preview_digest": preview_digest
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(confirmed.status, 200, "{}", confirmed.body);
+        let list_json = serde_json::from_str::<Value>(
+            &handle("GET /management/project/v1/list", b"", &store).body,
+        )
+        .unwrap();
+        let project_id = list_json["projects"][0]["project_id"]
+            .as_str()
+            .expect("project_id")
+            .to_owned();
+        let axis = handle(
+            &format!("GET /management/project/v1/axis?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(axis.status, 200, "{}", axis.body);
+        assert!(
+            axis.body.contains("\"responsible_slot\":\"collect\""),
+            "{}",
+            axis.body
+        );
+        assert!(
+            axis.body.contains("\"responsible_slot\":\"analyze\""),
+            "{}",
+            axis.body
+        );
+        assert!(
+            axis.body.contains("\"responsible_slot\":\"draft\""),
+            "{}",
+            axis.body
+        );
+        assert!(
+            !axis.body.contains("\"responsible_slot\":\"owner\""),
+            "{}",
+            axis.body
+        );
+        let detail_json = serde_json::from_str::<Value>(
+            &handle(
+                &format!("GET /management/project/v1/detail?project_id={project_id}"),
+                b"",
+                &store,
+            )
+            .body,
+        )
+        .unwrap();
+        let plan_id = detail_json["plan"]["plan_revision_id"]
+            .as_str()
+            .expect("plan_revision_id")
+            .to_owned();
+        let fake = handle(
+            "POST /management/project/v1/roster.register",
+            json!({
+                "project_id": project_id,
+                "plan_revision_id": plan_id,
+                "proposals": [{
+                    "slot": "manager",
+                    "specialization": "project-manager",
+                    "prompt": "fake G1 manager",
+                    "tools_declared": ["workspace-write"]
+                }]
+            })
+            .to_string()
+            .as_bytes(),
+            &store,
+        );
+        assert_eq!(fake.status, 422, "{}", fake.body);
+        let body = json!({
+            "project_id": project_id,
+            "plan_revision_id": plan_id,
+            "proposals": [
+                {
+                    "slot": "collect",
+                    "specialization": "member",
+                    "prompt": "collect",
+                    "tools_declared": ["workspace-write"]
+                },
+                {
+                    "slot": "analyze",
+                    "specialization": "member",
+                    "prompt": "analyze",
+                    "tools_declared": ["workspace-write"]
+                },
+                {
+                    "slot": "draft",
+                    "specialization": "member",
+                    "prompt": "draft",
+                    "tools_declared": ["workspace-write"]
+                }
+            ]
+        })
+        .to_string();
+        let chat = handle(
+            "POST /task/project/v1/roster.register",
+            body.as_bytes(),
+            &store,
+        );
+        assert_eq!(chat.status, 403, "{}", chat.body);
+        let registered = handle(
+            "POST /management/project/v1/roster.register",
+            body.as_bytes(),
+            &store,
+        );
+        assert_eq!(registered.status, 200, "{}", registered.body);
+        let ids = serde_json::from_str::<Value>(&registered.body)
+            .unwrap()
+            .get("employee_ids")
+            .and_then(Value::as_array)
+            .expect("employee_ids")
+            .iter()
+            .filter_map(Value::as_str)
+            .map(str::to_owned)
+            .collect::<Vec<_>>();
+        assert_eq!(ids.len(), 3, "{}", registered.body);
+        for employee_id in &ids {
+            let seat = handle(
+                "POST /management/project/v1/employee.seat.request",
+                json!({"employee_id": employee_id}).to_string().as_bytes(),
+                &store,
+            );
+            assert_eq!(seat.status, 200, "{}", seat.body);
+            let confirm = handle(
+                "POST /management/project/v1/employee.seat.confirm",
+                json!({"employee_id": employee_id, "model_binding": "flash", "accept": true})
+                    .to_string()
+                    .as_bytes(),
+                &store,
+            );
+            assert_eq!(confirm.status, 200, "{}", confirm.body);
+        }
+        let roster = handle(
+            &format!("GET /management/project/v1/roster?project_id={project_id}"),
+            b"",
+            &store,
+        );
+        assert_eq!(roster.status, 200, "{}", roster.body);
+        for employee_id in &ids {
+            assert!(roster.body.contains(employee_id), "{}", roster.body);
+        }
+        assert!(
+            roster.body.contains("\"state\":\"seated\""),
+            "{}",
+            roster.body
+        );
+    }
+
+    #[test]
     fn roster_is_empty_before_employees() {
         let (_tmp, store) = authority();
         let plane = ProjectAggregateStore::from_authority_store(&store);

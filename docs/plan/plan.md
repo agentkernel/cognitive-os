@@ -2346,7 +2346,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T04 — 成员加入落在真实 PlanRevision 槽
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `done`. Claim ceiling `hypothesis`. PR [#331](https://github.com/agentkernel/cognitive-os/pull/331). D01 Dual Track + D02 guest `/ui/` J4. Unique next: T05/D02 and/or T06/D02 on freed guest `:48681`. Do not claim T07/T08.
 - **EVAL-016:** J4.
 - **依赖:** P14-T03。
 - **垂直切片:** D01：激活后 responsible slots 存在；write join 落席；failure-first：无槽仍假装加入、聊天 Approve 被拒。
@@ -2358,7 +2358,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T05 — 从 Project chrome 走 2.0 Attempt / Runs / Outputs
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T05/D01`. Draft PR [#332](https://github.com/agentkernel/cognitive-os/pull/332) at `d72c2847`.
 - **EVAL-016:** J14 + empty Runs/Outputs.
 - **依赖:** P14-T03；P13-T02；P13-T04。
 - **垂直切片:** D01：Project chrome 启动 2.0 Attempt（非 `#/work`）；Runs/Outputs 读真实 ledger/产物或诚实 empty。
@@ -2369,7 +2369,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T06 — Today live 决策包 + 每 Project 运行概览
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T06/D01`. Draft PR [#333](https://github.com/agentkernel/cognitive-os/pull/333) at `1c9941c6`.
 - **EVAL-016:** J2.
 - **依赖:** P14-T03；P12-T05；P13-T05.
 - **垂直切片:** D01：激活后 Today 决策包 + 每 live Project 一行；failure-first：KPI 墙、未激活仍画 live 包。

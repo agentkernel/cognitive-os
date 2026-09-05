@@ -14,23 +14,13 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 
 ## Unique next action
 
-Push this D01 Dual Track checkpoint; keep Draft PR; unique next is `P14-T06/D02` guest `/ui/` J2 + `JOURNEY-BROWSER-SYNC-01` after required CI on this HEAD. Do not deploy `:48681` until D02. T04 owns guest `:48681`. Plan-file snapshot is blocked by T04 lease (see below).
+`P14-T06/D02` guest `/ui/` J2 + `JOURNEY-BROWSER-SYNC-01` **after T05 releases guest `:48681`**. Do not deploy or replace `:48681`. Do not start J2 this turn. Keep Draft PR [#333](https://github.com/agentkernel/cognitive-os/pull/333).
 
-## Wait-gate / plan-file lock
+## Wait-gate / guest lock
 
-T04 lists `docs/plan/PROGRESS.md`, `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md`, and `docs/plan/plan.md`. Those paths are **not** in this lease. Snapshot text to apply when the lock lifts (T04 last-merger or T04 heartbeat releasing those files):
+T04 last-merger on `origin/main@a6247f09` (PR [#331](https://github.com/agentkernel/cognitive-os/pull/331)) already recorded T04 **done**, T05 **in-progress** (PR [#332](https://github.com/agentkernel/cognitive-os/pull/332)), T06 **in-progress** (PR [#333](https://github.com/agentkernel/cognitive-os/pull/333)). Plan-file lock is lifted. This fold keeps those three facts and the T05 lease row (A8).
 
-**PARALLEL-LANES** (this branch already has the T06 row adjacent to DOC-REFRAME; last-merger must keep T04 + T05 if claimed + T06 + DOC-REFRAME adjacent, no blank line).
-
-**PROGRESS.md Current snapshot** (blocked; persist here):
-
-- Header: `P14-T06 in-progress` (`P14-T06/D01` Dual Track Today live packets).
-- New/updated row: P14-T06 Today live packets — **in-progress** — lease `lease/personal/P14-T06/today-packets` on `personal/P14-T06-today-packets`. Unique Slice `P14-T06/D01`. Failure-first Dual Track: KPI wall refused; unactivated titled Project does not paint live packets; T13 empty chrome is not packet acceptance. After titled live Project, Today = packets (every live `subject_ref`) + one overview row per live Project, not continue-create. Claim ceiling `hypothesis`. [this report].
-- Active task lease: add **active** `` `lease/personal/P14-T06/today-packets` `` on `personal/P14-T06-today-packets` (`P14-T06/D01`) alongside T04 if still active and DOC-REFRAME. Do not drop T04’s `lease/personal/P14-T04/member-join`.
-- Layer 2: `` `P14-T06/D01` `` → `in-progress` (unique in-progress Slice for T06). `` `P14-T06/D02` `` stays `ready`.
-- Layer 1: Phase 14 Remaining stays T04–T06 until T04/T05/T06 close; T06 status `in-progress`.
-
-**PERSONAL-DEVELOPMENT-PLAN.md / plan.md** (blocked): P14-T06 `in-progress`; `P14-T06/D01` in-progress.
+T05 is using guest `:48681` for T05/D02. T06 must not deploy, replace, or walk that daemon. `P14-T06/D02` stays `ready` until T05 releases `:48681`.
 
 ## Isolation
 
@@ -58,9 +48,10 @@ Not taken: T04 member-join store/HTTP/AddMember; T05 Project chrome Attempt / Ru
 | 2026-09-06 | Dual Track `todayLivePackets` + `todayPackets` + `todayOverview` + `opcIa` | **pass** 38/38 | vitest | worktree | after HITL_KEY mirror for `opc-rail-hitl` |
 | 2026-09-06 | `clients/pc/web` `pnpm test` | **pass** 74 files / 533 tests | Node | worktree | development evidence only |
 | 2026-09-06 | `clients/pc/web` `pnpm build` | **pass** | tsc + vite | worktree | first tsc fail TS2345 loading fallback; typed `Projection[]`; bundle `index-SUbyu6TL.js` |
-| 2026-09-06 | Guest `/ui/` J2 / `JOURNEY-BROWSER-SYNC-01` / replace `:48681` | **not-run** | T04 owns guest; D02 | — | this turn is Dual Track only |
+| 2026-09-06 | Guest `/ui/` J2 / `JOURNEY-BROWSER-SYNC-01` / replace `:48681` | **not-run** | T05 owns guest for D02 | — | T06 must not deploy/replace `:48681` |
 | 2026-09-06 | Local MSVC `cargo` | **not-run** | no Rust change; Dual Track TS is the registered D01 surface | — | override set; not used as supported validation |
-| 2026-09-06 | `PROGRESS.md` / formal plan / `plan.md` snapshot | **blocked** | T04 lease owns those files | — | text persisted in this report |
+| 2026-09-06 | `PROGRESS.md` / formal plan / `plan.md` snapshot | **blocked** then **lifted** | T04 merged PR [#331](https://github.com/agentkernel/cognitive-os/pull/331) at `main@a6247f09` already recorded T04 done / T05+T06 in-progress | `a6247f09` | this fold keeps those facts; T05 lease row retained |
+| 2026-09-06 | Fold `origin/main@a6247f09` (T04) into `personal/P14-T06-today-packets`; keep T05 lease adjacent; D02 blocked on T05 guest | recorded | T06 worktree only | fold | no J2; Draft PR [#333](https://github.com/agentkernel/cognitive-os/pull/333) |
 
 ## D01 Dual Track mapping
 
