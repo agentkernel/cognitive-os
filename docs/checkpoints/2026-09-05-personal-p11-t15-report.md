@@ -10,10 +10,12 @@
 - Claim ceiling: `hypothesis`. Not Gate / release / Profile / B01-W / signed installer / prototype-completeness mutex.
 - Evaluation routing: **OFF**
 - Denominator: **frozen** at claim from [plan.md](../plan/plan.md) `P11-T15` card scenes 1–15. N=15 is not replaceable.
+- Draft PR: [#325](https://github.com/agentkernel/cognitive-os/pull/325)
+- Task HEAD: `85e2821e` (claim) + cell-2 report follow-up
 
 ## Unique next action
 
-Continue `P11-T15/D01`: retain every started cell; independent review after the grid is complete; Draft PR; required CI on the to-merge HEAD. Do not auto-release.
+Continue `P11-T15/D01`: retain every started cell; required CI on the to-merge HEAD of Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325). Do not auto-release. Cells 3–15 remain honest `not-run` (missing live Provider / Pi / sandbox / sleep / host FS).
 
 ## Frozen N=15 preregistration (claim 2026-09-05)
 
@@ -45,14 +47,15 @@ Oracle = the scene text in plan.md T15. Record format = this table (`pass` / `fa
 | 2026-09-05 | Lease claim `lease/personal/P11-T15/windows-opc-acceptance` | recorded | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` | REFRAME product-doc lease retained; writable paths do not overlap. N=15 frozen above. |
 | 2026-09-05 | Unrendered `install.ps1` re-run | **pass** (fail-closed) | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` | system PowerShell exit **64**; stderr `release policy is not rendered`. Not a release installer. |
 | 2026-09-05 | `kernel-server --test p13_t13_windows_native_host` | **pass 2/2** | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` | Live unsigned daemon admits Windows `Personal Home`; GNU 422; task 403; `daemon.bind`; `/ui/` 503 without bundle / 200 with fixture `data/cognitiveos/ui/index.html`. |
-| 2026-09-05 | `cognitive-secret --test p7_t07_windows_credential_store` | **pass 7/7** | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` | Real Credential Manager round-trip with synthetic non-production bytes (~245s). Not Settings `connection.connect`. |
+| 2026-09-05 | Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325) | recorded | GitHub | `85e2821e` | Claim/status + handbook routing. Required CI started (resolve **SUCCESS**; ubuntu/windows in progress). |
+| 2026-09-05 | Dual Track empty Home dump-dom | **pass** | `DEV-WINDOWS-NATIVE-OPC-01` | `4ca9b046` product + local `clients/pc/web` dist | Disposable `kernel-server --personal` `:48791`; dist copied to runtime `data/cognitiveos/ui`; host Chrome headless CDP; session gate from file (never printed). `[data-page=opc-today]`; Start create → `#/projects/new`; empty-home copy; rail hidden; L1 Today/Projects/Knowledge; Team=0; Inbox=0; 0 fake Create/Activate/Approve. Honesty copy contains “Vite is not the product origin” (not a Vite preview). |
 
 ## N=15 cell grid (started; retain every cell)
 
 | # | Result | Why (this host, `4ca9b046`) |
 |---|---|---|
 | 1 | **partial** | Unsigned bootstrap **pass** (exit 64) + live daemon admit + Personal Home **pass**. Tray **not-run** (`tray_proves_work=false`; no tray binary). Scene requires tray 就位, so the cell is not pass. |
-| 2 | **not-run** | Fixture `/ui/` 200 is not Dual Track empty-Home chrome. Product `clients/pc/web` dump-dom not executed on this host this session. |
+| 2 | **pass** | Product-origin daemon `/ui/` Dual Track empty Home on this host (Chrome headless CDP). Only-create + rail hidden + no fake buttons + no Team/Inbox L1. Fixture `/ui/` is not this cell. |
 | 3 | **not-run** | Live Settings `connection.connect` / real Provider not invoked (no new SecretStore Provider entry). Credential Manager backend **pass 7/7** at this revision is not this scene. |
 | 4 | **not-run** | Windows Pi route remains unqualified; five-step wizard with real `assistant.turn` not run on this host. |
 | 5 | **not-run** | No live Project on a disposable T15 runtime; four-submenu native chrome not exercised. |
@@ -71,12 +74,13 @@ Started cells: **15/15**. `not-run` is never pass.
 
 ## Independent review (second pass, same session)
 
-Re-read the frozen 15 oracles against the cell grid without changing any judgement:
+Re-read the frozen 15 oracles against the cell grid without changing any judgement except cell 2, which was executed after the first pass:
 
 - Cell 1 stays **partial** (tray missing). Not upgraded to pass.
-- Cells 2–15 stay **not-run**. None rewritten as pass. Linux/CI/WSL/GNU evidence was not used as a Windows native pass.
+- Cell 2 is **pass** on Dual Track empty Home (this host, product `/ui/`). Not rewritten from Linux T12 dump-dom.
+- Cells 3–15 stay **not-run**. None rewritten as pass. Linux/CI/WSL/GNU evidence was not used as a Windows native pass.
 - SecretStore 7/7 is bound to cell 3's *backend* note only; the scene remains **not-run**.
-- Zero critical A1–A8 observed in this session (no secret in git/chat/argv/evidence; daemon-only admit path).
+- Zero critical A1–A8 observed in this session (no secret in git/chat/argv/evidence; daemon-only admit path; bootstrap file deleted after dump-dom).
 - Denominator still 15. Not Gate / release / Profile.
 
 Independent review **pass** as a non-claim integrity check of the grid. Product scenes that remain `not-run` are capability gaps, not T15 failures.

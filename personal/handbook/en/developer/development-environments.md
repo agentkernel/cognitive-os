@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:da049e1058389f0f6827e966a85bdf46302fb8d300f78c4b4b3052076a30912f"
+fingerprint: "sha256:ae40674151ddaa54c7d4e433d65b41928b66bf602ed26477e47bba46cc9295f2"
 non_claims:
   - Environment capability ceilings are owned by the environments registry; this page routes, it does not extend claims.
 ---

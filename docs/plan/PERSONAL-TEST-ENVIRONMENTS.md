@@ -215,7 +215,7 @@ Profile / B01-W product environment. Do not invent environment IDs.
 | P11-T12 Provider/honest usage | required CI plus qualified Windows SecretStore/daemon-proxy/usage route; unknown cost ≠ 0; member budget not current chrome | raw env/plaintext credential; member-level budget stop as 2.0.0 chrome |
 | P11-T13 OPC UI | client tests/contract mock/empty states plus daemon-served `/ui/`; NVDA/200%/host-theme contrast hung `not-run`; Dual Track after T03 HTTP stable | Vite preview as product origin; claiming full IA before Project authority |
 | P11-T14 X connector | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` plus exact-revision `DEV-LINUX-NATIVE-01` store/HTTP. Live X/Twitter API/account/CAPTCHA/platform qualification = `Requires-environment` / `not-run` | CAPTCHA/fingerprint/anti-abuse evasion; Linux CI as platform qualification |
-| P11-T15 fixed acceptance | **in-progress** on qualified `DEV-WINDOWS-NATIVE-OPC-01` at exact `main@4ca9b046`; N=15 frozen 2026-09-05; cell 1 **partial**, cells 2–15 **not-run** | ordinary CI, local GNU, Linux, WSL, Canvas; Linux cells standing in for Windows scenarios |
+| P11-T15 fixed acceptance | **in-progress** on qualified `DEV-WINDOWS-NATIVE-OPC-01` at exact `main@4ca9b046`; N=15 frozen 2026-09-05; cell 1 **partial**, cell 2 Dual Track empty Home **pass**, cells 3–15 **not-run**; Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325) | ordinary CI, local GNU, Linux, WSL, Canvas; Linux cells standing in for Windows scenarios |
 
 ### 5.2 Phase 13 completion validation route
 

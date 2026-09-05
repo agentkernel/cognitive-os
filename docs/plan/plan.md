@@ -1708,7 +1708,7 @@ formal acceptance.
 
 ### P11-T15 — Fixed-denominator Windows OPC acceptance (in-progress; Phase 13 验收出口)
 
-- **status:** `in-progress` (2026-09-05; exact `main@4ca9b046`; lease `lease/personal/P11-T15/windows-opc-acceptance`; N=15 frozen; cell 1 **partial**, cells 2–15 **not-run**; [report](../checkpoints/2026-09-05-personal-p11-t15-report.md)).
+- **status:** `in-progress` (2026-09-05; exact `main@4ca9b046`; lease `lease/personal/P11-T15/windows-opc-acceptance`; Draft PR [#325](https://github.com/agentkernel/cognitive-os/pull/325); N=15 frozen; cell 1 **partial**, cell 2 **pass**, cells 3–15 **not-run**; [report](../checkpoints/2026-09-05-personal-p11-t15-report.md)).
 - **2.0.0 表面:** N=15 固定分母已在领取时冻结。**不是** Phase 12 prototype completeness mutex。不自动
   release。
 - **依赖:** `acceptance_requires` = **`P13-T02..T13` done** + `P13-T13` 已把
