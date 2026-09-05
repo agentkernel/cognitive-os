@@ -12,7 +12,7 @@
 
 ## Unique next action
 
-Checkpoint + push Draft PR; wait required CI on the to-merge HEAD; then close T13 (ready/merge/lease). Do not claim `P11-T15` until T13 is merged.
+Consumed. T13 is ready to merge on green required CI. Claim `P11-T15` after merge. Do not auto-release.
 
 ## Host pins recorded 2026-09-05 (`DEV-WINDOWS-NATIVE-OPC-01`)
 

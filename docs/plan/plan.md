@@ -2270,7 +2270,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T13 — Windows native host qualification + hung native E2E backfill
 
-- **status:** `in-progress` (claimed 2026-09-05; lease `lease/personal/P13-T13/windows-native-qualification`; branch `personal/P13-T13-windows-host`; `P13-T13/D01` **done** D01-qualified; `P13-T13/D02` hung cells accounted). Designation merged PR [#323](https://github.com/agentkernel/cognitive-os/pull/323) at `main@08d62e8d`. Unique next: required CI then close. [report](../checkpoints/2026-09-05-personal-p13-t13-report.md).
+- **status:** `done` (2026-09-05; PR [#324](https://github.com/agentkernel/cognitive-os/pull/324); `P13-T13/D01` D01-qualified `DEV-WINDOWS-NATIVE-OPC-01`; `P13-T13/D02` hung cells accounted; validated implementation `bcd8746b` required CI [33960301310](https://github.com/agentkernel/cognitive-os/actions/runs/33960301310) **SUCCESS**; lease closed → PARALLEL-LANES §3.1). Unique next: claim `P11-T15`. [report](../checkpoints/2026-09-05-personal-p13-t13-report.md); [closure](../checkpoints/2026-09-05-personal-p13-t13-closure.md).
 - **2.0.0 表面:** 无新 chrome；把所有 `Requires-environment` / `not-run` 变成真实
   pass / fail。
 - **依赖:** 本机已由 owner 2026-09-05 指定为项目运行测试宿主（不要求 Windows 11；
