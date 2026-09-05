@@ -83,7 +83,10 @@ current fact of the code.
   Windows native environment is D01-qualified on this local host (2026-09-05);
   hung native cells without a capability remain `not-run`. Formal-plan **Phase 13**
   (`P13-T01`–`T13`) owns these gaps card by card; Phase 13 done is still not
-  release / signing / B01-W. `P13-T03` closed the hidden Pi assistant gap: its
+  release / signing / B01-W. Closed EVAL-016 then showed live `/ui/` still
+  fails the 小白 Owner job vs frozen v9; **Phase 14** (`P14-T01`–`T08`) is the
+  residual gap-close. Each closed journey must re-test on daemon `/ui/` under
+  `JOURNEY-BROWSER-SYNC-01`. `P13-T03` closed the hidden Pi assistant gap: its
   four turns now really run the exact pinned Pi through the daemon Provider
   proxy (Linux evidence only; the Windows Pi route stays `not-run` until
   `P13-T13`), and an unbound Provider yields a Settings pointer, not a chat box.

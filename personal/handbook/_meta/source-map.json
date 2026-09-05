@@ -212,7 +212,7 @@
         "personal/docs/architecture/personal-2.0.0-dev-prep-index.md"
       ],
       "docs": ["dev.architecture-overview", "ai.docs-impact"],
-      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only. P12-T01–T09 done; T15 independent / not-started. Not implementation, Gate, or a T15 claim."
+      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only. P12-T01–T09 done; Phase 13 done; Phase 14 residual `/ui/` gap-close registered. Not implementation, Gate, or a T15 claim."
     },
     {
       "id": "dsh-recovery-docs",

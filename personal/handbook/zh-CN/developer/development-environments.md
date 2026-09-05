@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:fec2fb4cddd9598700a555cef98872033b0e5a89ec53b6e5d0e19b0a4f6fdb68"
+fingerprint: "sha256:182f25cef20fd9c6f145ab1f3350c8782b65fcf6e754616f30e4d69688d3d2a4"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -48,6 +48,8 @@ UI 用 `DEV-WIN-GNU-01` TS 加 required CI；产品 chrome 原生 UI E2E 仍 `no
 exact-revision guest daemon `/ui/`（SSH 隧道）只是 implementation evidence；
 `DOC-LOCAL-RUNTIME-HOST`（2026-09-05）已把本机指定为 `DEV-WINDOWS-NATIVE-OPC-01`
 （OS 版本不是供给门槛）。`P13-T13/D01` 已于 2026-09-05 资格化 unsigned 路径；
+Phase 14 `/ui/` 旅程闭环走 **`JOURNEY-BROWSER-SYNC-01`**（§5.4）：exact-revision guest
+daemon `/ui/`（owner SSH 隧道），不是 Vite；回归包随任务增长。
 D02 已逐格记 pass/fail/`not-run`。`P11-T15` 在 T13 收口后 **done**。本机 cargo、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
 Gate/release；`not-run` 保持 `not-run`。
 

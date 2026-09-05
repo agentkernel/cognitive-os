@@ -159,7 +159,7 @@ REQ/F/IMP；没有关联时说明原因。写入前必须持有精确路径的�
 | TypeScript（`core/packages/**`、`personal/packages/**`、`personal/apps/agent-shell`、`tools/**`） | `pnpm -r build`；`pnpm -r test` | 同左（CI 复跑） | 映射页；`tools/` 变化联动 `meta.sync-policy` / `dev.conformance-testing` |
 | `clients/pc/web/**` | `pnpm test`、`pnpm build`（在该目录） | daemon `/ui/` 静态服务测试（Rust） | `clients/docs/**` 自有治理 |
 | `personal/handbook/**` | `node tools/src/check-handbook.mjs`；`node tools/src/generate-handbook.mjs --check`；手写页改后 `node tools/src/fill-handbook-fingerprints.mjs` | — | 双语同改；生成页只能重生成 |
-| `docs/plan/**`、`docs/governance/**`、`AGENTS.md`、`.cursor/rules/**` | `pnpm run check:consistency`；`pnpm run check:rules` | — | 需 DOC/GOV lease；规则只摘要不定义第二套语义 |
+| `docs/plan/**`、`docs/governance/**`、`AGENTS.md`、`.cursor/rules/**` | `pnpm run check:consistency`；`pnpm run check:rules` | — | 需 DOC/GOV lease；规则只摘要不定义第二套语义。Phase 14 `/ui/` 闭环另走 `JOURNEY-BROWSER-SYNC-01`（正式计划命名节 + 环境登记 §5.4；产品源 = daemon `/ui/`） |
 | `.github/**`、根 manifests、`tools/package.json` | `pnpm run check:rules`；相关 handbook 页 | CI 自身 | `dev.contributing-workflow` / `dev.dev-environments` / `ai.validation-commands` + 指纹 |
 
 Ready/merge 前额外：`node tools/src/check-handbook.mjs`、`node tools/src/generate-handbook.mjs --check`、

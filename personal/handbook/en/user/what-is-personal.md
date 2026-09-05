@@ -112,6 +112,9 @@ hidden-Pi inference, openable outputs and publication preview, runs/routine
 loop, group-chat routing, Knowledge/Memory/Settings surfaces, lifecycle and
 restore points, reviewed Skill/MCP grants, reflection, visual/a11y
 qualification, and Windows native host qualification. `P11-T15` is its exit;
-it is not the prototype-completeness mutex and not release. Canvas and ordinary
+it is not the prototype-completeness mutex and not release. **Phase 14**
+(`P14-T01`–`T08`) closes the residual live-`/ui/` gap measured by EVAL-016
+versus frozen v9; each closed journey is re-tested on daemon `/ui/`
+(`JOURNEY-BROWSER-SYNC-01`). Canvas and ordinary
 CI do not execute or promote it. There is no human desirability, usability, adoption, willingness-to-pay,
 support, release, Gate, Profile or Agent-benefit evidence.

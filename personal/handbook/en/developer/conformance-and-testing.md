@@ -107,6 +107,10 @@ identical edge sets (solid vs dashed included; ids normalized by dropping the
 `P13`/`P11` prefix) — a missing or extra edge is `BUILD_ORDER_EDGE_MISSING` /
 `BUILD_ORDER_EDGE_EXTRA`; the formal plan is authoritative and is never edited
 to match the index.
+Phase 14 mermaid lives in a **new** section (`### Phase 14 - …` /
+`### Phase 14 build order`) and is **not** part of that P0-T09 comparison.
+Phase 14 `/ui/` journey closes use the Personal-plan convention
+`JOURNEY-BROWSER-SYNC-01` (not a second Operating Model ID).
 
 The handbook adds its own checker
 (`check-handbook.mjs`) and generator drift gate — see

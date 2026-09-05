@@ -3,8 +3,8 @@
 > **项目身份：** `cognitiveos-personal` 是本仓库当前唯一活动实现项目。原 CognitiveOS
 > 设计、规范、符合性资产和通用内核是本项目的架构/合同基础，不是并行产品 backlog。
 > 边界与来源优先级见 [PROJECT-IDENTITY.md](../governance/PROJECT-IDENTITY.md)。
-> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T02` `done`（2026-09-03 托管 DSH 真实 Attempt 循环，merged PR #310 at `main@d8a002ea`；Windows sandbox/ACL/supply-chain 格仍 `not-run` 至 P13-T13）；`P13-T03` `done`（2026-09-03 隐藏 Pi 助手真实推理，merged PR #311 at `main@7f9b4115`；Windows Pi 路由仍 `not-run` 至 P13-T13）；`P13-T04` `done`（2026-09-03 独立验证 + 产出可打开 + 发布包预览，merged PR #313 at `main@a5d4040c`；宿主打开文件格仍 `not-run` 至 P13-T13）；`P13-T12` **done**（`P13-T12/D01` 视觉规格 + v9 对照清单 documentation-only `done`，PR #308；D02 rendered `/ui/` 逐格记账 `done`，PR #322，fold `bba4aa47` required CI [33951377929](https://github.com/agentkernel/cognitive-os/actions/runs/33951377929) **SUCCESS**）；`P13-T05` **done**（merged PR #315 at `main@90437cb4`；lease closed）；`P13-T06` **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；`P13-T07` **done**（labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease 本交付关闭）；`P13-T10` **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；`P13-T08` `done`（Settings completeness，merged PR #317 at `main@22718d74`；live SecretStore 12/12 at `8b71fb8d`；fold `b6bc5ea8`）；`P13-T09` **done**（项目生命周期 copy/archive/delete/restore-point/export，PR #321；fold `0898af16` Linux native pass；lease 本交付关闭；Windows FS E2E `not-run` 至 P13-T13）；`P13-T11` **done**（merged PR #320 at `main@fa3c1dab`；lease closed）；`P13-T13` `done`（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；D01-qualified `DEV-WINDOWS-NATIVE-OPC-01`）；`P11-T15` 验收前置指向 Phase 13；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice **done**（merged PR #314 at `main@e9826f70`；owner 已选本机 override；Option A 已落地 89/62/27）、`P0-T09` 漂移机械校验 `done`（2026-09-03，merged PR #312 at `main@8badb83c`）、`DOC-P13-DRIFT-FIX` 文档对齐 `done`（PR #309）；既有 Gate 结论不变；Profile / Windows B01-W 未声明）**
-> **最后更新：2026-09-02**
+> **状态：active（既有 P0..P9 与 Linux 1.0 事实不变；P10-T01/T02 `done`，P10-T03..T18 在未启动状态下显式 `cancelled`；P11-T01..T14 `done`；`P11-T15` unparked 且 **不是** Phase 12 mutex；Phase 12：`P12-T01` documentation-only `done`；`P12-T02` `done`；`P12-T03` `done`；`P12-T04` `done`；`P12-T05` `done`；`P12-T06` `done`；`P12-T07` `done`；`P12-T08` `done`；`P12-T09` `done`；Phase 13 已登记：`P13-T01` documentation-only `done`；`P13-T02` `done`（2026-09-03 托管 DSH 真实 Attempt 循环，merged PR #310 at `main@d8a002ea`；Windows sandbox/ACL/supply-chain 格仍 `not-run` 至 P13-T13）；`P13-T03` `done`（2026-09-03 隐藏 Pi 助手真实推理，merged PR #311 at `main@7f9b4115`；Windows Pi 路由仍 `not-run` 至 P13-T13）；`P13-T04` `done`（2026-09-03 独立验证 + 产出可打开 + 发布包预览，merged PR #313 at `main@a5d4040c`；宿主打开文件格仍 `not-run` 至 P13-T13）；`P13-T12` **done**（`P13-T12/D01` 视觉规格 + v9 对照清单 documentation-only `done`，PR #308；D02 rendered `/ui/` 逐格记账 `done`，PR #322，fold `bba4aa47` required CI [33951377929](https://github.com/agentkernel/cognitive-os/actions/runs/33951377929) **SUCCESS**）；`P13-T05` **done**（merged PR #315 at `main@90437cb4`；lease closed）；`P13-T06` **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；`P13-T07` **done**（labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease 本交付关闭）；`P13-T10` **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；`P13-T08` `done`（Settings completeness，merged PR #317 at `main@22718d74`；live SecretStore 12/12 at `8b71fb8d`；fold `b6bc5ea8`）；`P13-T09` **done**（项目生命周期 copy/archive/delete/restore-point/export，PR #321；fold `0898af16` Linux native pass；lease 本交付关闭；Windows FS E2E `not-run` 至 P13-T13）；`P13-T11` **done**（merged PR #320 at `main@fa3c1dab`；lease closed）；`P13-T13` `done`（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；D01-qualified `DEV-WINDOWS-NATIVE-OPC-01`）；`P11-T15` 验收前置指向 Phase 13；**Phase 14 已登记（2026-09-05，`DOC-P14-GAP-CLOSE`）：`P14-T01` docs-only **done**；`P14-T02`–`T08` **`not-started`**（live `/ui/` → 冻结 v9 + [user-journeys](../../personal/docs/product/user-journeys.md)；`JOURNEY-BROWSER-SYNC-01`）；评测关闭 ≠ 自动领取 `P14-T02`**；2026-09-02 追加旁支：`P0-T01/D02` 工具链修复 Slice **done**（merged PR #314 at `main@e9826f70`；owner 已选本机 override；Option A 已落地 89/62/27）、`P0-T09` 漂移机械校验 `done`（2026-09-03，merged PR #312 at `main@8badb83c`）、`DOC-P13-DRIFT-FIX` 文档对齐 `done`（PR #309）；既有 Gate 结论不变；Profile / Windows B01-W 未声明；**Phase 14 已登记（2026-09-05）：** `P14-T01` docs-only **done**；`P14-T02`–`T08` **`not-started`**（`JOURNEY-BROWSER-SYNC-01`）；评测关闭 ≠ 自动领取 `P14-T02`；Phase 13 / `P11-T15` 状态不重开）**
+> **最后更新：2026-09-05**
 
 > **仓库子项目化与 1.0.0 定稿修订（2026-08-25，ADR-0054 / P0-T08）：** owner 指令将仓库
 > 重组为 `core/`、`personal/`、`enterprise/`、`clients/` 四个子项目目录（clients 自独立
@@ -14,7 +14,7 @@
 > 定义边界与激活门槛（[enterprise/docs/VERSION-1.0.0.md](../../enterprise/docs/VERSION-1.0.0.md)），
 > 不激活实现。该 **structural** 修订只移动路径并同步工具链/文档索引，不改变任何任务
 > 验收、Gate 结论、evidence 或 claim scope；1.0.0 定稿逐字保留各 Gate 的 MVP 声明上限。
-> **计划追踪 ID：** `P0-T01` 至 `P13-T13`（含后续登记的 `P2-T09..P2-T38`、`P8-T12..T15`、`P9-T05..P9-T12`、`P10-T05..T18`、`P11-T01..T15`、`P12-T01..T09`、`P13-T01..T13` 与 2026-09-02 登记的 `P0-T09` / `P0-T01/D02`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **计划追踪 ID：** `P0-T01` 至 `P14-T08`（含后续登记的 `P2-T09..P2-T38`、`P8-T12..T15`、`P9-T05..P9-T12`、`P10-T05..T18`、`P11-T01..T15`、`P12-T01..T09`、`P13-T01..T13`、`P14-T01..T08` 与 2026-09-02 登记的 `P0-T09` / `P0-T01/D02`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** [`docs/plan/plan.md`](plan.md)；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`docs/plan/plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
@@ -192,6 +192,20 @@
 > `P13-T04/D01` + `P13-T04/D02` `done`；lease 已关闭）；
 > `P13-T05` **done**（merged PR [#315](https://github.com/agentkernel/cognitive-os/pull/315) at `main@90437cb4`；lease closed）；`P13-T06` **done**（群聊 v39，PR #316；lease 已关闭）；`P13-T07` **done**（merged PR #319 at `main@015afcb8`；lease closed）；`P13-T10` **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；`P13-T08` `done`（Settings completeness，merged PR #317 at `main@22718d74`；live SecretStore 12/12 at `8b71fb8d`；fold `b6bc5ea8`）；`P13-T09` **done**（copy/archive/delete/restore-point/export，merged PR #321 at `main@7575ebcd`；lease closed）；`P13-T11` **done**（反思 + versioned Member Runtime，merged PR #320 at `main@fa3c1dab`；lease closed）；`P13-T13` `done`（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；D01-qualified `DEV-WINDOWS-NATIVE-OPC-01`）。
 >
+> **Personal 2.0.0 prototype-gap close Phase 14 登记（2026-09-05，`DOC-P14-GAP-CLOSE`）：**
+> owner 指令「补充开发计划，让产品达到原型图和产品设计的功能。后续每闭环一个用户旅程
+> 或者功能模块就同步操作浏览器测试一次，避免积累技术债」。缺口预言机是已关闭的
+> [EVAL-016 浏览器对照](../evaluation/2026-09-05-personal-2.0.0-prototype-gap-browser-test.md)
+> （live daemon `/ui/` vs 冻结 v9 + [user-journeys.md](../../personal/docs/product/user-journeys.md)）。
+> Phase 13 `P13-T01..T13` 与 `P11-T15` 保持 **done**，不重开、不改状态。Phase 14 承接
+> 该测量之后仍失败的小白 Owner 工作。`P14-T01` 是 documentation-only **done**（已持久化）。
+> `P14-T02`–`T08` 为 **`not-started`** 垂直实现卡。同批登记
+> **`JOURNEY-BROWSER-SYNC-01`**（本文件命名节 + Phase 14 硬门 + 环境登记 §5.4）：
+> 每闭环一个用户旅程或有界功能模块，必须在 daemon `/ui/` 上做真实浏览器端到端，并回归
+> 已关闭的 Phase 14 旅程包。这是任务级同步，**不是** EVAL campaign，**不是** Gate。
+> owner 2026-09-05 持续交付指令已下达：领取 **`P14-T02`**。评测关闭本身仍不自动实现。
+> 本登记不改产品代码/合同/测试，不重开 EVAL-016，不升 Gate/release/Profile。
+>
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
 > [ADR-0026](../adr/0026-personal-trust-profile-low-friction-authorization.md)
 > 落地 Personal 低摩擦授权模型（DEC-P-20）：交互分层 Tier 0/1/2、任务准入预览为
@@ -248,6 +262,16 @@
     路一次完成，不得拆成后续“顺便处理”的独立步骤。任一步缺失时任务保持 `in-progress`
     或 `blocked`，不得留下“代码完成但验收、分支或状态待收口”的半完成状态。
 
+### JOURNEY-BROWSER-SYNC-01
+
+12. **`JOURNEY-BROWSER-SYNC-01`（本计划约定，不是新 Operating Model ID）：** 当一个正式任务或其最后一个 Slice **闭环一条用户旅程或一个有界功能模块**（Create wizard、Today、Settings、Knowledge、Member seating、Attempt/run chrome 等；旅程定义见 [user-journeys.md](../../personal/docs/product/user-journeys.md)）时，必须在标 `done` / ready / merge 之前完成下列步骤。约定由本文件拥有；环境路由见 [PERSONAL-TEST-ENVIRONMENTS.md](PERSONAL-TEST-ENVIRONMENTS.md) **`JOURNEY-BROWSER-SYNC-01`** / §5.4。它不复活 EVAL-016、不要求每次切片开完整评测 campaign、不升 Gate / release / Profile。自 2026-09-05 起，所有**未启动**的 Personal 2.0 `/ui/` 任务（含 Phase 14 与任何后续 UI 卡）继承本约定；已关闭的 P12/P13 不重开。产品源是 daemon `/ui/`（`http://127.0.0.1:48681/ui/`），永远不是 Vite preview。
+    1. 写/观察 focused failure-first 浏览器（或 Dual Track UI）测试，**再**声称该旅程完成。
+    2. 在 daemon `/ui/` 上用真实浏览器端到端走该旅程（click / type / navigate）。截图不是验收。
+    3. 在同一产品源上重跑此前已闭环的旅程（回归包随任务增长；不得只测新切片）。
+    4. 结果立刻追加进该任务唯一 running report（Operating Model `TEST-REPORT-INCREMENTAL-01`）：`pass` / `fail` / `not-run` + 精确 UI 观察。
+    5. 旅程相对 oracle（冻结 prototype v9 + user-journeys）仍失败则不得 ready/merge。诚实 empty / honesty notes ≠ 产品 pass。
+    6. 记录环境：guest、exact git revision、`/ui/` URL，并写明 Vite **不是**产品源。
+
 ### Typed dependency 规则
 
 - `implementation_requires`：开始独立 implementation slice 前必须已有的代码/合同；
@@ -274,8 +298,9 @@
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
 | Phase 11 - Windows OPC 2.0 | 15 | 15 | 0 | 0 | 0 | P11-T01..T15 done；`P11-T15` N=15 retained 1 pass / 1 partial / 13 not-run at `main@4ca9b046`（PR [#325](https://github.com/agentkernel/cognitive-os/pull/325)） |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
-| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 13 | 0 | 0 | 0 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；P13-T07 **done**（Knowledge/Memory labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease closed）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期 copy/archive/delete/restore-point/export，merged PR #321 at `main@7575ebcd`；lease closed）；P13-T11 **done**（反思 + versioned Member Runtime，merged PR #320 at `main@fa3c1dab`；lease closed）；P13-T12 **done**（D01 视觉规格 docs-only + D02 `/ui/` 逐格记账，PR #322）；**T13 `done`**（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；`DEV-WINDOWS-NATIVE-OPC-01` D01-qualified）；P11-T15 是其验收出口，不自动 release |
-| **合计** | **167** | **146** | **0** | **1** | **4** | 另有 16 cancelled；无新 Gate pass |
+| Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 13 | 0 | 0 | 0 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；P13-T07 **done**（Knowledge/Memory labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease closed）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期 copy/archive/delete/restore-point/export，merged PR #321 at `main@7575ebcd`；lease closed）；P13-T11 **done**（反思 + versioned Member Runtime，merged PR #320 at `main@fa3c1dab`；lease closed）；P13-T12 **done**（D01 视觉规格 docs-only + D02 `/ui/` 逐格记账，PR #322）；**T13 `done`**（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；`DEV-WINDOWS-NATIVE-OPC-01` D01-qualified）；P11-T15 是其验收出口，不自动 release。walking skeleton 完成 ≠ live v9 Owner job；剩余缺口见 Phase 14 |
+| Phase 14 - Personal 2.0.0 prototype-gap close after EVAL-016 | 8 | 1 | 0 | 0 | 7 | `P14-T01` docs-only **done**（Phase 14 + `JOURNEY-BROWSER-SYNC-01` persisted）；`P14-T02`–`T08` **`not-started`**；owner 2026-09-05 持续交付指令已下达；不重开 Phase 13；无新 Gate |
+| **合计** | **175** | **147** | **0** | **1** | **11** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -352,6 +377,7 @@
 | P11 | Windows-first OPC 2.0（chrome = Personal 2.0.0） | P11-T01 docs closure；T01–T14 `done`；T15 unparked | T13 Dual Track L1 不等于完整 `/ui/` 验收；T15 ≠ prototype done；release/signing/B01-W 仍独立 | 用 docs/Canvas/ordinary CI/Linux/Win-GNU 证据宣称 Windows、DSH、connector 或 release；把六族 `/ui/` 写成已是 OPC IA；把 T15 塞进 P12 |
 | P12 | Frozen-prototype functional completeness on daemon `/ui/` | P12-T01–T09 **done**；P12 Remaining = 0；do not auto-claim T15 | 默认可走场景接到 `/ui/`（非像素复制）；Dual Track 诚实空态；NVDA/200%/host-theme 挂单；T15 仍独立 | 新开平行计划/PRD；把 T13 L1 或 hidden T02/T07/T14 写成完整 Today/Projects；Vite/canvas 当产品源；假 Create/Activate/Approve；把缺口推到 2.1 |
 | P13 | Personal 2.0.0 completion：walking skeleton → 原型程度 + 设计目标 | P13-T01 docs closure **done**（PR #305）；实现第一刀 **`P13-T02`**（托管 DSH 真实 Attempt 循环）**done**（merged PR #310）；**`P13-T03`**（隐藏 Pi 真实推理）**done**（merged PR #311）；**`P13-T04`**（独立验证 + 产出可打开 + 发布包预览）**done**（merged PR #313 at `main@a5d4040c`）；**`P13-T05`**（Routine 武装 / occurrence ledger / runs + Today）**done**（merged PR #315 at `main@90437cb4`；lease closed）；**`P13-T06`**（项目群聊 / `@manager` / `@member`）**done**（merged PR #316 at `main@23355afb`；lease closed）；**`P13-T07`**（Knowledge/Memory）**done**（PR #319；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease 本交付关闭）；**`P13-T10`** **done**（merged PR #318 at `main@2217722d`；lease closed）；其余按 typed dependency 领取（本卡不领取 sibling-owned `P13-T08`/`T09`/`T11`） | 主链（成员真实执行 → 产物 → 独立验证 → 产出/发布 → 运行/例程 → 群聊协调）在 Linux native + CI 关闭；表面完备（Knowledge/Memory/Settings/生命周期/Skill-MCP/反思）；视觉与 a11y 资格化；Windows 原生环境资格化并回填挂单 E2E；最后 `P11-T15` N=15 | 用 Linux/CI 证据宣称 Windows 支持；把 P13 done 写成 release/signing/B01-W；用 canvas 截图当 a11y/视觉验收；把 walking skeleton 改名当产品级；把缺口推到 2.1；新开平行计划/PRD |
+| P14 | Personal 2.0.0 prototype-gap close：live `/ui/` → 冻结 v9 + user-journeys（EVAL-016 残差） | `P14-T01` docs-only **done**；实现第一刀 **`P14-T02`**（owner 2026-09-05 持续交付指令已下达） | 小白 Owner 从 daemon `/ui/` 走出活的具名 Project（①–⑤ / 席位 / Today / Runs / Settings L1 / Knowledge v9 IA）；每闭环旅程执行 `JOURNEY-BROWSER-SYNC-01` | 重开 Phase 13 或 EVAL-016；把诚实 empty/fail-closed 写成产品 pass；Vite 当产品源；假 Approve；合并 dsh 与 `/ui/` |
 
 ### Linux 1.0 active release tracks（不替代现有 Phase/task ID）
 
@@ -375,6 +401,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
 | Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01–T09 done；冻结 prototype 默认可走场景已接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
 | Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T02 done（托管 DSH 真实 Attempt 循环，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / runs + Today，merged PR #315 at `main@90437cb4`）；P13-T12 **done**（D01 视觉规格 + v9 对照清单 docs-only；D02 `/ui/` 逐格记账，PR #322）；P13-T06 done（群聊 v39，merged PR #316）；P13-T07 **done**（Knowledge/Memory，merged PR #319 at `main@015afcb8`；validated `6927efe6`）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期，merged PR #321 at `main@7575ebcd`）；P13-T11 **done**（merged PR #320 at `main@fa3c1dab`）；T13 **done**（merged PR #324 at `main@4ca9b046`）；出口 = P11-T15 N=15 **done** | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
+| Personal 2.0.0 prototype-gap close（Phase 14） | `P14-T01` docs-only **done**；`P14-T02`–`T08` **`not-started`**；预言机 = EVAL-016 + user-journeys + 冻结 v9；验证 = guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | 残差收口 live `/ui/` 对小白 Owner 工作；不重开 Phase 13；不是 Gate/release；dsh 不是 小白 chrome |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -505,6 +532,19 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P13-T12 | D01：P11-T01 设计文档 + 冻结 canvas v9（补 Phase 11 未产出的 Visual UI 规格；不改 IA）；D02：P12-T02..T09 + P13-T04..T09 表面存在 | D01 视觉规格（Apple-led）+ v9 逐模块对照清单成文；D02 在 exact-revision daemon `/ui/` 上执行：九态 × 九表面 State Lab 真布局、键盘可达与焦点恢复、200% 与窄窗三栏横滚不堆叠、light / dark / high-contrast host-theme 对比、NVDA 关键路径朗读；每格 pass / fail / not-run 记账 | rendered/NVDA 仅 implementation evidence；Windows native chrome 证据 = P13-T13；不自动 Gate/release |
 | P13-T13 | owner 2026-09-05 指定本机为项目运行测试宿主（不要求 Windows 11；OS 版本只作记录）；`PERSONAL-TEST-ENVIRONMENTS.md` 已登记指定；P11-T02；P13-T02；P13-T05；P13-T08；P10-T18 历史 unsigned dev path | `DEV-WINDOWS-NATIVE-OPC-01` 从 designated 变为 qualified（unsigned 安装实际跑过；image / tools / pins 记录）；挂单原生 E2E 在该环境实际跑过并逐格记 pass / fail：T02 install / tray / sleep / SecretStore、P13-T02 sandbox / ACL / supply chain、P13-T05 clock / sleep / restart、P13-T08 SecretStore / proxy、P13-T04 文件打开、UI 原生 E2E；live X（T14）可继续 `not-run` | production signing / B01-W / owner release disposition 仍独立；不构成 release |
 
+### Personal 2.0 Phase 14 prototype-gap close typed dependencies
+
+| Task | implementation_requires | acceptance_requires | promotion_requires |
+|---|---|---|---|
+| P14-T01 | owner 2026-09-05 指令；EVAL-016 **closed**；Phase 13 `P13-T01..T13` **done**（不重开）；`P11-T15` **done**；缺口预言机 = EVAL-016 报告 | Phase 14 + `P14-T*` 卡（三栏、负例、Slices、`implementation_requires`）写入本文件；命名节 **`JOURNEY-BROWSER-SYNC-01`**；trace/PROGRESS/plan.md/environments/dev-prep index/handbook 联动；`check:consistency`；documentation-only | 无；不产生 implementation/support/Gate/release；评测关闭 ≠ 自动实现 |
+| P14-T02 | P14-T01；P12-T02 五段向导骨架；P11-T03/T04 Project/Employee 权威；P13-T03 助手候选路径（未绑模型仍诚实指路 Settings） | daemon `/ui/` 创建向导 = 原型 ①–⑤（process / members / test / joint），不是五张 note textarea；oracle = [user-journeys.md](../../personal/docs/product/user-journeys.md) §1 + v9 `create-process` / `create-members` / `create-test` / `create-joint`；EVAL-016 J1 blocker 2；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion；Windows chrome `not-run` unless already qualified |
+| P14-T03 | P14-T02（紧耦合：Owner 必须从 `/ui/` 得到 live 具名 Project）；P11-T03 confirm-before-activate / PlanRevision | Write Project 激活 live Project：标题为 Owner 所写（不是 `unknown`）、PlanRevision axis 存在、状态不卡在 `creating`；EVAL-016 J1 blocker 1；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion |
+| P14-T04 | P14-T03（live Project + PlanRevision 槽）；P12-T04 先选后配 / 加成员 | 成员加入走真实 PlanRevision responsible slots（③）；「no PlanRevision slots」fail-closed 不再挡住 Owner；EVAL-016 J4；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion |
+| P14-T05 | P14-T03；P13-T02 hosted Attempt；P13-T04 outputs/CAS；P12-T03 runs/outputs 页 | 2.0 Attempt/Runs/Outputs 从 Project chrome 出发（不是 Linux 1.0 `#/work`）；EVAL-016 J14 + empty Runs/Outputs；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion |
+| P14-T06 | P14-T03；P12-T05 Today 包骨架；P13-T05 Today overview | 激活后 Today = live 决策包 + 每 live Project 运行概览（不是 continue-create）；EVAL-016 J2；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion |
+| P14-T07 | P14-T01；P13-T08 Settings 权威；P12-T08 连接表 | Settings 是真实 L1 `role=link`；默认 Owner chrome 隐藏 9×9 state-lab；Linux 1.0 Home/Work/Agents 不作为 2.0 目的地广告；`/settings/model-connections` 或 hub 可走；命令面板拦截在范围内；EVAL-016 J6/J8/J12/J20；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion |
+| P14-T08 | P14-T01；P13-T07 Vault/Memory 权威；P12-T07 ingest | Knowledge = v9 files / Why this fragment / import IA（不是仅 HTTP paste/admin）；EVAL-016 J5；**`JOURNEY-BROWSER-SYNC-01`** | 无；Obsidian 不进产品 |
+
 #### Context MVP authorization scope
 
 The first runnable P3-T01/P2-T04 Context path uses one owner-local management
@@ -625,6 +665,21 @@ formal task acceptance assessment 和收口。
 | `P13-T12/D02` | P13-T12 | 在 exact-revision daemon `/ui/` 上执行 State Lab 九态 × 九表面、键盘可达与焦点恢复、200% 与窄窗三栏横滚、light/dark/high-contrast 对比、NVDA 关键路径；每格 pass/fail/not-run 记账 | `P13-T12/D01`；`P12-T02..T09/D01`；`P13-T04/D02`、`P13-T05/D02`、`P13-T07/D01`、`P13-T08/D02` | rendered browser / NVDA / 200% / theme review 从登记宿主本机浏览器对已 push exact-revision guest daemon `/ui/`（`DEV-LINUX-NATIVE-01` SSH 隧道）= implementation evidence；Windows native chrome 证据 = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`；缺环境诚实 `not-run` |
 | `P13-T13/D01` | P13-T13 | `DEV-WINDOWS-NATIVE-OPC-01` 资格化（unsigned 开发安装路径在本机实际运行；image/tools/pins 写入 `PERSONAL-TEST-ENVIRONMENTS.md`） | 本机已由 `DOC-LOCAL-RUNTIME-HOST`（2026-09-05）指定为该 ID；`P11-T02/D01`；P10-T18 历史 | `CI-WINDOWS-MSVC-01` compile + 该宿主实际执行记录；指定 ≠ qualified；未跑安装则本 Slice 不得标 `done` |
 | `P13-T13/D02` | P13-T13 | 挂单原生 E2E 回填并逐格记 pass/fail：T02 install/tray/sleep/SecretStore、P13-T02 sandbox/ACL/supply chain、P13-T05 clock/sleep/restart、P13-T08 SecretStore/proxy、P13-T04 文件打开、UI 原生 E2E；live X 可继续 `not-run` | `P13-T13/D01`；`P13-T02/D02`、`P13-T05/D01`、`P13-T08/D01`、`P13-T04/D02` | `DEV-WINDOWS-NATIVE-OPC-01`（已资格化）；ordinary CI/Linux/WSL/GNU 不能代替；production signing/B01-W 仍独立 |
+| `P14-T01/D01` | P14-T01 | 完整 Phase 14 documentation-only 登记：本文件 Phase 14 节、`JOURNEY-BROWSER-SYNC-01` 命名节、typed deps、三栏、Slices、`plan.md` 卡、trace、environments、Current snapshot、dev-prep index Phase 14 pointer、handbook 联动；不触碰 code/contracts/tests；不重开 Phase 13 / EVAL-016 | owner 2026-09-05 指令；EVAL-016 closed；P13-T01..T13 done | local Markdown/link/anchor/fence/terminology、`check:consistency`、`check:handbook`、generator `--check`、fingerprint、docs-sync、diff/lint；documentation-only（persisted 2026-09-05） |
+| `P14-T02/D01` | P14-T02 | failure-first Dual Track：向导 ①–⑤ 表面（process axis / seating / openable tests / ⑤ 验收）替换 note textarea；0 假 Activate | `P14-T01/D01`；`P12-T02/D01`；`P11-T03/D01` | Dual Track TS（`DEV-WIN-GNU-01` 允许面）+ required CI；产品源 = daemon `/ui/` |
+| `P14-T02/D02` | P14-T02 | 真实 `/ui/` caller 走完 ①–⑤；**`JOURNEY-BROWSER-SYNC-01`**（J1 向导段 + 当时已关闭的 Phase 14 旅程回归包） | `P14-T02/D01` | exact-revision guest daemon `/ui/`（`B01-Desktop-Linux-002` / `DEV-LINUX-NATIVE-01` SSH 隧道 `http://127.0.0.1:48681/ui/`）；Windows chrome `not-run` unless qualified |
+| `P14-T03/D01` | P14-T03 | Write Project 持久化 titled live Project + PlanRevision axis；状态离开 `creating`；failure-first：空标题/`unknown`、无 axis 仍标 live 被拒 | `P14-T02/D02`；`P11-T03/D01` | Dual Track TS + required CI + `DEV-LINUX-NATIVE-01` |
+| `P14-T03/D02` | P14-T03 | 真实 `/ui/` J1 激活；Owner 列表/详情看到所写标题与 axis；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T03/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01` |
+| `P14-T04/D01` | P14-T04 | 激活后 PlanRevision responsible slots 存在；write join 成功落席；failure-first：无槽仍假装加入、聊天 Approve 被拒 | `P14-T03/D02`；`P12-T04/D01` | Dual Track TS + required CI + `DEV-LINUX-NATIVE-01` |
+| `P14-T04/D02` | P14-T04 | 真实 `/ui/` J4 加成员；**`JOURNEY-BROWSER-SYNC-01`**（含 J1 回归） | `P14-T04/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01` |
+| `P14-T05/D01` | P14-T05 | Project chrome 启动 2.0 Attempt（非 `#/work`）；Runs/Outputs 读真实 ledger/产物或诚实 empty；failure-first：Linux 1.0 Work 冒充 2.0、Vite 当产品源 | `P14-T03/D02`；`P13-T02/D02`；`P13-T04/D02` | Dual Track TS + required CI + `DEV-LINUX-NATIVE-01` |
+| `P14-T05/D02` | P14-T05 | 真实 `/ui/` J14；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T05/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01` |
+| `P14-T06/D01` | P14-T06 | 激活后 Today 决策包 + 每 Project 运行概览；failure-first：KPI 墙、未激活仍画 live 包 | `P14-T03/D02`；`P12-T05/D01`；`P13-T05/D02` | Dual Track TS + required CI |
+| `P14-T06/D02` | P14-T06 | 真实 `/ui/` J2；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T06/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01` |
+| `P14-T07/D01` | P14-T07 | Settings L1 link；默认隐藏 9×9 state-lab（a11y 树不倾倒）；Linux 1.0 Home/Work/Agents 不广告为 2.0 目的地；palette 拦截修复；failure-first：假 Connect、Vite 当产品源 | `P14-T01/D01`；`P13-T08/D02` | Dual Track TS + required CI |
+| `P14-T07/D02` | P14-T07 | `/settings/model-connections` 或 hub 可走；真实 `/ui/` J6/J8/J12/J20；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T07/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01`；Windows chrome `not-run` unless qualified |
+| `P14-T08/D01` | P14-T08 | Knowledge v9 files / why / import 表面；failure-first：file-as-authority、secret ingest | `P14-T01/D01`；`P13-T07/D01`；`P12-T07/D01` | Dual Track TS + required CI |
+| `P14-T08/D02` | P14-T08 | 真实 `/ui/` J5；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T08/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01` |
 
 > **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
 > PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`；
@@ -1485,7 +1540,9 @@ flowchart TD
 
 `RUST-LINK-DEV-WIN-GNU-01` 与 `COMMAND-SHELL-PS51` 记环境 / `not-run`，禁止写成
 产品失败。A6：不得为跑通而削弱合同或负例。A7：本地 / fixture / WSL / ordinary CI
-不升 Gate / release / Profile。`not-run` 永远不是 pass。
+不升 Gate / release / Profile。`not-run` 永远不是 pass。自 2026-09-05 起，**后续未启动**
+的 Personal 2.0 `/ui/` 任务另须满足 `JOURNEY-BROWSER-SYNC-01`（§1 第 12 条）。已关闭的
+P12 不重开。
 
 #### P12-T01..T09 三栏（缺一栏则开发前期未完成）
 
@@ -1519,6 +1576,7 @@ flowchart TD
 
 Phase 13 是 owner 2026-09-02 指令的直接落点：**完成所有 2.0.0 开发，使产品达到冻结
 原型图的程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 的设计目标**。
+Phase 13 walking skeleton **done ≠** live v9 Owner job；EVAL-016 残差由 Phase 14 承接。
 它承接 P11（权威 walking skeleton）与 P12（默认可走场景）之后仍然存在的五类缺口，
 按 2026-09-02 对 `main@67ad05c0` 的核对登记：
 
@@ -1634,7 +1692,8 @@ flowchart TD
 不升 Gate / release / Profile。`not-run` 永远不是 pass。**Phase 13 追加两条：**
 (5) 把 P11 walking skeleton 改名、加字段或补 UI 而不闭合真实循环，不算本阶段 done；
 (6) Linux native 证据只关闭"实现已存在"，对应 Windows 原生格必须在 `P13-T13` 逐格
-回填，否则该格永远是 `not-run`。
+回填，否则该格永远是 `not-run`。自 2026-09-05 起，**后续未启动**的 Personal 2.0 `/ui/`
+任务另须满足 `JOURNEY-BROWSER-SYNC-01`（§1 第 12 条）。已关闭的 P13 不重开。
 
 #### P13-T01..T13 三栏（缺一栏则开发前期未完成）
 
@@ -1678,7 +1737,123 @@ harness `packages/sandbox/*` / `packages/subprocess/*` 与 Codex `codex-rs/memor
 仍只是 **ideas**。禁止再造：第二套 scheduler、engine store、聊天 Approve、Team/Inbox
 一级、成员级预算当前 chrome、平行产品计划、第二套 Provider 凭据平面。
 
+### Phase 14 - Personal 2.0.0 prototype-gap close after EVAL-016
+
+Phase 14 是 owner 2026-09-05 指令的直接落点：**让 live daemon `/ui/` 达到冻结原型 v9
+与 [user-journeys.md](../../personal/docs/product/user-journeys.md) 对小白 Owner 工作的功能**
+（创建受治理 live Project、监督 Members、打开产物、批准后果性工作、生活在 Today），
+并在**每闭环一条用户旅程或有界功能模块后立即做真实浏览器测试**（`JOURNEY-BROWSER-SYNC-01`，
+§1 第 12 条），避免 UI 债累积。
+
+缺口预言机是已关闭的
+[EVAL-016](../evaluation/2026-09-05-personal-2.0.0-prototype-gap-browser-test.md)
+（guest `B01-Desktop-Linux-002` pin `711a5a7ce8e9f89c6aabcbb7f3d8d7ee098f8fd1`）。
+**不重开** `PERSONAL-OPC-EVAL-016`。**不重开、不改状态** Phase 13 `P13-T01..T13` 与
+`P11-T15`。`P14-T01` 是 documentation-only **done**（已持久化）。owner 2026-09-05
+持续交付指令已下达：claim **`P14-T02`**。评测关闭本身仍不自动实现。
+
+**产品规则（设计已声明，本阶段不阻塞问 owner）：**
+
+1. Dual Track Linux 1.0 hash（`#/home` `#/work` `#/work/new` `#/agents` `#/providers`）**不是** Owner chrome。从 L1、Settings leftover 列表与 command palette 退役；这些 hash 与 `#/inbox` 一样渲染 No such route。
+2. **dsh 不是小白 `/ui/` chrome。** 不合并两套 UI。Owner 隧道上的 `http://127.0.0.1:3080/` 是引擎面板；产品源永远是 daemon `/ui/`。
+3. MVP-first：不预建 RBAC / 审批链。保留 daemon-only writer、SecretStore、persist-before-dispatch、budget/fencing、独立 verifier。
+4. J16 成员级预算是 2.1 / Deferred。J11 archive 已在 P13-T09；live Project 后作回归，不单开卡。
+
+EVAL-016 → 任务映射（推荐串行；虚线 = 非 mutex）：
+
+| 推荐顺序 | ID | 闭环 | EVAL-016 |
+|---|---|---|---|
+| 0 | P14-T01 | 计划登记 + `JOURNEY-BROWSER-SYNC-01`（docs-only，**done**） | 本回合 |
+| 1 | P14-T02 | J1 向导 ①–⑤ | blocker 2（textarea 向导） |
+| 2 | P14-T03 | J1 Write = 具名 live Project | blocker 1（`creating`/`unknown`/无 axis） |
+| 3 | P14-T04 | J4 成员加入真实槽 | 无 PlanRevision slots |
+| 4 | P14-T05 | J14 Attempt/Runs/Outputs | `#/work`；空 Runs/Outputs |
+| 5 | P14-T06 | J2 Today live 决策包 | Today 非 live 包 |
+| 6 | P14-T07 | J6/J8/J12/J20 Settings L1 + IA | Settings 非 L1；9×9 dump；Linux 1.0 leftover |
+| 7 | P14-T08 | J5 Knowledge v9 IA | HTTP paste |
+
+J0/J10/J18/J19 已 pass：每次 `JOURNEY-BROWSER-SYNC-01` 的回归包。J11 部分 minor 由 P13-T09 覆盖。HITL Confirm / Routine / Assistant 会话无独立 caller 时可作 T02/T07 切片。诚实 empty ≠ 产品 pass。
+
+建造顺序（实现窗口约束；本图是 **新节**，不改变上一节 Phase 13 mermaid 的任何边）：
+
+```mermaid
+flowchart TD
+  T01[T01_docs_only]
+  T02[T02_create_wizard_1_to_5]
+  T03[T03_write_activates_live_project]
+  T04[T04_member_join_real_slots]
+  T05[T05_attempt_runs_outputs_from_project]
+  T06[T06_today_live_decision_packet]
+  T07[T07_settings_l1_and_ia]
+  T08[T08_knowledge_v9_ia]
+  T01 --> T02
+  T02 --> T03
+  T03 --> T04
+  T03 --> T05
+  T03 --> T06
+  T01 --> T07
+  T01 --> T08
+```
+
+#### JOURNEY-BROWSER-SYNC-01
+
+当一张任务或其最后一个 Delivery Slice **闭环一个用户旅程或一个有界功能模块**时：
+
+1. 失败优先的 UI/浏览器证据必须先于声称该旅程 done。
+2. 在真实浏览器里对 daemon `/ui/` 端到端执行该旅程：点击、输入、导航。截图 ≠ 验证。
+   产品源是 daemon `/ui/`（`http://127.0.0.1:48681/ui/`，经 owner SSH 隧道），永远
+   不是 Vite preview。
+3. 在同一 `/ui/` 上回归**此前已关闭的 Phase 14 旅程包**（包会变大；禁止只测新切片）。
+4. 立刻按 Operating Model `TEST-REPORT-INCREMENTAL-01` 把 `pass` / `fail` /
+   `not-run` 追加到该任务唯一 running report，并记下精确 UI 观察、guest、exact git
+   revision。
+5. 旅程仍失败预言机（[user-journeys.md](../../personal/docs/product/user-journeys.md)
+   + 冻结 v9）则不得 ready/merge。诚实 empty / fail-closed copy ≠ 产品 pass。
+6. 这是**任务级同步**，**不是**完整 EVAL campaign，**不是** Gate。
+
+本约定适用于全部 Phase 14 **实现**任务（`P14-T02`–`T08`）。其余未开始的 Personal 2.0
+UI 工作继承该约定。文档-only 的 `P14-T01` 不跑浏览器。
+
+#### 硬门（每张卡、每个垂直切片）
+
+切片未同时满足下列项，不得标 `done`：
+
+1. 产出用户可见 `/ui/` 路径、durable 权威事实、真实集成，或可关闭的正确性性质。
+2. focused failure-first 或负例 + 卡上登记的 supported validation **已在该环境实际跑过**。
+3. 结果按 Operating Model `TEST-REPORT-INCREMENTAL-01` 立刻追加进该任务唯一 running report。
+4. 下一刀优先接真实 `/ui/` caller，禁止连续 helper-only 堆砌。
+5. **`JOURNEY-BROWSER-SYNC-01`：** 闭环旅程或有界模块时，在 daemon `/ui/` 上真实浏览器端到端（click/type/navigate；截图不是验收），重跑已闭环旅程，相对 v9 + user-journeys 失败则不得 ready/merge。诚实 notes ≠ 产品 pass。记录 guest、exact revision、`/ui/` URL、Vite 不是产品源。不要求完整 EVAL campaign。
+
+`RUST-LINK-DEV-WIN-GNU-01` 与 `COMMAND-SHELL-PS51` 记环境 / `not-run`。A6/A7 不变。Claim ceiling `hypothesis`。无 Gate promotion。平台：Linux 主线；Windows chrome `not-run` unless already qualified。
+
+#### P14-T01..T08 三栏（缺一栏则开发前期未完成）
+
+| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
+|---|---|---|---|---|---|
+| P14-T01 | Phase 14 docs/plan 登记 + `JOURNEY-BROWSER-SYNC-01` | owner 2026-09-05 指令；EVAL-016 closed；P13-T01..T13 与 P11-T15 done（不重开） | 本文件 Phase 14 + typed deps + 三栏 + Slices + plan.md 卡 + trace/environments/PROGRESS/dev-prep index/handbook；`check:consistency`；documentation-only | done | `DOC-P14-GAP-CLOSE` persisted 2026-09-05 on `personal/DOC-P14-GAP-CLOSE`；无 implementation/support/Gate/release claim |
+| P14-T02 | 创建向导 = 原型 ①–⑤（不是五张 note textarea） | P14-T01；P12-T02；P11-T03/T04 | user-journeys §1 + v9 create-process/members/test/joint；EVAL-016 J1 blocker 2；真实 `/ui/` caller；`JOURNEY-BROWSER-SYNC-01` | not-started | 实现第一刀；owner 2026-09-05 持续交付指令已下达；claim ceiling `hypothesis` |
+| P14-T03 | Write Project 激活 live 具名 Project | P14-T02（紧耦合） | 标题 ≠ `unknown`；PlanRevision axis 存在；状态不卡 `creating`；EVAL-016 J1 blocker 1；`JOURNEY-BROWSER-SYNC-01` | not-started | Owner 必须从 `/ui/` 得到 live 具名 Project |
+| P14-T04 | 成员加入落在真实 PlanRevision 槽 | P14-T03 | 「no PlanRevision slots」不再挡住 Owner；EVAL-016 J4；`JOURNEY-BROWSER-SYNC-01` | not-started | |
+| P14-T05 | 从 Project chrome 走 2.0 Attempt/Runs/Outputs | P14-T03 | 不是 Linux 1.0 `#/work`；EVAL-016 J14 + empty Runs/Outputs；`JOURNEY-BROWSER-SYNC-01` | not-started | |
+| P14-T06 | Today live 决策包 + 每 Project 运行概览 | P14-T03 | 激活后不是 continue-create；EVAL-016 J2；`JOURNEY-BROWSER-SYNC-01` | not-started | |
+| P14-T07 | Settings 真 L1 + IA（藏 9×9；不广告 Linux 1.0 Home/Work/Agents；palette intercept） | P14-T01；P13-T08 | `/settings/model-connections` 或 hub 可走；EVAL-016 J6/J8/J12/J20；`JOURNEY-BROWSER-SYNC-01` | not-started | 可与创建链并行 |
+| P14-T08 | Knowledge v9 IA（files / why / import） | P14-T01；P13-T07 | 不是仅 HTTP paste；EVAL-016 J5；`JOURNEY-BROWSER-SYNC-01` | not-started | 可与创建链并行 |
+
+| ID | validation environment | 关闭门 | 漂移检测负例 |
+|---|---|---|---|
+| P14-T01 | local Markdown/link/anchor/fence/terminology、`check:consistency`、`check:handbook`、generator `--check`、fingerprint、docs-sync、diff/lint；documentation-only（本回合不强制 required CI） | Phase 14 卡完整（三栏、负例、Slices、`implementation_requires`）、命名节 `JOURNEY-BROWSER-SYNC-01`、一致性绿；不触碰 code/contracts/tests | 新开平行计划/PRD；重开 Phase 13 / EVAL-016；只在 PROGRESS 广告而不写卡；canvas/Vite 当产品源 |
+| P14-T02 | Dual Track TS + required CI；产品源 = exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`**。Windows chrome `not-run` unless qualified。`DEV-WIN-GNU-01` 禁 Rust link。 | ①–⑤ 接到既有 confirm-before-activate；无权威不写 Project；0 假 Create/Activate | 五张 textarea 冒充 ①–⑤；假 Create/Activate；向导绕过 preview 写权威；Vite 当产品源；secret 进 DOM |
+| P14-T03 | 同 T02 Dual Track + required CI + `JOURNEY-BROWSER-SYNC-01` | Write 后列表/详情标题 = Owner 所写；PlanRevision axis 存在；离开 `creating` | 标 live 但 title=`unknown`；无 axis 仍标 live；卡在 `creating`；把 fail-closed 写成 pass |
+| P14-T04 | 同 T02 + `JOURNEY-BROWSER-SYNC-01` | 激活后 join 落真实槽；拒绝 = 未加入 | 无槽仍假装加入；聊天 Approve；Install 商店 |
+| P14-T05 | 同 T02 + `JOURNEY-BROWSER-SYNC-01` | Project chrome 启动 2.0 Attempt；Runs/Outputs 读真实 ledger/产物或诚实 empty | `#/work` 冒充 2.0；无权威却渲染可点 Run；Vite 当产品源 |
+| P14-T06 | 同 T02 + `JOURNEY-BROWSER-SYNC-01` | 激活后 Today = 决策包 + 每 live Project 一行 | KPI 墙；未激活仍画 live 包；把 T13 empty chrome 写成 packet 已验收 |
+| P14-T07 | 同 T02 + `JOURNEY-BROWSER-SYNC-01` | Settings 为 L1 `role=link`；默认不倾倒 9×9；不广告 Linux 1.0 Home/Work/Agents；palette 拦截 | 假 Connect；raw secret 进 DOM；state-lab 一级；把 Linux 1.0 路由当 2.0 目的地 |
+| P14-T08 | 同 T02 + `JOURNEY-BROWSER-SYNC-01` | files / Why this fragment / import 走 Vault 权威 | HTTP paste 冒充 v9 IA；file-as-authority；secret ingest；捆绑 Obsidian |
+
+本阶段 foundation（复用，禁止再造）：P11–P13 权威与 `/ui/` 场景、Task/Intent/Effect/WIA/verification、CAS、Provider CP、SecretStore、exact Pi、dsh Path B（形状，不搬权威）。禁止再造：第二套 scheduler、engine store、聊天 Approve、Team/Inbox 一级、成员级预算当前 chrome、平行产品计划、合并 dsh 与 `/ui/`。
+
 ## 5. Gate 与证据要求
+
 
 | Gate | 必需结果 | 最低证据 |
 |---|---|---|

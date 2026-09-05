@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:3e61c430e34c18a786517f697a2a6d39d002bf6f03aa93a60584411a0d0ec22b"
+fingerprint: "sha256:61a360b404f90748669760940c780b254671de0596d2eaf5b40a470dec50bf9d"
 non_claims:
   - Command availability is not evidence; only actually executed checks count, and local results never promote Gate/release/Profile claims.
 ---
@@ -45,6 +45,10 @@ D01-qualified on this machine (2026-09-05); B01-W is not provisioned;
 `B01-DESKTOP-002` is not the 2.0 daily default. Local
 cargo, WSL, ordinary CI and Canvas cannot substitute Gate/release;
 record native cells `not-run` when the capability is missing. `not-run` is never pass.
+Phase 14 residual `/ui/` gap-close (after closed EVAL-016) routes browser
+evidence through **`JOURNEY-BROWSER-SYNC-01`** in
+`PERSONAL-TEST-ENVIRONMENTS.md` §5.4: daemon `/ui/` is the product origin,
+never Vite; re-run the growing closed-journey pack; not an EVAL campaign.
 
 ## Safe on every platform (including the local Windows host)
 

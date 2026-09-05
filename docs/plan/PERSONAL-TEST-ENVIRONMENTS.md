@@ -261,6 +261,41 @@ Windows install, tray/background, SecretStore, process/ACL containment, sleep/
 missed recovery, DSH supply chain/runtime, connector behavior, B01-W, support,
 release, or Profile.
 
+### 5.4 JOURNEY-BROWSER-SYNC-01
+
+Phase 14 (and remaining not-started Personal 2.0 `/ui/` work) uses this
+**task-scoped** validation route. It is a Personal-plan convention owned by
+[PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md) (`### JOURNEY-BROWSER-SYNC-01`
+and Phase 14 `#### JOURNEY-BROWSER-SYNC-01`). It is **not** a second Operating
+Model ID, **not** an EVAL campaign, and **not** Gate.
+
+When a task or its last slice **closes a user journey or a bounded feature
+module**:
+
+1. Write/observe focused failure-first UI/browser evidence **before** claiming
+   the journey done.
+2. Execute that journey end-to-end in a real browser on daemon `/ui/`
+   (`http://127.0.0.1:48681/ui/` via the owner SSH tunnel in §7 Owner viewing).
+   Click, type, navigate. A screenshot is not verification. Product origin is
+   daemon `/ui/`, never Vite preview.
+3. Re-run the regression pack of previously closed Phase 14 journeys on the
+   same `/ui/` (the pack grows; do not only test the new slice).
+4. Append `pass` / `fail` / `not-run` immediately to the task’s unique running
+   report (`TEST-REPORT-INCREMENTAL-01`) with exact UI observations, guest, and
+   exact git revision.
+5. Do not ready/merge if the journey still fails the oracle
+   (`personal/docs/product/user-journeys.md` + frozen v9). Honest empty /
+   fail-closed copy is not a product pass.
+6. Stay task-scoped. Do not revive EVAL-016.
+
+| Phase 14 work | Required development evidence | Explicit non-substitute |
+|---|---|---|
+| P14-T01 documentation-only | local Markdown / `check:consistency` / handbook / docs-sync | implementation, Gate, EVAL revival |
+| P14-T02..T08 implementation | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | Vite preview as product origin; canvas screenshot as pass; Linux 1.0 `#/work` as 2.0 chrome; ordinary CI as journey pass |
+
+Platform: Linux guest `/ui/` is the mainline. Windows chrome stays `not-run`
+unless already qualified. Claim ceiling `hypothesis`.
+
 ## 6. `DEV-WSL2-01` — WSL2 Linux guest
 
 - **Recorded kernel:** `6.18.33.2-microsoft-standard-WSL2`.
@@ -382,6 +417,16 @@ Agents should record the forwarded ports and exact Git revision deployed when
 handing off UI review. **After each guest debug session, remind the owner** with
 the SSH forward command and local URLs — do not omit this handoff. Vite preview
 or a separate clients dev server is not the product Control Plane origin.
+
+### JOURNEY-BROWSER-SYNC-01
+
+When Phase 14 (or later not-started Personal 2.0 `/ui/` work) closes a user
+journey or bounded feature module, the owner-viewing path above is the
+**required** product origin for the real-browser pass. Full steps live in
+§5.4 and in [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md)
+`### JOURNEY-BROWSER-SYNC-01`. Re-run the growing Phase 14 journey pack on
+`http://127.0.0.1:48681/ui/`. Do not treat dsh `http://127.0.0.1:3080/` as
+小白 chrome.
 
 ## 8. `BUILD-LINUX-EXPERIMENTAL-01` — protected experimental builder
 
