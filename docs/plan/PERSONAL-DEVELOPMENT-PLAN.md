@@ -272,7 +272,7 @@
 | Phase 8 - 通用 Agent 适配与设计基线 | 15 | 15 | 0 | 0 | 0 | post-1.0；沿用 B09 模式逐 agent 资格化 |
 | Phase 9 - 性能与结构演进 | 12 | 12 | 0 | 0 | 0 | 无新 Gate；沿用 P7-T04 回归地板 |
 | Phase 10 - superseded desktop/MCP plan | 18 | 2 | 0 | 0 | 0 | 16 cancelled；P10-T01/T02 事实保留 |
-| Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化 Windows |
+| Phase 11 - Windows OPC 2.0 | 15 | 14 | 0 | 0 | 1 | P11-T14 X connector done；T15 unparked，验收前置 = Phase 13 完成 + 资格化本机 Windows 宿主 |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
 | Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 12 | 0 | 0 | 1 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；P13-T07 **done**（Knowledge/Memory labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease closed）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期 copy/archive/delete/restore-point/export，merged PR #321 at `main@7575ebcd`；lease closed）；P13-T11 **done**（反思 + versioned Member Runtime，merged PR #320 at `main@fa3c1dab`；lease closed）；P13-T12 **done**（D01 视觉规格 docs-only + D02 `/ui/` 逐格记账，PR #322）；T13 not-started（owner 排除，不领取）；P11-T15 是其验收出口，不自动 release |
 | **合计** | **167** | **144** | **0** | **1** | **6** | 另有 16 cancelled；无新 Gate pass |
@@ -503,7 +503,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P13-T10 | P11-T04（InstallFact/Grant 拆分）；P11-T09（grant-expansion preview + 时间盒）；P13-T03（助手研究）；P12-T04（skills / tools / perms 标签）；P4 Skill package；P5-T03/T04 MCP transport facts | 成员 skills / tools / perms 标签可发起获取；助手主导发现 → 结构化安全评审（来源 / 许可 / 隐藏指令 / prompt-injection / 文件·网络·命令意图；MCP 加依赖 / 可执行代码 / 网络 / Secret / 工具权限 / 供应链）→ 首次安装或扩权前 **exact Owner 确认（画布 preview）** → 版本锁定 capability artifact → 独立 Project/Member grant → 更新评审 / 兼容测试 / 回滚 | 无；广泛 marketplace / MCP family console / engine store 不做 |
 | P13-T11 | P13-T02；P13-T04；P13-T05；P11-T04（versioned Employee/Blueprint、per-Project opt-in） | 反思候选（关键结果 / 日 / 周期 / 事件）由 daemon 从 Attempt / verification / evidence 事实生成（非模型自报）；Member Runtime 改进 = 新 revision，需 Owner preview 确认且可回滚；跨 Project Role Template 提案需 Owner 确认；不静默注入运行中进程 | 无自动 promotion |
 | P13-T12 | D01：P11-T01 设计文档 + 冻结 canvas v9（补 Phase 11 未产出的 Visual UI 规格；不改 IA）；D02：P12-T02..T09 + P13-T04..T09 表面存在 | D01 视觉规格（Apple-led）+ v9 逐模块对照清单成文；D02 在 exact-revision daemon `/ui/` 上执行：九态 × 九表面 State Lab 真布局、键盘可达与焦点恢复、200% 与窄窗三栏横滚不堆叠、light / dark / high-contrast host-theme 对比、NVDA 关键路径朗读；每格 pass / fail / not-run 记账 | rendered/NVDA 仅 implementation evidence；Windows native chrome 证据 = P13-T13；不自动 Gate/release |
-| P13-T13 | owner provision Windows 11 x86_64 宿主；`PERSONAL-TEST-ENVIRONMENTS.md` 登记修订；P11-T02；P13-T02；P13-T05；P13-T08；P10-T18 历史 unsigned dev path | `DEV-WINDOWS-NATIVE-OPC-01` 从 "not provisioned/qualified" 变为 qualified（image / tools / pins 记录）；挂单原生 E2E 在该环境实际跑过并逐格记 pass / fail：T02 install / tray / sleep / SecretStore、P13-T02 sandbox / ACL / supply chain、P13-T05 clock / sleep / restart、P13-T08 SecretStore / proxy、P13-T04 文件打开、UI 原生 E2E；live X（T14）可继续 `not-run` | production signing / B01-W / owner release disposition 仍独立；不构成 release |
+| P13-T13 | owner 2026-09-05 指定本机为项目运行测试宿主（不要求 Windows 11；OS 版本只作记录）；`PERSONAL-TEST-ENVIRONMENTS.md` 已登记指定；P11-T02；P13-T02；P13-T05；P13-T08；P10-T18 历史 unsigned dev path | `DEV-WINDOWS-NATIVE-OPC-01` 从 designated 变为 qualified（unsigned 安装实际跑过；image / tools / pins 记录）；挂单原生 E2E 在该环境实际跑过并逐格记 pass / fail：T02 install / tray / sleep / SecretStore、P13-T02 sandbox / ACL / supply chain、P13-T05 clock / sleep / restart、P13-T08 SecretStore / proxy、P13-T04 文件打开、UI 原生 E2E；live X（T14）可继续 `not-run` | production signing / B01-W / owner release disposition 仍独立；不构成 release |
 
 #### Context MVP authorization scope
 
@@ -623,7 +623,7 @@ formal task acceptance assessment 和收口。
 | `P13-T11/D01` | P13-T11 | daemon 从 Attempt/verification/evidence 事实生成反思候选；Member Runtime 改进 = 新 revision + Owner preview + 可回滚；跨 Project Role Template 提案需 Owner 确认；failure-first：模型自报即改进、隐式 Blueprint 升级、运行中 prompt 注入被拒 | `P13-T02/D02`、`P13-T04/D01`、`P13-T05/D01`、`P11-T04/D01` | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + `DEV-LINUX-NATIVE-01` |
 | `P13-T12/D01` | P13-T12 | Visual UI 规格（Apple-led；不改 IA）+ 冻结 v9 逐模块 `/ui/` 对照清单成文（documentation-only 出口） | `P11-T01/D01` 设计文档；冻结 canvas v9 | local Markdown/link、`check:consistency`、handbook/docs-sync；documentation-only |
 | `P13-T12/D02` | P13-T12 | 在 exact-revision daemon `/ui/` 上执行 State Lab 九态 × 九表面、键盘可达与焦点恢复、200% 与窄窗三栏横滚、light/dark/high-contrast 对比、NVDA 关键路径；每格 pass/fail/not-run 记账 | `P13-T12/D01`；`P12-T02..T09/D01`；`P13-T04/D02`、`P13-T05/D02`、`P13-T07/D01`、`P13-T08/D02` | rendered browser / NVDA / 200% / theme review 从登记宿主本机浏览器对已 push exact-revision guest daemon `/ui/`（`DEV-LINUX-NATIVE-01` SSH 隧道）= implementation evidence；Windows native chrome 证据 = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`；缺环境诚实 `not-run` |
-| `P13-T13/D01` | P13-T13 | `DEV-WINDOWS-NATIVE-OPC-01` provision + qualify（image/tools/pins 写入 `PERSONAL-TEST-ENVIRONMENTS.md`）；unsigned 开发安装路径可在该宿主运行 | owner 提供 Windows 11 x86_64 宿主；`P11-T02/D01`；P10-T18 历史 | `CI-WINDOWS-MSVC-01` compile + 该宿主实际执行记录；未 provision 则整卡 `blocked`，不得编造 |
+| `P13-T13/D01` | P13-T13 | `DEV-WINDOWS-NATIVE-OPC-01` 资格化（unsigned 开发安装路径在本机实际运行；image/tools/pins 写入 `PERSONAL-TEST-ENVIRONMENTS.md`） | 本机已由 `DOC-LOCAL-RUNTIME-HOST`（2026-09-05）指定为该 ID；`P11-T02/D01`；P10-T18 历史 | `CI-WINDOWS-MSVC-01` compile + 该宿主实际执行记录；指定 ≠ qualified；未跑安装则本 Slice 不得标 `done` |
 | `P13-T13/D02` | P13-T13 | 挂单原生 E2E 回填并逐格记 pass/fail：T02 install/tray/sleep/SecretStore、P13-T02 sandbox/ACL/supply chain、P13-T05 clock/sleep/restart、P13-T08 SecretStore/proxy、P13-T04 文件打开、UI 原生 E2E；live X 可继续 `not-run` | `P13-T13/D01`；`P13-T02/D02`、`P13-T05/D01`、`P13-T08/D01`、`P13-T04/D02` | `DEV-WINDOWS-NATIVE-OPC-01`（已资格化）；ordinary CI/Linux/WSL/GNU 不能代替；production signing/B01-W 仍独立 |
 
 > **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
@@ -1321,7 +1321,7 @@ Phase 11 是 ADR-0059 的 current successor plan。`P11-T01` 是已完成的 doc
 closure。`P11-T03`、`P11-T04`、`P11-T05`、`P11-T06`、`P11-T07`、`P11-T09`、`P11-T12`、`P11-T10`、`P11-T11`、`P11-T08`、`P11-T13` 与 `P11-T02` 已完成。
 任何其余实现必须使用单独 task branch/lease/Draft PR。
 Windows 2.0 不继承 Linux、WSL、Canvas、ordinary CI 或本机 GNU evidence 作为 Gate/release/Profile。
-native mobile/E2E relay remote 属于 2.1。T14 **done**；T15 **unparked**（领取在 T14 之后；自 2026-09-02 起其 `acceptance_requires` = Phase 13 `P13-T02..T13` done + `P13-T13` 资格化 Windows，见 Phase 13 节）。
+native mobile/E2E relay remote 属于 2.1。T14 **done**；T15 **unparked**（领取在 T14 之后；自 2026-09-02 起其 `acceptance_requires` = Phase 13 `P13-T02..T13` done + `P13-T13` 资格化本机 Windows 宿主，见 Phase 13 节）。
 
 **Visual UI 精修**是 Phase 11 内单独设计战役（非新 `P11-T*`、不改 Remaining），
 可与 T03 并行；必须在 **T13 编码前**产出视觉规格；不许改 IA；不跑
@@ -1399,7 +1399,7 @@ flowchart TD
 | P11-T12 | Provider 诚实 usage | P11-T03、P11-T04；**不依赖 T07** | 见下表三栏；成员预算非当前 chrome | done | merged PR [#286](https://github.com/agentkernel/cognitive-os/pull/286) at `main@9e9b18b690cfe63aaedc457bf06d0763965a80fd`; [report](../checkpoints/2026-08-30-personal-p11-t12-usage-report.md) |
 | P11-T13 | `/ui/` IA 收口 | P11-T03 + Visual UI 规格 | 见下表三栏；完整 `/ui/` 不提前冒充 | done | merged PR [#291](https://github.com/agentkernel/cognitive-os/pull/291) at `main@46eebeca`; required CI [33347348125](https://github.com/agentkernel/cognitive-os/actions/runs/33347348125) **SUCCESS** at `e4f00179`; Dual Track L1; NVDA/200%/host-theme **not-run**; [report](../checkpoints/2026-08-31-personal-p11-t13-opc-ia-report.md); [closure](../checkpoints/2026-08-31-personal-p11-t13-opc-ia-closure.md) |
 | P11-T14 | X/Twitter connector | P11-T03、T09、T12；**非 P0 hero** | 见下表三栏 | done | merged PR [#293](https://github.com/agentkernel/cognitive-os/pull/293) at `main@bc274bfd`; Linux store **9/9** + HTTP **1/1** at `cf94a8d9`; required CI [33364486699](https://github.com/agentkernel/cognitive-os/actions/runs/33364486699) **SUCCESS** at `53a35adf`; live X API **not-run** |
-| P11-T15 | fixed-denominator acceptance | **unparked**（2026-08-31 owner 指令）；验收前置 = `P13-T02..T13` done + `P13-T13` 资格化 Windows | 见下表三栏；N=15 场景预注册草案见 plan.md T15 卡（领取时冻结）；一 exact qualified Windows revision | not-started | unparked; **not** P12 mutex; Phase 13 的验收出口；不自动 release |
+| P11-T15 | fixed-denominator acceptance | **unparked**（2026-08-31 owner 指令）；验收前置 = `P13-T02..T13` done + `P13-T13` 资格化本机 Windows 宿主 | 见下表三栏；N=15 场景预注册草案见 plan.md T15 卡（领取时冻结）；一 exact qualified Windows revision | not-started | unparked; **not** P12 mutex; Phase 13 的验收出口；不自动 release |
 
 | ID | validation environment | 关闭门 | 漂移检测负例 |
 |---|---|---|---|
@@ -1533,8 +1533,9 @@ Phase 13 是 owner 2026-09-02 指令的直接落点：**完成所有 2.0.0 开�
    版本化改进、发布包与 external-send 完整链在 2.0 scope §3.3/§3.6 中是承诺，但无任务归宿。
 4. **视觉与可访问性从未验收。** Phase 11 要求"T13 编码前产出"的 Visual UI 规格没有产出；
    NVDA / 200% / host-theme / State Lab 九态 × 九表面 / 键盘焦点全程挂单 `not-run`。
-5. **Windows 原生资格化从未开始。** `DEV-WINDOWS-NATIVE-OPC-01` 未 provisioned，T02 / T07 /
-   T08 / T12 / UI 的原生 E2E 全部 `not-run`；`P11-T15` N=15 未预注册。
+5. **Windows 原生资格化尚未执行。** `DEV-WINDOWS-NATIVE-OPC-01` 已于 2026-09-05
+   指定为本机（不要求 Windows 11）；T02 / T07 / T08 / T12 / UI 的原生 E2E 仍全部
+   `not-run` 直到 `P13-T13` 实际跑过；`P11-T15` N=15 未执行。
 
 **边界。** Phase 13 **不是** release：production signing、B01-W、owner release disposition
 仍是 `P11-T15` 的独立 promotion requirement。**不是** 2.1（native mobile / pairing / E2E
@@ -1547,10 +1548,11 @@ enterprise、phone / pairing / relay。产品源永远是 daemon `/ui/`。Claim 
 `P13-T01` 是 documentation-only（模型同 `P11-T01` / `P12-T01`）。实现第一刀是
 **`P13-T02`**（托管 DSH 真实 Attempt 循环）与 **`P13-T03`**（隐藏 Pi 真实推理），两者互不
 依赖、可并行领取（不同 lease / 不同路径）。**`P13-T12/D01` 视觉规格**是 documentation-only
-切片，可与任何实现并行，且必须在 `P13-T12/D02` 与 `P11-T15` 之前完成。**`P13-T13`** 依赖
-owner 提供 Windows 宿主；宿主未到位时该卡 `blocked`，**不挡**任何其他卡（其余卡的原生
-E2E 继续诚实 `not-run`）。`P11-T15` 是本阶段的验收出口，其 `acceptance_requires` 已改为
-`P13-T02..T13` done + 资格化 Windows；T15 done 仍 ≠ release。
+切片，可与任何实现并行，且必须在 `P13-T12/D02` 与 `P11-T15` 之前完成。**`P13-T13`** 在
+本机已指定（2026-09-05，`DOC-LOCAL-RUNTIME-HOST`；不要求 Windows 11）后即可领取；指定
+≠ qualified。未跑 unsigned 安装与挂单原生 E2E 前不得标 `done`。该卡**不挡**任何其他卡
+（其余卡的原生 E2E 继续诚实 `not-run`）。`P11-T15` 是本阶段的验收出口，其 `acceptance_requires` 已改为
+`P13-T02..T13` done + 资格化本机 Windows 宿主；T15 done 仍 ≠ release。
 
 建造顺序（实现窗口约束；虚线 = 非 mutex）：
 
@@ -1650,7 +1652,7 @@ flowchart TD
 | P13-T10 | Skill/MCP 安全评审获取与按范围授权 | P11-T04/T09；P13-T03；P12-T04；P4；P5-T03/T04 | 见下表三栏；安装 ≠ 授权 | done | **done**（2026-09-03；PR [#318](https://github.com/agentkernel/cognitive-os/pull/318)；lease 本交付关闭；fold `abfb9ca2`；validated `d861d341` required CI [33747031610](https://github.com/agentkernel/cognitive-os/actions/runs/33747031610) **SUCCESS**；`DEV-LINUX-NATIVE-01` store 6/6 + HTTP 1/1 + clippy；正式验收：install ≠ grant；按钮仅 Request acquire preview；无 Activate；无新迁移；supply-chain 宿主 E2E `not-run` 至 P13-T13；[report](../checkpoints/2026-09-03-personal-p13-t10-skill-mcp-grant-report.md)；[closure](../checkpoints/2026-09-03-personal-p13-t10-skill-mcp-grant-closure.md)） |
 | P13-T11 | 反思与 Member Runtime 版本化改进 | P13-T02/T04/T05；P11-T04 | 见下表三栏；模型自报 ≠ 改进 | done | **done**（2026-09-05；merged PR [#320](https://github.com/agentkernel/cognitive-os/pull/320) at `main@fa3c1dab`；closure HEAD `56f9de61` required CI [33949770791](https://github.com/agentkernel/cognitive-os/actions/runs/33949770791) **SUCCESS**；lease closed → PARALLEL-LANES §3.1）：v40 反思候选由 daemon 从 Attempt / verification / evidence / occurrence 事实生成；Member Runtime 改进 = 新 Employee revision + Owner preview + 可回滚；跨 Project Role Template 需 Owner 确认且不复制 Employee；负例：自报 422、隐式 Blueprint 422、运行中注入 422、反思当完成 422、静默复用 403。fold HEAD `DEV-LINUX-NATIVE-01` store 10/10 + HTTP 2/2 + clippy；required CI [33896709599](https://github.com/agentkernel/cognitive-os/actions/runs/33896709599) **SUCCESS** at `3bb9b050`；Dual Track 12/12。Windows 宿主 E2E `not-run` 至 P13-T13；[report](../checkpoints/2026-09-05-personal-p13-t11-report.md)；[closure](../checkpoints/2026-09-05-personal-p13-t11-closure.md) |
 | P13-T12 | 视觉规格 + a11y / 视觉资格化（State Lab / 键盘 / NVDA / 200% / host-theme） | D01：P11-T01 + 冻结 v9；D02：P12 + P13-T04..T09 表面 | 见下表三栏；D01 documentation-only；D02 逐格记账 | done | `P13-T12/D01` **done**（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；required CI [33669225379](https://github.com/agentkernel/cognitive-os/actions/runs/33669225379) **SUCCESS** at `bd87b8ee`；lease 已关闭）：视觉规格 [personal-2.0-opc-visual-ui-spec.md](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md) + 对照清单 [personal-2.0-opc-v9-ui-comparison-checklist.md](../../personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)（19/19 表 A 模块，判定全 `not-run`；D02 各格网已列）；[report](../checkpoints/2026-09-03-personal-p13-t12-d01-visual-spec-report.md)；[closure](../checkpoints/2026-09-03-personal-p13-t12-d01-visual-spec-closure.md)。D02 **done**（2026-09-05，PR [#322](https://github.com/agentkernel/cognitive-os/pull/322)，fold HEAD `bba4aa47` required CI [33951377929](https://github.com/agentkernel/cognitive-os/actions/runs/33951377929) **SUCCESS**；`/ui/` `c8691923`；Chrome/Linux 格已填，计数见 [D02 report](../checkpoints/2026-09-05-personal-p13-t12-d02-report.md)；[D02 closure](../checkpoints/2026-09-05-personal-p13-t12-d02-closure.md)；lease closed → PARALLEL-LANES §3.1；NVDA/Windows 诚实 `not-run`） |
-| P13-T13 | Windows 原生宿主资格化 + 挂单原生 E2E 回填 | owner 宿主；P11-T02；P13-T02/T05/T08；P10-T18 历史 | 见下表三栏；宿主未到位则 `blocked`，不挡其他卡 | not-started | unclaimed；`DEV-WINDOWS-NATIVE-OPC-01` 目前 not provisioned |
+| P13-T13 | Windows 原生宿主资格化 + 挂单原生 E2E 回填 | 本机已指定（2026-09-05）；P11-T02；P13-T02/T05/T08；P10-T18 历史 | 见下表三栏；指定后可领取，指定 ≠ qualified | not-started | unclaimed；`DEV-WINDOWS-NATIVE-OPC-01` designated，E2E 未跑 |
 
 | ID | validation environment | 关闭门 | 漂移检测负例 |
 |---|---|---|---|
@@ -1666,7 +1668,7 @@ flowchart TD
 | P13-T10 | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + `DEV-LINUX-NATIVE-01`；Dual Track TS。supply-chain 宿主 E2E `not-run` 直到 P13-T13。 | 助手主导发现 → 结构化安全评审 → 首次安装/扩权前 exact Owner 画布 preview → 版本锁定 artifact → 独立 Project/Member grant → 更新评审/兼容测试/回滚 | 安装即授权；未评审自动安装；聊天 Approve；ambient grant；generic Resource schema；engine store / marketplace；grant 无过期无范围 |
 | P13-T11 | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + `DEV-LINUX-NATIVE-01`。 | 反思候选由 daemon 从 Attempt/verification/evidence 事实生成；Member Runtime 改进 = 新 revision + Owner preview + 可回滚；跨 Project Role Template 提案需 Owner 确认 | 模型自报即改进；隐式 Blueprint 升级；运行中 prompt 注入；反思当完成；跨 Project 静默复用 Member |
 | P13-T12 | D01 documentation-only（local Markdown/link、`check:consistency`、handbook/docs-sync）。D02：rendered browser / NVDA / 200% / theme review 从登记宿主本机浏览器对已 push exact-revision guest daemon `/ui/`（`DEV-LINUX-NATIVE-01` SSH 隧道）= implementation evidence；Windows native chrome 证据 = `DEV-WINDOWS-NATIVE-OPC-01` / `not-run`；缺环境诚实 `not-run`；不发明环境 ID。 | D01：视觉规格 + v9 逐模块对照清单成文。D02：九态 × 九表面 State Lab 真布局、键盘可达与焦点恢复、200% 与窄窗三栏横滚不堆叠、light/dark/high-contrast 对比、NVDA 关键路径，每格 pass/fail/not-run 记账 | canvas 截图当验收；跳过格写 pass；改 IA；Vite 当产品源；假 State Lab 静态图；把 rendered review 写成 Windows native 资格 |
-| P13-T13 | `DEV-WINDOWS-NATIVE-OPC-01`（本卡负责 provision + qualify 并写回 `PERSONAL-TEST-ENVIRONMENTS.md`）；`CI-WINDOWS-MSVC-01` compile。宿主未到位则整卡 `blocked`。 | 环境登记从 not provisioned/qualified 变为 qualified；挂单原生 E2E（T02 install/tray/sleep/SecretStore、P13-T02 sandbox/ACL/supply chain、P13-T05 clock/sleep/restart、P13-T08 SecretStore/proxy、P13-T04 文件打开、UI 原生）在该环境实际跑过并逐格记 pass/fail；unsigned 开发安装路径可运行 | CI/GNU/WSL/Linux 当原生资格；`not-run` 写 pass；B01-W 当日常机；签名/release 声称；用 B01-DESKTOP-002 冒充 Windows |
+| P13-T13 | `DEV-WINDOWS-NATIVE-OPC-01`（本卡负责 qualify 并写回 pins；指定已由 `DOC-LOCAL-RUNTIME-HOST` 完成）；`CI-WINDOWS-MSVC-01` compile。 | 环境登记从 designated 变为 qualified；挂单原生 E2E（T02 install/tray/sleep/SecretStore、P13-T02 sandbox/ACL/supply chain、P13-T05 clock/sleep/restart、P13-T08 SecretStore/proxy、P13-T04 文件打开、UI 原生）在该环境实际跑过并逐格记 pass/fail；unsigned 开发安装路径可运行 | CI/WSL/Linux 当原生资格；`not-run` 写 pass；cargo 当原生 E2E；B01-W 当日常机；签名/release 声称；用 B01-DESKTOP-002 冒充 Windows |
 
 本阶段 foundation（复用，禁止再造）：P11 全部权威对象（Project/Employee/Conversation/
 ApprovalPreview/Routine/Vault/Memory/InstallFact+Grant/hosted DSH child identity/

@@ -80,7 +80,8 @@ current fact of the code.
   hosted DSH is a start skeleton, `runs`/`outputs` show only the process axis,
   Settings still defers connections to the legacy `/providers` page, Memory
   correct/forget has no OPC surface, no visual specification exists, and the
-  Windows native environment is not provisioned. Formal-plan **Phase 13**
+  Windows native environment is designated on this local host (2026-09-05)
+  but native E2E cells remain `not-run` until `P13-T13`. Formal-plan **Phase 13**
   (`P13-T01`–`T13`) owns these gaps card by card; Phase 13 done is still not
   release / signing / B01-W. `P13-T03` closed the hidden Pi assistant gap: its
   four turns now really run the exact pinned Pi through the daemon Provider

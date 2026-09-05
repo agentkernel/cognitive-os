@@ -250,7 +250,7 @@ visible reason.
 | Guest daemon environment | `DEV-LINUX-NATIVE-01` (`wuz@192.168.1.2`, bind `127.0.0.1:48786`, SSH tunnel) |
 | Host browser + version (registered host) | Chrome 151.0.7922.174 on `DEV-WIN-GNU-01` (headless CDP; dump-dom) |
 | NVDA version | not installed on `DEV-WIN-GNU-01` (`C:\\Program Files\\NVDA` absent) — Grid E `not-run` |
-| Windows native chrome environment | `DEV-WINDOWS-NATIVE-OPC-01` — not provisioned; cells `not-run` until `P13-T13/D01` |
+| Windows native chrome environment | `DEV-WINDOWS-NATIVE-OPC-01` — designated on this local host 2026-09-05 (OS version not a gate); cells `not-run` until `P13-T13` executes them |
 | D02 running report | [2026-09-05-personal-p13-t12-d02-report.md](../../../docs/checkpoints/2026-09-05-personal-p13-t12-d02-report.md) |
 
 ---

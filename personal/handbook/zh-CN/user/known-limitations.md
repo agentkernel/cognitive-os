@@ -65,7 +65,7 @@ non_claims:
   0 假 Create/Activate/Approve。
 - **Phase 12 收口不等于成员真的会干活**：截至 2026-09-02，托管 DSH 只有 start 骨架、
   `runs`/`outputs` 只显示流程轴、Settings 连接仍指路旧 `/providers`、Memory
-  纠正/遗忘无 OPC 表面、没有视觉规格、Windows 原生环境未 provisioned。这些缺口由正式
+  纠正/遗忘无 OPC 表面、没有视觉规格、Windows 原生环境已指定本机但原生 E2E 仍 `not-run` 直到 `P13-T13`。这些缺口由正式
   计划 **Phase 13**（`P13-T01`–`T13`）逐卡承接；Phase 13 done 也不是 release /
   signing / B01-W。`P13-T03` 已关闭隐藏 Pi 助手缺口：四类 turn 现在真的经 daemon
   Provider 代理运行 exact pinned Pi（仅 Linux 证据；Windows Pi 路由在 `P13-T13` 前

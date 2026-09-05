@@ -1,7 +1,7 @@
 # CognitiveOS Personal Test and Development Environments
 
 - Status: active environment registry
-- Last reconciled: 2026-08-06
+- Last reconciled: 2026-09-05
 - Product/task status source: [PROGRESS.md](PROGRESS.md) `Current snapshot`
 - Platform claim source: [PERSONAL-SUPPORT-MATRIX.md](PERSONAL-SUPPORT-MATRIX.md)
 
@@ -63,7 +63,7 @@ Slice remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `DEV-WIN-GNU-01` | local Windows host (GNU default host; registered directories carry a local MSVC `rustup override` since 2026-09-03) | local development | TypeScript/static checks everywhere; local Rust build/test/Clippy iteration only inside the override directories — development evidence, never supported-CI/Gate/release/Profile |
 | `CI-UBUNTU-01` | GitHub `ubuntu-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
 | `CI-WINDOWS-MSVC-01` | GitHub `windows-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
-| `DEV-WINDOWS-NATIVE-OPC-01` | future qualified Windows 11 x86_64 development host | **not provisioned/qualified** | none; required for native Phase 11 host/DSH/UI/connector evidence |
+| `DEV-WINDOWS-NATIVE-OPC-01` | same physical host as `DEV-WIN-GNU-01` (owner 2026-09-05: project runtime testing on this machine; OS version is not a provision gate; recorded Windows 10 Pro 10.0.19045) | **designated**; not yet qualified | designation only; native install/tray/sleep/SecretStore/sandbox/UI E2E stays `not-run` until `P13-T13` executes those cells |
 | `CLOUD-AGENT-LINUX-01` | Cursor Cloud Agent Linux pod | ephemeral remote container | strong local/container implementation evidence |
 | `DEV-WSL2-01` | Windows WSL2 Linux guest | local Linux guest | strong local/fixture implementation evidence |
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
@@ -91,7 +91,8 @@ record; it names the owner's local Windows development machine, whose rustup
   `P0-T01/D02`).
 - **Local MSVC override (the registered local Rust link path):**
   `rustup override set 1.97.1-x86_64-pc-windows-msvc` is set for exactly
-  `D:\agent-kernel` and `D:\agent-kernel-wt-p0-t01`; it lives in rustup's own
+  `D:\agent-kernel` (the `D:\agent-kernel-wt-p0-t01` worktree was removed in
+  2026-09-05 disk hygiene); it lives in rustup's own
   settings, not in the repository, and takes precedence over
   `rust-toolchain.toml` only in those directories (`.cargo/config.toml` is not
   gitignored here and is therefore **not** used). In an override directory
@@ -125,11 +126,14 @@ record; it names the owner's local Windows development machine, whose rustup
   `P0-T01/D02` running report). Local Rust iteration is development evidence
   that helps a Slice reach a pushable checkpoint sooner; supported validation
   is still the CI/native route below.
-- **Known local limitations of the override path (recorded 2026-09-03):**
-  (1) disk — `D:` holds `CARGO_TARGET_DIR` with only a few GB free; the full
-  workspace test build fits only with `CARGO_PROFILE_DEV_DEBUG=0` set in the
-  shell session (no persistent change; debuginfo level does not alter what
-  is compiled or asserted); (2) privilege — the Cursor Shell is not elevated,
+- **Known local limitations of the override path (recorded 2026-09-03;
+  disk remeasured 2026-09-05 after Pchat-backup and cargo-target hygiene):**
+  (1) disk — `CARGO_TARGET_DIR` is `D:\DevEnv\CargoTarget`; after 2026-09-05
+  hygiene `C:` had ~14 GB free and `D:` ~25 GB free. The full workspace test
+  build still uses `CARGO_PROFILE_DEV_DEBUG=0` in the shell session (no
+  persistent change; debuginfo level does not alter what is compiled or
+  asserted). Linker temp should use `TEMP`/`TMP` on `D:\tmp\rust-link`, not
+  the default `C:\Users\...\Temp`. (2) privilege — the Cursor Shell is not elevated,
   `SeCreateSymbolicLinkPrivilege` is not held and Windows Developer Mode is
   off, so the four `kernel-server` `tool_executor` unit tests whose fixture
   creates a symlink/reparse point fail at fixture setup with OS error 1314
@@ -158,8 +162,9 @@ record; it names the owner's local Windows development machine, whose rustup
   including local MSVC-override Rust build/test/Clippy results labelled as
   such. Capability ceiling **unchanged** by `P0-T01/D02`.
 - **Cannot claim:** supported Windows Rust, `tested-supported-ci`, Windows
-  product install, `DEV-WINDOWS-NATIVE-OPC-01` qualification, B01-W,
-  sandbox/containment, release or Profile.
+  product install, citing cargo as native product-runtime E2E (this machine
+  is designated `DEV-WINDOWS-NATIVE-OPC-01`; cargo is not that
+  qualification), B01-W, sandbox/containment, release or Profile.
 - **Evidence:** [`personal/tests/baseline/README.md`](../../personal/tests/baseline/README.md)
   (2026-07-25 GNU baseline);
   [`P0-T01/D02` running report](../checkpoints/2026-09-03-personal-p0-t01-d02-toolchain-report.md)
@@ -199,7 +204,7 @@ default. This subsection aligns names only; it does not provision hosts.
 
 | Phase 11 work | Required development evidence | Explicit non-substitute |
 |---|---|---|
-| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` compile/test plus future qualified `DEV-WINDOWS-NATIVE-OPC-01` install/service/tray/sleep/filesystem/SecretStore execution (`Requires-environment` / `not-run` until qualified) | `DEV-WIN-GNU-01`, WSL, Linux, Canvas, `B01-DESKTOP-002` as daily default |
+| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` compile/test plus `DEV-WINDOWS-NATIVE-OPC-01` install/service/tray/sleep/filesystem/SecretStore execution (`Requires-environment` / `not-run` until `P13-T13` qualifies the designated local host) | citing cargo as install/tray/sleep E2E; WSL, Linux, Canvas, `B01-DESKTOP-002` as daily default |
 | P11-T03/T04 Project/Employee | daily authority tests: `CI-UBUNTU-01` and `CI-WINDOWS-MSVC-01`; native daemon/store when needed: pushed exact-revision `DEV-LINUX-NATIVE-01` | docs/fixtures alone; GNU Rust link; treating `B01-DESKTOP-002` as daily default |
 | P11-T05/T06 Conversation/Pi Assistant | projection negatives on required CI; Windows archive/index/Pi native route remains unqualified (`not-run`) | Linux Pi qualification transfer |
 | P11-T07 hidden hosted DSH | required CI plus qualified Windows artifact/sandbox/process/stdio/Provider/update/rollback E2E on `DEV-WINDOWS-NATIVE-OPC-01` (`not-run` until qualified) | existing Linux dsh Path B or research HEAD as Windows product; DSH `apps/web` as `/ui/` |
@@ -225,13 +230,28 @@ scenes and the frozen prototype + design goals. Linux native evidence closes
 | P13-T04 / T05 / T06 / T09 / T10 / T11 authority + `/ui/` | required CI plus `DEV-LINUX-NATIVE-01` for authority/store/HTTP; Dual Track TS on the `DEV-WIN-GNU-01` allowed surface for `/ui/`; product origin daemon `/ui/` | file open / clock-sleep-restart / FS / supply-chain host cells before `P13-T13` |
 | P13-T07 / T08 surfaces | Dual Track TS + required CI; `DEV-LINUX-NATIVE-01` for SecretStore route | Windows SecretStore / privacy host cells before `P13-T13`; Vite as product origin |
 | P13-T12 visual spec + a11y qualification | D01 documentation-only; D02 rendered browser / NVDA / 200% / host-theme review from a registered host's local browser against pushed exact-revision guest daemon `/ui/` (`DEV-LINUX-NATIVE-01` over the documented SSH tunnel) = implementation evidence | canvas screenshots; skipping a cell as pass; rendered review as Windows native chrome qualification |
-| P13-T13 Windows native qualification | owner-provisioned Windows 11 x86_64 host registered here as `DEV-WINDOWS-NATIVE-OPC-01` (image / tools / pins recorded) before any cell counts; then the hung native E2E cells run there | CI / GNU / WSL / Linux / `B01-DESKTOP-002`; B01-W VM as a daily development host; unsigned dev path as release |
+| P13-T13 Windows native qualification | owner-designated local host (same machine as `DEV-WIN-GNU-01`; OS version is not a provision gate; recorded Windows 10 Pro 10.0.19045) as `DEV-WINDOWS-NATIVE-OPC-01`; unsigned install + hung native E2E cells run there; image / tools / pins recorded when those cells execute | CI / WSL / Linux / `B01-DESKTOP-002`; B01-W VM as a daily development host; unsigned dev path as release; citing cargo as native E2E |
 
-`DEV-WINDOWS-NATIVE-OPC-01` is a reserved capability requirement, not an
-existing machine or qualification claim. Until provisioned and qualified,
-native checks are `not-run`/`Requires-environment`. `P13-T13/D01` is the only
-card allowed to change that row, and only by recording an actually provisioned
-and qualified host.
+`DEV-WINDOWS-NATIVE-OPC-01` is designated (2026-09-05, `DOC-LOCAL-RUNTIME-HOST`)
+on this local machine. Designation is not qualification. Native checks stay
+`not-run`/`Requires-environment` until `P13-T13` actually runs the unsigned
+install path and backfills each hung cell. That DOC owns the designation
+rewrite (bind the reserved ID to this host; drop any Windows 11 provision
+mutex). `P13-T13` still owns qualification and cell-by-cell backfill.
+
+### 5.3 `DEV-WINDOWS-NATIVE-OPC-01` — designated local project-runtime host
+
+Owner instruction 2026-09-05: run project runtime tests on this machine; do
+not require Windows 11 as a provision gate. No new environment ID.
+
+| Item | Fact |
+|---|---|
+| Physical host | Same machine as `DEV-WIN-GNU-01` (`D:\agent-kernel`) |
+| Recorded OS | Windows 10 Pro 10.0.19045, x86_64 (fact, not a gate) |
+| Designation | 2026-09-05 via `DOC-LOCAL-RUNTIME-HOST` |
+| Qualification | still `P13-T13` (unsigned development install + hung native E2E) |
+| Cargo / Dual Track TS on this host | development evidence only; not native product-runtime E2E |
+| B01-W / signing / release / Profile | unchanged and separate |
 
 `CI-WINDOWS-MSVC-01` may prove compile/test behavior only. It cannot prove
 Windows install, tray/background, SecretStore, process/ACL containment, sleep/
