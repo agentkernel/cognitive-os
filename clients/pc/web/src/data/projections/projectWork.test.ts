@@ -165,4 +165,29 @@ describe("project work projections (P12-T03)", () => {
     ).toEqual(["manager"]);
     expect(uniqueResponsibleSlots([])).toEqual([]);
   });
+
+  it("exposes Dual Track process-ring slots instead of collapsed owner", () => {
+    const ring = (stageId: string, slot: string, position: string) => ({
+      stageId,
+      position,
+      title: stageId,
+      objective: "unknown",
+      confirmStatus: "unknown",
+      ready: "false",
+      seated: "false",
+      outputDigest: "unknown",
+      deliverableType: "unknown",
+      saveFormat: "unknown",
+      openWith: "unknown",
+      gapCount: "0",
+      responsibleSlot: slot,
+    });
+    expect(
+      uniqueResponsibleSlots([
+        ring("collect", "collect", "0"),
+        ring("analyze", "analyze", "1"),
+        ring("draft", "draft", "2"),
+      ]),
+    ).toEqual(["collect", "analyze", "draft"]);
+  });
 });

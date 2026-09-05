@@ -129,7 +129,7 @@ export function buildCharterBlob(input: {
   goalReady: boolean;
 }): string {
   const processLines = input.rings.map((ring) => {
-    return `- ${ring.id} (${ring.label}): ${ring.status}; input=${ring.input.trim() || "(none)"}; method=${ring.method.trim() || "(none)"}; rights=${ring.rights.trim() || "(none)"}`;
+    return `- ${ring.id} (${ring.label}): ${ring.status}; input=${ring.input.trim() || "(none)"}; method=${ring.method.trim() || "(none)"}; rights=${ring.rights.trim() || "(none)"}; slot=${ring.id}`;
   });
   const memberLines =
     input.members.length === 0
