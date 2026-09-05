@@ -76,7 +76,8 @@ export function ProjectOutputsPage() {
         lede="Real Attempt artifacts from the daemon CAS. Select one, then view. Files are not Project authority."
       />
       <HonestyNote>
-        Product origin is daemon-served hash /ui/. GET {OUTPUTS_PATH} lists
+        Product origin is daemon-served hash /ui/. Vite preview is not the product
+        origin. This chrome is not Linux 1.0 #/work. GET {OUTPUTS_PATH} lists
         CAS-referenced artifacts with their independent-verifier state; the
         child's own “done” is never completion. Knowledge Vault files are not this
         list. Planned is not published; this page has no Publish and chat has no

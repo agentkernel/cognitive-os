@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
+import { isKnownRoute } from "../normalize";
 import {
+  ATTEMPT_RUN_PATH,
   attemptListPath,
   ledgerDecisionRows,
   projectAttemptHistory,
@@ -199,5 +201,11 @@ describe("P13-T05/D02 routine runs projection", () => {
     expect(rows[0].verificationStatus).toBe("not-run");
     expect(rows[0].exitCode).toBe("0");
     expect(projectAttemptHistory({ attempts: "nope" })).toEqual([]);
+  });
+
+  it("names the management Write Attempt route without whitelisting the task alias", () => {
+    expect(ATTEMPT_RUN_PATH).toBe("/management/project/v1/dsh.hosted.attempt.run");
+    expect(isKnownRoute("POST", ATTEMPT_RUN_PATH)).toBe(true);
+    expect(isKnownRoute("POST", "/task/project/v1/dsh.hosted.attempt.run")).toBe(false);
   });
 });

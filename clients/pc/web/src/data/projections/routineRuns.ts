@@ -12,6 +12,7 @@ import { asList, asRecord } from "../projections";
 
 export const ROUTINE_RUNS_PATH = "/management/project/v1/routine.runs";
 export const ATTEMPT_LIST_PATH = "/management/project/v1/dsh.hosted.attempt.list";
+export const ATTEMPT_RUN_PATH = "/management/project/v1/dsh.hosted.attempt.run";
 export const ROUTINE_TRIGGER_PATH = "/management/project/v1/routine.trigger";
 
 export function routineRunsPath(projectId: string): string {
