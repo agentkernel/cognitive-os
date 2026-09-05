@@ -4,7 +4,7 @@
 - Lease: `lease/personal/P14-T05/attempt-runs-outputs`
 - Worktree: `D:\agent-kernel-wt-P14-T05` (isolated from primary T04 checkout)
 - Branch: `personal/P14-T05-attempt-runs` from `origin/main@ed893951` (PR #330 / T03 merged)
-- Draft PR: pending this delivery
+- Draft PR: [#332](https://github.com/agentkernel/cognitive-os/pull/332) (Draft; not ready/merge)
 - Change class: `implementation-only` (Project Runs Write Attempt + whitelist management `dsh.hosted.attempt.run`; Runs/Outputs honesty; no `core/specs`; no numbered migration)
 - Claim ceiling: `hypothesis`
 - Product origin: daemon `/ui/` — Vite is not the product source
