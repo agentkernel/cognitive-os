@@ -2392,7 +2392,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T08 — Knowledge v9 IA（files / why / import）
 
-- **status:** `not-started`. Claim ceiling `hypothesis`. 可与创建链并行。
+- **status:** `in-progress` (`P14-T08/D01` on `personal/P14-T08-knowledge-ia`). Claim ceiling `hypothesis`. 可与创建链并行。 Do not claim T02/T03/T04 or T07/T06.
 - **EVAL-016:** J5.
 - **依赖:** P14-T01；P13-T07；P12-T07.
 - **垂直切片:** D01：files / Why this fragment / import 表面；failure-first：file-as-authority、secret ingest。

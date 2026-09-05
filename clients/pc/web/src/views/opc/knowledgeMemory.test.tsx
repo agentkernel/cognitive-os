@@ -83,6 +83,18 @@ function setInputValue(input: HTMLInputElement | HTMLTextAreaElement, value: str
   });
 }
 
+function clickTab(host: HTMLElement, label: string) {
+  const tab = [...host.querySelectorAll('[role="tab"]')].find(
+    (node) => (node.textContent ?? "").trim() === label,
+  );
+  if (!tab) {
+    throw new Error(`tab not found: ${label}`);
+  }
+  act(() => {
+    (tab as HTMLButtonElement).click();
+  });
+}
+
 function clickButton(host: HTMLElement, text: string) {
   const button = [...host.querySelectorAll("button")].find(
     (candidate) => (candidate.textContent ?? "").trim() === text,
@@ -229,6 +241,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
 
   it("keeps chat auto-admission honest empty with no Admit button", async () => {
     const { host, root, calls } = await renderKnowledge();
+    clickTab(host, "Memory");
     const auto = host.querySelector("[data-region='opc-knowledge-auto-admit']");
     expect(auto?.textContent).toMatch(/Requires-backend/);
     expect(auto?.querySelector("button")).toBeNull();
@@ -249,6 +262,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
         body: { status: "ok", memory_id: "mem-2" },
       },
     });
+    clickTab(host, "Memory");
     const select = host.querySelector("select[name='memory_id']") as HTMLSelectElement;
     act(() => {
       select.value = "mem-1";
@@ -284,6 +298,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
         },
       },
     });
+    clickTab(host, "Memory");
     const memory = host.querySelector("select[name='memory_id']") as HTMLSelectElement;
     act(() => {
       memory.value = "mem-1";
