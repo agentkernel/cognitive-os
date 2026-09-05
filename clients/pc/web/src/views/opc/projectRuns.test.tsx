@@ -2,11 +2,12 @@ import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../App";
+import { isKnownRoute } from "../../data/normalize";
 import { appProjections } from "../../data/store";
 import { clearSession, rememberBearer } from "../../session";
 
 type RouteResponse = { status: number; body: unknown };
-type FetchCall = { method: string; path: string; pathname: string };
+type FetchCall = { method: string; path: string; pathname: string; body?: string };
 
 function installFetch(routes: Record<string, RouteResponse>): FetchCall[] {
   const calls: FetchCall[] = [];
@@ -15,7 +16,12 @@ function installFetch(routes: Record<string, RouteResponse>): FetchCall[] {
     vi.fn(async (input: unknown, init?: RequestInit) => {
       const url = new URL(String(input), "http://localhost");
       const method = (init?.method ?? "GET").toUpperCase();
-      calls.push({ method, path: `${url.pathname}${url.search}`, pathname: url.pathname });
+      calls.push({
+        method,
+        path: `${url.pathname}${url.search}`,
+        pathname: url.pathname,
+        body: typeof init?.body === "string" ? init.body : undefined,
+      });
       const handler = routes[`${method} ${url.pathname}`];
       const resolved =
         handler ??
@@ -55,6 +61,24 @@ function unmount(host: HTMLDivElement, root: ReturnType<typeof createRoot>) {
     root.unmount();
   });
   host.remove();
+}
+
+function clickButton(host: HTMLElement, text: string) {
+  const button = [...host.querySelectorAll("button")].find(
+    (candidate) => (candidate.textContent ?? "").trim() === text,
+  );
+  if (!button) {
+    throw new Error(`button not found: ${text}`);
+  }
+  act(() => {
+    button.click();
+  });
+}
+
+function workHashes(host: HTMLElement): string[] {
+  return [...host.querySelectorAll("a")]
+    .map((node) => node.getAttribute("href") ?? "")
+    .filter((href) => href.includes("/work"));
 }
 
 /** P13-T05 drift negatives: fake Start, Approve, Complete, Retry-as-run. */
@@ -113,6 +137,24 @@ const READY_AXIS: RouteResponse = {
         seated: true,
         output_contract: { digest: "out-1", deliverable_type: "unknown", save_format: "unknown", open_with: "unknown" },
         gaps: [],
+      },
+    ],
+  },
+};
+
+const READY_ROSTER: RouteResponse = {
+  status: 200,
+  body: {
+    status: "ok",
+    authority_note: "employee",
+    roster: [
+      {
+        employee_id: "emp-1",
+        state: "seated",
+        model_bound: true,
+        is_current_manager: false,
+        runtime_binding_ref: "run-1",
+        responsible_stage_ids: ["st-1"],
       },
     ],
   },
@@ -276,6 +318,7 @@ function routes(extras: Record<string, RouteResponse> = {}): Record<string, Rout
     "GET /management/project/v1/list": READY_LIST,
     "GET /management/project/v1/detail": READY_DETAIL,
     "GET /management/project/v1/axis": READY_AXIS,
+    "GET /management/project/v1/roster": READY_ROSTER,
     "GET /management/project/v1/pending-previews": { status: 200, body: { status: "ok", previews: [] } },
     "GET /management/project/v1/routine.runs": RUNS,
     "GET /management/project/v1/dsh.hosted.attempt.list": ATTEMPTS,
@@ -437,5 +480,111 @@ describe("P13-T05/D02 Project runs: occurrence ledger + Attempt history", () => 
     expect(summary).toMatch(/missed unknown/);
     expect(summary).not.toMatch(/missed 0/);
     unmount(partial.host, partial.root);
+  });
+});
+
+describe("P14-T05/D01 Project chrome Write Attempt (not Linux 1.0 Work)", () => {
+  it("does not treat #/work as 2.0 chrome and never advertises Vite as product origin", async () => {
+    const { host, root } = await renderRuns();
+    expect(workHashes(host)).toEqual([]);
+    expect(host.textContent).toMatch(/daemon-served hash \/ui\//i);
+    expect(host.textContent).toMatch(/Vite preview is not the product origin/);
+    expect(host.textContent).toMatch(/not Linux 1\.0 #\/work/);
+    expect(host.querySelector("[data-page='opc-project-runs']")).not.toBeNull();
+    unmount(host, root);
+  });
+
+  it("does not offer a clickable Run or Write Attempt without a live Project and seated Member", async () => {
+    const creating = await renderRuns({
+      "GET /management/project/v1/detail": {
+        status: 200,
+        body: {
+          status: "ok",
+          projection: "personal-private",
+          project: { project_id: "proj-1", state: "creating", created_at: "t0" },
+          charter: { status: "draft", content_digest: "dig-1" },
+          plan: { plan_revision_id: "unknown" },
+          pending_preview_count: 0,
+        },
+      },
+      "GET /management/project/v1/roster": {
+        status: 200,
+        body: { status: "ok", authority_note: "empty-roster", roster: [] },
+      },
+    });
+    const creatingButton = creating.host.querySelector(
+      "button[data-write-attempt]",
+    ) as HTMLButtonElement | null;
+    expect(creatingButton?.disabled).toBe(true);
+    expect(creatingButton?.getAttribute("data-write-attempt")).toBe("blocked");
+    expect(creating.host.querySelector("[data-region='opc-write-attempt']")?.textContent).toMatch(
+      /Nothing was dispatched/,
+    );
+    expect(fakeActionLabels(creating.host)).toEqual([]);
+    creatingButton?.click();
+    await flush();
+    expect(
+      creating.calls.some((call) => call.pathname === "/management/project/v1/dsh.hosted.attempt.run"),
+    ).toBe(false);
+    unmount(creating.host, creating.root);
+    appProjections.clear();
+
+    const unseated = await renderRuns({
+      "GET /management/project/v1/roster": {
+        status: 200,
+        body: {
+          status: "ok",
+          authority_note: "employee",
+          roster: [{ employee_id: "emp-1", state: "registered", model_bound: false }],
+        },
+      },
+    });
+    const unseatedButton = unseated.host.querySelector(
+      "button[data-write-attempt]",
+    ) as HTMLButtonElement | null;
+    expect(unseatedButton?.disabled).toBe(true);
+    expect(unseatedButton?.getAttribute("data-write-attempt")).toBe("blocked");
+    expect(fakeActionLabels(unseated.host)).toEqual([]);
+    expect(
+      unseated.calls.some((call) => call.method === "POST" && call.pathname.includes("attempt.run")),
+    ).toBe(false);
+    unmount(unseated.host, unseated.root);
+  });
+
+  it("posts management dsh.hosted.attempt.run from Write Attempt, never the task channel or #/work", async () => {
+    const { host, root, calls } = await renderRuns({
+      "POST /management/project/v1/dsh.hosted.attempt.run": {
+        status: 200,
+        body: {
+          status: "ok",
+          attempt: {
+            attempt_id: "dshattempt-new",
+            employee_id: "emp-1",
+            task_ref: "task://personal/project/proj-1",
+            state: "working",
+            completion_claimed: false,
+            verification_status: "not-run",
+          },
+          receipt_is_not_completion: true,
+        },
+      },
+    });
+    expect(isKnownRoute("POST", "/management/project/v1/dsh.hosted.attempt.run")).toBe(true);
+    expect(isKnownRoute("POST", "/task/project/v1/dsh.hosted.attempt.run")).toBe(false);
+    const button = host.querySelector("button[data-write-attempt='ready']") as HTMLButtonElement | null;
+    expect(button?.disabled).toBe(false);
+    expect(fakeActionLabels(host)).toEqual([]);
+    clickButton(host, "Write Attempt");
+    await flush();
+    const posted = calls.find(
+      (call) => call.method === "POST" && call.pathname === "/management/project/v1/dsh.hosted.attempt.run",
+    );
+    expect(posted).toBeDefined();
+    expect(posted?.body).toContain("\"employee_id\":\"emp-1\"");
+    expect(posted?.body).toContain("\"task_ref\":\"task://personal/project/proj-1\"");
+    expect(posted?.body).toContain("\"wait\":false");
+    expect(calls.some((call) => call.pathname.startsWith("/task/"))).toBe(false);
+    expect(workHashes(host)).toEqual([]);
+    unmount(host, root);
   });
 });

@@ -130,13 +130,14 @@ describe("route whitelist (R-1)", () => {
     expect(
       isKnownRoute("GET", "/management/project/v1/dsh.hosted.attempt.list?project_id=proj-1"),
     ).toBe(true);
+    expect(isKnownRoute("POST", "/management/project/v1/dsh.hosted.attempt.run")).toBe(true);
+    expect(isKnownRoute("POST", "/task/project/v1/dsh.hosted.attempt.run")).toBe(false);
   });
 
   it("never whitelists Routine arming / instruction writes or a Start control from the UI", () => {
     expect(isKnownRoute("POST", "/management/project/v1/routine.arm")).toBe(false);
     expect(isKnownRoute("POST", "/management/project/v1/routine.instruction")).toBe(false);
     expect(isKnownRoute("POST", "/management/project/v1/routine.trigger")).toBe(false);
-    expect(isKnownRoute("POST", "/management/project/v1/dsh.hosted.attempt.run")).toBe(false);
     expect(isKnownRoute("GET", "/task/project/v1/routine.runs?project_id=proj-1")).toBe(false);
     expect(isKnownRoute("POST", "/task/project/v1/chat.post")).toBe(false);
     expect(isKnownRoute("GET", "/task/project/v1/chat.thread")).toBe(false);
