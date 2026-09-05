@@ -55,13 +55,13 @@ designation. Disk facts in `PERSONAL-TEST-ENVIRONMENTS.md` §3 were refreshed
 | Unit | Command / check | Result | Environment | Notes |
 |---|---|---|---|---|
 | U1 backup deletion | PowerShell `Remove-Item` on both `backups` trees | pass | host FS | not a product test |
-| U2 docs-sync (staged) | `node tools/src/docs-sync-gate.mjs --staged` | pending (run at commit) | `DEV-WIN-GNU-01` | after stage |
+| U2 docs-sync (staged) | `node tools/src/docs-sync-gate.mjs --staged` | pass | `DEV-WIN-GNU-01` | hook on `9a000fc0` |
 | U3 consistency | `pnpm run check:consistency` | pass | `DEV-WIN-GNU-01` | 275 requirements; Phase 13 edge set verified |
 | U4 handbook | `node tools/src/check-handbook.mjs` | pass | `DEV-WIN-GNU-01` | 58×2 locales |
 | U5 generator `--check` | `node tools/src/generate-handbook.mjs --check` | pass | `DEV-WIN-GNU-01` | 18 pages byte-identical |
 | U6 rules | `pnpm run check:rules` | pass | `DEV-WIN-GNU-01` | 0 failures |
-| U7 diff --check | `git diff --check` | pending | `DEV-WIN-GNU-01` | after stage |
-| U8 required CI | GitHub Actions on this branch HEAD | pending | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | after push |
+| U7 diff --check | `git diff --check` | pass | `DEV-WIN-GNU-01` | content + closure HEADs |
+| U8 required CI | GitHub Actions run [33955909125](https://github.com/agentkernel/cognitive-os/actions/runs/33955909125) | pass | `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` | content HEAD `9a000fc0`: resolve 3s SUCCESS; ubuntu 4m39s SUCCESS; windows 16m20s SUCCESS; `required-ci` 4s SUCCESS |
 | U9 Rust workspace | cargo build/test/clippy | not-run | — | documentation-only; no product code |
 | U10 native E2E | install / tray / sleep / SecretStore | not-run | `DEV-WINDOWS-NATIVE-OPC-01` | owned by `P13-T13` |
 
@@ -76,5 +76,4 @@ designation. Disk facts in `PERSONAL-TEST-ENVIRONMENTS.md` §3 were refreshed
 
 ## 6. Unique next
 
-Finish this DOC (fingerprints, local gates, Draft PR, required CI, merge).
-Then a later session may claim `P13-T13`. Do not claim `P11-T15`.
+This DOC is ready to merge (PR [#323](https://github.com/agentkernel/cognitive-os/pull/323); required CI [33955909125](https://github.com/agentkernel/cognitive-os/actions/runs/33955909125) **SUCCESS** at `9a000fc0`). After merge: claim `P13-T13`. Do not claim `P11-T15`.

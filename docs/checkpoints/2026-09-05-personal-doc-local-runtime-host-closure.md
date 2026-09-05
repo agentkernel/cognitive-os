@@ -2,10 +2,11 @@
 
 - Delivery: `DOC-LOCAL-RUNTIME-HOST`; change class **documentation** (environment
   registry / formal-plan alignment); no product-code, contract, or Gate change
-- Lease: `lease/personal/DOC-LOCAL-RUNTIME-HOST/plan-env` — close on merge
+- Lease: `lease/personal/DOC-LOCAL-RUNTIME-HOST/plan-env` — closed this delivery → PARALLEL-LANES §3.1
 - Branch: `personal/DOC-LOCAL-RUNTIME-HOST`
 - Running report: [2026-09-05-personal-doc-local-runtime-host-report.md](2026-09-05-personal-doc-local-runtime-host-report.md)
-- PR / required CI: recorded in PROGRESS when merge lands
+- PR: [#323](https://github.com/agentkernel/cognitive-os/pull/323)
+- Required CI: [33955909125](https://github.com/agentkernel/cognitive-os/actions/runs/33955909125) **SUCCESS** at content HEAD `9a000fc0` (resolve 3s; ubuntu 4m39s; windows 16m20s; required-ci 4s)
 
 ## Acceptance mapping
 
@@ -25,5 +26,7 @@ implementation, Gate, release, Profile, B01-W, T15, or Windows-support claim.
 
 ## Next unique action
 
-After this DOC merges: claim `P13-T13` with `lease/personal/P13-T13/native-host`
-on a task branch from fresh `origin/main`. Do not claim `P11-T15`.
+After this DOC merges: claim `P13-T13` with
+`lease/personal/P13-T13/windows-native-qualification` on branch
+`personal/P13-T13-windows-host` from fresh `origin/main`. Do not claim
+`P11-T15`.
