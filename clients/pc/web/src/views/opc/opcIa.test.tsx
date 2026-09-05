@@ -90,6 +90,18 @@ function fakeActionLabels(host: HTMLElement): string[] {
   return labels;
 }
 
+function clickTab(host: HTMLElement, label: string) {
+  const tab = [...host.querySelectorAll('[role="tab"]')].find(
+    (node) => (node.textContent ?? "").trim() === label,
+  );
+  if (!tab) {
+    throw new Error(`tab not found: ${label}`);
+  }
+  act(() => {
+    (tab as HTMLButtonElement).click();
+  });
+}
+
 function opcRoutes(
   list: RouteResponse,
   extras: Record<string, RouteResponse> = {},
@@ -440,7 +452,9 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
         body: { status: "ok", family: "memory", resources: [{ id: "mem-1", family: "memory" }] },
       },
     });
+    clickTab(host, "Why this fragment");
     expect(host.querySelector("[data-row-key='ent-1']")).not.toBeNull();
+    clickTab(host, "Memory");
     expect(host.querySelector("[data-row-key='mem-1']")).not.toBeNull();
     expect(host.textContent).toContain("mem-1");
     expect(fakeActionLabels(host)).toEqual([]);
@@ -462,7 +476,8 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
         body: { status: "error", error: { code: "LOCAL_ORIGIN_HEADER_REJECTED", message: "denied" } },
       },
     });
-    expect(host.querySelector("[data-region='opc-vault']")?.textContent).toMatch(/session denied/i);
+    clickTab(host, "Why this fragment");
+    expect(host.querySelector("[data-region='opc-why-fragment']")?.textContent).toMatch(/session denied/i);
     expect(host.querySelector("[data-row-key='ent-1']")).toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
@@ -487,7 +502,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
       },
     });
     expect(host.querySelector("[data-row-key='pol-1']")).not.toBeNull();
-    expect(host.querySelector("[data-page='opc-settings'] input")).toBeNull();
+    expect(host.querySelector("[data-region='opc-standing-policies'] input")).toBeNull();
     expect(host.textContent).toMatch(/2\.1 \/ Deferred/);
     const settingsLinks = [...host.querySelectorAll("[data-page='opc-settings'] a")].map(
       (node) => (node.textContent ?? "").trim(),

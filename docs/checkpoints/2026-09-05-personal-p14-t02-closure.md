@@ -8,7 +8,7 @@
 - Validated HEAD before this closure: `c9de0907` required CI [33976523572](https://github.com/agentkernel/cognitive-os/actions/runs/33976523572) **SUCCESS** (resolve 4s, ubuntu 3m58s, windows 17m21s, required-ci 3s)
 - Running report: [P14-T02 report](2026-09-05-personal-p14-t02-report.md)
 - Claim ceiling: `hypothesis` (A7: Dual Track / ordinary CI / guest `/ui/` close "the Dual Track wizard exists" only). Not Gate / release / Profile / B01. Windows native chrome JOURNEY **not-run**.
-- Evaluation routing: **OFF**. Formal-plan status row for `P14-T02` stays `not-started` until last-merger of `PERSONAL-DEVELOPMENT-PLAN.md` (sibling `P14-T08` lease). Current snapshot owns the done fact.
+- Evaluation routing: **OFF**. Last-merger of `PERSONAL-DEVELOPMENT-PLAN.md` marks `P14-T02` `in-progress` on this folded HEAD (`origin/main@299f4afb` includes `P14-T08` **done**). Current snapshot owns the closing fact; task `done` is recorded after required CI + merge.
 
 ## 1. Acceptance mapping (formal plan P14-T02 card + D01/D02)
 
@@ -39,8 +39,8 @@ Honest leftover owned by **P14-T03** (not a T02 fail): after Write, Today stays 
 
 ## 3. Non-claims
 
-Not T03 titled live Project / PlanRevision axis / leave `creating`. Not T07 Settings L1. Not T08 Knowledge files/why/import. No Gate / release / Profile / B01. No Vite origin. No secret in Git/DOM/report. Formal-plan `P14-T02` status cell is sibling-owned until last-merger.
+Not T03 titled live Project / PlanRevision axis / leave `creating`. Not T07 Settings L1. T08 Knowledge files/why/import is already merged (`main@299f4afb`). No Gate / release / Profile / B01. No Vite origin. No secret in Git/DOM/report. Last-merger marks formal-plan `P14-T02` `in-progress` on this fold.
 
 ## 4. Unique next
 
-Ready/merge PR [#329](https://github.com/agentkernel/cognitive-os/pull/329) after required CI on this closure HEAD. Then claim `P14-T03` (Write Project → titled live Project + PlanRevision axis). Do not claim T07/T08.
+Required CI on this folded HEAD (`origin/main@299f4afb` + Dual Track wizard). Then ready/merge PR [#329](https://github.com/agentkernel/cognitive-os/pull/329), close lease, then claim `P14-T03` (Write Project → titled live Project + PlanRevision axis). Do not claim T07.

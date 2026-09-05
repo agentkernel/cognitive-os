@@ -83,6 +83,29 @@ function setInputValue(input: HTMLInputElement | HTMLTextAreaElement, value: str
   });
 }
 
+function clickTab(host: HTMLElement, label: string) {
+  const tab = [...host.querySelectorAll('[role="tab"]')].find(
+    (node) => (node.textContent ?? "").trim() === label,
+  );
+  if (!tab) {
+    throw new Error(`tab not found: ${label}`);
+  }
+  act(() => {
+    (tab as HTMLButtonElement).click();
+  });
+}
+
+function selectImportSource(host: HTMLElement, value: string) {
+  const select = host.querySelector('select[name="import_source"]') as HTMLSelectElement | null;
+  if (!select) {
+    throw new Error("import_source not found");
+  }
+  act(() => {
+    select.value = value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
 function clickButton(host: HTMLElement, text: string) {
   const button = [...host.querySelectorAll("button")].find(
     (candidate) => (candidate.textContent ?? "").trim() === text,
@@ -212,15 +235,13 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
 
   it("shows Why this fragment from daemon inject_order and excerpts", async () => {
     const { host, root } = await renderKnowledge("#/knowledge");
+    clickTab(host, "Why this fragment");
     expect(host.querySelector("[data-region='opc-why-fragment']")).not.toBeNull();
     expect(host.querySelector("[data-row-key='ent-1']")?.textContent).toMatch(/sourced-excerpt/);
     expect(host.textContent).toContain("fixed-decision");
     expect(host.textContent).toContain("sourced-excerpt");
-    expect(host.querySelector("[data-region='opc-vault-ingest']")).not.toBeNull();
-    expect(host.querySelector("[data-region='opc-vault-ingest']")?.textContent).not.toMatch(
-      /obsidian/i,
-    );
-    expect(host.textContent).toMatch(/Import to Vault/);
+    expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
+    expect(host.textContent).not.toMatch(/obsidian/i);
     expect(host.textContent).not.toMatch(/apply authority/i);
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
@@ -242,6 +263,8 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
         body: { status: "ok", written: 1, memory_fts: "untouched" },
       },
     });
+    clickTab(host, "Import");
+    selectImportSource(host, "typed");
     setInputValue(host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement, "version one");
     clickButton(host, "Import to Vault");
     await flush();
@@ -275,6 +298,8 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
         },
       },
     });
+    clickTab(host, "Import");
+    selectImportSource(host, "typed");
     setInputValue(host.querySelector("input[name='relative_path']") as HTMLInputElement, "notes/keep.md");
     setInputValue(host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement, "keep this body");
     clickButton(host, "Import to Vault");
@@ -296,6 +321,8 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
 
   it("does not POST secret-shaped paste and keeps the original", async () => {
     const { host, root, calls } = await renderKnowledge("#/knowledge");
+    clickTab(host, "Import");
+    selectImportSource(host, "typed");
     setInputValue(
       host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement,
       "api_key=sk-p12t07-fixture",
@@ -317,6 +344,7 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
         body: { status: "error", error: { code: "LOCAL_ORIGIN_HEADER_REJECTED", message: "denied" } },
       },
     });
+    clickTab(host, "Why this fragment");
     expect(host.querySelector("[data-region='opc-why-fragment']")?.textContent).toMatch(/session denied/i);
     expect(host.querySelector("[data-row-key='ent-1']")).toBeNull();
     expect(calls.some((call) => call.method === "POST")).toBe(false);

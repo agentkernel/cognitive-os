@@ -199,11 +199,11 @@
 > （live daemon `/ui/` vs 冻结 v9 + [user-journeys.md](../../personal/docs/product/user-journeys.md)）。
 > Phase 13 `P13-T01..T13` 与 `P11-T15` 保持 **done**，不重开、不改状态。Phase 14 承接
 > 该测量之后仍失败的小白 Owner 工作。`P14-T01` 是 documentation-only **done**（已持久化）。
-> `P14-T02`–`T08` 为 **`not-started`** 垂直实现卡。同批登记
+> `P14-T08` **done**；`P14-T02` **in-progress**（PR [#329](https://github.com/agentkernel/cognitive-os/pull/329)）；`P14-T03`–`T07` 仍为垂直实现卡。同批登记
 > **`JOURNEY-BROWSER-SYNC-01`**（本文件命名节 + Phase 14 硬门 + 环境登记 §5.4）：
 > 每闭环一个用户旅程或有界功能模块，必须在 daemon `/ui/` 上做真实浏览器端到端，并回归
 > 已关闭的 Phase 14 旅程包。这是任务级同步，**不是** EVAL campaign，**不是** Gate。
-> owner 2026-09-05 持续交付指令已下达：领取 **`P14-T02`**。评测关闭本身仍不自动实现。
+> owner 2026-09-05 持续交付指令已下达：`P14-T02` **in-progress**；unique next after merge is claim **`P14-T03`**。评测关闭本身仍不自动实现。
 > 本登记不改产品代码/合同/测试，不重开 EVAL-016，不升 Gate/release/Profile。
 >
 > **计划修订（2026-07-26，生产就绪与低摩擦授权批）：** 依 owner 指令与
@@ -299,8 +299,8 @@
 | Phase 11 - Windows OPC 2.0 | 15 | 15 | 0 | 0 | 0 | P11-T01..T15 done；`P11-T15` N=15 retained 1 pass / 1 partial / 13 not-run at `main@4ca9b046`（PR [#325](https://github.com/agentkernel/cognitive-os/pull/325)） |
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
 | Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 13 | 0 | 0 | 0 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；P13-T07 **done**（Knowledge/Memory labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease closed）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期 copy/archive/delete/restore-point/export，merged PR #321 at `main@7575ebcd`；lease closed）；P13-T11 **done**（反思 + versioned Member Runtime，merged PR #320 at `main@fa3c1dab`；lease closed）；P13-T12 **done**（D01 视觉规格 docs-only + D02 `/ui/` 逐格记账，PR #322）；**T13 `done`**（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；`DEV-WINDOWS-NATIVE-OPC-01` D01-qualified）；P11-T15 是其验收出口，不自动 release。walking skeleton 完成 ≠ live v9 Owner job；剩余缺口见 Phase 14 |
-| Phase 14 - Personal 2.0.0 prototype-gap close after EVAL-016 | 8 | 1 | 0 | 0 | 7 | `P14-T01` docs-only **done**（Phase 14 + `JOURNEY-BROWSER-SYNC-01` persisted）；`P14-T02`–`T08` **`not-started`**；owner 2026-09-05 持续交付指令已下达；不重开 Phase 13；无新 Gate |
-| **合计** | **175** | **147** | **0** | **1** | **11** | 另有 16 cancelled；无新 Gate pass |
+| Phase 14 - Personal 2.0.0 prototype-gap close after EVAL-016 | 8 | 2 | 1 | 0 | 5 | `P14-T01` docs-only **done**；`P14-T08` **done**（Knowledge v9 IA，PR [#328](https://github.com/agentkernel/cognitive-os/pull/328) at `main@299f4afb`）；`P14-T02` **in-progress**（PR [#329](https://github.com/agentkernel/cognitive-os/pull/329)）；`P14-T03`–`T07` **`not-started`**；不重开 Phase 13；无新 Gate |
+| **合计** | **175** | **148** | **1** | **1** | **9** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -401,7 +401,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Web UI 与 Windows | P7-T05、P7-T07/B01-W | 独立 readiness/qualification，不继承 Linux 证据 |
 | Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01–T09 done；冻结 prototype 默认可走场景已接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
 | Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T02 done（托管 DSH 真实 Attempt 循环，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / runs + Today，merged PR #315 at `main@90437cb4`）；P13-T12 **done**（D01 视觉规格 + v9 对照清单 docs-only；D02 `/ui/` 逐格记账，PR #322）；P13-T06 done（群聊 v39，merged PR #316）；P13-T07 **done**（Knowledge/Memory，merged PR #319 at `main@015afcb8`；validated `6927efe6`）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期，merged PR #321 at `main@7575ebcd`）；P13-T11 **done**（merged PR #320 at `main@fa3c1dab`）；T13 **done**（merged PR #324 at `main@4ca9b046`）；出口 = P11-T15 N=15 **done** | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
-| Personal 2.0.0 prototype-gap close（Phase 14） | `P14-T01` docs-only **done**；`P14-T02`–`T08` **`not-started`**；预言机 = EVAL-016 + user-journeys + 冻结 v9；验证 = guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | 残差收口 live `/ui/` 对小白 Owner 工作；不重开 Phase 13；不是 Gate/release；dsh 不是 小白 chrome |
+| Personal 2.0.0 prototype-gap close（Phase 14） | `P14-T01` docs-only **done**；`P14-T08` **done**（PR [#328](https://github.com/agentkernel/cognitive-os/pull/328)）；`P14-T02` **in-progress**（PR [#329](https://github.com/agentkernel/cognitive-os/pull/329)）；`P14-T03`–`T07` **`not-started`**；预言机 = EVAL-016 + user-journeys + 冻结 v9；验证 = guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | 残差收口 live `/ui/` 对小白 Owner 工作；不重开 Phase 13；不是 Gate/release；dsh 不是 小白 chrome |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -1750,7 +1750,7 @@ Phase 14 是 owner 2026-09-05 指令的直接落点：**让 live daemon `/ui/` �
 （guest `B01-Desktop-Linux-002` pin `711a5a7ce8e9f89c6aabcbb7f3d8d7ee098f8fd1`）。
 **不重开** `PERSONAL-OPC-EVAL-016`。**不重开、不改状态** Phase 13 `P13-T01..T13` 与
 `P11-T15`。`P14-T01` 是 documentation-only **done**（已持久化）。owner 2026-09-05
-持续交付指令已下达：claim **`P14-T02`**。评测关闭本身仍不自动实现。
+持续交付指令已下达：`P14-T02` **in-progress**（PR [#329](https://github.com/agentkernel/cognitive-os/pull/329)）；unique next after merge is claim **`P14-T03`**。评测关闭本身仍不自动实现。
 
 **产品规则（设计已声明，本阶段不阻塞问 owner）：**
 
@@ -1831,13 +1831,13 @@ UI 工作继承该约定。文档-only 的 `P14-T01` 不跑浏览器。
 | ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
 |---|---|---|---|---|---|
 | P14-T01 | Phase 14 docs/plan 登记 + `JOURNEY-BROWSER-SYNC-01` | owner 2026-09-05 指令；EVAL-016 closed；P13-T01..T13 与 P11-T15 done（不重开） | 本文件 Phase 14 + typed deps + 三栏 + Slices + plan.md 卡 + trace/environments/PROGRESS/dev-prep index/handbook；`check:consistency`；documentation-only | done | `DOC-P14-GAP-CLOSE` persisted 2026-09-05 on `personal/DOC-P14-GAP-CLOSE`；无 implementation/support/Gate/release claim |
-| P14-T02 | 创建向导 = 原型 ①–⑤（不是五张 note textarea） | P14-T01；P12-T02；P11-T03/T04 | user-journeys §1 + v9 create-process/members/test/joint；EVAL-016 J1 blocker 2；真实 `/ui/` caller；`JOURNEY-BROWSER-SYNC-01` | not-started | 实现第一刀；owner 2026-09-05 持续交付指令已下达；claim ceiling `hypothesis` |
+| P14-T02 | 创建向导 = 原型 ①–⑤（不是五张 note textarea） | P14-T01；P12-T02；P11-T03/T04 | user-journeys §1 + v9 create-process/members/test/joint；EVAL-016 J1 blocker 2；真实 `/ui/` caller；`JOURNEY-BROWSER-SYNC-01` | in-progress | PR [#329](https://github.com/agentkernel/cognitive-os/pull/329)；D01 Dual Track **done** `1118076c`；D02 JOURNEY **pass**；fold `origin/main@299f4afb`；claim ceiling `hypothesis` |
 | P14-T03 | Write Project 激活 live 具名 Project | P14-T02（紧耦合） | 标题 ≠ `unknown`；PlanRevision axis 存在；状态不卡 `creating`；EVAL-016 J1 blocker 1；`JOURNEY-BROWSER-SYNC-01` | not-started | Owner 必须从 `/ui/` 得到 live 具名 Project |
 | P14-T04 | 成员加入落在真实 PlanRevision 槽 | P14-T03 | 「no PlanRevision slots」不再挡住 Owner；EVAL-016 J4；`JOURNEY-BROWSER-SYNC-01` | not-started | |
 | P14-T05 | 从 Project chrome 走 2.0 Attempt/Runs/Outputs | P14-T03 | 不是 Linux 1.0 `#/work`；EVAL-016 J14 + empty Runs/Outputs；`JOURNEY-BROWSER-SYNC-01` | not-started | |
 | P14-T06 | Today live 决策包 + 每 Project 运行概览 | P14-T03 | 激活后不是 continue-create；EVAL-016 J2；`JOURNEY-BROWSER-SYNC-01` | not-started | |
 | P14-T07 | Settings 真 L1 + IA（藏 9×9；不广告 Linux 1.0 Home/Work/Agents；palette intercept） | P14-T01；P13-T08 | `/settings/model-connections` 或 hub 可走；EVAL-016 J6/J8/J12/J20；`JOURNEY-BROWSER-SYNC-01` | not-started | 可与创建链并行 |
-| P14-T08 | Knowledge v9 IA（files / why / import） | P14-T01；P13-T07 | 不是仅 HTTP paste；EVAL-016 J5；`JOURNEY-BROWSER-SYNC-01` | not-started | 可与创建链并行 |
+| P14-T08 | Knowledge v9 IA（files / why / import） | P14-T01；P13-T07 | 不是仅 HTTP paste；EVAL-016 J5；`JOURNEY-BROWSER-SYNC-01` | done | PR [#328](https://github.com/agentkernel/cognitive-os/pull/328); Dual Track + live `/ui/` J5; claim ceiling `hypothesis` |
 
 | ID | validation environment | 关闭门 | 漂移检测负例 |
 |---|---|---|---|
