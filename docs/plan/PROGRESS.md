@@ -419,8 +419,8 @@ they are not executable backlog.
 | `P14-T05/D02` | `ready` | Real `/ui/` J14 + `JOURNEY-BROWSER-SYNC-01`. | after D01 |
 | `P14-T06/D01` | `ready` | Today live decision-packet + per-Project run overview. EVAL-016 J2. | after P14-T03 |
 | `P14-T06/D02` | `ready` | Real `/ui/` J2 + `JOURNEY-BROWSER-SYNC-01`. | after D01 |
-| `P14-T07/D01` | `in-progress` | Settings real L1; hide 9×9 from default chrome; do not advertise Linux 1.0 Home/Work/Agents; palette intercept. EVAL-016 J6/J8/J12/J20. Dual Track TS 72 files / 516 tests on worktree `D:\agent-kernel-p14-t07`. | claimed `lease/personal/P14-T07/settings-ia`; unique next D02 guest `/ui/` |
-| `P14-T07/D02` | `ready` | `/settings/model-connections` or hub on `/ui/` + `JOURNEY-BROWSER-SYNC-01`. | after D01 |
+| `P14-T07/D01` | `done` | Settings real L1; hide 9×9 from default chrome; do not advertise Linux 1.0 Home/Work/Agents; palette intercept. Dual Track TS 72 files / 516 tests. Guest `/ui/` D02 logged in the same report. | D02 guest `/ui/` recorded; unique next required CI then ready/merge |
+| `P14-T07/D02` | `in-progress` | SPA `634da855` on `B01-Desktop-Linux-002` `127.0.0.1:48681` (kernel pin still EVAL `711a5a7c`; Dual Track-only). J6/J8/J12/J20 + J0/J10/J18/J19 **pass**. HITL pending preview **not-run**. Windows required CI pending. | wait required CI windows; then ready/merge PR [#327](https://github.com/agentkernel/cognitive-os/pull/327) |
 | `P14-T08/D01` | `ready` | Knowledge v9 files / why / import IA. EVAL-016 J5. | after P14-T01; parallel with create chain |
 | `P14-T08/D02` | `ready` | Real `/ui/` J5 + `JOURNEY-BROWSER-SYNC-01`. | after D01 |
 | `P12-T01/D01` | `done` | Documentation-only Phase 12 registration. Merged PR [#294](https://github.com/agentkernel/cognitive-os/pull/294) at `main@d87bcb2a`. Required CI [33369721714](https://github.com/agentkernel/cognitive-os/actions/runs/33369721714) **SUCCESS**. Frozen-prototype functional completeness on daemon `/ui/`; not pixel-replica; not 2.1; not T15. Claim ceiling `hypothesis`. | consumed; task closed |

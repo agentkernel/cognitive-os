@@ -18,8 +18,8 @@
 
 | Slice | Status | Notes |
 |---|---|---|
-| `P14-T07/D01` | `in-progress` | Settings L1 `role=link`; default 9×9 unmounted; Linux 1.0 Home/Work/Agents/Providers hashes 404; palette Escape capture; `/settings/model-connections` hub |
-| `P14-T07/D02` | `ready` | exact-revision guest `/ui/` J6/J8/J12/J20 + `JOURNEY-BROWSER-SYNC-01` |
+| `P14-T07/D01` | `done` | Dual Track 72/516. Settings L1; 9×9 unmounted; Linux 1.0 hashes 404; palette Escape capture; `#/settings/model-connections` SecretStore hub |
+| `P14-T07/D02` | `in-progress` | guest `/ui/` J6/J8/J12/J20 + `JOURNEY-BROWSER-SYNC-01` J0/J10/J18/J19 **pass** at SPA `634da855` on `B01-Desktop-Linux-002` `127.0.0.1:48681`; required CI windows still pending |
 
 ## Validation log (TEST-REPORT-INCREMENTAL-01)
 
@@ -28,9 +28,15 @@
 | 2026-09-05 | Dual Track `pnpm test` in `clients/pc/web` (MSVC not required; TS only) | **pass** 72 files / 516 tests |
 | 2026-09-05 | `ownerChromeIa.test.tsx` (failure-first then green) | **pass**: Settings L1 link; 0× `data-state-lab-cell` by default; `#/home` `#/work` `#/work/new` `#/agents` `#/providers` `#/bindings` `#/tasks` = No such route; palette does not advertise retired hashes; `#/settings/model-connections` SecretStore form; Escape closes palette |
 | 2026-09-05 | leftover Home/Work/Agents/Providers suites | **pass** via test-only `LinuxLegacyApp` (not product chrome) |
-| 2026-09-05 | required CI | `not-run` until push |
-| 2026-09-05 | guest `/ui/` J6/J8/J12/J20 + `JOURNEY-BROWSER-SYNC-01` | `not-run` (D02) |
+| 2026-09-05 | required CI run [33974591057](https://github.com/agentkernel/cognitive-os/actions/runs/33974591057) at `634da855` | ubuntu **pass** 6m58s; windows **pending**; resolve **pass** |
+| 2026-09-05 | guest `/ui/` J0 gate | **pass** — bootstrap secret into password field; not a Provider key; session issued; Vite is not the product origin |
+| 2026-09-05 | guest `/ui/` J8 Settings | **pass** — Primary `role=link` Settings current; `#/settings` and `#/settings/model-connections` both show Model Connections; `Hand key to SecretStore` disabled with empty key; 0 fake Connect buttons; 0 `#/home` `#/work` `#/agents` `#/providers` leftover links |
+| 2026-09-05 | guest `/ui/` J6/J12 chrome | **pass** — default Settings `data-state-lab-cell` count **0**; open Advanced state-lab → **81** cells; close → **0** (unmounted). HITL pending preview **not-run** (no ApprovalPreview after EVAL-016 creating Project; T03/T04) |
+| 2026-09-05 | guest `/ui/` J19 + retired hashes | **pass** — `#/home` `#/work` `#/work/new` `#/agents` `#/providers` `#/inbox` `#/team` all **No such route** |
+| 2026-09-05 | guest `/ui/` J20 + palette intercept | **pass** — skip link present; Settings is L1 link; palette destinations are Today/Projects/Knowledge/Settings/Model Connections/Activity (no Home/Work/Agents/Providers); Escape closes dialog (`role=dialog` gone); Import to Vault click then reached the Knowledge button |
+| 2026-09-05 | `JOURNEY-BROWSER-SYNC-01` regression J10 / J18 | **pass** — no X/Twitter P0 in L1; Session link + principal remain |
+| 2026-09-05 | dsh `http://127.0.0.1:3080/` | HTTP **200** (DSH Local Build). Not 小白 chrome. |
 
 ## Unique next
 
-Push Draft PR, then D02 on `B01-Desktop-Linux-002` at the pushed revision: J6/J8/J12/J20 plus regression J0/J10/J18/J19.
+Rebase onto `origin/main` (`adb20828`, #326 merged). Wait required CI on the rebased HEAD / PR [#327](https://github.com/agentkernel/cognitive-os/pull/327). Then ready/merge, close lease, ff `main`. Do not claim T02/T03/T04/T08/T05. After merge, claim T06 only if T03 is already done.
