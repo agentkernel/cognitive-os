@@ -133,28 +133,43 @@ const READY_DETAIL: RouteResponse = {
   },
 };
 
+function axisStage(stageId: string, slot: string, title: string, position: number) {
+  return {
+    stage_id: stageId,
+    position,
+    title,
+    responsible_slot: slot,
+    confirm_status: "confirmed",
+    ready: false,
+    seated: false,
+    output_contract: {
+      digest: "unknown",
+      deliverable_type: "unknown",
+      save_format: "unknown",
+      open_with: "unknown",
+    },
+    gaps: [],
+  };
+}
+
 const SLOTTED_AXIS: RouteResponse = {
   status: 200,
   body: {
     status: "ok",
     plan_revision_id: "plan-1",
+    stages: [axisStage("st-1", "manager", "Intake", 0)],
+  },
+};
+
+const DUAL_TRACK_AXIS: RouteResponse = {
+  status: 200,
+  body: {
+    status: "ok",
+    plan_revision_id: "plan-1",
     stages: [
-      {
-        stage_id: "st-1",
-        position: 0,
-        title: "Intake",
-        responsible_slot: "manager",
-        confirm_status: "confirmed",
-        ready: false,
-        seated: false,
-        output_contract: {
-          digest: "unknown",
-          deliverable_type: "unknown",
-          save_format: "unknown",
-          open_with: "unknown",
-        },
-        gaps: [],
-      },
+      axisStage("collect", "collect", "collect (收集)", 0),
+      axisStage("analyze", "analyze", "analyze (分析)", 1),
+      axisStage("draft", "draft", "draft (起草)", 2),
     ],
   },
 };
@@ -471,6 +486,47 @@ describe("P12-T04 select-then-configure + add member", () => {
     await flush();
     expect(calls.some((call) => call.method === "POST")).toBe(false);
     expect(host.querySelector("[data-region='opc-join-written']")).toBeNull();
+    expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("posts Dual Track ring slots on Write join instead of a fake manager", async () => {
+    const { host, root, calls } = await renderMember("#/projects/proj-1/members/new", {
+      "GET /management/project/v1/axis": DUAL_TRACK_AXIS,
+      "POST /management/project/v1/roster.register": {
+        status: 200,
+        body: { status: "ok", employee_ids: ["emp-collect", "emp-analyze", "emp-draft"] },
+      },
+      "POST /management/project/v1/employee.seat.request": {
+        status: 200,
+        body: { status: "ok", state: "seating" },
+      },
+      "POST /management/project/v1/employee.seat.confirm": {
+        status: 200,
+        body: { status: "ok", state: "seated" },
+      },
+    });
+    clickButton(host, "Write join");
+    await flush();
+    const register = calls.find((call) => call.pathname === "/management/project/v1/roster.register");
+    expect(register?.body).toEqual({
+      project_id: "proj-1",
+      plan_revision_id: "plan-1",
+      proposals: [
+        { slot: "collect", specialization: "member", prompt: "", tools_declared: [] },
+        { slot: "analyze", specialization: "member", prompt: "", tools_declared: [] },
+        { slot: "draft", specialization: "member", prompt: "", tools_declared: [] },
+      ],
+    });
+    expect(host.querySelector("[data-region='opc-join-written']")?.textContent).toContain(
+      "emp-collect",
+    );
+    expect(host.textContent).toMatch(/Chat cannot Approve/);
+    expect(
+      [...host.querySelectorAll("button")].some((button) =>
+        /\bApprove\b/.test((button.textContent ?? "").trim()),
+      ),
+    ).toBe(false);
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });
