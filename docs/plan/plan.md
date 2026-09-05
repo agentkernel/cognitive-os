@@ -2270,6 +2270,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P13-T13 — Windows native host qualification + hung native E2E backfill
 
+- **status:** `done` (2026-09-05; PR [#324](https://github.com/agentkernel/cognitive-os/pull/324); `P13-T13/D01` D01-qualified `DEV-WINDOWS-NATIVE-OPC-01`; `P13-T13/D02` hung cells accounted; validated implementation `bcd8746b` required CI [33960301310](https://github.com/agentkernel/cognitive-os/actions/runs/33960301310) **SUCCESS**; lease closed → PARALLEL-LANES §3.1). Unique next: claim `P11-T15`. [report](../checkpoints/2026-09-05-personal-p13-t13-report.md); [closure](../checkpoints/2026-09-05-personal-p13-t13-closure.md).
 - **2.0.0 表面:** 无新 chrome；把所有 `Requires-environment` / `not-run` 变成真实
   pass / fail。
 - **依赖:** 本机已由 owner 2026-09-05 指定为项目运行测试宿主（不要求 Windows 11；
@@ -2288,7 +2289,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
   inspectable bootstrap installer + Credential Manager 后端、P10-T18 免签名路径文档。
 - **禁止再造:** 第二套安装器；用 B01-DESKTOP-002 冒充 Windows。
 - **validation environment:** `DEV-WINDOWS-NATIVE-OPC-01`（指定已完成；本卡负责
-  资格化并写回 pins）；`CI-WINDOWS-MSVC-01` compile。
+  资格化并写回 pins）；`CI-WINDOWS-MSVC-01` compile。D01 已于 2026-09-05 资格化。
 - **关闭门:** 环境登记从 designated 变为 qualified；挂单原生 E2E 在该
   环境实际跑过并逐格记账；unsigned 开发安装路径可运行。
 - **漂移检测负例:** CI/WSL/Linux 当原生资格；`not-run` 写 pass；cargo 当原生 E2E；B01-W 当日常机；

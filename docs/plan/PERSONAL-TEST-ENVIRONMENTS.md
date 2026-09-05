@@ -63,7 +63,7 @@ Slice remain `blocked`/`not-run`; an unrelated `ready` Slice may proceed.
 | `DEV-WIN-GNU-01` | local Windows host (GNU default host; registered directories carry a local MSVC `rustup override` since 2026-09-03) | local development | TypeScript/static checks everywhere; local Rust build/test/Clippy iteration only inside the override directories — development evidence, never supported-CI/Gate/release/Profile |
 | `CI-UBUNTU-01` | GitHub `ubuntu-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
 | `CI-WINDOWS-MSVC-01` | GitHub `windows-latest` | ordinary supported CI | `tested-supported-ci` implementation evidence |
-| `DEV-WINDOWS-NATIVE-OPC-01` | same physical host as `DEV-WIN-GNU-01` (owner 2026-09-05: project runtime testing on this machine; OS version is not a provision gate; recorded Windows 10 Pro 10.0.19045) | **designated**; not yet qualified | designation only; native install/tray/sleep/SecretStore/sandbox/UI E2E stays `not-run` until `P13-T13` executes those cells |
+| `DEV-WINDOWS-NATIVE-OPC-01` | same physical host as `DEV-WIN-GNU-01` (owner 2026-09-05: project runtime testing on this machine; OS version is not a provision gate; recorded Windows 10 Pro 10.0.19045) | **D01 qualified** 2026-09-05 (`P13-T13`); D02 hung E2E cells accounted | unsigned bootstrap fail-closed + live cargo-built daemon admit + `/ui/`; tray/OS-sleep/OS-DACL/sandbox/signed-install remain `not-run`; not Gate/release/Profile/B01-W |
 | `CLOUD-AGENT-LINUX-01` | Cursor Cloud Agent Linux pod | ephemeral remote container | strong local/container implementation evidence |
 | `DEV-WSL2-01` | Windows WSL2 Linux guest | local Linux guest | strong local/fixture implementation evidence |
 | `DEV-LINUX-NATIVE-01` | `personal-linux-native-01` | experimental native Linux | `tested-local` native evidence |
@@ -197,14 +197,15 @@ record; it names the owner's local Windows development machine, whose rustup
 
 ### 5.1 Phase 11 Windows OPC validation route
 
-ADR-0059 / Personal 2.0.0 chrome makes Windows the product target, but no
-current environment is a qualified Windows OPC product environment. Do not
-invent environment IDs. `B01-DESKTOP-002` is **not** the 2.0 daily development
-default. This subsection aligns names only; it does not provision hosts.
+ADR-0059 / Personal 2.0.0 chrome makes Windows the product target.
+`DEV-WINDOWS-NATIVE-OPC-01` is **D01-qualified** (2026-09-05, `P13-T13`) as the
+unsigned development-runtime host on this machine. That is not a Gate / release /
+Profile / B01-W product environment. Do not invent environment IDs.
+`B01-DESKTOP-002` is **not** the 2.0 daily development default.
 
 | Phase 11 work | Required development evidence | Explicit non-substitute |
 |---|---|---|
-| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` compile/test plus `DEV-WINDOWS-NATIVE-OPC-01` install/service/tray/sleep/filesystem/SecretStore execution (`Requires-environment` / `not-run` until `P13-T13` qualifies the designated local host) | citing cargo as install/tray/sleep E2E; WSL, Linux, Canvas, `B01-DESKTOP-002` as daily default |
+| P11-T02 host/tray/background | `CI-WINDOWS-MSVC-01` compile/test plus `DEV-WINDOWS-NATIVE-OPC-01` unsigned install (D01 **pass** fail-closed) / SecretStore Credential Manager (D02 **pass** synthetic) ; tray / OS sleep / service remain `not-run` | citing cargo as install/tray/sleep E2E; WSL, Linux, Canvas, `B01-DESKTOP-002` as daily default |
 | P11-T03/T04 Project/Employee | daily authority tests: `CI-UBUNTU-01` and `CI-WINDOWS-MSVC-01`; native daemon/store when needed: pushed exact-revision `DEV-LINUX-NATIVE-01` | docs/fixtures alone; GNU Rust link; treating `B01-DESKTOP-002` as daily default |
 | P11-T05/T06 Conversation/Pi Assistant | projection negatives on required CI; Windows archive/index/Pi native route remains unqualified (`not-run`) | Linux Pi qualification transfer |
 | P11-T07 hidden hosted DSH | required CI plus qualified Windows artifact/sandbox/process/stdio/Provider/update/rollback E2E on `DEV-WINDOWS-NATIVE-OPC-01` (`not-run` until qualified) | existing Linux dsh Path B or research HEAD as Windows product; DSH `apps/web` as `/ui/` |
@@ -230,16 +231,15 @@ scenes and the frozen prototype + design goals. Linux native evidence closes
 | P13-T04 / T05 / T06 / T09 / T10 / T11 authority + `/ui/` | required CI plus `DEV-LINUX-NATIVE-01` for authority/store/HTTP; Dual Track TS on the `DEV-WIN-GNU-01` allowed surface for `/ui/`; product origin daemon `/ui/` | file open / clock-sleep-restart / FS / supply-chain host cells before `P13-T13` |
 | P13-T07 / T08 surfaces | Dual Track TS + required CI; `DEV-LINUX-NATIVE-01` for SecretStore route | Windows SecretStore / privacy host cells before `P13-T13`; Vite as product origin |
 | P13-T12 visual spec + a11y qualification | D01 documentation-only; D02 rendered browser / NVDA / 200% / host-theme review from a registered host's local browser against pushed exact-revision guest daemon `/ui/` (`DEV-LINUX-NATIVE-01` over the documented SSH tunnel) = implementation evidence | canvas screenshots; skipping a cell as pass; rendered review as Windows native chrome qualification |
-| P13-T13 Windows native qualification | owner-designated local host (same machine as `DEV-WIN-GNU-01`; OS version is not a provision gate; recorded Windows 10 Pro 10.0.19045) as `DEV-WINDOWS-NATIVE-OPC-01`; unsigned install + hung native E2E cells run there; image / tools / pins recorded when those cells execute | CI / WSL / Linux / `B01-DESKTOP-002`; B01-W VM as a daily development host; unsigned dev path as release; citing cargo as native E2E |
+| P13-T13 Windows native qualification | owner-designated local host (same machine as `DEV-WIN-GNU-01`; OS version is not a provision gate; recorded Windows 10 Pro 10.0.19045) as `DEV-WINDOWS-NATIVE-OPC-01`; D01 unsigned path **qualified** 2026-09-05; D02 hung cells accounted pass/fail/`not-run` on this host | CI / WSL / Linux / `B01-DESKTOP-002`; B01-W VM as a daily development host; unsigned dev path as release; citing cargo as native install/tray/sleep E2E |
 
-`DEV-WINDOWS-NATIVE-OPC-01` is designated (2026-09-05, `DOC-LOCAL-RUNTIME-HOST`)
-on this local machine. Designation is not qualification. Native checks stay
-`not-run`/`Requires-environment` until `P13-T13` actually runs the unsigned
-install path and backfills each hung cell. That DOC owns the designation
-rewrite (bind the reserved ID to this host; drop any Windows 11 provision
-mutex). `P13-T13` still owns qualification and cell-by-cell backfill.
+`DEV-WINDOWS-NATIVE-OPC-01` was designated (2026-09-05, `DOC-LOCAL-RUNTIME-HOST`)
+and **D01-qualified** (2026-09-05, `P13-T13`) on this local machine. Qualification
+is the unsigned development path actually running here, not CI/GNU/WSL/Linux.
+Hung native cells that lack a capability stay honest `not-run`. This is not Gate,
+release, Profile, B01-W, or T15.
 
-### 5.3 `DEV-WINDOWS-NATIVE-OPC-01` — designated local project-runtime host
+### 5.3 `DEV-WINDOWS-NATIVE-OPC-01` — D01-qualified local project-runtime host
 
 Owner instruction 2026-09-05: run project runtime tests on this machine; do
 not require Windows 11 as a provision gate. No new environment ID.
@@ -247,10 +247,13 @@ not require Windows 11 as a provision gate. No new environment ID.
 | Item | Fact |
 |---|---|
 | Physical host | Same machine as `DEV-WIN-GNU-01` (`D:\agent-kernel`) |
-| Recorded OS | Windows 10 Pro 10.0.19045, x86_64 (fact, not a gate) |
+| Recorded OS | Windows 10 专业版 (Pro) `10.0.19045`, x86_64 (fact, not a gate) |
 | Designation | 2026-09-05 via `DOC-LOCAL-RUNTIME-HOST` |
-| Qualification | still `P13-T13` (unsigned development install + hung native E2E) |
-| Cargo / Dual Track TS on this host | development evidence only; not native product-runtime E2E |
+| D01 qualification | 2026-09-05 `P13-T13/D01`: unrendered `personal/deploy/windows/install.ps1` via system PowerShell → exit **64** (`release policy is not rendered`, no TEMP leftover); live cargo-built `kernel-server --personal` admits a disposable Windows path ending in `Personal Home`, rejects GNU/Linux roots (422) and the task channel (403), `daemon.bind`, `GET /ui/` is 503 `LOCAL_UI_BUNDLE_UNAVAILABLE` without a bundle and 200 with `data/cognitiveos/ui/index.html`. Test: `kernel-server` `--test p13_t13_windows_native_host` **2/2**. |
+| rustc | `1.97.1` (`8bab26f4f 2026-07-14`), `host: x86_64-pc-windows-msvc`, LLVM 22.1.6; directory override on `D:\agent-kernel` |
+| Node / pnpm | Node `24.15.0`; pnpm `10.33.2` |
+| D02 hung cells (2026-09-05) | T02 install **pass** (fail-closed); T02 SecretStore **pass** (`cognitive-secret` `--test p7_t07_windows_credential_store` **7/7** synthetic Credential Manager); T02 tray **not-run** (`tray_proves_work=false`); T02/T05 OS sleep/restart **not-run** (daily machine not slept); P13-T02 sandbox **not-run** (Windows native channels remain `Unsupported`; `sandbox::tests::matrix_keeps_windows_native_unsupported_without_evidence` **pass**); P13-T02 ACL **not-run** (SQLite policy only); P13-T02 supply chain **not-run** (no rendered/signed Windows bundle); P13-T08 Settings `connection.connect` **not-run** (live discovery not invoked); P13-T04 host file-open **not-run** (`host_file_open_e2e` stays `not-run`); UI native chrome **not-run** (fixture `/ui/` 200 is not product chrome); live X **not-run**. Install-surface template tests **10/10**. |
+| Cargo / Dual Track TS on this host | development evidence only; not native product-runtime E2E; not Gate/release/Profile |
 | B01-W / signing / release / Profile | unchanged and separate |
 
 `CI-WINDOWS-MSVC-01` may prove compile/test behavior only. It cannot prove

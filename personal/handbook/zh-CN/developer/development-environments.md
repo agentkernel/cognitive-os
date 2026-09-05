@@ -11,7 +11,7 @@ sources:
   - path: docs/bug/dsh-pathb-stale-daemon-bearer-after-daemon-restart.md
   - path: rust-toolchain.toml
   - path: .gitattributes
-fingerprint: "sha256:45ea41169665d96ab75f9225911746d66d63e79020756f8953094450194dfa3d"
+fingerprint: "sha256:69f61c6c77a8aac7134ced95565c80d577f5797c5b6171368bd0a1edacd8a634"
 non_claims:
   - 环境能力上限由环境注册表拥有；本页只做路由，不扩展任何声明。
 ---
@@ -28,7 +28,7 @@ non_claims:
 | `DEV-LINUX-NATIVE-01`（native Linux 主机） | exact-revision native 验证、实验性服务/Pi 工作；只消费**已推送 commit** 到可清理 worktree | 未提交代码、生产声明 |
 | `CLOUD-AGENT-LINUX-01`（Cursor Cloud Agent pod） | 推送前的完整 bash shell Rust + TS 迭代；由 `.cursor/environment.json` 引导 | native systemd/Secret Service 行为、timing 基线、Gate/release/Profile |
 | 本地 Windows 主机 `DEV-WIN-GNU-01`（GNU 默认工具链；已登记目录自 2026-09-03 起带本机 MSVC `rustup override`） | pnpm 构建/测试、`cargo fmt`、Node 检查器、文档工作（任何目录）；workspace `cargo build/test/clippy` **仅在 override 目录内**（`rustc -vV` → `host: x86_64-pc-windows-msvc`）作为开发迭代 | 在 GNU 默认 host 上做 Rust 链接——已登记 linker exit 121；把本机 MSVC 结果当 supported validation、Gate、release、Profile 或 Windows 支持 |
-| `DEV-WINDOWS-NATIVE-OPC-01` | 已指定的本机项目运行测试宿主（与 `DEV-WIN-GNU-01` 同一台机器；2026-09-05；OS 版本不是供给门槛） | 把 cargo 当原生 install/tray/sleep E2E；Gate/release/Profile；B01-W |
+| `DEV-WINDOWS-NATIVE-OPC-01` | D01 已资格化的本机项目运行测试宿主（与 `DEV-WIN-GNU-01` 同一台机器；2026-09-05；OS 版本不是供给门槛）。Unsigned 安装 fail-closed + 现场 daemon admit。Tray/OS-sleep/sandbox/签名安装仍 `not-run` | 把 cargo 当原生 install/tray/sleep E2E；Gate/release/Profile；B01-W |
 | WSL2 | 历史工程证据 | Linux 1.0 或 Windows OPC 产品路径声明 |
 | `B01-Desktop-Linux-002` | 预注册流程下的专用 Gate campaign guest；自 2026-08-27 起同时为 owner 授权的 Personal 2.0 开发验证主机（仅限 exact-revision 一次性 worktree 与任务声明的可清理目录；B01 campaign 活动期间冻结开发用途） | 在预注册 B01 campaign lease 之外改变 guest 基线、快照或凭据 |
 | `B01-W-DESKTOP-001` | 已注册但未供给的 Windows Gate guest（B01-W） | 按其预注册供给前的一切用途 |
@@ -36,19 +36,19 @@ non_claims:
 Phase 11 Personal 2.0.0 路由：T03/T04 日常权威测试用 `CI-UBUNTU-01` /
 `CI-WINDOWS-MSVC-01`（需要 native daemon/store 时加已 push 的 exact-revision
 `DEV-LINUX-NATIVE-01`）。T02/T07 原生 host/DSH E2E 仍是
-`DEV-WINDOWS-NATIVE-OPC-01` = `Requires-environment` / `not-run`（未资格化）。
+`DEV-WINDOWS-NATIVE-OPC-01` = D01 已资格化（2026-09-05，`P13-T13`）；缺能力的挂单格保持诚实 `not-run`。
 T09 是画布 HITL，不是一级 Inbox。`B01-DESKTOP-002` 仅 campaign，不是 2.0 日常
 默认机。unparked 的 T15 N=15 acceptance 仍需同一 preregistered qualified
 Windows revision，**不是** Phase 12 prototype completeness mutex。Phase 12 Dual Track
-UI 用 `DEV-WIN-GNU-01` TS 加 required CI；原生 UI E2E 在
-`DEV-WINDOWS-NATIVE-OPC-01` 资格化前为 `not-run`。Phase 13 路由
+UI 用 `DEV-WIN-GNU-01` TS 加 required CI；产品 chrome 原生 UI E2E 仍 `not-run`
+（fixture `/ui/` 200 不是该格）。Phase 13 路由
 （`PERSONAL-TEST-ENVIRONMENTS.md` §5.2）：P13-T02/T03 真实 child/Pi 路径与其余权威卡用
 `CI-UBUNTU-01` / `CI-WINDOWS-MSVC-01` + 已 push exact-revision `DEV-LINUX-NATIVE-01`；
 `/ui/` 表面用 Dual Track TS；P13-T12/D02 的 rendered / NVDA / 200% / host-theme 复审对
 exact-revision guest daemon `/ui/`（SSH 隧道）只是 implementation evidence；
 `DOC-LOCAL-RUNTIME-HOST`（2026-09-05）已把本机指定为 `DEV-WINDOWS-NATIVE-OPC-01`
-（OS 版本不是供给门槛）。只有 `P13-T13` 可以把它标为 qualified 并回填挂单原生格；
-T15 只在那之后执行。本机 cargo、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
+（OS 版本不是供给门槛）。`P13-T13/D01` 已于 2026-09-05 资格化 unsigned 路径；
+D02 已逐格记 pass/fail/`not-run`。T15 只在 T13 收口后执行。本机 cargo、WSL、Linux、ordinary CI 与 Canvas 明确不能替代
 Gate/release；`not-run` 保持 `not-run`。
 
 工具链 pin：Rust 1.97.1（`rust-toolchain.toml`）、pnpm 10.33.2 + Node ≥22

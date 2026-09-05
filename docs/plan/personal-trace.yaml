@@ -536,14 +536,13 @@ personal_requirements:
 
   - id: PERS-PR-052
     classification: product-only
-    statement: Personal 2.0.0 completion is qualified rather than asserted - a written visual specification plus a per-module comparison against the frozen v9 prototype; nine states by nine surfaces, keyboard reachability and focus restoration, 200% zoom and narrow three-column horizontal scroll, light/dark/high-contrast host themes, and NVDA key paths are each recorded pass/fail/not-run on exact-revision daemon /ui/; DEV-WINDOWS-NATIVE-OPC-01 is designated on the local development host (2026-09-05; OS version is not a provision gate) and must still be qualified by P13-T13 with every hung native E2E cell backfilled there; only then does P11-T15 execute its fixed N=15 denominator. Phase 13 done is not release, signing, B01-W, Gate, Profile, or 2.1.
+    statement: Personal 2.0.0 completion is qualified rather than asserted - a written visual specification plus a per-module comparison against the frozen v9 prototype; nine states by nine surfaces, keyboard reachability and focus restoration, 200% zoom and narrow three-column horizontal scroll, light/dark/high-contrast host themes, and NVDA key paths are each recorded pass/fail/not-run on exact-revision daemon /ui/; DEV-WINDOWS-NATIVE-OPC-01 is D01-qualified on the local development host (2026-09-05; OS version is not a provision gate) with hung native E2E cells accounted pass/fail/not-run by P13-T13; only after T13 closes does P11-T15 execute its fixed N=15 denominator. Phase 13 done is not release, signing, B01-W, Gate, Profile, or 2.1.
     direct_registry_requirements: []
     tasks: [P13-T01, P13-T12, P13-T13, P11-T15]
     gates: []
-    # 2026-09-05: P13-T12/D02 recorded rendered cells on /ui/ c8691923
-    # (DEV-LINUX-NATIVE-01 + host Chrome). NVDA 10× not-run; Windows native
-    # chrome / FC not-run until P13-T13. evidence_status stays not-run until
-    # PERS-PR-052's native-host backfill clause is also satisfied.
+    # 2026-09-05: P13-T13/D01 qualified unsigned path on this host; D02
+    # accounted hung cells (many honest not-run). evidence_status stays
+    # not-run until T13 closes and T15 executes.
     evidence_status: not-run
 
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness
