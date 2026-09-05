@@ -293,6 +293,8 @@ describe("P13-T08 Settings Model Connections / diagnostics / state-lab", () => {
     expect(stateLab).not.toBeNull();
     expect(diagnostics.open).toBe(false);
     expect(stateLab.open).toBe(false);
+    expect(host.querySelectorAll("[data-state-lab-cell]").length).toBe(0);
+    expect(host.querySelector("[data-region='opc-state-lab-grid']")).toBeNull();
     expect(host.querySelector("[data-page='opc-state-lab']")).toBeNull();
     expect(calls.some((call) => call.pathname === "/management/settings/v1/diagnostics")).toBe(true);
     expect(host.querySelector("nav a[href='#/state-lab']")).toBeNull();

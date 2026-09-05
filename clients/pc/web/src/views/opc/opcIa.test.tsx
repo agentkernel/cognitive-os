@@ -158,14 +158,22 @@ afterEach(() => {
 
 describe("P11-T13 OPC IA chrome", () => {
   it("keeps L1 as Today / Projects / Knowledge and never Team or Inbox", () => {
-    expect(PRIMARY_NAV.map(([, label]) => label)).toEqual(["Today", "Projects", "Knowledge"]);
+    expect(PRIMARY_NAV.map(([, label]) => label)).toEqual([
+      "Today",
+      "Projects",
+      "Knowledge",
+      "Settings",
+    ]);
     const { host, root } = renderAppAt("#/session");
     const nav = host.querySelector('nav[aria-label="Primary"]');
     expect(nav?.textContent).toContain("Today");
     expect(nav?.textContent).toContain("Projects");
     expect(nav?.textContent).toContain("Knowledge");
+    expect(nav?.textContent).toContain("Settings");
     expect(nav?.textContent).not.toMatch(/Team|Inbox/);
-    expect(host.querySelector(".cp-side-foot a[href='#/settings']")?.textContent).toBe("Settings");
+    expect(host.querySelector("nav[aria-label='Primary'] a[href='#/settings']")?.textContent).toBe(
+      "Settings",
+    );
     expect(host.querySelector("[data-rail='assistant']")?.textContent).toMatch(/candidate-only/i);
     expect(
       [...(host.querySelector("[data-rail='assistant']")?.querySelectorAll("button, a.cp-button") ?? [])].map(
@@ -173,7 +181,7 @@ describe("P11-T13 OPC IA chrome", () => {
       ),
     ).not.toContain("Approve");
     const links = [...host.querySelectorAll("nav[aria-label='Primary'] a")];
-    expect(links).toHaveLength(3);
+    expect(links).toHaveLength(4);
     for (const link of links) {
       const href = link.getAttribute("href") ?? "";
       expect(href.startsWith("#")).toBe(true);
@@ -187,9 +195,9 @@ describe("P11-T13 OPC IA chrome", () => {
     expect(SPACE_CHORDS.p).toBe("/projects");
     expect(SPACE_CHORDS.n).toBe("/knowledge");
     expect(SPACE_CHORDS.s).toBe("/settings");
-    expect(SPACE_CHORDS.h).toBe("/home");
-    expect(SPACE_CHORDS.w).toBe("/work");
-    expect(SPACE_CHORDS.v).toBe("/providers");
+    expect(SPACE_CHORDS.h).toBeUndefined();
+    expect(SPACE_CHORDS.w).toBeUndefined();
+    expect(SPACE_CHORDS.v).toBeUndefined();
   });
 
   it("whitelists the Project list route used by Dual Track", () => {
@@ -305,7 +313,10 @@ describe("P11-T13 Dual Track honesty (zero fake buttons)", () => {
 
     const settings = await renderOpc("#/settings", EMPTY_LIST);
     expect(settings.host.querySelector("[data-page='opc-settings']")).not.toBeNull();
-    expect(settings.host.querySelector("a[href='#/home']")?.textContent).toBe("Linux 1.0 Home");
+    expect(settings.host.querySelector("a[href='#/home']")).toBeNull();
+    expect(settings.host.querySelector("a[href='#/work']")).toBeNull();
+    expect(settings.host.querySelector("a[href='#/agents']")).toBeNull();
+    expect(settings.host.querySelector("a[href='#/providers']")).toBeNull();
     const settingsLinks = [...settings.host.querySelectorAll("[data-page='opc-settings'] a")].map(
       (node) => (node.textContent ?? "").trim(),
     );
@@ -487,7 +498,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
       },
     });
     expect(host.querySelector("[data-row-key='pol-1']")).not.toBeNull();
-    expect(host.querySelector("[data-page='opc-settings'] input")).toBeNull();
+    expect(host.querySelector("[data-region='opc-standing-policies'] input")).toBeNull();
     expect(host.textContent).toMatch(/2\.1 \/ Deferred/);
     const settingsLinks = [...host.querySelectorAll("[data-page='opc-settings'] a")].map(
       (node) => (node.textContent ?? "").trim(),
@@ -509,8 +520,10 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
     ) as HTMLDetailsElement | null;
     expect(advanced).not.toBeNull();
     expect(advanced?.open).toBe(false);
-    expect(advanced?.querySelector("a[href='#/home']")?.textContent).toBe("Linux 1.0 Home");
-    expect(advanced?.querySelector("a[href='#/work']")?.textContent).toBe("Work");
+    expect(advanced?.querySelector("a[href='#/home']")).toBeNull();
+    expect(advanced?.querySelector("a[href='#/work']")).toBeNull();
+    expect(advanced?.querySelector("a[href='#/agents']")).toBeNull();
+    expect(advanced?.querySelector("a[href='#/providers']")).toBeNull();
     expect(host.querySelector("nav[aria-label='Primary'] a[href='#/work']")).toBeNull();
     expect(host.querySelector("nav[aria-label='Primary']")?.textContent).not.toMatch(/Team|Inbox/);
     expect(fakeActionLabels(host)).toEqual([]);

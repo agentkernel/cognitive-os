@@ -54,7 +54,7 @@ describe("Shell identity and navigation", () => {
     expect(nav).not.toBeNull();
     // Personal 2.0 L1 (P11-T13): Today / Projects / Knowledge. Team/Inbox
     // are not L1. Linux 1.0 spaces remain as secondary routes.
-    for (const label of ["Today", "Projects", "Knowledge"]) {
+    for (const label of ["Today", "Projects", "Knowledge", "Settings"]) {
       expect(nav?.textContent).toContain(label);
     }
     expect(nav?.textContent).not.toContain("Team");
@@ -119,9 +119,8 @@ describe("Provider hierarchy and authoritative-empty state", () => {
       await Promise.resolve();
     });
 
-    expect(host.querySelector("h2")?.textContent).toBe("Providers");
-    expect(host.querySelector('h3')?.textContent).toBe("Create named account");
-    expect(host.textContent).toContain("No provider accounts yet");
+    expect(host.textContent).toContain("No such route");
+    expect(host.querySelector("h2")?.textContent).not.toBe("Providers");
     expect(host.textContent).not.toContain(bearerValue);
     expect(host.innerHTML).not.toContain(bearerValue);
 

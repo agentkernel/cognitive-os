@@ -31,10 +31,6 @@ describe("shell keyboard helpers (W12)", () => {
       p: "/projects",
       n: "/knowledge",
       s: "/settings",
-      h: "/home",
-      w: "/work",
-      a: "/agents",
-      v: "/providers",
       r: "/resources",
       c: "/activity",
     });

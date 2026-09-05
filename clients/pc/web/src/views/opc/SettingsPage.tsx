@@ -36,9 +36,7 @@ import { DaemonReadPanel } from "./DaemonReadPanel";
 import { httpErrorMessage } from "./httpError";
 
 const ADVANCED_ROUTES = [
-  ...LINUX_1_0_NAV.filter(([to]) => to !== "/providers").map(([to, label]) =>
-    to === "/home" ? (["/home", "Linux 1.0 Home"] as const) : ([to, label] as const),
-  ),
+  ...LINUX_1_0_NAV.map(([to, label]) => [to, label] as const),
   ["/session", "Session"],
 ] as const;
 
@@ -130,12 +128,14 @@ function notificationsPath(homeId: string): string {
 /**
  * Settings — Model Connections through SecretStore, retractable
  * 「本周不再问」, CloseBackgroundDialog, notification/recovery groups,
- * collapsed diagnostics, and hidden state-lab (P13-T08) on daemon `/ui/`.
+ * collapsed diagnostics, and hidden state-lab (P13-T08 / P14-T07) on daemon `/ui/`.
  * Chat cannot mint. Unknown usage is never 0. No `/providers` detour.
+ * Linux 1.0 Home/Work/Agents/Providers hashes are retired (No such route).
  */
 export function SettingsPage() {
   const [params] = useSearchParams();
   const homeId = (params.get("home") ?? "").trim();
+  const [stateLabOpen, setStateLabOpen] = useState(false);
   const accounts = useProjection<ProviderAccount[]>(OPC_CONNECTIONS_KEY);
   const usage = useProjection<UsageEventView[]>(OPC_USAGE_KEY);
   const policies = useProjection<StandingPolicyRow[]>(STANDING_POLICIES_KEY);
@@ -198,9 +198,11 @@ export function SettingsPage() {
         Product origin is daemon-served hash /ui/. Vite is not the product origin.
         Member-level budget hard-stop is 2.1 / Deferred. Connection usage unknown
         is never 0. StandingApprovalPolicy is a time-box, not a permanent Don't
-        ask. Chat cannot mint. CloseBackground uses GET host/v1/status then POST
+        ask.         Chat cannot mint. CloseBackground uses GET host/v1/status then POST
         close.request. Native close/host/SecretStore E2E is not-run. Advanced
-        Linux 1.0 surfaces, diagnostics, and state-lab are hidden by default.
+        diagnostics and state-lab stay hidden by default. Linux 1.0 Home /
+        Work / Agents / Providers hashes are retired; they render No such
+        route, same as #/inbox.
       </HonestyNote>
       <ModelConnectionsForm onConnected={refresh} />
       <ConnectionsTable accounts={accounts} usage={usage} />
@@ -211,19 +213,26 @@ export function SettingsPage() {
         <summary>Advanced diagnostics — DSH / Pi (hidden by default)</summary>
         <DiagnosticsPanel diagnostics={diagnostics} />
       </details>
-      <details className="cp-details" data-region="opc-settings-state-lab">
+      <details
+        className="cp-details"
+        data-region="opc-settings-state-lab"
+        open={stateLabOpen}
+        onToggle={(event) => setStateLabOpen(event.currentTarget.open)}
+      >
         <summary>Advanced — state-lab nine × nine (hidden by default)</summary>
         <p className="cp-quiet">
           Real `/ui/` components. Not a first-level destination. Not Installed
-          Agents. Unknown is never 0.
+          Agents. Unknown is never 0. Closed: the 9×9 grid is unmounted so it
+          is not in the accessibility tree.
         </p>
-        <StateLabGrid />
+        {stateLabOpen ? <StateLabGrid /> : null}
       </details>
       <details className="cp-details" data-region="opc-settings-advanced">
-        <summary>Advanced — Linux 1.0 surfaces (hidden by default)</summary>
+        <summary>Advanced — remaining daemon surfaces (hidden by default)</summary>
         <p className="cp-quiet">
-          These are real daemon-served hash routes from Linux 1.0. They are not
-          Personal 2.0 L1. Not Team. Not Inbox.
+          Resources / Activity / System remain secondary daemon surfaces. They
+          are not Personal 2.0 L1. Linux 1.0 Home / Work / Agents / Providers
+          hashes are retired and are not listed. Not Team. Not Inbox.
         </p>
         <ul className="cp-nav">
           {ADVANCED_ROUTES.map(([to, label]) => (

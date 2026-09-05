@@ -19,3 +19,16 @@ export function App() {
     </HashRouter>
   );
 }
+
+/** Test-only: leftover Linux 1.0 Home/Work/Agents/Providers pages. Not product chrome. */
+export function LinuxLegacyApp() {
+  return (
+    <HashRouter>
+      <SessionScope>
+        <AppShell>
+          <AppRoutes includeRetiredLinux />
+        </AppShell>
+      </SessionScope>
+    </HashRouter>
+  );
+}

@@ -17,11 +17,13 @@ const TASK_REF = "task://personal/web-ui/abc";
 describe("command catalog (W10)", () => {
   it("indexes destinations and class-A landings without class-C verbs", () => {
     const items = buildCommandCatalog(createProjectionStore());
-    expect(items.some((item) => item.label === "Work")).toBe(true);
+    expect(items.some((item) => item.label === "Work")).toBe(false);
     expect(items.some((item) => item.label === "Today")).toBe(true);
+    expect(items.some((item) => item.label === "Settings")).toBe(true);
     expect(items.some((item) => item.href === "/settings")).toBe(true);
-    expect(items.some((item) => item.href === "/work/new")).toBe(true);
-    expect(items.some((item) => item.href === "/providers")).toBe(true);
+    expect(items.some((item) => item.href === "/settings/model-connections")).toBe(true);
+    expect(items.some((item) => item.href === "/work/new")).toBe(false);
+    expect(items.some((item) => item.href === "/providers")).toBe(false);
     expect(catalogHasClassC(items)).toBe(false);
   });
 
@@ -47,20 +49,20 @@ describe("command catalog (W10)", () => {
       data: [{ id: "al-live", threshold: "exceeded_80", acknowledged: false }],
     });
     const loaded = buildCommandCatalog(store);
-    expect(loaded.some((item) => item.href === "/work/" + encodeURIComponent(TASK_REF))).toBe(true);
-    expect(loaded.some((item) => item.href === "/providers/acct-1")).toBe(true);
+    expect(loaded.some((item) => item.href === "/work/" + encodeURIComponent(TASK_REF))).toBe(false);
+    expect(loaded.some((item) => item.href === "/providers/acct-1")).toBe(false);
     expect(loaded.some((item) => item.id === "object:memory:mem-1")).toBe(true);
     expect(loaded.some((item) => item.execution === "acknowledge" && item.alertId === "al-live")).toBe(true);
   });
 
   it("ranks exact ids ahead of destinations and reports no-results as empty", () => {
     const store = createProjectionStore();
-    store.set("home:tasks", {
+    store.set(resourceListKey("memory"), {
       status: "ready",
-      data: [{ taskRef: TASK_REF }],
+      data: { family: "memory", truncated: false, resources: [{ id: "mem-1", family: "memory" }] },
     });
     const items = buildCommandCatalog(store);
-    const exact = rankCommands(items, TASK_REF);
+    const exact = rankCommands(items, "mem-1");
     expect(exact[0]?.kind).toBe("object");
     expect(rankCommands(items, "zzzz-no-such-object")).toEqual([]);
   });
