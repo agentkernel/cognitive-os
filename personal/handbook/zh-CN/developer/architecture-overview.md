@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:a880380c99f2dba4804d1940e7a1936bf8827e5a0ccca123c4a104d2b26e55e0"
+fingerprint: "sha256:c59fcdb61733caace3f4775766a32c0e1bbc8987c2a017f0473d2941107527bc"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -123,8 +123,9 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   设计系统；不改 CSS）与
   [冻结 v9 ↔ `/ui/` 对照清单](../../../docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
   （维护索引 19/19 模块，加九态 × 九表面、键盘/焦点、200%/窄窗、宿主主题、NVDA
-  各格）。清单所有判定在 `P13-T12/D02` 于 exact `/ui/` revision 记账前均为
-  `not-run`；两份文档都不是 Gate、release 或 T15 证据。
+  各格）。`P13-T12/D02` 已在 `/ui/` `c8691923`（`DEV-LINUX-NATIVE-01` + 宿主
+  Chrome）记账；剩余 `not-run` 是缺 NVDA、缺 Windows 原生 chrome，或一次性
+  runtime 没有 live Project。两份文档都不是 Gate、release 或 T15 证据。
 - 权威对象英文 id 为 **Employee**。产品表面在完成后对账前仍可写
   **Member Runtime**。本页不改写产品旅程。
 - HITL **只**在项目中心画布；Today 用深链进入。不要把独立

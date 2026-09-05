@@ -2255,7 +2255,8 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
   State Lab 静态图；把 rendered review 写成 Windows native 资格。
 - **硬门:** 适用 Phase 13 六条 + `TEST-REPORT-INCREMENTAL-01`（D01 documentation-only
   出口写明）。
-- **D01 done（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；lease `lease/personal/P13-T12/visual-spec` 已关闭；D02 `ready`）:** 视觉规格
+- **D02 in-progress（2026-09-05，`lease/personal/P13-T12/visual-qualification`，branch `personal/P13-T12-D02-visual-qualification`，`/ui/` pin `c8691923`）。** Chrome/Linux 格已填：modules 7/1/1/10；Grid A 81 fail；Grid B 7/5/10/35；Grid C 5/15/0/16；Grid D 18/0/0/22；Grid E 10 not-run（NVDA 未装）。见 [D02 report](../checkpoints/2026-09-05-personal-p13-t12-d02-report.md)。下一动作：Draft PR + required CI 后 ready/merge 仅 T12；不领取 T11。
+- **D01 done（2026-09-03，merged PR [#308](https://github.com/agentkernel/cognitive-os/pull/308) at `main@3680b742`；lease `lease/personal/P13-T12/visual-spec` 已关闭）:** 视觉规格
   [`personal-2.0-opc-visual-ui-spec.md`](../../personal/docs/architecture/personal-2.0-opc-visual-ui-spec.md)
   与对照清单
   [`personal-2.0-opc-v9-ui-comparison-checklist.md`](../../personal/docs/architecture/personal-2.0-opc-v9-ui-comparison-checklist.md)
