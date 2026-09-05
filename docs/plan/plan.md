@@ -2333,7 +2333,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T03 — Write Project 激活 live 具名 Project
 
-- **status:** `in-progress`. Claim ceiling `hypothesis`. Branch `personal/P14-T03-write-live-project`.
+- **status:** `done`. Claim ceiling `hypothesis`. PR [#330](https://github.com/agentkernel/cognitive-os/pull/330).
 - **EVAL-016:** J1 blocker 1.
 - **依赖:** P14-T02（紧耦合：Owner 必须从 `/ui/` 得到 live 具名 Project）；P11-T03 PlanRevision。
 - **垂直切片:** D01：Write 持久化 titled live Project + PlanRevision axis；离开 `creating`；
