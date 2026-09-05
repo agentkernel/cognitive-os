@@ -1,9 +1,9 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { App } from "../App";
+import { App, LinuxLegacyApp } from "../App";
 import { COMMAND_INDEX_HONESTY, COMMAND_NO_RESULTS, resetCommandRecents } from "../data/commands";
-import { WORK_TASKS_KEY } from "../data/projections/work";
+import { resourceListKey } from "../data/projections/resources";
 import { appProjections } from "../data/store";
 import { clearSession, rememberBearer } from "../session";
 
@@ -122,14 +122,15 @@ describe("command palette (W10)", () => {
     const { host, root } = renderAppAt("#/");
     await flush();
     await openPalette(host);
-    const work = [...host.querySelectorAll('[role="option"]')].find(
-      (node) => (node.textContent ?? "").includes("Work") && (node.textContent ?? "").includes("destination"),
+    const settings = [...host.querySelectorAll('[role="option"]')].find(
+      (node) =>
+        (node.textContent ?? "").includes("Settings") && (node.textContent ?? "").includes("destination"),
     );
     await act(async () => {
-      (work as HTMLElement | undefined)?.click();
+      (settings as HTMLElement | undefined)?.click();
     });
     await flush();
-    expect(window.location.hash).toMatch(/#\/work/);
+    expect(window.location.hash).toMatch(/#\/settings/);
     expect(host.querySelector('[role="dialog"][aria-label="Command palette"]')).toBeNull();
     unmount(host, root);
   });
@@ -138,19 +139,19 @@ describe("command palette (W10)", () => {
     rememberBearer("management", "test-management-bearer");
     rememberBearer("task", "test-task-bearer");
     installFetch();
-    appProjections.set(WORK_TASKS_KEY, {
+    appProjections.set(resourceListKey("memory"), {
       status: "ready",
-      data: [{ taskRef: TASK_REF }],
+      data: { family: "memory", truncated: false, resources: [{ id: "mem-1", family: "memory" }] },
     });
     const { host, root } = renderAppAt("#/");
     await flush();
     await openPalette(host);
     const input = host.querySelector(".cp-palette-input") as HTMLInputElement;
     await act(async () => {
-      typeQuery(input, TASK_REF);
+      typeQuery(input, "mem-1");
     });
     await flush();
-    expect(host.textContent).toContain(TASK_REF);
+    expect(host.textContent).toContain("mem-1");
     await act(async () => {
       typeQuery(input, "zzzz-no-such-object");
     });
@@ -168,7 +169,13 @@ describe("command palette (W10)", () => {
       configurable: true,
       value: { writeText },
     });
-    const { host, root } = renderAppAt(`#/work/${encodeURIComponent(TASK_REF)}`);
+    window.location.hash = `#/work/${encodeURIComponent(TASK_REF)}`;
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const root = createRoot(host);
+    act(() => {
+      root.render(<LinuxLegacyApp />);
+    });
     await flush();
     await openPalette(host);
     const copy = [...host.querySelectorAll('[role="option"]')].find((node) =>
@@ -219,7 +226,11 @@ describe("command palette (W10)", () => {
         });
       }),
     );
-    const { host, root } = renderAppAt("#/home");
+    appProjections.set("home:alerts", {
+      status: "ready",
+      data: [{ id: "al-live", threshold: "exceeded_80", acknowledged: false }],
+    });
+    const { host, root } = renderAppAt("#/");
     await flush();
     await openPalette(host);
     const input = host.querySelector(".cp-palette-input") as HTMLInputElement;

@@ -40,7 +40,7 @@ describe("shell accessibility and structure (W1)", () => {
     const current = host.querySelector('nav[aria-label="Primary"] a[aria-current="page"]');
     expect(current?.textContent).toBe("Projects");
     const all = [...host.querySelectorAll('nav[aria-label="Primary"] a')];
-    expect(all.length).toBe(3);
+    expect(all.length).toBe(4);
     expect(all.filter((a) => a.hasAttribute("aria-current")).length).toBe(1);
     act(() => root.unmount());
     host.remove();
@@ -87,14 +87,18 @@ describe("shell accessibility and structure (W1)", () => {
     host.remove();
   });
 
-  it("g then w jumps to the Work space", () => {
+  it("g then s jumps to Settings and does not revive retired Linux 1.0 hashes", () => {
     const { host, root } = renderApp("#/session");
+    act(() => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "g", bubbles: true }));
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "s", bubbles: true }));
+    });
+    expect(window.location.hash).toBe("#/settings");
     act(() => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "g", bubbles: true }));
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "w", bubbles: true }));
     });
-    expect(window.location.hash).toBe("#/work");
-    expect(host.textContent).toContain("Work");
+    expect(window.location.hash).toBe("#/settings");
     act(() => root.unmount());
     host.remove();
   });

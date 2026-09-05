@@ -1,22 +1,27 @@
 import { NavLink } from "react-router-dom";
 
 /**
- * Personal 2.0 L1: Today / Projects / Knowledge. Settings lives in the
- * side-foot, not L1. Linux 1.0 six-family routes remain reachable as
- * secondary destinations (Settings hub + palette), not as Team/Inbox.
+ * Personal 2.0 L1: Today / Projects / Knowledge / Settings. Linux 1.0
+ * Home / Work / Agents / Providers hashes are retired from Owner chrome
+ * (P14-T07); leftover tests keep them via LinuxLegacyApp.
  */
 export const PRIMARY_NAV = [
   ["/", "Today"],
   ["/projects", "Projects"],
   ["/knowledge", "Knowledge"],
+  ["/settings", "Settings"],
 ] as const;
 
-/** Linux 1.0 spaces kept as real routes, not L1 chrome. */
-export const LINUX_1_0_NAV = [
+/** Retired Dual Track hashes — product App 404s these; leftover suites keep them. */
+export const RETIRED_LINUX_1_0_NAV = [
   ["/home", "Home"],
   ["/work", "Work"],
   ["/agents", "Agents"],
   ["/providers", "Providers"],
+] as const;
+
+/** Remaining daemon surfaces that are not Owner L1 and not the retired hashes. */
+export const LINUX_1_0_NAV = [
   ["/resources", "Resources"],
   ["/activity", "Activity"],
   ["/system", "System"],
@@ -50,9 +55,6 @@ export function PrimaryNav({
         </ul>
       </nav>
       <div className="cp-side-foot">
-        <p>
-          <NavLink to="/settings">Settings</NavLink>
-        </p>
         <p>
           <button
             type="button"

@@ -29,17 +29,17 @@ import { ActivityPage } from "./views/activity/ActivityPage";
 import { SystemPage } from "./views/system/SystemPage";
 
 /**
- * Route map — Personal 2.0 L1 is Today / Projects / Knowledge; Settings is
- * chrome. `/projects/new` is the five-step create wizard (P12-T02), not L1.
+ * Route map — Personal 2.0 L1 is Today / Projects / Knowledge / Settings.
+ * `/projects/new` is the five-step create wizard (P12-T02), not L1.
  * `/projects/:id` plus members/runs/outputs are P12-T03 four submenus.
  * `/projects/:id/members/new` and `/members/:memberId` are P12-T04.
- * Linux 1.0 Home remains at /home. Providers/Work/Agents/Resources/
- * Activity/System stay as real secondary routes. Bindings folded into
- * Providers; /tasks → /work. ⌘K is chrome, not a space. Team/Inbox/#/hitl
- * are not routes. HITL is the Projects canvas (`?preview=`), reached from
- * Today by deep link.
+ * Linux 1.0 `#/home` `#/work` `#/agents` `#/providers` (and nested /bindings
+ * /tasks) are retired from Owner chrome (P14-T07); they 404 like `#/inbox`
+ * unless `includeRetiredLinux` (leftover Dual Track suites). Resources /
+ * Activity / System remain secondary. ⌘K is chrome, not a space.
+ * Team/Inbox/#/hitl are not routes. HITL is the Projects canvas (`?preview=`).
  */
-export function AppRoutes() {
+export function AppRoutes({ includeRetiredLinux = false }: { includeRetiredLinux?: boolean } = {}) {
   return (
     <Routes>
       <Route path="/session" element={<SessionPage />} />
@@ -124,6 +124,14 @@ export function AppRoutes() {
         }
       />
       <Route
+        path="/settings/model-connections"
+        element={
+          <SessionGate channel="management" title="Model Connections">
+            <SettingsPage />
+          </SessionGate>
+        }
+      />
+      <Route
         path="/settings"
         element={
           <SessionGate channel="management" title="Settings">
@@ -131,72 +139,76 @@ export function AppRoutes() {
           </SessionGate>
         }
       />
-      <Route
-        path="/home"
-        element={
-          <SessionGate channel="management" title="Home">
-            <HomePage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/work"
-        element={
-          <SessionGate channel="task" title="Work">
-            <WorkPage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/work/new"
-        element={
-          <SessionGate channel="task" title="New task">
-            <NewTaskPage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/work/:taskRef"
-        element={
-          <SessionGate channel="task" title="Task">
-            <WorkDetailPage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/agents"
-        element={
-          <SessionGate channel="management" title="Agents">
-            <AgentsPage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/agents/:id"
-        element={
-          <SessionGate channel="management" title="Agent detail">
-            <AgentDetailPage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/providers"
-        element={
-          <SessionGate channel="management" title="Providers">
-            <ProvidersPage />
-          </SessionGate>
-        }
-      />
-      <Route
-        path="/providers/:id"
-        element={
-          <SessionGate channel="management" title="Provider account">
-            <ProviderDetailPage />
-          </SessionGate>
-        }
-      />
-      <Route path="/bindings" element={<Navigate to="/providers" replace />} />
-      <Route path="/tasks" element={<Navigate to="/work" replace />} />
+      {includeRetiredLinux ? (
+        <>
+          <Route
+            path="/home"
+            element={
+              <SessionGate channel="management" title="Home">
+                <HomePage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/work"
+            element={
+              <SessionGate channel="task" title="Work">
+                <WorkPage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/work/new"
+            element={
+              <SessionGate channel="task" title="New task">
+                <NewTaskPage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/work/:taskRef"
+            element={
+              <SessionGate channel="task" title="Task">
+                <WorkDetailPage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/agents"
+            element={
+              <SessionGate channel="management" title="Agents">
+                <AgentsPage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/agents/:id"
+            element={
+              <SessionGate channel="management" title="Agent detail">
+                <AgentDetailPage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/providers"
+            element={
+              <SessionGate channel="management" title="Providers">
+                <ProvidersPage />
+              </SessionGate>
+            }
+          />
+          <Route
+            path="/providers/:id"
+            element={
+              <SessionGate channel="management" title="Provider account">
+                <ProviderDetailPage />
+              </SessionGate>
+            }
+          />
+          <Route path="/bindings" element={<Navigate to="/providers" replace />} />
+          <Route path="/tasks" element={<Navigate to="/work" replace />} />
+        </>
+      ) : null}
       <Route
         path="/activity"
         element={

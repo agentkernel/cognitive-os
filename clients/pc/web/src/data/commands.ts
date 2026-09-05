@@ -6,17 +6,13 @@
  * routes. Class-B may run inline. Class-C/D verbs are absent, not disabled.
  */
 
-import { HTTP_NAMED_AGENTS } from "./projections/agents";
-import { type TaskEnvelopeView } from "./projections/home";
-import { type BindingView, type ProviderAccount, type ProviderAlertView } from "./projections/providers";
+import { type ProviderAlertView } from "./projections/providers";
 import { resourceListKey, type ResourceListView } from "./projections/resources";
 import { TOOL_CATALOG_KEY, type ToolCatalogView } from "./projections/tools";
-import { WORK_TASKS_KEY } from "./projections/work";
-import { LINUX_1_0_NAV, PRIMARY_NAV } from "../shell/PrimaryNav";
+import { PRIMARY_NAV } from "../shell/PrimaryNav";
 import type { ProjectionStore } from "./store";
 
 const HOME_ALERTS_KEY = "home:alerts";
-const HOME_TASKS_KEY = "home:tasks";
 
 export const COMMAND_INDEX_HONESTY =
   "Palette searches known objects in this tab (BD-6). There is no server search. The inventory is partial (BD-3).";
@@ -78,18 +74,18 @@ const CREATE_ACTIONS: CommandItem[] = [
     kind: "action",
     execution: "navigate",
     label: "New task",
-    detail: "Opens the governed creation chain",
-    keywords: ["create", "admit", "work"],
-    href: "/work/new",
+    detail: "Opens the 2.0 create wizard",
+    keywords: ["create", "admit", "work", "project"],
+    href: "/projects/new",
   },
   {
     id: "action:add-provider",
     kind: "action",
     execution: "navigate",
     label: "Add provider account",
-    detail: "Lands on Providers; key entry stays in that form",
+    detail: "Lands on Model Connections; key entry stays in that form",
     keywords: ["create", "account", "provider", "configure"],
-    href: "/providers",
+    href: "/settings/model-connections",
   },
   {
     id: "action:remember",
@@ -114,9 +110,9 @@ const CREATE_ACTIONS: CommandItem[] = [
     kind: "action",
     execution: "navigate",
     label: "Configure provider",
-    detail: "Binding, budget and price stay on the account page",
+    detail: "Binding, budget and price stay on Model Connections",
     keywords: ["configure", "binding", "budget", "price"],
-    href: "/providers",
+    href: "/settings/model-connections",
   },
   {
     id: "action:copy-location",
@@ -138,7 +134,7 @@ const HELP: CommandItem = {
 };
 
 function destinations(): CommandItem[] {
-  const spaces = [...PRIMARY_NAV, ...LINUX_1_0_NAV].map(([to, label]) => ({
+  const spaces = PRIMARY_NAV.map(([to, label]) => ({
     id: `dest:${to}`,
     kind: "destination" as const,
     execution: "navigate" as const,
@@ -150,13 +146,22 @@ function destinations(): CommandItem[] {
   return [
     ...spaces,
     {
-      id: "dest:/settings",
+      id: "dest:/settings/model-connections",
       kind: "destination",
       execution: "navigate",
-      label: "Settings",
+      label: "Model Connections",
       detail: "Navigate",
-      keywords: ["settings", "go", "space"],
-      href: "/settings",
+      keywords: ["settings", "model", "connections", "provider", "go"],
+      href: "/settings/model-connections",
+    },
+    {
+      id: "dest:/activity",
+      kind: "destination",
+      execution: "navigate",
+      label: "Activity",
+      detail: "Navigate",
+      keywords: ["activity", "go", "space"],
+      href: "/activity",
     },
     {
       id: "dest:system-doctor",
@@ -175,42 +180,6 @@ function destinations(): CommandItem[] {
       href: "/system?section=stewardship",
     },
   ];
-}
-
-function namedAgents(): CommandItem[] {
-  return HTTP_NAMED_AGENTS.map((id) => ({
-    id: `object:agent:${id}`,
-    kind: "object" as const,
-    execution: "navigate" as const,
-    label: `agent ${id}`,
-    detail: "Named agent dossier",
-    keywords: [id, "agent", "inspect"],
-    href: `/agents/${encodeURIComponent(id)}`,
-  }));
-}
-
-function taskItems(rows: TaskEnvelopeView[] | undefined): CommandItem[] {
-  return (rows ?? []).map((row) => ({
-    id: `object:task:${row.taskRef}`,
-    kind: "object" as const,
-    execution: "navigate" as const,
-    label: `task ${row.taskRef}`,
-    detail: "Open Work detail (evidence is on that page)",
-    keywords: [row.taskRef, "task", "inspect", "verify"],
-    href: `/work/${encodeURIComponent(row.taskRef)}`,
-  }));
-}
-
-function accountItems(rows: ProviderAccount[] | undefined): CommandItem[] {
-  return (rows ?? []).map((row) => ({
-    id: `object:account:${row.id}`,
-    kind: "object" as const,
-    execution: "navigate" as const,
-    label: row.name,
-    detail: `provider ${row.id}`,
-    keywords: [row.id, row.name, row.kind, "provider", "account", "inspect"],
-    href: `/providers/${encodeURIComponent(row.id)}`,
-  }));
 }
 
 function envelopeItems(family: "memory" | "skill", view: ResourceListView | undefined): CommandItem[] {
@@ -234,17 +203,6 @@ function toolItems(view: ToolCatalogView | undefined): CommandItem[] {
     detail: row.lifecycle,
     keywords: [row.operationId, "tool", row.family ?? "", "inspect"].filter(Boolean),
     href: "/resources/tool",
-  }));
-}
-
-function bindingItems(rows: BindingView[] | undefined): CommandItem[] {
-  return (rows ?? []).map((row) => ({
-    id: `object:binding:${row.agent}:${row.accountId}`,
-    kind: "object" as const,
-    execution: "navigate" as const,
-    label: `binding ${row.agent} → ${row.accountId}`,
-    keywords: [row.agent, row.accountId, row.modelId, "binding", "inspect"],
-    href: `/agents/${encodeURIComponent(row.agent)}`,
   }));
 }
 
@@ -369,11 +327,6 @@ export function contextActions(pathname: string): CommandItem[] {
  * already loaded. Unloaded lists do not appear — that is the BD-6 boundary.
  */
 export function buildCommandCatalog(store: ProjectionStore, pathname = ""): CommandItem[] {
-  const tasks =
-    store.get<TaskEnvelopeView[]>(WORK_TASKS_KEY)?.data ??
-    store.get<TaskEnvelopeView[]>(HOME_TASKS_KEY)?.data;
-  const accounts = store.get<ProviderAccount[]>("providers:accounts")?.data;
-  const bindings = store.get<BindingView[]>("bindings:all")?.data;
   const alerts = store.get<ProviderAlertView[]>(HOME_ALERTS_KEY)?.data;
   const memory = store.get<ResourceListView>(resourceListKey("memory"))?.data;
   const skill = store.get<ResourceListView>(resourceListKey("skill"))?.data;
@@ -383,10 +336,6 @@ export function buildCommandCatalog(store: ProjectionStore, pathname = ""): Comm
     ...contextActions(pathname),
     ...CREATE_ACTIONS,
     ...alertActions(alerts),
-    ...taskItems(tasks),
-    ...accountItems(accounts),
-    ...namedAgents(),
-    ...bindingItems(bindings),
     ...envelopeItems("memory", memory),
     ...envelopeItems("skill", skill),
     ...toolItems(tools),

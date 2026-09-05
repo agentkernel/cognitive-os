@@ -1,7 +1,7 @@
 import { act } from "react";
 import { createRoot } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { App } from "../../../App";
+import { LinuxLegacyApp as App } from "../../../App";
 import { noteObservedTask, noteSessionChain } from "../../../data/projections/work";
 import {
   NO_RECORDED_FACTS,
