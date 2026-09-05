@@ -3,7 +3,7 @@
 //! The unrendered bootstrap template must fail closed (exit 64) before any
 //! network or filesystem side effect. A cargo-built daemon on this host must
 //! admit a Windows path ending in `Personal Home`, bind, and serve `/ui/`.
-//! GNU/WSL/Linux roots and the task channel stay fail-closed.
+//! GNU/WSL/Linux crates compile this file but run no tests here.
 //!
 //! This is implementation evidence on whatever Windows host runs it
 //! (`DEV-WINDOWS-NATIVE-OPC-01` locally; `CI-WINDOWS-MSVC-01` in required CI).
@@ -141,15 +141,6 @@ impl Drop for Hermetic {
         let _ = std::fs::remove_dir_all(&self.root);
         let _ = std::fs::remove_dir_all(&self.home);
     }
-}
-
-#[cfg(not(windows))]
-#[test]
-fn p13_t13_live_unsigned_host_path_is_windows_only() {
-    assert!(
-        !cfg!(windows),
-        "this compile-only gate records that live unsigned-host E2E is cfg(windows)"
-    );
 }
 
 #[cfg(windows)]
