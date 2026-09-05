@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { App } from "../../App";
 import { appProjections } from "../../data/store";
 import { clearSession, rememberBearer } from "../../session";
+import { PROCESS_STAGES, RUNTIME_SLOTS } from "./createWizardModel";
 
 type RouteResponse = { status: number; body: unknown };
 type FetchCall = { method: string; path: string; pathname: string; body?: unknown };
@@ -82,6 +83,13 @@ function setInputValue(input: HTMLInputElement | HTMLTextAreaElement, value: str
   });
 }
 
+function setSelectValue(select: HTMLSelectElement, value: string) {
+  act(() => {
+    select.value = value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+}
+
 function clickButton(host: HTMLElement, text: string) {
   const button = [...host.querySelectorAll("button")].find(
     (candidate) => (candidate.textContent ?? "").trim() === text,
@@ -92,6 +100,12 @@ function clickButton(host: HTMLElement, text: string) {
   act(() => {
     button.click();
   });
+}
+
+function button(host: HTMLElement, text: string): HTMLButtonElement | undefined {
+  return [...host.querySelectorAll("button")].find(
+    (candidate) => (candidate.textContent ?? "").trim() === text,
+  ) as HTMLButtonElement | undefined;
 }
 
 const FAKE_ACTION = /approve|create project|activate|new project|team|inbox|confirm|ingest|apply authority/i;
@@ -122,16 +136,57 @@ async function renderWizard(extras: Record<string, RouteResponse> = {}) {
   return { ...view, calls };
 }
 
-async function walkToJoint(host: HTMLElement) {
+function fillCharter(host: HTMLElement) {
   setInputValue(host.querySelector("input[name='title']") as HTMLInputElement, "Q3 charter");
   setInputValue(
     host.querySelector("textarea[name='charter']") as HTMLTextAreaElement,
     "owner charter body",
   );
   clickButton(host, "Continue");
-  clickButton(host, "Continue");
-  clickButton(host, "Continue");
-  clickButton(host, "Continue");
+}
+
+function confirmProcessAxis(host: HTMLElement) {
+  for (let i = 0; i < PROCESS_STAGES.length; i += 1) {
+    clickButton(host, "确认这一环");
+  }
+  clickButton(host, "确认总目标与项目触发");
+  clickButton(host, "进入 ③");
+}
+
+function seatAllMembers(host: HTMLElement) {
+  clickButton(host, "创建岗位");
+  for (let i = 0; i < PROCESS_STAGES.length; i += 1) {
+    const select = host.querySelector("select[name='member-model']") as HTMLSelectElement;
+    setSelectValue(select, "draft-bound");
+    for (const slot of RUNTIME_SLOTS) {
+      const box = host.querySelector(`input[name='slot-${slot.id}']`) as HTMLInputElement;
+      if (!box.checked) {
+        act(() => {
+          box.click();
+        });
+      }
+    }
+    clickButton(host, "确认就位");
+  }
+  clickButton(host, "进入 ④");
+}
+
+function passAllStageTests(host: HTMLElement) {
+  PROCESS_STAGES.forEach((_stage, index) => {
+    clickButton(host, "开始测");
+    clickButton(host, "记录通过");
+    const last = index === PROCESS_STAGES.length - 1;
+    clickButton(host, last ? "末环通过，进入 ⑤" : "通过，下一环");
+  });
+}
+
+function walkToJoint(host: HTMLElement) {
+  fillCharter(host);
+  confirmProcessAxis(host);
+  seatAllMembers(host);
+  passAllStageTests(host);
+  clickButton(host, "开始联调");
+  clickButton(host, "核对通过");
 }
 
 afterEach(() => {
@@ -141,18 +196,64 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("P12-T02 five-step create wizard", () => {
-  it("hides the assistant rail and walks five steps without fake Activate chrome", async () => {
+describe("P14-T02 Dual Track create wizard", () => {
+  it("replaces note textareas with process axis / seating / openable tests and has no fake Activate chrome", async () => {
     const { host, root } = await renderWizard();
     expect(host.querySelector("[data-page='opc-create-wizard']")).not.toBeNull();
     expect(host.querySelector("[data-step='create-init']")).not.toBeNull();
     expect(host.querySelector("[data-rail='assistant']")).toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
-    await walkToJoint(host);
+    fillCharter(host);
+    expect(host.querySelector("[data-step='create-process']")).not.toBeNull();
+    expect(host.querySelector("textarea[name='process']")).toBeNull();
+    expect(host.querySelector("[data-process-axis]")).not.toBeNull();
+    expect(host.querySelectorAll("[data-ring]")).toHaveLength(PROCESS_STAGES.length);
+    confirmProcessAxis(host);
+    expect(host.querySelector("[data-step='create-members']")).not.toBeNull();
+    expect(host.querySelector("textarea[name='members']")).toBeNull();
+    seatAllMembers(host);
+    expect(host.querySelector("[data-step='create-test']")).not.toBeNull();
+    expect(host.querySelector("textarea[name='verification']")).toBeNull();
+    passAllStageTests(host);
     expect(host.querySelector("[data-step='create-joint']")).not.toBeNull();
+    expect(host.querySelector("[data-openable-result]")).not.toBeNull();
     expect(host.textContent).toMatch(/Request preview/);
     expect(host.textContent).toMatch(/Write Project/);
     expect(fakeActionLabels(host)).toEqual([]);
+    unmount(host, root);
+  });
+
+  it("does not enter ③ until every ring is resolved and total goal is confirmed", async () => {
+    const { host, root } = await renderWizard();
+    fillCharter(host);
+    expect(button(host, "进入 ③")).toBeUndefined();
+    clickButton(host, "确认这一环");
+    expect(host.querySelector("[data-step='create-process']")).not.toBeNull();
+    expect(button(host, "进入 ③")).toBeUndefined();
+    unmount(host, root);
+  });
+
+  it("refuses seating without a model and blocks ④ until every member is seated", async () => {
+    const { host, root } = await renderWizard();
+    fillCharter(host);
+    confirmProcessAxis(host);
+    clickButton(host, "创建岗位");
+    const seat = button(host, "确认就位");
+    expect(seat?.disabled).toBe(true);
+    expect(button(host, "进入 ④")?.disabled).toBe(true);
+    unmount(host, root);
+  });
+
+  it("blocks start/pass when the responsible member is not seated, and unknown cannot pass", async () => {
+    const { host, root } = await renderWizard();
+    fillCharter(host);
+    confirmProcessAxis(host);
+    expect(host.querySelector("[data-step='create-test']")).toBeNull();
+    seatAllMembers(host);
+    clickButton(host, "开始测");
+    clickButton(host, "记录说不清");
+    expect(button(host, "通过，下一环")?.disabled).toBe(true);
+    expect(host.textContent).toMatch(/说不清|不能通过/);
     unmount(host, root);
   });
 
@@ -171,7 +272,8 @@ describe("P12-T02 five-step create wizard", () => {
         body: { status: "ok", new_ref: "proj-new", receipt_ref: "r1", result: "activation" },
       },
     });
-    await walkToJoint(host);
+    walkToJoint(host);
+    expect(button(host, "Write Project")?.disabled).toBe(true);
     clickButton(host, "Request preview");
     await flush();
     expect(calls.some((call) => call.pathname === "/management/project/v1/draft.create")).toBe(
@@ -182,6 +284,8 @@ describe("P12-T02 five-step create wizard", () => {
     );
     const preview = calls.find((call) => call.pathname === "/management/project/v1/preview.request");
     expect(preview?.body).toEqual({ subject_kind: "activation", subject_ref: "draft-1" });
+    const created = calls.find((call) => call.pathname === "/management/project/v1/draft.create");
+    expect(String((created?.body as { charter?: string })?.charter ?? "")).toMatch(/收集本周事实/);
     clickButton(host, "Write Project");
     await flush();
     expect(calls.some((call) => call.pathname === "/management/project/v1/confirm")).toBe(true);
@@ -200,7 +304,7 @@ describe("P12-T02 five-step create wizard", () => {
         },
       },
     });
-    await walkToJoint(host);
+    walkToJoint(host);
     clickButton(host, "Request preview");
     await flush();
     expect(host.querySelector("[data-wizard-error='true']")?.textContent).toMatch(/PROJECT_INVALID/);
