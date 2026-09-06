@@ -1,10 +1,12 @@
 import { useCallback, useEffect } from "react";
 import { Link, useParams, useSearchParams } from "react-router-dom";
+import { FactGrid } from "../../components/FactGrid";
 import { PageHeader } from "../../components/PageHeader";
 import {
   HITL_KEY,
   type PendingPreviewRow,
 } from "../../data/projections/hitl";
+import { PROJECTS_KEY, type ProjectListRow } from "../../data/projections/projects";
 import {
   projectAxisKey,
   PROJECT_AXIS_PATH,
@@ -23,11 +25,12 @@ import {
   loadProjectDetail,
 } from "./loadOpcReads";
 import { ProjectLifecyclePanel } from "./ProjectLifecyclePanel";
-import { ProjectWorkNav } from "./ProjectWorkNav";
+import { ownerProjectStatus, ProjectWorkNav } from "./ProjectWorkNav";
 
 /**
  * Project detail — daemon GET detail + read-only PlanRevision axis.
- * L2 goes to members/runs/outputs. HITL Confirm is digest-bound on this canvas.
+ * Owner chrome vs frozen v9. L2 goes to 成员/运行/产出. HITL Confirm stays
+ * digest-bound on this canvas. Missing axis is honest empty.
  */
 export function ProjectDetailPage() {
   const { projectId = "" } = useParams();
@@ -35,6 +38,7 @@ export function ProjectDetailPage() {
   const focusPreviewId = params.get("preview");
   const detail = useProjection<ProjectDetailRow[]>(projectDetailKey(projectId));
   const axis = useProjection<ProjectAxisStageRow[]>(projectAxisKey(projectId));
+  const list = useProjection<ProjectListRow[]>(PROJECTS_KEY);
   const hitl = useProjection<PendingPreviewRow[]>(`${HITL_KEY}:${projectId}`);
   const refresh = useCallback(async () => {
     if (projectId.length === 0) {
@@ -48,20 +52,26 @@ export function ProjectDetailPage() {
     void refresh();
   }, [refresh]);
   const row = detail.data?.[0];
+  const listRow = (list.data ?? []).find((item) => item.projectId === projectId);
+  const name =
+    listRow?.titleSummary && listRow.titleSummary !== "unknown"
+      ? listRow.titleSummary
+      : (row?.projectId ?? projectId);
+  const stageCount = axis.data?.length ?? 0;
 
   return (
     <section data-page="opc-project-detail">
       <PageHeader
-        title="Project detail"
-        lede="Daemon Project aggregate. Not a renamed Task."
+        title="项目详情"
+        lede="只读章程与流程轴。改章程走预览确认，不当表单页。去成员 / 运行 / 产出。"
       />
-      <HonestyNote>
-        Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        GET {PROJECT_DETAIL_PATH} is the header. The process axis is read-only.
-        Confirm-before-activate stays on management HTTP. Chat cannot Approve.
+      <HonestyNote placement="secondary">
+        Product origin is daemon-served hash /ui/. GET {PROJECT_DETAIL_PATH} is
+        the header. The process axis is read-only. Confirm-before-activate stays
+        on management HTTP. Chat cannot Approve.
       </HonestyNote>
       <p className="cp-quiet">
-        <Link to="/projects">Projects list</Link>
+        <Link to="/projects">项目列表</Link>
         {projectId ? (
           <>
             {" "}
@@ -78,54 +88,49 @@ export function ProjectDetailPage() {
         region="opc-project-detail"
       >
         {row ? (
-          <table className="cp-table">
-            <caption className="cp-quiet">GET {PROJECT_DETAIL_PATH}</caption>
-            <thead>
-              <tr>
-                <th>Field</th>
-                <th>Daemon statement</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td>State</td>
-                <td>{row.state}</td>
-              </tr>
-              <tr>
-                <td>Charter</td>
-                <td>{row.charterStatus}</td>
-              </tr>
-              <tr>
-                <td>Charter digest</td>
-                <td>
-                  <code className="cp-mono">{row.charterDigest}</code>
-                </td>
-              </tr>
-              <tr>
-                <td>Plan revision</td>
-                <td>
-                  <code className="cp-mono">{row.planRevisionId}</code>
-                </td>
-              </tr>
-              <tr>
-                <td>Cost</td>
-                <td>{row.cost}</td>
-              </tr>
-              <tr>
-                <td>Pending previews</td>
-                <td>{row.pendingPreviewCount}</td>
-              </tr>
-            </tbody>
-          </table>
+          <section className="cp-region">
+            <h3>
+              {name} · {ownerProjectStatus(row.state)}
+            </h3>
+            <FactGrid
+              facts={[
+                { label: "名称", value: name },
+                { label: "章程", value: row.charterStatus },
+                { label: "状态", value: `${ownerProjectStatus(row.state)} (${row.state})` },
+                { label: "费用", value: row.cost },
+                {
+                  label: "流程环节",
+                  value:
+                    stageCount > 0
+                      ? `${stageCount} 环 · 执行进度在运行管理`
+                      : "无轴 · 执行进度在运行管理",
+                },
+                { label: "成员", value: "去成员管理查看。不跨项目共享。" },
+              ]}
+            />
+            <p className="cp-toolbar">
+              <Link className="cp-button" to={`/projects/${encodeURIComponent(projectId)}/members`}>
+                成员管理
+              </Link>{" "}
+              <Link className="cp-button" to={`/projects/${encodeURIComponent(projectId)}/runs`}>
+                运行管理
+              </Link>{" "}
+              <Link className="cp-button" to={`/projects/${encodeURIComponent(projectId)}/outputs`}>
+                产出管理
+              </Link>
+            </p>
+            <p className="cp-quiet">GET {PROJECT_DETAIL_PATH}</p>
+          </section>
         ) : null}
       </DaemonReadPanel>
       <DaemonReadPanel
         projection={axis}
         surface="Project process axis"
-        emptyTitle="Project detail: no PlanRevision axis"
-        emptyBody="Missing plan is empty, not a fake wizard. Runs and outputs stay empty until the daemon states stages."
+        emptyTitle="没有流程轴 · no PlanRevision axis"
+        emptyBody="无轴仍诚实 empty。不发明示范环节。Missing plan is empty, not a fake wizard. Runs and outputs stay empty until the daemon states stages."
         region="opc-project-axis"
       >
+        <p className="cp-quiet">流程轴 · 只读章程。点运行管理看当前步骤。GET {PROJECT_AXIS_PATH}</p>
         <table className="cp-table">
           <caption className="cp-quiet">GET {PROJECT_AXIS_PATH} — read-only</caption>
           <thead>

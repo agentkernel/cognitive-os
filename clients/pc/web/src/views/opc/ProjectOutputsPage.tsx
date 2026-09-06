@@ -72,10 +72,10 @@ export function ProjectOutputsPage() {
   return (
     <section data-page="opc-project-outputs">
       <PageHeader
-        title="Project outputs"
-        lede="Real Attempt artifacts from the daemon CAS. Select one, then view. Files are not Project authority."
+        title="产出管理"
+        lede="打开一份产出，再决定要不要对外。Files are not Project authority."
       />
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Product origin is daemon-served hash /ui/. Vite preview is not the product
         origin. This chrome is not Linux 1.0 #/work. GET {OUTPUTS_PATH} lists
         CAS-referenced artifacts with their independent-verifier state; the
@@ -84,7 +84,7 @@ export function ProjectOutputsPage() {
         Confirm.
       </HonestyNote>
       <p className="cp-quiet">
-        <Link to="/projects">Projects list</Link>
+        <Link to="/projects">项目列表</Link>
         {projectId ? (
           <>
             {" "}

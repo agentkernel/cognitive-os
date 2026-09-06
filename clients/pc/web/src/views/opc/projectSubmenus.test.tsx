@@ -193,18 +193,18 @@ afterEach(() => {
 describe("P12-T03 Project four submenus", () => {
   it("opens daemon Project detail from the list without minting Activate", async () => {
     const { host, root } = await renderWork("#/projects");
-    expect(host.querySelector("a[href='#/projects/proj-1']")?.textContent).toBe("Open");
+    expect(host.querySelector("a[href='#/projects/proj-1']")?.textContent).toBe("打开");
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });
 
-  it("keeps L2 as Detail / Members / Runs / Outputs and never Team or Inbox", async () => {
+  it("keeps L2 as 详情 / 成员 / 运行 / 产出 and never Team or Inbox", async () => {
     const { host, root, calls } = await renderWork("#/projects/proj-1");
     const nav = host.querySelector('nav[aria-label="Project sections"]');
-    expect(nav?.textContent).toContain("Detail");
-    expect(nav?.textContent).toContain("Members");
-    expect(nav?.textContent).toContain("Runs");
-    expect(nav?.textContent).toContain("Outputs");
+    expect(nav?.textContent).toContain("详情");
+    expect(nav?.textContent).toContain("成员");
+    expect(nav?.textContent).toContain("运行");
+    expect(nav?.textContent).toContain("产出");
     expect(nav?.textContent).not.toMatch(/Team|Inbox|Work/);
     expect(host.querySelector("[data-page='opc-project-detail']")).not.toBeNull();
     expect(host.textContent).toContain("active");

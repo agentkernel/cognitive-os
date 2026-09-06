@@ -23,7 +23,7 @@
 | Scene → daemon map | [personal-2.0-opc-v9-implementation-mapping.md](personal-2.0-opc-v9-implementation-mapping.md) (historical path name contains v9; rewritten to post-P12 facts) |
 | Design-Agent / journey assessment | [13-personal-20-agent-design-difficulty-and-journey-assessment.md](../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md) (2026-08-30; hypothesis; not a P11 claim) |
 | Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11–**15** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15`, `P12-T01`…`T09`, `P13-T01`…`T13`, `P14-T01`…`T08`, and `P15-T01`…`T06` cards |
-| First implementation knife (Phase 15) | **`P15-T01` done** shell + Today Owner chrome toward frozen v9 on daemon `/ui/` (owner 2026-09-06 「授权，执行」; PR #335; guest pin `4373d158`). **`P15-T02` done** Write/①–⑤ Owner copy vs v9 (PR #337; guest pin `3528ba28` / SPA `index-V6QE_Yae.js`). Unique next = claim `P15-T03`. `P15-T03`..`T06` remain not-started. Not 19 modules. Not Gate / T15 |
+| First implementation knife (Phase 15) | **`P15-T01` done** shell + Today Owner chrome toward frozen v9 on daemon `/ui/` (owner 2026-09-06 「授权，执行」; PR #335; guest pin `4373d158`). **`P15-T02` done** Write/①–⑤ Owner copy vs v9 (PR #337; guest pin `3528ba28` / SPA `index-V6QE_Yae.js`). **`P15-T03` in-progress** Projects list/detail vs v9 (`P15-T03/D01`). Unique next = `P15-T03/D01` Dual Track then guest `/ui/` J3. Do not claim `P15-T04`..`T06` from this claim. Not 19 modules. Not Gate / T15 |
 | First implementation knife (Phase 11) | **`P11-T03` Project aggregate walking skeleton** — done; not a full `/ui/` page |
 | First implementation knife (Phase 12) | **`P12-T01`–`T09` done**; merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`. Dual Track **Now / hypothesis chrome** on `/ui/`. Not T15; not pixel-replica; NVDA/200%/host-theme **not-run** |
 | First implementation knives (Phase 13) | **`P13-T02` hosted DSH real Attempt loop** and **`P13-T03` hidden Pi real inference** — independent, may run in parallel leases after `P13-T01` docs-only merge; **`P13-T12/D01` visual spec** is documentation-only and parallel. Exit of Phase 13 = `P11-T15` N=15 on a qualified Windows host (`P13-T13`). Not release / signing / B01-W / 2.1 |
@@ -330,8 +330,9 @@ flowchart TD
 
 Do **not** edit the Phase 13 or Phase 14 mermaid above. Keep this graph in
 sync with the formal plan 「Phase 15 - v9 design authority on daemon `/ui/`」
-mermaid. `P15-T01` is **done**. `P15-T02` is **done**. Unique next is
-claim `P15-T03`. Do not claim `P15-T04`..`T06` from T02 close.
+mermaid. `P15-T01` is **done**. `P15-T02` is **done**. `P15-T03` is
+**in-progress**. Unique next is `P15-T03/D01` Dual Track then guest `/ui/`
+J3. Do not claim `P15-T04`..`T06` from this claim.
 
 ```mermaid
 flowchart TD
