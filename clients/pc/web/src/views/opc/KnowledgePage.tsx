@@ -204,10 +204,12 @@ export function KnowledgePage() {
             : "不必另装笔记应用。解析失败保留原件可重试。离线只读上次索引。"
         }
       />
-      <HonestyNote placement="secondary">
-        资料不是项目权威。导入走已有 Vault 写入。密钥形态不进知识库。聊天自动入记忆仍是
-        Requires-backend。
-      </HonestyNote>
+      {locked ? null : (
+        <HonestyNote placement="secondary">
+          资料不是项目权威。导入走已有 Vault 写入。密钥形态不进知识库。聊天自动入记忆仍是
+          Requires-backend。
+        </HonestyNote>
+      )}
       <ProjectAuthorityPanel
         projection={projects}
         surface="知识"
@@ -382,9 +384,9 @@ function KnowledgeFilesTab({
       ) : (
         <DaemonReadPanel
           projection={documents}
-          surface="Knowledge document status"
-          emptyTitle="Knowledge: no stored Vault documents"
-          emptyBody="No stored documents. A failed rebuild still leaves an imported original visible as not-indexed."
+          surface="资料状态"
+          emptyTitle="还没有存档的资料"
+          emptyBody="没有存档。重建失败时原件仍可见为未索引。"
           region="opc-knowledge-documents"
         >
           {visible.length === 0 ? (
@@ -394,8 +396,7 @@ function KnowledgeFilesTab({
           ) : (
             <table className="cp-table">
               <caption className="cp-quiet">
-                GET {vaultDocumentsPath(projectId)} — original remains visible when
-                index_status is not-indexed. is_authority stays false.
+                GET {vaultDocumentsPath(projectId)}。未索引时原件仍可见。资料不是项目权威。
               </caption>
               <thead>
                 <tr>
@@ -477,14 +478,14 @@ function KnowledgeFilesTab({
       >
         <table className="cp-table">
           <caption className="cp-quiet">GET {vaultConflictsPath(projectId)}</caption>
-          <thead>
-            <tr>
-              <th>Conflict</th>
-              <th>Path</th>
-              <th>Resolution</th>
-            </tr>
-          </thead>
-          <tbody>
+              <thead>
+                <tr>
+                  <th>冲突</th>
+                  <th>路径</th>
+                  <th>处理</th>
+                </tr>
+              </thead>
+              <tbody>
             {(conflicts.data ?? []).map((row) => (
               <tr key={row.conflictId} data-row-key={row.conflictId}>
                 <td>
@@ -497,6 +498,7 @@ function KnowledgeFilesTab({
           </tbody>
         </table>
       </DaemonReadPanel>
+      ) : null}
     </div>
   );
 }
@@ -545,9 +547,9 @@ function KnowledgeWhyTab({
           </caption>
           <thead>
             <tr>
-              <th>Entry</th>
-              <th>Layer</th>
-              <th>Excerpt</th>
+              <th>条目</th>
+              <th>层</th>
+              <th>摘录</th>
             </tr>
           </thead>
           <tbody>
@@ -1204,7 +1206,7 @@ function VaultIngestForm({
           checked={recordConflict}
           onChange={(event) => setRecordConflict(event.target.checked)}
         />{" "}
-        Record conflict if this path already exists
+        若路径已存在则记冲突
       </label>
       <button type="submit" disabled={busy}>
         开始导入

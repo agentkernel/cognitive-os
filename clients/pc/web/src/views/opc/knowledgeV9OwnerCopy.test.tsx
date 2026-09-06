@@ -213,6 +213,8 @@ describe("P15-T04 Knowledge vs v9 Owner copy", () => {
     expect(host.textContent).toMatch(/还没资料/);
     expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
     expect(host.querySelector("textarea[name='vault-body']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-knowledge-labels']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-vault-conflicts']")).toBeNull();
     expect(primaryHonesty(host)).toEqual([]);
     expect(host.querySelector("#main")?.textContent).not.toMatch(JARGON_WALL);
     expect(host.textContent).not.toMatch(HTTP_PASTE_WALL);

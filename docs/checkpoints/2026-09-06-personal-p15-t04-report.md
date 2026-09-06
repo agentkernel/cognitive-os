@@ -34,6 +34,7 @@ Wrote `knowledgeV9OwnerCopy.test.tsx` against unmodified Knowledge chrome, then 
 | 2026-09-06 | Owner copy `KnowledgePage.tsx` | pass | Dual Track vitest | dirty worktree | Title `当前项目资料`; tabs 项目资料/导入/为什么用这段/记忆; no Obsidian; no fake Activate. |
 | 2026-09-06 | Knowledge + opcIa Dual Track | pass | Dual Track vitest | dirty worktree | 5 files, **44/44**. opcIa empty Knowledge asserts `知识已锁定`. |
 | 2026-09-06 | Full Dual Track web vitest | pass | Dual Track vitest | dirty worktree | **77 files / 549 tests**. |
+| 2026-09-06 | Locked Knowledge h2 + remaining Owner table copy | pass | Dual Track vitest | dirty follow-up | Empty Knowledge title `知识已锁定`. Labels/conflicts hidden until files exist. 5 files **44/44**. |
 | 2026-09-06 | D02 guest `/ui/` J5 | not-run | `B01-Desktop-Linux-002` | — | Guest `:48681` is not this lease. Keep Draft. |
 
 ## Unique next (T04 only)

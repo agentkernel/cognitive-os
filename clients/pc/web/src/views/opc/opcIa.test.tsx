@@ -380,7 +380,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
     }
     const knowledgeOrigin = await renderOpc("#/knowledge", EMPTY_LIST);
     expect(knowledgeOrigin.host.textContent).not.toMatch(/vite preview|vite dev server|localhost:5173/i);
-    expect(knowledgeOrigin.host.querySelector(".cp-page-head h2")?.textContent).toBe("当前项目资料");
+    expect(knowledgeOrigin.host.querySelector(".cp-page-head h2")?.textContent).toBe("知识已锁定");
     unmount(knowledgeOrigin.host, knowledgeOrigin.root);
     const today = await renderOpc("#/", EMPTY_LIST);
     expect(today.host.querySelector("#main .cp-honesty")).toBeNull();

@@ -231,7 +231,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
     expect(labels?.textContent).toMatch(/owner-owned/);
     expect(labels?.textContent).toMatch(/citation-only/);
     expect(labels?.textContent).toMatch(/excluded/);
-    expect(labels?.textContent).toMatch(/untrusted/i);
+    expect(labels?.textContent).toMatch(/不可信/);
     expect(host.querySelector("[data-region='opc-knowledge-documents']")?.textContent).toMatch(
       /not-indexed/,
     );

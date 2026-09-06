@@ -178,6 +178,7 @@ describe("P14-T08 Knowledge v9 files / why / import IA", () => {
       "GET /management/project/v1/list": EMPTY_LIST,
     });
     expect(host.querySelector('[role="tablist"][aria-label="知识"]')).toBeNull();
+    expect(host.querySelector(".cp-page-head h2")?.textContent).toBe("知识已锁定");
     expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
     expect(host.querySelector("[data-region='opc-why-fragment']")).toBeNull();
     expect(host.textContent).toMatch(/locked|no Project/i);
