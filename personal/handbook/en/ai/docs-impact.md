@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:8a201a8c19ea633a640a8821cce71fdebeb70b1d72cff8b3a09cf65f308ced66"
+fingerprint: "sha256:f3650f63c63fb2630c5982101acba67b7c722246e550a08e552faeaff4fd05cb"
 non_claims:
   - This page adapts the docs-sync contract for the handbook; the contract itself owns legacy-documentation obligations.
 ---
@@ -72,12 +72,12 @@ silently:
   Personal 2.0.0 Scene → daemon mapping
   (`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`;
   historical filename and rule id contain v9 — not a product version)
-  to `dev.architecture-overview` and this page. Informative only; canvas v9
-  is the frozen design prototype, not the product. Dual Track hashes on
-  daemon `/ui/` are Now / hypothesis chrome after `P12-T01`–`T09` closed.
-  Architecture chapter bodies no longer present Team/Inbox as 2.0.0 L1
-  (`DOC-P12-DEBT`). Authority remains the P11 walking skeleton. Not Gate, release, or a T15
-  claim.
+  to `dev.architecture-overview` and this page. Informative only; product origin
+  is daemon `/ui/`. Canvas v9 is the design authority and completion target for
+  that `/ui/`. Dual Track hashes on daemon `/ui/` are Now / hypothesis chrome
+  after `P12-T01`–`T09` closed. Architecture chapter bodies no longer present
+  Team/Inbox as 2.0.0 L1 (`DOC-P12-DEBT`). Honesty / fail-closed stay. Not Gate,
+  release, or a T15 claim.
 - `personal-2-0-0-dev-prep` routes the Personal 2.0.0 development-prep index
   `personal/docs/architecture/personal-2.0.0-dev-prep-index.md`) to
   `dev.architecture-overview` and this page. Plan cards aligned 2026-08-30;

@@ -17,7 +17,7 @@ sources:
     symbols: ["validateWebUiRouteInventory"]
   - path: tools/src/personal-rc-gate.mjs
     symbols: ["buildPersonalRcDeclarationReport"]
-fingerprint: "sha256:61a360b404f90748669760940c780b254671de0596d2eaf5b40a470dec50bf9d"
+fingerprint: "sha256:f9645d6777faba4667107c39137e9b521bc5c9ab48c6daa77d0e8de36cc98968"
 non_claims:
   - 命令可用不等于证据；只有实际执行的检查才算数，且本地结果绝不升格 Gate/release/Profile 声明。
 ---

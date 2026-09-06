@@ -552,6 +552,14 @@ personal_requirements:
     gates: []
     evidence_status: not-run
 
+  - id: PERS-PR-054
+    classification: product-only
+    statement: Owner 2026-09-06 authorized canvas v9 as the design authority and completion target for daemon /ui/ (IA + visual + Owner-facing copy) while product origin stays daemon /ui/. Do not copy v9 mock complete-job, Twitter/X P0, fake Activate, fake data-as-authority, or Vite-as-product. Axioms A1-A5 stay. First vertical is shell/Today (P15-T01). Remaining modules P15-T02..T06 (create/write Owner copy, Projects list/detail, Knowledge, Settings/Model Connections, remaining layout tokens 176/22/44/~1100) are registered not-started and wait for T01/D02. Journey oracle remains user-journeys + v9. Honesty/fail-closed unchanged. Not Gate, release, Profile, or an EVAL campaign.
+    direct_registry_requirements: []
+    tasks: [P15-T01, P15-T02, P15-T03, P15-T04, P15-T05, P15-T06]
+    gates: []
+    evidence_status: not-run
+
 # Informative crosswalk only. BR identifiers belong to the benchmark-readiness
 # execution plan and do not create task, requirement, Gate, or evidence status.
 benchmark_readiness_packages:

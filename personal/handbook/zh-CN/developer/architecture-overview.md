@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:363e3f6fcc5ad73fdc302be14a66222c1e15cd0f177791c0bba9590aeb41dad5"
+fingerprint: "sha256:efbbd183c063a9c5fe7a044528ed4529fdc9777b5618d7257d1c0b607f943cc2"
 non_claims:
   - 目标架构文档记录意图；本页跟踪哪些部分已存在。两者都不是 Gate/release 证据。
 ---
@@ -93,12 +93,10 @@ host、DSH、Pi、Vault 与 connector adapter 都不拥有 authority。
   billing/quota、budget 与 actual usage 分离。
 - UI 是 Today/Projects/Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
   不是一级导航。2026-08-30 设计定档的当前 chrome 是 **CognitiveOS Personal
-  2.0.0**（os-personal 2.0.0）。Canvas v9 是冻结设计原型（历史文件名
-  `personal-20-opc-e2e-optimized-v9`），不是产品。产品源是 daemon `/ui/`。
-  Dual Track L1 在 `P12-T01`–`T09` 收口后是 **Now / hypothesis chrome**
-  （merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）。
+  2.0.0**（os-personal 2.0.0）。产品源是 daemon `/ui/`。Canvas v9 是该 `/ui/` 的设计权威与完成目标（历史文件名
+  `personal-20-opc-e2e-optimized-v9`）。Dual Track L1 是 **Now / hypothesis chrome**。诚实 / fail-closed 不变。
   架构章节正文不再把 Team/Inbox 写成 2.0.0 一级（`DOC-P12-DEBT`）。
-  权威仍是 P11 walking skeleton。NVDA/200%/host-theme 仍 `not-run`。
+  NVDA/200%/host-theme 仍 `not-run`。
   **Phase 13**（`P13-T01`–`T13`，2026-09-02 登记于正式计划）把 walking skeleton
   补到原型程度与设计目标：P13-T02 托管 DSH 真实 Attempt 循环（完整 stdio broker）、
   P13-T03 隐藏 Pi 真实推理、P13-T04 独立验证/可打开产出/发布包、P13-T05 运行/例程
