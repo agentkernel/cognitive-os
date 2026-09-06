@@ -26,11 +26,41 @@ import {
 } from "./createWizardModel";
 
 const STEPS = [
-  { id: "create-init", title: "① Charter" },
-  { id: "create-process", title: "② 流程初始化" },
-  { id: "create-members", title: "③ 成员初始化" },
-  { id: "create-test", title: "④ 分环节测试" },
-  { id: "create-joint", title: "⑤ 联合调试" },
+  {
+    id: "create-init",
+    title: "① 项目初始化",
+    pageTitle: "创建项目 · ① 项目初始化",
+    heading: "① 逐项确认这件事",
+    lede: "右侧助手是主入口。确认本项后才能下一项。",
+  },
+  {
+    id: "create-process",
+    title: "② 流程初始化",
+    pageTitle: "创建项目 · ② 流程初始化",
+    heading: "② 一条流程轴，一次只开一环",
+    lede: "一次只开一环。缺口留在轴上，不标已就绪。",
+  },
+  {
+    id: "create-members",
+    title: "③ 成员初始化",
+    pageTitle: "创建项目 · ③ 成员初始化",
+    heading: "③ 创建岗位，再逐人就位",
+    lede: "按已确认流程建班子。未选模型不能就位。",
+  },
+  {
+    id: "create-test",
+    title: "④ 分环节测试",
+    pageTitle: "创建项目 · ④ 分环节测试",
+    heading: "④ 测这一环，直到子产出可打开",
+    lede: "先检查负责人是否就位。未知不能通过。",
+  },
+  {
+    id: "create-joint",
+    title: "⑤ 联合调试",
+    pageTitle: "创建项目 · ⑤ 联合调试",
+    heading: "⑤ 联合调试 · 第一次成功",
+    lede: "打开总成果并核对。未知不能验收。无假发布。",
+  },
 ] as const;
 
 type StepId = (typeof STEPS)[number]["id"];
@@ -129,7 +159,7 @@ export function CreateWizardPage() {
     event.preventDefault();
     setError(undefined);
     if (step === 0 && (title.trim() === "" || charter.trim() === "")) {
-      setError("Charter title and body are required before leaving this step. Nothing is written yet.");
+      setError("标题和这件事还没写完。这一步还没有写入。");
       return;
     }
     setStep((value) => Math.min(value + 1, STEPS.length - 1));
@@ -285,17 +315,11 @@ export function CreateWizardPage() {
 
   return (
     <section data-page="opc-create-wizard" data-step={current}>
-      <PageHeader
-        title="Create Project"
-        lede="①–⑤ Dual Track wizard. Local draft is not authority. Activation is digest-bound management HTTP."
-      />
-      <HonestyNote>
-        Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        Process axis, seating, and tests stay local until preview.request then confirm.
-        Owner-recorded pass/fail is not independent verification. This wizard does
-        not Activate, Approve, or write a Project without a digest.
+      <PageHeader title={STEPS[step].pageTitle} lede={STEPS[step].lede} />
+      <HonestyNote placement="secondary">
+        本页草稿不是写入。最后一步用预览摘要再写入项目。聊天不能代替写入。
       </HonestyNote>
-      <ol className="cp-quiet" aria-label="Create steps">
+      <ol className="cp-quiet" aria-label="创建步骤">
         {STEPS.map((item, index) => (
           <li key={item.id} data-step-item={item.id} aria-current={index === step ? "step" : undefined}>
             {item.title}
@@ -304,8 +328,11 @@ export function CreateWizardPage() {
       </ol>
       {current === "create-init" ? (
         <form onSubmit={goNext}>
+          <h2 className="cp-title" data-wizard-heading="">
+            {STEPS[0].heading}
+          </h2>
           <label className="cp-field">
-            Title
+            标题
             <input
               name="title"
               value={title}
@@ -313,7 +340,7 @@ export function CreateWizardPage() {
             />
           </label>
           <label className="cp-field">
-            Charter
+            这件事
             <textarea
               name="charter"
               value={charter}
@@ -321,15 +348,17 @@ export function CreateWizardPage() {
               rows={8}
             />
           </label>
-          <p className="cp-quiet">A draft exists only after preview on the last step.</p>
+          <p className="cp-quiet">这一步还没有写入。预览在最后一步。</p>
           <button type="submit" className="cp-button cp-button--primary">
-            Continue
+            进入 ②
           </button>
         </form>
       ) : null}
       {current === "create-process" ? (
         <div>
-          <h2 className="cp-title">② 一条流程轴，一次只开一环</h2>
+          <h2 className="cp-title" data-wizard-heading="">
+            {STEPS[1].heading}
+          </h2>
           <p className="cp-quiet">
             「确认这一环」后再开下一环。缺口留在轴上，不标已就绪。最后确认总目标与项目触发，再进入 ③。
           </p>
@@ -388,7 +417,7 @@ export function CreateWizardPage() {
             </label>
             <p>
               <button type="button" className="cp-button" onClick={() => setStep(0)}>
-                Back
+                回 ①
               </button>{" "}
               <button
                 type="button"
@@ -440,7 +469,9 @@ export function CreateWizardPage() {
       ) : null}
       {current === "create-members" ? (
         <div>
-          <h2 className="cp-title">③ 创建岗位，再逐人就位</h2>
+          <h2 className="cp-title" data-wizard-heading="">
+            {STEPS[2].heading}
+          </h2>
           <p className="cp-quiet">
             按已确认流程建班子。模型必选，未选不能就位、也不会静默绑定。拒绝 = 未加入。全员就位后才进入 ④。
           </p>
@@ -579,7 +610,9 @@ export function CreateWizardPage() {
       ) : null}
       {current === "create-test" ? (
         <div>
-          <h2 className="cp-title">④ 测这一环，直到子产出可打开</h2>
+          <h2 className="cp-title" data-wizard-heading="">
+            {STEPS[3].heading}
+          </h2>
           <p className="cp-quiet">先检查负责人是否就位。未知不能通过。Owner 记录不是独立核对。</p>
           <div className="cp-filters" data-process-axis="" role="list" aria-label="测试轴">
             {PROCESS_STAGES.map((stage, index) => {
@@ -637,7 +670,7 @@ export function CreateWizardPage() {
             ) : null}
             <p>
               <button type="button" className="cp-button" onClick={() => setStep(2)}>
-                Back
+                回 ③
               </button>{" "}
               <button
                 type="button"
@@ -714,7 +747,9 @@ export function CreateWizardPage() {
       ) : null}
       {current === "create-joint" ? (
         <div>
-          <h2 className="cp-title">⑤ 联合调试 · 第一次成功</h2>
+          <h2 className="cp-title" data-wizard-heading="">
+            {STEPS[4].heading}
+          </h2>
           <p className="cp-quiet">
             打开总成果 + 核对状态。未知不能验收。无假发布。验收接到既有 preview.request → confirm。
           </p>
@@ -758,7 +793,7 @@ export function CreateWizardPage() {
           </p>
           <p>
             <button type="button" className="cp-button" onClick={() => setStep(3)} disabled={busy}>
-              Back
+              回 ④
             </button>{" "}
             <button
               type="button"
@@ -825,10 +860,7 @@ export function CreateWizardPage() {
               Write Project
             </button>
           </p>
-          <p className="cp-quiet">
-            Request preview mints a digest-bound ApprovalPreview. Write Project posts that digest
-            on management confirm. Chat cannot do this.
-          </p>
+          <p className="cp-quiet">先预览，再写入。聊天不能代替写入。</p>
         </div>
       ) : null}
       {error ? (
