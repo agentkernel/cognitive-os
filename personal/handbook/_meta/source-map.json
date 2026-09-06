@@ -204,7 +204,7 @@
         "personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md"
       ],
       "docs": ["dev.architecture-overview", "ai.docs-impact"],
-      "note": "CognitiveOS Personal 2.0.0 (os-personal 2.0.0) design-frozen Scene → daemon mapping; historical source filename and rule id contain v9 — not a product version. Canvas v9 is the frozen design prototype, not the product. Dual Track hashes on daemon `/ui/` are Now / hypothesis chrome after `P12-T01`–`T09` closed. Authority remains the P11 walking skeleton. Informative; not Gate, release, or a T15 claim."
+      "note": "CognitiveOS Personal 2.0.0 (os-personal 2.0.0) design-frozen Scene → daemon mapping; historical source filename and rule id contain v9 — not a product version. Product origin is daemon `/ui/`. Canvas v9 is the design authority and completion target for that `/ui/` (owner 2026-09-06). Dual Track hashes on daemon `/ui/` are Now / hypothesis chrome after `P12-T01`–`T09` closed. Honesty / fail-closed stay. Informative; not Gate, release, or a T15 claim."
     },
     {
       "id": "personal-2-0-0-dev-prep",
@@ -212,7 +212,7 @@
         "personal/docs/architecture/personal-2.0.0-dev-prep-index.md"
       ],
       "docs": ["dev.architecture-overview", "ai.docs-impact"],
-      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only. P12-T01–T09 done; Phase 13 done; Phase 14 residual `/ui/` gap-close registered. Not implementation, Gate, or a T15 claim."
+      "note": "Personal 2.0.0 development-prep index (plan alignment, test/env hard gates, transferable modules, window prompts). Documentation only. P12-T01–T09 done; Phase 13 done; Phase 14 residual `/ui/` gap-close done; Phase 15 v9-target on `/ui/` in progress. Not implementation, Gate, or a T15 claim."
     },
     {
       "id": "dsh-recovery-docs",

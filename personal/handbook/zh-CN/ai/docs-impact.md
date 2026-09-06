@@ -10,7 +10,7 @@ sources:
   - path: docs/standards/docs-sync-contract.md
   - path: tools/src/docs-sync-gate.mjs
     symbols: ["routeChangedPaths", "decideDocsSync"]
-fingerprint: "sha256:8a201a8c19ea633a640a8821cce71fdebeb70b1d72cff8b3a09cf65f308ced66"
+fingerprint: "sha256:b360981aad8ce673b3b69499d3c6fe84dfab5b040801bdf4128f5b9562182d67"
 non_claims:
   - 本页是 docs-sync 契约面向手册的适配；旧文档义务仍由契约本身拥有。
 ---
@@ -62,10 +62,10 @@ source map 有意让已采纳目标无法静默变化：
 - `personal-2-opc-v9-implementation-mapping` 路由已定档 Personal 2.0.0 Scene →
   daemon 映射（`personal/docs/architecture/personal-2.0-opc-v9-implementation-mapping.md`；
   历史文件名与规则 id 含 v9，不是产品版本）
-  到 `dev.architecture-overview` 与本页。仅 informative；canvas v9 是冻结设计原型，
-  不是产品。daemon `/ui/` Dual Track hash 在 `P12-T01`–`T09` 收口后是 Now /
-  hypothesis chrome。架构章节正文不再把 Team/Inbox 写成 2.0.0 一级（`DOC-P12-DEBT`）。
-  权威仍是 P11 walking skeleton。不是 Gate、release 或 T15 领取。
+  到 `dev.architecture-overview` 与本页。仅 informative；产品源是 daemon `/ui/`。
+  canvas v9 是该 `/ui/` 的设计权威与完成目标。daemon `/ui/` Dual Track hash 在
+  `P12-T01`–`T09` 收口后是 Now / hypothesis chrome。架构章节正文不再把 Team/Inbox
+  写成 2.0.0 一级（`DOC-P12-DEBT`）。诚实 / fail-closed 不变。不是 Gate、release 或 T15 领取。
 - `personal-2-0-0-dev-prep` 路由 Personal 2.0.0 开发前期索引
   （`personal/docs/architecture/personal-2.0.0-dev-prep-index.md`）到
   `dev.architecture-overview` 与本页。计划卡已于 2026-08-30 对齐；Phase 12

@@ -263,7 +263,7 @@ release, or Profile.
 
 ### 5.4 JOURNEY-BROWSER-SYNC-01
 
-Phase 14 (and remaining not-started Personal 2.0 `/ui/` work) uses this
+Phase 14 (and Phase 15 `/ui/` work) uses this
 **task-scoped** validation route. It is a Personal-plan convention owned by
 [PERSONAL-DEVELOPMENT-PLAN.md](PERSONAL-DEVELOPMENT-PLAN.md) (`### JOURNEY-BROWSER-SYNC-01`
 and Phase 14 `#### JOURNEY-BROWSER-SYNC-01`). It is **not** a second Operating
@@ -292,6 +292,8 @@ module**:
 |---|---|---|
 | P14-T01 documentation-only | local Markdown / `check:consistency` / handbook / docs-sync | implementation, Gate, EVAL revival |
 | P14-T02..T08 implementation | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | Vite preview as product origin; canvas screenshot as pass; Linux 1.0 `#/work` as 2.0 chrome; ordinary CI as journey pass |
+| P15-T01 shell/Today v9-target | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J0/J2/J10; no Twitter P0) | Vite preview as product origin; canvas as origin; fake Activate / mock complete-job; honesty wall as primary chrome |
+| P15-T01 shell/Today v9-target | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J0/J2/J10 + Phase 14 regression) | Vite as product origin; shipping `.canvas.tsx`; fake Activate; Twitter/X P0 hero |
 
 Platform: Linux guest `/ui/` is the mainline. Windows chrome stays `not-run`
 unless already qualified. Claim ceiling `hypothesis`.

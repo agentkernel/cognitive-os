@@ -2400,6 +2400,17 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 - **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
 - **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
 
+### P15-T01 — v9 design authority on daemon `/ui/` (shell/Today first slice)
+
+- **status:** `in-progress` (2026-09-06). Owner 「授权，执行」. Claim ceiling `hypothesis`.
+- **产品口径:** origin = daemon `/ui/` (not Vite, not `.canvas.tsx`). Canvas v9 = design authority and completion target for `/ui/` (IA + visual + Owner-facing copy). Journey oracle remains user-journeys + v9. Honesty / fail-closed / A1–A5 unchanged.
+- **依赖:** owner 2026-09-06；Phase 14 done；P13-T12 visual spec；冻结 v9 只读。
+- **垂直切片:** D01：文档口径 + Dual Track shell/Today Owner 文案 + no-stack tokens；failure-first：假 Activate、未认证 fail-closed、Twitter P0 hero。
+  D02：真实 `/ui/` J0/J2/J10 + **`JOURNEY-BROWSER-SYNC-01`**。
+- **不可做:** 复制 v9 mock complete-job；Twitter/X P0；假 Activate；假数据当权威；Vite 当产品；重开 Phase 14；一次 19 模块；改 AXIOMS.md；覆盖 canvas 文件。
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 inherited + `JOURNEY-BROWSER-SYNC-01`。
+
 ---
 
 # 12. 机器可读 typed dependency 图
@@ -2473,6 +2484,11 @@ phases:
     acceptance_requires: [P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
     claim_boundary: HYPOTHESIS_NOT_GATE_NOT_RELEASE_NOT_EVAL_CAMPAIGN
     notes: JOURNEY_BROWSER_SYNC_01_ON_EACH_CLOSED_JOURNEY
+  P15:
+    implementation_requires: [P15-T01]
+    acceptance_requires: [P15-T01]
+    claim_boundary: HYPOTHESIS_NOT_GATE_NOT_RELEASE_V9_DESIGN_AUTHORITY_UI_ORIGIN
+    notes: ORIGIN_DAEMON_UI_V9_DESIGN_TARGET
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -2489,6 +2505,7 @@ post_1_0:
   FROZEN_PROTOTYPE_UI_COMPLETENESS: [P12-T01, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
   PERSONAL_2_0_0_COMPLETION: [P13-T01, P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13, P11-T15]
   PERSONAL_2_0_0_PROTOTYPE_GAP_CLOSE: [P14-T01, P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
+  PERSONAL_2_0_0_V9_DESIGN_AUTHORITY: [P15-T01]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -2784,6 +2801,9 @@ tasks:
   P14-T08:
     implementation_requires: [P14-T01, P13-T07, P12-T07]
     acceptance_requires: [KNOWLEDGE_V9_FILES_WHY_IMPORT, JOURNEY_BROWSER_SYNC_01]
+  P15-T01:
+    implementation_requires: [P14-T01, P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
+    acceptance_requires: [V9_DESIGN_AUTHORITY_DOCS, SHELL_TODAY_OWNER_COPY, NO_STACK_TOKENS, JOURNEY_BROWSER_SYNC_01]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。

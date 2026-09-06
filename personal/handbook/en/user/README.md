@@ -20,9 +20,9 @@ digital employees, Routines and preserved Attempts; Personal-owned
 Conversations/Vault/Memory; a Pi-backed Personal Assistant; preinstalled
 managed DSH; Provider/budget hierarchy; and one fixed Windows acceptance path.
 The current same-origin `/ui/` Dual Track L1 is **Now / hypothesis chrome**.
-Canvas v9 is the frozen design prototype, not the product. Product origin is
-daemon `/ui/`. Authority remains the P11 walking skeleton (no fake Create /
-Activate / Approve). NVDA/200%/host-theme remain `not-run`.
+Product origin is daemon `/ui/`. Canvas v9 is the design authority and
+completion target for that `/ui/` (IA + visual + Owner-facing copy). Honesty /
+fail-closed and axioms stay. NVDA/200%/host-theme remain `not-run`.
 One-module OPC maintenance:
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 

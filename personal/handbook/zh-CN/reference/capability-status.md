@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:3f2efaf4a89b32f77db5e17a825d6d80ffdb0426a658ea890256952296f21683"
+fingerprint: "sha256:139bea6808d97d714495e30300cc676378c178820341baf5c140a0f98f29fcff"
 non_claims:
   - 状态是记录基线上代码+合同+测试的联合判断，不是 Gate/release/Profile 结论，也不是正式计划的任务状态。
 ---
@@ -77,7 +77,7 @@ native/campaign environment）与 `Requires-core`（还需要批准的 core 合�
 | 当前六族资源投影/watch | implemented | 仅 management+task 通道；不是已采纳的 MCP 第七族 |
 | Agent 生命周期（Pi 获取→sidecar） | implemented | — |
 | 非 Pi agent | designed | 仅 Codex fixture 资格化 |
-| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）；Dual Track L1 在 `P12-T01`–`T09` 后是 daemon `/ui/` 上的 **Now / hypothesis chrome**（merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）；canvas v9 是冻结设计原型，不是产品；NVDA/200%/host-theme `not-run`；**Phase 13**（`P13-T01`–`T13`，2026-09-02 登记）承接 walking skeleton → 原型程度 + 设计目标；**Phase 14**（`P14-T01`–`T08`）承接 EVAL-016 之后的 live `/ui/` 残差（`JOURNEY-BROWSER-SYNC-01`）；`P11-T15` 为 Phase 13 验收出口；单模块目录 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)；Linux/WSL/CI/Canvas evidence 不转移 |
+| Personal 2.0 Windows OPC 产品 | Requires-backend + Requires-environment | Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）；Dual Track L1 在 `P12-T01`–`T09` 后是 daemon `/ui/` 上的 **Now / hypothesis chrome**（merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)）；产品源是 daemon `/ui/`；canvas v9 是该 `/ui/` 的设计权威与完成目标；NVDA/200%/host-theme `not-run`；**Phase 13**（`P13-T01`–`T13`，2026-09-02 登记）承接 walking skeleton → 原型程度 + 设计目标；**Phase 14**（`P14-T01`–`T08`）承接 EVAL-016 之后的 live `/ui/` 残差（`JOURNEY-BROWSER-SYNC-01`）；**Phase 15**（`P15-T01`）把 v9 Owner chrome 落到 `/ui/` shell/Today；`P11-T15` 为 Phase 13 验收出口；单模块目录 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)；Linux/WSL/CI/Canvas evidence 不转移 |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority 可复用，但 Project activation、manager envelope、Routine/missed ledger 与完整 hierarchy 不存在 |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | 没有完整 authority/projection；employee identity 必须与 runtime/process 分离 |
 | Pi-backed Personal Assistant | Requires-backend | Pi 是 hidden、candidate-only target engine；current Pi Shell/Linux qualification 不构成 OPC Assistant |

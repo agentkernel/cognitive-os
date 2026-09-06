@@ -14,7 +14,10 @@
   completeness, and the implementation mapping are reconciled
   (`P12-T01`–`T09` Remaining = 0; mapping rewritten in
   [DOC-P12-ALIGN](https://github.com/agentkernel/cognitive-os/pull/303)).
-  Canvas v9 is the frozen design prototype; product origin is daemon `/ui/`.
+  Canvas v9 is the frozen design prototype **and** the design authority /
+  completion target for daemon `/ui/` (owner 2026-09-06). Product origin is
+  daemon `/ui/` (never Vite). Dual Track and fail-closed without authority
+  remain. Do not ship the `.canvas.tsx` file.
 - Requirements baseline:
   [Personal 2.0 OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Exact scope: [Personal 2.0 scope](personal-2.0-scope.md)

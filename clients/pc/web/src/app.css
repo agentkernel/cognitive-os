@@ -71,6 +71,8 @@ body {
   grid-template-rows: 34px minmax(0, 1fr);
   grid-template-columns: 232px minmax(0, 1fr) 280px;
   min-height: 100vh;
+  min-width: var(--cp-shell-min-width);
+  overflow-x: auto;
 }
 
 .cp-strip {
@@ -139,7 +141,7 @@ body {
 
 .cp-brand h1 {
   margin: 0;
-  font-size: var(--cp-size-headline);
+  font-size: var(--cp-size-title2);
   font-weight: 600;
   letter-spacing: var(--cp-track-tight);
 }
@@ -369,6 +371,22 @@ body {
   font-size: var(--cp-size-row);
   line-height: var(--cp-leading-row);
   color: var(--cp-quiet);
+}
+
+.cp-honesty-secondary {
+  margin: var(--cp-space-4) 0 0;
+}
+
+.cp-honesty-secondary > summary {
+  cursor: pointer;
+  font-size: var(--cp-size-label);
+  letter-spacing: var(--cp-track-label);
+  color: var(--cp-quiet);
+}
+
+.cp-honesty-secondary .cp-honesty {
+  background: transparent;
+  border-left-color: var(--cp-line);
 }
 
 .cp-honesty code {
@@ -1095,54 +1113,8 @@ body {
   }
 }
 
-@media (max-width: 1279px) {
-  .cp-shell {
-    grid-template-areas: "strip" "side" "main" "rail";
-    grid-template-rows: 34px auto minmax(0, 1fr) auto;
-    grid-template-columns: minmax(0, 1fr);
-  }
-
-  .cp-side {
-    border-right: 0;
-    border-bottom: 1px solid var(--cp-line);
-    padding: var(--cp-space-2) 0;
-  }
-
-  .cp-brand {
-    border-bottom: 0;
-    padding-bottom: var(--cp-space-1);
-  }
-
-  .cp-nav {
-    display: flex;
-    overflow-x: auto;
-    gap: var(--cp-space-1);
-    margin-top: var(--cp-space-1);
-  }
-
-  .cp-nav a {
-    border-left: 0;
-    border-bottom: 2px solid transparent;
-    border-radius: var(--cp-radius-sm);
-  }
-
-  .cp-nav a[aria-current="page"] {
-    border-bottom-color: var(--cp-accent);
-  }
-
-  .cp-side-foot {
-    display: none;
-  }
-
-  .cp-rail {
-    border-left: 0;
-    border-top: 1px solid var(--cp-line);
-  }
-
-  .cp-main {
-    padding: var(--cp-space-4) var(--cp-space-3) var(--cp-space-8);
-  }
-}
+/* Narrow windows keep the locked three-column grid and scroll
+ * horizontally (v9 / visual spec §6.2 / §13-a). Do not stack nav as tabs. */
 
 /* ---------- command palette (floating layer) ---------- */
 

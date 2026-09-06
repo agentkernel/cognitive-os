@@ -210,7 +210,7 @@ describe("P14-T06/D01 Today live packets after activation (Dual Track)", () => {
     expect(host.querySelector("[data-packet]")).toBeNull();
     expect(host.textContent).toContain(TODAY_EMPTY_ONLY_CREATE);
     expect(host.textContent).not.toMatch(/packet accepted|packets are accepted/i);
-    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/Start create/);
+    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/创建项目/);
     expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
       false,
     );
@@ -243,7 +243,7 @@ describe("P14-T06/D01 Today live packets after activation (Dual Track)", () => {
     expect(host.querySelector("[data-region='opc-today-run-overview']")).toBeNull();
     expect(host.textContent).toContain(TODAY_INCOMPLETE_ONLY_CREATE);
     expect(host.textContent).toContain("Almost Alpha");
-    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/Continue create/);
+    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/继续未完成的创建/);
     expect(fakeActionLabels(host)).toEqual([]);
     expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
       false,
@@ -292,7 +292,7 @@ describe("P14-T06/D01 Today live packets after activation (Dual Track)", () => {
     expect(host.querySelector("[data-surface='today']")).not.toBeNull();
     expect(host.querySelector("[data-surface='today-incomplete']")).toBeNull();
     expect(host.textContent).not.toContain(TODAY_INCOMPLETE_ONLY_CREATE);
-    expect(host.textContent).not.toMatch(/Continue create/i);
+    expect(host.textContent).not.toMatch(/继续未完成的创建/);
     expect(host.textContent).toContain("Owner Alpha");
     expect(host.querySelector("[data-packet='prev-alpha']")).not.toBeNull();
     expect(
@@ -359,7 +359,7 @@ describe("P14-T06/D01 Today live packets after activation (Dual Track)", () => {
     const { host, root, calls } = await renderToday(MIXED_AFTER_ACTIVATION);
     expect(host.querySelector("[data-surface='today']")).not.toBeNull();
     expect(host.querySelector("[data-surface='today-incomplete']")).toBeNull();
-    expect(host.textContent).not.toMatch(/Continue create/i);
+    expect(host.textContent).not.toMatch(/继续未完成的创建/);
     expect(host.querySelector("[data-region='opc-today-leftover-drafts']")).not.toBeNull();
     expect(host.querySelector("[data-region='opc-today-run-overview']")).not.toBeNull();
     expect(host.textContent).toContain("Owner Alpha");

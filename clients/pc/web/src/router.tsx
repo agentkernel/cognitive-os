@@ -46,7 +46,7 @@ export function AppRoutes({ includeRetiredLinux = false }: { includeRetiredLinux
       <Route
         path="/"
         element={
-          <SessionGate channel="management" title="Today">
+          <SessionGate channel="management" title="今日">
             <TodayPage />
           </SessionGate>
         }

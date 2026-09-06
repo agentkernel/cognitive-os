@@ -2,8 +2,9 @@
 
 > Documentation-only index. Not implementation, not thaw, not Gate, not a P11 claim.
 > Product name: **CognitiveOS Personal 2.0.0** (os-personal 2.0.0). **v9 is a
-> historical canvas filename**, not a product version. Canvas v9 is the
-> **frozen design prototype**, not the product. Product origin is daemon `/ui/`.
+> historical canvas filename**, not a product version. Product origin is daemon `/ui/`.
+> Canvas v9 is the **design authority and completion target** for that `/ui/`
+> (owner 2026-09-06). Vite is not the product origin.
 > HEAD at writing: see `PROGRESS.md` Current snapshot. Evaluation routing **OFF**.
 > The overlapping `DOC-PERSONAL-2.0.0/dev-prep` lease is **closed** (2026-08-31).
 > Phase 12 `P12-T01`–`T09` are **done** (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`). P12 Remaining = 0.
@@ -17,11 +18,12 @@
 
 | Fact | Pointer |
 |---|---|
-| Chrome source | Frozen design prototype: `clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx` (not the product) |
+| Chrome source | Design authority: `clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx` (read-only; not the origin) |
 | Product origin | daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite is not the product origin |
 | Scene → daemon map | [personal-2.0-opc-v9-implementation-mapping.md](personal-2.0-opc-v9-implementation-mapping.md) (historical path name contains v9; rewritten to post-P12 facts) |
 | Design-Agent / journey assessment | [13-personal-20-agent-design-difficulty-and-journey-assessment.md](../../../clients/docs/design/opc-2.0/13-personal-20-agent-design-difficulty-and-journey-assessment.md) (2026-08-30; hypothesis; not a P11 claim) |
-| Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11 + **Phase 12** + **Phase 13** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15`, `P12-T01`…`T09` and `P13-T01`…`T13` cards |
+| Formal plan rewrite | `docs/plan/PERSONAL-DEVELOPMENT-PLAN.md` Phase 11–**15** tables + typed deps + [plan.md](../../../docs/plan/plan.md) `P11-T02`…`T15`, `P12-T01`…`T09`, `P13-T01`…`T13`, `P14-T01`…`T08`, and `P15-T01` cards |
+| First implementation knife (Phase 15) | **`P15-T01`** shell + Today Owner chrome toward frozen v9 on daemon `/ui/` (owner 2026-09-06 「授权，执行」). Not 19 modules. Not Gate / T15 |
 | First implementation knife (Phase 11) | **`P11-T03` Project aggregate walking skeleton** — done; not a full `/ui/` page |
 | First implementation knife (Phase 12) | **`P12-T01`–`T09` done**; merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302) at `main@3a563e7c`. Dual Track **Now / hypothesis chrome** on `/ui/`. Not T15; not pixel-replica; NVDA/200%/host-theme **not-run** |
 | First implementation knives (Phase 13) | **`P13-T02` hosted DSH real Attempt loop** and **`P13-T03` hidden Pi real inference** — independent, may run in parallel leases after `P13-T01` docs-only merge; **`P13-T12/D01` visual spec** is documentation-only and parallel. Exit of Phase 13 = `P11-T15` N=15 on a qualified Windows host (`P13-T13`). Not release / signing / B01-W / 2.1 |
@@ -50,9 +52,10 @@ Authority object English id = **Employee**. Product chrome may still say
 
 Do not create or treat as product roots: `personal-v9/`, `os-personal3/`,
 `clients/opc-v9/`, `dsh-product/`, `.cursor/rules-v9/`, `AXIOMS-v9.md`,
-`V9-DEVELOPMENT-PLAN`, `PROGRESS-v9`, `History/`. Do not rewrite
-`clients/pc/web`, canvas source, or `core/specs|crates|conformance` in this
-window. Clones stay in ignored `/artifacts/`; never `git add` them.
+`V9-DEVELOPMENT-PLAN`, `PROGRESS-v9`, `History/`. Do not rewrite canvas
+source or `core/specs|crates|conformance`. Phase 15 (`P15-T01`) applies
+Owner chrome on daemon `/ui/` (`clients/pc/web`) without shipping
+`.canvas.tsx`. Clones stay in ignored `/artifacts/`; never `git add` them.
 
 ## D2 — rules / AGENTS alignment (executed)
 

@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:f577deb6b725403e9fe69558cb5f72b7c06466507d7144b4a36b2ba5266ca56b"
+fingerprint: "sha256:48d4bbf64c545846e5af2067f12a2d856b1a979aa0b526a11864b153c797b04e"
 non_claims:
   - 不构成 Gate、release、Profile、Windows 对等或 agent 收益声明；Linux 1.0 目标组合由正式计划拥有。
 ---
@@ -79,10 +79,10 @@ Digital Employee。
   candidates。
 - **Deferred：** MCP 保留为 advanced seventh-family target，但不是 OPC P0。native
   mobile、device pairing 与 E2E relay remote 从 Personal 2.1 开始。
-- **冻结设计原型（不是产品）：** canvas
+- **设计权威（不是产品源）：** canvas
   `clients/docs/design/opc-2.0/` 下的 `personal-20-opc-e2e-optimized-v9`。
   产品源是 daemon `/ui/`。Dual Track L1 在 `P12-T01`–`T09` 收口后是
-  **Now / hypothesis chrome**。权威仍是 P11 walking skeleton。创建顺序为
+  **Now / hypothesis chrome**。诚实 / fail-closed 不变。创建顺序为
   ① 项目 → ② 流程 → ③ 成员 → ④ 测试 → ⑤ 联调。单模块维护入口是
   [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)，
   不是完整 `/ui/` 验收。Owner 原型批准不是可用性、Gate 或 release 证据。

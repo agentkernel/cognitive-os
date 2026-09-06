@@ -54,7 +54,7 @@ describe("Shell identity and navigation", () => {
     expect(nav).not.toBeNull();
     // Personal 2.0 L1 (P11-T13): Today / Projects / Knowledge. Team/Inbox
     // are not L1. Linux 1.0 spaces remain as secondary routes.
-    for (const label of ["Today", "Projects", "Knowledge", "Settings"]) {
+    for (const label of ["今日", "项目", "知识", "设置"]) {
       expect(nav?.textContent).toContain(label);
     }
     expect(nav?.textContent).not.toContain("Team");
@@ -70,7 +70,7 @@ describe("Shell identity and navigation", () => {
   it("shows an in-place session gate for the dashboard when unauthenticated", () => {
     const { host, root } = renderApp("#/");
     expect(host.querySelector("[data-page='session-gate']")).not.toBeNull();
-    expect(host.querySelector("main h2")?.textContent).toBe("Today");
+    expect(host.querySelector("main h2")?.textContent).toBe("今日");
     expect(host.textContent).toMatch(/not a Provider LLM API key/i);
     expect(host.textContent).toMatch(/local-bootstrap\.secret/);
     act(() => {

@@ -34,8 +34,9 @@ and daemon-served `/ui/` retain their implemented boundaries. Dual Track L1
 (Today / Projects / Knowledge + Settings + rail) is **Now / hypothesis
 chrome** on `/ui/` after `P11-T13` and `P12-T01`–`T09`. Team and Inbox are
 not first-level. Authority remains the P11 walking skeleton. Native dsh web
-is a separate current surface. None establishes Windows OPC support. Canvas
-v9 is the frozen design prototype, not the product.
+is a separate current surface. None establishes Windows OPC support. Product
+origin is daemon `/ui/`. Canvas v9 is the design authority and completion
+target for that `/ui/`.
 
 ### Personal 2.0 target
 

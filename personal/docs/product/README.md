@@ -11,10 +11,16 @@
   2026-08-28/29
 - **PM/UI maintenance (one module or flow, not the whole corpus):**
   [OPC 00 maintenance index](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)
-- Frozen design prototype (not the product):
-  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Product origin: daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite
-  is not the product origin.
+  is not the product origin. The canvas file is not the product origin.
+- Design authority and completion target for `/ui/`:
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
+  (IA + visual + Owner-facing copy). Journey oracle remains
+  [user-journeys](user-journeys.md) + this canvas. Honesty / fail-closed /
+  axioms unchanged. Do not copy v9 mock complete-job, Twitter/X P0, fake
+  Activate, or fake data-as-authority.
+- Frozen canvas (read-only; never overwritten):
+  [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Prior approved baseline (not current chrome; **not overwritten**):
   [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)
 - Archived (not current chrome):
@@ -22,10 +28,11 @@
   (not overwritten);
   [pre-v5-approval](../../../clients/docs/design/opc-2.0/history/2026-08-29-pre-v5-approval/README.md);
   [pre-subtraction V2](../../../clients/docs/design/opc-2.0/history/2026-08-28-pre-subtraction/README.md)
-- Prototype identity: canvas v9 is the **frozen design prototype** (owner-
-  approved 2026-08-30 chrome spec). It is not daemon `/ui/` and not a
-  product version. Dual Track **Now / hypothesis chrome** on `/ui/` is the
-  shipped hash surface (`P11-T13` + `P12-T01`–`T09`). Authority remains
+- Prototype identity: canvas v9 is the **design authority and completion
+  target** for daemon `/ui/` (owner-approved 2026-08-30 chrome spec;
+  owner 2026-09-06). It is not the product origin. Dual Track **Now /
+  hypothesis chrome** on `/ui/` is the shipped hash surface
+  (`P11-T13` + `P12-T01`–`T09` + Phase 14). Authority remains
   the P11 walking skeleton. Pre-optimization `personal-20-opc-e2e` and
   optimized v1–v4 are archived iteration. v8 is the prior approved
   baseline. Same-day v5 and unapproved v6/v7 are not current. Archived V2
@@ -83,8 +90,8 @@ Operations defaults to
 **Candidate → Intent persisted → Fence → Execute → Independent verify →
 Receipt** as backend discipline. Knowledge Context shows why each fragment
 was selected; chat auto-admits to inspectable Memory. Secrets use SecretStore
-takeover and never appear in chat. Canvas v9 is the frozen design prototype,
-not the product. Product origin is daemon `/ui/`. P0 is complete capabilities
+takeover and never appear in chat. Product origin is daemon `/ui/`. Canvas v9
+is the design authority and completion target for that `/ui/`. P0 is complete capabilities
 only: no demo Project, no X as P0 hero.
 
 A reusable **Role Runtime Template** becomes a Project-specific, long-lived

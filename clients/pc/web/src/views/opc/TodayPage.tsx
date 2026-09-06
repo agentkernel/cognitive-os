@@ -18,7 +18,6 @@ import {
   type TodayPeriod,
 } from "../../data/projections/todayOverview";
 import { useProjection, useProjections } from "../../data/useProjection";
-import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
 import { loadProjectList } from "./loadOpcReads";
 import {
@@ -33,9 +32,9 @@ import {
 } from "./todayLiveReads";
 
 const PERIOD_LABEL: Record<TodayPeriod, string> = {
-  today: "Today",
-  week: "This week",
-  month: "This month",
+  today: "今日",
+  week: "本周",
+  month: "本月",
 };
 
 /**
@@ -76,31 +75,24 @@ export function TodayPage() {
     projects.status === "empty" ||
     (projects.status === "ready" && (projects.data?.length ?? 0) === 0);
   const lede = emptyHome
-    ? "Start create. Not Home, not an Inbox, not a decision packet."
+    ? "还没有项目。从创建开始。"
     : incompleteOnly
-      ? "Create is not finished. Daily packets wait for activation."
-      : "What needs the Owner on a live Project, and how its Routines ran. Not Home, not an Inbox, not a KPI wall.";
+      ? "创建还没完成。继续未完成的创建。"
+      : "看清并处理要你拍板的事。";
   const view =
     overview.status === "ready" || overview.status === "stale" ? overview.data?.[0] : undefined;
 
   return (
     <section data-page="opc-today">
-      <PageHeader title="Today" lede={lede} />
-      <HonestyNote>
-        Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        Empty home is only-create. Creating-only stays continue-create. After a
-        live Project, Today is decision packets plus one row per live Project,
-        not continue-create. Leftover drafts are not packets. T13 empty chrome
-        is not packet acceptance. Completed runs are daemon-observed Attempt
-        terminals, not verified completion. Chat cannot Approve.
-      </HonestyNote>
+      <PageHeader title="今日" lede={lede} />
       <ProjectAuthorityPanel
         projection={projects}
-        surface="Today"
+        surface="今日"
+        leadHonesty={false}
         emptyBody={TODAY_EMPTY_ONLY_CREATE}
         emptyAction={
           <Link className="cp-button cp-button--primary" to="/projects/new">
-            Start create
+            创建项目
           </Link>
         }
       >
@@ -109,7 +101,7 @@ export function TodayPage() {
             <p>{TODAY_INCOMPLETE_ONLY_CREATE}</p>
             <p>
               <Link className="cp-button cp-button--primary" to="/projects/new">
-                Continue create
+                继续未完成的创建
               </Link>
             </p>
             <table className="cp-table">

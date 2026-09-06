@@ -14,7 +14,7 @@
 > 定义边界与激活门槛（[enterprise/docs/VERSION-1.0.0.md](../../enterprise/docs/VERSION-1.0.0.md)），
 > 不激活实现。该 **structural** 修订只移动路径并同步工具链/文档索引，不改变任何任务
 > 验收、Gate 结论、evidence 或 claim scope；1.0.0 定稿逐字保留各 Gate 的 MVP 声明上限。
-> **计划追踪 ID：** `P0-T01` 至 `P14-T08`（含后续登记的 `P2-T09..P2-T38`、`P8-T12..T15`、`P9-T05..P9-T12`、`P10-T05..T18`、`P11-T01..T15`、`P12-T01..T09`、`P13-T01..T13`、`P14-T01..T08` 与 2026-09-02 登记的 `P0-T09` / `P0-T01/D02`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
+> **计划追踪 ID：** `P0-T01` 至 `P15-T01`（含后续登记的 `P2-T09..P2-T38`、`P8-T12..T15`、`P9-T05..P9-T12`、`P10-T05..T18`、`P11-T01..T15`、`P12-T01..T09`、`P13-T01..T13`、`P14-T01..T08`、`P15-T01` 与 2026-09-02 登记的 `P0-T09` / `P0-T01/D02`）是本计划的管理 ID，不是 `core/specs/registry/` 中的 REQ-ID，也不构成实现、测试或 Profile 符合性声明。
 > **详细研究与任务卡草案：** [`docs/plan/plan.md`](plan.md)；本文件是后续开发的**正式任务、typed dependency、验收与 Gate 定义源**。当前 task/Gate/claim 事实只由 [PROGRESS.md](PROGRESS.md) `Current snapshot` 拥有；`docs/plan/plan.md` 只补充经本文件对齐的研究依据、实施细节与验收方法。
 > **可机读追踪：** [personal-trace.yaml](personal-trace.yaml) 将 `PERS-PR`、本计划任务与 Gate/benchmark 对齐；它不是 registry matrix，且不构成 REQ、测试执行或 Profile 符合性声明。
 
@@ -300,7 +300,8 @@
 | Phase 12 - frozen-prototype `/ui/` completeness | 9 | 9 | 0 | 0 | 0 | P12-T01..T09 done；P12 Remaining = 0 |
 | Phase 13 - Personal 2.0.0 completion（原型程度 + 设计目标） | 13 | 13 | 0 | 0 | 0 | P13-T01 docs-only done；P13-T02 done（hosted DSH real Attempt loop，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / occurrence ledger / runs + Today，merged PR #315 at `main@90437cb4`；lease closed）；P13-T06 **done**（群聊 v39，merged PR #316 at `main@23355afb`；lease closed）；P13-T07 **done**（Knowledge/Memory labeled Vault + Memory promote，merged PR #319 at `main@015afcb8`；validated `6927efe6` required CI [33756037394](https://github.com/agentkernel/cognitive-os/actions/runs/33756037394) **SUCCESS**；lease closed）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`；lease closed）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期 copy/archive/delete/restore-point/export，merged PR #321 at `main@7575ebcd`；lease closed）；P13-T11 **done**（反思 + versioned Member Runtime，merged PR #320 at `main@fa3c1dab`；lease closed）；P13-T12 **done**（D01 视觉规格 docs-only + D02 `/ui/` 逐格记账，PR #322）；**T13 `done`**（PR [#324](https://github.com/agentkernel/cognitive-os/pull/324)；`DEV-WINDOWS-NATIVE-OPC-01` D01-qualified）；P11-T15 是其验收出口，不自动 release。walking skeleton 完成 ≠ live v9 Owner job；剩余缺口见 Phase 14 |
 | Phase 14 - Personal 2.0.0 prototype-gap close after EVAL-016 | 8 | 8 | 0 | 0 | 0 | `P14-T01` docs-only **done**；`P14-T02` **done**（PR [#329](https://github.com/agentkernel/cognitive-os/pull/329) at `main@c9bb291d`）；`P14-T07` **done**（PR [#327](https://github.com/agentkernel/cognitive-os/pull/327) at `main@2d92dd16`）；`P14-T08` **done**（PR [#328](https://github.com/agentkernel/cognitive-os/pull/328)）；`P14-T03` **done**（PR [#330](https://github.com/agentkernel/cognitive-os/pull/330)）；`P14-T04` **done**（PR [#331](https://github.com/agentkernel/cognitive-os/pull/331)）；`P14-T05` **done**（PR [#332](https://github.com/agentkernel/cognitive-os/pull/332)）；`P14-T06` **done**（PR [#333](https://github.com/agentkernel/cognitive-os/pull/333)）；不重开 Phase 13；无新 Gate |
-| **合计** | **175** | **154** | **0** | **1** | **4** | 另有 16 cancelled；无新 Gate pass |
+| Phase 15 - v9 design authority on daemon `/ui/` | 1 | 0 | 1 | 0 | 0 | `P15-T01` **`in-progress`**（owner 2026-09-06 「授权，执行」：origin = daemon `/ui/`；v9 = design authority/target；首刀 shell/Today Owner copy + no-stack；不复制 mock complete-job / Twitter P0 / fake Activate）；不重开 Phase 14；无新 Gate |
+| **合计** | **176** | **154** | **1** | **1** | **4** | 另有 16 cancelled；无新 Gate pass |
 
 ## 2. 产品边界与不变量
 
@@ -402,6 +403,7 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | Personal 2.0 Windows OPC | P11-T01..T14 done；T15 unparked（非 P12 mutex）；P12-T01–T09 done；冻结 prototype 默认可走场景已接到 `/ui/` | current 2.0.0 chrome target；现有 Web UI/dsh/Pi/Linux/CI evidence 不自动成为 Windows OPC support；P12 done ≠ T15/Gate/release |
 | Personal 2.0.0 completion（Phase 13） | P13-T01 docs-only done（PR #305）；P13-T02 done（托管 DSH 真实 Attempt 循环，merged PR #310）；P13-T03 done（隐藏 Pi 真实推理，merged PR #311）；P13-T04 done（独立验证 + 产出可打开 + 发布包预览，merged PR #313）；P13-T05 done（Routine 武装 / runs + Today，merged PR #315 at `main@90437cb4`）；P13-T12 **done**（D01 视觉规格 + v9 对照清单 docs-only；D02 `/ui/` 逐格记账，PR #322）；P13-T06 done（群聊 v39，merged PR #316）；P13-T07 **done**（Knowledge/Memory，merged PR #319 at `main@015afcb8`；validated `6927efe6`）；P13-T10 **done**（Skill/MCP reviewed acquire，merged PR #318 at `main@2217722d`）；P13-T08 **done**（Settings，merged PR #317 at `main@22718d74`）；P13-T09 **done**（项目生命周期，merged PR #321 at `main@7575ebcd`）；P13-T11 **done**（merged PR #320 at `main@fa3c1dab`）；T13 **done**（merged PR #324 at `main@4ca9b046`）；出口 = P11-T15 N=15 **done** | 把 P11 walking skeleton 与 P12 可走场景补到原型程度与 [2.0 scope](../../personal/docs/product/personal-2.0-scope.md) 设计目标；release/signing/B01-W 仍独立；2.1 remote 不进 |
 | Personal 2.0.0 prototype-gap close（Phase 14） | `P14-T01` docs-only **done**；`P14-T08` **done**；`P14-T02` **done**（PR [#329](https://github.com/agentkernel/cognitive-os/pull/329)）；`P14-T07` **done**（PR [#327](https://github.com/agentkernel/cognitive-os/pull/327)）；`P14-T03` **done**（PR [#330](https://github.com/agentkernel/cognitive-os/pull/330)）；`P14-T04` **done**；`P14-T05` **done**（PR [#332](https://github.com/agentkernel/cognitive-os/pull/332)）；`P14-T06` **done**（PR [#333](https://github.com/agentkernel/cognitive-os/pull/333)）；预言机 = EVAL-016 + user-journeys + 冻结 v9；验证 = guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | 残差收口 live `/ui/` 对小白 Owner 工作；不重开 Phase 13；不是 Gate/release；dsh 不是 小白 chrome |
+| Personal 2.0.0 v9 design authority（Phase 15） | `P15-T01` **in-progress**；origin = daemon `/ui/`（不是 Vite、不是 `.canvas.tsx`）；v9 = `/ui/` 的 IA/视觉/Owner 文案权威与完成目标；预言机仍 = user-journeys + v9；诚实/fail-closed/公理不变 | owner 2026-09-06 「授权，执行」；不复制 mock complete-job / Twitter P0 / fake Activate / 假数据当权威；不重开 Phase 14；不是 19 模块一次做完；不是 Gate/release |
 | non-Pi Agent 与其他 Linux/hardware | 后续 adapter/port qualification | 经既有 ports 演进；不得据此宣称底层 substrate 已支持 |
 
 ### Linux 1.0 release-critical typed dependencies
@@ -545,6 +547,12 @@ P1-T01..T07 仍是共同 foundation，但不作为第四条 active release track
 | P14-T07 | P14-T01；P13-T08 Settings 权威；P12-T08 连接表 | Settings 是真实 L1 `role=link`；默认 Owner chrome 隐藏 9×9 state-lab；Linux 1.0 Home/Work/Agents 不作为 2.0 目的地广告；`/settings/model-connections` 或 hub 可走；命令面板拦截在范围内；EVAL-016 J6/J8/J12/J20；**`JOURNEY-BROWSER-SYNC-01`** | 无自动 promotion |
 | P14-T08 | P14-T01；P13-T07 Vault/Memory 权威；P12-T07 ingest | Knowledge = v9 files / Why this fragment / import IA（不是仅 HTTP paste/admin）；EVAL-016 J5；**`JOURNEY-BROWSER-SYNC-01`** | 无；Obsidian 不进产品 |
 
+### Personal 2.0 Phase 15 v9 design-authority typed dependencies
+
+| Task | implementation_requires | acceptance_requires | promotion_requires |
+|---|---|---|---|
+| P15-T01 | owner 2026-09-06 「授权，执行」（§2.4 product-semantic）；Phase 14 `P14-T01..T08` **done**（不重开）；产品源保持 daemon `/ui/`；冻结 canvas v9 只读 | 产品文档口径：origin = daemon `/ui/`，v9 = `/ui/` 的设计权威与完成目标（IA + 视觉 + Owner 文案）；旅程预言机仍 = user-journeys + v9；诚实 empty / fail-closed / A1–A5 不变。首个垂直切片：shell/Today Owner 文案 + 无堆叠视觉 token，Owner 不再把开发者诚实墙当主 chrome。Dual Track：假 Activate 仍拒、未认证 fail-closed、无 Twitter P0 hero。**`JOURNEY-BROWSER-SYNC-01`** J0/J2/J10。不复制 v9 mock complete-job / fake data-as-authority / Vite-as-product | 无自动 promotion；不是 19 模块；不是 Gate/release |
+
 #### Context MVP authorization scope
 
 The first runnable P3-T01/P2-T04 Context path uses one owner-local management
@@ -680,6 +688,8 @@ formal task acceptance assessment 和收口。
 | `P14-T07/D02` | P14-T07 | `/settings/model-connections` 或 hub 可走；真实 `/ui/` J6/J8/J12/J20；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T07/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01`；Windows chrome `not-run` unless qualified |
 | `P14-T08/D01` | P14-T08 | Knowledge v9 files / why / import 表面；failure-first：file-as-authority、secret ingest | `P14-T01/D01`；`P13-T07/D01`；`P12-T07/D01` | Dual Track TS + required CI |
 | `P14-T08/D02` | P14-T08 | 真实 `/ui/` J5；**`JOURNEY-BROWSER-SYNC-01`** | `P14-T08/D01` | exact-revision guest daemon `/ui/` + `JOURNEY-BROWSER-SYNC-01` |
+| `P15-T01/D01` | P15-T01 | 文档口径重写 + Dual Track shell/Today Owner 文案 + `--cp-shell-min-width` 无堆叠；failure-first：假 Activate、未认证 fail-closed、Twitter P0 hero、Vite 当产品源 | owner 2026-09-06 指令；Phase 14 done；P13-T12 visual spec；冻结 v9 只读 | Dual Track TS（`DEV-WIN-GNU-01` 允许面）+ required CI；产品源 = daemon `/ui/` |
+| `P15-T01/D02` | P15-T01 | 真实 `/ui/` Owner chrome（诚实墙不再是 Today 主 chrome；L1 今日/项目/知识/设置）；**`JOURNEY-BROWSER-SYNC-01`**（J0/J2/J10 + 无 Twitter hero） | `P15-T01/D01` | exact-revision guest daemon `/ui/`（`B01-Desktop-Linux-002` SSH 隧道 `http://127.0.0.1:48681/ui/`）；不碰 `:48181` |
 
 > **历史收口注记（原位于本节中部的"收口记录"，移此保留）：** `P2-T07` 已完成并在
 > PR #164 中合并到 `main@7e75e6642d289e1127928c79fed116e00b61c987`；
@@ -1851,6 +1861,29 @@ UI 工作继承该约定。文档-only 的 `P14-T01` 不跑浏览器。
 | P14-T08 | 同 T02 + `JOURNEY-BROWSER-SYNC-01` | files / Why this fragment / import 走 Vault 权威 | HTTP paste 冒充 v9 IA；file-as-authority；secret ingest；捆绑 Obsidian |
 
 本阶段 foundation（复用，禁止再造）：P11–P13 权威与 `/ui/` 场景、Task/Intent/Effect/WIA/verification、CAS、Provider CP、SecretStore、exact Pi、dsh Path B（形状，不搬权威）。禁止再造：第二套 scheduler、engine store、聊天 Approve、Team/Inbox 一级、成员级预算当前 chrome、平行产品计划、合并 dsh 与 `/ui/`。
+
+### Phase 15 - v9 design authority on daemon `/ui/`
+
+Phase 15 是 owner 2026-09-06 「授权，执行」的直接落点：**产品源仍是 daemon `/ui/`**（不是 Vite，不是 `.canvas.tsx`）。**冻结 canvas v9 成为该 `/ui/` 的设计权威与完成目标**（IA + 视觉 + Owner 文案）。旅程预言机仍是 [user-journeys.md](../../personal/docs/product/user-journeys.md) + v9。诚实 empty / fail-closed / 公理 A1–A5 **不变**。
+
+**不复制：** v9 mock complete-job、Twitter/X P0 hero、假 Activate、假数据当权威、Vite 当产品。不重开 Phase 13/14 旅程状态。评测 routing OFF。首刀不是 19 模块。
+
+```mermaid
+flowchart TD
+  T01[T01_docs_and_shell_today]
+```
+
+#### P15-T01 三栏
+
+| ID | 工作项 | 依赖 | 验收摘要 | 状态 | 证据/备注 |
+|---|---|---|---|---|---|
+| P15-T01 | 文档口径 + shell/Today Owner 文案与无堆叠视觉 | owner 2026-09-06；Phase 14 done；P13-T12 spec；v9 只读 | origin=`/ui/`；v9=设计权威/目标；Today 主 chrome 不再是开发者诚实墙；Dual Track 假 Activate/未认证/Twitter P0；`JOURNEY-BROWSER-SYNC-01` | in-progress | lease `lease/personal/P15-T01/v9-design-authority-shell`；claim ceiling `hypothesis` |
+
+| ID | validation environment | 关闭门 | 漂移检测负例 |
+|---|---|---|---|
+| P15-T01 | Dual Track TS + required CI；产品源 = exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`**。Windows chrome `not-run` unless qualified。`DEV-WIN-GNU-01` 禁 Rust link。 | Owner 在 Today 看到 v9 语言（今日 / 创建项目 / 继续未完成的创建）；无堆叠横滚；假 Activate 仍拒；未认证 fail-closed；无 Twitter P0；文档不再写「v9 不是产品」 | 把 canvas/Vite 当产品源；复制 mock 完成工作；假 Activate；削弱 A1–A5；重开 Phase 14；一次改 19 模块 |
+
+本阶段 foundation 同 Phase 14。禁止再造第二产品。Canvas v9 文件只读、永不覆盖。
 
 ## 5. Gate 与证据要求
 

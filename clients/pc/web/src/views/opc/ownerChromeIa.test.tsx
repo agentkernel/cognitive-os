@@ -91,15 +91,15 @@ afterEach(() => {
 describe("P14-T07 Owner chrome IA (failure-first vs EVAL-016 J6/J8/J12/J20)", () => {
   it("makes Settings a real L1 role=link beside Today / Projects / Knowledge", async () => {
     expect(PRIMARY_NAV.map(([, label]) => label)).toEqual([
-      "Today",
-      "Projects",
-      "Knowledge",
-      "Settings",
+      "今日",
+      "项目",
+      "知识",
+      "设置",
     ]);
     const { host, root } = await renderOwner("#/");
     const nav = host.querySelector('nav[aria-label="Primary"]');
     const settings = [...(nav?.querySelectorAll("a") ?? [])].find(
-      (node) => (node.textContent ?? "").trim() === "Settings",
+      (node) => (node.textContent ?? "").trim() === "设置",
     );
     expect(settings).not.toBeNull();
     expect(settings?.getAttribute("href")).toBe("#/settings");
@@ -188,7 +188,7 @@ describe("P14-T07 Owner chrome IA (failure-first vs EVAL-016 J6/J8/J12/J20)", ()
     await flush(4);
     expect(host.querySelector('[role="dialog"][aria-label="Command palette"]')).toBeNull();
     const settings = [...host.querySelectorAll('nav[aria-label="Primary"] a')].find(
-      (node) => (node.textContent ?? "").trim() === "Settings",
+      (node) => (node.textContent ?? "").trim() === "设置",
     ) as HTMLAnchorElement | undefined;
     await act(async () => {
       settings?.click();
