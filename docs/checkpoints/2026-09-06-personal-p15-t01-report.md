@@ -2,11 +2,12 @@
 
 Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit immediately. `not-run` is never pass. Claim ceiling `hypothesis`. A7: local/CI is not Gate.
 
-- Task: `P15-T01` / slices `P15-T01/D01` **done** (Dual Track) + `P15-T01/D02` **ready** (guest `/ui/` after this push)
+- Task: `P15-T01` / slices `P15-T01/D01` **done** + `P15-T01/D02` **in-progress**
 - Branch: `personal/P15-T01-v9-target`
 - Worktree: `D:\agent-kernel-wt-P15-T01`
 - Lease: `lease/personal/P15-T01/v9-design-authority-shell`
-- Draft PR: pending push
+- Draft PR: [#335](https://github.com/agentkernel/cognitive-os/pull/335)
+- Implementation pin: `6b524c53`
 - Change class: `product-semantic` (docs reframe) + `implementation-only` (shell/Today Owner chrome + `--cp-*` type scale / no-stack). No `core/specs`. No numbered migration. Canvas v9 file not shipped / not overwritten.
 - Claim ceiling: `hypothesis`
 - Product origin: daemon-served `/ui/`. Frozen canvas v9 = design authority and completion target. Vite is not the product origin.
@@ -26,10 +27,11 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | Time | Unit | Result | Env | Revision | Notes |
 |---|---|---|---|---|---|
 | 2026-09-06 | D01 Dual Track `todayOwnerChrome.test.tsx` + `shell.test.tsx` | **pass** 10/10 (3 chrome + 7 shell) | Node jsdom `clients/pc/web` | worktree | N1–N3 after `readFileSync` tokens + Session fail-closed + secondary honesty |
-| 2026-09-06 | D01 Dual Track focused (`opcIa` / `todayPackets` / `todayLivePackets` / `ownerChromeIa` / `commands` / `App`) | **pass** 61/61 | Node jsdom `clients/pc/web` | worktree | Today has no `#main .cp-honesty`; L1 今日/项目/知识/设置 |
-| 2026-09-06 | D01 Dual Track focused pack (9 files: chrome + opcIa + packets + App + commands + palette) | **pass** 67/67 | Node jsdom `clients/pc/web` | `6b524c53` | Fake Activate refused; unauthenticated fail-closed; no Twitter P0; Today h2 `今日` + CTA `创建项目`; `--cp-size-body` 0.875rem; `--cp-shell-min-width` 1100px |
-| 2026-09-06 | D02 guest `/ui/` J0/J2/J10 + `JOURNEY-BROWSER-SYNC-01` | **not-run** | `B01-Desktop-Linux-002` `:48681` | — | wait for this checkpoint push. Leave `:48181` untouched. |
+| 2026-09-06 | D01 Dual Track focused pack (`opcIa` / packets / livePackets / ownerChrome / chrome / commands / App) | **pass** 54/54 | Node jsdom `clients/pc/web` | `6b524c53` | Fake Activate refused; unauthenticated fail-closed; no Twitter P0; Today h2 `今日` + CTA `创建项目` |
+| 2026-09-06 | D01 Dual Track full `clients/pc/web` vitest | **pass** 543/543 (75 files) | Node jsdom `clients/pc/web` | worktree on `6b524c53` | No primary Today honesty wall; Session fail-closed; no Twitter P0 |
+| 2026-09-06 | Draft PR [#335](https://github.com/agentkernel/cognitive-os/pull/335) | pass | GitHub | `6b524c53` | D01 Dual Track + docs reframe pushed |
+| 2026-09-06 | D02 guest `/ui/` J0/J2/J10 + `JOURNEY-BROWSER-SYNC-01` | **not-run** | `B01-Desktop-Linux-002` `:48681` | `6b524c53` | exact-revision Linux UI build then guest replace. Leave `:48181` untouched. |
 
 ## Unique next
 
-`P15-T01/D02` on guest `:48681` at the pushed SHA. J0/J2/J10. Leave `:48181` untouched. Bootstrap from guest file; never print secrets.
+`P15-T01/D02` on guest `:48681` at pushed `6b524c53`. J0/J2/J10 + Phase 14 regression. Leave `:48181` untouched. Bootstrap from guest file; never print secrets.
