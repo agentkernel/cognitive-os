@@ -354,7 +354,7 @@ implementation stop only for the owner-directed, documentation-only
 
 | Total | Done | In progress | Blocked | Not started | Remaining |
 |---:|---:|---:|---:|---:|---:|
-| 181 | 156 | 0 | 1 | 8 | 25 |
+| 181 | 156 | 1 | 1 | 7 | 25 |
 
 `P9-T04` is `done` (PR #199), closed as a non-claim report. Formal task
 completion remains independent from GMVP-LINUX, release, Profile, and Windows
