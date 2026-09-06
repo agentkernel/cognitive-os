@@ -6,6 +6,8 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Branch: `personal/P15-T04-knowledge-v9`
 - Worktree: `D:\agent-kernel-wt-P15-T04` from `origin/main@b3f59161` (T01 #335 + T02 #337 already merged).
 - Lease: `lease/personal/P15-T04/knowledge-v9`
+- Draft PR: [#339](https://github.com/agentkernel/cognitive-os/pull/339) (keep Draft)
+- HEAD: `626681a3`
 - T05 Settings and T03 Projects not claimed here. `docs/plan/PROGRESS.md` unique-next stays claim `P15-T03`.
 - Change class: `implementation-only` (Owner-facing Knowledge copy vs frozen v9). Vault authority unchanged. Canvas v9 file not overwritten. AXIOMS.md not rewritten.
 - Claim ceiling: `hypothesis`
@@ -35,8 +37,9 @@ Wrote `knowledgeV9OwnerCopy.test.tsx` against unmodified Knowledge chrome, then 
 | 2026-09-06 | Knowledge + opcIa Dual Track | pass | Dual Track vitest | dirty worktree | 5 files, **44/44**. opcIa empty Knowledge asserts `知识已锁定`. |
 | 2026-09-06 | Full Dual Track web vitest | pass | Dual Track vitest | dirty worktree | **77 files / 549 tests**. |
 | 2026-09-06 | Locked Knowledge h2 + remaining Owner table copy | pass | Dual Track vitest | dirty follow-up | Empty Knowledge title `知识已锁定`. Labels/conflicts hidden until files exist. 5 files **44/44**. |
+| 2026-09-06 | Draft PR [#339](https://github.com/agentkernel/cognitive-os/pull/339) | pass | GitHub | `626681a3` | Keep Draft. Required CI in progress (ubuntu/windows). |
 | 2026-09-06 | D02 guest `/ui/` J5 | not-run | `B01-Desktop-Linux-002` | — | Guest `:48681` is not this lease. Keep Draft. |
 
 ## Unique next (T04 only)
 
-Keep Draft. Wait required CI on this HEAD. Do not ready/merge. `P15-T04/D02` guest `/ui/` J5 waits; this lease does not deploy `:48681`. Leave `:48181` untouched. Do not claim T03/T05/T06.
+Keep Draft [#339](https://github.com/agentkernel/cognitive-os/pull/339). Wait required CI on `626681a3`. Do not ready/merge. `P15-T04/D02` guest `/ui/` J5 waits; this lease does not deploy `:48681`. Leave `:48181` untouched. Do not claim T03/T05/T06.
