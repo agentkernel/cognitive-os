@@ -2,7 +2,7 @@
 
 Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit immediately. `not-run` is never pass. Claim ceiling `hypothesis`. A7: local/CI is not Gate.
 
-- Task: `P15-T02` / slices `P15-T02/D01` **done** + `P15-T02/D02` **done** (guest walk). Ready/merge waits required CI on merge HEAD.
+- Task: `P15-T02` / slices `P15-T02/D01` **done** + `P15-T02/D02` **done**. Unique next after close: claim `P15-T03`.
 - Branch: `personal/P15-T02-write-owner-copy`
 - Worktree: `D:\agent-kernel-wt-P15-T02`
 - Lease: `lease/personal/P15-T02/write-owner-copy`
@@ -42,4 +42,4 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 
 ## Unique next
 
-`P15-T02/D01` Dual Track is **done**. Guest J1 walked at `3528ba28` / SPA `index-V6QE_Yae.js`. Unique next: required CI **SUCCESS** on the exact HEAD to merge, then ready/merge [#337](https://github.com/agentkernel/cognitive-os/pull/337). Do not claim T03–T06. Evaluation routing OFF.
+`P15-T02/D01` Dual Track is **done**. Guest J1 walked at `3528ba28` / SPA `index-V6QE_Yae.js`. Unique next after T02 close: **claim `P15-T03`**. Do not claim T04–T06 from this close. Evaluation routing OFF.
