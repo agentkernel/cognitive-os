@@ -6,13 +6,14 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 - Branch: `personal/P15-T01-v9-target`
 - Worktree: `D:\agent-kernel-wt-P15-T01`
 - Lease: `lease/personal/P15-T01/v9-design-authority-shell`
-- Draft PR: [#335](https://github.com/agentkernel/cognitive-os/pull/335) (kept Draft)
+- Draft PR: [#335](https://github.com/agentkernel/cognitive-os/pull/335) (ready/merge in T01 close)
 - Implementation pin: Dual Track `6b524c53`; guest / required CI `4373d158` (tsc exclude Dual Track tests so `pnpm build` can emit `/ui/` dist)
+- Fold: `DOC-P15-V9-BACKLOG` (#336 HEAD `1c761d7e`) folded into this close; T02–T06 remain **not-started**
 - Change class: `product-semantic` (docs reframe) + `implementation-only` (shell/Today Owner chrome + `--cp-*` type scale / no-stack). No `core/specs`. No numbered migration. Canvas v9 file not shipped / not overwritten. AXIOMS.md not rewritten.
 - Claim ceiling: `hypothesis`
 - Product origin: daemon-served `/ui/`. Frozen canvas v9 = design authority and completion target. Vite is not the product origin.
 - Evaluation routing: **OFF**
-- Phase 14 journeys stay **done**. Do not claim T02–T06 from this close. Do not auto-claim P6. `P7-T07` stays blocked.
+- Phase 14 journeys stay **done**. Unique next after close: claim `P15-T02`. Do not claim T03–T06 from this close. Do not auto-claim P6. `P7-T07` stays blocked.
 
 ## Failure-first (D01)
 
@@ -43,7 +44,8 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | 2026-09-06 | Knowledge / Settings L1 regression | **pass** | `#/knowledge` `#/settings` | `4373d158` | Knowledge tabs Files / Import / Why this fragment / Memory; 0 Admit. Settings Model Connections; no fake Connect; 9×9 unmounted. |
 | 2026-09-06 | Windows native chrome JOURNEY | **not-run** | walk used local Cursor browser against forwarded guest `/ui/` | — | not Windows-native daemon chrome |
 | 2026-09-06 11:14 | D02 resume after 10:51 stall | **pass** | Cursor browser → tunnel guest `/ui/` | deploy `4373d158`; docs HEAD `e7dc9b91` | Guest still PID **2740931** on `:48681`; `:48181` untouched (PID **166715**). `REVISION` + UI `REVISION` = `4373d158`. kernel sha256 `909c111704039fd0539c38c012aadee874bfc90da2096cffb90a22bddf0a720c` matches Linux exact-revision binary (not a stale other-worktree server). SPA `index-D06uNekN.js` + `index-C9SPnPVx.css`. J0: empty Issue → `management HTTP 401; task HTTP 401. Bootstrap discarded.`; unauth `#/` has no `[data-surface=today]`, 0 Activate, `twitter=false`. J2 (prior authed session same turn): h2 `今日`, lede `看清并处理要你拍板的事。`, 4 live Projects (`P14-T03 D02 titled live` / `wizard live` / `wizard titled live` / `P14-T04 D02 wizard join live`), packet `data-collapsed=true`, period today `created 2 · live 4 · blocked 0`, `min-width: 1100px`, body `14px`. J10: `twitter=false` on Today / Projects / Knowledge / Settings. Required CI on **deployed** SHA [34006761447](https://github.com/agentkernel/cognitive-os/actions/runs/34006761447) **SUCCESS**. Docs-only HEAD CI [34008157427](https://github.com/agentkernel/cognitive-os/actions/runs/34008157427) in progress. `#3080` still **not-run**. Keep Draft [#335](https://github.com/agentkernel/cognitive-os/pull/335). |
+| 2026-09-06 | Fold `DOC-P15-V9-BACKLOG` + T01 close docs | **pass** (local) | `check:consistency` / handbook fingerprints after merge resolution | this close HEAD | Last-merger keeps T02–T06 registered **not-started**. Unique next = claim `P15-T02`. Do not merge leftover SNAP [#334](https://github.com/agentkernel/cognitive-os/pull/334). Lease table empty (`none`) so merge HEAD will not trip `CURRENT_SNAPSHOT_LEASE_MISMATCH`. |
 
 ## Unique next
 
-`P15-T01/D01` + `P15-T01/D02` are **done** on Draft [#335](https://github.com/agentkernel/cognitive-os/pull/335). Unique next stays on **T01** (wait for required CI on docs HEAD `e7dc9b91`, then ready/merge/closure) — not T02. Do not start `P15-T02`..`T06`. Keep #335 Draft until T01 full acceptance close. Do not auto-claim P6. `P7-T07` stays blocked. Evaluation routing OFF.
+`P15-T01/D01` + `P15-T01/D02` are **done**. Unique next after ready/merge of [#335](https://github.com/agentkernel/cognitive-os/pull/335): **claim `P15-T02`**. Do not claim T03–T06 from this close. Do not auto-claim P6. `P7-T07` stays blocked. Evaluation routing OFF.

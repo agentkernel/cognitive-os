@@ -293,6 +293,11 @@ module**:
 | P14-T01 documentation-only | local Markdown / `check:consistency` / handbook / docs-sync | implementation, Gate, EVAL revival |
 | P14-T02..T08 implementation | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** | Vite preview as product origin; canvas screenshot as pass; Linux 1.0 `#/work` as 2.0 chrome; ordinary CI as journey pass |
 | P15-T01 shell/Today v9-target | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J0/J2/J10 + Phase 14 regression) | Vite as product origin; shipping `.canvas.tsx`; fake Activate; Twitter/X P0 hero |
+| P15-T02 Write/①–⑤ Owner copy vs v9 | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J1 + regression) | jargon wall as v9; fake Activate; Vite as product |
+| P15-T03 Projects list/detail vs v9 | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J3 + regression) | `#/work` as 2.0; clickable Run without authority |
+| P15-T04 Knowledge vs v9 | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J5 + regression) | file-as-authority; secret ingest; Obsidian bundle |
+| P15-T05 Settings / Model Connections vs v9 | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J8/J12 + regression) | fake Connect; 9×9 dump; raw secret in DOM |
+| P15-T06 remaining layout tokens | Dual Track TS + required CI + exact-revision guest daemon `/ui/` + **`JOURNEY-BROWSER-SYNC-01`** (J0 layout + regression) | stacked columns; revert T01 min-width; Twitter/X P0 |
 
 Platform: Linux guest `/ui/` is the mainline. Windows chrome stays `not-run`
 unless already qualified. Claim ceiling `hypothesis`.
