@@ -2369,7 +2369,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T06 — Today live 决策包 + 每 Project 运行概览
 
-- **status:** `in-progress`. Claim ceiling `hypothesis`. Unique in-progress Slice `P14-T06/D01`. Draft PR [#333](https://github.com/agentkernel/cognitive-os/pull/333) at `1c9941c6`.
+- **status:** `done` (2026-09-06, PR [#333](https://github.com/agentkernel/cognitive-os/pull/333)). Claim ceiling `hypothesis`. Folded `origin/main@d9cee39d` (T05 #332). Guest `/ui/` pin `01004a49`. Do not claim T07/T08.
 - **EVAL-016:** J2.
 - **依赖:** P14-T03；P12-T05；P13-T05.
 - **垂直切片:** D01：激活后 Today 决策包 + 每 live Project 一行；failure-first：KPI 墙、未激活仍画 live 包。

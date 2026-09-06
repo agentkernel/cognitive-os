@@ -243,7 +243,7 @@ describe("P12-T05 Today decision packets (Dual Track)", () => {
     unmount(host, root);
   });
 
-  it("keeps creating rows as continue-create when mixed with a live Project, and packets use the live subject_ref", async () => {
+  it("after a live Project, leftover creating drafts are not continue-create and packets use the live subject_ref", async () => {
     const { host, root, calls } = await renderOpc("#/", MIXED_LIST, {
       "GET /management/project/v1/pending-previews": {
         status: 200,
@@ -252,8 +252,8 @@ describe("P12-T05 Today decision packets (Dual Track)", () => {
     });
     expect(host.querySelector("[data-surface='today']")).not.toBeNull();
     expect(host.querySelector("[data-surface='today-incomplete']")).toBeNull();
-    expect(host.textContent).toMatch(/Continue create/i);
-    expect(host.querySelector("a[href='#/projects/new']")).not.toBeNull();
+    expect(host.textContent).not.toMatch(/Continue create/i);
+    expect(host.querySelector("[data-region='opc-today-leftover-drafts']")).not.toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     expect(
       calls.some(

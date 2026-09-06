@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { PageHeader } from "../../components/PageHeader";
-import { hitlCanvasPath, HITL_KEY, type PendingPreviewRow } from "../../data/projections/hitl";
+import { hitlCanvasPath, type PendingPreviewRow } from "../../data/projections/hitl";
 import {
   creatingProjectRows,
   liveProjectRows,
@@ -17,20 +17,20 @@ import {
   type TodayOverviewView,
   type TodayPeriod,
 } from "../../data/projections/todayOverview";
-import { useProjection } from "../../data/useProjection";
+import { useProjection, useProjections } from "../../data/useProjection";
 import { HonestyNote } from "../../state/HonestyNote";
 import { DaemonReadPanel } from "./DaemonReadPanel";
-import {
-  loadPendingPreviewsForLiveProject,
-  loadProjectList,
-  loadTodayOverviewForLiveProject,
-  liveProjectId,
-} from "./loadOpcReads";
+import { loadProjectList } from "./loadOpcReads";
 import {
   ProjectAuthorityPanel,
   TODAY_EMPTY_ONLY_CREATE,
   TODAY_INCOMPLETE_ONLY_CREATE,
 } from "./ProjectAuthorityPanel";
+import {
+  livePacketKey,
+  loadTodayLiveSurface,
+  mergeLivePacketProjection,
+} from "./todayLiveReads";
 
 const PERIOD_LABEL: Record<TodayPeriod, string> = {
   today: "Today",
@@ -40,28 +40,29 @@ const PERIOD_LABEL: Record<TodayPeriod, string> = {
 
 /**
  * Today — Personal 2.0. Empty home is only-create (P12-T02). Creating-only
- * is continue-create (today-incomplete). Live Projects get daily packets
- * from pending-previews, deep-linked to the HITL canvas, and the run
- * overview from `today.overview` (P13-T05/D02): one row per live Project
- * (state · completed Attempts · current stage · duration) plus created /
- * live / blocked counts and a today / week / month switch. With nothing
- * pending the packet block collapses and the overview stays. No KPI wall;
- * unknown is never 0; chat has no Approve. T06 Confirm stays on management HTTP.
+ * is continue-create (today-incomplete). After a live Project (P14-T03),
+ * Today is decision packets from every live pending-preview plus the run
+ * overview (P13-T05/D02 / P14-T06): one row per live Project, not
+ * continue-create. Leftover creating drafts stay honest notes, not the
+ * daily surface. With nothing pending the packet block collapses and the
+ * overview stays. KPI wall is refused; unknown is never 0; chat has no
+ * Approve. Confirm stays on management HTTP. T13 empty chrome is not
+ * packet acceptance.
  */
 export function TodayPage() {
   const projects = useProjection<ProjectListRow[]>(PROJECTS_KEY);
-  const hitl = useProjection<PendingPreviewRow[]>(HITL_KEY);
   const overview = useProjection<TodayOverviewView[]>(TODAY_OVERVIEW_KEY);
   const [period, setPeriod] = useState<TodayPeriod>("today");
-  const liveId = liveProjectId(projects);
   const liveRows = liveProjectRows(projects.data);
   const creatingRows = creatingProjectRows(projects.data);
+  const liveIds = liveRows.map((row) => row.projectId);
+  const packetProjections = useProjections<PendingPreviewRow[]>(
+    liveIds.map((id) => livePacketKey(id)),
+  );
+  const hitl = mergeLivePacketProjection(liveIds, packetProjections);
   const refresh = useCallback(async () => {
     const list = await loadProjectList();
-    await Promise.all([
-      loadPendingPreviewsForLiveProject(list),
-      loadTodayOverviewForLiveProject(list, period),
-    ]);
+    await loadTodayLiveSurface(list, period);
   }, [period]);
   useEffect(() => {
     void refresh();
@@ -69,7 +70,7 @@ export function TodayPage() {
 
   const incompleteOnly =
     projects.status === "ready" && liveRows.length === 0 && creatingRows.length > 0;
-  const packets = hitl.status === "ready" ? (hitl.data ?? []) : [];
+  const packets = hitl.status === "ready" || hitl.status === "stale" ? (hitl.data ?? []) : [];
   const packetsCollapsed = hitl.status === "empty" || (hitl.status === "ready" && packets.length === 0);
   const emptyHome =
     projects.status === "empty" ||
@@ -87,10 +88,11 @@ export function TodayPage() {
       <PageHeader title="Today" lede={lede} />
       <HonestyNote>
         Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        Empty home is only-create. Creating Projects stay continue-create. Daily
-        packets and the run overview exist only for live daemon state. Completed
-        runs are daemon-observed Attempt terminals, not verified completion. Chat
-        cannot Approve.
+        Empty home is only-create. Creating-only stays continue-create. After a
+        live Project, Today is decision packets plus one row per live Project,
+        not continue-create. Leftover drafts are not packets. T13 empty chrome
+        is not packet acceptance. Completed runs are daemon-observed Attempt
+        terminals, not verified completion. Chat cannot Approve.
       </HonestyNote>
       <ProjectAuthorityPanel
         projection={projects}
@@ -145,13 +147,12 @@ export function TodayPage() {
               is daemon-stated rows, not a KPI wall. Unknown cost stays unknown.
             </p>
             {creatingRows.length > 0 ? (
-              <p>
-                Unaccepted creating Projects stay continue-create, not a daily
-                packet.{" "}
-                <Link to="/projects/new">Continue create</Link>
+              <p className="cp-quiet" data-region="opc-today-leftover-drafts">
+                Unactivated drafts are not daily packets and do not keep Today on
+                continue-create after a live Project exists.
               </p>
             ) : null}
-            {liveId ? (
+            {liveIds.length > 0 ? (
               <details
                 data-region="opc-today-packet-block"
                 data-collapsed={packetsCollapsed ? "true" : "false"}
@@ -203,7 +204,7 @@ export function TodayPage() {
                           <p>
                             <Link
                               className="cp-button cp-button--primary"
-                              to={hitlCanvasPath(row.previewId, liveId)}
+                              to={hitlCanvasPath(row.previewId, row.subjectRef)}
                             >
                               Open this decision on the canvas
                             </Link>
@@ -216,7 +217,7 @@ export function TodayPage() {
               </details>
             ) : null}
 
-            {liveId ? (
+            {liveIds.length > 0 ? (
               <div data-region="opc-today-overview-block">
                 <p
                   className="cp-quiet"
@@ -285,15 +286,23 @@ export function TodayPage() {
 }
 
 function RunOverview({ view }: { view: TodayOverviewView }) {
+  const kpiWallOffered = view.kpiWall === "true";
   return (
     <div data-region="opc-today-run-overview" data-period={view.period}>
-      <p className="cp-quiet" data-region="opc-today-counts">
-        Period <code className="cp-mono">{view.period}</code> ({view.periodBasis}) · created{" "}
-        <span data-count="created">{view.created}</span> · live{" "}
-        <span data-count="live">{view.live}</span> · blocked{" "}
-        <span data-count="blocked">{view.blocked}</span>. Counts are daemon-stated; unknown is
-        never 0. Verification {view.verificationStatus}; cost {view.cost}.
-      </p>
+      {kpiWallOffered ? (
+        <p className="cp-quiet" data-kpi-wall="refused">
+          The daemon offered a KPI wall. Today refuses it. Per-live-Project rows
+          stay operational facts, not a success-rate wall. Unknown is never 0.
+        </p>
+      ) : (
+        <p className="cp-quiet" data-region="opc-today-counts">
+          Period <code className="cp-mono">{view.period}</code> ({view.periodBasis}) · created{" "}
+          <span data-count="created">{view.created}</span> · live{" "}
+          <span data-count="live">{view.live}</span> · blocked{" "}
+          <span data-count="blocked">{view.blocked}</span>. Counts are daemon-stated; unknown is
+          never 0. Verification {view.verificationStatus}; cost {view.cost}.
+        </p>
+      )}
       <table className="cp-table" data-region="opc-today-overview-rows">
         <caption className="cp-quiet">
           GET {TODAY_OVERVIEW_PATH} — one row per live Project; completed runs are
