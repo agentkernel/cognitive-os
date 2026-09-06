@@ -235,7 +235,7 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
 
   it("shows Why this fragment from daemon inject_order and excerpts", async () => {
     const { host, root } = await renderKnowledge("#/knowledge");
-    clickTab(host, "Why this fragment");
+    clickTab(host, "为什么用这段");
     expect(host.querySelector("[data-region='opc-why-fragment']")).not.toBeNull();
     expect(host.querySelector("[data-row-key='ent-1']")?.textContent).toMatch(/sourced-excerpt/);
     expect(host.textContent).toContain("fixed-decision");
@@ -263,10 +263,10 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
         body: { status: "ok", written: 1, memory_fts: "untouched" },
       },
     });
-    clickTab(host, "Import");
+    clickTab(host, "导入");
     selectImportSource(host, "typed");
     setInputValue(host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement, "version one");
-    clickButton(host, "Import to Vault");
+    clickButton(host, "开始导入");
     await flush();
     const imported = calls.find((call) => call.pathname === "/management/project/v1/vault.import");
     expect(imported?.body).toEqual({
@@ -298,11 +298,11 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
         },
       },
     });
-    clickTab(host, "Import");
+    clickTab(host, "导入");
     selectImportSource(host, "typed");
     setInputValue(host.querySelector("input[name='relative_path']") as HTMLInputElement, "notes/keep.md");
     setInputValue(host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement, "keep this body");
-    clickButton(host, "Import to Vault");
+    clickButton(host, "开始导入");
     await flush();
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.import")).toBe(true);
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index.rebuild")).toBe(
@@ -321,13 +321,13 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
 
   it("does not POST secret-shaped paste and keeps the original", async () => {
     const { host, root, calls } = await renderKnowledge("#/knowledge");
-    clickTab(host, "Import");
+    clickTab(host, "导入");
     selectImportSource(host, "typed");
     setInputValue(
       host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement,
       "api_key=sk-p12t07-fixture",
     );
-    clickButton(host, "Import to Vault");
+    clickButton(host, "开始导入");
     await flush();
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.import")).toBe(false);
     expect((host.querySelector("textarea[name='vault-body']") as HTMLTextAreaElement).value).toBe(
@@ -344,7 +344,7 @@ describe("P12-T07 Knowledge ingest + Why this fragment", () => {
         body: { status: "error", error: { code: "LOCAL_ORIGIN_HEADER_REJECTED", message: "denied" } },
       },
     });
-    clickTab(host, "Why this fragment");
+    clickTab(host, "为什么用这段");
     expect(host.querySelector("[data-region='opc-why-fragment']")?.textContent).toMatch(/session denied/i);
     expect(host.querySelector("[data-row-key='ent-1']")).toBeNull();
     expect(calls.some((call) => call.method === "POST")).toBe(false);

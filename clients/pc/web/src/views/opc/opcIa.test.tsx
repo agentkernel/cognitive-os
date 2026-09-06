@@ -319,7 +319,7 @@ describe("P11-T13 Dual Track honesty (zero fake buttons)", () => {
   it("gates Knowledge on Project authority and keeps Settings as a hub of real routes", async () => {
     const knowledge = await renderOpc("#/knowledge", EMPTY_LIST);
     expect(knowledge.host.querySelector("[data-page='opc-knowledge']")).not.toBeNull();
-    expect(knowledge.host.textContent).toContain(NO_PROJECT_EMPTY);
+    expect(knowledge.host.textContent).toMatch(/知识已锁定/);
     expect(fakeActionLabels(knowledge.host)).toEqual([]);
     unmount(knowledge.host, knowledge.root);
 
@@ -373,11 +373,15 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
       expect(fakeActionLabels(host)).toEqual([]);
       unmount(host, root);
     }
-    for (const hash of ["#/projects", "#/knowledge", "#/settings"]) {
+    for (const hash of ["#/projects", "#/settings"]) {
       const { host, root } = await renderOpc(hash, EMPTY_LIST);
       expect(host.textContent).toMatch(/daemon-served hash \/ui\//);
       unmount(host, root);
     }
+    const knowledgeOrigin = await renderOpc("#/knowledge", EMPTY_LIST);
+    expect(knowledgeOrigin.host.textContent).not.toMatch(/vite preview|vite dev server|localhost:5173/i);
+    expect(knowledgeOrigin.host.querySelector(".cp-page-head h2")?.textContent).toBe("当前项目资料");
+    unmount(knowledgeOrigin.host, knowledgeOrigin.root);
     const today = await renderOpc("#/", EMPTY_LIST);
     expect(today.host.querySelector("#main .cp-honesty")).toBeNull();
     unmount(today.host, today.root);
@@ -441,7 +445,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
 
   it("does not open Vault or Memory without a Project id", async () => {
     const { host, root, calls } = await renderOpc("#/knowledge", EMPTY_LIST);
-    expect(host.textContent).toContain(NO_PROJECT_EMPTY);
+    expect(host.textContent).toMatch(/知识已锁定/);
     expect(host.querySelector("[data-region='opc-vault']")).toBeNull();
     expect(host.querySelector("[data-region='opc-memory']")).toBeNull();
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index")).toBe(false);
@@ -470,9 +474,9 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
         body: { status: "ok", family: "memory", resources: [{ id: "mem-1", family: "memory" }] },
       },
     });
-    clickTab(host, "Why this fragment");
+    clickTab(host, "为什么用这段");
     expect(host.querySelector("[data-row-key='ent-1']")).not.toBeNull();
-    clickTab(host, "Memory");
+    clickTab(host, "记忆");
     expect(host.querySelector("[data-row-key='mem-1']")).not.toBeNull();
     expect(host.textContent).toContain("mem-1");
     expect(fakeActionLabels(host)).toEqual([]);
@@ -494,7 +498,7 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
         body: { status: "error", error: { code: "LOCAL_ORIGIN_HEADER_REJECTED", message: "denied" } },
       },
     });
-    clickTab(host, "Why this fragment");
+    clickTab(host, "为什么用这段");
     expect(host.querySelector("[data-region='opc-why-fragment']")?.textContent).toMatch(/session denied/i);
     expect(host.querySelector("[data-row-key='ent-1']")).toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
