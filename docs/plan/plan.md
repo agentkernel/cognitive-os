@@ -2346,7 +2346,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T04 — 成员加入落在真实 PlanRevision 槽
 
-- **status:** `done`. Claim ceiling `hypothesis`. PR [#331](https://github.com/agentkernel/cognitive-os/pull/331). D01 Dual Track + D02 guest `/ui/` J4. Unique next: T05/D02 and/or T06/D02 on freed guest `:48681`. Do not claim T07/T08.
+- **status:** `done`. Claim ceiling `hypothesis`. PR [#331](https://github.com/agentkernel/cognitive-os/pull/331). D01 Dual Track + D02 guest `/ui/` J4. Unique next: none — Phase 14 Remaining = 0 (`P14-T05`/`T06` done). Do not claim T07/T08.
 - **EVAL-016:** J4.
 - **依赖:** P14-T03。
 - **垂直切片:** D01：激活后 responsible slots 存在；write join 落席；failure-first：无槽仍假装加入、聊天 Approve 被拒。
@@ -2358,7 +2358,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P14-T05 — 从 Project chrome 走 2.0 Attempt / Runs / Outputs
 
-- **status:** `done` (2026-09-06, PR [#332](https://github.com/agentkernel/cognitive-os/pull/332)). Claim ceiling `hypothesis`. Validated `cf6d09e3` required CI [33991619494](https://github.com/agentkernel/cognitive-os/actions/runs/33991619494) **SUCCESS**. Do not claim T07/T08. T06 stays in-progress on PR [#333](https://github.com/agentkernel/cognitive-os/pull/333).
+- **status:** `done` (2026-09-06, merged PR [#332](https://github.com/agentkernel/cognitive-os/pull/332) at `main@d9cee39d`). Claim ceiling `hypothesis`. Validated `cf6d09e3` required CI [33991619494](https://github.com/agentkernel/cognitive-os/actions/runs/33991619494) **SUCCESS**. T06 is **done** (merged PR [#333](https://github.com/agentkernel/cognitive-os/pull/333) at `main@dbe188f5`). Phase 14 Remaining = 0. Do not claim T07/T08.
 - **EVAL-016:** J14 + empty Runs/Outputs.
 - **依赖:** P14-T03；P13-T02；P13-T04。
 - **垂直切片:** D01：Project chrome 启动 2.0 Attempt（非 `#/work`）；Runs/Outputs 读真实 ledger/产物或诚实 empty。
