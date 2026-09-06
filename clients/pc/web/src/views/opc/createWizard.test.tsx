@@ -142,7 +142,7 @@ function fillCharter(host: HTMLElement) {
     host.querySelector("textarea[name='charter']") as HTMLTextAreaElement,
     "owner charter body",
   );
-  clickButton(host, "Continue");
+  clickButton(host, "进入 ②");
 }
 
 function confirmProcessAxis(host: HTMLElement) {
@@ -316,9 +316,9 @@ describe("P14-T02 Dual Track create wizard", () => {
 
   it("does not leave create-init without a charter", async () => {
     const { host, root } = await renderWizard();
-    clickButton(host, "Continue");
+    clickButton(host, "进入 ②");
     expect(host.querySelector("[data-step='create-init']")).not.toBeNull();
-    expect(host.querySelector("[data-wizard-error='true']")?.textContent).toMatch(/Charter/);
+    expect(host.querySelector("[data-wizard-error='true']")?.textContent).toMatch(/这件事/);
     unmount(host, root);
   });
 });

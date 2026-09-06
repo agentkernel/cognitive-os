@@ -2413,7 +2413,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P15-T02 — Write Project / ①–⑤ Owner copy vs v9
 
-- **status:** `not-started` (registered 2026-09-06 by `DOC-P15-V9-BACKLOG`). Claim ceiling `hypothesis`.
+- **status:** `done` (2026-09-06). PR [#337](https://github.com/agentkernel/cognitive-os/pull/337). Guest pin `3528ba28` / SPA `index-V6QE_Yae.js`. D01 Dual Track **done**. D02 guest J1 **done**. Claim ceiling `hypothesis`.
 - **产品口径:** origin = daemon `/ui/`. v9 `CreateInit` / `CreateProcess` / `CreateMembers` / `CreateTest` / `CreateJoint` = design target. Not Charter/Process jargon walls.
 - **依赖:** `P15-T01` **done**; P14-T02/T03 done (do not reopen).
 - **垂直切片:** D01 Dual Track Owner copy + visual for ①–⑤; failure-first: fake Activate, jargon wall, Vite-as-product.
