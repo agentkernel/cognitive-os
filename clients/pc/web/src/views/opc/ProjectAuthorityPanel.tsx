@@ -9,10 +9,10 @@ export const NO_PROJECT_EMPTY =
   "This daemon reports no Project. That is not an empty Task list and not an accepted OPC chrome. No action is available until a Project exists as daemon authority.";
 
 export const TODAY_EMPTY_ONLY_CREATE =
-  "This daemon reports no Project. That is not an empty Task list, not a decision packet, and not an accepted OPC chrome. Start create opens the five-step wizard. The wizard does not mint a Project until owner-management preview and write.";
+  "还没有项目。从创建开始。向导在你确认并写入之前不会生成项目。";
 
 export const TODAY_INCOMPLETE_ONLY_CREATE =
-  "Create is not finished. Daily packets wait for activation. Today keeps only continue-create. This is not a decision packet, not a KPI wall, and not T13 empty chrome pretending packets are accepted.";
+  "创建还没完成。继续未完成的创建。日常决策包要等项目上线。";
 
 export const NO_FAKE_CHROME =
   "This slice does not paint Today packets, Team, Inbox, or Requires-backend controls.";
@@ -28,12 +28,14 @@ export function ProjectAuthorityPanel({
   surface,
   emptyBody,
   emptyAction,
+  leadHonesty = true,
   children,
 }: {
   projection: Projection<ProjectListRow[]>;
   surface: string;
   emptyBody?: string;
   emptyAction?: ReactNode;
+  leadHonesty?: boolean;
   children?: ReactNode;
 }) {
   if (projection.status === "loading") {
@@ -95,10 +97,12 @@ export function ProjectAuthorityPanel({
   }
   return (
     <>
-      <HonestyNote>
-        Rows are the daemon list. Cost and title stay as stated. Completing a
-        Project is not a model reply.
-      </HonestyNote>
+      {leadHonesty ? (
+        <HonestyNote>
+          Rows are the daemon list. Cost and title stay as stated. Completing a
+          Project is not a model reply.
+        </HonestyNote>
+      ) : null}
       {children}
     </>
   );

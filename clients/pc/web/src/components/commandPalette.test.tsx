@@ -124,7 +124,7 @@ describe("command palette (W10)", () => {
     await openPalette(host);
     const settings = [...host.querySelectorAll('[role="option"]')].find(
       (node) =>
-        (node.textContent ?? "").includes("Settings") && (node.textContent ?? "").includes("destination"),
+        (node.textContent ?? "").includes("设置") && (node.textContent ?? "").includes("destination"),
     );
     await act(async () => {
       (settings as HTMLElement | undefined)?.click();

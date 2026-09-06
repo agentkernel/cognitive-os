@@ -18,11 +18,11 @@ Today/Projects/Knowledge（Team 与 Inbox 不是一级导航）、Project/Role/E
 Personal-owned Conversation/Vault/Memory、Pi-backed Personal Assistant、preinstalled
 managed DSH、global→Project→employee→Task Provider/budget 与固定 Windows acceptance。
 MCP advanced/deferred；native mobile/E2E relay remote 属于 2.1。上述都不是 current
-implementation 或 Windows/DSH support。Canvas v9
-（`personal-20-opc-e2e-optimized-v9`）是**冻结设计原型**，不是产品。产品源是
-daemon `/ui/`。Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）
-在 `P12-T01`–`T09` 收口后是 **Now / hypothesis chrome**。权威仍是 P11
-walking skeleton。NVDA/200%/host-theme 仍 `not-run`。`P11-T15` 独立 /
+implementation 或 Windows/DSH support。产品源是 daemon `/ui/`。Canvas v9
+（`personal-20-opc-e2e-optimized-v9`）是该 `/ui/` 的**设计权威与完成目标**。
+Dual Track L1（Today/Projects/Knowledge + Settings + 右栏）
+在 `P12-T01`–`T09` 收口后是 **Now / hypothesis chrome**。诚实 / fail-closed 不变。
+NVDA/200%/host-theme 仍 `not-run`。`P11-T15` 独立 /
 not-started。单模块维护入口：
 [`00-maintenance-index.md`](../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 

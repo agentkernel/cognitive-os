@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <div className="cp-app cp-shell">
+    <div className="cp-app cp-shell" data-visual="v9-target">
       <a
         className="skip"
         href="#main"

@@ -8,7 +8,10 @@
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
 - Workshop record (verbatim Q&A + scheme snapshot):
   [journey-subtraction workshop 2026-08-28](personal-2.0-opc-journey-subtraction-workshop-2026-08-28.md)
-- Current interaction prototype:
+- Product origin: daemon `/ui/` (never Vite). Frozen canvas v9 is the
+  design authority and completion target for that `/ui/` (owner 2026-09-06).
+  Dual Track and fail-closed without authority remain.
+- Current interaction prototype (not shipped):
   [**personal-20-opc-e2e-optimized-v9**](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx)
 - Prior approved baseline (not current chrome; **not overwritten**):
   [personal-20-opc-e2e-optimized-v8](../../../clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v8.canvas.tsx)

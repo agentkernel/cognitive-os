@@ -171,20 +171,20 @@ afterEach(() => {
 describe("P11-T13 OPC IA chrome", () => {
   it("keeps L1 as Today / Projects / Knowledge and never Team or Inbox", () => {
     expect(PRIMARY_NAV.map(([, label]) => label)).toEqual([
-      "Today",
-      "Projects",
-      "Knowledge",
-      "Settings",
+      "今日",
+      "项目",
+      "知识",
+      "设置",
     ]);
     const { host, root } = renderAppAt("#/session");
     const nav = host.querySelector('nav[aria-label="Primary"]');
-    expect(nav?.textContent).toContain("Today");
-    expect(nav?.textContent).toContain("Projects");
-    expect(nav?.textContent).toContain("Knowledge");
-    expect(nav?.textContent).toContain("Settings");
+    expect(nav?.textContent).toContain("今日");
+    expect(nav?.textContent).toContain("项目");
+    expect(nav?.textContent).toContain("知识");
+    expect(nav?.textContent).toContain("设置");
     expect(nav?.textContent).not.toMatch(/Team|Inbox/);
     expect(host.querySelector("nav[aria-label='Primary'] a[href='#/settings']")?.textContent).toBe(
-      "Settings",
+      "设置",
     );
     expect(host.querySelector("[data-rail='assistant']")?.textContent).toMatch(/candidate-only/i);
     expect(
@@ -249,12 +249,12 @@ describe("P11-T13 Dual Track honesty (zero fake buttons)", () => {
   it("renders Today as empty, not a fake OPC chrome, when the daemon has no Project", async () => {
     const { host, root, calls } = await renderOpc("#/", EMPTY_LIST);
     expect(host.querySelector("[data-page='opc-today']")).not.toBeNull();
-    expect(host.querySelector("main h2")?.textContent).toBe("Today");
+    expect(host.querySelector("main h2")?.textContent).toBe("今日");
     expect(host.textContent).toContain(TODAY_EMPTY_ONLY_CREATE);
     expect(host.querySelector("[data-page='opc-today'] .cp-region")).toBeNull();
     expect(host.querySelector("[data-region='opc-hitl']")).toBeNull();
     expect(host.querySelector("[data-rail='assistant']")).toBeNull();
-    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/Start create/);
+    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/创建项目/);
     expect(fakeActionLabels(host)).toEqual([]);
     expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
       false,
@@ -341,7 +341,7 @@ describe("P11-T13 Dual Track honesty (zero fake buttons)", () => {
   it("shows the Today session gate without painting fake OPC chrome", () => {
     const { host, root } = renderAppAt("#/");
     expect(host.querySelector("[data-page='session-gate']")).not.toBeNull();
-    expect(host.querySelector("main h2")?.textContent).toBe("Today");
+    expect(host.querySelector("main h2")?.textContent).toBe("今日");
     expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });
@@ -369,11 +369,18 @@ describe("P11-T13 Dual Track daemon reads (fail-closed)", () => {
   it("does not claim Vite as the product origin on L1 or Settings", async () => {
     for (const hash of ["#/", "#/projects", "#/knowledge", "#/settings"]) {
       const { host, root } = await renderOpc(hash, EMPTY_LIST);
-      expect(host.textContent).toMatch(/daemon-served hash \/ui\//);
       expect(host.textContent).not.toMatch(/vite preview|vite dev server|localhost:5173/i);
       expect(fakeActionLabels(host)).toEqual([]);
       unmount(host, root);
     }
+    for (const hash of ["#/projects", "#/knowledge", "#/settings"]) {
+      const { host, root } = await renderOpc(hash, EMPTY_LIST);
+      expect(host.textContent).toMatch(/daemon-served hash \/ui\//);
+      unmount(host, root);
+    }
+    const today = await renderOpc("#/", EMPTY_LIST);
+    expect(today.host.querySelector("#main .cp-honesty")).toBeNull();
+    unmount(today.host, today.root);
   });
 
   it("announces pending HITL without Confirm when a Project exists", async () => {

@@ -34,7 +34,7 @@ sources:
   - path: personal/apps/kernel-server/src/personal/resource_manager.rs
   - path: core/crates/cognitive-kernel/src/lib.rs
     symbols: ["KERNEL_PORTS"]
-fingerprint: "sha256:363e3f6fcc5ad73fdc302be14a66222c1e15cd0f177791c0bba9590aeb41dad5"
+fingerprint: "sha256:24fb7272c366f6f4b2c69a8a27f43d3bff00df335acada507051b1c3c9a1df4b"
 non_claims:
   - The target architecture documents intent; this page tracks which pieces exist. Neither is Gate/release evidence.
 ---
@@ -101,12 +101,11 @@ authority.
 - UI is Today/Projects/Knowledge with bottom Settings and one persistent
   right conversation. Team and Inbox are not first-level destinations.
   Design-frozen current chrome (2026-08-30) is **CognitiveOS Personal
-  2.0.0** (os-personal 2.0.0). Canvas v9 is the frozen design prototype
-  (historical filename `personal-20-opc-e2e-optimized-v9`), not the
-  product. Product origin is daemon `/ui/`. Dual Track L1 is **Now /
-  hypothesis chrome** after `P12-T01`–`T09` closed (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)).
+  2.0.0** (os-personal 2.0.0). Product origin is daemon `/ui/`. Canvas v9 is the
+  design authority and completion target for that `/ui/` (historical filename
+  `personal-20-opc-e2e-optimized-v9`). Dual Track L1 is **Now / hypothesis chrome**. Honesty / fail-closed stay.
   Architecture chapter bodies no longer present Team/Inbox as 2.0.0 L1
-  (`DOC-P12-DEBT`). Authority remains the P11 walking skeleton. NVDA/200%/host-theme remain
+  (`DOC-P12-DEBT`). NVDA/200%/host-theme remain
   `not-run`. **Phase 13** (`P13-T01`–`T13`, registered in the formal plan on
   2026-09-02) carries the walking skeletons to prototype-grade product and
   design goals: P13-T02 real hosted-DSH Attempt loop (complete stdio broker),

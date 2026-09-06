@@ -2,6 +2,10 @@
 
 - Status: adopted target; implementation remains capability-gated
 - Current client: `clients/pc/web/`, daemon-served at `/ui/`
+- Owner 2026-09-06: product origin is daemon `/ui/` (never Vite). Frozen
+  canvas v9 is the **design authority and completion target** for that `/ui/`.
+  Dual Track and fail-closed without authority remain. Do not ship the
+  `.canvas.tsx` file.
 - Decision: [ADR-0059](../../../docs/adr/0059-personal-2-0-opc-project-runtime-and-memory-boundary.md)
 - Requirements:
   [OPC requirements analysis](personal-2.0-opc-requirements-analysis.md)
@@ -31,8 +35,8 @@
 
 | Boundary | UI truth |
 |---|---|
-| **Current implementation (Now)** | The delivered daemon-served UI has Linux-era Home, Work, Agents, Providers, Resources, Activity, and System surfaces with bounded real capabilities. |
-| **Adopted Personal 2.0 target** | Windows OPC shell with stable Today, Projects, and Knowledge anchors; bottom Settings; locked left / center / right columns; global Assistant outside Projects; Project group conversation always in the right column. |
+| **Current implementation (Now)** | Daemon `/ui/` IA is Today / Projects / Knowledge + Settings (Phase 14 journeys **done**). Visual tokens still catching up to v9 (`P15-T01` starts shell + Today). Linux 1.0 hashes are retired from Owner chrome. |
+| **Adopted Personal 2.0 target** | Frozen canvas v9 look and density on daemon `/ui/`; stable Today, Projects, and Knowledge anchors; bottom Settings; locked left / center / right columns; global Assistant outside Projects; Project group conversation always in the right column. |
 | **Requires-backend** | Project/Role/Member authority, Personal conversations/archive, typed canvas composition, Pi Assistant composition, hidden managed DSH, Routine/missed-run, contextual attention/approval, Vault ingestion/retrieval, Model Connections, capability acquisition, and OPC projections. |
 | **Requires-environment** | Windows host, background/tray, DSH sandbox, connector, and final OPC validation require qualified Windows-native routes not supplied by ordinary CI or this prototype. |
 

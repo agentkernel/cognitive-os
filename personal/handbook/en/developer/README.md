@@ -19,9 +19,8 @@ Personal-owned Conversation/Vault/Memory, hidden Pi Assistant engine,
 preinstalled managed DSH child, Provider/budget hierarchy and OPC UI. Every
 missing item is `Requires-backend`/`Requires-environment`, not implementation.
 MCP is advanced/deferred and native mobile/E2E relay remote is 2.1.
-Canvas v9 is the frozen design prototype, not the product. Product origin is
-daemon `/ui/`. Dual Track L1 is **Now / hypothesis chrome**. Authority remains
-the P11 walking skeleton. `P11-T15` is independent / not-started.
+Product origin is daemon `/ui/`. Canvas v9 is the design authority and
+completion target for that `/ui/`. Dual Track L1 is **Now / hypothesis chrome**.
 One-module OPC maintenance:
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).
 

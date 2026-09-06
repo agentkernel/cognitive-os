@@ -5,7 +5,7 @@
 - Status: **informative** / 非实现 / 非 support / 非 Gate
 - Change class: owner-directed post-P12 documentation alignment; no formal
   `P*-T*` claim; no `P11-T15` claim
-- Frozen design prototype (not the product): owner-approved canvas v9
+- Design authority and completion target (not the origin): owner-approved canvas v9
   (`clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx`)
 - Product origin: daemon-served `/ui/` (`clients/pc/web/` same-origin). Vite
   is not the product origin
@@ -20,7 +20,8 @@
 - HEAD at this rewrite: `origin/main` `bf5965f0614e2a3b05835f7bd3afefecf05dec6a`
 - Lease: `lease/personal/DOC-P12-ALIGN/docs-reconcile`
 - Evaluation routing: **OFF**. `PERSONAL-PERF-EVAL-015` closed.
-- Claim ceiling: `hypothesis`. Canvas v9 ≠ product. Dual Track chrome ≠
+- Claim ceiling: `hypothesis`. Product origin = daemon `/ui/`. Canvas v9 is
+  the design authority and target, not the origin. Dual Track chrome ≠
   Gate / release / Profile / Windows qualification / Agent-benefit.
   Walking-skeleton authority ≠ complete OPC acceptance.
 
@@ -87,7 +88,7 @@ Phase 13 / PRD；不领取 T15；不实现新 chrome。
 
 ### 1.1 本文做什么
 
-把 **frozen design prototype**（canvas v9 Scene）映射到 **post-P12** 事实：
+把 **design authority**（canvas v9 Scene）映射到 **post-P12** 事实：
 
 - 产品源 daemon-served `/ui/` 上已落地的 Dual Track hash（**Now /
   hypothesis chrome**）；
@@ -276,9 +277,9 @@ core 1.0.0 已定稿。权威在 **personal daemon**，合同在 `core/`。
 
 ## 6. v9 Scene 主映射表 / Scene → daemon map
 
-Canvas v9 仍是 **frozen design prototype**。daemon `/ui/` 上的 Dual Track
+Canvas v9 是 **design authority and completion target**（不是产品源）。daemon `/ui/` 上的 Dual Track
 hash 已是 **Now / hypothesis chrome**（`P11-T13` + `P12-T01`–`T09`）。
-权威仍是 P11 walking skeleton：无权威 → 诚实 empty / Requires-backend；
+诚实 / fail-closed 与公理不变：无权威 → 诚实 empty / Requires-backend；
 **零**假 Create / Activate / Approve。Linux 1.0 Home / Work / Agents /
 Resources / Activity / System 仍是 Advanced/secondary，不是 OPC L1。
 
@@ -582,5 +583,6 @@ T15 independent / not-started；canvas v9 **不是**产品；产品源 = daemon
 
 ---
 
-End of mapping. Informative only. Canvas v9 ≠ product. Dual Track chrome ≠
+End of mapping. Informative. Product origin = daemon `/ui/`. Canvas v9 is the
+design authority and completion target for that `/ui/`. Dual Track chrome ≠
 Gate / release. Authority remains the P11 walking skeleton.

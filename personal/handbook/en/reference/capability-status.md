@@ -32,7 +32,7 @@ sources:
   - path: personal/docs/architecture/x-twitter-connector.md
   - path: personal/crates/cognitive-store/src/x_connector.rs
     symbols: ["X_CONNECTOR_SCHEMA_V35", "XConnectorStore"]
-fingerprint: "sha256:3f2efaf4a89b32f77db5e17a825d6d80ffdb0426a658ea890256952296f21683"
+fingerprint: "sha256:139bea6808d97d714495e30300cc676378c178820341baf5c140a0f98f29fcff"
 non_claims:
   - Statuses are code+contract+test judgments at the recorded baseline, not Gate/release/Profile results and not the formal plan's task states.
 ---
@@ -80,7 +80,7 @@ and Agent requires independent qualification.
 | Current six-family resource projection/watch | implemented | management+task channels only; this is not the adopted MCP seventh family |
 | Agent lifecycle (Pi acquisition→sidecar) | implemented | — |
 | Non-Pi agents | designed | Codex fixture qualification only |
-| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level); Dual Track L1 is **Now / hypothesis chrome** on daemon `/ui/` after `P12-T01`–`T09` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)); canvas v9 is the frozen design prototype, not the product; NVDA/200%/host-theme `not-run`; **Phase 13** (`P13-T01`–`T13`, registered 2026-09-02) carries walking skeletons to prototype-grade + design goals; **Phase 14** (`P14-T01`–`T08`) closes the residual live-`/ui/` gap after EVAL-016 under `JOURNEY-BROWSER-SYNC-01`; `P11-T15` is the Phase 13 exit; one-module catalog [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md); Linux/WSL/CI/Canvas evidence does not transfer |
+| Personal 2.0 Windows OPC product | Requires-backend + Requires-environment | Today/Projects/Knowledge (Team and Inbox are not first-level); Dual Track L1 is **Now / hypothesis chrome** on daemon `/ui/` after `P12-T01`–`T09` (merged PR [#302](https://github.com/agentkernel/cognitive-os/pull/302)); product origin is daemon `/ui/`; canvas v9 is the design authority and completion target for that `/ui/`; NVDA/200%/host-theme `not-run`; **Phase 13** (`P13-T01`–`T13`, registered 2026-09-02) carries walking skeletons to prototype-grade + design goals; **Phase 14** (`P14-T01`–`T08`) closes the residual live-`/ui/` gap after EVAL-016 under `JOURNEY-BROWSER-SYNC-01`; **Phase 15** (`P15-T01`) applies v9 Owner chrome to `/ui/` shell/Today; `P11-T15` is the Phase 13 exit; one-module catalog [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md); Linux/WSL/CI/Canvas evidence does not transfer |
 | Project/Charter/Goal/Plan/Routine/Task/Attempt | Requires-backend | current Task authority is reusable, but Project activation, manager envelope, Routine/missed ledger and complete hierarchy do not exist |
 | Role Blueprint/Assignment/Digital Employee | Requires-backend | no complete authority/projection; employee identity must remain separate from runtime/process |
 | Pi-backed Personal Assistant | Requires-backend | Pi is the hidden candidate-only target engine; current Pi Shell/Linux qualification does not establish the OPC Assistant |

@@ -17,9 +17,7 @@ Personal 2.0 target 包含 Today/Projects/Knowledge（Team 与 Inbox 不是一�
 Digital Employee、Routine 与 preserved Attempt；Personal-owned Conversation/Vault/
 Memory；Pi-backed Personal Assistant；preinstalled managed DSH；Provider/budget
 hierarchy 与固定 Windows acceptance path。当前同源 `/ui/` Dual Track L1 是
-**Now / hypothesis chrome**。Canvas v9 是冻结设计原型，不是产品。产品源是
-daemon `/ui/`。权威仍是 P11 walking skeleton（无假 Create / Activate /
-Approve）。NVDA/200%/host-theme 仍 `not-run`。单模块维护入口：
+**Now / hypothesis chrome**。产品源是 daemon `/ui/`。Canvas v9 是该 `/ui/` 的设计权威与完成目标。诚实 / fail-closed 与公理不变。NVDA/200%/host-theme 仍 `not-run`。单模块维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 
 从这里开始：

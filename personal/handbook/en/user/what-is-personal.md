@@ -17,7 +17,7 @@ sources:
   - path: personal/docs/product/opc-product-model.md
 tests:
   - personal/apps/kernel-server/tests/p1_t04_personal_daemon.rs
-fingerprint: "sha256:f577deb6b725403e9fe69558cb5f72b7c06466507d7144b4a36b2ba5266ca56b"
+fingerprint: "sha256:48d4bbf64c545846e5af2067f12a2d856b1a979aa0b526a11864b153c797b04e"
 non_claims:
   - No Gate, release, Profile, Windows-parity, or agent-benefit claim; the Linux 1.0 target composition is owned by the formal plan.
 ---
@@ -94,11 +94,10 @@ Keep these two baselines separate:
 - **Deferred:** MCP remains an advanced seventh-family target but is not an OPC
   P0 dependency. Native mobile, device pairing and E2E relay remote begin in
   Personal 2.1.
-- **Frozen design prototype (not the product):** canvas
+- **Design authority (not the origin):** canvas
   `personal-20-opc-e2e-optimized-v9` under `clients/docs/design/opc-2.0/`.
   Product origin is daemon `/ui/`. Dual Track L1 is **Now / hypothesis
-  chrome** after `P12-T01`–`T09` closed. Authority remains the P11 walking
-  skeleton. Create order is ① project → ② process → ③ members → ④ test → ⑤
+  chrome** after `P12-T01`–`T09` closed. Honesty / fail-closed stay. Create order is ① project → ② process → ③ members → ④ test → ⑤
   joint. Maintain one module or flow from
   [`clients/docs/design/opc-2.0/00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md);
   do not treat that catalog as complete `/ui/` acceptance. Owner prototype

@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:e80695a6b0cf4ad6b683631bd6e0fd1cd03dc4250fd51d4faf15dcfe5fca5813"
+fingerprint: "sha256:6b86d87c14560e34923c2ba47e3e6ae5b35392ab3ff105f9ee4795eed8e85dc3"
 non_claims:
   - 本页用于建立概念，不构成 release、Gate、Profile 或 agent 收益声明。
   - 调度器驱动的完全自主执行与独立验证仍为 partial；见 Task 与执行。
@@ -84,9 +84,9 @@ Owner
 ```
 
 UI 是 Today / Projects / Knowledge、底部 Settings 与持久右侧会话。Team 与 Inbox
-不是一级导航。Canvas v9 是冻结设计原型；文件名可保留
-`personal-20-opc-e2e-optimized-v9`。产品源是 daemon `/ui/`。Dual Track L1 是
-**Now / hypothesis chrome**。权威仍是 P11 walking skeleton。创建顺序为项目 → 流程 →
+不是一级导航。产品源是 daemon `/ui/`。Canvas v9 是该 `/ui/` 的设计权威与完成目标；文件名可保留
+`personal-20-opc-e2e-optimized-v9`。Dual Track L1 是
+**Now / hypothesis chrome**。诚实 / fail-closed 不变。创建顺序为项目 → 流程 →
 成员 → 分环测试 → 联调。单模块 PM/UI 维护入口：
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md)。
 Pi 是 hidden、candidate-only 的 Assistant engine。DSH 是隐藏托管 Member 执行引擎

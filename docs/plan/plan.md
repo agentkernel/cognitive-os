@@ -2400,6 +2400,72 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 - **validation environment:** 同 T02 + `JOURNEY-BROWSER-SYNC-01`。
 - **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`。
 
+### P15-T01 — v9 design authority on daemon `/ui/` (shell/Today first slice)
+
+- **status:** `done` (2026-09-06). Owner 「授权，执行」. PR [#335](https://github.com/agentkernel/cognitive-os/pull/335). Claim ceiling `hypothesis`.
+- **产品口径:** origin = daemon `/ui/` (not Vite, not `.canvas.tsx`). Canvas v9 = design authority and completion target for `/ui/` (IA + visual + Owner-facing copy). Journey oracle remains user-journeys + v9. Honesty / fail-closed / A1–A5 unchanged.
+- **依赖:** owner 2026-09-06；Phase 14 done；P13-T12 visual spec；冻结 v9 只读。
+- **垂直切片:** D01：文档口径 + Dual Track shell/Today Owner 文案 + no-stack tokens；failure-first：假 Activate、未认证 fail-closed、Twitter P0 hero。
+  D02：真实 `/ui/` J0/J2/J10 + **`JOURNEY-BROWSER-SYNC-01`**。
+- **不可做:** 复制 v9 mock complete-job；Twitter/X P0；假 Activate；假数据当权威；Vite 当产品；重开 Phase 14；一次 19 模块；改 AXIOMS.md；覆盖 canvas 文件。
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`。
+- **硬门:** Phase 14 六条 inherited + `JOURNEY-BROWSER-SYNC-01`。
+
+### P15-T02 — Write Project / ①–⑤ Owner copy vs v9
+
+- **status:** `not-started` (registered 2026-09-06 by `DOC-P15-V9-BACKLOG`). Claim ceiling `hypothesis`.
+- **产品口径:** origin = daemon `/ui/`. v9 `CreateInit` / `CreateProcess` / `CreateMembers` / `CreateTest` / `CreateJoint` = design target. Not Charter/Process jargon walls.
+- **依赖:** `P15-T01` **done**; P14-T02/T03 done (do not reopen).
+- **垂直切片:** D01 Dual Track Owner copy + visual for ①–⑤; failure-first: fake Activate, jargon wall, Vite-as-product.
+  D02 guest `/ui/` J1 + **`JOURNEY-BROWSER-SYNC-01`**.
+- **不可做:** mock complete-job; Twitter/X P0; fake Activate; Vite as product; weaken A1–A5; cover canvas.
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`.
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`.
+
+### P15-T03 — Projects list/detail vs v9
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **产品口径:** v9 `ProjectsScene` / `ProjectDetailScene` (plus members/runs/outputs visual) = design target.
+- **依赖:** `P15-T01`; P14-T03/T04/T05 done (do not reopen functional cards).
+- **垂直切片:** D01 Dual Track list/detail density and Owner copy; failure-first: `#/work` as 2.0, clickable Run without authority.
+  D02 guest `/ui/` J3 + **`JOURNEY-BROWSER-SYNC-01`**.
+- **不可做:** Linux 1.0 Work chrome; fake data-as-authority; Twitter P0.
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`.
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`.
+
+### P15-T04 — Knowledge vs v9
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **产品口径:** v9 `KnowledgeScene` files / Why this fragment / import visual.
+- **依赖:** `P15-T01`; P14-T08 done (do not reopen IA).
+- **垂直切片:** D01 Dual Track visual; failure-first: file-as-authority, secret ingest.
+  D02 guest `/ui/` J5 + **`JOURNEY-BROWSER-SYNC-01`**.
+- **不可做:** Obsidian bundle; HTTP-paste as v9; secret ingest.
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`.
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`.
+
+### P15-T05 — Settings / Model Connections vs v9
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **产品口径:** v9 `SettingsScene` / Model Connections visual. L1 stays `role=link`. 9×9 stays hidden.
+- **依赖:** `P15-T01`; P14-T07 done (do not reopen IA).
+- **垂直切片:** D01 Dual Track visual; failure-first: fake Connect, 9×9 dump, raw secret in DOM.
+  D02 guest `/ui/` J8/J12 + **`JOURNEY-BROWSER-SYNC-01`**.
+- **不可做:** fake Connect; SecretStore bypass; state-lab as L1.
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`.
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`.
+
+### P15-T06 — remaining layout tokens (176 / 22 / 44 / ~1100)
+
+- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **产品口径:** v9 `.shell` `min-width: 1100px`; `grid-template-columns: 176px minmax(576px, 1fr) 348px`; 22px titles; 44px hits. Remaining Owner honesty notes demoted to secondary `details`.
+- **依赖:** `P15-T02`..`T05` (surface copy first so this card owns `tokens.css` / `app.css` shell bands).
+- **垂直切片:** D01 Dual Track remaining tokens; failure-first: stacked columns, Twitter P0, Vite-as-product.
+  D02 guest `/ui/` J0 layout + **`JOURNEY-BROWSER-SYNC-01`**.
+- **不可做:** revert T01 `--cp-shell-min-width`; rewrite AXIOMS.md; overwrite canvas.
+- **validation environment:** Dual Track TS + required CI + guest `/ui/` + `JOURNEY-BROWSER-SYNC-01`.
+- **硬门:** Phase 14 六条 + `JOURNEY-BROWSER-SYNC-01`.
+
 ---
 
 # 12. 机器可读 typed dependency 图
@@ -2473,6 +2539,11 @@ phases:
     acceptance_requires: [P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
     claim_boundary: HYPOTHESIS_NOT_GATE_NOT_RELEASE_NOT_EVAL_CAMPAIGN
     notes: JOURNEY_BROWSER_SYNC_01_ON_EACH_CLOSED_JOURNEY
+  P15:
+    implementation_requires: [P15-T01]
+    acceptance_requires: [P15-T01, P15-T02, P15-T03, P15-T04, P15-T05, P15-T06]
+    claim_boundary: HYPOTHESIS_NOT_GATE_NOT_RELEASE_V9_DESIGN_AUTHORITY_UI_ORIGIN
+    notes: ORIGIN_DAEMON_UI_V9_DESIGN_TARGET
 
 linux_1_0_active_tracks:
   RUNTIME_SPINE: [P1-T09, P2-T01, P2-T02, P2-T03, P2-T04, P2-T05, P2-T06, P2-T07, P2-T08, P5-T01, P5-T02, P5-T05]
@@ -2489,6 +2560,7 @@ post_1_0:
   FROZEN_PROTOTYPE_UI_COMPLETENESS: [P12-T01, P12-T02, P12-T03, P12-T04, P12-T05, P12-T06, P12-T07, P12-T08, P12-T09]
   PERSONAL_2_0_0_COMPLETION: [P13-T01, P13-T02, P13-T03, P13-T04, P13-T05, P13-T06, P13-T07, P13-T08, P13-T09, P13-T10, P13-T11, P13-T12, P13-T13, P11-T15]
   PERSONAL_2_0_0_PROTOTYPE_GAP_CLOSE: [P14-T01, P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
+  PERSONAL_2_0_0_V9_DESIGN_AUTHORITY: [P15-T01, P15-T02, P15-T03, P15-T04, P15-T05, P15-T06]
 
 tasks:
   P0-T01: { implementation_requires: [] }
@@ -2784,6 +2856,24 @@ tasks:
   P14-T08:
     implementation_requires: [P14-T01, P13-T07, P12-T07]
     acceptance_requires: [KNOWLEDGE_V9_FILES_WHY_IMPORT, JOURNEY_BROWSER_SYNC_01]
+  P15-T01:
+    implementation_requires: [P14-T01, P14-T02, P14-T03, P14-T04, P14-T05, P14-T06, P14-T07, P14-T08]
+    acceptance_requires: [V9_DESIGN_AUTHORITY_DOCS, SHELL_TODAY_OWNER_COPY, NO_STACK_TOKENS, JOURNEY_BROWSER_SYNC_01]
+  P15-T02:
+    implementation_requires: [P15-T01, P14-T02, P14-T03]
+    acceptance_requires: [CREATE_WRITE_OWNER_COPY_VS_V9, JOURNEY_BROWSER_SYNC_01]
+  P15-T03:
+    implementation_requires: [P15-T01, P14-T03, P14-T04, P14-T05]
+    acceptance_requires: [PROJECTS_LIST_DETAIL_VS_V9, JOURNEY_BROWSER_SYNC_01]
+  P15-T04:
+    implementation_requires: [P15-T01, P14-T08]
+    acceptance_requires: [KNOWLEDGE_VS_V9_VISUAL, JOURNEY_BROWSER_SYNC_01]
+  P15-T05:
+    implementation_requires: [P15-T01, P14-T07]
+    acceptance_requires: [SETTINGS_MODEL_CONNECTIONS_VS_V9, JOURNEY_BROWSER_SYNC_01]
+  P15-T06:
+    implementation_requires: [P15-T02, P15-T03, P15-T04, P15-T05]
+    acceptance_requires: [LAYOUT_TOKENS_176_22_44_1100, JOURNEY_BROWSER_SYNC_01]
 
 # Linux 1.0 critical path 汇合 Runtime Spine、Resource Value、managed Pi sidecar
 # 和 Product Operability。B06/B07/B10/B11、P6、P7-T05 与 P7-T07 不阻塞。

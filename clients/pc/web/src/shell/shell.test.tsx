@@ -38,7 +38,7 @@ describe("shell accessibility and structure (W1)", () => {
   it("marks the current nav item with aria-current and others without", () => {
     const { host, root } = renderApp("#/projects");
     const current = host.querySelector('nav[aria-label="Primary"] a[aria-current="page"]');
-    expect(current?.textContent).toBe("Projects");
+    expect(current?.textContent).toBe("项目");
     const all = [...host.querySelectorAll('nav[aria-label="Primary"] a')];
     expect(all.length).toBe(4);
     expect(all.filter((a) => a.hasAttribute("aria-current")).length).toBe(1);

@@ -28,7 +28,7 @@ tests:
   - personal/apps/kernel-server/tests/p2_t02_resource_projection.rs
   - personal/apps/kernel-server/tests/p2_t02_task_api_watch.rs
   - personal/apps/kernel-server/tests/p2_t28_end_to_end_journey.rs
-fingerprint: "sha256:e80695a6b0cf4ad6b683631bd6e0fd1cd03dc4250fd51d4faf15dcfe5fca5813"
+fingerprint: "sha256:6b86d87c14560e34923c2ba47e3e6ae5b35392ab3ff105f9ee4795eed8e85dc3"
 non_claims:
   - This is an orientation page, not a release, Gate, Profile, or agent-benefit claim.
   - Fully autonomous scheduler-driven execution and independent verification remain partial; see Tasks and execution.
@@ -86,11 +86,10 @@ Owner
 ```
 
 The UI is Today / Projects / Knowledge, bottom Settings, and a persistent
-right conversation. Team and Inbox are not first-level destinations. Canvas
-v9 is the frozen design prototype; the file may keep
-`personal-20-opc-e2e-optimized-v9` as a historical filename. Product origin
-is daemon `/ui/`. Dual Track L1 is **Now / hypothesis chrome**. Authority
-remains the P11 walking skeleton. Create order is
+right conversation. Team and Inbox are not first-level destinations. Product
+origin is daemon `/ui/`. Canvas v9 is the design authority and completion
+target for that `/ui/`; the file may keep
+`personal-20-opc-e2e-optimized-v9` as a historical filename. Dual Track L1 is **Now / hypothesis chrome**. Honesty / fail-closed stay. Create order is
 project → process → members → per-stage test → joint. One-module PM/UI
 maintenance starts at
 [`00-maintenance-index.md`](../../../../clients/docs/design/opc-2.0/00-maintenance-index.md).

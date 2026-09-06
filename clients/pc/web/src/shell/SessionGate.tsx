@@ -1,4 +1,5 @@
 import { useContext, useState, type FormEvent, type ReactNode } from "react";
+import { Link } from "react-router-dom";
 import { issueChannelSession } from "../api";
 import { clearSession, rememberBearer, rememberPrincipal, sessionHasChannel } from "../session";
 import { SessionTick } from "./SessionScope";
@@ -95,11 +96,17 @@ export function SessionGate({
         <header className="cp-page-head">
           <h2>{title}</h2>
           <p className="cp-lede">
-            This page needs a {channel} session. Sidebar navigation still changes the view.
+            Session denied until this daemon accepts a bootstrap secret. Sidebar
+            navigation still changes the view.
           </p>
         </header>
         <p className="cp-warn" role="status">
           Paste this daemon&apos;s bootstrap secret — not a Provider LLM API key.
+        </p>
+        <p>
+          <Link className="cp-button cp-button--primary" to="/session">
+            Open Session
+          </Link>
         </p>
         <SessionForm />
       </section>

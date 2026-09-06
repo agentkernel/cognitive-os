@@ -166,7 +166,7 @@ describe("P12-T05 Today decision packets (Dual Track)", () => {
     expect(host.querySelector("[data-packet]")).toBeNull();
     expect(host.textContent).toContain(TODAY_EMPTY_ONLY_CREATE);
     expect(host.textContent).not.toMatch(/weekly report/i);
-    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/Start create/);
+    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/创建项目/);
     expect(host.querySelector("[data-rail='assistant']")).toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     expect(calls.some((call) => call.pathname === "/management/project/v1/pending-previews")).toBe(
@@ -183,7 +183,7 @@ describe("P12-T05 Today decision packets (Dual Track)", () => {
     expect(host.querySelector("[data-region='opc-hitl']")).toBeNull();
     expect(host.textContent).toContain(TODAY_INCOMPLETE_ONLY_CREATE);
     expect(host.querySelector("[data-row-key='proj-draft']")).not.toBeNull();
-    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/Continue create/);
+    expect(host.querySelector("a[href='#/projects/new']")?.textContent).toMatch(/继续未完成的创建/);
     expect(host.querySelector("[data-rail='assistant']")).toBeNull();
     expect(host.textContent).not.toMatch(/weekly report/i);
     expect(fakeActionLabels(host)).toEqual([]);
@@ -252,7 +252,7 @@ describe("P12-T05 Today decision packets (Dual Track)", () => {
     });
     expect(host.querySelector("[data-surface='today']")).not.toBeNull();
     expect(host.querySelector("[data-surface='today-incomplete']")).toBeNull();
-    expect(host.textContent).not.toMatch(/Continue create/i);
+    expect(host.textContent).not.toMatch(/继续未完成的创建/);
     expect(host.querySelector("[data-region='opc-today-leftover-drafts']")).not.toBeNull();
     expect(fakeActionLabels(host)).toEqual([]);
     expect(

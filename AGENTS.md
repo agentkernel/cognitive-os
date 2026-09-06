@@ -130,7 +130,7 @@ release/production promotion、force push、破坏性操作和超出任务的系
 - `enterprise/`：设计层；未经 owner 按 [VERSION-1.0.0.md](enterprise/docs/VERSION-1.0.0.md) §4
   激活不得实现。
 - `clients/`：自有治理；Web UI 唯一实现路径 `clients/pc/web/`；产品源是 daemon 提供的
-  `/ui/`，Vite preview 不是产品源。`clients/legacy/cognitiveos-console/` 只维护台账。
+  `/ui/`，Vite preview 不是产品源。Canvas v9 是该 `/ui/` 的设计权威与完成目标（只读，不覆盖）。`clients/legacy/cognitiveos-console/` 只维护台账。
 - `docs/governance/`、`docs/plan/`、`docs/checkpoints/`：共享治理、正式计划、快照与移交。
   closure/report 沿用 `docs/checkpoints/<YYYY-MM-DD>-personal-<task-id>-{report,closure}.md`。
 - `personal-blog/` 是独立仓库，禁止推入本仓库；`artifacts/` 已 gitignore，其中

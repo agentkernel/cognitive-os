@@ -3,13 +3,15 @@
 # 个人 2.0.0 OPC 视觉 UI 规格（daemon `/ui/`）
 
 - Status: **informative** specification / 非实现 / 非 support / 非 Gate
-- Formal task: `P13-T12/D01` (documentation-only Delivery Slice). `P13-T12/D02`
-  executes the rendered qualification; this document only says what "correct"
-  looks like and how to judge it.
+- Formal task: `P13-T12/D01` wrote this specification (documentation-only).
+  `P13-T12/D02` recorded rendered cells and did **not** patch CSS. Owner
+  2026-09-06 (`P15-T01`) **applies** this specification to daemon `/ui/`:
+  frozen canvas v9 is the design authority and completion target; product
+  origin remains `/ui/`. The P13-T12 "no CSS" sentence does not forbid Phase 15.
 - Change class: `implementation-only` documentation — the product contract,
   the IA and the machine contracts are unchanged; nothing here adds a route,
   DTO, state, or authority.
-- Frozen design prototype (not the product): owner-approved canvas v9
+- Design authority and completion target (not the origin): owner-approved canvas v9
   `clients/docs/design/opc-2.0/personal-20-opc-e2e-optimized-v9.canvas.tsx`
   (read only; never regenerated; v8 untouched).
 - Product origin: daemon-served `/ui/` (`clients/pc/web/`). Vite preview is not
@@ -18,9 +20,10 @@
   (`--cp-*` namespace) and the seven-category state system in
   `clients/pc/web/src/state/stateMap.ts`. **This document does not create a
   second design system, a second token namespace, or a parallel canvas.** It
-  expresses every rule against existing token names; the few additions it
-  needs are listed once in §12 as *proposed* and are not applied to CSS by
-  this slice.
+  expresses every rule against existing token names. `P15-T01` applies the
+  type-scale (`--cp-size-body` 14px, `--cp-size-headline` 15px) and
+  no-stack (`--cp-shell-min-width`) tokens on daemon `/ui/`; remaining §12
+  tokens stay proposed.
 - Upstream that wins on conflict: [AXIOMS](../../../docs/governance/AXIOMS.md)
   → product docs ([web-ui-design](../product/web-ui-design.md),
   [personal-2.0-scope](../product/personal-2.0-scope.md) §3.1–§3.6,
@@ -38,7 +41,9 @@
   [legacy 24 visual direction](../../../clients/docs/design/legacy-control-plane-20260827/24-control-plane-visual-direction.md).
 - Companion: [v9 module-by-module comparison checklist](personal-2.0-opc-v9-ui-comparison-checklist.md)
   (the per-module judgement sheet D02 fills in).
-- Lease: `lease/personal/P13-T12/visual-spec`. Claim ceiling `hypothesis`.
+- Lease: `lease/personal/P15-T01/v9-design-authority-shell` (applies this
+  specification). `P13-T12/visual-spec` wrote it and is closed.
+  Claim ceiling `hypothesis`.
 - Non-claims: nothing here proves rendered behaviour, contrast, NVDA
   announcement, 200% layout, Windows native chrome, usability, Gate, release,
   Profile, or `P11-T15` acceptance. D02 cell judgements live in the companion
@@ -81,7 +86,8 @@ and keyboard order; motion and reduced motion; the nine State Lab states
 Knowledge + bottom Settings; Team and Inbox are not L1; HITL only on the
 Project canvas with a Today deep link; `state-lab` under Settings → Advanced,
 hidden by default); the Dual Track hashes of the mapping §6.0; copy locale
-(see §13); backend facts; any CSS or TSX edit; canvas regeneration.
+(see §13); backend facts; canvas regeneration. CSS/TSX application is
+`P15-T01` and later Phase 15 slices, not P13-T12.
 
 ---
 
@@ -118,9 +124,9 @@ Families and scale are the existing tokens; **no new scale is introduced**.
 | UI text | `--cp-font-text` | `-apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", system-ui, sans-serif` | everything by default; Windows renders Segoe UI |
 | Authority data (ids, digests, cursors, exact counts, daemon enum words, HTTP paths) | `--cp-font-mono` | `"SF Mono", "Cascadia Mono", ui-monospace, …` | `.cp-mono`, `.cp-factgrid dd`, `.cp-chip`, `.cp-strip` |
 | Space title (one per page: 今日 / 项目列表 / 项目详情 / 成员管理 / 运行管理 / 产出管理 / 知识 / 设置 / 创建项目 · ①–⑤) | `--cp-size-title1` · `--cp-leading-title` · `--cp-track-title` | 22 px / 1.15 / −0.02 em, weight 600 | `.cp-page-head h2` |
-| Detail object name (Project name in 详情 header, Member name in 成员配置 header, decision packet title, current-initialisation title in ③) | `--cp-size-title2` | 17 px, weight 600 | `.cp-detail-title` |
-| Section heading inside a work surface (岗位名单 / 这一环 / 将做什么 / 已验收产出 / 模型连接 …) | `--cp-size-headline` · `--cp-leading-headline` · `--cp-track-tight` | 13 px / 1.3 / −0.015 em, weight 600 | `.cp-section-title`, `.cp-stateview h3`, `.cp-rail h2` |
-| Body / form text | `--cp-size-body` · `--cp-leading-body` | 13 px / 1.45, weight 400 | default |
+| Detail object name (Project name in 详情 header, Member name in 成员配置 header, decision packet title, current-initialisation title in ③) | `--cp-size-title2` | 20 px, weight 600 | `.cp-detail-title` |
+| Section heading inside a work surface (岗位名单 / 这一环 / 将做什么 / 已验收产出 / 模型连接 …) | `--cp-size-headline` · `--cp-leading-headline` · `--cp-track-tight` | 15 px / 1.3 / −0.015 em, weight 600 | `.cp-section-title`, `.cp-stateview h3`, `.cp-rail h2` |
+| Body / form text | `--cp-size-body` · `--cp-leading-body` | 14 px / 1.45, weight 400 | default |
 | Dense rows (tables, lists, ledgers, run counts) | `--cp-size-row` · `--cp-leading-row` | 12.5 px / 1.3 | `.cp-table`, `.cp-factgrid`, `.cp-receipt`, `.cp-honesty` |
 | Labels, state words, reasons, timestamps, captions | `--cp-size-label` · `--cp-track-label` | 11 px / +0.01 em, weight 500 (labels) or 400 (reasons) | `.cp-field > span`, `.cp-table th`, `.cp-reason`, `.cp-chip`, `.cp-strip` |
 | Large numerals (Today counts, run counts) | `--cp-size-title2` + `font-variant-numeric: tabular-nums` | 17 px tabular | run-count strongs; v9 draws 20 px — the token scale wins (§13-b) |
@@ -615,7 +621,7 @@ collapsed by default for traces, diagnostics and `state-lab`.
 
 | Proposed token | Value | Why | Status |
 |---|---|---|---|
-| `--cp-shell-min-width` | `1100px` | makes the narrow-window horizontal-scroll rule (§6.2) a single measurable number; v9 `.shell { min-width: 1100px }` | **proposed** |
+| `--cp-shell-min-width` | `1100px` | makes the narrow-window horizontal-scroll rule (§6.2) a single measurable number; v9 `.shell { min-width: 1100px }` | **applied (`P15-T01`)** |
 | `--cp-layout-side` / `--cp-layout-side-narrow` | `232px` / `200px` | name the two side-column bands already hard-coded in `app.css` | **proposed** |
 | `--cp-layout-rail` / `--cp-layout-rail-narrow` | `280px` / `240px` | name the two rail bands already hard-coded | **proposed** |
 | `--cp-layout-main-min` | `576px` | main column floor inside the locked grid (v9) | **proposed** |
@@ -633,8 +639,8 @@ No new hue, no new type size, no new spacing step is proposed. The
 
 | # | Observation | Sources | Resolution rule applied here |
 |---|---|---|---|
-| a | `app.css` `@media (max-width: 1279px)` stacks strip / side / main / rail and turns the nav into a top tab strip; the legacy design system ([legacy 11 §7](../../../clients/docs/design/legacy-control-plane-20260827/11-control-plane-design-system.md)) also allows stacking below 1280 px. Product docs, scope §3.1, 09 and v9 require **no stacking, horizontal scroll**. | `app.css` 1098–1145; legacy 11 §7; scope §3.1; 09 | Upstream product docs win: §6.2 rule is no-stack. Current CSS is non-conforming; D02 will record the narrow / 200% cells against §6.2. No P13 card currently owns the CSS change — flagged in the running report. |
-| b | v9 base type is 14 px / h3 15 px / numerals 20 px; `tokens.css` is 13 px body / 13 px headline / 17 px title2. | v9 CSS; `tokens.css` | Tokens are the design system of record; the prototype is not a pixel replica (Phase 13 boundary). |
+| a | `app.css` `@media (max-width: 1279px)` stacked strip / side / main / rail. | `app.css`; scope §3.1; 09 | Upstream product docs win: §6.2 no-stack. **`P15-T01` applies `--cp-shell-min-width: 1100px` and removes the 1279 stacking query.** |
+| b | v9 base type is 14 px / h3 15 px / numerals 20 px; prior `tokens.css` was 13 px body. | v9 CSS; `tokens.css` | **`P15-T01` adopts the v9 type scale on `--cp-size-body` / headline / title2.** Tokens remain the single `--cp-*` namespace. |
 | c | v9 focus ring 3 px; `app.css` 2 px. | v9 `:focus-visible`; `app.css` 49–53 | Token rule (2 px) kept; `--cp-focus-width` proposed for one measurable value. |
 | d | v9 shell bands 176 / minmax(576,1fr) / 348 at `min-width: 1100`; `app.css` 232 / fluid / 280 (200 / 240 below 1440). | v9 `.shell`; `app.css` 68–74, 1082 | `app.css` bands kept (legacy 11 §3 sidebar 232, inspector 280–400); only the 1100 px minimum and the 576 px main floor are adopted (§12). |
 | e | [web-ui-design §4](../product/web-ui-design.md) lists design routes (`/today`, `/projects/:id/setup`, `/settings/model-connections` …); `/ui/` hashes are `#/`, `#/projects/new`, `#/settings` … | web-ui-design §4; mapping §6.0 | web-ui-design already declares them "design routes, not SPA claims"; the mapping §6.0 hashes are the checklist's route column. |
@@ -659,5 +665,6 @@ pass, and required CI is green on the merged head. It creates no rendered,
 contrast, NVDA, 200%, Windows, Gate, release or T15 claim; those are
 `P13-T12/D02`, `P13-T13` and `P11-T15`.
 
-End of specification. Informative only. Canvas v9 ≠ product. `/ui/` chrome ≠
-Gate / release. Authority remains the daemon.
+End of specification. Informative. Product origin = daemon `/ui/`. Canvas v9 is
+the design authority and completion target for that `/ui/`. Authority remains
+the daemon.

@@ -6,10 +6,10 @@ import { NavLink } from "react-router-dom";
  * (P14-T07); leftover tests keep them via LinuxLegacyApp.
  */
 export const PRIMARY_NAV = [
-  ["/", "Today"],
-  ["/projects", "Projects"],
-  ["/knowledge", "Knowledge"],
-  ["/settings", "Settings"],
+  ["/", "今日"],
+  ["/projects", "项目"],
+  ["/knowledge", "知识"],
+  ["/settings", "设置"],
 ] as const;
 
 /** Retired Dual Track hashes — product App 404s these; leftover suites keep them. */
@@ -40,7 +40,7 @@ export function PrimaryNav({
         <span className="cp-brand-mark" aria-hidden="true" />
         <div>
           <h1>CognitiveOS Personal</h1>
-          <p>Daemon client · not an authority writer</p>
+          <p>个人</p>
         </div>
       </div>
       <nav aria-label="Primary">
@@ -68,7 +68,7 @@ export function PrimaryNav({
             ⌘K
           </button>
         </p>
-        <p>Unknown is a value. Nothing here is inferred.</p>
+        <p className="cp-quiet">Command palette</p>
       </div>
     </div>
   );
