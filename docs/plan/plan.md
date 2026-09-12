@@ -2446,7 +2446,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P15-T05 — Settings / Model Connections vs v9
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `in-progress`. Claim ceiling `hypothesis`.
 - **产品口径:** v9 `SettingsScene` / Model Connections visual. L1 stays `role=link`. 9×9 stays hidden.
 - **依赖:** `P15-T01`; P14-T07 done (do not reopen IA).
 - **垂直切片:** D01 Dual Track visual; failure-first: fake Connect, 9×9 dump, raw secret in DOM.

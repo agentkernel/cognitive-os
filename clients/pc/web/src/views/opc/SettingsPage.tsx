@@ -54,7 +54,7 @@ const TEMPLATES = [
   { id: "openai", label: "OpenAI" },
   { id: "anthropic", label: "Anthropic" },
   { id: "deepseek", label: "DeepSeek" },
-  { id: "custom", label: "Custom URL / compatible" },
+  { id: "custom", label: "自定义" },
 ] as const;
 
 export type SettingsDiagnostics = {
@@ -126,11 +126,11 @@ function notificationsPath(homeId: string): string {
 }
 
 /**
- * Settings — Model Connections through SecretStore, retractable
+ * Settings — 设置 / 模型连接 through SecretStore, retractable
  * 「本周不再问」, CloseBackgroundDialog, notification/recovery groups,
- * collapsed diagnostics, and hidden state-lab (P13-T08 / P14-T07) on daemon `/ui/`.
- * Chat cannot mint. Unknown usage is never 0. No `/providers` detour.
- * Linux 1.0 Home/Work/Agents/Providers hashes are retired (No such route).
+ * collapsed diagnostics, and hidden state-lab (P13-T08 / P14-T07 / P15-T05)
+ * on daemon `/ui/`. Chat cannot mint. Unknown usage is never 0. No `/providers`
+ * detour. Linux 1.0 Home/Work/Agents/Providers hashes are retired (No such route).
  */
 export function SettingsPage() {
   const [params] = useSearchParams();
@@ -191,14 +191,14 @@ export function SettingsPage() {
   return (
     <section data-page="opc-settings">
       <PageHeader
-        title="Settings"
-        lede="Model Connections, retractable don't-ask-this-week, close-background, and recovery facts. Not Team. Not member budget."
+        title="设置"
+        lede="连接模型 · 收回本周不再问 · 通知恢复。无账单、无引擎商店、无收件箱。"
       />
-      <HonestyNote>
-        Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        Member-level budget hard-stop is 2.1 / Deferred. Connection usage unknown
-        is never 0. StandingApprovalPolicy is a time-box, not a permanent Don't
-        ask.         Chat cannot mint. CloseBackground uses GET host/v1/status then POST
+      <HonestyNote placement="secondary">
+        Product origin is daemon-served hash /ui/. Member-level budget hard-stop
+        is 2.1 / Deferred. Connection usage unknown is never 0.
+        StandingApprovalPolicy is a time-box, not a permanent Don't ask. Chat
+        cannot mint. CloseBackground uses GET host/v1/status then POST
         close.request. Native close/host/SecretStore E2E is not-run. Advanced
         diagnostics and state-lab stay hidden by default. Linux 1.0 Home /
         Work / Agents / Providers hashes are retired; they render No such
@@ -309,20 +309,19 @@ function ModelConnectionsForm({ onConnected }: { onConnected: () => Promise<void
 
   return (
     <section className="cp-panel" data-region="opc-model-connections">
-      <h2 className="cp-section-title">Model Connections</h2>
+      <h2 className="cp-section-title">模型连接</h2>
       <form
         onSubmit={(event) => {
           void submit(event);
         }}
       >
         <p className="cp-quiet">
-          Mainstream template or custom URL / compatible mode. The key is handed
-          once to the daemon SecretStore and cleared here. Connected / failed
-          never shows the raw secret. This form does not open the Linux-era
-          Providers page.
+          主流下拉 + 自定义 URL / 兼容 / 模型。Owner 输入密钥。密钥一次性交给
+          daemon SecretStore，这里立刻清空。已交接 / 失败都不回显明文。没有假
+          Connect，也不打开 Linux 1.0 Providers 页。
         </p>
         <label className="cp-field">
-          <span>Template</span>
+          <span>供应商模板</span>
           <select
             name="template"
             value={template}
@@ -336,12 +335,12 @@ function ModelConnectionsForm({ onConnected }: { onConnected: () => Promise<void
           </select>
         </label>
         <label className="cp-field">
-          <span>Display name</span>
+          <span>显示名</span>
           <input name="display_name" />
         </label>
         {template === "custom" ? (
           <label className="cp-field">
-            <span>Custom URL</span>
+            <span>自定义 URL</span>
             <input
               name="endpoint"
               placeholder="https://…"
@@ -350,15 +349,16 @@ function ModelConnectionsForm({ onConnected }: { onConnected: () => Promise<void
           </label>
         ) : null}
         <label className="cp-field">
-          <span>Model</span>
+          <span>模型名</span>
           <input name="model" />
         </label>
         <label className="cp-field">
-          <span>API key</span>
+          <span>密钥（一次性交接）</span>
           <input
             name="api_key"
             type="password"
             autoComplete="off"
+            placeholder="输入后交接，界面不回显…"
             onInput={(event) => setHasKey(event.currentTarget.value.trim().length > 0)}
           />
         </label>
@@ -370,7 +370,7 @@ function ModelConnectionsForm({ onConnected }: { onConnected: () => Promise<void
                 checked={allowPrivate}
                 onChange={(event) => setAllowPrivate(event.target.checked)}
               />{" "}
-              Allow private network
+              允许私网
             </label>
             <label className="cp-field">
               <input
@@ -378,15 +378,15 @@ function ModelConnectionsForm({ onConnected }: { onConnected: () => Promise<void
                 checked={allowInsecure}
                 onChange={(event) => setAllowInsecure(event.target.checked)}
               />{" "}
-              Allow insecure HTTP
+              允许明文 HTTP
             </label>
           </>
         ) : null}
         <button type="submit" className="cp-button cp-button--primary" disabled={busy || !canSubmit}>
-          Hand key to SecretStore
+          交接密钥到 SecretStore
         </button>
         {!canSubmit ? (
-          <p className="cp-quiet">Key required. Custom URL required in compatible mode. No fake Connect.</p>
+          <p className="cp-quiet">需要密钥。自定义模式还要 URL。没有假 Connect。</p>
         ) : null}
       </form>
       {receipt ? <p className="cp-receipt">{receipt}</p> : null}
@@ -412,8 +412,8 @@ function ConnectionsTable({
     <DaemonReadPanel
       projection={accounts}
       surface="Settings connections"
-      emptyTitle="Settings: no model connection"
-      emptyBody="The daemon reports no Provider account. Empty Settings is not connected yet. Use Model Connections above. This table does not invent a connection."
+      emptyTitle="设置：还没有模型连接"
+      emptyBody="Daemon 报告没有 Provider 账户。空设置不是已连接。用上面的模型连接交接密钥。这张表不发明连接。"
       region="opc-connections"
     >
       <table className="cp-table">
@@ -458,10 +458,9 @@ function NotificationGroups({
   const groups = notifications.data ?? { missed: [], offline: [], resume: [] };
   return (
     <div data-region="opc-settings-notifications">
-      <h2 className="cp-section-title">Notifications and recovery</h2>
+      <h2 className="cp-section-title">通知与恢复</h2>
       <p className="cp-quiet">
-        Missed / offline / resume facts from the daemon. Empty groups are not
-        invented events. Windows host E2E is not-run.
+        故障时才需要更深的运行信息。默认不展示底层引擎名。空组不是发明出来的事件。Windows host E2E is not-run.
       </p>
       <section>
         <h3 className="cp-section-title">Missed</h3>
@@ -571,11 +570,12 @@ function StandingPolicyTable({
 
   return (
     <>
+      <h2 className="cp-section-title">本周不再问</h2>
       <DaemonReadPanel
         projection={policies}
         surface="Settings StandingApprovalPolicy"
-        emptyTitle="Settings: no StandingApprovalPolicy"
-        emptyBody="The daemon reports no non-revoked StandingApprovalPolicy. Chat cannot mint a time-box. Retract is not a permanent Don't ask. This is not Inbox L1."
+        emptyTitle="本周不再问：当前没有有效的时间盒跳过。"
+        emptyBody="Daemon 报告没有未收回的 StandingApprovalPolicy。聊天不能铸造时间盒。收回不是永久 Don't ask。这不是 Inbox L1。"
         region="opc-standing-policies"
       >
         <table className="cp-table">
@@ -608,7 +608,7 @@ function StandingPolicyTable({
                     disabled={busyId === row.policyId}
                     onClick={() => void revoke(row.policyId)}
                   >
-                    Retract this week
+                    收回跳过
                   </button>
                 </td>
               </tr>
