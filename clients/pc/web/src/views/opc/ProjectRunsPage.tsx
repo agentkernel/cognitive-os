@@ -108,10 +108,10 @@ export function ProjectRunsPage() {
   return (
     <section data-page="opc-project-runs">
       <PageHeader
-        title="Project runs"
-        lede="Routine occurrence ledger, Attempt history, and the current PlanRevision axis. Not a renamed Work timeline."
+        title="运行管理"
+        lede="当前业务流程、每环正在执行的具体步骤、今日执行情况。进行中不是完成。Not a renamed Work timeline."
       />
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Product origin is daemon-served hash /ui/. Vite preview is not the product
         origin. This chrome is not Linux 1.0 #/work. GET {ROUTINE_RUNS_PATH} is the
         occurrence ledger the daemon scheduler tick writes; GET {ATTEMPT_LIST_PATH}{" "}
@@ -121,7 +121,7 @@ export function ProjectRunsPage() {
         Start, Run now, Approve, or Complete control lives here.
       </HonestyNote>
       <p className="cp-quiet">
-        <Link to="/projects">Projects list</Link>
+        <Link to="/projects">项目列表</Link>
         {projectId ? (
           <>
             {" "}

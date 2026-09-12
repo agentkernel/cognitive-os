@@ -2424,7 +2424,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P15-T03 — Projects list/detail vs v9
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `done`. Claim ceiling `hypothesis`. Slices `P15-T03/D01` + `P15-T03/D02` done (PR [#338](https://github.com/agentkernel/cognitive-os/pull/338); guest pin `8b47b73e`).
 - **产品口径:** v9 `ProjectsScene` / `ProjectDetailScene` (plus members/runs/outputs visual) = design target.
 - **依赖:** `P15-T01`; P14-T03/T04/T05 done (do not reopen functional cards).
 - **垂直切片:** D01 Dual Track list/detail density and Owner copy; failure-first: `#/work` as 2.0, clickable Run without authority.
