@@ -41,4 +41,4 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 
 ## Unique next (T05 only)
 
-`P15-T05/D01` Dual Track is **done**. `P15-T05/D02` guest `/ui/` J8/J12 + `JOURNEY-BROWSER-SYNC-01` (J0/J2/J3/J5) **walked** at `7b93bfc5` / SPA `index-DyIoQWPe.js`. Unique next: required CI on Draft [#340](https://github.com/agentkernel/cognitive-os/pull/340), then close. Leave `:48181` untouched. Do not claim T06. Do not merge leftover SNAP [#334](https://github.com/agentkernel/cognitive-os/pull/334).
+`P15-T05/D01` Dual Track is **done**. `P15-T05/D02` guest `/ui/` J8/J12 + `JOURNEY-BROWSER-SYNC-01` (J0/J2/J3/J5) **walked** at `7b93bfc5` / SPA `index-DyIoQWPe.js`. Unique next: required CI on this closure HEAD, then ready/merge [#340](https://github.com/agentkernel/cognitive-os/pull/340), then claim `P15-T06`. Leave `:48181` untouched. Do not merge leftover SNAP [#334](https://github.com/agentkernel/cognitive-os/pull/334).
