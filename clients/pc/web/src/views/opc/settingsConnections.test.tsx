@@ -155,7 +155,7 @@ describe("P12-T08 Settings connections / retract / CloseBackground", () => {
   it("shows an honest empty connection table without inventing accounts or posting create", async () => {
     const { host, root, calls } = await renderSettings("#/settings");
     expect(host.querySelector("[data-region='opc-connections']")?.textContent).toMatch(
-      /no model connection/i,
+      /没有模型连接/,
     );
     expect(host.textContent).toMatch(/never 0/);
     expect(host.querySelector("[data-region='opc-connections'] [data-row-key]")).toBeNull();
@@ -229,7 +229,7 @@ describe("P12-T08 Settings connections / retract / CloseBackground", () => {
       },
     });
     expect(host.querySelector("[data-row-key='pol-1']")).not.toBeNull();
-    clickButton(host, "Retract this week");
+    clickButton(host, "收回跳过");
     await flush();
     const revoked = calls.find((call) => call.pathname === "/management/project/v1/standing-policy.revoke");
     expect(revoked?.method).toBe("POST");
@@ -262,7 +262,7 @@ describe("P12-T08 Settings connections / retract / CloseBackground", () => {
         body: { status: "error", code: "POLICY_NOT_FOUND", message: "gone" },
       },
     });
-    clickButton(host, "Retract this week");
+    clickButton(host, "收回跳过");
     await flush();
     expect(host.querySelector("[data-row-key='pol-1']")).not.toBeNull();
     expect(host.querySelector("[data-region='opc-standing-revoke-error']")?.textContent).toMatch(
