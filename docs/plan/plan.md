@@ -2435,7 +2435,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P15-T04 — Knowledge vs v9
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `done`. PR [#339](https://github.com/agentkernel/cognitive-os/pull/339). Guest pin `991408f8` / SPA `index-3s2lrA_c.js`. Claim ceiling `hypothesis`.
 - **产品口径:** v9 `KnowledgeScene` files / Why this fragment / import visual.
 - **依赖:** `P15-T01`; P14-T08 done (do not reopen IA).
 - **垂直切片:** D01 Dual Track visual; failure-first: file-as-authority, secret ingest.

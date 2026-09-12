@@ -52,4 +52,4 @@ Wrote `knowledgeV9OwnerCopy.test.tsx` against unmodified Knowledge chrome, then 
 
 ## Unique next (T04 only)
 
-`P15-T04/D01` Dual Track is **done**. `P15-T04/D02` guest `/ui/` J5 + `JOURNEY-BROWSER-SYNC-01` (J0/J2/J3/J10) **walked** at `991408f8` / SPA `index-3s2lrA_c.js`. Unique next: wait required CI on the closing HEAD (this report commit), then ready/merge [#339](https://github.com/agentkernel/cognitive-os/pull/339). Leave `:48181` untouched. Do not claim T05–T06.
+`P15-T04/D01` Dual Track is **done**. `P15-T04/D02` guest `/ui/` J5 + `JOURNEY-BROWSER-SYNC-01` (J0/J2/J3/J10) **walked** at `991408f8` / SPA `index-3s2lrA_c.js`. Report HEAD `1cfa5f69` required CI [34663663188](https://github.com/agentkernel/cognitive-os/actions/runs/34663663188) **SUCCESS**. Unique next: ready/merge [#339](https://github.com/agentkernel/cognitive-os/pull/339) after this closure commit's required CI, then claim / continue `P15-T05`. Leave `:48181` untouched. Do not claim T06.
