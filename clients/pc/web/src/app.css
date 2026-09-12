@@ -69,7 +69,7 @@ body {
   display: grid;
   grid-template-areas: "strip strip strip" "side main rail";
   grid-template-rows: 34px minmax(0, 1fr);
-  grid-template-columns: 232px minmax(0, 1fr) 280px;
+  grid-template-columns: var(--cp-nav-width) minmax(var(--cp-main-min), 1fr) var(--cp-rail-width);
   min-height: 100vh;
   min-width: var(--cp-shell-min-width);
   overflow-x: auto;
@@ -168,6 +168,7 @@ body {
   display: flex;
   align-items: center;
   gap: var(--cp-space-2);
+  min-height: var(--cp-target-min);
   padding: 6px var(--cp-space-2);
   border-radius: var(--cp-radius-md);
   color: var(--cp-ink);
@@ -660,6 +661,7 @@ body {
   display: inline-flex;
   align-items: center;
   gap: var(--cp-space-1);
+  min-height: var(--cp-target-min);
   padding: 6px var(--cp-space-3);
   border-radius: var(--cp-radius-md);
   border: 1px solid var(--cp-line-strong);
@@ -1099,7 +1101,7 @@ body {
 
 @media (max-width: 1439px) {
   .cp-shell {
-    grid-template-columns: 200px minmax(0, 1fr) 240px;
+    grid-template-columns: var(--cp-nav-width) minmax(var(--cp-main-min), 1fr) var(--cp-rail-width);
   }
 
   .cp-inspector {
@@ -1251,8 +1253,8 @@ body {
   .cp-digestchip button,
   .cp-queue-action a,
   .cp-queue-action button {
-    min-height: 44px;
-    min-width: 44px;
+    min-height: var(--cp-target-min);
+    min-width: var(--cp-target-min);
   }
 }
 

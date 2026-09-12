@@ -2457,7 +2457,7 @@ Memory 列表只读（"Forget/remember stay on management HTTP"）；
 
 ### P15-T06 — remaining layout tokens (176 / 22 / 44 / ~1100)
 
-- **status:** `not-started`. Claim ceiling `hypothesis`.
+- **status:** `in-progress` (`P15-T06/D01`). Claim ceiling `hypothesis`.
 - **产品口径:** v9 `.shell` `min-width: 1100px`; `grid-template-columns: 176px minmax(576px, 1fr) 348px`; 22px titles; 44px hits. Remaining Owner honesty notes demoted to secondary `details`.
 - **依赖:** `P15-T02`..`T05` (surface copy first so this card owns `tokens.css` / `app.css` shell bands).
 - **垂直切片:** D01 Dual Track remaining tokens; failure-first: stacked columns, Twitter P0, Vite-as-product.

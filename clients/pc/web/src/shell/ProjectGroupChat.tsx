@@ -192,7 +192,7 @@ export function ProjectGroupChat({ projectId, hidden = false }: ProjectGroupChat
       aria-label="Project group chat"
     >
       <h3 className="cp-section-title">Project group · Owner / manager / Members</h3>
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Group conversation for this Project. The daemon routes @manager and @member;
         manager speaks by default, Members only when mentioned, delivering, handing off,
         blocked, or requesting a decision. Candidates are announced here and confirmed on

@@ -754,7 +754,7 @@ describe("Work detail structure and routing", () => {
     }
     expect(host.querySelector('[role="tab"]')).toBeNull();
     expect(host.querySelector('[role="tablist"]')).toBeNull();
-    expect(host.querySelector("details")).toBeNull();
+    expect(host.querySelector("#main details")).toBeNull();
     unmount(host, root);
   });
 
@@ -948,7 +948,7 @@ describe("Work detail structure and routing", () => {
       window.dispatchEvent(new KeyboardEvent("keydown", { key: "]", bubbles: true }));
     });
     expect(
-      (host.querySelector('.cp-sectionnav-link[aria-current="true"]')?.textContent ?? "").trim(),
+      (host.querySelector("#main .cp-sectionnav-link[aria-current='true']")?.textContent ?? "").trim(),
     ).toBe("Evidence");
     unmount(host, root);
   });

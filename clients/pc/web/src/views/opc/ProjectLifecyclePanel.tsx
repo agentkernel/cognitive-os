@@ -56,7 +56,7 @@ export function ProjectLifecyclePanel({
 
   return (
     <section data-region="opc-project-lifecycle">
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Archive stops Routine/Trigger first. Delete is a logical impact preview
         plus a second step — the Project row stays. Restore points are
         same-disk and not a disaster backup. Export is not authority and never

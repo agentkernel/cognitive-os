@@ -93,7 +93,7 @@ export function MemberConfigPage() {
         title="Member configuration"
         lede="Select the member, then configure duty, contracts, grants, brief, loop, perms, and reflection."
       />
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Product origin is daemon-served hash /ui/. GET {PROJECT_ROSTER_PATH} is the
         current Project. GET {PROJECT_CATALOG_PATH} is the grant catalog, not a
         recipe. Role is not merged into Agent. Member-level budget is not chrome.

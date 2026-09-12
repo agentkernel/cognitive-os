@@ -72,7 +72,7 @@ export function AssistantRail() {
       ) : null}
       {projectId ? <ProjectGroupChat projectId={projectId} hidden={!showGroup} /> : null}
       <div data-region="opc-rail-assistant-layer" hidden={showGroup}>
-        <HonestyNote>
+        <HonestyNote placement="secondary">
           Candidate-only. This rail does not Approve, persist a Project, or write
           SecretStore or archive. Chat Approve is not a Control Plane control.
           HITL Confirm stays on management HTTP.

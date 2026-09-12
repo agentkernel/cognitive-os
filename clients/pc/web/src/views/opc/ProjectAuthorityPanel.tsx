@@ -98,7 +98,7 @@ export function ProjectAuthorityPanel({
   return (
     <>
       {leadHonesty ? (
-        <HonestyNote>
+        <HonestyNote placement="secondary">
           Rows are the daemon list. Cost and title stay as stated. Completing a
           Project is not a model reply.
         </HonestyNote>
