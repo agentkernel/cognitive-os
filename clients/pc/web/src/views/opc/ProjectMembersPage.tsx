@@ -33,17 +33,17 @@ export function ProjectMembersPage() {
   return (
     <section data-page="opc-project-members">
       <PageHeader
-        title="Project members"
-        lede="Employee roster for this Project. Select a row to configure. Not Installed Agents."
+        title="成员管理"
+        lede="先选一个人，再改职责与交接。未激活副本不带成员。不跨项目共享。"
       />
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Product origin is daemon-served hash /ui/. GET {PROJECT_ROSTER_PATH} is
         the list. Add member writes join as management Intent. This page does
         not Install and does not mint a seat locally. Role is not merged into
         Agent. Member-level budget is not chrome.
       </HonestyNote>
       <p className="cp-quiet">
-        <Link to="/projects">Projects list</Link>
+        <Link to="/projects">项目列表</Link>
         {projectId ? (
           <>
             {" "}

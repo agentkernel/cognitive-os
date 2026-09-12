@@ -2,18 +2,17 @@
 
 Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit immediately. `not-run` is never pass. Claim ceiling `hypothesis`. A7: local/CI is not Gate.
 
-- Task: `P15-T04` / unique slice `P15-T04/D01` Dual Track Owner copy. `P15-T04/D02` guest `/ui/` J5 **not this session** (guest `:48681` is not this lease).
+- Task: `P15-T04` / unique next `P15-T04/D02` guest `/ui/` J5. `P15-T04/D01` Dual Track Owner copy already implemented.
 - Branch: `personal/P15-T04-knowledge-v9`
-- Worktree: `D:\agent-kernel-wt-P15-T04` from `origin/main@b3f59161` (T01 #335 + T02 #337 already merged).
+- Worktree: `D:\agent-kernel-wt-P15-T04`. Fold `origin/main@ae1dc06a` (P15-T03 #338).
 - Lease: `lease/personal/P15-T04/knowledge-v9`
-- Draft PR: [#339](https://github.com/agentkernel/cognitive-os/pull/339) (keep Draft)
-- HEAD: `626681a3`
-- T05 Settings and T03 Projects not claimed here. `docs/plan/PROGRESS.md` unique-next stays claim `P15-T03`.
+- Draft PR: [#339](https://github.com/agentkernel/cognitive-os/pull/339) (keep Draft until full acceptance)
+- T03 closed; guest `:48681` is now this lease for D02. Leave `:48181` untouched. Do not claim T05–T06.
 - Change class: `implementation-only` (Owner-facing Knowledge copy vs frozen v9). Vault authority unchanged. Canvas v9 file not overwritten. AXIOMS.md not rewritten.
 - Claim ceiling: `hypothesis`
 - Product origin: daemon-served `/ui/`. Vite is not the product origin.
 - Evaluation routing: **OFF**
-- Do not merge leftover SNAP [#334](https://github.com/agentkernel/cognitive-os/pull/334). Do not deploy `:48681`. Leave `:48181` untouched. Do not start T02/T03/T05/T06.
+- Do not merge leftover SNAP [#334](https://github.com/agentkernel/cognitive-os/pull/334).
 
 ## Failure-first (D01)
 
@@ -38,8 +37,9 @@ Wrote `knowledgeV9OwnerCopy.test.tsx` against unmodified Knowledge chrome, then 
 | 2026-09-06 | Full Dual Track web vitest | pass | Dual Track vitest | dirty worktree | **77 files / 549 tests**. |
 | 2026-09-06 | Locked Knowledge h2 + remaining Owner table copy | pass | Dual Track vitest | dirty follow-up | Empty Knowledge title `知识已锁定`. Labels/conflicts hidden until files exist. 5 files **44/44**. |
 | 2026-09-06 | Draft PR [#339](https://github.com/agentkernel/cognitive-os/pull/339) | pass | GitHub | `626681a3` | Keep Draft. Required CI in progress (ubuntu/windows). |
-| 2026-09-06 | D02 guest `/ui/` J5 | not-run | `B01-Desktop-Linux-002` | — | Guest `:48681` is not this lease. Keep Draft. |
+| 2026-09-06 | D02 guest `/ui/` J5 | not-run | `B01-Desktop-Linux-002` | — | Guest `:48681` was not this lease while T03 held it. |
+| 2026-09-12 | Fold `origin/main@ae1dc06a` (P15-T03 #338) | pass | worktree | merge resolving | T03 done; D01 Dual Track consumed; unique next D02. |
 
 ## Unique next (T04 only)
 
-Keep Draft [#339](https://github.com/agentkernel/cognitive-os/pull/339). Wait required CI on `626681a3`. Do not ready/merge. `P15-T04/D02` guest `/ui/` J5 waits; this lease does not deploy `:48681`. Leave `:48181` untouched. Do not claim T03/T05/T06.
+`P15-T04/D01` Dual Track is done. `P15-T04/D02` guest `/ui/` J5 + `JOURNEY-BROWSER-SYNC-01` (J0/J2/J10) on `:48681` after this fold is pushed. Leave `:48181` untouched. Keep Draft [#339](https://github.com/agentkernel/cognitive-os/pull/339). Do not claim T05–T06.
