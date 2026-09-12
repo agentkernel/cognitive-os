@@ -153,7 +153,7 @@ export function AddMemberPage() {
         title="Add member"
         lede="Duty and slot first. Write join is management Intent. Refuse leaves the post unjoined."
       />
-      <HonestyNote>
+      <HonestyNote placement="secondary">
         Product origin is daemon-served hash /ui/. GET {PROJECT_ROSTER_PATH} is the
         current Project roster — not a global sample. Write join posts{" "}
         {ROSTER_REGISTER_PATH} then {SEAT_REQUEST_PATH} then {SEAT_CONFIRM_PATH}.
