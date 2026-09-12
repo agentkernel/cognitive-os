@@ -2,7 +2,7 @@
 
 Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit immediately. `not-run` is never pass. Claim ceiling `hypothesis`. A7: local/CI is not Gate.
 
-- Task: `P15-T03` / slices `P15-T03/D01` **done** + `P15-T03/D02` guest `/ui/` J3 **done** (required CI pending for close).
+- Task: `P15-T03` / slices `P15-T03/D01` **done** + `P15-T03/D02` guest `/ui/` J3 **done**. Required CI [34015268580](https://github.com/agentkernel/cognitive-os/actions/runs/34015268580) **SUCCESS** at `c72499b1`.
 - Branch: `personal/P15-T03-projects-v9`
 - Worktree: `D:\agent-kernel-wt-P15-T03`
 - Lease: `lease/personal/P15-T03/projects-v9`
@@ -44,9 +44,9 @@ Incremental log per `TEST-REPORT-INCREMENTAL-01`. Append each finished unit imme
 | 2026-09-06 | J2 Today regression | **pass** | guest `/ui/#/` | `8b47b73e` | h2 `今日`; lede `看清并处理要你拍板的事。` |
 | 2026-09-06 | Continue-create regression | **pass** | guest `/ui/#/projects/new` | `8b47b73e` | T02 chrome `创建项目 · ① 项目初始化`. 0 Activate |
 | 2026-09-06 | J10 no X/Twitter P0 | **pass** | Today / Projects / Knowledge / Settings | `8b47b73e` | `twitter=false`; 0 Activate |
-| 2026-09-06 | Required CI | **in-progress** | GitHub | `8b47b73e` | Draft [#338](https://github.com/agentkernel/cognitive-os/pull/338) |
+| 2026-09-06 | Required CI | **pass** | GitHub | `c72499b1` | [34015268580](https://github.com/agentkernel/cognitive-os/actions/runs/34015268580) **SUCCESS** (resolve / ubuntu / windows / required-ci) |
 | 2026-09-06 | Windows native chrome JOURNEY | **not-run** | walk used local Cursor browser against forwarded guest `/ui/` | — | not Windows-native daemon chrome |
 
 ## Unique next
 
-`P15-T03/D01` Dual Track is **done** (553/553). Guest J3 walked at `8b47b73e` / SPA `index-Vx_NJPld.js`. Unique next: **required CI on the closing HEAD, then ready/merge/lease close**. Do not claim T04–T06. Evaluation routing OFF.
+`P15-T03/D01` Dual Track is **done** (553/553). Guest J3 walked at `8b47b73e` / SPA `index-Vx_NJPld.js`. Ancestor `c72499b1` required CI **SUCCESS**. Unique next: **ready/merge/lease close**, then claim / continue `P15-T04` (Draft [#339](https://github.com/agentkernel/cognitive-os/pull/339)). Do not claim T05–T06. Evaluation routing OFF.
