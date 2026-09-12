@@ -59,10 +59,10 @@ export const OPC_MEMORY_KEY = "opc:memory";
 export const OPC_MEMORY_PATH = "/management/resource/v1/list?family=memory";
 
 const KNOWLEDGE_TABS = [
-  { id: "files", label: "Files" },
-  { id: "import", label: "Import" },
-  { id: "why", label: "Why this fragment" },
-  { id: "memory", label: "Memory" },
+  { id: "files", label: "项目资料" },
+  { id: "import", label: "导入" },
+  { id: "why", label: "为什么用这段" },
+  { id: "memory", label: "记忆" },
 ] as const;
 
 type KnowledgeTab = (typeof KNOWLEDGE_TABS)[number]["id"];
@@ -123,8 +123,8 @@ function jsonProjection<T>(
 }
 
 /**
- * Knowledge — ingest + Why this fragment (P12-T07) + P13-T07 labels / Memory
- * authority on daemon `/ui/`. Files are not Project authority. No Obsidian.
+ * Knowledge — v9 Owner chrome for files / import / why / memory on daemon `/ui/`.
+ * Files are not Project authority. Obsidian is not bundled.
  */
 export function KnowledgePage() {
   const projects = useProjection<ProjectListRow[]>(PROJECTS_KEY);
@@ -141,6 +141,10 @@ export function KnowledgePage() {
   const [fileQuery, setFileQuery] = useState("");
   const [fileKind, setFileKind] = useState<"all" | "markdown" | "link" | "image">("all");
   const projectId = readyProjectId(projects);
+  const locked =
+    !projectId &&
+    (projects.status === "empty" ||
+      (projects.status === "ready" && (projects.data?.length ?? 0) === 0));
   const refresh = useCallback(async () => {
     const list = await loadProjectList();
     const id = readyProjectId(list);
@@ -193,20 +197,28 @@ export function KnowledgePage() {
   return (
     <section data-page="opc-knowledge" data-knowledge-ia="v9">
       <PageHeader
-        title="Knowledge"
-        lede="Project files, Why this fragment, and import. Files are not Project authority."
+        title={locked ? "知识已锁定" : "当前项目资料"}
+        lede={
+          locked
+            ? "没有项目时不能进。创建到 ② 流程需要输入时，只为当前草稿打开。"
+            : "不必另装笔记应用。解析失败保留原件可重试。离线只读上次索引。"
+        }
       />
-      <HonestyNote>
-        Product origin is daemon-served hash /ui/. Vite is not the product origin.
-        Import copies permitted Markdown into the selected Vault through POST{" "}
-        {VAULT_IMPORT_PATH}. Files are not a Charter. A companion Markdown app
-        is not bundled. Chat auto-admission stays honest-empty / Requires-backend
-        (0 Admit buttons). Host filesystem E2E remains not-run as a product claim.
-      </HonestyNote>
-      <ProjectAuthorityPanel projection={projects} surface="Knowledge">
+      {locked ? null : (
+        <HonestyNote placement="secondary">
+          资料不是项目权威。导入走已有 Vault 写入。密钥形态不进知识库。聊天自动入记忆仍是
+          Requires-backend。
+        </HonestyNote>
+      )}
+      <ProjectAuthorityPanel
+        projection={projects}
+        surface="知识"
+        emptyBody="知识已锁定。没有项目时不能进。创建到 ② 流程需要输入时，只为当前草稿打开。"
+        leadHonesty={false}
+      >
         {projectId ? (
           <>
-            <p className="cp-quiet" role="tablist" aria-label="Knowledge">
+            <p className="cp-quiet" role="tablist" aria-label="知识">
               {KNOWLEDGE_TABS.map((item) => (
                 <button
                   key={item.id}
@@ -244,7 +256,7 @@ export function KnowledgePage() {
             {tab === "memory" ? (
               <>
                 <div data-region="opc-knowledge-auto-admit">
-                  <h3>Chat auto-admission</h3>
+                  <h3>对话自动进入可检查记忆</h3>
                   <p className="cp-quiet">{CHAT_AUTO_ADMIT_REQUIRES_BACKEND}</p>
                 </div>
                 <DaemonReadPanel
@@ -288,8 +300,7 @@ export function KnowledgePage() {
           </>
         ) : (
           <p className="cp-quiet" data-region="opc-knowledge-locked">
-            Knowledge is locked. Without a Project it cannot open. During create it
-            opens at process only for the current draft.
+            知识已锁定。没有项目时不能进。创建到 ② 流程需要输入时，只为当前草稿打开。
           </p>
         )}
       </ProjectAuthorityPanel>
@@ -331,73 +342,69 @@ function KnowledgeFilesTab({
   });
   return (
     <div data-region="opc-knowledge-files" className="cp-stack">
-      <h3>Project files</h3>
-      <p className="cp-quiet">
-        Empty = no files yet + import. Ordinary knowledge reindexes. A
-        goal/role/permission-like edit cannot silently mutate authority.
-      </p>
+      <h3>资料</h3>
+      <p className="cp-quiet">可按资料类型和关键词查看。资料不是项目权威。</p>
       <div className="knowledge-filters">
         <label>
-          Kind
+          资料类型
           <select
             name="knowledge-kind"
             value={kind}
             onChange={(event) => onKind(event.target.value as typeof kind)}
           >
-            <option value="all">All</option>
+            <option value="all">全部类型</option>
             <option value="markdown">Markdown</option>
-            <option value="link">Link</option>
-            <option value="image">Image</option>
+            <option value="link">链接</option>
+            <option value="image">图片</option>
           </select>
         </label>
         <label>
-          Search
+          关键词
           <input
             name="knowledge-query"
             type="search"
             value={query}
             onChange={(event) => onQuery(event.target.value)}
             autoComplete="off"
+            placeholder="按标题检索…"
           />
         </label>
       </div>
       {documents.status === "empty" || (documents.status === "ready" && catalog.length === 0) ? (
         <EmptyState
-          title="No files yet"
+          title="还没资料"
           action={
             <button type="button" className="cp-button cp-button--primary" onClick={onImport}>
-              Import files
+              导入资料
             </button>
           }
         >
-          Import files, directories, links, or image/video metadata into this
-          Project Vault. This is not Project authority.
+          用导入把文件、链接或图片元数据放进当前范围。这不是项目权威。
         </EmptyState>
       ) : (
         <DaemonReadPanel
           projection={documents}
-          surface="Knowledge document status"
-          emptyTitle="Knowledge: no stored Vault documents"
-          emptyBody="No stored documents. A failed rebuild still leaves an imported original visible as not-indexed."
+          surface="资料状态"
+          emptyTitle="还没有存档的资料"
+          emptyBody="没有存档。重建失败时原件仍可见为未索引。"
           region="opc-knowledge-documents"
         >
           {visible.length === 0 ? (
-            <EmptyState title="No matching files">
-              The current kind or keyword did not hit. This is not an empty index.
+            <EmptyState title="没有匹配的资料">
+              当前类型或关键词没有命中。这不是索引为零。
             </EmptyState>
           ) : (
             <table className="cp-table">
               <caption className="cp-quiet">
-                GET {vaultDocumentsPath(projectId)} — original remains visible when
-                index_status is not-indexed. is_authority stays false.
+                GET {vaultDocumentsPath(projectId)}。未索引时原件仍可见。资料不是项目权威。
               </caption>
               <thead>
                 <tr>
-                  <th>Document</th>
-                  <th>Path</th>
-                  <th>Kind</th>
-                  <th>Provenance</th>
-                  <th>Index</th>
+                  <th>资料</th>
+                  <th>路径</th>
+                  <th>类型</th>
+                  <th>来源</th>
+                  <th>索引</th>
                 </tr>
               </thead>
               <tbody>
@@ -417,27 +424,27 @@ function KnowledgeFilesTab({
           )}
         </DaemonReadPanel>
       )}
+      {catalog.length > 0 ? (
       <DaemonReadPanel
         projection={labeled}
-        surface="Knowledge fragment labels"
-        emptyTitle="Knowledge: no labeled fragments"
-        emptyBody="vault.labeled returned no excerpts. Labels are not invented. Files are not Project authority."
+        surface="资料摘录标签"
+        emptyTitle="还没有摘录标签"
+        emptyBody="没有摘录。标签不编造。资料不是项目权威。"
         region="opc-knowledge-labels"
       >
         <table className="cp-table">
           <caption className="cp-quiet">
-            GET {vaultLabeledPath(projectId)} — provenance / rights / freshness /
-            exclusion. is_authority stays false.
+            GET {vaultLabeledPath(projectId)}。来源 / 权利 / 新鲜度 / 排除。资料不是项目权威。
           </caption>
           <thead>
             <tr>
-              <th>Path</th>
-              <th>Provenance</th>
-              <th>Rights</th>
-              <th>Freshness</th>
-              <th>Exclusion</th>
-              <th>Untrusted</th>
-              <th>Excerpt</th>
+              <th>路径</th>
+              <th>来源</th>
+              <th>权利</th>
+              <th>新鲜度</th>
+              <th>排除</th>
+              <th>不可信</th>
+              <th>摘录</th>
             </tr>
           </thead>
           <tbody>
@@ -460,23 +467,25 @@ function KnowledgeFilesTab({
           </tbody>
         </table>
       </DaemonReadPanel>
+      ) : null}
+      {catalog.length > 0 ? (
       <DaemonReadPanel
         projection={conflicts}
-        surface="Knowledge Vault conflicts"
-        emptyTitle="Knowledge: no Vault conflicts"
-        emptyBody="No conflict records. Last-write-wins without a conflict record is rejected by the daemon."
+        surface="资料冲突"
+        emptyTitle="没有冲突记录"
+        emptyBody="没有冲突。无记录的后写覆盖会被拒绝。"
         region="opc-vault-conflicts"
       >
         <table className="cp-table">
           <caption className="cp-quiet">GET {vaultConflictsPath(projectId)}</caption>
-          <thead>
-            <tr>
-              <th>Conflict</th>
-              <th>Path</th>
-              <th>Resolution</th>
-            </tr>
-          </thead>
-          <tbody>
+              <thead>
+                <tr>
+                  <th>冲突</th>
+                  <th>路径</th>
+                  <th>处理</th>
+                </tr>
+              </thead>
+              <tbody>
             {(conflicts.data ?? []).map((row) => (
               <tr key={row.conflictId} data-row-key={row.conflictId}>
                 <td>
@@ -489,6 +498,7 @@ function KnowledgeFilesTab({
           </tbody>
         </table>
       </DaemonReadPanel>
+      ) : null}
     </div>
   );
 }
@@ -504,11 +514,13 @@ function KnowledgeWhyTab({
 }) {
   return (
     <div data-region="opc-knowledge-why" className="cp-stack">
+      <h3>为什么用了这段</h3>
+      <p className="cp-quiet">范围、来源、新鲜度、删减损失都要看见。</p>
       <DaemonReadPanel
         projection={injectOrder}
-        surface="Why this fragment inject order"
-        emptyTitle="Knowledge: inject_order absent"
-        emptyBody="vault.index did not return inject_order. Why this fragment does not invent Task-contract or fixed-decision layers."
+        surface="为什么用了这段 · 注入顺序"
+        emptyTitle="知识：注入顺序缺失"
+        emptyBody="vault.index 没有返回 inject_order。这里不编造任务合同或固定决策层。"
         region="opc-why-fragment-order"
       >
         <div>
@@ -524,21 +536,20 @@ function KnowledgeWhyTab({
       </DaemonReadPanel>
       <DaemonReadPanel
         projection={vault}
-        surface="Why this fragment"
-        emptyTitle="Knowledge: no Why this fragment excerpts"
-        emptyBody="The daemon reports no Vault index excerpts for this Project. Why this fragment does not invent sourced text."
+        surface="为什么用了这段"
+        emptyTitle="知识：还没有摘录"
+        emptyBody="daemon 没有返回本项目的 Vault 摘录。这里不编造来源文字。"
         region="opc-why-fragment"
       >
         <table className="cp-table">
           <caption className="cp-quiet">
-            GET {vaultIndexPath(projectId)} — Why this fragment. Files are not
-            Project authority.
+            GET {vaultIndexPath(projectId)}。资料不是项目权威。
           </caption>
           <thead>
             <tr>
-              <th>Entry</th>
-              <th>Layer</th>
-              <th>Excerpt</th>
+              <th>条目</th>
+              <th>层</th>
+              <th>摘录</th>
             </tr>
           </thead>
           <tbody>
@@ -1085,15 +1096,12 @@ function VaultIngestForm({
 
   return (
     <form data-region="opc-vault-ingest" className="cp-stack" onSubmit={onSubmit}>
-      <h3>Import to Vault</h3>
+      <h3>导入资料</h3>
       <p className="cp-quiet">
-        Pick files, a directory, a link, or image/video metadata. Vault stores
-        Markdown copies through existing import authority. Files are not Project
-        authority. Secret-shaped bytes are refused. Last-write-wins without a
-        conflict record is rejected.
+        选范围、复制或引用、来源种类。密钥不得进入 Vault。资料不是项目权威。
       </p>
       <label>
-        Source
+        来源种类
         <select
           name="import_source"
           value={source}
@@ -1102,28 +1110,28 @@ function VaultIngestForm({
             setPickedFiles([]);
           }}
         >
-          <option value="files">Files</option>
-          <option value="directory">Directory</option>
-          <option value="link">Link</option>
-          <option value="image">Image metadata</option>
-          <option value="video">Video metadata</option>
-          <option value="typed">Typed note</option>
+          <option value="files">文件</option>
+          <option value="directory">目录</option>
+          <option value="link">链接</option>
+          <option value="image">图片</option>
+          <option value="video">视频元数据</option>
+          <option value="typed">手写笔记</option>
         </select>
       </label>
       <label>
-        Copy or reference
+        复制或引用
         <select
           name="import_policy"
           value={policy}
           onChange={(event) => setPolicy(event.target.value as ImportPolicy)}
         >
-          <option value="copy">Copy into Vault (must be reusable)</option>
-          <option value="reference">Reference the original (do not copy body)</option>
+          <option value="copy">复制到 Vault（须有权复用）</option>
+          <option value="reference">引用原件（不复制正文）</option>
         </select>
       </label>
       {usesFiles ? (
         <label>
-          {source === "directory" ? "Directory" : "Files"}
+          {source === "directory" ? "目录" : "文件"}
           <input
             name="vault-files"
             type="file"
@@ -1135,7 +1143,7 @@ function VaultIngestForm({
       ) : null}
       {source === "link" ? (
         <label>
-          Link
+          链接
           <input
             name="import_link"
             value={linkUri}
@@ -1147,7 +1155,7 @@ function VaultIngestForm({
       {source === "typed" ? (
         <>
           <label>
-            Relative path
+            相对路径
             <input
               name="relative_path"
               value={relativePath}
@@ -1156,7 +1164,7 @@ function VaultIngestForm({
             />
           </label>
           <label>
-            Provenance source_uri
+            来源
             <input
               name="source_uri"
               value={sourceUri}
@@ -1165,7 +1173,7 @@ function VaultIngestForm({
             />
           </label>
           <label>
-            Markdown body
+            笔记正文
             <textarea
               name="vault-body"
               value={body}
@@ -1176,7 +1184,7 @@ function VaultIngestForm({
         </>
       ) : null}
       <label>
-        Rights class
+        权利类别
         <select
           name="rights_class"
           value={rightsClass}
@@ -1198,10 +1206,10 @@ function VaultIngestForm({
           checked={recordConflict}
           onChange={(event) => setRecordConflict(event.target.checked)}
         />{" "}
-        Record conflict if this path already exists
+        若路径已存在则记冲突
       </label>
       <button type="submit" disabled={busy}>
-        Import to Vault
+        开始导入
       </button>
       {error ? <p data-ingest-error="true">{error}</p> : null}
       {receipt ? (

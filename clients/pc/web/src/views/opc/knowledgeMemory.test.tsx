@@ -231,7 +231,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
     expect(labels?.textContent).toMatch(/owner-owned/);
     expect(labels?.textContent).toMatch(/citation-only/);
     expect(labels?.textContent).toMatch(/excluded/);
-    expect(labels?.textContent).toMatch(/untrusted/i);
+    expect(labels?.textContent).toMatch(/不可信/);
     expect(host.querySelector("[data-region='opc-knowledge-documents']")?.textContent).toMatch(
       /not-indexed/,
     );
@@ -241,7 +241,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
 
   it("keeps chat auto-admission honest empty with no Admit button", async () => {
     const { host, root, calls } = await renderKnowledge();
-    clickTab(host, "Memory");
+    clickTab(host, "记忆");
     const auto = host.querySelector("[data-region='opc-knowledge-auto-admit']");
     expect(auto?.textContent).toMatch(/Requires-backend/);
     expect(auto?.querySelector("button")).toBeNull();
@@ -262,7 +262,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
         body: { status: "ok", memory_id: "mem-2" },
       },
     });
-    clickTab(host, "Memory");
+    clickTab(host, "记忆");
     const select = host.querySelector("select[name='memory_id']") as HTMLSelectElement;
     act(() => {
       select.value = "mem-1";
@@ -298,7 +298,7 @@ describe("P13-T07 Knowledge labels and Memory authority", () => {
         },
       },
     });
-    clickTab(host, "Memory");
+    clickTab(host, "记忆");
     const memory = host.querySelector("select[name='memory_id']") as HTMLSelectElement;
     act(() => {
       memory.value = "mem-1";

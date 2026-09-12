@@ -8,7 +8,7 @@ import { clearSession, rememberBearer } from "../../session";
 type RouteResponse = { status: number; body: unknown };
 type FetchCall = { method: string; path: string; pathname: string; body?: unknown };
 
-function installFetch(routes: Record<string, RouteResponse>): FetchCall[] {
+function installFetch(routes: Record<string, RouteResponse> = {}): FetchCall[] {
   const calls: FetchCall[] = [];
   vi.stubGlobal(
     "fetch",
@@ -34,7 +34,7 @@ function installFetch(routes: Record<string, RouteResponse>): FetchCall[] {
         handler ??
         (url.pathname === "/personal/health" || url.pathname === "/personal/status"
           ? { status: 200, body: { status: "ok", overall: "ready", alerts: [] } }
-          : { status: 404, body: { status: "error", code: "NOT_FOUND", message: "not found" } });
+          : { status: 401, body: { status: "error", code: "UNAUTHENTICATED", message: "no session" } });
       return new Response(JSON.stringify(resolved.body), {
         status: resolved.status,
         headers: { "content-type": "application/json" },
@@ -108,10 +108,22 @@ function setFiles(input: HTMLInputElement, files: File[]) {
   });
 }
 
-const EMPTY_LIST: RouteResponse = {
-  status: 200,
-  body: { status: "ok", projects: [] },
-};
+const FAKE_ACTION = /approve|create project|activate|new project|team|inbox|confirm|apply authority/i;
+const TWITTER_HERO = /twitter|\bx\b hero|trending on x|tweet composer/i;
+const HTTP_PASTE_WALL = /HTTP-paste-only|owner-paste Vault HTTP|Typed note as the only ingest/i;
+const JARGON_WALL = /Vite is not the product origin|Dual Track wizard|Why this fragment/i;
+
+function primaryHonesty(host: HTMLElement): Element[] {
+  return [...host.querySelectorAll("#main .cp-honesty")].filter(
+    (node) => !node.closest("details[data-honesty='secondary']"),
+  );
+}
+
+function fakeActionLabels(host: HTMLElement): string[] {
+  return [...host.querySelectorAll("#main button, #main a.cp-button")]
+    .map((node) => (node.textContent ?? "").trim())
+    .filter((label) => FAKE_ACTION.test(label));
+}
 
 const READY_LIST: RouteResponse = {
   status: 200,
@@ -172,104 +184,52 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe("P14-T08 Knowledge v9 files / why / import IA", () => {
-  it("locks Knowledge without painting ingest or why tabs when no Project exists", async () => {
-    const { host, root, calls } = await renderKnowledge({
-      "GET /management/project/v1/list": EMPTY_LIST,
-    });
-    expect(host.querySelector('[role="tablist"][aria-label="知识"]')).toBeNull();
-    expect(host.querySelector(".cp-page-head h2")?.textContent).toBe("知识已锁定");
+describe("P15-T04 Knowledge vs v9 Owner copy", () => {
+  it("fail-closes Knowledge without a session: no ingest, no fake Activate, no Twitter hero", async () => {
+    const calls = installFetch({});
+    const { host, root } = renderAppAt("#/knowledge");
+    await flush();
+    expect(host.textContent).toMatch(/session denied|Open Session/i);
+    expect(host.querySelector("[data-page='opc-knowledge']")).toBeNull();
     expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
-    expect(host.querySelector("[data-region='opc-why-fragment']")).toBeNull();
-    expect(host.textContent).toMatch(/locked|no Project/i);
+    expect(fakeActionLabels(host)).toEqual([]);
+    expect(host.textContent).not.toMatch(TWITTER_HERO);
+    expect(host.textContent).not.toMatch(/\bActivate\b/);
     expect(calls.some((call) => call.pathname === "/management/project/v1/vault.import")).toBe(false);
-    expect(host.textContent).not.toMatch(/obsidian/i);
     unmount(host, root);
   });
 
-  it("exposes Files / Import / Why this fragment / Memory instead of an HTTP-paste-only admin form", async () => {
+  it("leads Knowledge with v9 Owner language, not an HTTP-paste or developer honesty wall", async () => {
     const { host, root } = await renderKnowledge();
+    expect(host.querySelector(".cp-shell")?.getAttribute("data-visual")).toBe("v9-target");
+    expect(host.querySelector("[data-page='opc-knowledge']")).not.toBeNull();
+    expect(host.querySelector(".cp-page-head h2")?.textContent).toBe("当前项目资料");
+    expect(host.querySelector(".cp-lede")?.textContent).toMatch(/不必另装笔记应用/);
     const tabs = [...host.querySelectorAll('[role="tablist"][aria-label="知识"] [role="tab"]')].map(
       (node) => (node.textContent ?? "").trim(),
     );
     expect(tabs).toEqual(["项目资料", "导入", "为什么用这段", "记忆"]);
     expect(host.querySelector("[data-region='opc-knowledge-files']")).not.toBeNull();
-    expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
-    expect(host.querySelector("[data-region='opc-why-fragment']")).toBeNull();
     expect(host.textContent).toMatch(/还没资料/);
+    expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
+    expect(host.querySelector("textarea[name='vault-body']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-knowledge-labels']")).toBeNull();
+    expect(host.querySelector("[data-region='opc-vault-conflicts']")).toBeNull();
+    expect(primaryHonesty(host)).toEqual([]);
+    expect(host.querySelector("#main")?.textContent).not.toMatch(JARGON_WALL);
+    expect(host.textContent).not.toMatch(HTTP_PASTE_WALL);
     expect(host.textContent).not.toMatch(/obsidian/i);
+    expect(host.textContent).not.toMatch(TWITTER_HERO);
+    expect(host.textContent).not.toMatch(/\bActivate\b/);
+    expect(fakeActionLabels(host)).toEqual([]);
     clickButton(host, "导入资料");
     expect(host.querySelector("[data-region='opc-vault-ingest']")).not.toBeNull();
     expect(host.querySelector('input[name="vault-files"]')).not.toBeNull();
+    expect(host.querySelector("h3")?.textContent).toBe("导入资料");
     unmount(host, root);
   });
 
-  it("reads Why this fragment on its own tab from daemon inject_order and excerpts", async () => {
-    const { host, root } = await renderKnowledge();
-    clickTab(host, "为什么用这段");
-    expect(host.querySelector("[data-region='opc-why-fragment']")).not.toBeNull();
-    expect(host.querySelector("[data-row-key='ent-1']")?.textContent).toMatch(/note/);
-    expect(host.textContent).toContain("fixed-decision");
-    expect(host.querySelector("[data-region='opc-vault-ingest']")).toBeNull();
-    unmount(host, root);
-  });
-
-  it("imports a picked Markdown file through vault.import as markdown-file, not as Project authority", async () => {
-    const { host, root, calls } = await renderKnowledge({
-      "POST /management/project/v1/vault.import": {
-        status: 200,
-        body: {
-          status: "ok",
-          document_id: "doc-file",
-          is_authority: false,
-          host_fs_e2e: "not-run",
-        },
-      },
-      "POST /management/project/v1/vault.index.rebuild": {
-        status: 200,
-        body: { status: "ok", written: 1, memory_fts: "untouched" },
-      },
-    });
-    clickTab(host, "导入");
-    const input = host.querySelector('input[name="vault-files"]') as HTMLInputElement;
-    setFiles(input, [new File(["# picked note\n"], "brief.md", { type: "text/markdown" })]);
-    await flush();
-    clickButton(host, "开始导入");
-    await flush();
-    const imported = calls.find((call) => call.pathname === "/management/project/v1/vault.import");
-    expect(imported?.body).toEqual({
-      project_id: "proj-1",
-      relative_path: "inbox/brief.md",
-      rights_class: "owner-owned",
-      provenance: { source_uri: "file:brief.md" },
-      source_kind: "markdown-file",
-      body: "# picked note\n",
-    });
-    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.apply-authority")).toBe(
-      false,
-    );
-    expect(host.querySelector("[data-ingest-receipt='doc-file']")).not.toBeNull();
-    unmount(host, root);
-  });
-
-  it("refuses secret-shaped file ingest and keeps the original file selection", async () => {
-    const { host, root, calls } = await renderKnowledge();
-    clickTab(host, "导入");
-    const input = host.querySelector('input[name="vault-files"]') as HTMLInputElement;
-    const secretFile = new File(["api_key=sk-p14t08-fixture"], "secret.md", { type: "text/markdown" });
-    setFiles(input, [secretFile]);
-    await flush();
-    clickButton(host, "开始导入");
-    await flush();
-    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.import")).toBe(false);
-    expect((host.querySelector('input[name="vault-files"]') as HTMLInputElement).files?.[0]?.name).toBe(
-      "secret.md",
-    );
-    expect(host.querySelector("[data-ingest-error='true']")?.textContent).toMatch(/secret-shaped/i);
-    unmount(host, root);
-  });
-
-  it("refuses a Vault file that claims is_authority and does not rebuild", async () => {
+  it("refuses secret ingest and a file that claims authority, with no Activate / Twitter P0", async () => {
     const { host, root, calls } = await renderKnowledge({
       "POST /management/project/v1/vault.import": {
         status: 200,
@@ -278,30 +238,15 @@ describe("P14-T08 Knowledge v9 files / why / import IA", () => {
     });
     clickTab(host, "导入");
     const input = host.querySelector('input[name="vault-files"]') as HTMLInputElement;
-    setFiles(input, [new File(["not authority"], "charter.md", { type: "text/markdown" })]);
+    setFiles(input, [new File(["api_key=sk-p15t04-fixture"], "secret.md", { type: "text/markdown" })]);
     await flush();
     clickButton(host, "开始导入");
     await flush();
-    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.import")).toBe(true);
-    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.index.rebuild")).toBe(
-      false,
-    );
-    expect(host.querySelector("[data-ingest-error='true']")?.textContent).toMatch(/not Project authority/i);
-    expect(host.querySelector("[data-ingest-receipt]")).toBeNull();
-    unmount(host, root);
-  });
-
-  it("keeps Memory auto-admission honest with zero Admit buttons", async () => {
-    const { host, root, calls } = await renderKnowledge();
-    clickTab(host, "记忆");
-    const auto = host.querySelector("[data-region='opc-knowledge-auto-admit']");
-    expect(auto?.textContent).toMatch(/Requires-backend/);
-    expect(
-      [...host.querySelectorAll("button")].some((node) => /\bAdmit\b/.test(node.textContent ?? "")),
-    ).toBe(false);
-    expect(calls.some((call) => call.pathname === "/management/resource/v1/memory/auto-admit.chat")).toBe(
-      false,
-    );
+    expect(calls.some((call) => call.pathname === "/management/project/v1/vault.import")).toBe(false);
+    expect(host.querySelector("[data-ingest-error='true']")?.textContent).toMatch(/secret-shaped|密钥/i);
+    expect(host.textContent).not.toMatch(/\bActivate\b/);
+    expect(host.textContent).not.toMatch(TWITTER_HERO);
+    expect(fakeActionLabels(host)).toEqual([]);
     unmount(host, root);
   });
 });
